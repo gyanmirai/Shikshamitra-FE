@@ -11,7 +11,17 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionHeader } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Card, Alert, Stack, Button, Divider, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Card,
+  Alert,
+  Stack,
+  Button,
+  Divider,
+  IconButton,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 import { policyImpactRows } from '../policyImpactModel';
 
@@ -101,18 +111,6 @@ export default function FeeStructurePoliciesStep({
   return (
     <>
       <Stack spacing={2} sx={{ width: 1, maxWidth: 'md', mx: 'auto', py: 1, minWidth: 0 }}>
-        <Stack spacing={0.5}>
-          <Typography variant="overline" color="primary.main" sx={{ overflowWrap: 'anywhere' }}>
-            {candidate.name || 'New fee structure'}
-          </Typography>
-          <Typography component="h2" variant="h5">
-            {ready
-              ? 'Your policies are ready'
-              : collectionAttached
-                ? 'Check your policy selections'
-                : 'Choose your policies'}
-          </Typography>
-        </Stack>
         <Card
           component="section"
           aria-label="Policy selections"
@@ -176,33 +174,50 @@ export default function FeeStructurePoliciesStep({
                       }}
 
                       action={
-                        !locked && (
-                          <CustomTooltip
-                            title={
-                              allowed
-                                ? `${version ? 'Change' : 'Select'} ${impact.label}`
-                                : 'Editing this policy requires an editable draft and policy permissions.'
-                            }
-                          >
-                            <span>
-                              <Button
-                                type="button"
-                                size="small"
-                                variant="text"
-                                disabled={!allowed || busy}
-                                startIcon={
+                        <Stack direction="row" spacing={0.5}>
+                          {!locked && (
+                            <CustomTooltip
+                              title={
+                                allowed
+                                  ? `${version ? 'Change' : 'Select'} ${impact.label}`
+                                  : 'Editing this policy requires an editable draft and policy permissions.'
+                              }
+                            >
+                              <span>
+                                <IconButton
+                                  type="button"
+                                  size="small"
+                                  disabled={!allowed || busy}
+                                  aria-label={`${version ? 'Change' : 'Select'} ${impact.label}`}
+                                  onClick={() => setChoosing(key)}
+                                >
                                   <Iconify
                                     icon={version ? GlobalIcons.edit : GlobalIcons.addIcon}
                                   />
-                                }
-                                aria-label={`${version ? 'Change' : 'Select'} ${impact.label}`}
-                                onClick={() => setChoosing(key)}
+                                </IconButton>
+                              </span>
+                            </CustomTooltip>
+                          )}
+                          <CustomTooltip
+                            title={
+                              version
+                                ? `View ${impact.label} coverage`
+                                : 'Select a policy to view its coverage.'
+                            }
+                          >
+                            <span>
+                              <IconButton
+                                type="button"
+                                size="small"
+                                disabled={busy || !version}
+                                aria-label={`View ${impact.label} fee head impact`}
+                                onClick={() => onView(key)}
                               >
-                                {version ? 'Edit' : 'Select'}
-                              </Button>
+                                <Iconify icon={GlobalIcons.eye} />
+                              </IconButton>
                             </span>
                           </CustomTooltip>
-                        )
+                        </Stack>
                       }
                     />
                     <Stack spacing={0.5} sx={{ pl: { xs: 0, sm: 5.5 }, mt: 0.5 }}>
@@ -295,29 +310,6 @@ export default function FeeStructurePoliciesStep({
                 );
               })}
             </Stack>
-            {impacts.some(({ key }) => candidate[`${key}PolicyVersionId`]) && (
-              <>
-                <Divider />
-                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                  {impacts
-                    .filter(({ key }) => candidate[`${key}PolicyVersionId`])
-                    .map(({ key, label }) => (
-                      <Button
-                        key={key}
-                        type="button"
-                        variant="text"
-                        size="small"
-                        disabled={busy}
-                        startIcon={<Iconify icon={GlobalIcons.eye} />}
-                        aria-label={`View ${label} fee head impact`}
-                        onClick={() => onView(key)}
-                      >
-                        View {key} coverage
-                      </Button>
-                    ))}
-                </Stack>
-              </>
-            )}
           </Stack>
         </Card>
       </Stack>

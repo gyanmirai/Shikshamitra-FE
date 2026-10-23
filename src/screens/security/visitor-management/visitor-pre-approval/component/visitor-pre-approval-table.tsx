@@ -60,13 +60,14 @@ const VisitorApprovalTable: React.FC<IVisitorPreApprovalTableTableProps> = ({ on
         label: 'Visiting Date',
         id: 'visitingDate',
 
-        filterType: 'date',
+        filterType: 'date' as const,
         render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : null),
       },
       {
         label: 'Visiting Time',
+        filterType: 'string' as const,
         id: 'visitingTime',
-        isFilter: false,
+        isFilter: true,
         isSort: false,
 
         render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : null),

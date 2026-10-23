@@ -12,7 +12,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
@@ -222,32 +222,6 @@ const ReceiptManagement = () => {
           return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('en-IN');
         },
       },
-      {
-        align: 'left',
-        stickyPosition: 'right',
-        excludeFromExport: true,
-        id: 'actions',
-        label: 'Action',
-        isFilter: false,
-        isSort: false,
-        sticky: true,
-        width: 80,
-        minWidth: 64,
-        render(_value: any, row: any) {
-          return (
-            <AdaptiveThreeDotsActions directActionLimit={2}
-              actions={[
-                {
-                  id: 'view',
-                  label: 'View',
-                  icon: 'carbon:view-filled',
-                  onClick: () => setPreviewReceiptId(row.id),
-                },
-              ]}
-            />
-          );
-        },
-      },
     ],
     []
   );
@@ -316,6 +290,12 @@ const ReceiptManagement = () => {
 
       {/* ── Table ────────────────────────────────────────────────────────────── */}
       <CustomizableTable
+        getRowAction={(row) => ({
+          label: `Open ${row.receiptNumber || 'record'}`,
+          onClick: () => {
+            setPreviewReceiptId(row.id);
+          },
+        })}
         tableId="fee-receipts"
         columns={columns}
         data={tableData}

@@ -76,14 +76,15 @@ const ReviewGatePassRequestStaffTable = () => {
           {
             id: 'leaveDate',
             label: 'leave Date',
-            filterType: 'date',
+            filterType: 'date' as const,
             render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : null),
           },
           {
             id: 'leaveTime',
             label: 'leave Time',
+            filterType: 'string' as const,
 
-            isFilter: false,
+            isFilter: true,
             isSort: false,
             render: (value) => (value ? dayjs(value).format('hh:mm A') : null),
           },
@@ -91,7 +92,7 @@ const ReviewGatePassRequestStaffTable = () => {
           {
             id: 'status',
             label: 'Status',
-            filterType: 'enum',
+            filterType: 'enum' as const,
             enumOptions: CommonRequestStatusTypeOptions,
             minWidth: '130px',
             align: 'left',

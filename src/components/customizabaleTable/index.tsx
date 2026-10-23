@@ -78,6 +78,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   totalCount,
   maxServerRowsPerPage,
   handleRowClick = () => {},
+  getRowAction,
   isLoading = false,
   isPagination = true,
   isFilter = true,
@@ -379,7 +380,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   const handleRemoveFilter = useCallback(
     (index: number) => {
       const nextFilters = filters.filter((filterItem, i) => i !== index);
-      handleChangeParams({ filters: nextFilters });
+      handleChangeParams({ filters: nextFilters, page: 0 });
       onFiltersChange?.(nextFilters);
       onServerFilter?.(nextFilters);
     },
@@ -387,7 +388,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   );
 
   const handleClearAllFilters = useCallback(() => {
-    handleChangeParams({ filters: [] });
+    handleChangeParams({ filters: [], page: 0 });
     onFiltersChange?.([]);
     onServerFilter?.([]);
   }, [handleChangeParams, onServerFilter, onFiltersChange]);
@@ -625,6 +626,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   getStickyStyle={getStickyStyle}
                   dense={dense}
                   onRowClick={handleRowClick}
+                  getRowAction={getRowAction}
                   rowProps={rowProps}
                   renderExpandedRow={renderExpandedRow}
                   expandedRows={expandedRows}
@@ -771,6 +773,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       isLoading,
       paginatedData,
       handleRowClick,
+      getRowAction,
       rowProps,
       renderExpandedRow,
       showToolbar,

@@ -24,7 +24,8 @@ const FacilitiesAllocationOverview = () => (
         {
           id: 'facility',
           label: 'Facility',
-          isFilter: false,
+          filterType: 'string' as const,
+          isFilter: true,
           isSort: false,
           render(value, row) {
             return (
@@ -38,7 +39,7 @@ const FacilitiesAllocationOverview = () => (
         {
           id: 'status',
           label: 'Status',
-          filterType: 'enum',
+          filterType: 'enum' as const,
           enumOptions: FacilityStatusTypeOptions,
 
           render(value, row) {
@@ -50,7 +51,8 @@ const FacilitiesAllocationOverview = () => (
         {
           id: 'utilization',
           label: 'Utilization',
-          isFilter: false,
+          filterType: 'number' as const,
+          isFilter: true,
           isSort: false,
           render(value, row) {
             return (

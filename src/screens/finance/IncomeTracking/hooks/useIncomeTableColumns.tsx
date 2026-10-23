@@ -82,7 +82,7 @@ export const useIncomeTableColumns = ({
               sticky: true,
               minWidth: 50,
               render: (_value: unknown, row: unknown) => (
-                <AdaptiveThreeDotsActions directActionLimit={2}
+                <AdaptiveThreeDotsActions directActionLimit={3}
                   actions={[
                     ...(onEdit && !(row as any).isAutomatic
                       ? [

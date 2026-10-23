@@ -1,5 +1,8 @@
 'use client';
 
+import type { IParams } from 'src/components/customizabaleTable/types';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -9,16 +12,16 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { financePermissions } from 'src/constants/finance-menu';
+import { financePaths, financePermissions } from 'src/constants/finance-menu';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -42,7 +45,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import {
-  chargeCategoryApi,
+  type ChargeCategoryUsage,
+  useLazyGetChargeCategoryUsageQuery,
   useGetChargeCategoriesQuery,
   usePutChargeCategoryMutation,
   usePostChargeCategoryMutation,
@@ -68,9 +72,14 @@ const FinanceChargeCategory = () => {
   const canEdit = hasGrantedPermission(auth.permissions, categoryPermissions.edit);
   const canChangeStatus = hasGrantedPermission(auth.permissions, categoryPermissions.changeStatus);
   const canDelete = hasGrantedPermission(auth.permissions, categoryPermissions.delete);
+  const canReviewCharges = hasGrantedPermission(
+    auth.permissions,
+    financePermissions.fees.chargeActions.view
+  );
   const academicYearId = currentYear?.id ?? '';
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+  const [filters, setFilters] = useState<IParams['filters']>([]);
 
   const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
     setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
@@ -81,7 +90,7 @@ const FinanceChargeCategory = () => {
   }, []);
 
   // Get charge categories data
-  const { data, isLoading, isFetching, refetch } = useQueryAndMutation({
+  const { data, isLoading, isFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargeCategoriesQuery,
     params: {
@@ -89,6 +98,7 @@ const FinanceChargeCategory = () => {
       page: queryParams.page,
       pageSize: queryParams.pageSize,
       search: queryParams.search || undefined,
+      filters: serializeFinanceTableFilters(filters),
       isActive: archiveView === 'current',
     },
   });
@@ -102,12 +112,12 @@ const FinanceChargeCategory = () => {
     { skip: !academicYearId }
   );
 
-  // Delete mutation
-  const [deleteChargeCategory, { isLoading: isDeleting }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteChargeCategoryMutation,
-  });
-
+  const [deleteChargeCategory, { isLoading: isDeleting }] = useDeleteChargeCategoryMutation();
+  const [getCategoryUsage] = useLazyGetChargeCategoryUsageQuery();
+  const [deletionUsage, setDeletionUsage] = useState<ChargeCategoryUsage | null>(null);
+  const [isCheckingUsage, setIsCheckingUsage] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const deleteInFlight = useRef(false);
   const [patchChargeCategoryStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePatchChargeCategoryStatusMutation,
@@ -125,41 +135,41 @@ const FinanceChargeCategory = () => {
 
   const nextStatus = statusData ? !statusData.isActive : false;
 
-  const { confirmWithUndo } = useConfirmWithUndo();
-
-  // Handle delete operation
-  const handleDelete = async () => {
-    if (!selectedEntry?.id) return;
-
-    confirmWithUndo({
-      item: selectedEntry,
-      onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-        dispatchFn(
-          chargeCategoryApi.util.updateQueryData(
-            'getChargeCategories',
-            {
-              academicYearId: currentYear?.id,
-              page: queryParams.page,
-              pageSize: queryParams.pageSize,
-              search: queryParams.search || undefined,
-              isActive: archiveView === 'current',
-            },
-            (draft: any) => {
-              const index = draft.items?.findIndex((b: any) => b.id === (selectedEntry as any)?.id);
-              setDeleteIndex(index);
-              if (index !== -1) {
-                draft.items.splice(index, 1);
-              }
-            }
-          )
-        ),
-      onUndoRestore: () => refetch(),
-      onCommit: () => deleteChargeCategory({ chargeCategoryId: selectedEntry.id }),
-    });
-    confirm.onFalse();
-    setSelectedEntry(null);
+  const checkDeletionUsage = async (id: string) => {
+    setIsCheckingUsage(true);
+    setDeleteError('');
+    try {
+      const usage = await getCategoryUsage(id, false).unwrap();
+      setDeletionUsage(usage);
+    } catch (error) {
+      setDeletionUsage(null);
+      setDeleteError(`Unable to check charge dependencies. ${parseApiProblemDetail(error).detail}`);
+    } finally {
+      setIsCheckingUsage(false);
+    }
   };
 
+  const handleDelete = async () => {
+    if (!selectedEntry?.id || !deletionUsage?.canDelete || deleteInFlight.current) return;
+    deleteInFlight.current = true;
+    setDeleteError('');
+    try {
+      await deleteChargeCategory({ chargeCategoryId: selectedEntry.id }).unwrap();
+      shikshaMitraToast.success({ message: 'Charge category deleted successfully' });
+      confirm.onFalse();
+      setSelectedEntry(null);
+      setDeletionUsage(null);
+    } catch (error) {
+      const problem = parseApiProblemDetail(error);
+      if (problem.errorCode === 'Finance:Charge:010028') {
+        await checkDeletionUsage(selectedEntry.id);
+      } else {
+        setDeleteError(problem.detail);
+      }
+    } finally {
+      deleteInFlight.current = false;
+    }
+  };
   // Handle edit action
   const handleEdit = (item: any) => {
     setSelectedItem(item);
@@ -169,7 +179,9 @@ const FinanceChargeCategory = () => {
   // Handle delete action
   const handleDeleteAction = (item: any) => {
     setSelectedEntry(item);
+    setDeletionUsage(null);
     confirm.onTrue();
+    void checkDeletionUsage(item.id);
   };
 
   // Handle add new item
@@ -177,9 +189,6 @@ const FinanceChargeCategory = () => {
     setSelectedItem(null);
     addDialog.onTrue();
   };
-
-  // Redux state and dispatch
-  const dispatch = useDispatch();
 
   /**
    * Handles closing the charge category dialog
@@ -198,6 +207,7 @@ const FinanceChargeCategory = () => {
       {
         id: 'name',
         label: 'Name',
+        filterType: 'string' as const,
         width: 200,
         minWidth: 170,
         isSort: true,
@@ -208,7 +218,9 @@ const FinanceChargeCategory = () => {
       },
       {
         id: 'incomeCategoryName',
+        isFilter: true,
         label: 'Income Category',
+        filterType: 'string' as const,
         width: 220,
         minWidth: 180,
         align: 'left',
@@ -217,7 +229,13 @@ const FinanceChargeCategory = () => {
       },
       {
         id: 'isApprovalRequired',
+        isFilter: true,
         label: 'Approval Required',
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Yes', value: 1 },
+          { label: 'No', value: 0 },
+        ],
         width: 170,
         minWidth: 160,
         align: 'left',
@@ -226,6 +244,7 @@ const FinanceChargeCategory = () => {
       {
         id: 'description',
         label: 'Description',
+        filterType: 'string' as const,
         width: 260,
         minWidth: 180,
         isSort: true,
@@ -241,7 +260,13 @@ const FinanceChargeCategory = () => {
       },
       {
         id: 'isActive',
+        isFilter: true,
         label: 'Status',
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Active', value: 1 },
+          { label: 'Archived', value: 0 },
+        ],
         width: 110,
         minWidth: 100,
         align: 'left',
@@ -272,7 +297,7 @@ const FinanceChargeCategory = () => {
         render(value, row: any) {
           return (
             <AdaptiveThreeDotsActions
-              directActionLimit={2}
+              directActionLimit={3}
               placement="right-top"
               actions={[
                 ...(canEdit && archiveView === 'current'
@@ -285,7 +310,7 @@ const FinanceChargeCategory = () => {
                       },
                     ]
                   : []),
-                ...(canDelete && archiveView === 'current' && !row.isUsedInDownstream
+                ...(canDelete && archiveView === 'current'
                   ? [
                       {
                         id: 'delete',
@@ -357,6 +382,7 @@ const FinanceChargeCategory = () => {
             variant={archiveView === 'current' ? 'contained' : 'outlined'}
             onClick={() => {
               setQueryParams((current) => ({ ...current, page: 1 }));
+              setFilters((current) => current.filter((filter) => filter.column !== 'isActive'));
               setArchiveView('current');
             }}
           >
@@ -367,6 +393,7 @@ const FinanceChargeCategory = () => {
             variant={archiveView === 'archived' ? 'contained' : 'outlined'}
             onClick={() => {
               setQueryParams((current) => ({ ...current, page: 1 }));
+              setFilters((current) => current.filter((filter) => filter.column !== 'isActive'));
               setArchiveView('archived');
             }}
           >
@@ -388,6 +415,12 @@ const FinanceChargeCategory = () => {
         isLoading={isLoading || isFetching}
         columns={columns}
         data={data?.items || []}
+        serverSideFilter
+        filters={filters}
+        onServerFilter={(next) => {
+          setFilters(next);
+          setQueryParams((current) => ({ ...current, page: 1 }));
+        }}
         serverSidePagination
         serverSideSearch
         totalCount={data?.totalCount}
@@ -428,33 +461,104 @@ const FinanceChargeCategory = () => {
         )}
       </CustomDialog>
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
+          if (isCheckingUsage || isDeleting) return;
           confirm.onFalse();
           setSelectedEntry(null);
+          setDeletionUsage(null);
+          setDeleteError('');
         }}
-        title="Delete"
+        disableCancel={isCheckingUsage || isDeleting}
+        title={
+          deletionUsage && !deletionUsage.canDelete
+            ? 'Charge Category In Use'
+            : 'Delete Charge Category?'
+        }
+        icon={deletionUsage && !deletionUsage.canDelete ? 'warning' : 'error'}
         content={
-          <>
-            Are you sure you want to delete charge category <b>{selectedEntry?.name}</b>?{' '}
-          </>
+          <Stack spacing={1.5}>
+            {isCheckingUsage ? (
+              <Typography variant="body2" role="status">
+                Checking charge dependencies…
+              </Typography>
+            ) : deletionUsage && !deletionUsage.canDelete ? (
+              <>
+                <Typography variant="body2">
+                  <b>{deletionUsage.categoryName}</b> cannot be deleted because it is currently used
+                  by{' '}
+                  <b>
+                    {deletionUsage.chargeCount}{' '}
+                    {deletionUsage.chargeCount === 1 ? 'charge' : 'charges'}
+                  </b>
+                  {deletionUsage.studentAssignmentCount > 0 &&
+                    ` (${deletionUsage.studentAssignmentCount} student assignments)`}
+                  .
+                </Typography>
+                {deletionUsage.chargeNames.length > 0 && (
+                  <Box component="ul" sx={{ my: 0, pl: 2.5 }}>
+                    {deletionUsage.chargeNames.map((name) => (
+                      <li key={name}>{name}</li>
+                    ))}
+                  </Box>
+                )}
+                <Typography variant="body2">
+                  Review the related charges. Archive this category to stop new use while preserving
+                  existing student records.
+                  {deletionUsage.chargeNames.length === 0 &&
+                    ' Charge details may require additional access.'}
+                </Typography>
+              </>
+            ) : deletionUsage ? (
+              <Typography variant="body2">
+                Delete charge category <b>{deletionUsage.categoryName}</b>? This action cannot be
+                undone.
+              </Typography>
+            ) : null}
+            {deleteError && (
+              <Typography variant="body2" color="error" role="alert">
+                {deleteError}
+              </Typography>
+            )}
+          </Stack>
         }
         action={
-          <LoadingButton
-            startIcon={<Iconify icon="mdi:delete-outline" />}
-            variant="contained"
-            color="error"
-            size="small"
-            loading={isDeleting}
-            onClick={handleDelete}
-          >
-            Yes
-          </LoadingButton>
+          deletionUsage && !deletionUsage.canDelete ? (
+            canReviewCharges ? (
+              <Button
+                href={financePaths.fees.charges}
+                variant="contained"
+                color="inherit"
+                startIcon={<Iconify icon={GlobalIcons.eye} />}
+              >
+                Review charges
+              </Button>
+            ) : null
+          ) : deleteError && !deletionUsage ? (
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="mdi:refresh" />}
+              onClick={() => selectedEntry?.id && void checkDeletionUsage(selectedEntry.id)}
+            >
+              Retry
+            </Button>
+          ) : (
+            <LoadingButton
+              type="button"
+              startIcon={<Iconify icon={GlobalIcons.delete} />}
+              variant="contained"
+              color="error"
+              size="small"
+              disabled={isCheckingUsage || !deletionUsage?.canDelete}
+              loading={isDeleting}
+              onClick={handleDelete}
+            >
+              Delete
+            </LoadingButton>
+          )
         }
       />
-
       {/* Status Confirmation Dialog */}
       <ConfirmDialog
         open={statusConfirm.value}

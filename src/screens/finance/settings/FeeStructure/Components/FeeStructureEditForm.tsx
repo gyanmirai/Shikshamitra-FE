@@ -99,8 +99,9 @@ export default function FeeStructureEditForm({
           slotProps={{
             tab: {
               px: 1.5,
+              py: 0.5,
               minWidth: 56,
-              minHeight: 64,
+              minHeight: 44,
               typography: 'body1',
               color: 'text.primary',
             },

@@ -455,13 +455,13 @@ describe('Collect Fees presentation and shared ledger', () => {
     expect(screen.getByLabelText(/Cash Received/)).toHaveValue('₹ 500');
   }, 30_000);
 
-  it('shows the fee breakdown from the common View icon and keeps the selection on close', () => {
+  it('shows the fee breakdown by clicking the ledger row and keeps the selection on close', () => {
     render(<FeeCollectComponentForm student={student} />);
     const checkbox = screen.getByRole('checkbox', {
       name: 'Select Class 3 Tuition Fee, June 2026',
     });
     fireEvent.click(checkbox);
-    fireEvent.click(screen.getByRole('button', { name: 'View Class 3 Tuition Fee, June 2026' }));
+    fireEvent.click(screen.getByRole('row', { name: 'Open Class 3 Tuition Fee, June 2026' }));
     expect(screen.getByText('Outstanding principal')).toBeVisible();
     expect(screen.getByText('Reconciliation amount')).toBeVisible();
     expect(screen.getByText('Concession')).toBeVisible();

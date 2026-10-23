@@ -43,6 +43,8 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   archived,
   onPaginationChange,
   onSearchChange,
+  filters,
+  onFiltersChange,
   onView,
   onVersionHistory,
   onEdit,
@@ -63,6 +65,8 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
     () => [
       {
         id: 'name',
+        isFilter: true,
+        filterType: 'string' as const,
         label: 'Name',
         align: 'left',
         minWidth: 220,
@@ -76,6 +80,8 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
       },
       {
         id: 'currentVersionNumber',
+        isFilter: true,
+        filterType: 'number' as const,
         label: 'Version',
         align: 'left',
         minWidth: 100,
@@ -87,11 +93,12 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
       },
       {
         id: 'usage',
+        filterType: 'string' as const,
         label: 'Used In',
         align: 'left',
         minWidth: 190,
         isSort: false,
-        isFilter: false,
+        isFilter: true,
         render: (_, row) => {
           const term = row as PaymentTermListItem;
           return term.usage ? (
@@ -105,6 +112,13 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
       },
       {
         id: 'status',
+        isFilter: true,
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Active', value: 'Active' },
+          { label: 'Draft', value: 'Draft' },
+          { label: 'Archived', value: 'Archived' },
+        ],
         label: 'Status',
         align: 'left',
         minWidth: 240,
@@ -142,20 +156,10 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
 
           return (
             <AdaptiveThreeDotsActions
-              directActionLimit={2}
+              directActionLimit={3}
               sx={{ justifyContent: 'flex-start' }}
               moreLabel={`More actions for ${term.name}`}
               actions={[
-                ...(canView
-                  ? [
-                      {
-                        id: 'view',
-                        label: `View ${term.name}`,
-                        icon: 'carbon:view-filled',
-                        onClick: () => onView(term),
-                      },
-                    ]
-                  : []),
                 ...(canEdit && !archived
                   ? [
                       {
@@ -250,6 +254,16 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   return (
     <>
       <CustomizableTable
+        getRowAction={(row) =>
+          canView
+            ? {
+                label: `Open ${row.name || 'record'}`,
+                onClick: () => {
+                  onView(row as PaymentTermListItem);
+                },
+              }
+            : undefined
+        }
         tableId="payment-term-table"
         tableTitle="Payment terms"
         exportLabel="Export current page"
@@ -258,6 +272,9 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         isLoading={loading}
         isSearch
         isPagination
+        serverSideFilter
+        filters={filters}
+        onServerFilter={onFiltersChange}
         serverSidePagination
         serverSideSearch
         totalCount={totalCount}

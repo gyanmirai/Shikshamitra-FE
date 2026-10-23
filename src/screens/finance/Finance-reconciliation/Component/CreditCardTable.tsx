@@ -267,7 +267,7 @@ const CreditCardTable = ({
 
           return (
             <AdaptiveThreeDotsActions
-              directActionLimit={2}
+              directActionLimit={3}
               actions={[
                 ...(row.status !== PaymentMethodsStatusType.Approved &&
                 row.status !== PaymentMethodsStatusType.Rejected &&

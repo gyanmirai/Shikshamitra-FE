@@ -189,7 +189,7 @@ describe('collection ledger waiver capabilities', () => {
         <CollectionLedgerTable {...ledgerProps()} layout="ledger" />
       </LedgerTestProviders>
     );
-    const view = screen.getByRole('button', { name: 'View Tuition, June 2026' });
+    const view = screen.getByRole('row', { name: 'Open Tuition, June 2026' });
     await user.click(view);
     expect(screen.getByRole('dialog', { name: 'Tuition' })).toBeVisible();
 
@@ -235,7 +235,7 @@ describe('collection ledger waiver capabilities', () => {
       </LedgerTestProviders>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'View Tuition, June 2026' }));
+    fireEvent.click(screen.getByRole('row', { name: 'Open Tuition, June 2026' }));
     const context = within(
       screen.getByRole('heading', { name: 'Fee Details' }).closest('section')!
     );
@@ -279,7 +279,7 @@ describe('collection ledger waiver capabilities', () => {
       </LedgerTestProviders>
     );
     fireEvent.click(screen.getByRole('button', { name: /^Additional Charges/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'View Lab charge, 2026-06-01' }));
+    fireEvent.click(screen.getByRole('row', { name: 'Open Lab charge, 2026-06-01' }));
     expect(screen.getByRole('heading', { name: 'Charge Details' })).toBeVisible();
     expect(screen.getByText('Lab materials')).toBeVisible();
     expect(screen.getByText('Charge waived')).toBeVisible();
@@ -298,7 +298,7 @@ describe('collection ledger waiver capabilities', () => {
       const group = screen.getByRole('button', { name: /^Additional Charges/ });
       if (group.getAttribute('aria-expanded') === 'false') fireEvent.click(group);
     }
-    fireEvent.click(screen.getByRole('button', { name: `View ${label}` }));
+    fireEvent.click(screen.getByRole('row', { name: `Open ${label}` }));
     expect(screen.getByRole('button', { name: `Waive ${type}` })).toHaveAttribute(
       'data-source-id',
       sourceId
@@ -315,7 +315,7 @@ describe('collection ledger waiver capabilities', () => {
       const group = screen.getByRole('button', { name: /^Additional Charges/ });
       if (group.getAttribute('aria-expanded') === 'false') fireEvent.click(group);
     }
-    fireEvent.click(screen.getByRole('button', { name: `View ${label}` }));
+    fireEvent.click(screen.getByRole('row', { name: `Open ${label}` }));
     expect(screen.getByText('Outstanding principal')).toBeVisible();
     expect(screen.queryByRole('button', { name: /^Waive / })).not.toBeInTheDocument();
   });

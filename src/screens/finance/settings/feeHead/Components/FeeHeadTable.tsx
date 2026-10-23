@@ -31,6 +31,10 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
   totalCount,
   onServerPagination,
   onServerSearch,
+  filters,
+  onServerFilter,
+  page,
+  rowsPerPage,
 }) => {
   const access = useFinancePermissions(financePermissions.fees.settings.feeHead);
   const [patchFeeHead, { isLoading: isStatusLoading }] = useQueryAndMutation({
@@ -62,7 +66,9 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
       {
         stickyPosition: 'left',
         id: 'name',
+        isFilter: true,
         label: 'Name',
+        filterType: 'string' as const,
         align: 'left',
         sticky: true,
         render: (value) => (
@@ -73,12 +79,16 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
       },
       {
         id: 'feeCategoryName',
+        isFilter: true,
         label: 'Fee Category',
+        filterType: 'string' as const,
         align: 'left',
       },
       {
         id: 'incomeCategoryName',
+        isFilter: true,
         label: 'Income Category',
+        filterType: 'string' as const,
         align: 'left',
         render: (value, row) => (
           <Stack spacing={0.25}>
@@ -90,7 +100,9 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
       },
       {
         id: 'description',
+        isFilter: true,
         label: 'Description',
+        filterType: 'string' as const,
         align: 'left',
         render: (value) => (
           <Typography
@@ -110,7 +122,13 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
       {
         stickyPosition: 'right',
         id: 'isActive',
+        isFilter: true,
         label: 'Status',
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Active', value: 1 },
+          { label: 'Inactive', value: 0 },
+        ],
         minWidth: 140,
         sticky: true,
         render(value, row) {
@@ -147,7 +165,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
         render(value, row) {
           return (
             <AdaptiveThreeDotsActions
-              directActionLimit={2}
+              directActionLimit={3}
               actions={[
                 {
                   id: 'edit',
@@ -210,6 +228,11 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
         }
         columns={columns}
         data={data || []}
+        serverSideFilter
+        filters={filters}
+        onServerFilter={onServerFilter}
+        page={page}
+        rowsPerPage={rowsPerPage}
         serverSidePagination
         serverSideSearch
         totalCount={totalCount}

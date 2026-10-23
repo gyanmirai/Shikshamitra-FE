@@ -10,6 +10,13 @@ audience: humans-and-agents
 
 # Validate Finance frontend changes
 
+Charge Category deletion: run `ChargeCategory.deletion.test.tsx`, `ChargeCategory.test.tsx`,
+and `src/redux/finance/chargeCategory.test.ts`. Browser checks cover the in-use dependency
+warning and Review charges link, unused-category confirmation/cancel, failed preflight/retry,
+busy locks, and a dependency created after preflight. Confirm that no DELETE is sent from a
+blocked warning or cancellation. Backend dependency and permission cases live in
+`ChargeCategoryDependencyApi_Tests` and `ChargeCategoryApiContract_Tests`.
+
 Automatic collection allocation: run focused Vitest checks for
 `collectionAllocationOrder.test.ts`, `preview/paymentAllocationUtils.test.ts`,
 `FeeCollectionForm.context.test.tsx`, `CollectionLedgerTable.test.tsx`,

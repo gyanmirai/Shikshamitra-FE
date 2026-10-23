@@ -1,5 +1,8 @@
 'use client';
 
+import type { IParams } from 'src/components/customizabaleTable/types';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -67,6 +70,7 @@ const FinanceReceiptBookSetting = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+  const [filters, setFilters] = useState<IParams['filters']>([]);
 
   const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
     setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
@@ -84,7 +88,11 @@ const FinanceReceiptBookSetting = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReceiptBooksQuery,
-    params: { academicYearId: currentYear?.id, ...queryParams },
+    params: {
+      academicYearId: currentYear?.id,
+      ...queryParams,
+      filters: serializeFinanceTableFilters(filters),
+    },
   });
 
   // PATCH mutation for status change
@@ -111,12 +119,34 @@ const FinanceReceiptBookSetting = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
-      { stickyPosition: 'left', id: 'name', label: 'Name', align: 'left', sticky: true },
-      { id: 'prefix', label: 'Prefix', align: 'left' },
-      { id: 'suffix', label: 'Suffix', align: 'left' },
+      {
+        stickyPosition: 'left',
+        id: 'name',
+        isFilter: true,
+        label: 'Name',
+        filterType: 'string' as const,
+        align: 'left',
+        sticky: true,
+      },
+      {
+        id: 'prefix',
+        isFilter: true,
+        label: 'Prefix',
+        filterType: 'string' as const,
+        align: 'left',
+      },
+      {
+        id: 'suffix',
+        isFilter: true,
+        label: 'Suffix',
+        filterType: 'string' as const,
+        align: 'left',
+      },
       {
         id: 'board',
+        isFilter: true,
         label: 'Board/Medium',
+        filterType: 'string' as const,
         align: 'left',
         render: (value, row) => (
           <Typography variant="caption" fontSize="13px">
@@ -124,12 +154,34 @@ const FinanceReceiptBookSetting = () => {
           </Typography>
         ),
       },
-      { id: 'mediumStageName', label: 'Organization', align: 'left' },
-      { id: 'startingNumber', label: 'Starting No.', align: 'left', minWidth: 130 },
-      { id: 'endingNumber', label: 'Ending No.', align: 'left', minWidth: 130 },
+      {
+        id: 'mediumStageName',
+        isFilter: true,
+        label: 'Organization',
+        filterType: 'string' as const,
+        align: 'left',
+      },
+      {
+        id: 'startingNumber',
+        isFilter: true,
+        label: 'Starting No.',
+        filterType: 'number' as const,
+        align: 'left',
+        minWidth: 130,
+      },
+      {
+        id: 'endingNumber',
+        isFilter: true,
+        label: 'Ending No.',
+        filterType: 'number' as const,
+        align: 'left',
+        minWidth: 130,
+      },
       {
         id: 'description',
+        isFilter: true,
         label: 'Description',
+        filterType: 'string' as const,
         align: 'left',
         render: (value) => (
           <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
@@ -153,7 +205,12 @@ const FinanceReceiptBookSetting = () => {
         stickyPosition: 'right',
         id: 'isActive',
         label: 'Active',
-        isFilter: false,
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Active', value: 1 },
+          { label: 'Inactive', value: 0 },
+        ],
+        isFilter: true,
         isSort: false,
         sticky: true,
         render(value, row) {
@@ -210,7 +267,7 @@ const FinanceReceiptBookSetting = () => {
         minWidth: 40,
         render: (value, row: any) => (
           <AdaptiveThreeDotsActions
-            directActionLimit={2}
+            directActionLimit={3}
             actions={[
               {
                 id: 'edit',
@@ -297,6 +354,14 @@ const FinanceReceiptBookSetting = () => {
         tableId="finance-receipt-book-setting-table"
         columns={columns}
         data={receiptBookData?.items || []}
+        serverSideFilter
+        filters={filters}
+        page={queryParams.page - 1}
+        rowsPerPage={queryParams.pageSize}
+        onServerFilter={(next) => {
+          setFilters(next);
+          setQueryParams((current) => ({ ...current, page: 1 }));
+        }}
         serverSidePagination
         serverSideSearch
         totalCount={receiptBookData?.totalCount}

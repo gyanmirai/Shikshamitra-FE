@@ -119,9 +119,8 @@ vi.mock('src/components/customizabaleTable', () => ({
         </button>
         {props.errorContent}
         {props.data.map((row: any) => (
-          <div key={row.id}>
+          <div key={row.id} role="row" aria-label={props.getRowAction(row)?.label} onClick={() => props.getRowAction(row)?.onClick()}>
             {row.studentIdentity}
-            {props.columns.find((column: any) => column.id === 'actions').render(null, row)}
           </div>
         ))}
       </>
@@ -153,7 +152,6 @@ describe('Accounts register table', () => {
         'Amount',
         'Transaction Date',
         'Status',
-        'Actions',
       ]);
       expect(state.table.data[0]).toMatchObject({
         studentIdentity: 'Asha Patel (1001)',
@@ -179,15 +177,12 @@ describe('Accounts register table', () => {
       expect(state.table.columns.find((column: any) => column.id === 'occurredAt')).toMatchObject({
         filterType: 'date',
       });
-      expect(state.table.columns.slice(-2).map((column: any) => column.stickyPosition)).toEqual([
-        'right',
-        'right',
-      ]);
       expect(state.table.columns.at(-1)).toMatchObject({
-        isFilter: false,
-        isSort: false,
-        excludeFromExport: true,
+        id: 'sourceStatus',
+        stickyPosition: 'right',
+        isFilter: true,
       });
+      expect(state.table.columns.some((column: any) => column.id === 'actions')).toBe(false);
     }
   );
 
@@ -230,7 +225,8 @@ describe('Accounts register table', () => {
         .find((column: any) => column.id === 'source')
         .enumOptions.map((option: any) => option.value)
     ).toEqual(['Expense', 'Refund']);
-    fireEvent.click(screen.getByRole('button', { name: 'View details for REF-001' }));
+    expect(screen.queryByRole('button', { name: 'View details for REF-001' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('row', { name: 'Open REF-001' }));
     expect(screen.getByText('Details for REF-001')).toBeVisible();
   });
 

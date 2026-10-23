@@ -1,3 +1,5 @@
+import type { IParams } from 'src/components/customizabaleTable/types';
+
 import type { Dayjs } from 'dayjs';
 import type { SyntheticEvent } from 'react';
 import type { PaymentTermListItem } from 'src/redux/finance/paymentTerm';
@@ -173,6 +175,8 @@ export interface IPaymentTermTableProps {
   archived: boolean;
   onPaginationChange: (page: number, pageSize: number) => void;
   onSearchChange: (search: string) => void;
+  filters?: IParams['filters'];
+  onFiltersChange?: (filters: IParams['filters']) => void;
   onView: (row: PaymentTermListItem) => void;
   onVersionHistory: (row: PaymentTermListItem) => void;
   onEdit: (row: PaymentTermListItem) => void;

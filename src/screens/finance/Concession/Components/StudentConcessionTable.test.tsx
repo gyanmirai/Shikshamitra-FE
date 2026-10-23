@@ -1,6 +1,7 @@
 import React from 'react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { financePermissions } from 'src/constants/finance-menu';
+import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import StudentConcessionTable from './StudentConcessionTable';
@@ -10,7 +11,11 @@ const state = vi.hoisted(() => ({
   table: {} as any,
   userId: 'checker',
   error: false,
+  draft: false,
+  confirmWithUndo: vi.fn(),
+  onViewConcession: vi.fn(),
 }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('react-redux', () => ({
   useSelector: (select: any) =>
     select({
@@ -35,13 +40,17 @@ vi.mock('src/screens/finance/components/FinanceAcademicContextFilter', () => ({
 vi.mock('src/screens/finance/components/FinanceClassDivisionFilter', () => ({
   default: () => null,
 }));
-vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
+vi.mock('src/components/confirm-dialog', () => ({
+  ConfirmDialog: ({ open, title, content, action, onClose }: any) => open ? (
+    <div role="dialog" aria-label={title}>{content}<button type="button" onClick={onClose}>Cancel deletion</button>{action}</div>
+  ) : null,
+}));
 vi.mock('src/components/customDialog', () => ({
   default: () => null,
   DialogScrollContent: () => null,
 }));
 vi.mock('src/hooks/useConfirmWithUndo', () => ({
-  useConfirmWithUndo: () => ({ confirmWithUndo: vi.fn() }),
+  useConfirmWithUndo: () => ({ confirmWithUndo: state.confirmWithUndo }),
 }));
 vi.mock('src/redux/finance/ConcessionManagement/concessionManagementApi', () => ({
   concessionManagementApi: {},
@@ -70,9 +79,9 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
             standardName: 'Class 4',
             divisionName: 'B',
             rollNo: '0',
-            status: 0,
+            status: state.draft ? ConcessionStatusType.Draft : ConcessionStatusType.Pending,
             requesterId: 'maker',
-            availableActions: ['approve', 'reject', 'cancel'],
+            availableActions: state.draft ? ['delete', 'edit'] : ['approve', 'reject', 'cancel'],
             concessionAmount: 500,
             createdAt: '2026-10-14T00:00:00Z',
           },
@@ -96,6 +105,7 @@ vi.mock('src/components/customizabaleTable', () => ({
   default: (props: any) => {
     state.table = props;
     const row = props.data[0];
+    const rowAction = props.getRowAction?.(row, 0);
     return (
       <>
         <button type="button" onClick={() => props.onServerPagination(3, 10)}>
@@ -126,6 +136,11 @@ vi.mock('src/components/customizabaleTable', () => ({
           Clear filters
         </button>
         <div>{row.classDivision}</div>
+        {rowAction && (
+          <button type="button" disabled={rowAction.disabled} onClick={rowAction.onClick}>
+            {rowAction.label}
+          </button>
+        )}
         {props.columns.find((column: any) => column.id === 'actions').render(null, row)}
         {props.errorContent}
       </>
@@ -134,13 +149,22 @@ vi.mock('src/components/customizabaleTable', () => ({
 }));
 
 function setup() {
-  render(<StudentConcessionTable onReject={vi.fn()} onAddConcession={vi.fn()} />);
+  render(
+    <StudentConcessionTable
+      onReject={vi.fn()}
+      onAddConcession={vi.fn()}
+      onViewConcession={state.onViewConcession}
+    />
+  );
 }
 
 describe('Concessions table query and actions', () => {
   beforeEach(() => {
     state.userId = 'checker';
     state.error = false;
+    state.draft = false;
+    state.confirmWithUndo.mockClear();
+    state.onViewConcession.mockClear();
   });
   it('passes server paging, filters and sort together and resets to the first page', () => {
     setup();
@@ -199,7 +223,12 @@ describe('Concessions table query and actions', () => {
     setup();
     expect(screen.getByRole('button', { name: 'Approve Asha Patel (1001)' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reject Asha Patel (1001)' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'View Asha Patel (1001)' })).toBeEnabled();
+    const openRecord = screen.getByRole('button', { name: 'Open Asha Patel (1001)' });
+    expect(openRecord).toBeEnabled();
+    fireEvent.click(openRecord);
+    expect(state.onViewConcession).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'request', requesterId: 'maker' })
+    );
   });
   it('offers decisions to an independent checker with the exact grants and server actions', () => {
     setup();
@@ -211,5 +240,18 @@ describe('Concessions table query and actions', () => {
     setup();
     expect(screen.getByRole('alert')).toHaveTextContent('Could not load concessions');
     expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled();
+  });
+  it('requires explicit confirmation before deleting a draft and preserves it on Cancel', () => {
+    state.draft = true;
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Asha Patel (1001)' }));
+    expect(screen.getByRole('dialog', { name: 'Delete Concession Draft?' })).toHaveTextContent('Asha Patel');
+    expect(state.confirmWithUndo).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel deletion' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(state.confirmWithUndo).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Asha Patel (1001)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete draft' }));
+    expect(state.confirmWithUndo).toHaveBeenCalledTimes(1);
   });
 });

@@ -138,7 +138,7 @@ const FinanceNewBudgetingScreen = () => {
         sticky: true,
         render: (_: any, row: any) => (
           <AdaptiveThreeDotsActions
-            directActionLimit={2}
+            directActionLimit={3}
             actions={[
               {
                 id: 'edit',

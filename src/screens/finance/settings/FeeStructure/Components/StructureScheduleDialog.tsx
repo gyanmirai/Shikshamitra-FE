@@ -12,11 +12,12 @@ import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { Box, Alert, Stack, Button, Typography, DialogActions } from '@mui/material';
 
 import { structureScheduleAmounts } from './structureScheduleAmounts';
@@ -196,64 +197,34 @@ export default function StructureScheduleDialog({
       >
         <DialogScrollContent>
           <Stack spacing={2}>
-            <FormSectionCard
-              descriptionTooltip="Annual amount and charge options configured for this fee head. Variable amounts are determined during student assignment."
+            <DetailSection
+              helpText="Annual amount and charge options configured for this fee head. Variable amounts are determined during student assignment."
               icon={GlobalIcons.receiptIcon}
               title="Fee Head Details"
-              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
             >
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
-                  gap: 2,
-                  overflowWrap: 'anywhere',
-                }}
-              >
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Fee head name
-                  </Typography>
-                  <Typography variant="body2">{line.feeHeadName || 'Fee head'}</Typography>
-                </Box>
-                {line.categoryName && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Category
-                    </Typography>
-                    <Typography variant="body2">{line.categoryName}</Typography>
-                  </Box>
-                )}
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Annual amount
-                  </Typography>
-                  <Typography variant="body2">
-                    {line.isVariable
+              <DetailGrid>
+                <DetailField label="Fee head name" value={line.feeHeadName || 'Fee head'} />
+                {line.categoryName && <DetailField label="Category" value={line.categoryName} />}
+                <DetailField
+                  label="Annual amount"
+                  value={
+                    line.isVariable
                       ? 'Set during assignment'
                       : line.amount == null
                         ? 'Not set'
-                        : formatNumber(line.amount, 'INR')}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Payment frequency
-                  </Typography>
-                  <Typography variant="body2">
-                    {term.name} · v{term.versionNumber}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Charge option
-                  </Typography>
-                  <Typography variant="body2">
-                    {line.isOptional ? 'Optional' : 'Required'}
-                  </Typography>
-                </Box>
-              </Box>
-            </FormSectionCard>
+                        : formatNumber(line.amount, 'INR')
+                  }
+                />
+                <DetailField
+                  label="Payment frequency"
+                  value={`${term.name} · v${term.versionNumber}`}
+                />
+                <DetailField
+                  label="Charge option"
+                  value={line.isOptional ? 'Optional' : 'Required'}
+                />
+              </DetailGrid>
+            </DetailSection>
             <FormSectionCard
               descriptionTooltip="Each installment shows its coverage, demand date, due date, percentage allocation, and calculated amount. Remainders follow the existing payment-term allocation rules."
               icon={GlobalIcons.calendar}

@@ -107,10 +107,11 @@ export default function AssignmentReview({
                   {
                     id: 'feeHeadName',
                     label: 'Fee Head',
+                    filterType: 'string' as const,
                     minWidth: 180,
                     width: '40%',
                     isSort: false,
-                    isFilter: false,
+                    isFilter: true,
                     render: (_value, head) => (
                       <Stack spacing={0.5}>
                         <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
@@ -131,9 +132,10 @@ export default function AssignmentReview({
                   {
                     id: 'paymentTermName',
                     label: 'Payment Term',
+                    filterType: 'string' as const,
                     minWidth: 180,
                     isSort: false,
-                    isFilter: false,
+                    isFilter: true,
                     render: (_value, head) =>
                       head.included ? (
                         <Stack spacing={0.5}>
@@ -155,11 +157,12 @@ export default function AssignmentReview({
                   {
                     id: 'obligation',
                     label: legacy ? 'Recorded Amount' : 'Assigned Amount',
+                    filterType: 'number' as const,
                     minWidth: 130,
                     align: 'left',
                     cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
                     isSort: false,
-                    isFilter: false,
+                    isFilter: true,
                     render: (value, head) => (
                       <Stack spacing={0.5}>
                         <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
@@ -221,9 +224,10 @@ export default function AssignmentReview({
                   {
                     id: 'label',
                     label: 'Installment',
+                    filterType: 'string' as const,
                     minWidth: 145,
                     isSort: false,
-                    isFilter: false,
+                    isFilter: true,
                     render: (value, row) => {
                       const headCount = new Set(
                         row.lines.map((line: { feeHeadId: string }) => line.feeHeadId)
@@ -241,6 +245,7 @@ export default function AssignmentReview({
                   {
                     id: 'demandDate',
                     label: 'Demand date',
+                    filterType: 'date' as const,
                     renderColumn: () => (
                       <InfoTooltipIcon
                         label="About demand dates"
@@ -249,12 +254,13 @@ export default function AssignmentReview({
                     ),
                     minWidth: 110,
                     isSort: false,
-                    isFilter: false,
+                    isFilter: true,
                     render: (value) => (value ? fDate(value) : '—'),
                   },
                   {
                     id: 'dueDate',
                     label: 'Due date',
+                    filterType: 'date' as const,
                     renderColumn: () => (
                       <InfoTooltipIcon
                         label="About due dates"
@@ -263,17 +269,18 @@ export default function AssignmentReview({
                     ),
                     minWidth: 110,
                     isSort: false,
-                    isFilter: false,
+                    isFilter: true,
                     render: (value) => (value ? fDate(value) : '—'),
                   },
                   {
                     id: 'obligation',
                     label: 'Assigned Amount',
+                    filterType: 'number' as const,
                     minWidth: 110,
                     align: 'left',
                     cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
                     isSort: false,
-                    isFilter: false,
+                    isFilter: true,
                     render: (value) => money(value),
                   },
                   ...(committed
@@ -281,6 +288,7 @@ export default function AssignmentReview({
                         {
                           id: 'paid',
                           label: 'Paid',
+                          filterType: 'number' as const,
                           minWidth: 100,
                           align: 'left' as const,
                           cellSx: {
@@ -288,12 +296,13 @@ export default function AssignmentReview({
                             fontVariantNumeric: 'tabular-nums',
                           },
                           isSort: false,
-                          isFilter: false,
+                          isFilter: true,
                           render: (value: number) => money(value),
                         },
                         {
                           id: 'outstanding',
                           label: 'Outstanding',
+                          filterType: 'number' as const,
                           minWidth: 110,
                           align: 'left' as const,
                           cellSx: {
@@ -301,7 +310,7 @@ export default function AssignmentReview({
                             fontVariantNumeric: 'tabular-nums',
                           },
                           isSort: false,
-                          isFilter: false,
+                          isFilter: true,
                           render: (value: number) => money(value),
                         },
                       ]
@@ -396,10 +405,11 @@ export default function AssignmentReview({
                 {
                   id: 'feeHeadName',
                   label: 'Fee head / installment',
+                  filterType: 'string' as const,
                   minWidth: 220,
                   width: '35%',
                   isSort: false,
-                  isFilter: false,
+                  isFilter: true,
                   render: (_value, line) => (
                     <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
                       <Typography
@@ -420,6 +430,7 @@ export default function AssignmentReview({
                 {
                   id: 'allocationPercentage',
                   label: 'Share',
+                  filterType: 'number' as const,
                   renderColumn: () => (
                     <InfoTooltipIcon
                       label="About installment shares"
@@ -430,12 +441,13 @@ export default function AssignmentReview({
                   align: 'left',
                   cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
                   isSort: false,
-                  isFilter: false,
+                  isFilter: true,
                   render: (value) => (legacy ? 'Unknown' : `${value}%`),
                 },
                 {
                   id: 'demandDate',
                   label: 'Demand date',
+                  filterType: 'date' as const,
                   renderColumn: () => (
                     <InfoTooltipIcon
                       label="About installment demand dates"
@@ -444,12 +456,13 @@ export default function AssignmentReview({
                   ),
                   minWidth: 125,
                   isSort: false,
-                  isFilter: false,
+                  isFilter: true,
                   render: (value) => (value ? fDate(value) : '—'),
                 },
                 {
                   id: 'dueDate',
                   label: 'Due date',
+                  filterType: 'date' as const,
                   renderColumn: () => (
                     <InfoTooltipIcon
                       label="About installment due dates"
@@ -458,12 +471,13 @@ export default function AssignmentReview({
                   ),
                   minWidth: 125,
                   isSort: false,
-                  isFilter: false,
+                  isFilter: true,
                   render: (value) => fDate(value),
                 },
                 {
                   id: 'proratedAmount',
                   label: 'Obligation',
+                  filterType: 'number' as const,
                   renderColumn: () => (
                     <InfoTooltipIcon
                       label="About installment obligations"
@@ -474,7 +488,7 @@ export default function AssignmentReview({
                   align: 'left',
                   cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
                   isSort: false,
-                  isFilter: false,
+                  isFilter: true,
                   render: (value) => money(value),
                 },
                 ...(committed
@@ -482,21 +496,23 @@ export default function AssignmentReview({
                       {
                         id: 'paidAmount',
                         label: 'Paid',
+                        filterType: 'number' as const,
                         minWidth: 120,
                         align: 'left' as const,
                         cellSx: { textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' },
                         isSort: false,
-                        isFilter: false,
+                        isFilter: true,
                         render: (value: number) => money(value),
                       },
                       {
                         id: 'outstandingAmount',
                         label: 'Outstanding',
+                        filterType: 'number' as const,
                         minWidth: 140,
                         align: 'left' as const,
                         cellSx: { textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' },
                         isSort: false,
-                        isFilter: false,
+                        isFilter: true,
                         render: (value: number) => money(value),
                       },
                     ]

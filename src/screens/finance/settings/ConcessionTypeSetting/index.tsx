@@ -1,29 +1,33 @@
 'use client';
 
+import type { IParams } from 'src/components/customizabaleTable/types';
+
 import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
+import { useState, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Card, Stack, Button, Typography } from '@mui/material';
-
+import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Card, Stack, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { financePermissions } from 'src/constants/finance-menu';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import {
   concessionTypeApi,
   useGetConcessionTypesQuery,
   useDeleteConcessionTypeMutation,
 } from 'src/redux/finance/concessionType';
+
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 
 import ConcessionTypeTable from './Components/ConcessionTable';
 import ConcessionTypeForm from './Components/ConcessionTypeForm';
@@ -31,7 +35,6 @@ import ConcessionDocumentTable from './Components/ConcessionDocuments';
 import ConcessionTypeVersionHistoryDrawer from './Components/ConcessionTypeVersionHistoryDrawer';
 
 import type { IConcessionTypeForm } from './type';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const ConcessionType = () => {
   const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
@@ -58,6 +61,7 @@ const ConcessionType = () => {
   const academicYearId = currentYear?.id ?? '';
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+  const [filters, setFilters] = useState<IParams['filters']>([]);
 
   const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
     setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
@@ -72,6 +76,7 @@ const ConcessionType = () => {
     skipCount: (queryParams.page - 1) * queryParams.pageSize,
     maxResultCount: queryParams.pageSize,
     searchTerm: queryParams.search || undefined,
+    filters: serializeFinanceTableFilters(filters),
     includeInactive: archiveView === 'archived',
     isActive: archiveView === 'current',
   };
@@ -96,6 +101,7 @@ const ConcessionType = () => {
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypesQuery,
     params: apiParams,
+    options: { skip: !academicYearId },
   });
 
   // Redux state and dispatch
@@ -149,7 +155,7 @@ const ConcessionType = () => {
               variant="contained"
               color="inherit"
             >
-              Add Concession Type
+              Concession Type
             </Button>
           ) : undefined
         }
@@ -161,6 +167,7 @@ const ConcessionType = () => {
             variant={archiveView === 'current' ? 'contained' : 'outlined'}
             onClick={() => {
               setQueryParams((current) => ({ ...current, page: 1 }));
+              setFilters((current) => current.filter((filter) => filter.column !== 'isActive'));
               setArchiveView('current');
             }}
           >
@@ -171,6 +178,7 @@ const ConcessionType = () => {
             variant={archiveView === 'archived' ? 'contained' : 'outlined'}
             onClick={() => {
               setQueryParams((current) => ({ ...current, page: 1 }));
+              setFilters((current) => current.filter((filter) => filter.column !== 'isActive'));
               setArchiveView('archived');
             }}
           >
@@ -216,7 +224,11 @@ const ConcessionType = () => {
         </CustomDialog>
 
         <ConcessionTypeTable
-          key={archiveView}
+          filters={filters}
+          onServerFilter={(next) => {
+            setFilters(next);
+            setQueryParams((current) => ({ ...current, page: 1 }));
+          }}
           archived={archiveView === 'archived'}
           canView={canView}
           canAdd={canAdd}
@@ -336,6 +348,11 @@ const ConcessionType = () => {
           open={Boolean(versionHistoryTarget)}
           concessionTypeId={versionHistoryTarget?.id ?? null}
           concessionTypeName={versionHistoryTarget?.name}
+          onBackToDetails={() => {
+            setSelectedConcessionType(versionHistoryTarget);
+            setVersionHistoryTarget(null);
+            viewConcessionTypeDialog.onTrue();
+          }}
           onClose={() => setVersionHistoryTarget(null)}
         />
       </>

@@ -90,7 +90,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           label: 'Title',
           minWidth: 240,
           align: 'left',
-          filterType: 'string',
+          filterType: 'string' as const,
           sticky: true,
           render: (value) =>
             canView ? (
@@ -104,13 +104,23 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
               value
             ),
         },
-        { id: 'classDivision', label: 'Class / Division', align: 'left', filterType: 'string' },
-        { id: 'subjectChapter', label: 'Subject / Chapter', align: 'left', filterType: 'string' },
+        {
+          id: 'classDivision',
+          label: 'Class / Division',
+          align: 'left',
+          filterType: 'string' as const,
+        },
+        {
+          id: 'subjectChapter',
+          label: 'Subject / Chapter',
+          align: 'left',
+          filterType: 'string' as const,
+        },
         {
           id: 'homeworkType',
           label: 'Task Type',
           align: 'left',
-          filterType: 'string',
+          filterType: 'string' as const,
           render: (value, row) => (
             <Stack spacing={1}>
               <Typography variant="body2">{value || '-'}</Typography>
@@ -124,7 +134,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           id: 'publishDate',
           label: 'Publish Date',
           align: 'left',
-          filterType: 'date',
+          filterType: 'date' as const,
           render: (value) => (
             <Typography variant="caption" fontSize="13px">
               {value ? dayjs(value).format('DD-MM-YYYY HH:mm') : '-'}
@@ -135,7 +145,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           id: 'dueDate',
           label: 'Due Date',
           align: 'left',
-          filterType: 'date',
+          filterType: 'date' as const,
           render: (value) => (
             <Typography variant="caption" fontSize="13px">
               {value ? dayjs(value).format('DD-MM-YYYY HH:mm') : '-'}
@@ -146,7 +156,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           id: 'submittedCount',
           label: 'Submission Progress',
           align: 'left',
-          filterType: 'number',
+          filterType: 'number' as const,
           render: (_value, row) => (
             <Typography variant="caption">{getSubmissionProgress(row)}</Typography>
           ),
@@ -155,7 +165,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           id: 'evaluationPendingCount',
           label: 'Evaluation Progress',
           align: 'left',
-          filterType: 'number',
+          filterType: 'number' as const,
           render: (_value, row) => (
             <Typography variant="caption">{getEvaluationProgress(row)}</Typography>
           ),
@@ -163,8 +173,9 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
         {
           id: 'status',
           label: 'Status',
+          filterType: 'string' as const,
           align: 'left',
-          isFilter: false,
+          isFilter: true,
           sticky: true,
           stickyPosition: 'right',
           isSort: false,

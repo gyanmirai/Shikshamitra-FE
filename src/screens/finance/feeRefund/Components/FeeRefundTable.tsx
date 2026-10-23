@@ -200,6 +200,15 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
       </Card>
 
       <CustomizableTable
+        getRowAction={(row) =>
+          onView
+            ? {
+                label: `Open ${row.name || 'record'}`,
+                onClick: () => {
+                  onView?.(row as IStudentFeeData);
+                },
+              }
+            : undefined}
         tableId="student-fee-table"
         isLoading={isLoading || isFetching}
         noDataText={<>No student refund fee data found.</>}
@@ -285,16 +294,8 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
               const isDraft = actions.includes('edit');
               return (
                 <Box display="flex" gap={1} alignItems="center">
-                  <AdaptiveThreeDotsActions directActionLimit={2}
+                  <AdaptiveThreeDotsActions directActionLimit={3}
                     actions={[
-                      {
-                        id: 'view',
-                        label: 'View',
-                        icon: 'carbon:view-filled',
-                        onClick: () => {
-                          onView?.(row as IStudentFeeData);
-                        },
-                      },
                       ...(isDraft
                         ? [
                           {

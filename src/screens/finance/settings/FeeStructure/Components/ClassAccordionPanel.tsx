@@ -197,22 +197,24 @@ export default function ClassAccordionPanel({
         )}
       </Stack>
       {canAdd && (
-        <Stack spacing={1} sx={{ px: 1.5, pb: 2 }}>
+        <Stack direction="row" spacing={1} sx={{ px: 1.5, pb: 2 }}>
           <Button
             size="small"
             variant="contained"
             color="inherit"
             fullWidth
+            aria-label="Add structure"
             startIcon={<Iconify icon={GlobalIcons.addIcon} />}
             onClick={addNew}
             disabled={busy}
           >
-            Add structure
+            Add
           </Button>
           <Button
             size="small"
             variant="outlined"
             fullWidth
+            aria-label="Copy structure"
             startIcon={<Iconify icon={GlobalIcons.copy} />}
             onClick={() => {
               setListOpen(false);
@@ -220,7 +222,7 @@ export default function ClassAccordionPanel({
             }}
             disabled={busy}
           >
-            Copy structure
+            Copy
           </Button>
         </Stack>
       )}
@@ -397,7 +399,7 @@ export default function ClassAccordionPanel({
             </Box>
           </Button>
           {canAdd && (
-            <>
+            <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
               <Button
                 size="small"
                 variant="contained"
@@ -418,7 +420,7 @@ export default function ClassAccordionPanel({
               >
                 Copy structure
               </Button>
-            </>
+            </Stack>
           )}
         </Box>
       )}

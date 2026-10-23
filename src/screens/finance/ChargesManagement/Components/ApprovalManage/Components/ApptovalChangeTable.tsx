@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   ChargesPriorityStatus,
@@ -112,6 +112,12 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
 
       {/* Table */}
       <CustomizableTable
+        getRowAction={(row) => ({
+          label: `Open ${row.category || 'record'}`,
+          onClick: () => {
+            onView(row as IChargeData);
+          },
+        })}
         tableId="charges-approval-table"
         noDataText="No Charges Found"
         columns={[
@@ -177,34 +183,6 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
                 >
                   {ChargesPaymentStatus[value as ChargesPaymentStatus]}
                 </Label>
-              );
-            },
-          },
-          {
-            stickyPosition: 'right',
-            excludeFromExport: true,
-            id: 'action',
-            label: 'Action',
-            minWidth: 80,
-            align: 'left',
-            isSort: false,
-            sticky: true,
-            isFilter: false,
-            render(value, row) {
-              return (
-                <AdaptiveThreeDotsActions directActionLimit={2}
-                  actions={[
-                    {
-                      id: 'view',
-                      label: 'View',
-                      icon: 'carbon:view-filled',
-                      onClick: () => {
-                        onView(row as IChargeData);
-                      },
-                    },
-                  ]}
-                  placement="right-top"
-                />
               );
             },
           },

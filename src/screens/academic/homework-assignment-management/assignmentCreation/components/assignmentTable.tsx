@@ -108,7 +108,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
             label: 'Title',
             minWidth: 240,
             align: 'left',
-            filterType: 'string',
+            filterType: 'string' as const,
             sticky: true,
             render: (value) =>
               canView ? (
@@ -122,13 +122,23 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                 value
               ),
           },
-          { id: 'classDivision', label: 'Class / Division', align: 'left', filterType: 'string' },
-          { id: 'subjectChapter', label: 'Subject / Chapter', align: 'left', filterType: 'string' },
+          {
+            id: 'classDivision',
+            label: 'Class / Division',
+            align: 'left',
+            filterType: 'string' as const,
+          },
+          {
+            id: 'subjectChapter',
+            label: 'Subject / Chapter',
+            align: 'left',
+            filterType: 'string' as const,
+          },
           {
             id: 'assignmentType',
             label: 'Task Type',
             align: 'left',
-            filterType: 'string',
+            filterType: 'string' as const,
             render: (value, row) => (
               <Stack spacing={1}>
                 <Typography variant="body2">{value || '-'}</Typography>
@@ -144,7 +154,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
             id: 'publishDate',
             label: 'Publish Date',
             align: 'left',
-            filterType: 'date',
+            filterType: 'date' as const,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {value ? dayjs(value).format('DD-MM-YYYY HH:mm') : '-'}
@@ -155,7 +165,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
             id: 'dueDate',
             label: 'Due Date',
             align: 'left',
-            filterType: 'date',
+            filterType: 'date' as const,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {value ? dayjs(value).format('DD-MM-YYYY HH:mm') : '-'}
@@ -166,7 +176,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
             id: 'submittedCount',
             label: 'Submission Progress',
             align: 'left',
-            filterType: 'number',
+            filterType: 'number' as const,
             render: (_value, row) => (
               <Typography variant="caption">{getSubmissionProgress(row)}</Typography>
             ),
@@ -175,7 +185,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
             id: 'evaluationPendingCount',
             label: 'Evaluation Progress',
             align: 'left',
-            filterType: 'number',
+            filterType: 'number' as const,
             render: (_value, row) => (
               <Typography variant="caption">{getEvaluationProgress(row)}</Typography>
             ),
@@ -183,8 +193,9 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           {
             id: 'status',
             label: 'Status',
+            filterType: 'string' as const,
             align: 'left',
-            isFilter: false,
+            isFilter: true,
             sticky: true,
             stickyPosition: 'right',
             isSort: false,

@@ -199,7 +199,7 @@ const WalletTable = ({
 
           return (
             <AdaptiveThreeDotsActions
-              directActionLimit={2}
+              directActionLimit={3}
               actions={[
                 ...(row.status !== PaymentMethodsStatusType.Approved && canApproveReject
                   ? [

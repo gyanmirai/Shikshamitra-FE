@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box, Avatar } from '@mui/material';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IStudentInfo } from '../type';
@@ -14,6 +14,15 @@ interface ICombinedProps {
 
 const StudentConcessionListTable: React.FC<ICombinedProps> = ({ data, onViewAllConcession }) => (
   <CustomizableTable
+    getRowAction={(row) =>
+      onViewAllConcession
+        ? {
+            label: `Open ${row.studentName || 'record'}`,
+            onClick: () => {
+              onViewAllConcession?.(row as IStudentInfo);
+            },
+          }
+        : undefined}
     tableId="student-concession-table"
     noDataText="No student data found"
     columns={[
@@ -62,30 +71,6 @@ const StudentConcessionListTable: React.FC<ICombinedProps> = ({ data, onViewAllC
         label: 'Contact No.',
         align: 'left',
         minWidth: 150,
-      },
-      {
-        stickyPosition: 'right',
-        excludeFromExport: true,
-        id: 'actions',
-        label: 'Action',
-        align: 'left',
-        isSort: false,
-        isFilter: false,
-        sticky: true,
-        minWidth: 40,
-        render: (value, row) => (
-          <AdaptiveThreeDotsActions directActionLimit={2}
-            actions={[
-              {
-                id: 'view',
-                label: 'View',
-                icon: 'carbon:view-filled',
-                onClick: () => onViewAllConcession?.(row as IStudentInfo),
-              },
-            ]}
-            placement="right-center"
-          />
-        ),
       },
     ]}
     data={data || []}

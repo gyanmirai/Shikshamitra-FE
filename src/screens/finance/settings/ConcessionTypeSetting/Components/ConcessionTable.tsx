@@ -54,6 +54,8 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   searchTerm,
   onServerPagination,
   onServerSearch,
+  filters,
+  onServerFilter,
 }) => {
   const [patchConcessionTypeStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -84,7 +86,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
     () => [
       {
         id: 'name',
+        isFilter: true,
         label: 'Concession Type Name',
+        filterType: 'string' as const,
         align: 'left',
         width: 190,
         minWidth: 180,
@@ -93,7 +97,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
       },
       {
         id: 'description',
+        isFilter: true,
         label: 'Description',
+        filterType: 'string' as const,
         align: 'left',
         width: 240,
         minWidth: 180,
@@ -102,7 +108,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
       },
       {
         id: 'documents',
+        isFilter: true,
         label: 'Documents',
+        filterType: 'string' as const,
         align: 'left',
         width: 200,
         minWidth: 160,
@@ -118,7 +126,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
       },
       {
         id: 'deactivationReason',
+        isFilter: true,
         label: 'Deactivation Reason',
+        filterType: 'string' as const,
         align: 'left',
         width: 200,
         minWidth: 170,
@@ -126,6 +136,12 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
       },
       {
         id: 'isActive',
+        filterType: 'enum' as const,
+        isFilter: true,
+        enumOptions: [
+          { label: 'Active', value: 1 },
+          { label: 'Archived', value: 0 },
+        ],
         label: 'Status',
         width: 110,
         minWidth: 100,
@@ -159,19 +175,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
           const concessionType = row as IConcessionTypeForm;
           return (
             <AdaptiveThreeDotsActions
-              directActionLimit={2}
+              directActionLimit={3}
               moreLabel={`More actions for ${concessionType.name}`}
               actions={[
-                ...(canView
-                  ? [
-                      {
-                        id: 'view',
-                        label: `View ${concessionType.name}`,
-                        icon: 'carbon:view-filled',
-                        onClick: () => onView?.(concessionType),
-                      },
-                    ]
-                  : []),
                 ...(canEdit && !archived
                   ? [
                       {
@@ -239,6 +245,16 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   return (
     <>
       <CustomizableTable
+        getRowAction={(row) =>
+          canView && onView
+            ? {
+                label: `Open ${row.name || 'record'}`,
+                onClick: () => {
+                  onView?.(row as IConcessionTypeForm);
+                },
+              }
+            : undefined
+        }
         tableId="concession-table"
         tableTitle="Concession Types"
         wrapperProps={{ sx: { flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' } }}
@@ -263,6 +279,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         }
         columns={columns}
         data={tableData || []}
+        serverSideFilter
+        filters={filters}
+        onServerFilter={onServerFilter}
         serverSidePagination
         serverSideSearch
         totalCount={totalCount}

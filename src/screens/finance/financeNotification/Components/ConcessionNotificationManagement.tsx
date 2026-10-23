@@ -167,6 +167,15 @@ const ConcessionNotificationManagement = ({ dialog, setIsViewMode }: any) => {
         </Card>
       ) : (
         <CustomizableTable
+          getRowAction={(row) => ({
+            label: `Open ${row.event || 'notification'}`,
+            onClick: () => {
+              setSelectedData(row);
+              setView(true);
+              dialog.onTrue();
+              setIsViewMode(true);
+            },
+          })}
           tableId="concession-auto-notification-configuration"
           data={tableData}
           columns={[
@@ -221,19 +230,8 @@ const ConcessionNotificationManagement = ({ dialog, setIsViewMode }: any) => {
               minWidth: 60,
               render(value, row) {
                 return (
-                  <AdaptiveThreeDotsActions directActionLimit={2}
+                  <AdaptiveThreeDotsActions directActionLimit={3}
                     actions={[
-                      {
-                        id: 'view',
-                        label: 'View',
-                        icon: 'carbon:view-filled',
-                        onClick: () => {
-                          setSelectedData(row);
-                          setView(true);
-                          dialog.onTrue();
-                          setIsViewMode(true);
-                        },
-                      },
                       {
                         id: 'edit',
                         label: 'Edit',

@@ -37,7 +37,8 @@ const LiveSecurityAlertTable = () => {
           {
             id: 'time',
             label: 'Time',
-            isFilter: false,
+            filterType: 'string' as const,
+            isFilter: true,
             isSort: false,
             render: (value) => (value ? dayjs(value).format('hh:mm A') : null),
           },

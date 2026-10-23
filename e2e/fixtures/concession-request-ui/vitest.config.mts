@@ -12,6 +12,8 @@ export default defineConfig({
     testTimeout: 30000,
     include: [
       'src/screens/finance/Concession/Components/ConcessionSteps/ValueEntryStep.test.tsx',
+      'src/screens/finance/Concession/Components/ConcessionFeeHeadSelection.test.tsx',
+      'src/screens/finance/Concession/Components/ConcessionDocumentList.test.tsx',
       'src/screens/finance/ConcessionAdmin/ReadOnlyConcessionApprovalView.test.tsx',
     ],
   },

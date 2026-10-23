@@ -36,14 +36,15 @@ const AlertDashboardTable = () => (
       {
         id: 'time',
         label: 'Time',
-        isFilter: false,
+        filterType: 'string' as const,
+        isFilter: true,
         isSort: false,
         render: (value) => (value ? dayjs(value).format('hh:mm A') : null),
       },
       {
         id: 'status',
         label: 'Status',
-        filterType: 'enum',
+        filterType: 'enum' as const,
         enumOptions: CommonComplaintStatusTypeOptions,
         minWidth: '130px',
         align: 'left',

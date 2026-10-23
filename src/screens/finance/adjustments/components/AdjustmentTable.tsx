@@ -109,10 +109,9 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
       const { row } = params;
       const isPending = row.status === AdjustmentStatusEnum.Pending;
       return (
-        <AdaptiveThreeDotsActions directActionLimit={2}
+        <AdaptiveThreeDotsActions directActionLimit={3}
           placement="right-top"
           actions={[
-            { id: 'view', label: 'View', icon: 'carbon:view-filled', onClick: () => onView(row) },
             ...(access.canAdd && isPending && onApprove
               ? [
                   {
@@ -196,6 +195,15 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
       </Card>
 
       <CustomizableTable
+        getRowAction={(row) =>
+          access.canView
+            ? {
+                label: `Open ${row.studentName || 'record'}`,
+                onClick: () => {
+                  onView(row as Parameters<typeof onView>[0]);
+                },
+              }
+            : undefined}
         tableId="adjustment-table"
         isLoading={isLoading || isFetching}
         noDataText={<>No adjustment records found.</>}

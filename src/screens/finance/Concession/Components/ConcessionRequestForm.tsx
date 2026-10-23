@@ -38,12 +38,10 @@ import {
   Stack,
   Alert,
   Button,
-  Checkbox,
   Skeleton,
   TextField,
   Typography,
   Autocomplete,
-  FormControlLabel,
 } from '@mui/material';
 import {
   useGetConcessionRequestByIdQuery,
@@ -56,6 +54,7 @@ import {
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import ConcessionDocumentList from './ConcessionDocumentList';
+import ConcessionFeeHeadSelection from './ConcessionFeeHeadSelection';
 import ValueEntryStep from './ConcessionSteps/ValueEntryStep';
 import ConcessionImpactSummary from './ConcessionImpactSummary';
 
@@ -140,6 +139,7 @@ function buildInitialValues(
         documentId: d.documentId,
         url: d.url,
         status: d.status,
+        fileName: d.fileName,
       })) || [];
 
     return {
@@ -679,12 +679,21 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       (block?.documents || []).filter((item: any) => item.url).map((item: any) => item.documentId)
     );
   }, [values.concessionTypeDocuments, values.concessionTypeId]);
-  const hasMissingRequiredDocuments = selectedTypeRequirements.some(
+  const missingRequiredDocuments = selectedTypeRequirements.filter(
     (requirement) => requirement.isRequired && !submittedDocumentIds.has(requirement.documentId)
   );
+  const hasMissingRequiredDocuments = missingRequiredDocuments.length > 0;
 
   const selectedFeeHeadCount = (values.selectedFeeHeads[values.concessionTypeId] || []).length;
   const hasSelectedFeeHeads = selectedFeeHeadCount > 0;
+  const selectedEligibleTotal = feeHeads.reduce(
+    (total, head) =>
+      total +
+      ((values.selectedFeeHeads[values.concessionTypeId] || []).includes(head.feeHeadId)
+        ? head.amount
+        : 0),
+    0
+  );
 
   // -- Handlers --------------------------------------------------------------
 
@@ -802,7 +811,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     (concessionId: string, newDocs: any[]) => {
       const payload = [...(values.concessionTypeDocuments || [])];
       const idx = payload.findIndex((d: any) => d.concessionTypeId === concessionId);
-      const docs = newDocs.map((d) => ({ documentId: d.documentId, url: d.url, status: d.status }));
+      const docs = newDocs.map((d) => ({
+        documentId: d.documentId,
+        url: d.url,
+        status: d.status,
+        fileName: d.fileName,
+      }));
       if (idx === -1) payload.push({ concessionTypeId: concessionId, documents: docs });
       else payload[idx] = { ...payload[idx], documents: docs };
       setFieldValue('concessionTypeDocuments', payload);
@@ -819,6 +833,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         documentId: d.documentId,
         url: d.url,
         status: d.status,
+        fileName: d.fileName,
       }));
     },
     [values.concessionTypeDocuments]
@@ -1374,7 +1389,13 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     <FormSectionCard
                       descriptionTooltip="Select fee heads; the selection applies to every eligible installment shown below."
                       icon="solar:bill-list-bold-duotone"
-                      title="Fee heads"
+                      title="Fee Heads"
+                      action={
+                        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                          Selected eligible total:{' '}
+                          <strong>{formatNumber(selectedEligibleTotal, 'INR')}</strong>
+                        </Typography>
+                      }
                     >
                       {!values.concessionPolicyId ? (
                         <Typography color="text.secondary" textAlign="center" py={2}>
@@ -1415,129 +1436,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           }
 
                           return (
-                            <Grid container spacing={1}>
-                              {displayFeeHeads.map((fh: any) => {
-                                const installmentLines = (
-                                  requestContext?.eligibleDueFees || []
-                                ).filter((line) => line.feeHeadId === fh.feeHeadId);
-                                const isChecked = (
-                                  values.selectedFeeHeads[values.concessionTypeId] || []
-                                ).includes(fh.feeHeadId);
-                                return (
-                                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={fh.feeHeadId}>
-                                    <Box
-                                      onClick={() =>
-                                        handleFeeHeadToggle(values.concessionTypeId, fh.feeHeadId)
-                                      }
-                                      sx={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'stretch',
-                                        border: '1.5px solid',
-                                        borderColor: isChecked ? 'primary.main' : 'divider',
-                                        borderRadius: 1.5,
-                                        p: '6px 10px',
-                                        cursor: 'pointer',
-                                        bgcolor: isChecked ? 'action.selected' : 'background.paper',
-                                        transition:
-                                          'border-color 0.2s ease, background-color 0.2s ease',
-                                        '@media (prefers-reduced-motion: reduce)': {
-                                          transition: 'none',
-                                        },
-                                        '&:hover': {
-                                          borderColor: 'primary.light',
-                                          bgcolor: 'action.hover',
-                                        },
-                                      }}
-                                    >
-                                      <Box
-                                        sx={{
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'space-between',
-                                          gap: 1,
-                                        }}
-                                      >
-                                        <FormControlLabel
-                                          onClick={(event) => event.stopPropagation()}
-                                          sx={{
-                                            m: 0,
-                                            minWidth: 0,
-                                            flex: 1,
-                                            alignItems: 'flex-start',
-                                            '& .MuiFormControlLabel-label': { minWidth: 0 },
-                                          }}
-                                          control={
-                                            <Checkbox
-                                              size="small"
-                                              checked={isChecked}
-                                              onChange={() =>
-                                                handleFeeHeadToggle(
-                                                  values.concessionTypeId,
-                                                  fh.feeHeadId
-                                                )
-                                              }
-                                              sx={{ p: 0.5, mr: 0.5 }}
-                                            />
-                                          }
-                                          label={
-                                            <Box sx={{ pt: 0.5 }}>
-                                              <Typography
-                                                variant="body2"
-                                                fontWeight={600}
-                                                sx={{ overflowWrap: 'anywhere' }}
-                                              >
-                                                {fh.feeHeadName}
-                                              </Typography>
-                                              {fh.categoryName && (
-                                                <Typography
-                                                  variant="caption"
-                                                  color="text.secondary"
-                                                >
-                                                  {fh.categoryName}
-                                                </Typography>
-                                              )}
-                                            </Box>
-                                          }
-                                        />
-                                        <Typography
-                                          variant="subtitle2"
-                                          color={isChecked ? 'primary.main' : 'text.secondary'}
-                                          sx={{
-                                            fontWeight: 700,
-                                            whiteSpace: 'nowrap',
-                                            ml: 0.5,
-                                            flexShrink: 0,
-                                          }}
-                                        >
-                                          {formatNumber(fh.amount, 'INR')}
-                                        </Typography>
-                                      </Box>
-                                      {installmentLines.length > 0 && (
-                                        <Stack sx={{ pl: 3.5, pt: 0.5 }} spacing={0.25}>
-                                          {installmentLines.map((line) => (
-                                            <Stack
-                                              key={line.dueFeeId}
-                                              direction="row"
-                                              justifyContent="space-between"
-                                              gap={1}
-                                            >
-                                              <Typography variant="caption" color="text.secondary">
-                                                {line.installmentLabel} ({line.year})
-                                              </Typography>
-                                              <Typography variant="caption" color="text.secondary">
-                                                {formatNumber(line.outstandingAmount, 'INR')}{' '}
-                                                outstanding
-                                              </Typography>
-                                            </Stack>
-                                          ))}
-                                        </Stack>
-                                      )}
-                                    </Box>
-                                  </Grid>
-                                );
-                              })}
-                            </Grid>
+                            <ConcessionFeeHeadSelection
+                              feeHeads={displayFeeHeads}
+                              installments={requestContext?.eligibleDueFees || []}
+                              selectedIds={values.selectedFeeHeads[values.concessionTypeId] || []}
+                              onToggle={(id) => handleFeeHeadToggle(values.concessionTypeId, id)}
+                            />
                           );
                         })()
                       )}
@@ -1551,7 +1455,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     <FormSectionCard
                       descriptionTooltip="Enter concession amounts per fee head and review the eligible installments."
                       icon="solar:calculator-bold-duotone"
-                      title="Concession values"
+                      title="Concession Values"
                     >
                       <ValueEntryStep
                         formik={{
@@ -1650,7 +1554,14 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     variant="outlined"
                     size="small"
                     loading={createDraftLoading || updateLoading}
-                    disabled={!hasResolvedAssignment}
+                    disabled={
+                      !hasResolvedAssignment ||
+                      formik.isSubmitting ||
+                      createLoading ||
+                      submitLoading ||
+                      createDraftLoading ||
+                      updateLoading
+                    }
                     startIcon={<Iconify icon="solar:diskette-bold" />}
                     onClick={handleSaveDraft}
                   >
@@ -1664,6 +1575,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     size="small"
                     disabled={
                       createLoading ||
+                      createDraftLoading ||
                       formik.isSubmitting ||
                       submitLoading ||
                       updateLoading ||

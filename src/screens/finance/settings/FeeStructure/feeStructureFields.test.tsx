@@ -238,7 +238,7 @@ it('ignores an outstanding preview when a newer saved structure arrives', async 
   await act(async () => {
     resolvePreview({ isReady: true, errors: [], warnings: [], coverage: [], schedules: [] });
   });
-  expect(screen.queryByRole('heading', { name: 'Policy coverage' })).toBeNull();
+  expect(screen.queryByRole('heading', { name: 'Policy Coverage' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Publish structure' })).toBeDisabled();
 });
 
@@ -352,7 +352,7 @@ it('saves the selected collection policy before allowing review and publication 
   // Reviewing unsaved input must not permit publishing the older server record.
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(ready) });
   fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
-  await screen.findByRole('heading', { name: 'Policy coverage' });
+  await screen.findByRole('heading', { name: 'Policy Coverage' });
   expect(screen.queryByText('All configuration checks passed.')).toBeNull();
   expect(publishButton().disabled).toBe(true);
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(saved) });

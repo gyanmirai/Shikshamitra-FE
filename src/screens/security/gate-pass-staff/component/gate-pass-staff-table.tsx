@@ -83,14 +83,15 @@ const GateStaffPassRequestTable: React.FC<IGatePassStaffTableProps> = ({ onClick
         {
           id: 'leaveDate',
           label: 'Requested Date',
-          filterType: 'date',
+          filterType: 'date' as const,
           render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : null),
         },
         {
           id: 'leaveTime',
           label: 'Requested Time',
+          filterType: 'string' as const,
 
-          isFilter: false,
+          isFilter: true,
           isSort: false,
           render: (value) => (value ? dayjs(value).format('hh:mm A') : null),
         },
@@ -98,7 +99,7 @@ const GateStaffPassRequestTable: React.FC<IGatePassStaffTableProps> = ({ onClick
         {
           id: 'status',
           label: 'Status',
-          filterType: 'enum',
+          filterType: 'enum' as const,
           enumOptions: CommonRequestStatusTypeOptions,
           minWidth: '130px',
           align: 'left',

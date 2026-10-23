@@ -20,6 +20,14 @@ The server recalculates money and rejects stale or altered allocations. See the
 TL;DR: Finance clients live mostly under `src/redux/finance/**`.
 Several older fee and receipt surfaces still use shared clients outside that folder.
 
+Charge Category deletion uses `useLazyGetChargeCategoryUsageQuery` in
+`src/redux/finance/chargeCategory.tsx` for a fresh dependency preflight. The confirmation stays
+open while checking or deleting, blocks unknown usage, and shows the category name, charge count,
+student assignment count and permitted charge names when used. Review charges opens Charges
+Management for callers with Charges View; unused categories require an explicit Delete action.
+`Finance:Charge:010028` refreshes usage after a dependency appears between check and confirmation.
+See the [backend deletion contract](../../../Shikshamitra-BE/docs/modules/finance/api.md).
+
 Active Fee Structure editor, typed client and browser checks: [workspace implementation](./references/fee-structure-workspace.md).
 
 ## Client map

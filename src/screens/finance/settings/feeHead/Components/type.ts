@@ -1,6 +1,8 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type { IFeeHeadResponse } from 'src/redux/feeCategory/feeCategoryApi';
 
+import type { IParams } from 'src/components/customizabaleTable/types';
+
 export type IFeeHead = IFeeHeadResponse;
 
 export interface IFeeHeadTableProps {
@@ -14,6 +16,10 @@ export interface IFeeHeadTableProps {
   totalCount?: number;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;
+  filters?: IParams['filters'];
+  onServerFilter?: (filters: IParams['filters']) => void;
+  page?: number;
+  rowsPerPage?: number;
 }
 
 export interface IFeeHeadFormProps {

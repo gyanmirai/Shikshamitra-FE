@@ -399,14 +399,16 @@ export default function AdmissionFeeCollectionPanel({
               {
                 id: 'receiptNumber',
                 label: 'Receipt',
-                isFilter: false,
+                filterType: 'string' as const,
+                isFilter: true,
                 isSort: false,
                 minWidth: 140,
               },
               {
                 id: 'collectedAt',
                 label: 'Collected',
-                isFilter: false,
+                filterType: 'date' as const,
+                isFilter: true,
                 isSort: false,
                 minWidth: 160,
                 render: (value) => fDateTime(value),
@@ -414,15 +416,17 @@ export default function AdmissionFeeCollectionPanel({
               {
                 id: 'amount',
                 label: 'Amount',
+                filterType: 'number' as const,
                 align: 'right',
-                isFilter: false,
+                isFilter: true,
                 isSort: false,
                 render: (value) => amount(Number(value)),
               },
               {
                 id: 'status',
                 label: 'Status',
-                isFilter: false,
+                filterType: 'string' as const,
+                isFilter: true,
                 isSort: false,
                 render: (value) => (
                   <Label

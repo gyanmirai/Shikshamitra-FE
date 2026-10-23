@@ -170,9 +170,10 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       {
         id: 'subjects',
         label: 'Subjects',
+        filterType: 'string' as const,
         align: 'left',
         minWidth: 260,
-        isFilter: false,
+        isFilter: true,
         isSort: false,
         render: (value) => {
           const subjects = (value || []) as IElectiveSubject['subjects'];
@@ -232,7 +233,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         label: 'Used In Classes',
         align: 'center',
         minWidth: 160,
-        filterType: 'number',
+        filterType: 'number' as const,
         render: (value, row) => (
           <Box
             component="button"
@@ -268,7 +269,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         label: 'Last Updated',
         align: 'left',
         minWidth: 140,
-        filterType: 'date',
+        filterType: 'date' as const,
         render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '-'),
       },
       {
@@ -277,7 +278,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         width: 130,
         minWidth: 130,
         sticky: true,
-        filterType: 'enum',
+        filterType: 'enum' as const,
         enumOptions: [
           { label: 'Active', value: 'Active' },
           { label: 'Inactive', value: 'Inactive' },

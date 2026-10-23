@@ -54,27 +54,37 @@ export function createWorkflowColumns(
     {
       id: 'name',
       label: 'Workflow',
+      filterType: 'string' as const,
       width: 300,
       minWidth: 250,
       sticky: true,
       stickyPosition: 'left',
       stickyOnMobile: false,
-      isFilter: false,
+      isFilter: true,
       render: (value, row) => <AdmissionTableText text={String(value ?? '')} strong />,
     },
-    { id: 'version', label: 'Version', minWidth: 90, align: 'center', isFilter: false },
+    {
+      id: 'version',
+      label: 'Version',
+      filterType: 'number' as const,
+      minWidth: 90,
+      align: 'center',
+      isFilter: true,
+    },
     {
       id: 'offeringCount',
       label: 'Used by offerings',
+      filterType: 'number' as const,
       minWidth: 150,
       align: 'center',
-      isFilter: false,
+      isFilter: true,
     },
     {
       id: 'lastModificationTime',
       label: 'Last modified',
+      filterType: 'date' as const,
       minWidth: 170,
-      isFilter: false,
+      isFilter: true,
       render: (value, row) => {
         const date = (value as string | null) || (row as AdmissionWorkflow).creationTime;
         return (
@@ -88,8 +98,9 @@ export function createWorkflowColumns(
     {
       id: 'publishedAt',
       label: 'Published at',
+      filterType: 'date' as const,
       minWidth: 170,
-      isFilter: false,
+      isFilter: true,
       render: (value) => (
         <AdmissionTableText
           text={formatWorkflowListDate(value as string | null)}
@@ -100,10 +111,15 @@ export function createWorkflowColumns(
     {
       id: 'status',
       label: 'Status',
+      filterType: 'enum' as const,
+      enumOptions: Object.entries(STATUS_LABELS).map(([value, label]) => ({
+        label,
+        value: Number(value),
+      })),
       minWidth: 120,
       sticky: true,
       stickyPosition: 'right',
-      isFilter: false,
+      isFilter: true,
       render: (value) => {
         const status = Number(value) as AdmissionWorkflowStatus;
         return <Label color={STATUS_COLORS[status]}>{STATUS_LABELS[status]}</Label>;

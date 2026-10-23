@@ -161,19 +161,27 @@ export default function AccountEntryDetails({
                   showToolbar={false}
                   isShowedDense={false}
                   columns={[
-                    { id: 'category', label: 'Category', isFilter: false, isSort: false },
+                    {
+                      id: 'category',
+                      label: 'Category',
+                      filterType: 'string' as const,
+                      isFilter: true,
+                      isSort: false,
+                    },
                     {
                       id: 'bankLabel',
                       label: 'School bank account',
-                      isFilter: false,
+                      filterType: 'string' as const,
+                      isFilter: true,
                       isSort: false,
                     },
                     {
                       cellSx: { textAlign: 'right' as const },
                       id: 'amount',
                       label: 'Amount',
+                      filterType: 'number' as const,
                       align: 'left',
-                      isFilter: false,
+                      isFilter: true,
                       isSort: false,
                       render: (value: number) => formatNumber(value, 'INR'),
                     },
@@ -206,12 +214,25 @@ export default function AccountEntryDetails({
                   showToolbar={false}
                   isShowedDense={false}
                   columns={[
-                    { id: 'name', label: 'Fee head / charge', isFilter: false, isSort: false },
-                    { id: 'period', label: 'Installment / period', isFilter: false, isSort: false },
+                    {
+                      id: 'name',
+                      label: 'Fee head / charge',
+                      filterType: 'string' as const,
+                      isFilter: true,
+                      isSort: false,
+                    },
+                    {
+                      id: 'period',
+                      label: 'Installment / period',
+                      filterType: 'string' as const,
+                      isFilter: true,
+                      isSort: false,
+                    },
                     {
                       id: 'coverage',
                       label: 'Coverage',
-                      isFilter: false,
+                      filterType: 'string' as const,
+                      isFilter: true,
                       isSort: false,
                       render: (_, line) =>
                         line.coverageStartDate && line.coverageEndDate
@@ -222,8 +243,9 @@ export default function AccountEntryDetails({
                       cellSx: { textAlign: 'right' as const },
                       id: 'amount',
                       label: 'Amount',
+                      filterType: 'number' as const,
                       align: 'left',
-                      isFilter: false,
+                      isFilter: true,
                       isSort: false,
                       render: (value: number) => formatNumber(value, 'INR'),
                     },
@@ -248,21 +270,30 @@ export default function AccountEntryDetails({
                     {
                       id: 'method',
                       label: 'Method',
-                      isFilter: false,
+                      filterType: 'string' as const,
+                      isFilter: true,
                       isSort: false,
                       render: (value: string) => methodLabel(value),
                     },
                     {
                       id: 'bankLabel',
                       label: 'School bank account',
-                      isFilter: false,
+                      filterType: 'string' as const,
+                      isFilter: true,
                       isSort: false,
                     },
-                    { id: 'reference', label: 'Payment reference', isFilter: false, isSort: false },
+                    {
+                      id: 'reference',
+                      label: 'Payment reference',
+                      filterType: 'string' as const,
+                      isFilter: true,
+                      isSort: false,
+                    },
                     {
                       id: 'date',
                       label: 'Date',
-                      isFilter: false,
+                      filterType: 'date' as const,
+                      isFilter: true,
                       isSort: false,
                       render: (value: string) => fDateTime(value),
                     },
@@ -270,16 +301,24 @@ export default function AccountEntryDetails({
                       cellSx: { textAlign: 'right' as const },
                       id: 'amount',
                       label: 'Amount',
+                      filterType: 'number' as const,
                       align: 'left',
-                      isFilter: false,
+                      isFilter: true,
                       isSort: false,
                       render: (value: number) => formatNumber(value, 'INR'),
                     },
-                    { id: 'status', label: 'Status', isFilter: false, isSort: false },
+                    {
+                      id: 'status',
+                      label: 'Status',
+                      filterType: 'string' as const,
+                      isFilter: true,
+                      isSort: false,
+                    },
                     {
                       id: 'evidenceReference',
                       label: 'Evidence reference',
-                      isFilter: false,
+                      filterType: 'string' as const,
+                      isFilter: true,
                       isSort: false,
                     },
                   ]}

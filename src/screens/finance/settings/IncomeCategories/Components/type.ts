@@ -1,5 +1,7 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import type { IParams } from 'src/components/customizabaleTable/types';
+
 export interface IIncomeCategory {
   id: string;
   code?: string;
@@ -30,6 +32,10 @@ export interface IIncomeCategoryTableProps {
   totalCount?: number;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;
+  filters?: IParams['filters'];
+  onServerFilter?: (filters: IParams['filters']) => void;
+  page?: number;
+  rowsPerPage?: number;
 }
 
 export interface IIncomeCategoryFormProps {

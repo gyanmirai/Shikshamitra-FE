@@ -1,11 +1,8 @@
-import type { Dayjs } from 'dayjs';
-
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { motion } from 'framer-motion';
 import React, { useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
@@ -14,6 +11,8 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Card, Grid, Divider, MenuItem, TextField, Typography } from '@mui/material';
 
 import FeeTermsComponent from './FeeTermsComponent';
+import CollectionPaymentDateField from './CollectionPaymentDateField';
+import { getCollectionPaymentDateError } from './collectionPaymentDate';
 import { paymentMethodsConfig } from './paymentConfigMethods';
 
 import type { IPaymentFormValues, IPaymentFieldConfig, IPaymentDetailsFormProps } from './type';
@@ -164,45 +163,28 @@ export const buildCollectionFieldValidation = (field: IPaymentFieldConfig, curre
   let schema: Yup.Schema<any>;
 
   if (field.type === 'date') {
-    schema = field.required
-      ? Yup.mixed()
-          .required(`${field.label} is required`)
-          .test(
-            'is-valid-dayjs',
-            `${field.label} must be a valid date`,
-            (value) => value && dayjs(value as Dayjs).isValid()
-          )
-          .test(
-            'min-date',
-            `${field.label} must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-            (value) =>
-              value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
-          )
-          .test(
-            'max-date',
-            `${field.label} must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-            (value) =>
-              value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-          )
-      : Yup.mixed()
-          .nullable()
-          .test(
-            'is-valid-dayjs',
-            `${field.label} must be a valid date`,
-            (value) => !value || dayjs(value as Dayjs).isValid()
-          )
-          .test(
-            'min-date',
-            `${field.label} must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-            (value) =>
-              !value || dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
-          )
-          .test(
-            'max-date',
-            `${field.label} must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-            (value) =>
-              !value || dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-          );
+    schema = Yup.mixed()
+      .nullable()
+      .test('collection-date', (value, context) => {
+        const message = getCollectionPaymentDateError(value, field.label, field.required);
+        return message ? context.createError({ message }) : true;
+      })
+      .test('academic-year', (value, context) => {
+        if (!value) return true;
+        const date = dayjs(value as any);
+        if (!date.isValid()) return true;
+        if (currentYear?.startDate && date.isBefore(dayjs(currentYear.startDate), 'day')) {
+          return context.createError({
+            message: `${field.label} must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+          });
+        }
+        if (currentYear?.endDate && date.isAfter(dayjs(currentYear.endDate), 'day')) {
+          return context.createError({
+            message: `${field.label} must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+          });
+        }
+        return true;
+      });
   } else if (field.type === 'amount' || field.type === 'number') {
     schema = Yup.number()
       .typeError(`${field.label} must be a number`)
@@ -428,20 +410,20 @@ export default function PaymentDetailsForm({
                               <Grid size={{ xs: 6 }} key={`${payment.paymentMethod}-${field.name}`}>
                                 {field.type === 'date' ? (
                                   <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                    <DatePicker
-                                      label={`${field.label}${field.required ? ' *' : ''}`}
-                                      value={fieldValue ? dayjs(fieldValue) : null}
-                                      format="DD/MM/YYYY"
+                                    <CollectionPaymentDateField
+                                      label={field.label}
+                                      name={fieldPath}
+                                      required={field.required}
+                                      value={fieldValue}
                                       onChange={(date) => formik.setFieldValue(fieldPath, date)}
-                                      sx={{ width: '100%' }}
-                                      slotProps={{
-                                        textField: {
-                                          size: 'small',
-                                          fullWidth: true,
-                                          error: isTouched && Boolean(errorMsg),
-                                          helperText: isTouched && errorMsg,
-                                        },
+                                      onBlur={() => {
+                                        formik.setFieldTouched(fieldPath, true);
                                       }}
+                                      error={
+                                        isTouched && typeof errorMsg === 'string'
+                                          ? errorMsg
+                                          : undefined
+                                      }
                                     />
                                   </ShakingTextField>
                                 ) : field.type === 'select' ? (

@@ -36,6 +36,9 @@ const { rows } = vi.hoisted(() => ({
 }));
 
 vi.mock('react-redux', () => ({ useSelector: () => ({ currentYear: { id: 'year' } }) }));
+vi.mock('src/screens/finance/hooks/useFinancePermissions', () => ({
+  useFinancePermissions: () => ({ isReady: true, canView: true, canAdd: true }),
+}));
 vi.mock('src/redux/feeCollection/feeCollection', () => ({ useGetFeeCollectionListQuery: vi.fn() }));
 vi.mock('src/redux/customQueryAndMutation', () => ({
   default: () => ({ data: { items: rows, totalCount: 3 }, isLoading: false, isFetching: false }),
@@ -58,14 +61,14 @@ vi.mock('src/components/adaptive-three-dots-actions', () => ({
   ),
 }));
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ data, columns }: any) => (
+  default: ({ data, columns, getRowAction }: any) => (
     <table>
       <tbody>
         {data.map((row: any) => (
-          <tr key={row.id} data-testid={row.id}>
+          <tr key={row.id} data-testid={row.id} onClick={() => getRowAction?.(row)?.onClick()}>
             <td>{row.name}</td>
             <td>{row.pendingFees}</td>
-            <td>{columns.find((column: any) => column.id === 'action').render(undefined, row)}</td>
+            <td onClick={(event) => event.stopPropagation()}>{columns.find((column: any) => column.id === 'action').render(undefined, row)}</td>
           </tr>
         ))}
       </tbody>
@@ -100,9 +103,8 @@ describe('Finance applicant summary actions', () => {
     expect(
       applicant.getByRole('button', { name: 'Collect fee for QA Applicant One' })
     ).toBeDisabled();
-    expect(
-      applicant.getByRole('button', { name: 'View details for QA Applicant One' })
-    ).toBeDisabled();
+    expect(applicant.queryByRole('button', { name: /^View details/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('account-one'));
     expect(
       applicant.getByRole('button', { name: 'Give fee adjustment for QA Applicant One' })
     ).toBeDisabled();
@@ -120,5 +122,8 @@ describe('Finance applicant summary actions', () => {
     expect(collect).toHaveBeenCalledOnce();
     expect(collect.mock.calls[0][0].id).toBe('real-student');
     expect(collect.mock.calls[0][0].financeFeeAccountId).toBe('linked-account');
+    fireEvent.click(screen.getByTestId('real-student'));
+    expect(view).toHaveBeenCalledOnce();
+    expect(view.mock.calls[0][0].id).toBe('real-student');
   });
 });

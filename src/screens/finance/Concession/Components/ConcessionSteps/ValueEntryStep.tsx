@@ -9,6 +9,8 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Box, Grid, Stack, Typography } from '@mui/material';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
+import RequestEnteredInstallments from './RequestEnteredInstallments';
+
 interface Props {
   formik: any;
   concessionTypes: any[];
@@ -94,7 +96,6 @@ const ValueEntryStep: React.FC<Props> = ({
           formik={formik}
           requestContext={requestContext}
           policy={policy}
-          preview={preview}
         />
       ) : (
         selectedTypes.map((ct: any) => (
@@ -117,150 +118,6 @@ const ValueEntryStep: React.FC<Props> = ({
     </Box>
   );
 };
-
-function RequestEnteredInstallments({
-  formik,
-  requestContext,
-  policy,
-  preview,
-}: {
-  formik: any;
-  requestContext?: ConcessionRequestContext;
-  policy: ConcessionPolicyOption;
-  preview?: ConcessionRequestPreview;
-}) {
-  const { values, setFieldValue } = formik;
-  const selectedHeads = new Set<string>(values.selectedFeeHeads[values.concessionTypeId] || []);
-  const lines = (requestContext?.eligibleDueFees || []).filter(
-    (line) => selectedHeads.has(line.feeHeadId) && line.eligibleConcessionAmount > 0
-  );
-  const groups = lines.reduce<Record<string, typeof lines>>((acc, line) => {
-    const key = `${line.year}-${line.installmentLabel}`;
-    (acc[key] ||= []).push(line);
-    return acc;
-  }, {});
-  const entries: Record<string, number | string> = values.dueFeeEntries || {};
-  const enteredTotal = lines.reduce((sum, line) => sum + Number(entries[line.dueFeeId] || 0), 0);
-  const percentage = policy.calculationMethod === 'Percentage';
-  const maximum = percentage
-    ? Math.min(100, policy.maximumPercentage ?? 100)
-    : (policy.maximumFixedAmount ?? Number.POSITIVE_INFINITY);
-  const money = (amount: number) => formatNumber(amount, 'INR');
-
-  return (
-    <Stack
-      spacing={0}
-      sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}
-    >
-      {Object.entries(groups).map(([installment, rows]) => (
-        <Box key={installment} sx={{ '& + &': { borderTop: 1, borderColor: 'divider' } }}>
-          <Box sx={{ px: 1.5, py: 1, bgcolor: 'background.neutral' }}>
-            <Typography variant="subtitle2" component="h3">
-              {installment.substring(5)}
-              <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                {rows[0]?.year}
-              </Typography>
-            </Typography>
-          </Box>
-          <Stack spacing={0}>
-            {(rows || []).map((line) => {
-              const value = Number(entries[line.dueFeeId] || 0);
-              const estimate = percentage
-                ? Math.round(line.eligibleConcessionAmount * value) / 100
-                : Math.min(value, line.eligibleConcessionAmount);
-              return (
-                <Box
-                  key={line.dueFeeId}
-                  sx={{
-                    display: 'grid',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    p: 1.5,
-                    gridTemplateColumns: {
-                      xs: 'minmax(0, 1fr) minmax(0, 1fr)',
-                      sm: 'minmax(0, 1fr) minmax(140px, 200px) minmax(110px, 160px)',
-                    },
-                    '& + &': { borderTop: 1, borderColor: 'divider' },
-                  }}
-                >
-                  <Box sx={{ minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'auto' } }}>
-                    <Typography variant="body2" fontWeight={600}>
-                      {line.feeHeadName}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Original {money(line.originalAmount)} · paid {money(line.paidAmount)}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Eligible {money(line.eligibleConcessionAmount)}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ minWidth: 0 }}>
-                    <NumericFormatCustom
-                      fullWidth
-                      size="small"
-                      name={`dueFeeEntries.${line.dueFeeId}`}
-                      label={percentage ? 'Concession %' : 'Concession amount'}
-                      value={entries[line.dueFeeId] ?? ''}
-                      roundToWholeRupees={false}
-                      decimalScale={2}
-                      prefix={percentage ? '' : '₹ '}
-                      suffix={percentage ? '%' : ''}
-                      slotProps={{
-                        inputLabel: { shrink: true },
-                        htmlInput: {
-                          'aria-label': `${line.installmentLabel} ${line.feeHeadName} ${percentage ? 'concession percentage' : 'concession amount'}`,
-                        },
-                      }}
-                      isAllowed={({ floatValue }) =>
-                        floatValue === undefined ||
-                        (floatValue <= (percentage ? maximum : line.eligibleConcessionAmount) &&
-                          (percentage || enteredTotal - value + floatValue <= maximum))
-                      }
-                      onValueChange={(input, source) => {
-                        if (source.source === 'event')
-                          setFieldValue('dueFeeEntries', {
-                            ...entries,
-                            [line.dueFeeId]: input.value,
-                          });
-                      }}
-                      onBlur={formik.handleBlur}
-                      error={Boolean(
-                        formik.touched.dueFeeEntries?.[line.dueFeeId] &&
-                        formik.errors.dueFeeEntries?.[line.dueFeeId]
-                      )}
-                      helperText={
-                        (formik.touched.dueFeeEntries?.[line.dueFeeId] &&
-                          formik.errors.dueFeeEntries?.[line.dueFeeId]) ||
-                        undefined
-                      }
-                      FormHelperTextProps={{ sx: { minHeight: '1.5em', mx: 0 } }}
-                    />
-                  </Box>
-                  <Box sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Estimated reduction
-                    </Typography>
-                    <Typography variant="subtitle2">−{money(estimate)}</Typography>
-                  </Box>
-                </Box>
-              );
-            })}
-          </Stack>
-        </Box>
-      ))}
-      {lines.length === 0 && (
-        <Typography color="text.secondary">
-          Select eligible fee heads to enter installment amounts.
-        </Typography>
-      )}
-      {!percentage && Number.isFinite(maximum) && (
-        <Typography variant="caption">
-          Entered total {money(enteredTotal)} of {money(maximum)} allowed
-        </Typography>
-      )}
-    </Stack>
-  );
-}
 
 const ValueEntryStepItem = ({
   concessionType,
@@ -455,7 +312,7 @@ const ValueEntryStepItem = ({
                 <Grid size={{ xs: 7, sm: 4 }}>
                   {isPolicyFixed ? (
                     <Typography variant="body2" color="text.secondary">
-                      Calculated by policy ·{' '}
+                      Calculated automatically by policy ·{' '}
                       {calculationMethod === 'Percentage'
                         ? `${assignedStructureData?.concessionPercentageValue ?? 0}%`
                         : calculationMethod === 'FixedAmount'

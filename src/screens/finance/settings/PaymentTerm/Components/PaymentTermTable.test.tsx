@@ -36,15 +36,16 @@ vi.mock('src/components/iconify', () => ({
 }));
 
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ columns, data }: ICustomizableTableProps) => (
+  default: ({ columns, data, getRowAction }: ICustomizableTableProps) => (
     <div
       data-testid="payment-term-table"
       data-columns={columns.map((column) => column.id).join(',')}
     >
       {data.map((row) => (
-        <div key={String(row.id)} data-testid={`row-${String(row.id)}`}>
+        <div key={String(row.id)} data-testid={`row-${String(row.id)}`}
+          onClick={() => getRowAction?.(row, 0)?.onClick()}>
           {columns.map((column) => (
-            <div key={column.id}>
+            <div key={column.id} onClick={column.id === 'actions' ? (event) => event.stopPropagation() : undefined}>
               {column.render ? column.render(row[column.id], row) : String(row[column.id] ?? '')}
             </div>
           ))}
@@ -104,6 +105,23 @@ const baseProps: ComponentProps<typeof PaymentTermTable> = {
 describe('PaymentTermTable', () => {
   beforeEach(() => {
     Object.values(callbacks).forEach((callback) => callback.mockClear());
+  });
+
+  it('opens details from the row and keeps View out of the action buttons', () => {
+    const term = createTerm();
+    render(<PaymentTermTable {...baseProps} data={[term]} />);
+    expect(screen.queryByRole('button', { name: /^View / })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('row-term-draft'));
+    expect(callbacks.onView).toHaveBeenCalledWith(term);
+    fireEvent.click(screen.getByRole('button', { name: `Edit ${term.name}` }));
+    expect(callbacks.onEdit).toHaveBeenCalledWith(term);
+    expect(callbacks.onView).toHaveBeenCalledOnce();
+  });
+
+  it('does not open details from the row without View permission', () => {
+    render(<PaymentTermTable {...baseProps} data={[createTerm()]} canView={false} />);
+    fireEvent.click(screen.getByTestId('row-term-draft'));
+    expect(callbacks.onView).not.toHaveBeenCalled();
   });
 
   it('renders Status immediately before Actions', () => {

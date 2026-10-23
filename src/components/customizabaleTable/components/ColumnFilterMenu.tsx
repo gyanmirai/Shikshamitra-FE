@@ -59,7 +59,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
       }),
       max: yup.number().when('filterType', {
         is: 'between',
-        then: (schema) => schema.required('Max value is required'),
+        then: (schema) => schema.required('Max value is required').min(yup.ref('min'), 'Max must be at least min'),
         otherwise: (schema) => schema.nullable(),
       }),
       filterValue: yup.mixed().when('filterType', {

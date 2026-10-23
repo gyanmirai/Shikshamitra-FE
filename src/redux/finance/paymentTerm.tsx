@@ -237,6 +237,7 @@ export interface ArchivePaymentTermRequest {
 }
 
 export interface PaymentTermListParams {
+  filters?: string;
   academicYearId: string;
   boardId?: string;
   status?: 'Active' | 'Archived';
@@ -402,6 +403,7 @@ export const PaymentTermApi = api.injectEndpoints({
           boardId: params.boardId,
           status: params.status,
           search: params.search,
+          filters: params.filters,
           includeArchived: params.includeArchived,
           skipCount: params.page ? (params.page - 1) * (params.pageSize ?? 10) : 0,
           maxResultCount: params.pageSize ?? 10,

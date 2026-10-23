@@ -105,7 +105,8 @@ const AccessLogsManagementTable = () => (
         {
           id: 'timestamp',
           label: 'Timestamp',
-          isFilter: false,
+          filterType: 'date' as const,
+          isFilter: true,
           isSort: false,
 
           render: (value) => (value ? dayjs(value).format('hh:mm A') : null),
@@ -113,7 +114,7 @@ const AccessLogsManagementTable = () => (
         {
           id: 'direction',
           label: 'Direction',
-          filterType: 'enum',
+          filterType: 'enum' as const,
           enumOptions: AccessLogsManagementStatusTypeOptions,
           minWidth: '130px',
           align: 'left',

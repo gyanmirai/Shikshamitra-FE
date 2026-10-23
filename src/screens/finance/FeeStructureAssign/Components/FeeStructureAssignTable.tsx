@@ -177,6 +177,15 @@ export default function FeeStructureAssignTable({
         </Stack>
       )}
       <CustomizableTable
+        getRowAction={(row) =>
+          row.isFeeStructureAssigned
+            ? {
+                label: `Open ${row.studentName || 'record'}`,
+                onClick: () => {
+                  onAssignStructure(row as IFeeStructureData);
+                },
+              }
+            : undefined}
         tableId="fee-structure-assignment"
         tableTitle="Student fee structure assignments"
         isLoading={query.isFetching}
@@ -399,17 +408,10 @@ export default function FeeStructureAssignTable({
                 );
               return row.isFeeStructureAssigned || canAssign ? (
                 <AdaptiveThreeDotsActions
-                  directActionLimit={2}
+                  directActionLimit={3}
                   actions={
                     row.isFeeStructureAssigned
-                      ? [
-                          {
-                            id: 'view',
-                            icon: 'mdi:eye-outline',
-                            label: `View assignment for ${row.studentName}`,
-                            onClick: () => onAssignStructure(row),
-                          },
-                        ]
+                      ? []
                       : [
                           {
                             id: 'assign',

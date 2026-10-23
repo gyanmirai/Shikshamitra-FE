@@ -1,4 +1,3 @@
-import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { CheckCircle } from '@mui/icons-material';
 import React, { useState, useEffect } from 'react';
@@ -8,17 +7,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetConcessionTypeByIdQuery } from 'src/redux/finance/concessionType';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { useUploadConcessionDocumentFileMutation } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
-import {
-  Box,
-  Card,
-  Stack,
-  Divider,
-  IconButton,
-  Typography,
-  CardHeader,
-  CardContent,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Alert, Stack, IconButton, Typography, CircularProgress } from '@mui/material';
 
 import {
   getFileAccept,
@@ -78,6 +67,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
         return {
           documentId: docId,
           documentName: doc.documentName,
+          fileName: existing?.fileName,
           url: existing?.url || '',
           status: existing?.url ? (existing.status ?? 1) : 0,
         };
@@ -94,7 +84,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
 
   const handleRemove = (docId: string) => {
     const updatedDocs = localDocs.map((doc) =>
-      doc.documentId === docId ? { ...doc, url: '', status: 0 } : doc
+      doc.documentId === docId ? { ...doc, url: '', fileName: undefined, status: 0 } : doc
     );
     setLocalDocs(updatedDocs);
     onSave(updatedDocs.filter((doc) => doc.url && doc.url.trim() !== ''));
@@ -136,6 +126,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
         url: uploadedUrl,
         status: 1,
         documentName: docInfo?.documentName || '',
+        fileName: file.name,
       };
 
       if (existingIndex !== -1) {
@@ -162,76 +153,87 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
     }
   };
 
+  const missingRequiredDocuments = documents.filter(
+    (document: any) =>
+      document.isRequired &&
+      !localDocs.some(
+        (submitted) =>
+          submitted.documentId === (document.id || document.documentId) && submitted.url
+      )
+  );
+
   return (
-    <Card variant="outlined">
-      <CardHeader
-        title={
-          <Typography
-            variant="subtitle2"
-            sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}
-          >
-            <Iconify icon="eva:file-text-outline" />
-            {concessionName}
-          </Typography>
-        }
-        sx={{ p: 2 }}
-      />
-      <Divider />
-      <CardContent sx={{ p: 2 }}>
-        {isLoadingDetails ? (
-          <Box display="flex" justifyContent="center" py={3}>
-            <CircularProgress size={24} />
-          </Box>
-        ) : (
-          <Stack spacing={1.5}>
-            {(documents || []).map((doc: any) => {
-              const docId = doc.id || doc.documentId;
-              const submitted = localDocs.find(
-                (d: IConcessionSubmittedDocument) => d.documentId === docId
-              );
-              return (
-                <Box
-                  key={docId}
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 1.5,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.04),
-                  }}
-                >
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box>
-                      <Typography variant="body2" fontWeight={600}>
-                        {doc.documentName}{' '}
-                        {doc.isRequired && (
-                          <Box component="span" color="error.main">
-                            *
-                          </Box>
-                        )}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        {getDocumentConstraintText(doc)}
-                      </Typography>
-                      {submitted?.url ? (
-                        <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                          <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
-                          <Typography variant="caption" color="success.main" fontWeight={600}>
-                            Uploaded
-                          </Typography>
+    <Box aria-label={`${concessionName} supporting documents`}>
+      {isLoadingDetails ? (
+        <Box display="flex" justifyContent="center" py={3}>
+          <CircularProgress size={24} />
+        </Box>
+      ) : (
+        <Stack spacing={1}>
+          {missingRequiredDocuments.length > 0 && (
+            <Alert severity="warning">
+              Required documents missing:{' '}
+              {missingRequiredDocuments.map((document: any) => document.documentName).join(', ')}.
+            </Alert>
+          )}
+          {(documents || []).map((doc: any) => {
+            const docId = doc.id || doc.documentId;
+            const submitted = localDocs.find(
+              (d: IConcessionSubmittedDocument) => d.documentId === docId
+            );
+            return (
+              <Box
+                key={docId}
+                sx={{
+                  py: 1,
+                  '& + &': { borderTop: 1 },
+                  borderColor: 'divider',
+                }}
+              >
+                <Stack spacing={0.75}>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {doc.documentName}{' '}
+                      {doc.isRequired && (
+                        <Box component="span" color="error.main">
+                          *
                         </Box>
-                      ) : (
-                        <Typography variant="caption" color="text.secondary">
-                          Not uploaded
-                        </Typography>
                       )}
-                    </Box>
-                    <Box display="flex" gap={1}>
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {getDocumentConstraintText(doc)}
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+                    {submitted?.url ? (
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={0.5}
+                        sx={{ minWidth: 0, maxWidth: '100%' }}
+                      >
+                        <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
+                        <Typography
+                          variant="caption"
+                          color="success.main"
+                          fontWeight={600}
+                          sx={{ overflowWrap: 'anywhere' }}
+                        >
+                          Uploaded{submitted.fileName ? ` · ${submitted.fileName}` : ''}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        Not uploaded
+                      </Typography>
+                    )}
+                    <Box display="flex" gap={0.5} alignItems="center">
                       {submitted?.url && (
                         <>
                           {canView && (
                             <IconButton
                               size="small"
+                              aria-label={`Preview ${doc.documentName}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setPreviewDoc({
@@ -268,22 +270,24 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
                           )
                         }
                         disabled={!canUpload || isUploading}
+                        aria-label={`${submitted?.url ? 'Replace' : 'Upload'} ${doc.documentName}`}
+                        fileInputProps={{ 'aria-label': `Choose ${doc.documentName} file` }}
                       >
                         {submitted?.url ? 'Replace' : 'Upload'}
                       </UploadButton>
                     </Box>
-                  </Box>
-                </Box>
-              );
-            })}
-            {(!documents || documents.length === 0) && (
-              <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 1 }}>
-                No documents required for this concession.
-              </Typography>
-            )}
-          </Stack>
-        )}
-      </CardContent>
+                  </Stack>
+                </Stack>
+              </Box>
+            );
+          })}
+          {(!documents || documents.length === 0) && (
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 1 }}>
+              No documents required for this concession.
+            </Typography>
+          )}
+        </Stack>
+      )}
 
       <DocumentPreviewDialog
         open={!!previewDoc}
@@ -292,7 +296,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
         documentName={previewDoc?.name}
         directUrl
       />
-    </Card>
+    </Box>
   );
 };
 

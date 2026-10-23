@@ -112,8 +112,9 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
       {
         id: 'startTime',
         label: 'Start Time',
+        filterType: 'string' as const,
         minWidth: 150,
-        isFilter: false,
+        isFilter: true,
         isSort: false,
         align: 'center' as const,
         render(value: unknown, row: ITimeSlot) {
@@ -152,8 +153,9 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
       {
         id: 'endTime',
         label: 'End Time',
+        filterType: 'string' as const,
         minWidth: 150,
-        isFilter: false,
+        isFilter: true,
         isSort: false,
         align: 'center' as const,
         render(value: any, row: ITimeSlot) {
@@ -192,8 +194,9 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
       {
         id: 'totalTime',
         label: 'Duration',
+        filterType: 'string' as const,
         minWidth: 100,
-        isFilter: false,
+        isFilter: true,
         isSort: false,
         align: 'center' as const,
         render(_v: unknown, row: ITimeSlot) {
@@ -249,9 +252,10 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
       {
         id: 'slotType',
         label: 'Slot Type',
+        filterType: 'string' as const,
         minWidth: 300,
         align: 'left' as const,
-        isFilter: false,
+        isFilter: true,
         isSort: false,
         render(_v: unknown, row: ITimeSlot) {
           const index = slotIndexMap.get(row.id) ?? -1;

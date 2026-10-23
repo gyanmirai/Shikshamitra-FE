@@ -424,7 +424,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
           <AdaptiveThreeDotsActions
             placement="right-top"
             sx={{ justifyContent: 'flex-start' }}
-            directActionLimit={2}
+            directActionLimit={3}
             moreLabel={`More actions for ${(row as IFeeCategory).name}`}
             actions={[
               ...(canAdd && !archived
@@ -437,16 +437,6 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                         setEditData(row as IFeeCategory);
                         onAddFeeCategory.onTrue();
                       },
-                    },
-                  ]
-                : []),
-              ...(canView
-                ? [
-                    {
-                      id: 'fee-heads',
-                      label: 'View fee heads',
-                      icon: GlobalIcons.eye,
-                      onClick: () => setFeeHeadsCategoryId((row as IFeeCategory).id),
                     },
                   ]
                 : []),

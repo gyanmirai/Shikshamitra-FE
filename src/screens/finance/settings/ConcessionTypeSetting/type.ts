@@ -1,3 +1,5 @@
+import type { IParams } from 'src/components/customizabaleTable/types';
+
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export enum ConcessionBasedOn {
@@ -73,6 +75,8 @@ export interface IConcessionTableProps {
   searchTerm?: string;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;
+  filters?: IParams['filters'];
+  onServerFilter?: (filters: IParams['filters']) => void;
 }
 
 export interface IConcessionTypeFormProps {

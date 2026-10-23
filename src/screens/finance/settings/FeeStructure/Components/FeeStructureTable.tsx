@@ -1,5 +1,7 @@
 'use client';
 
+import type { IParams } from 'src/components/customizabaleTable/types';
+
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -15,6 +17,8 @@ import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeStructuresQuery } from 'src/redux/finance/financeFeeStructure';
+
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 
 import type { IFeeStructure, IFeeStructureTableProps } from '../type';
 import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
@@ -32,6 +36,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<IParams['filters']>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
   const canEdit = hasGrantedPermission(
@@ -48,7 +53,13 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeStructuresQuery,
-    params: { academicYearId: currentYear?.id, page: page + 1, pageSize, search },
+    params: {
+      academicYearId: currentYear?.id,
+      page: page + 1,
+      pageSize,
+      search,
+      filters: serializeFinanceTableFilters(filters),
+    },
     options: { skip: !currentYear?.id },
   });
 
@@ -70,23 +81,23 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
 
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'name', label: 'Name', align: 'left', filterType: 'string' },
+      { id: 'name', isFilter: true, label: 'Name', align: 'left', filterType: 'string' as const },
       {
         id: 'boardMediumValue',
+        isFilter: true,
         label: 'Board/Medium',
         align: 'left',
-        filterType: 'string',
+        filterType: 'string' as const,
       },
       {
         id: 'totalClassValue',
-        label: (
-          <Stack direction="row" spacing={0.5} alignItems="center">
-            <span>Configured Classes</span>
-            <InfoTooltipIcon title="Total classes configured in this fee structure." />
-          </Stack>
+        isFilter: true,
+        label: 'Configured Classes',
+        renderColumn: () => (
+          <InfoTooltipIcon title="Total classes configured in this fee structure." />
         ),
         align: 'left',
-        filterType: 'string',
+        filterType: 'string' as const,
         render: (value) => (value == null ? '-' : value),
       },
       {
@@ -101,14 +112,8 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         minWidth: 50,
         render: (value, row) => (
           <AdaptiveThreeDotsActions
-            directActionLimit={2}
+            directActionLimit={3}
             actions={[
-              {
-                id: 'view',
-                label: 'View',
-                icon: 'carbon:view-filled',
-                onClick: () => onView?.(row as IFeeStructure),
-              },
               ...(canEdit
                 ? [
                     {
@@ -147,9 +152,25 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         </Alert>
       )}
       <CustomizableTable
+        getRowAction={(row) =>
+          onView
+            ? {
+                label: `Open ${row.name || 'record'}`,
+                onClick: () => {
+                  onView?.(row as IFeeStructure);
+                },
+              }
+            : undefined
+        }
         tableId="fee-structure-table"
         tableTitle="Fee structures"
         exportLabel="Export current page"
+        serverSideFilter
+        filters={filters}
+        onServerFilter={(next) => {
+          setFilters(next);
+          setPage(0);
+        }}
         serverSidePagination
         serverSideSearch
         page={page}
@@ -157,7 +178,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         totalCount={feeStructureData?.totalCount ?? 0}
         maxServerRowsPerPage={100}
         onServerPagination={(nextPage, size) => {
-          setPage(nextPage);
+          setPage(nextPage - 1);
           setPageSize(size);
         }}
         onServerSearch={(value) => {

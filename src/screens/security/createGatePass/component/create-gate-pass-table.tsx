@@ -55,7 +55,8 @@ const CreateGatePassTable: React.FC<ICreateEmergencyGatePassTableProps> = ({ onC
         {
           id: 'time',
           label: 'Time',
-          isFilter: false,
+          filterType: 'string' as const,
+          isFilter: true,
           isSort: false,
           render: (value) => (value ? dayjs(value).format('hh:mm A') : null),
         },
@@ -66,7 +67,7 @@ const CreateGatePassTable: React.FC<ICreateEmergencyGatePassTableProps> = ({ onC
           label: 'Emergency Flag',
           align: 'left',
           minWidth: '130px',
-          filterType: 'enum',
+          filterType: 'enum' as const,
           enumOptions: CreateGatePassRequestStatusOptions,
           render(value) {
             const color = CreateGatePassRequestStatusColor[

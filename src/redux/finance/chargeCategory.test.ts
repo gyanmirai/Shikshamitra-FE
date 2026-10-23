@@ -2,10 +2,17 @@ import { it, expect, describe } from 'vitest';
 
 import {
   buildChargeCategoryListRequest,
+  buildChargeCategoryUsageRequest,
   buildChargeCategoryStatusRequest,
 } from './chargeCategory';
 
 describe('charge-category API contract', () => {
+  it('reads fresh dependency usage before requesting deletion', () => {
+    expect(buildChargeCategoryUsageRequest('category-id')).toEqual({
+      url: '/charge-categories/category-id/usage',
+      method: 'GET',
+    });
+  });
   it('requests active categories only for charge authoring', () => {
     expect(
       buildChargeCategoryListRequest({

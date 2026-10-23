@@ -1,3 +1,5 @@
+import type { IParams } from 'src/components/customizabaleTable/types';
+
 export enum BankAccountType {
   Saving = 0,
   Current = 1,
@@ -40,6 +42,10 @@ export interface IBankAccountTableProps {
   totalCount?: number;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;
+  filters?: IParams['filters'];
+  onServerFilter?: (filters: IParams['filters']) => void;
+  page?: number;
+  rowsPerPage?: number;
 }
 
 export interface IBankAccountFormProps {
