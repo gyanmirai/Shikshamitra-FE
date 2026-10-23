@@ -37,6 +37,14 @@ export type AdmissionFeeSelection = {
   isRequired: boolean;
   isLocked: boolean;
   hasRecordedFeePayment?: boolean;
+  paymentCompletion?: {
+    paymentRule: 'partial' | 'full';
+    allowCollectionLater: boolean;
+    canComplete: boolean;
+    canDeferCollection: boolean;
+    status: string;
+    blocker: string | null;
+  } | null;
   feeCollectionDeferral?: AdmissionFeeCollectionDeferral | null;
   canEdit: boolean;
   canConfirmOnboarding: boolean;

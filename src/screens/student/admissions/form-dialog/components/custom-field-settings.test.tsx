@@ -228,7 +228,7 @@ describe('Admission Form Builder custom field settings', () => {
     const country = { ...newField('section-1', 1, 0), code: 'COUNTRY', label: 'Country' };
     renderSettings(0, undefined, { visibilityRuleJson: savedRule }, [country]);
     await user.click(screen.getByRole('tab', { name: 'Rules' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('It has not been changed.');
+    expect(screen.getByText('It has not been changed.', { exact: false })).toBeVisible();
     expect(currentField().visibilityRuleJson).toBe(savedRule);
     expect(screen.getByRole('textbox', { name: 'Compatibility rule' })).toHaveValue(savedRule);
     expectTechnicalEditorsHidden();

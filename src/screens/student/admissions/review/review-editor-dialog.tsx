@@ -1,7 +1,8 @@
 import type { ReviewSummary } from 'src/redux/student/admissions/admission-review-types';
 
+import { StudentFeedback } from 'src/components/student-feedback';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, Typography, DialogActions } from '@mui/material';
 
 import { ReviewDialog } from './review-dialog';
 import { ReviewEvidence } from './review-evidence';
@@ -70,15 +71,24 @@ export function ReviewEditorDialog({
             onReload={editor.reload}
           />
           {editor.summary.isStale && (
-            <Alert severity="warning">
+            <StudentFeedback
+              notificationKey="STU-0464"
+              presentation="persistent"
+              severity="warning"
+            >
               Evidence has changed. Check the current information before submitting a new
               recommendation.
-            </Alert>
+            </StudentFeedback>
           )}
           {editor.summary.blockers.map((blocker) => (
-            <Alert severity="info" key={blocker}>
+            <StudentFeedback
+              notificationKey="STU-0465"
+              presentation="persistent"
+              severity="info"
+              key={blocker}
+            >
               {blocker}
-            </Alert>
+            </StudentFeedback>
           ))}
           <ReviewEvidence items={editor.summary.prerequisites} />
           <ReviewChecklistFields summary={editor.summary} formik={formik} />

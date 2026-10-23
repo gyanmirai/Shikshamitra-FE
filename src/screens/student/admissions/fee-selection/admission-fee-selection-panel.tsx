@@ -12,17 +12,9 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import {
-  Box,
-  Alert,
-  Stack,
-  Button,
-  Skeleton,
-  IconButton,
-  Typography,
-  LinearProgress,
-} from '@mui/material';
+import { Box, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
 import {
   useGetAdmissionFeeSelectionQuery,
   useConfirmAdmissionFeeSelectionOnboardingMutation,
@@ -121,7 +113,7 @@ export default function AdmissionFeeSelectionPanel({
       !readOnly &&
       !editing &&
       state?.selection &&
-      (mode !== 'admissions' || state.hasRecordedFeePayment) &&
+      (mode !== 'admissions' || state.paymentCompletion?.canComplete === true) &&
       !collectionOpen &&
       !query.isError &&
       (!completionStageId || state.currentStageId === completionStageId)
@@ -172,7 +164,9 @@ export default function AdmissionFeeSelectionPanel({
     return (
       <Stack spacing={1.5} sx={{ flex: workspaceLayout ? 1 : undefined }}>
         {workspaceLayout && <Typography variant="subtitle1">Payment</Typography>}
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0349"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" onClick={() => query.refetch()}>
@@ -181,7 +175,7 @@ export default function AdmissionFeeSelectionPanel({
           }
         >
           Fee structure details could not be loaded.
-        </Alert>
+        </StudentFeedback>
       </Stack>
     );
   if ((mode === 'onboarding' && !state.selection) || (!state.available && !state.selection))
@@ -213,18 +207,23 @@ export default function AdmissionFeeSelectionPanel({
       {selection ? 'Change fee structure' : 'Select fee structure'}
     </Button>
   );
-  const deferralAction = onCollectLater && mode === 'admissions' && !readOnly && (
-    <Button
-      size="small"
-      variant="outlined"
-      startIcon={<Iconify icon="mdi:clock-outline" width={16} />}
-      disabled={query.isFetching || query.isError || continuing || editorBlocked || collectionOpen}
-      onClick={onCollectLater}
-      sx={{ flexShrink: 0 }}
-    >
-      Collect later in Onboarding
-    </Button>
-  );
+  const deferralAction = onCollectLater &&
+    mode === 'admissions' &&
+    !readOnly &&
+    state.paymentCompletion?.canDeferCollection === true && (
+      <Button
+        size="small"
+        variant="outlined"
+        startIcon={<Iconify icon="mdi:clock-outline" width={16} />}
+        disabled={
+          query.isFetching || query.isError || continuing || editorBlocked || collectionOpen
+        }
+        onClick={onCollectLater}
+        sx={{ flexShrink: 0 }}
+      >
+        Collect later in Onboarding
+      </Button>
+    );
 
   return (
     <Box
@@ -253,7 +252,13 @@ export default function AdmissionFeeSelectionPanel({
               {compact && mode === 'admissions' ? 'Payment' : 'Fee structure'}
             </Typography>
             {mode === 'admissions' && (
-              <CustomTooltip title="Select a published fee structure to collect fees here, or record a reason to collect later in Onboarding.">
+              <CustomTooltip
+                title={
+                  state.paymentCompletion?.paymentRule === 'full'
+                    ? 'The entire selected Finance fee structure, including future installments, must be cleared. Finance-verified zero payable needs no payment entry.'
+                    : 'A confirmed partial payment is sufficient. Finance-verified zero payable needs no payment entry.'
+                }
+              >
                 <IconButton
                   size="small"
                   color="info"
@@ -289,9 +294,10 @@ export default function AdmissionFeeSelectionPanel({
             {!workspaceLayout && selectionAction}
           </Stack>
         </Stack>
-        {query.isFetching && <LinearProgress aria-label="Refreshing fee structure" />}
         {query.isError && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0350"
+            presentation="toast"
             severity="error"
             action={
               <Button size="small" onClick={() => query.refetch()}>
@@ -301,7 +307,7 @@ export default function AdmissionFeeSelectionPanel({
           >
             Fee structure details could not be refreshed. Your unsaved selection is preserved. Retry
             before saving or confirming.
-          </Alert>
+          </StudentFeedback>
         )}
         <Box
           sx={
@@ -346,6 +352,37 @@ export default function AdmissionFeeSelectionPanel({
                 onEditorStateChange={onEditorStateChange}
                 compact={compact}
               />
+            ) : query.isFetching ? (
+              <Stack role="status" aria-label="Refreshing fee structure" aria-busy spacing={1.5}>
+                <Skeleton variant="text" width="60%" height={24} />
+                <Skeleton variant="text" width="75%" height={20} />
+                <Stack
+                  spacing={1.5}
+                  sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5 }}
+                >
+                  <Skeleton variant="text" width={160} height={24} />
+                  {[0, 1, 2].map((row) => (
+                    <Stack key={row} direction="row" justifyContent="space-between" spacing={2}>
+                      <Skeleton variant="text" width="60%" height={40} />
+                      <Skeleton variant="text" width="20%" height={40} />
+                    </Stack>
+                  ))}
+                </Stack>
+                {workspaceLayout && (
+                  <Stack
+                    spacing={1.5}
+                    sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5 }}
+                  >
+                    <Skeleton variant="text" width={148} height={24} />
+                    {[0, 1, 2, 3, 4].map((row) => (
+                      <Stack key={row} direction="row" justifyContent="space-between" spacing={2}>
+                        <Skeleton variant="text" width="35%" height={22} />
+                        <Skeleton variant="text" width="40%" height={22} />
+                      </Stack>
+                    ))}
+                  </Stack>
+                )}
+              </Stack>
             ) : selection ? (
               <>
                 <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
@@ -388,12 +425,6 @@ export default function AdmissionFeeSelectionPanel({
                   </Box>
                 ) : (
                   <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
-                )}
-                {!workspaceLayout && (
-                  <Typography variant="caption" color="text.secondary">
-                    Fees can be collected here using Finance. Partial collection is allowed; the
-                    remaining dues stay available in Onboarding.
-                  </Typography>
                 )}
               </>
             ) : workspaceLayout ? (
@@ -475,7 +506,7 @@ export default function AdmissionFeeSelectionPanel({
           </Stack>
         )}
         {state.feeCollectionDeferral && (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0352" presentation="inline" severity="info">
             <Stack spacing={0.5}>
               <Typography variant="subtitle2">Collection deferred to Onboarding</Typography>
               <Typography variant="body2" sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
@@ -485,11 +516,25 @@ export default function AdmissionFeeSelectionPanel({
                 {fDateTime(state.feeCollectionDeferral.deferredAt)}
               </Typography>
             </Stack>
-          </Alert>
+          </StudentFeedback>
+        )}
+        {mode === 'admissions' && !readOnly && state.paymentCompletion?.blocker && !editing && (
+          <StudentFeedback notificationKey="STU-0353" presentation="inline" severity="info">
+            {state.paymentCompletion.blocker}
+          </StudentFeedback>
+        )}
+        {mode === 'admissions' && state.paymentCompletion?.status === 'financeCleared' && (
+          <StudentFeedback notificationKey="STU-0353" presentation="inline" severity="success">
+            Finance confirms no outstanding amount. No further payment is required.
+          </StudentFeedback>
         )}
         {onContinue && !readOnly && mode === 'admissions' && (
           <Stack spacing={1}>
-            {selection && <Alert severity="success">Fee structure confirmed.</Alert>}
+            {selection && (
+              <StudentFeedback notificationKey="STU-0353" presentation="inline" severity="success">
+                Fee structure confirmed.
+              </StudentFeedback>
+            )}
             <Button
               size="small"
               variant="contained"
@@ -501,7 +546,7 @@ export default function AdmissionFeeSelectionPanel({
                 continuing ||
                 editing ||
                 !selection ||
-                !state.hasRecordedFeePayment ||
+                state.paymentCompletion?.canComplete !== true ||
                 collectionOpen ||
                 query.isFetching ||
                 query.isError ||
@@ -514,10 +559,10 @@ export default function AdmissionFeeSelectionPanel({
           </Stack>
         )}
         {state.isLocked && (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0354" presentation="inline" severity="info">
             Payment has been recorded. This fee selection is locked; ask Finance to review any
             adjustment or refund.
-          </Alert>
+          </StudentFeedback>
         )}
         {!canEdit && !state.isLocked && mode === 'admissions' && state.ownerStageName && (
           <Typography variant="caption" color="text.secondary">
@@ -527,15 +572,33 @@ export default function AdmissionFeeSelectionPanel({
         )}
         {mode === 'onboarding' && selection && (
           <>
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0355"
+              presentation="inline"
               severity={state.onboardingConfirmed && !state.onboardingBlocker ? 'success' : 'info'}
             >
               {state.onboardingConfirmed
                 ? 'The admission fee selection has been confirmed for Onboarding.'
                 : 'Review and confirm the saved admission fee selection before completing Onboarding.'}
-            </Alert>
-            {state.onboardingBlocker && <Alert severity="warning">{state.onboardingBlocker}</Alert>}
-            {confirmationError && <Alert severity="error">{confirmationError}</Alert>}
+            </StudentFeedback>
+            {state.onboardingBlocker && (
+              <StudentFeedback
+                notificationKey="STU-0356"
+                presentation="persistent"
+                severity="warning"
+              >
+                {state.onboardingBlocker}
+              </StudentFeedback>
+            )}
+            {confirmationError && (
+              <StudentFeedback
+                notificationKey="STU-0357"
+                presentation="persistent"
+                severity="error"
+              >
+                {confirmationError}
+              </StudentFeedback>
+            )}
             {canConfirmSelection && (
               <Button
                 size="small"

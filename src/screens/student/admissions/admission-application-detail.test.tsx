@@ -286,6 +286,30 @@ const loadPaymentDetail = () => {
 };
 
 describe('AdmissionApplicationDetailScreen', () => {
+  it.each(['applicationQuery', 'workflowQuery'] as const)(
+    'refreshes status with a skeleton while retaining the dirty payment editor (%s)',
+    (queryName) => {
+      loadPaymentDetail();
+      const { rerender } = render(<AdmissionApplicationDetailScreen />);
+      const editor = screen.getByText('Fee selection editor');
+      fireEvent.click(screen.getByRole('button', { name: 'Change fee selection' }));
+      detailState[queryName].isFetching = true;
+      rerender(<AdmissionApplicationDetailScreen />);
+      expect(screen.getByRole('status', { name: 'Refreshing application status' })).toBeVisible();
+      expect(screen.getByText('Test applicant')).toBeVisible();
+      expect(screen.getByText('Fee selection editor')).toBe(editor);
+      expect(
+        screen.queryByRole('progressbar', { name: 'Refreshing application details' })
+      ).not.toBeInTheDocument();
+      expect(detailState.discardUnsavedAnswers).not.toHaveBeenCalled();
+      detailState[queryName].isFetching = false;
+      rerender(<AdmissionApplicationDetailScreen />);
+      expect(
+        screen.queryByRole('status', { name: 'Refreshing application status' })
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Fee selection editor')).toBe(editor);
+    }
+  );
   it('expands a drawer in place without discarding or remounting the active form', () => {
     loadPaymentDetail();
     const onClose = vi.fn();

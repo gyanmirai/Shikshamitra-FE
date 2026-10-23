@@ -2,8 +2,9 @@ import type { ReviewSummary } from 'src/redux/student/admissions/admission-revie
 
 import dayjs from 'dayjs';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { ReviewDialog } from './review-dialog';
 import { ReviewRecoveryAlert } from './review-recovery-alert';
@@ -52,9 +53,9 @@ export function ReviewAssignmentDialog({
             onReload={reload}
           />
           {!summary.canAssign && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0456" presentation="persistent" severity="info">
               Assignment is not available in the latest review. {summary.blockers.join(' ')}
-            </Alert>
+            </StudentFeedback>
           )}
           <Typography variant="body2">
             Choose who will review this application. Assignment changes are recorded and require a

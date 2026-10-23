@@ -2,7 +2,8 @@ import type { FormikProps } from 'formik';
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 import type { AdmissionDocumentPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
-import { Alert, Stack, Button } from '@mui/material';
+import { Stack, Button } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetAdmissionDocumentTypesQuery } from 'src/redux/student/admissions/admission-document-settings-api';
 import { getDocumentConfigurationError } from 'src/redux/student/admissions/admission-document-policy-validation';
@@ -45,15 +46,21 @@ export function WorkflowDocumentSettings({ formik, available, readOnly }: Props)
       >
         <Stack spacing={2}>
           {!available && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0545" presentation="inline" severity="info">
               Document checklists and review are not available in this environment yet.
-            </Alert>
+            </StudentFeedback>
           )}
-          {unreadable && <Alert severity="error">{invalid}</Alert>}
+          {unreadable && (
+            <StudentFeedback notificationKey="STU-0546" presentation="persistent" severity="error">
+              {invalid}
+            </StudentFeedback>
+          )}
           {policy?.enabled && (
             <>
               {isError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0547"
+                  presentation="persistent"
                   severity="warning"
                   action={
                     <Button size="small" onClick={() => refetch()}>
@@ -63,7 +70,7 @@ export function WorkflowDocumentSettings({ formik, available, readOnly }: Props)
                 >
                   Student document categories could not load. You can configure admission evidence
                   and retry linking a category.
-                </Alert>
+                </StudentFeedback>
               )}
               <DocumentRequirementsList
                 requirements={policy.requirements}
@@ -74,7 +81,15 @@ export function WorkflowDocumentSettings({ formik, available, readOnly }: Props)
                 onRetryDocumentTypes={() => refetch()}
                 onChange={(requirements) => update({ requirements })}
               />
-              {invalid && <Alert severity="error">{invalid}</Alert>}
+              {invalid && (
+                <StudentFeedback
+                  notificationKey="STU-0546"
+                  presentation="persistent"
+                  severity="error"
+                >
+                  {invalid}
+                </StudentFeedback>
+              )}
             </>
           )}
         </Stack>

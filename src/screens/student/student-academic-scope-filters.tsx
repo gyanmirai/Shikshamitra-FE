@@ -1,7 +1,8 @@
 'use client';
 
-import { Alert, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 
@@ -22,7 +23,9 @@ export function StudentAcademicScopeFilters() {
   return (
     <Stack spacing={1} sx={{ px: 1, py: 1 }}>
       {scope.isError && (
-        <Alert severity="error">Academic access could not be verified. Refresh to try again.</Alert>
+        <StudentFeedback notificationKey="STU-0709" presentation="toast" severity="error">
+          Academic access could not be verified. Refresh to try again.
+        </StudentFeedback>
       )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
         <CustomSelect

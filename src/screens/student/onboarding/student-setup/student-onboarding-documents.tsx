@@ -4,7 +4,8 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Alert, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import {
   useGetStudentOnboardingDocumentsQuery,
   useUploadStudentOnboardingDocumentMutation,
@@ -45,7 +46,9 @@ export default function StudentOnboardingDocuments({
 
   if (documentsQuery.isError) {
     return (
-      <Alert
+      <StudentFeedback
+        notificationKey="STU-0991"
+        presentation="toast"
         severity="error"
         action={
           <Button color="inherit" size="small" onClick={() => documentsQuery.refetch()}>
@@ -54,7 +57,7 @@ export default function StudentOnboardingDocuments({
         }
       >
         Onboarding documents could not be loaded.
-      </Alert>
+      </StudentFeedback>
     );
   }
 

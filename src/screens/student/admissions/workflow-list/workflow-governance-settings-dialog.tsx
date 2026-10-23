@@ -3,12 +3,13 @@
 import type { AdmissionWorkflowGovernanceSettings } from 'src/redux/student/admissions/admission-workflows-api';
 
 import * as yup from 'yup';
-import { useFormik } from 'formik';
 import { useEffect } from 'react';
+import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
 import { LoadingButton } from 'src/components/loading-button';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Switch, DialogActions, FormControlLabel } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Switch, FormControlLabel, DialogActions } from '@mui/material';
 
 type Props = {
   open: boolean;
@@ -70,10 +71,10 @@ export function WorkflowGovernanceSettingsDialog({
     >
       <DialogScrollContent onSubmit={formik.handleSubmit}>
         <Stack spacing={1.5}>
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0618" presentation="inline" severity="info">
             When maker-checker is enabled, a different authorized user must approve each workflow
             before it can be scheduled or published.
-          </Alert>
+          </StudentFeedback>
           <FormControlLabel
             label="Require maker-checker approval"
             control={
@@ -111,11 +112,16 @@ export function WorkflowGovernanceSettingsDialog({
               />
             }
           />
-          <Alert severity={formik.values.makerCheckerEnabled ? 'success' : 'warning'} icon={false}>
+          <StudentFeedback
+            notificationKey="STU-0619"
+            presentation="inline"
+            severity={formik.values.makerCheckerEnabled ? 'success' : 'warning'}
+            icon={false}
+          >
             {formik.values.makerCheckerEnabled
               ? 'Draft → Validated → Submitted → Approved → Scheduled or Published'
               : 'Authorized administrators can validate and publish directly.'}
-          </Alert>
+          </StudentFeedback>
         </Stack>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>

@@ -5,12 +5,12 @@ import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   List,
-  Alert,
   Stack,
   Button,
   Skeleton,
@@ -91,7 +91,9 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
             {versionsLoading ? (
               <Skeleton variant="rounded" height={40} aria-label="Loading form versions" />
             ) : versions.isError ? (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0062"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button size="small" onClick={() => versions.refetch()}>
@@ -100,7 +102,7 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
                 }
               >
                 Unable to load form versions. Please try again.
-              </Alert>
+              </StudentFeedback>
             ) : comparableVersions.length ? (
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
@@ -153,11 +155,23 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
                 No other versions are available yet.
               </Typography>
             )}
-            {restoreError && <Alert severity="error">{restoreError}</Alert>}
+            {restoreError && (
+              <StudentFeedback
+                notificationKey="STU-0063"
+                presentation="persistent"
+                severity="error"
+              >
+                {restoreError}
+              </StudentFeedback>
+            )}
             {comparisonMatchesSelection && comparison.isError && (
-              <Alert severity="error">
+              <StudentFeedback
+                notificationKey="STU-0064"
+                presentation="toast"
+                severity="error"
+              >
                 Unable to compare these versions. Select Compare to try again.
-              </Alert>
+              </StudentFeedback>
             )}
             {comparisonMatchesSelection &&
               !comparison.isFetching &&
@@ -185,7 +199,9 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
                 <Skeleton variant="rounded" height={48} />
               </Stack>
             ) : audit.isError ? (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0065"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button size="small" onClick={() => audit.refetch()}>
@@ -194,7 +210,7 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
                 }
               >
                 Unable to load form activity. Please try again.
-              </Alert>
+              </StudentFeedback>
             ) : audit.currentData?.length ? (
               <List dense disablePadding>
                 {audit.currentData.map((entry) => (

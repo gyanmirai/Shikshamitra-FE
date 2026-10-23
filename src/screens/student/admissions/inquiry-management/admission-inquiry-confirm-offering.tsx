@@ -6,19 +6,11 @@ import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/adm
 import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Box, Card, Stack, Button, TextField, Typography, Autocomplete } from '@mui/material';
 import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import { useConfirmAdmissionInquiryOfferingMutation } from 'src/redux/student/admissions/admission-inquiries-api';
-import {
-  Box,
-  Card,
-  Stack,
-  Alert,
-  Button,
-  TextField,
-  Typography,
-  Autocomplete,
-} from '@mui/material';
 
 import { admissionTrackLabels } from '../admission-offering-model';
 
@@ -94,7 +86,9 @@ export function AdmissionInquiryConfirmOffering({
           )}
         />
         {offerings.isError && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0398"
+            presentation="toast"
             severity="error"
             action={
               <Button size="small" onClick={() => offerings.refetch()}>
@@ -103,13 +97,13 @@ export function AdmissionInquiryConfirmOffering({
             }
           >
             Offerings could not be loaded.
-          </Alert>
+          </StudentFeedback>
         )}
         {!offerings.isFetching && !offerings.isError && inquiryOfferings.length === 0 && (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0399" presentation="inline" severity="info">
             No ready inquiry offerings are available for this cycle. Check Admission Form, Admission
             Stage, and Admission Offering settings.
-          </Alert>
+          </StudentFeedback>
         )}
         <Stack direction="row" justifyContent="flex-end">
           <LoadingButton

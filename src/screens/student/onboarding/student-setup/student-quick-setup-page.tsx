@@ -8,18 +8,10 @@ import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import {
-  Box,
-  Alert,
-  Stack,
-  Avatar,
-  Button,
-  Skeleton,
-  Typography,
-  LinearProgress,
-} from '@mui/material';
+import { Box, Stack, Avatar, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import {
   useActivateStudentOnboardingMutation,
   useLazyGetStudentOnboardingCaseQuery,
@@ -285,12 +277,34 @@ export default function StudentQuickSetupPage({
                 .join(' · ')}
           </Typography>
         </Box>
-        {!editor.permissionDenied && <Label color={status.color}>{status.label}</Label>}
+        {!editor.permissionDenied && (
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="flex-end"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            sx={{ minWidth: 0, flexShrink: 0, maxWidth: { xs: '50%', sm: 'none' } }}
+          >
+            <Label color={status.color}>{status.label}</Label>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={onShowDetails}
+              disabled={busy || editor.loading || editor.readError}
+            >
+              Details & History
+            </Button>
+          </Stack>
+        )}
       </Stack>
       <Scrollbar ref={bodyRef} sx={{ flex: 1, minHeight: 0 }}>
         <Stack spacing={1.5}>
           {editor.permissionDenied ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-1034"
+              presentation="persistent"
               severity="error"
               action={
                 <Button size="small" onClick={editor.retry}>
@@ -299,18 +313,27 @@ export default function StudentQuickSetupPage({
               }
             >
               This student is no longer available with your current access.
-            </Alert>
+            </StudentFeedback>
           ) : (
             <>
               {scopeChanged && (
-                <Alert severity="warning">
+                <StudentFeedback
+                  notificationKey="STU-1035"
+                  presentation="persistent"
+                  severity="warning"
+                >
                   The academic year changed. Close this student and reopen it in the correct year.
-                </Alert>
+                </StudentFeedback>
               )}
               {failure && (
-                <Alert severity={failureSeverity} role="alert">
+                <StudentFeedback
+                  notificationKey="STU-1036"
+                  presentation="persistent"
+                  severity={failureSeverity}
+                  role="alert"
+                >
                   {failure}
-                </Alert>
+                </StudentFeedback>
               )}
               {saving && (
                 <LinearProgress
@@ -426,11 +449,6 @@ export default function StudentQuickSetupPage({
                 title="Admission & Documents"
                 icon="mdi:file-document-check-outline"
                 contentSpacing={1}
-                action={
-                  <Button size="small" onClick={onShowDetails} disabled={busy || editor.readError}>
-                    Details & History
-                  </Button>
-                }
               >
                 <Box
                   component="fieldset"

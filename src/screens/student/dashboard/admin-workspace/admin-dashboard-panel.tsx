@@ -3,11 +3,11 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { DashboardSectionCard } from 'src/screens/academic/AcademicDashboard/Components/DashboardSectionCard';
 import {
   Box,
   Stack,
-  Alert,
   Button,
   Skeleton,
   Typography,
@@ -60,7 +60,9 @@ export function AdminDashboardPanel({
         <LinearProgress aria-label={`Refreshing ${title}`} sx={{ mb: 1 }} />
       )}
       {query?.isError ? (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0713"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" color="inherit" onClick={query.refetch}>
@@ -69,7 +71,7 @@ export function AdminDashboardPanel({
           }
         >
           {title} could not be loaded. Other sections remain available.
-        </Alert>
+        </StudentFeedback>
       ) : loading ? (
         <Skeleton variant="rounded" height={200} aria-label={`Loading ${title}`} />
       ) : (

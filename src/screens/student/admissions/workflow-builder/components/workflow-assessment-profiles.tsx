@@ -7,8 +7,9 @@ import { uuidv4 } from 'src/utils/uuidv4';
 import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { Stack, Button, Skeleton, Typography } from '@mui/material';
 import { useGetAdmissionAssessmentCatalogQuery } from 'src/redux/student/admissions/admission-assessment-catalog-api';
 
 import { WorkflowAssessmentClassProfile } from './workflow-assessment-class-profile';
@@ -76,7 +77,9 @@ export function WorkflowAssessmentProfiles({
           />
         )}
         {query.isError && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0534"
+            presentation="toast"
             severity="error"
             action={
               <Button size="small" disabled={query.isFetching} onClick={() => query.refetch()}>
@@ -85,13 +88,13 @@ export function WorkflowAssessmentProfiles({
             }
           >
             Assessment classes and subjects could not load. Your configuration is retained.
-          </Alert>
+          </StudentFeedback>
         )}
         {query.currentData && !query.isError && catalog.classes.length === 0 && (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0535" presentation="inline" severity="info">
             No classes are available in your permitted scope. Configure classes in Institute Setup
             first.
-          </Alert>
+          </StudentFeedback>
         )}
         {!initialLoading && profiles.length === 0 && (
           <Typography variant="body2" color={showErrors ? 'error.main' : 'text.secondary'}>

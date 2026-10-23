@@ -7,6 +7,7 @@ import { View403 } from 'src/sections/error';
 import { SplashScreen } from 'src/components/loading-screen';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { studentPermissions } from 'src/constants/student-menu';
+import { StudentFeedbackScope } from 'src/screens/student/student-feedback-scope';
 
 const StudentLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -19,7 +20,7 @@ const StudentLayout: React.FC<{ children: React.ReactNode }> = ({
 
   const hasPermission = hasGrantedPermission(permissions, studentPermissions.root);
   if (loading || !permissionsInitialized) return <SplashScreen />;
-  return hasPermission ? children : <View403 />;
+  return hasPermission ? <StudentFeedbackScope>{children}</StudentFeedbackScope> : <View403 />;
 };
 
 export default StudentLayout;

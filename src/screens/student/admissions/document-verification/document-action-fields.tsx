@@ -1,7 +1,8 @@
 import type { FormikProps } from 'formik';
 import type { AdmissionDocumentRequirement } from 'src/redux/student/admissions/admission-document-types';
 
-import { Alert, Stack, TextField, Typography } from '@mui/material';
+import { Stack, TextField, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import type { DocumentAction, DocumentActionValues } from './document-action-model';
 
@@ -25,12 +26,12 @@ export function DocumentActionFields({
       {action === 'upload' && (
         <>
           {requirement.evidence.length > 0 && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0307" presentation="inline" severity="info">
               This creates a new version for review. Previous versions remain in the history.
               {requirement.evidence.at(-1)?.originalSeen
                 ? ' Record the original again after replacing the file.'
                 : ''}
-            </Alert>
+            </StudentFeedback>
           )}
           <TextField
             type="file"
@@ -60,25 +61,25 @@ export function DocumentActionFields({
         </>
       )}
       {original && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0308" presentation="inline" severity="info">
           Confirm that you personally checked the physical original. This records your attestation
           and sends the evidence for review.
-        </Alert>
+        </StudentFeedback>
       )}
       {action === 'accept' && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0309" presentation="inline" severity="info">
           Accept the latest evidence after checking it against this requirement.
-        </Alert>
+        </StudentFeedback>
       )}
       {action === 'reject' && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0310" presentation="inline" severity="warning">
           Explain what needs correcting so admissions staff can provide a replacement.
-        </Alert>
+        </StudentFeedback>
       )}
       {action === 'waive' && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0311" presentation="inline" severity="warning">
           This records an exception for this applicant. Explain why the requirement can be waived.
-        </Alert>
+        </StudentFeedback>
       )}
       <TextField
         fullWidth

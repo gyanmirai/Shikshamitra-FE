@@ -14,13 +14,13 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useCreateAdmissionWorkflowVersionMutation } from 'src/redux/student/admissions/admission-workflows-api';
 import {
   Box,
   Card,
   Chip,
-  Alert,
   Stack,
   Button,
   Divider,
@@ -74,7 +74,11 @@ export function WorkflowVersionHistory({
   const existingDraft = versions.find((version) => version.status === 0);
 
   if (versions.length === 0) {
-    return <Alert severity="info">No workflow versions are available.</Alert>;
+    return (
+      <StudentFeedback notificationKey="STU-0595" presentation="inline" severity="info">
+        No workflow versions are available.
+      </StudentFeedback>
+    );
   }
 
   return (
@@ -96,9 +100,13 @@ export function WorkflowVersionHistory({
             ))}
           </TextField>
           {selected && selected.stages.length === 0 && (
-            <Alert severity="warning">
+            <StudentFeedback
+              notificationKey="STU-0596"
+              presentation="persistent"
+              severity="warning"
+            >
               Detailed comparison is unavailable until the updated Workflow API is running.
-            </Alert>
+            </StudentFeedback>
           )}
           {selected && comparison && (
             <Card variant="outlined" sx={{ p: 1.5 }}>
@@ -113,7 +121,13 @@ export function WorkflowVersionHistory({
                 </Stack>
                 <Divider />
                 {!comparison.hasChanges ? (
-                  <Alert severity="success">No stage or route differences found.</Alert>
+                  <StudentFeedback
+                    notificationKey="STU-0597"
+                    presentation="inline"
+                    severity="success"
+                  >
+                    No stage or route differences found.
+                  </StudentFeedback>
                 ) : (
                   <>
                     <ChangeList title="Stage changes" changes={comparison.stageChanges} />
@@ -142,7 +156,9 @@ export function WorkflowVersionHistory({
           )}
         </>
       ) : (
-        <Alert severity="info">Create another version to enable comparison.</Alert>
+        <StudentFeedback notificationKey="STU-0598" presentation="inline" severity="info">
+          Create another version to enable comparison.
+        </StudentFeedback>
       )}
 
       <Typography variant="subtitle2">All versions</Typography>

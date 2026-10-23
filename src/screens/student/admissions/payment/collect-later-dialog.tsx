@@ -4,8 +4,9 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useRef, useState } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 type Props = {
   busy: boolean;
@@ -77,7 +78,11 @@ export function CollectLaterDialog({ busy, onClose, onSubmit }: Props) {
               `${formik.values.reason.length}/512 characters`
             }
           />
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <StudentFeedback notificationKey="STU-0443" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
         </Stack>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2 }}>

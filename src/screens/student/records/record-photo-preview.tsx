@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Box, Stack, Alert, Button, Typography, LinearProgress } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import { useGetStudentRecordPhotoPreviewQuery } from 'src/redux/student/records/student-record-changes-api';
 
 export default function RecordPhotoPreview({ studentId, uri }: { studentId: string; uri: string }) {
@@ -20,13 +21,20 @@ export default function RecordPhotoPreview({ studentId, uri }: { studentId: stri
     setPreview({ blob, url });
     return () => URL.revokeObjectURL(url);
   }, [query.currentData, query.isError]);
-  if (!valid) return <Alert severity="error">The proposed photo preview is unavailable.</Alert>;
+  if (!valid)
+    return (
+      <StudentFeedback notificationKey="STU-0811" presentation="persistent" severity="error">
+        The proposed photo preview is unavailable.
+      </StudentFeedback>
+    );
   return (
     <Stack spacing={1}>
       <Typography variant="subtitle2">Proposed student photo</Typography>
       {query.isFetching && <LinearProgress aria-label="Loading proposed student photo" />}
       {query.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0812"
+          presentation="toast"
           severity="error"
           action={
             <Button color="inherit" onClick={() => query.refetch()}>
@@ -35,7 +43,7 @@ export default function RecordPhotoPreview({ studentId, uri }: { studentId: stri
           }
         >
           The proposed photo could not be opened with your current access.
-        </Alert>
+        </StudentFeedback>
       )}
       {!query.isError && preview && preview.blob === query.currentData && (
         <Box

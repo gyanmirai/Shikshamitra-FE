@@ -4,7 +4,8 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Chip, Alert, Stack, Typography, CardActionArea } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Card, Chip, Stack, Typography, CardActionArea } from '@mui/material';
 
 import { buildWorkflowJourneyLevels } from '../workflow-journey-levels';
 
@@ -17,7 +18,11 @@ type Props = {
 
 export function WorkflowJourneyMap({ stages, transitions, readOnly, onEditStage }: Props) {
   if (stages.length === 0) {
-    return <Alert severity="info">Add a stage to build the journey map.</Alert>;
+    return (
+      <StudentFeedback notificationKey="STU-0562" presentation="inline" severity="info">
+        Add a stage to build the journey map.
+      </StudentFeedback>
+    );
   }
 
   const levels = buildWorkflowJourneyLevels(stages, transitions);

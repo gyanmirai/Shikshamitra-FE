@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Collapse from '@mui/material/Collapse';
@@ -8,10 +7,9 @@ import TextField from '@mui/material/TextField';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useGetAdmissionFormDataSourcesQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import {
   createAdmissionChoiceValue,
@@ -42,15 +40,10 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
   const [pastedChoices, setPastedChoices] = useState('');
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
   const path = `sections[${sectionIndex}].fields[${fieldIndex}]`;
-  const { data: dataSources = [] } = useGetAdmissionFormDataSourcesQuery();
   const sourceConfig = parseOptionsSource(field.optionsJson);
   const parsedChoices = sourceConfig
     ? { choices: [] as EditableAdmissionChoice[] }
     : parseEditableAdmissionChoices(field.optionsJson);
-  const otherFields = formik.values.sections
-    .flatMap((section) => section.fields)
-    .filter((item) => item.code !== field.code);
-  const selectedSource = dataSources.find((source) => source.key === sourceConfig?.source);
   const updateChoices = (choices: EditableAdmissionChoice[]) =>
     formik.setFieldValue(`${path}.optionsJson`, serializeEditableAdmissionChoices(choices));
   const addChoice = () => {
@@ -89,6 +82,9 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
     setPasteOpen(false);
   };
 
+  // Linked Student lookups keep their existing source; choice editing is manual-only.
+  if (sourceConfig?.source && field.bindingType === 0) return null;
+
   return (
     <SectionCard
       title="Answer options"
@@ -96,45 +92,27 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
       gridProps={{ sx: { display: 'block' } }}
     >
       <Stack spacing={1.5}>
-        <CustomSelect
-          size="small"
-          label="Options source"
-          value={sourceConfig?.source ?? ''}
-          options={[
-            { value: '', label: 'Enter my own options' },
-            ...dataSources.map((item) => ({ value: item.key, label: item.displayName })),
-          ]}
-          onChange={(value) =>
-            formik.setFieldValue(
-              `${path}.optionsJson`,
-              value ? JSON.stringify({ source: value }) : undefined
-            )
-          }
-        />
-        {selectedSource?.supportsParent && (
-          <CustomSelect
-            size="small"
-            label="Depends on field"
-            value={sourceConfig?.parentField ?? ''}
-            options={[
-              { value: '', label: 'Select parent field' },
-              ...otherFields.map((item) => ({ value: item.code, label: item.label })),
-            ]}
-            onChange={(value) =>
-              formik.setFieldValue(
-                `${path}.optionsJson`,
-                JSON.stringify({
-                  source: sourceConfig?.source,
-                  parentField: value || undefined,
-                })
-              )
-            }
-          />
+        {sourceConfig?.source && (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              This field uses previously configured automatic choices. Switching to your own options
+              replaces that configuration.
+            </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => formik.setFieldValue(`${path}.optionsJson`, undefined)}
+            >
+              Enter my own options
+            </Button>
+          </>
         )}
 
         {!sourceConfig?.source && parsedChoices.error && (
           <>
-            <Alert severity="warning">{parsedChoices.error}</Alert>
+            <StudentFeedback notificationKey="STU-0359" presentation="inline" severity="warning">
+              {parsedChoices.error}
+            </StudentFeedback>
             <TextField
               fullWidth
               size="small"

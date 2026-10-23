@@ -30,7 +30,15 @@ vi.mock('src/redux/student/admissions/admission-applications-api', () => ({
 vi.mock('src/redux/student/admissions/admission-assessments-api', () => ({
   admissionAssessmentsApi: { useLazyGetApplicationAssessmentQuery: () => [mocks.getAssessment] },
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.success } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: mocks.success,
+  },
+}));
 const row: AssessmentRosterItem = {
   applicationId: 'app',
   applicationNumber: 'ADM1',

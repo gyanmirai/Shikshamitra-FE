@@ -2,7 +2,8 @@ import type { StudentDirectoryItem } from 'src/redux/student/records/student-rec
 
 import { useMemo, useState, useCallback } from 'react';
 import { useDebounceEffect } from 'src/hooks/use-debounce';
-import { Alert, Stack, Button, TextField, Autocomplete } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, TextField, Autocomplete } from '@mui/material';
 import { useGetStudentRecordsDirectoryQuery } from 'src/redux/student/records/student-records-api';
 
 export default function RecordsStudentPicker({
@@ -68,15 +69,17 @@ export default function RecordsStudentPicker({
           setLocalSelection(value);
           onSelect(value);
         }}
-        noOptionsText={query.isError
-          ? 'Students could not be loaded. Use Retry below.'
-          : includeActiveStudentList
-            ? debounced
-              ? 'No matching active or records-eligible student found.'
-              : 'No active or records-eligible students are available.'
-            : debounced
-              ? 'No eligible student matches. Students in Student List may need onboarding or historical entry approval.'
-              : 'No eligible student records are available. Complete onboarding or approve a historical entry first.'}
+        noOptionsText={
+          query.isError
+            ? 'Students could not be loaded. Use Retry below.'
+            : includeActiveStudentList
+              ? debounced
+                ? 'No matching active or records-eligible student found.'
+                : 'No active or records-eligible students are available.'
+              : debounced
+                ? 'No eligible student matches. Students in Student List may need onboarding or historical entry approval.'
+                : 'No eligible student records are available. Complete onboarding or approve a historical entry first.'
+        }
         renderInput={(params) => (
           <TextField
             {...params}
@@ -87,7 +90,9 @@ export default function RecordsStudentPicker({
         )}
       />
       {selectedQuery.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0823"
+          presentation="toast"
           severity="error"
           action={
             <Button color="inherit" onClick={() => selectedQuery.refetch()}>
@@ -96,10 +101,12 @@ export default function RecordsStudentPicker({
           }
         >
           The selected student could not be restored.
-        </Alert>
+        </StudentFeedback>
       )}
       {query.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0824"
+          presentation="toast"
           severity="error"
           action={
             <Button color="inherit" onClick={() => query.refetch()}>
@@ -108,7 +115,7 @@ export default function RecordsStudentPicker({
           }
         >
           Student choices could not be loaded.
-        </Alert>
+        </StudentFeedback>
       )}
     </Stack>
   );

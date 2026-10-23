@@ -5,7 +5,8 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 import { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { Card, Grid, Alert, Stack, Button, Typography, CardContent } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Card, Grid, Stack, Button, Typography, CardContent } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import AdmissionRuntimeField from '../admission-runtime-field';
@@ -85,7 +86,9 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
     if (!visibleFields.length)
       return (
         <Grid size={{ xs: 12 }}>
-          <Alert severity="info">No fields are configured for this section yet.</Alert>
+          <StudentFeedback notificationKey="STU-0382" presentation="inline" severity="info">
+            No fields are configured for this section yet.
+          </StudentFeedback>
         </Grid>
       );
     return (

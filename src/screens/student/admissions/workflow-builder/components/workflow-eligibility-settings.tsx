@@ -3,7 +3,8 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 import type { AdmissionEligibilityPolicy } from 'src/redux/student/admissions/admission-eligibility-policy';
 
-import { Alert, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { getEligibilityConfigurationError } from 'src/redux/student/admissions/admission-eligibility-validation';
 import {
@@ -51,11 +52,15 @@ export function WorkflowEligibilitySettings({
       >
         <Stack spacing={2}>
           {!available && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0550" presentation="inline" severity="info">
               Eligibility evaluation is not available in this environment yet.
-            </Alert>
+            </StudentFeedback>
           )}
-          {unreadable && <Alert severity="error">{error}</Alert>}
+          {unreadable && (
+            <StudentFeedback notificationKey="STU-0551" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
           <WorkflowProcessChoice
             label="Eligibility process"
             value={policy?.enabled ? 'managed' : 'basic'}
@@ -87,7 +92,15 @@ export function WorkflowEligibilitySettings({
                 stageOrder={formik.values.displayOrder}
                 readOnly={disabled}
               />
-              {error && <Alert severity="error">{error}</Alert>}
+              {error && (
+                <StudentFeedback
+                  notificationKey="STU-0551"
+                  presentation="persistent"
+                  severity="error"
+                >
+                  {error}
+                </StudentFeedback>
+              )}
             </>
           )}
         </Stack>

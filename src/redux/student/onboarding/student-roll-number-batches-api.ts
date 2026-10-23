@@ -4,6 +4,10 @@ import { studentType, studentOnboardingType } from 'src/redux/tagTypes';
 export type RollNumberScope = { academicYearId: string; standardId: string; divisionId: string };
 export type RollBatchOperation = 'assign-missing' | 'renumber';
 export type RollNumberBatch = RollNumberScope & {
+  caseIds?: string[] | null;
+  approvalRequired?: boolean;
+  approvalStages?: string[][];
+  policyVersionId?: string | null;
   scopeLabel: string;
   id: string;
   creationTime: string;
@@ -67,7 +71,7 @@ export const studentRollNumberBatchesApi = api.injectEndpoints({
     }),
     previewRollNumberBatch: builder.mutation<
       RollNumberBatch,
-      RollNumberScope & { operation: RollBatchOperation }
+      RollNumberScope & { operation: RollBatchOperation; caseIds?: string[] }
     >({
       query: (body) => ({ url: `${base}/preview`, method: 'POST', body }),
       transformResponse: (response: Envelope<RollNumberBatch>) => unwrap(response),

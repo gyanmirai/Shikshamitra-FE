@@ -19,7 +19,15 @@ const mocks = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('./use-admission-unsaved-changes', () => ({ useAdmissionUnsavedChanges: vi.fn() }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('@mui/x-date-pickers', () => ({ DatePicker: () => <div>Date picker</div> }));
 vi.mock('src/components/custom-select', () => ({
   default: ({ label, value, options, onChange, disabled }: any) => (

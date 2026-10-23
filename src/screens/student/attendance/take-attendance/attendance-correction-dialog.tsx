@@ -12,12 +12,12 @@ import { Iconify } from 'src/components/iconify';
 import { formatDateOnly } from 'src/utils/date-only';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { AttendanceStatus } from 'src/enums/student-attendace-status';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useRequestAttendanceCorrectionMutation } from 'src/redux/student/take-attendance/take-attendace-api';
 import {
-  Alert,
   Button,
   Checkbox,
   TextField,
@@ -113,16 +113,16 @@ export default function AttendanceCorrectionDialog({
           Your school policy decides whether approval is required.
         </Typography>
         {student.needsCreditCorrection && (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0640" presentation="persistent" severity="info">
             Approved leave changed after this attendance was submitted. Request a correction to
             update leave credit, even when Present or Absent stays unchanged.
-          </Alert>
+          </StudentFeedback>
         )}
         {failure && (
-          <Alert severity="error">
+          <StudentFeedback notificationKey="STU-0641" presentation="persistent" severity="error">
             {failure} Your requested change is retained. Review the latest register if it has
             changed.
-          </Alert>
+          </StudentFeedback>
         )}
         <CustomSelect
           fullWidth

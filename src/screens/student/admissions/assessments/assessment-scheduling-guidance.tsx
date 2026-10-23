@@ -1,7 +1,8 @@
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
+import { Button, Skeleton } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
-import { Alert, Button, Skeleton } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAssessmentSessionsQuery } from 'src/redux/student/admissions/admission-assessment-sessions-api';
 
 import {
@@ -34,7 +35,9 @@ export function AssessmentSchedulingGuidance({
     return <Skeleton variant="rounded" height={48} aria-label="Checking assessment slots" />;
   if (sessions.isError || !sessions.currentData)
     return (
-      <Alert
+      <StudentFeedback
+        notificationKey="STU-0268"
+        presentation="toast"
         severity="error"
         action={
           <Button
@@ -48,19 +51,21 @@ export function AssessmentSchedulingGuidance({
         }
       >
         Assessment slots could not be loaded. Retry before booking the entrance exam.
-      </Alert>
+      </StudentFeedback>
     );
   const available = getAvailableAssessmentSessions(sessions.currentData);
   if (available.length)
     return (
-      <Alert severity="info">
+      <StudentFeedback notificationKey="STU-0269" presentation="inline" severity="info">
         This applicant has no assessment slot booked. Book an available slot before starting the
         entrance exam.
-      </Alert>
+      </StudentFeedback>
     );
   const href = getAssessmentSchedulingUrl(scope, new URLSearchParams(params.toString()));
   return (
-    <Alert
+    <StudentFeedback
+      notificationKey="STU-0270"
+      presentation="persistent"
       severity="warning"
       action={
         <Button
@@ -81,6 +86,6 @@ export function AssessmentSchedulingGuidance({
       {canManageSessions
         ? 'Create an assessment slot in Assessments, then book it for this applicant before starting the entrance exam.'
         : 'Ask an admissions administrator to create an available slot, then book it for this applicant before starting the entrance exam.'}
-    </Alert>
+    </StudentFeedback>
   );
 }

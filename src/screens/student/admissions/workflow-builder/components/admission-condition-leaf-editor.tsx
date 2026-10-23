@@ -1,7 +1,8 @@
 import type { AdmissionConditionLeaf } from 'src/redux/student/admissions/admission-condition-rule';
 
 import CustomSelect from 'src/components/custom-select';
-import { Alert, Stack, TextField, Autocomplete } from '@mui/material';
+import { Stack, TextField, Autocomplete } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import {
   CONDITION_OPERATORS,
   needsConditionValue,
@@ -82,7 +83,9 @@ export function AdmissionConditionLeafEditor({
         onChange={(operator) => onChange({ ...value, operator: String(operator) })}
       />
       {strictTypes && invalidOperator && (
-        <Alert severity="error">Choose a comparison supported by this answer type.</Alert>
+        <StudentFeedback notificationKey="STU-0503" presentation="inline" severity="error">
+          Choose a comparison supported by this answer type.
+        </StudentFeedback>
       )}
       {needsConditionValue(value.operator) && (
         <TextField

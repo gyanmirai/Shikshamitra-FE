@@ -1,7 +1,8 @@
 import type { ReviewSummary } from 'src/redux/student/admissions/admission-review-types';
 
 import dayjs from 'dayjs';
-import { Chip, Link, Alert, Stack, Button, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Chip, Link, Stack, Button, Typography } from '@mui/material';
 
 import { ReviewHistory } from './review-history';
 import { ReviewEvidence } from './review-evidence';
@@ -41,21 +42,26 @@ export function ReviewSummaryContent({
         </Typography>
       </Stack>
       {summary.isStale && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0468" presentation="persistent" severity="warning">
           The application or required evidence changed after the last review. Check the updated
           information and submit a fresh recommendation before a decision.
-        </Alert>
+        </StudentFeedback>
       )}
       {summary.status === 'correctionRequested' && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0469" presentation="inline" severity="info">
           Correct the application form below and resubmit it. Review the corrected details and
           submit a new recommendation here.
-        </Alert>
+        </StudentFeedback>
       )}
       {summary.blockers.map((message) => (
-        <Alert severity="info" key={message}>
+        <StudentFeedback
+          notificationKey="STU-0470"
+          presentation="persistent"
+          severity="info"
+          key={message}
+        >
           {message}
-        </Alert>
+        </StudentFeedback>
       ))}
       {(summary.policy?.reviewerRole ||
         summary.policy?.approverRole ||

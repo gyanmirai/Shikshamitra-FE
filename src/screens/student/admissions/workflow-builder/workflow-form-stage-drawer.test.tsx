@@ -264,19 +264,19 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       DEFAULT_FORM_STAGE_POLICY
     );
   });
-  it('keeps completion validation visible beside the directly available controls', async () => {
+  it('removes staff verification settings while preserving normal completion controls', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
-    await user.click(
-      screen.getByRole('switch', {
-        name: 'Require staff verification before completing this stage',
-      })
-    );
     expect(
-      screen.queryByRole('button', { name: 'Submission and verification' })
+      screen.queryByRole('switch', { name: /Require staff verification/ })
     ).not.toBeInTheDocument();
-    expect(screen.getByText('Choose at least one section that staff must verify.')).toBeVisible();
+    expect(screen.queryByText('Sections staff must verify')).not.toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Allow corrections' })).toBeChecked();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    expect(onSave).not.toHaveBeenCalled();
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).form).toMatchObject({
+      requireSectionVerification: false,
+      verificationSectionCodes: [],
+    });
   });
   it('hides Entry stage on other stages when a starting stage is already selected', () => {
     setup(JSON.stringify({ formDefinitionId: form.id }), { isEntryStage: false }, [
@@ -347,125 +347,68 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     expect(onClose).toHaveBeenCalledOnce();
     expect(onSave).not.toHaveBeenCalled();
   });
-  it('loads sections for a selected published form from its detail endpoint', async () => {
-    mswServer.use(
-      http.get('*/student/enrollment/admissions/forms/form-1', () =>
-        HttpResponse.json({ data: form })
-      )
+  it('clears legacy verification without loading full form sections or blocking Apply changes', async () => {
+    const loadSections = vi.fn(() => new HttpResponse(null, { status: 500 }));
+    mswServer.use(http.get('*/student/enrollment/admissions/forms/form-1', loadSections));
+    const { user, onSave } = setup(
+      JSON.stringify({
+        formDefinitionId: form.id,
+        extension: 'keep',
+        form: {
+          ...DEFAULT_FORM_STAGE_POLICY,
+          requireSectionVerification: true,
+          verificationSectionCodes: ['OLD_SECTION'],
+          autoAdvanceOnSubmit: false,
+          responsibility: 'staff',
+          dueInDays: 7,
+          maxSubmissionAttempts: 5,
+        },
+      }),
+      {},
+      [],
+      [{ ...form, sections: [] }]
     );
-    const onSave = vi.fn();
-    const configurationJson = JSON.stringify({
-      formDefinitionId: form.id,
-      form: {
-        ...DEFAULT_FORM_STAGE_POLICY,
-        requireSectionVerification: true,
-        autoAdvanceOnSubmit: false,
-      },
-    });
-    renderDocumentUi(
-      <AdmissionWorkflowStageDrawer
-        open
-        stage={{ ...stage, configurationJson }}
-        stageTypes={[metadata]}
-        forms={[{ ...form, sections: [] }]}
-        readOnly={false}
-        onClose={vi.fn()}
-        onSave={onSave}
-      />
-    );
-    const user = userEvent.setup();
-
-    await screen.findByRole('checkbox', { name: 'Applicant details' });
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.queryByRole('checkbox', { name: 'Applicant details' })).not.toBeInTheDocument();
     expect(
-      screen.getByText('Choose at least one section that staff must verify.')
-    ).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Published form version *' })).not.toHaveAttribute(
-      'aria-invalid',
-      'true'
-    );
-
-    await user.click(screen.getByRole('checkbox', { name: 'Applicant details' }));
+      screen.queryByRole('switch', { name: /Require staff verification/ })
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeEnabled();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-    expect(
-      JSON.parse(onSave.mock.calls[0][0].configurationJson).form.verificationSectionCodes
-    ).toEqual(['APPLICANT']);
-  });
-
-  it('loads sections when a published form is attached after opening the stage', async () => {
-    mswServer.use(
-      http.get('*/student/enrollment/admissions/forms/form-1', () =>
-        HttpResponse.json({ data: form })
-      )
-    );
-    const onSave = vi.fn();
-    const configurationJson = JSON.stringify({
-      form: {
-        ...DEFAULT_FORM_STAGE_POLICY,
-        requireSectionVerification: true,
-        autoAdvanceOnSubmit: false,
-      },
-    });
-    renderDocumentUi(
-      <AdmissionWorkflowStageDrawer
-        open
-        stage={{ ...stage, configurationJson }}
-        stageTypes={[metadata]}
-        forms={[{ ...form, sections: [] }]}
-        readOnly={false}
-        onClose={vi.fn()}
-        onSave={onSave}
-      />
-    );
-    const user = userEvent.setup();
-
-    await user.click(screen.getByRole('combobox', { name: 'Published form version *' }));
-    await user.click(screen.getByRole('option', { name: 'Application form · v2' }));
-    await user.click(await screen.findByRole('checkbox', { name: 'Applicant details' }));
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-
-    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(loadSections).not.toHaveBeenCalled();
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
       formDefinitionId: form.id,
-      form: { verificationSectionCodes: ['APPLICANT'] },
+      extension: 'keep',
+      form: {
+        requireSectionVerification: false,
+        verificationSectionCodes: [],
+        autoAdvanceOnSubmit: true,
+        responsibility: 'staff',
+        dueInDays: 7,
+        maxSubmissionAttempts: 5,
+      },
     });
   });
 
-  it('shows a retry path when the selected form sections cannot be loaded', async () => {
-    let attempts = 0;
-    mswServer.use(
-      http.get('*/student/enrollment/admissions/forms/form-1', () => {
-        attempts += 1;
-        return attempts === 1
-          ? new HttpResponse(null, { status: 500 })
-          : HttpResponse.json({ data: form });
-      })
+  it('allows attaching a registration form without an obsolete section-details request', async () => {
+    const loadSections = vi.fn(() => HttpResponse.json({ data: form }));
+    mswServer.use(http.get('*/student/enrollment/admissions/forms/form-1', loadSections));
+    const { user, onSave } = setup(
+      JSON.stringify({
+        form: { ...DEFAULT_FORM_STAGE_POLICY, requireSectionVerification: true },
+      }),
+      {},
+      [],
+      [{ ...form, sections: [] }]
     );
-    const configurationJson = JSON.stringify({
+    await user.click(screen.getByRole('combobox', { name: 'Published form version *' }));
+    await user.click(screen.getByRole('option', { name: 'Application form · v2' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(loadSections).not.toHaveBeenCalled();
+    expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
       formDefinitionId: form.id,
-      form: { ...DEFAULT_FORM_STAGE_POLICY, requireSectionVerification: true },
+      form: { requireSectionVerification: false, verificationSectionCodes: [] },
     });
-    renderDocumentUi(
-      <AdmissionWorkflowStageDrawer
-        open
-        stage={{ ...stage, configurationJson }}
-        stageTypes={[metadata]}
-        forms={[{ ...form, sections: [] }]}
-        readOnly={false}
-        onClose={vi.fn()}
-        onSave={vi.fn()}
-      />
-    );
-    const user = userEvent.setup();
-
-    expect(await screen.findByText(/Unable to load this form's sections/)).toBeInTheDocument();
-    expect(
-      screen.queryByText('Choose at least one section that staff must verify.')
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(await screen.findByRole('checkbox', { name: 'Applicant details' })).toBeInTheDocument();
   });
 });

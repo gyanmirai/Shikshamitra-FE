@@ -216,7 +216,7 @@ describe('Pipeline worklist', () => {
       }),
       expect.objectContaining({ skip: false, refetchOnMountOrArgChange: true })
     );
-    expect(context.table.exportLabel).toBe('Export current page');
+    expect(context.table.exportLabel).toBe('Export');
     expect(context.table.isFilter).toBe(true);
     fireEvent.click(screen.getByText('Open row'));
     expect(context.push).toHaveBeenCalledWith(
@@ -246,6 +246,16 @@ describe('Pipeline worklist', () => {
     expect(context.table.isLoading).toBe(false);
     expect(context.table.data).toEqual(context.data.items);
     expect(screen.getByRole('progressbar', { name: 'Refreshing Pipeline' })).toBeInTheDocument();
+  });
+  it('keeps cached Pipeline rows without a competing refresh bar behind an application drawer', () => {
+    context.fetching = true;
+    context.params.set('application', 'app-1');
+    render(<AdmissionInquiryPipelineScreen />);
+    expect(context.table.isLoading).toBe(false);
+    expect(context.table.data).toEqual(context.data.items);
+    expect(
+      screen.queryByRole('progressbar', { name: 'Refreshing Pipeline' })
+    ).not.toBeInTheDocument();
   });
   it('skips both reads and hides case navigation without Application View', () => {
     context.canView = false;

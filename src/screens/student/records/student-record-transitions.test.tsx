@@ -57,7 +57,15 @@ vi.mock('src/components/custom-select', () => ({
     </select>
   ),
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('src/components/customizabaleTable', () => ({
   default: ({ data, columns }: any) => (
     <div>
@@ -107,15 +115,18 @@ describe('Transition command permissions', () => {
     { grant: 'Add', canCancel: true, canApprove: true },
     { grant: 'Delete', canCancel: false, canApprove: false },
     { grant: 'View', canCancel: false, canApprove: false },
-  ])('requires Add/Update for cancellation and approval with $grant access', ({ grant, canCancel, canApprove }) => {
-    mocks.permissions = [{ name: `Students.Records.Transitions.${grant}`, isGranted: true }];
-    mocks.row.canCancel = true;
-    mocks.row.canApprove = true;
-    render(<StudentRecordTransitions />);
-    fireEvent.click(screen.getByRole('button', { name: 'Review' }));
-    expect(Boolean(screen.queryByRole('button', { name: 'Cancel transition' }))).toBe(canCancel);
-    expect(Boolean(screen.queryByRole('button', { name: 'Approve stage' }))).toBe(canApprove);
-  });
+  ])(
+    'requires Add/Update for cancellation and approval with $grant access',
+    ({ grant, canCancel, canApprove }) => {
+      mocks.permissions = [{ name: `Students.Records.Transitions.${grant}`, isGranted: true }];
+      mocks.row.canCancel = true;
+      mocks.row.canApprove = true;
+      render(<StudentRecordTransitions />);
+      fireEvent.click(screen.getByRole('button', { name: 'Review' }));
+      expect(Boolean(screen.queryByRole('button', { name: 'Cancel transition' }))).toBe(canCancel);
+      expect(Boolean(screen.queryByRole('button', { name: 'Approve stage' }))).toBe(canApprove);
+    }
+  );
   it('does not advertise approval or application when the server denies the current actor', () => {
     render(<StudentRecordTransitions />);
     fireEvent.click(screen.getByRole('button', { name: 'Review' }));
@@ -145,7 +156,7 @@ describe('Transition command permissions', () => {
         remarks: 'Reviewed all exit evidence',
       })
     );
-    expect(await screen.findByRole('alert')).toHaveTextContent('Your reason has been kept');
+    expect(await screen.findByText('Your reason has been kept', { exact: false })).toBeVisible();
     expect(screen.getByLabelText('Reason or review remarks')).toHaveValue(
       'Reviewed all exit evidence'
     );

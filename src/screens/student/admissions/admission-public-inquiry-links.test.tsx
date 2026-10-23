@@ -150,6 +150,8 @@ vi.mock('src/screens/hr/employee/employee-form-fields/InformationFields', () => 
 vi.mock('@mui/x-date-pickers', () => ({ DateTimePicker: () => null }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
+    warning: vi.fn(),
+    dismiss: vi.fn(),
     success: hooks.successToast,
     info: hooks.infoToast,
     error: hooks.errorToast,

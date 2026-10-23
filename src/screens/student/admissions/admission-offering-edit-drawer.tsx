@@ -12,6 +12,7 @@ import type {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
@@ -19,7 +20,6 @@ import {
   Box,
   Card,
   Link,
-  Alert,
   Stack,
   Drawer,
   Button,
@@ -68,7 +68,9 @@ export function AdmissionOfferingEditDrawer(props: Props) {
           <Skeleton variant="rounded" height={56} />
           <AdmissionOfferingCycleContext cycle={cycle} showCode={false} />
           {detailError ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0121"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" color="inherit" onClick={onRetryDetail}>
@@ -77,7 +79,7 @@ export function AdmissionOfferingEditDrawer(props: Props) {
               }
             >
               {detailError}
-            </Alert>
+            </StudentFeedback>
           ) : (
             <Box role="status" aria-label="Loading admission offering" aria-busy="true">
               <FormSectionCard icon="mdi:school-outline" title="Class and academic scope">
@@ -319,7 +321,9 @@ function AdmissionOfferingEditStep({
             }
           >
             {(editor.queryFailed || standardsQuery.isError) && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0123"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button
@@ -335,16 +339,20 @@ function AdmissionOfferingEditStep({
                 }
               >
                 Some academic options could not be loaded. Retry before saving.
-              </Alert>
+              </StudentFeedback>
             )}
             {editor.hierarchyEmpty && (
-              <Alert severity="error">
+              <StudentFeedback
+                notificationKey="STU-0124"
+                presentation="persistent"
+                severity="error"
+              >
                 No academic hierarchy is configured for this academic year. Configure the board,
                 medium, school level, and standards in Institute Setup.{' '}
                 <Link href="/setting/academic-setup/" underline="hover">
                   Open Institute Setup
                 </Link>
-              </Alert>
+              </StudentFeedback>
             )}
             <AdmissionOfferingHierarchyFields
               compact
@@ -467,14 +475,14 @@ function AdmissionOfferingEditStep({
           </Stack>
           {editor.readiness?.isValid && <Label color="success">Ready</Label>}
           {editor.readiness && !editor.readiness.isValid && (
-            <Alert severity="error">
+            <StudentFeedback notificationKey="STU-0125" presentation="persistent" severity="error">
               <Typography variant="subtitle2">Configuration incomplete</Typography>
               {editor.readiness.errors.map((error) => (
                 <Typography key={`${error.code}-${error.message}`} variant="body2">
                   {error.message}
                 </Typography>
               ))}
-            </Alert>
+            </StudentFeedback>
           )}
         </FormSectionCard>
       )}

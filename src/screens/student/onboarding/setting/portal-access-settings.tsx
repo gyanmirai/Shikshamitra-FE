@@ -12,12 +12,12 @@ import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { studentPermissions } from 'src/constants/student-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import {
   Box,
   Stack,
-  Alert,
   Paper,
   Radio,
   Button,
@@ -134,9 +134,9 @@ export default function PortalAccessSettingsScreen() {
         {' · All admissions'}
       </Typography>
       {!canConfigure && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0942" presentation="inline" severity="info">
           You can view these settings. Editing requires onboarding settings permission.
-        </Alert>
+        </StudentFeedback>
       )}
       <Box
         component="form"
@@ -275,7 +275,15 @@ export default function PortalAccessSettingsScreen() {
                 )}
               </Stack>
             </Box>
-            {formik.status && <Alert severity="error">{formik.status}</Alert>}
+            {formik.status && (
+              <StudentFeedback
+                notificationKey="STU-0943"
+                presentation="persistent"
+                severity="error"
+              >
+                {formik.status}
+              </StudentFeedback>
+            )}
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
               spacing={1.5}

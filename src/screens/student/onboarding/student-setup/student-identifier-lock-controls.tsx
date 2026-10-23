@@ -6,9 +6,10 @@ import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Stack, Alert, Button, TextField, DialogActions } from '@mui/material';
+import { Stack, Button, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useSetStudentOnboardingIdentifierLockMutation } from 'src/redux/student/onboarding/student-onboarding-api';
 
@@ -91,23 +92,25 @@ export default function StudentIdentifierLockControls({
   };
   return (
     <>
-      <Stack direction="row" spacing={1}>
+      <Stack direction="row" spacing={1} alignItems="center">
         <Button
           size="small"
           variant="outlined"
+          startIcon={<Iconify icon="mdi:lock-outline" width={18} />}
           disabled={disabled || saving.isLoading || !canLock || !academicYearId || !divisionId}
           onClick={() => setAction('lock')}
         >
-          Lock {label}
+          Lock
         </Button>
         {canUnlock && (
           <Button
             size="small"
             variant="outlined"
+            startIcon={<Iconify icon="mdi:lock-open-outline" width={18} />}
             disabled={disabled || saving.isLoading || !academicYearId || !divisionId}
             onClick={() => setAction('unlock')}
           >
-            Unlock {label}
+            Unlock
           </Button>
         )}
       </Stack>
@@ -122,11 +125,11 @@ export default function StudentIdentifierLockControls({
       >
         <DialogScrollContent>
           <Stack spacing={1.5}>
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0968" presentation="inline" severity="info">
               This applies to {label} for students in the selected Division. New students receive
               the next available number while locked; after unlocking, published numbering rules
               apply.
-            </Alert>
+            </StudentFeedback>
             {action === 'unlock' && (
               <ShakingTextField error={Boolean(form.touched.reason && form.errors.reason)}>
                 <TextField
@@ -144,7 +147,15 @@ export default function StudentIdentifierLockControls({
                 />
               </ShakingTextField>
             )}
-            {form.status && <Alert severity="error">{form.status}</Alert>}
+            {form.status && (
+              <StudentFeedback
+                notificationKey="STU-0969"
+                presentation="persistent"
+                severity="error"
+              >
+                {form.status}
+              </StudentFeedback>
+            )}
           </Stack>
         </DialogScrollContent>
         <DialogActions sx={{ p: 2 }}>

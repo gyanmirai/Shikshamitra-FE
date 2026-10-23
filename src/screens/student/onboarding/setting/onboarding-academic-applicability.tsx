@@ -4,9 +4,10 @@ import type { Board } from 'src/types/school';
 import type { StudentOnboardingCampus } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import { useMemo } from 'react';
-import { Box, Alert } from '@mui/material';
+import { Box } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import type {
   AcademicApplicableRule,
@@ -33,11 +34,16 @@ export type OnboardingAcademicStructureOptions = {
 };
 
 export function getOnboardingSchoolLevelName(
-  boardName: string, mediumName: string, stageName: string
+  boardName: string,
+  mediumName: string,
+  stageName: string
 ): string {
   const prefix = `${boardName} - ${mediumName} - `;
-  return (stageName.toLowerCase().startsWith(prefix.toLowerCase())
-    ? stageName.slice(prefix.length) : stageName).trim();
+  return (
+    stageName.toLowerCase().startsWith(prefix.toLowerCase())
+      ? stageName.slice(prefix.length)
+      : stageName
+  ).trim();
 }
 
 export const buildOnboardingAcademicStructureOptions = (
@@ -187,7 +193,8 @@ export const normalizeSingleAcademicApplicability = (
   schoolLevels: 'always' | 'gseb' | 'none' = 'always'
 ): AcademicApplicableRule => {
   const board = boards.find((item) => item.id === value.boardIds[0]);
-  const showSchoolLevels = schoolLevels === 'always' || (schoolLevels === 'gseb' && board?.type === 1);
+  const showSchoolLevels =
+    schoolLevels === 'always' || (schoolLevels === 'gseb' && board?.type === 1);
   const singleValue: AcademicApplicableRule = {
     ...value,
     boardMode: 'selected',
@@ -223,7 +230,8 @@ export const createEmptySingleAcademicApplicability = (): AcademicApplicableRule
 });
 
 export const getSingleAcademicPathValidationError = (value: AcademicApplicableRule) => {
-  if (value.campusMode === 'selected' && !value.campusIds?.length) return 'Select at least one Campus.';
+  if (value.campusMode === 'selected' && !value.campusIds?.length)
+    return 'Select at least one Campus.';
   if (value.boardMode !== 'selected' || value.boardIds.length !== 1) return 'Select one Board.';
   if (value.mediumMode !== 'selected' || value.academicMediumIds.length !== 1) {
     return 'Select one Medium.';
@@ -262,8 +270,10 @@ export const getAcademicApplicabilitySummary = (
   campuses: StudentOnboardingCampus[] = []
 ) => {
   const options = buildOnboardingAcademicStructureOptions(boards);
-  const campusIds = value.campusMode === 'selected' ? value.campusIds ?? [] : [];
-  const campusNames = campusIds.map((id) => campuses.find((campus) => campus.id === id)?.name ?? 'Unavailable campus');
+  const campusIds = value.campusMode === 'selected' ? (value.campusIds ?? []) : [];
+  const campusNames = campusIds.map(
+    (id) => campuses.find((campus) => campus.id === id)?.name ?? 'Unavailable campus'
+  );
   return [
     ...(campusIds.length ? [`Campus: ${campusNames.join(', ')}`] : []),
     summarizeDimension(value.boardMode, value.boardIds, options.boards, 'All Boards', 'Board'),
@@ -300,9 +310,17 @@ export const getAcademicApplicabilitySummary = (
 
 /** Preserve hierarchy IDs while showing concise labels in dependent selectors. */
 export function AcademicApplicabilityFields({
-  value, boards, campuses = [], campusesLoading = false, campusesError = false,
-  onChange, showErrors = false, compactHelp = false,
-  schoolLevels = 'always', showDivisions = true, showCampuses = true,
+  value,
+  boards,
+  campuses = [],
+  campusesLoading = false,
+  campusesError = false,
+  onChange,
+  showErrors = false,
+  compactHelp = false,
+  schoolLevels = 'always',
+  showDivisions = true,
+  showCampuses = true,
 }: {
   value: AcademicApplicableRule;
   boards: Board[];
@@ -319,88 +337,195 @@ export function AcademicApplicabilityFields({
   const options = useMemo(() => buildOnboardingAcademicStructureOptions(boards), [boards]);
   const available = useMemo(() => filterAcademicOptions(value, options), [options, value]);
   const update = (patch: Partial<AcademicApplicableRule>) =>
-    onChange(normalizeApplicability({ ...value, includeFutureStructures: false, ...patch }, options));
-  const boardId = value.boardMode === 'selected' ? value.boardIds[0] ?? '' : '';
+    onChange(
+      normalizeApplicability({ ...value, includeFutureStructures: false, ...patch }, options)
+    );
+  const boardId = value.boardMode === 'selected' ? (value.boardIds[0] ?? '') : '';
   const board = boards.find((item) => item.id === boardId);
-  const showSchoolLevels = schoolLevels === 'always' || (schoolLevels === 'gseb' && board?.type === 1);
-  const mediumId = value.mediumMode === 'selected' ? value.academicMediumIds[0] ?? '' : '';
+  const showSchoolLevels =
+    schoolLevels === 'always' || (schoolLevels === 'gseb' && board?.type === 1);
+  const mediumId = value.mediumMode === 'selected' ? (value.academicMediumIds[0] ?? '') : '';
   const stages = value.stageMode === 'selected' ? value.academicMediumStageIds : [];
   const standards = value.classMode === 'selected' ? value.standardIds : [];
   const selectOptions = (choices: AcademicStructureOption[]) =>
     choices.map((option) => ({ value: option.id, label: option.label }));
   const multiple = (
-    label: string, ids: string[], choices: AcademicStructureOption[],
-    disabled: boolean, onSelect: (ids: string[]) => void, optional = false
+    label: string,
+    ids: string[],
+    choices: AcademicStructureOption[],
+    disabled: boolean,
+    onSelect: (ids: string[]) => void,
+    optional = false
   ) => (
     <ShakingTextField error={showErrors && !optional && !disabled && ids.length === 0}>
       <CustomSelect
-        size="small" label={label} multiple value={ids} options={selectOptions(choices)}
-        required={!optional} disabled={disabled || choices.length === 0}
+        size="small"
+        label={label}
+        multiple
+        value={ids}
+        options={selectOptions(choices)}
+        required={!optional}
+        disabled={disabled || choices.length === 0}
         error={showErrors && !optional && !disabled && ids.length === 0}
-        helperText={showErrors && !optional && !ids.length && !disabled
-          ? `Select at least one ${label.toLowerCase()}.`
-          : !compactHelp && disabled ? 'Choose the parent selection first.'
-          : !compactHelp && optional ? 'Leave empty for all divisions in the selected standards.' : undefined}
+        helperText={
+          showErrors && !optional && !ids.length && !disabled
+            ? `Select at least one ${label.toLowerCase()}.`
+            : !compactHelp && disabled
+              ? 'Choose the parent selection first.'
+              : !compactHelp && optional
+                ? 'Leave empty for all divisions in the selected standards.'
+                : undefined
+        }
         onChange={(selectedIds) => onSelect(selectedIds.map(String))}
       />
     </ShakingTextField>
   );
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
-      {showCampuses && (campuses.length > 0 || campusesLoading || campusesError || value.campusMode === 'selected') ? (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+        gap: 2,
+      }}
+    >
+      {showCampuses &&
+      (campuses.length > 0 ||
+        campusesLoading ||
+        campusesError ||
+        value.campusMode === 'selected') ? (
         <Box sx={{ gridColumn: '1 / -1' }}>
           <CustomSelect
             size="small"
             label="Campuses (optional)"
             multiple
-            value={value.campusMode === 'selected' ? value.campusIds ?? [] : []}
+            value={value.campusMode === 'selected' ? (value.campusIds ?? []) : []}
             options={campuses.map((campus) => ({ value: campus.id, label: campus.name }))}
             disabled={campusesLoading || campusesError || !campuses.length}
-            helperText={campusesError ? 'Campus choices could not be loaded.'
-              : campusesLoading ? 'Loading campuses…'
-              : compactHelp ? undefined : 'Leave empty to cover all campuses.'}
-            onChange={(ids) => update({
-              campusMode: ids.length ? 'selected' : 'all', campusIds: ids.map(String),
-            })}
+            helperText={
+              campusesError
+                ? 'Campus choices could not be loaded.'
+                : campusesLoading
+                  ? 'Loading campuses…'
+                  : compactHelp
+                    ? undefined
+                    : 'Leave empty to cover all campuses.'
+            }
+            onChange={(ids) =>
+              update({
+                campusMode: ids.length ? 'selected' : 'all',
+                campusIds: ids.map(String),
+              })
+            }
           />
-          {campusesError ? <Alert severity="error">Campus choices could not be loaded. Retry this page before applying a campus-specific rule.</Alert> : null}
+          {campusesError ? (
+            <StudentFeedback notificationKey="STU-0940" presentation="toast" severity="error">
+              Campus choices could not be loaded. Retry this page before applying a campus-specific
+              rule.
+            </StudentFeedback>
+          ) : null}
         </Box>
       ) : null}
       <ShakingTextField error={showErrors && !boardId}>
-        <CustomSelect size="small" required label="Board" value={boardId}
-          options={selectOptions(options.boards)} disabled={!options.boards.length}
+        <CustomSelect
+          size="small"
+          required
+          label="Board"
+          value={boardId}
+          options={selectOptions(options.boards)}
+          disabled={!options.boards.length}
           error={showErrors && !boardId}
           helperText={showErrors && !boardId ? 'Select a board.' : undefined}
-          onChange={(id) => update({
-            boardMode: 'selected', boardIds: [String(id)],
-            mediumMode: 'selected', academicMediumIds: [],
-            stageMode: schoolLevels === 'always' || (schoolLevels === 'gseb' && boards.find((item) => item.id === String(id))?.type === 1) ? 'selected' : 'all', academicMediumStageIds: [],
-            classMode: 'selected', standardIds: [], divisionMode: 'all', divisionIds: [],
-          })} />
+          onChange={(id) =>
+            update({
+              boardMode: 'selected',
+              boardIds: [String(id)],
+              mediumMode: 'selected',
+              academicMediumIds: [],
+              stageMode:
+                schoolLevels === 'always' ||
+                (schoolLevels === 'gseb' &&
+                  boards.find((item) => item.id === String(id))?.type === 1)
+                  ? 'selected'
+                  : 'all',
+              academicMediumStageIds: [],
+              classMode: 'selected',
+              standardIds: [],
+              divisionMode: 'all',
+              divisionIds: [],
+            })
+          }
+        />
       </ShakingTextField>
       <ShakingTextField error={showErrors && !mediumId && Boolean(boardId)}>
-        <CustomSelect size="small" required label="Medium" value={mediumId}
-          options={selectOptions(available.mediums)} disabled={!boardId || !available.mediums.length}
-          error={showErrors && !mediumId && Boolean(boardId)} helperText={showErrors && !mediumId && boardId
-            ? 'Select a medium.' : !compactHelp && !boardId ? 'Choose a board first.' : undefined}
-          onChange={(id) => update({
-            mediumMode: 'selected', academicMediumIds: [String(id)],
-            stageMode: showSchoolLevels ? 'selected' : 'all', academicMediumStageIds: [],
-            classMode: 'selected', standardIds: [], divisionMode: 'all', divisionIds: [],
-          })} />
+        <CustomSelect
+          size="small"
+          required
+          label="Medium"
+          value={mediumId}
+          options={selectOptions(available.mediums)}
+          disabled={!boardId || !available.mediums.length}
+          error={showErrors && !mediumId && Boolean(boardId)}
+          helperText={
+            showErrors && !mediumId && boardId
+              ? 'Select a medium.'
+              : !compactHelp && !boardId
+                ? 'Choose a board first.'
+                : undefined
+          }
+          onChange={(id) =>
+            update({
+              mediumMode: 'selected',
+              academicMediumIds: [String(id)],
+              stageMode: showSchoolLevels ? 'selected' : 'all',
+              academicMediumStageIds: [],
+              classMode: 'selected',
+              standardIds: [],
+              divisionMode: 'all',
+              divisionIds: [],
+            })
+          }
+        />
       </ShakingTextField>
-      {showSchoolLevels && multiple('School levels', stages, available.stages, !mediumId, (ids) => update({
-        stageMode: 'selected', academicMediumStageIds: ids,
-        classMode: 'selected', standardIds: [], divisionMode: 'all', divisionIds: [],
-      }))}
-      {multiple(schoolLevels === 'always' ? 'Standards' : 'Class', standards, available.standards, !mediumId || (showSchoolLevels && !stages.length), (ids) => update({
-        classMode: 'selected', standardIds: ids, divisionMode: 'all', divisionIds: [],
-      }))}
-      {showDivisions && <Box sx={{ gridColumn: '1 / -1' }}>
-        {multiple('Divisions', value.divisionIds, available.divisions, !standards.length, (ids) => update({
-          divisionMode: ids.length ? 'selected' : 'all', divisionIds: ids,
-        }), true)}
-      </Box>}
+      {showSchoolLevels &&
+        multiple('School levels', stages, available.stages, !mediumId, (ids) =>
+          update({
+            stageMode: 'selected',
+            academicMediumStageIds: ids,
+            classMode: 'selected',
+            standardIds: [],
+            divisionMode: 'all',
+            divisionIds: [],
+          })
+        )}
+      {multiple(
+        schoolLevels === 'always' ? 'Standards' : 'Class',
+        standards,
+        available.standards,
+        !mediumId || (showSchoolLevels && !stages.length),
+        (ids) =>
+          update({
+            classMode: 'selected',
+            standardIds: ids,
+            divisionMode: 'all',
+            divisionIds: [],
+          })
+      )}
+      {showDivisions && (
+        <Box sx={{ gridColumn: '1 / -1' }}>
+          {multiple(
+            'Divisions',
+            value.divisionIds,
+            available.divisions,
+            !standards.length,
+            (ids) =>
+              update({
+                divisionMode: ids.length ? 'selected' : 'all',
+                divisionIds: ids,
+              }),
+            true
+          )}
+        </Box>
+      )}
     </Box>
   );
 }

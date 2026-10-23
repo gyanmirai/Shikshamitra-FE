@@ -1,7 +1,8 @@
 import type { FormikProps } from 'formik';
 
-import { Alert, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import type { WorkflowTransitionFormValues } from '../workflow-transition-form';
 
@@ -63,10 +64,10 @@ export function WorkflowDocumentRoute({
         ]}
         onChange={(value) => selectRoute(String(value))}
       />
-      <Alert severity="info">
+      <StudentFeedback notificationKey="STU-0544" presentation="inline" severity="info">
         Every required document must be accepted before any route can continue. Rejected documents
         need replacement and fresh verification.
-      </Alert>
+      </StudentFeedback>
     </Stack>
   );
 }

@@ -4,7 +4,8 @@ import type {
 } from 'src/redux/student/admissions/admission-document-types';
 
 import { Iconify } from 'src/components/iconify';
-import { Alert, Button, DialogActions } from '@mui/material';
+import { Button, DialogActions } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { documentActionLabels } from './document-action-model';
@@ -45,9 +46,14 @@ export function DocumentActionDialog({
     >
       <DialogScrollContent>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <StudentFeedback
+            notificationKey="STU-0306"
+            presentation="persistent"
+            severity="error"
+            sx={{ mb: 2 }}
+          >
             {error}
-          </Alert>
+          </StudentFeedback>
         )}
         <DocumentActionFields
           action={action}

@@ -17,7 +17,13 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: mocks.success, warning: mocks.warning, error: mocks.error },
+  shikshaMitraToast: {
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: mocks.success,
+    warning: mocks.warning,
+    error: mocks.error,
+  },
 }));
 vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
   useLazyGetAdmissionOfferingQuery: () => [mocks.load, { isFetching: false }],

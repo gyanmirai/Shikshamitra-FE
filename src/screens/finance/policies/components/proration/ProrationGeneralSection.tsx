@@ -110,7 +110,7 @@ export default function ProrationGeneralSection({
                       Active
                     </Label>
                     <Typography variant="caption" color="text.secondary">
-                      (Ready for fee structures)
+                      (Available for fee calculation)
                     </Typography>
                   </Stack>
                 </MenuItem>

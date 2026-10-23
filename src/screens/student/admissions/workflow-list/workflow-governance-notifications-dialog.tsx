@@ -2,11 +2,12 @@
 
 import type { AdmissionWorkflowNotification } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { fDateTime } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
 import { LoadingButton } from 'src/components/loading-button';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Card, Stack, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Card, Stack, Button, Typography, DialogActions } from '@mui/material';
 
 type Props = {
   open: boolean;
@@ -41,9 +42,15 @@ export function WorkflowGovernanceNotificationsDialog({
           <Typography variant="body2" color="text.secondary">
             Review approval requests and publication updates assigned to you.
           </Typography>
-          {loading && <Alert severity="info">Loading workflow notifications…</Alert>}
+          {loading && (
+            <StudentFeedback notificationKey="STU-0616" presentation="inline" severity="info">
+              Loading workflow notifications…
+            </StudentFeedback>
+          )}
           {!loading && !notifications?.length && (
-            <Alert severity="info">You have no workflow governance notifications.</Alert>
+            <StudentFeedback notificationKey="STU-0617" presentation="inline" severity="info">
+              You have no workflow governance notifications.
+            </StudentFeedback>
           )}
           {notifications?.map((notification) => (
             <Card key={notification.id} variant="outlined" sx={{ p: 1.5 }}>

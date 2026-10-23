@@ -2,8 +2,9 @@ import type { FormikProps } from 'formik';
 import type { AdmissionOfferPolicy } from 'src/redux/student/admissions/admission-offer-policy';
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Alert, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import CustomAccordion from 'src/components/custom-accordian';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
 import {
@@ -39,9 +40,9 @@ export function WorkflowOfferSettings({ formik, available, readOnly }: Props) {
       >
         <Stack spacing={2}>
           {!available && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0563" presentation="inline" severity="info">
               Managed Offer settings are not available in this environment yet.
-            </Alert>
+            </StudentFeedback>
           )}
           <WorkflowProcessChoice
             label="Offer process"
@@ -64,7 +65,11 @@ export function WorkflowOfferSettings({ formik, available, readOnly }: Props) {
               },
             ]}
           />
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <StudentFeedback notificationKey="STU-0564" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
         </Stack>
       </FormSectionCard>
       {policy?.enabled && (

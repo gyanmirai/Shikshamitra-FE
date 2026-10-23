@@ -1,6 +1,7 @@
 import type { FormikProps } from 'formik';
 
-import { Alert, Stack, MenuItem, TextField } from '@mui/material';
+import { Stack, MenuItem, TextField } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import type { WorkflowTransitionFormValues } from '../workflow-transition-form';
 
@@ -70,15 +71,26 @@ export function WorkflowOutcomeRoute({
         disabled={readOnly}
         onChange={(event) => selectRoute(event.target.value)}
       >
-        <MenuItem value="default" disabled={!defaultAllowed}>{defaultLabel}</MenuItem>
+        <MenuItem value="default" disabled={!defaultAllowed}>
+          {defaultLabel}
+        </MenuItem>
         {outcomes.map((outcome) => (
-          <MenuItem key={outcome.value} value={outcome.value} disabled={Boolean(allowedOutcomes && !allowedOutcomes.includes(outcome.value))}>
-            {outcome.label}{allowedOutcomes && !allowedOutcomes.includes(outcome.value) ? ' (enable in stage completion settings)' : ''}
+          <MenuItem
+            key={outcome.value}
+            value={outcome.value}
+            disabled={Boolean(allowedOutcomes && !allowedOutcomes.includes(outcome.value))}
+          >
+            {outcome.label}
+            {allowedOutcomes && !allowedOutcomes.includes(outcome.value)
+              ? ' (enable in stage completion settings)'
+              : ''}
           </MenuItem>
         ))}
         <MenuItem value="custom">Another condition</MenuItem>
       </TextField>
-      <Alert severity="info">{guidance}</Alert>
+      <StudentFeedback notificationKey="STU-0565" presentation="persistent" severity="info">
+        {guidance}
+      </StudentFeedback>
     </Stack>
   );
 }

@@ -7,7 +7,8 @@ import type { Standards } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import { useEffect, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Paper, Stack, Alert, Button } from '@mui/material';
+import { Box, Paper, Stack, Button } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -174,10 +175,14 @@ export function AdmissionAcademicFilters({
   return (
     <>
       {!academicYearId && (
-        <Alert severity="info">Select an academic year to view admissions.</Alert>
+        <StudentFeedback notificationKey="STU-0001" presentation="inline" severity="info">
+          Select an academic year to view admissions.
+        </StudentFeedback>
       )}
       {hierarchy.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0002"
+          presentation="toast"
           severity="error"
           action={
             <Button disabled={disabled} onClick={() => hierarchy.refetch()}>
@@ -186,10 +191,12 @@ export function AdmissionAcademicFilters({
           }
         >
           Could not load Board and Medium options.
-        </Alert>
+        </StudentFeedback>
       )}
       {classes.isError && mediumId && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0003"
+          presentation="toast"
           severity="error"
           action={
             <Button disabled={disabled} onClick={() => classes.refetch()}>
@@ -198,7 +205,7 @@ export function AdmissionAcademicFilters({
           }
         >
           Could not load Class options.
-        </Alert>
+        </StudentFeedback>
       )}
       <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
         <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1}>

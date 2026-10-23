@@ -2,17 +2,18 @@
 
 import type { AdmissionWorkflowApprover } from 'src/redux/student/admissions/admission-workflows-api';
 
-import * as yup from 'yup';
 import dayjs from 'dayjs';
-import { useFormik } from 'formik';
+import * as yup from 'yup';
 import { useEffect } from 'react';
+import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { Stack, TextField, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, TextField, Typography, DialogActions } from '@mui/material';
 
 import { ADMISSION_DATE_TIME_FORMAT } from '../../admission-date-formats';
 
@@ -114,9 +115,13 @@ export function WorkflowGovernanceActionDialog({
     >
       <DialogScrollContent onSubmit={formik.handleSubmit}>
         <Stack spacing={1.5}>
-          <Alert severity={mode === 'reject' || mode === 'rollback' ? 'warning' : 'info'}>
+          <StudentFeedback
+            notificationKey="STU-0557"
+            presentation="inline"
+            severity={mode === 'reject' || mode === 'rollback' ? 'warning' : 'info'}
+          >
             {descriptions[mode]}
-          </Alert>
+          </StudentFeedback>
           <Typography variant="body2" color="text.secondary">
             {workflowName}
           </Typography>

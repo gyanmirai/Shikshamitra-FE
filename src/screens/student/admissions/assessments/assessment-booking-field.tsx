@@ -1,9 +1,10 @@
 import dayjs from 'dayjs';
 import { useRef, useEffect } from 'react';
+import { Stack, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import { Alert, Stack, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { EmptyContent } from 'src/components/empty-content';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAssessmentSessionsQuery } from 'src/redux/student/admissions/admission-assessment-sessions-api';
 import { useGetAssessmentSessionSlotsQuery } from 'src/redux/student/admissions/admission-assessment-planning-api';
 
@@ -63,7 +64,9 @@ export function AssessmentBookingField({
   return (
     <Stack spacing={1}>
       {sessions.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0250"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" color="inherit" onClick={sessions.refetch}>
@@ -72,7 +75,7 @@ export function AssessmentBookingField({
           }
         >
           Unable to load sessions. Retry before booking.
-        </Alert>
+        </StudentFeedback>
       )}
       <CustomSelect
         label="Assessment session"
@@ -145,7 +148,9 @@ export function AssessmentBookingField({
       {isIndividual && (
         <>
           {slots.isError && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0252"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" color="inherit" onClick={slots.refetch}>
@@ -154,7 +159,7 @@ export function AssessmentBookingField({
               }
             >
               Unable to load interview slots. Retry before booking.
-            </Alert>
+            </StudentFeedback>
           )}
           <CustomSelect
             label="Interview time slot"

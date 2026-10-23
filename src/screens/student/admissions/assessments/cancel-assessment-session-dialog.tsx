@@ -1,7 +1,8 @@
 import type { AssessmentSession } from 'src/redux/student/admissions/admission-assessment-types';
 
 import { useState } from 'react';
-import { Alert, Button, DialogActions } from '@mui/material';
+import { Button, DialogActions } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useCancelAssessmentSessionMutation } from 'src/redux/student/admissions/admission-assessment-sessions-api';
 
@@ -33,14 +34,19 @@ export function CancelAssessmentSessionDialog({
       disableClose={state.isLoading}
     >
       <DialogScrollContent>
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0289" presentation="inline" severity="warning">
           The session will no longer accept bookings. Existing bookings must be resolved before
           cancellation.
-        </Alert>
+        </StudentFeedback>
         {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <StudentFeedback
+            notificationKey="STU-0290"
+            presentation="persistent"
+            severity="error"
+            sx={{ mt: 2 }}
+          >
             {error}
-          </Alert>
+          </StudentFeedback>
         )}
       </DialogScrollContent>
       <DialogActions>

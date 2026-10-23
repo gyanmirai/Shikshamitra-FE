@@ -2,7 +2,8 @@ import type { FormikProps } from 'formik';
 import type { AdmissionSeatPolicy } from 'src/redux/student/admissions/admission-seat-policy';
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Alert, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
 import {
@@ -38,9 +39,9 @@ export function WorkflowSeatSettings({ formik, available, readOnly }: Props) {
       >
         <Stack spacing={2}>
           {!available && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0576" presentation="inline" severity="info">
               Managed Seat settings are not available in this environment yet.
-            </Alert>
+            </StudentFeedback>
           )}
           <WorkflowProcessChoice
             label="Seat process"
@@ -63,7 +64,11 @@ export function WorkflowSeatSettings({ formik, available, readOnly }: Props) {
               },
             ]}
           />
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <StudentFeedback notificationKey="STU-0577" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
         </Stack>
       </FormSectionCard>
       {policy?.enabled && (

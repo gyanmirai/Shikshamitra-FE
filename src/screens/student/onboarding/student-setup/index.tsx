@@ -3,18 +3,21 @@
 import type { RootState } from 'src/redux/store';
 import type { TooltipProps } from '@mui/material';
 import type { IParams } from 'src/components/customizabaleTable/types';
+import type { RollNumberScope } from 'src/redux/student/onboarding/student-roll-number-batches-api';
 
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { readOnboardingDashboardQueue } from 'src/utils/student-dashboard-drilldown';
-import { Box, Alert, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { Box, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import {
   readAcademicFilterIds,
   academicClassFilterInput,
@@ -37,6 +40,7 @@ import StudentRollNumberWorkspace from './student-roll-number-workspace';
 import { useStudentSetupAssignment } from './use-student-setup-assignment';
 import StudentSetupAssignmentToolbar from './student-setup-assignment-toolbar';
 import StudentIdentifierLockControls from './student-identifier-lock-controls';
+import { getStudentSetupRollAutoTargets } from './student-setup-assignment-model';
 import StudentOnboardingOperationDialog from './student-onboarding-operation-dialog';
 import StudentSetupAutoAssignmentDialog from './student-setup-auto-assignment-dialog';
 import { mapOnboardingCaseToItem, type StudentOnboardingItem } from './student-onboarding-model';
@@ -158,7 +162,11 @@ export default function StudentSetupScreen() {
     students: StudentOnboardingItem[];
   } | null>(null);
   const [lockInteraction, setLockInteraction] = useState(false);
-  const [rollWorkspace, setRollWorkspace] = useState<'manage' | 'assign-missing' | null>(null);
+  const [rollWorkspace, setRollWorkspace] = useState<{
+    scope: RollNumberScope;
+    caseIds?: string[];
+    batchId?: string;
+  } | null>(null);
   const navigationRef = useRef<(action: () => void) => void>((action) => action());
   const navigate = useCallback((action: () => void) => navigationRef.current(action), []);
   const [assignmentRequest, setAssignmentRequest] = useState<{
@@ -588,7 +596,6 @@ export default function StudentSetupScreen() {
     () => (onboardingQuery.currentData?.items ?? []).map(mapOnboardingCaseToItem),
     [onboardingQuery.currentData?.items]
   );
-  const sourceRows = liveRows;
   const assignmentType =
     activeView === 'division' || activeView === 'gr-number' || activeView === 'roll-number'
       ? activeView
@@ -613,6 +620,7 @@ export default function StudentSetupScreen() {
     totalCount: onboardingQuery.currentData?.totalCount ?? 0,
   });
   const { displayedRows } = assignment;
+  const sourceRows = displayedRows;
   const rollClassIds = readAcademicFilterIds(selectedStandardId);
   const rollDivisionIds = readAcademicFilterIds(selectedDivisionId);
   const rollScope =
@@ -622,7 +630,8 @@ export default function StudentSetupScreen() {
   const rollContext = useGetRollNumberBatchContextQuery(rollScope!, {
     skip: activeView !== 'roll-number' || !rollScope,
   });
-  const interactionBusy = assignment.busy || lockInteraction || quickSetupState.busy;
+  const interactionBusy =
+    assignment.busy || lockInteraction || quickSetupState.busy || Boolean(rollWorkspace);
   const { requestNavigation, confirmation } = useUnsavedNavigation(
     assignment.form.dirty || quickSetupState.dirty,
     {
@@ -652,6 +661,17 @@ export default function StudentSetupScreen() {
       ? displayedRows.filter((row) => selectedStudentIds.includes(row.id))
       : displayedRows;
   const automaticTargets = assignment.eligible('automatic', assignmentTargets);
+  const rollAutomaticTargets = rollScope
+    ? getStudentSetupRollAutoTargets(displayedRows, rollScope)
+    : [];
+  const pendingRollBatches = (rollContext.currentData?.batches ?? []).filter(
+    (batch) =>
+      (batch.status === 'PendingApproval' || batch.status === 'Approved') &&
+      Boolean(batch.caseIds?.length) &&
+      batch.caseIds!.every((id) => displayedRows.some((row) => row.id === id))
+  );
+  const reviewRollBatch =
+    pendingRollBatches.find((batch) => batch.canDecide || batch.canApply) ?? pendingRollBatches[0];
   const manualTargets = assignment.eligible('manual', assignmentTargets);
   const pendingCount =
     activeTaskScope === 'pending'
@@ -677,10 +697,7 @@ export default function StudentSetupScreen() {
         : activeView === 'roll-number'
           ? !rollScope
             ? 'Select one class and division for Auto.'
-            : !rollContext.currentData?.canAssignMissing &&
-                Boolean(rollContext.currentData?.unassignedCount)
-              ? rollContext.currentData?.blockedReason || undefined
-              : undefined
+            : undefined
           : undefined;
   const selectedRow = sourceRows.find((student) => student.id === selectedStudentId);
   if (selectedRow) selectedSnapshot.current = selectedRow;
@@ -951,7 +968,9 @@ export default function StudentSetupScreen() {
         </Stack>
       )}
       {singleStudentMode && focusedCaseId && !selectedRow && focusedCaseQuery.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0958"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" onClick={() => focusedCaseQuery.refetch()}>
@@ -960,7 +979,7 @@ export default function StudentSetupScreen() {
           }
         >
           The selected onboarding case could not be loaded.
-        </Alert>
+        </StudentFeedback>
       )}
       <Box
         data-testid="student-setup-worklist"
@@ -988,10 +1007,15 @@ export default function StudentSetupScreen() {
           }}
         >
           {dashboardQueue && (
-            <Alert severity="info">
-              Dashboard worklist: {dashboardQueue.replaceAll('-', ' ')}. Counts follow the selected
-              academic scope.
-            </Alert>
+            <>
+              <StudentFeedback notificationKey="STU-0959" presentation="toast" severity="info">
+                Dashboard worklist: {dashboardQueue.replaceAll('-', ' ')}. Counts follow the
+                selected academic scope.
+              </StudentFeedback>
+              <Label sx={{ alignSelf: 'flex-start' }}>
+                Worklist: {dashboardQueue.replaceAll('-', ' ')}
+              </Label>
+            </>
           )}
           <StudentSetupFilters
             allowAllScope={Boolean(dashboardQueue)}
@@ -1022,7 +1046,9 @@ export default function StudentSetupScreen() {
           />
 
           {filterOptionsQuery.isError && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0960"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" onClick={() => filterOptionsQuery.refetch()}>
@@ -1031,16 +1057,23 @@ export default function StudentSetupScreen() {
               }
             >
               Could not load academic filter options.
-            </Alert>
+            </StudentFeedback>
           )}
 
           {!academicYearId && showFilterAlert ? (
-            <Alert severity="info" onClose={() => setShowFilterAlert(false)}>
+            <StudentFeedback
+              notificationKey="STU-0961"
+              presentation="inline"
+              severity="info"
+              onClose={() => setShowFilterAlert(false)}
+            >
               Select an academic year to load onboarding cases.
-            </Alert>
+            </StudentFeedback>
           ) : null}
           {assignment.contextChanged && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0962"
+              presentation="persistent"
               severity="warning"
               action={
                 <Button size="small" disabled={interactionBusy} onClick={() => navigate(() => {})}>
@@ -1050,7 +1083,7 @@ export default function StudentSetupScreen() {
             >
               The academic scope or task changed. Your previous edits are kept for review, but
               cannot be saved here. Cancel editing to load the current worklist.
-            </Alert>
+            </StudentFeedback>
           )}
 
           <Box sx={{ minWidth: 0, minHeight: 0, flex: 1, display: 'flex' }}>
@@ -1086,6 +1119,9 @@ export default function StudentSetupScreen() {
                     })
                   }
                   busy={interactionBusy}
+                  automaticLoading={
+                    assignment.busy || Boolean(rollWorkspace && !rollWorkspace.batchId)
+                  }
                   unavailable={
                     onboardingQuery.isFetching ||
                     onboardingQuery.isError ||
@@ -1093,10 +1129,8 @@ export default function StudentSetupScreen() {
                   }
                   automaticCount={
                     activeView === 'roll-number'
-                      ? rollContext.currentData?.canAssignMissing &&
-                        !rollContext.isFetching &&
-                        !rollContext.isError
-                        ? rollContext.currentData.unassignedCount
+                      ? rollContext.currentData && !rollContext.isFetching && !rollContext.isError
+                        ? rollAutomaticTargets.length
                         : 0
                       : activeView === 'division' && !showDivisionSelection
                         ? 0
@@ -1107,11 +1141,47 @@ export default function StudentSetupScreen() {
                   changedCount={
                     assignment.contextChanged || !canManageOnboarding ? 0 : assignment.changedCount
                   }
-                  onAuto={() => {
-                    if (activeView === 'roll-number' && rollScope) {
-                      navigate(() => setRollWorkspace('assign-missing'));
+                  onAuto={async () => {
+                    if (
+                      interactionBusy ||
+                      !canManageOnboarding ||
+                      onboardingQuery.isFetching ||
+                      onboardingQuery.isError
+                    )
+                      return;
+                    if (
+                      activeView === 'roll-number' &&
+                      rollScope &&
+                      rollAutomaticTargets.length &&
+                      rollContext.currentData &&
+                      !rollContext.isFetching &&
+                      !rollContext.isError
+                    ) {
+                      navigate(() => {
+                        assignment.retainAutomaticPage();
+                        setRollWorkspace({
+                          scope: rollScope,
+                          caseIds: rollAutomaticTargets.map((student) => student.id),
+                        });
+                      });
                       return;
                     }
+                    if (activeView === 'gr-number' && automaticTargets.length) {
+                      const completed = await assignment.runAutomatic(automaticTargets);
+                      if (completed.length) {
+                        const failed = completed.filter(
+                          (result) => result.status === 'failed'
+                        ).length;
+                        const saved = completed.filter(
+                          (result) => result.status === 'saved'
+                        ).length;
+                        const message = `${saved} GR numbers assigned${failed ? `; ${failed} need attention in the table` : ''}.`;
+                        if (failed) shikshaMitraToast.warning({ message });
+                        else shikshaMitraToast.success({ message });
+                      }
+                      return;
+                    }
+                    if (activeView !== 'division') return;
                     if (assignmentType && automaticTargets.length) {
                       assignment.clearResults();
                       setAutoAssignment({ type: assignmentType, students: automaticTargets });
@@ -1132,20 +1202,27 @@ export default function StudentSetupScreen() {
                   locks={
                     activeView === 'gr-number' || activeView === 'roll-number' ? (
                       <>
-                        {activeView === 'roll-number' && (
+                        {activeView === 'roll-number' && reviewRollBatch && (
                           <Button
                             size="small"
                             variant="outlined"
                             color="inherit"
-                            title={
-                              rollScope
-                                ? 'Review division roll numbering and approval batches'
-                                : 'Choose one Class and one Division first'
-                            }
                             disabled={!rollScope || interactionBusy || assignment.manualEditing}
-                            onClick={() => navigate(() => setRollWorkspace('manage'))}
+                            onClick={() =>
+                              rollScope &&
+                              navigate(() => {
+                                assignment.retainAutomaticPage();
+                                setRollWorkspace({
+                                  scope: rollScope,
+                                  batchId: reviewRollBatch.id,
+                                  caseIds: reviewRollBatch.caseIds ?? undefined,
+                                });
+                              })
+                            }
                           >
-                            Manage Roll Numbers
+                            {reviewRollBatch.status === 'Approved'
+                              ? 'Apply approved'
+                              : 'Review approval'}
                           </Button>
                         )}
                         <StudentIdentifierLockControls
@@ -1175,7 +1252,9 @@ export default function StudentSetupScreen() {
                 />
               )}
               {activeView === 'roll-number' && rollScope && rollContext.isError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0963"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button
@@ -1188,7 +1267,7 @@ export default function StudentSetupScreen() {
                   }
                 >
                   Could not load roll numbering.
-                </Alert>
+                </StudentFeedback>
               )}
               <StudentSetupTable
                 rows={displayedRows}
@@ -1319,6 +1398,7 @@ export default function StudentSetupScreen() {
       )}
       {(selectedStudent?.source !== 'onboarding-case' || reviewingCaseDetails) && (
         <StudentSetupDrawer
+          presentation={reviewingCaseDetails ? 'details' : 'workflow'}
           initialView={reviewingCaseDetails ? 'details' : undefined}
           taskView={reviewingCaseDetails ? 'readiness' : (drawerTaskView ?? activeView)}
           open={Boolean(selectedStudent)}
@@ -1361,12 +1441,16 @@ export default function StudentSetupScreen() {
         />
       )}
       {confirmation}
-      {rollWorkspace && rollScope && (
+      {rollWorkspace && (
         <StudentRollNumberWorkspace
-          key={`${rollScope.academicYearId}:${rollScope.standardId}:${rollScope.divisionId}`}
-          scope={rollScope}
-          operation={rollWorkspace === 'assign-missing' ? 'assign-missing' : undefined}
+          key={`${rollWorkspace.scope.academicYearId}:${rollWorkspace.scope.standardId}:${rollWorkspace.scope.divisionId}:${rollWorkspace.batchId ?? 'auto'}`}
+          scope={rollWorkspace.scope}
+          presentation="quick"
+          caseIds={rollWorkspace.caseIds}
+          batchId={rollWorkspace.batchId}
+          operation={rollWorkspace.batchId ? undefined : 'assign-missing'}
           onClose={() => setRollWorkspace(null)}
+          onApplied={assignment.applyRollBatchRows}
           onInteractionChange={setLockInteraction}
         />
       )}

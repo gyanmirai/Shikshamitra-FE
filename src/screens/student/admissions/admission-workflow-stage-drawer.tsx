@@ -9,8 +9,8 @@ import type {
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Stack, Alert, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
-import { readAdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { isApplicationStageType } from './workflow-builder/workflow-stage-configuration';
@@ -35,17 +35,10 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
     metadata,
     formDefinitionId,
     forms: resolvedForms,
-    formDetailsLoading,
-    formDetailsError,
-    formDetailsUnavailable,
-    retryFormDetails,
     discard,
     close,
     requestClose,
   } = useWorkflowStageEditor({ open, stage, stageTypes, stages, forms, readOnly, onClose, onSave });
-  const verificationRequired =
-    formik.values.stageType === 1 &&
-    readAdmissionFormStagePolicy(formik.values.configurationJson)?.requireSectionVerification;
 
   return (
     <>
@@ -97,24 +90,31 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 (formik.touched.code && formik.errors.code) ||
                 (formik.touched.description && formik.errors.description)
               ) && (
-                <Alert severity="error" sx={{ mx: 2, mt: 2 }}>
+                <StudentFeedback
+                  notificationKey="STU-0161"
+                  presentation="persistent"
+                  severity="error"
+                  sx={{ mx: 2, mt: 2 }}
+                >
                   This stage has invalid saved details. Restore a valid workflow version or replace
                   this stage before applying changes.
-                </Alert>
+                </StudentFeedback>
               )}
               {formik.touched.stageType && formik.errors.stageType && (
-                <Alert severity="error" sx={{ mx: 2, mt: 2 }}>
+                <StudentFeedback
+                  notificationKey="STU-0162"
+                  presentation="inline"
+                  severity="error"
+                  sx={{ mx: 2, mt: 2 }}
+                >
                   {formik.errors.stageType}
-                </Alert>
+                </StudentFeedback>
               )}
               <WorkflowStageFields
                 formik={formik}
                 metadata={metadata}
                 stageTypes={stageTypes}
                 forms={resolvedForms}
-                formDetailsLoading={formDetailsLoading}
-                formDetailsError={formDetailsError}
-                onRetryFormDetails={retryFormDetails}
                 stages={stages}
                 formDefinitionId={formDefinitionId}
                 readOnly={readOnly}
@@ -134,11 +134,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 variant="contained"
                 type={readOnly ? 'button' : 'submit'}
                 onClick={readOnly ? requestClose : undefined}
-                disabled={
-                  !readOnly &&
-                  (!isApplicationStageType(formik.values.stageType) ||
-                    Boolean(verificationRequired && formDetailsUnavailable))
-                }
+                disabled={!readOnly && !isApplicationStageType(formik.values.stageType)}
                 startIcon={<Iconify icon={readOnly ? 'mdi:close' : 'mdi:content-save-outline'} />}
               >
                 {readOnly ? 'Close' : 'Apply changes'}

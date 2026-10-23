@@ -17,6 +17,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
@@ -26,7 +27,6 @@ import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   Box,
-  Alert,
   Stack,
   Button,
   Switch,
@@ -213,7 +213,9 @@ export default function AttendanceType() {
         }
       />
       {isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0633"
+          presentation="toast"
           severity="error"
           action={
             <Button startIcon={<Iconify icon={GlobalIcons.refresh} />} onClick={() => refetch()}>
@@ -222,12 +224,12 @@ export default function AttendanceType() {
           }
         >
           {attendanceError(error, 'Leave types could not be loaded.')}
-        </Alert>
+        </StudentFeedback>
       )}
       <CustomizableTable
         tableId="student-attendance-leave-types"
         tableTitle="Leave Types"
-        exportLabel="Export Current Page"
+        exportLabel="Export"
         columns={columns}
         data={rows}
         isLoading={isLoading || isFetching}

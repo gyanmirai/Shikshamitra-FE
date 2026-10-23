@@ -12,11 +12,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Stack,
-  Alert,
   Drawer,
   Button,
   Divider,
@@ -296,7 +296,9 @@ export function AssessmentManageSessionsDrawer({
               noDataText="No assessment sessions match this view."
               errorContent={
                 error ? (
-                  <Alert
+                  <StudentFeedback
+                    notificationKey="STU-0257"
+                    presentation="toast"
                     severity="error"
                     action={
                       <Button size="small" onClick={onRetry}>
@@ -305,7 +307,7 @@ export function AssessmentManageSessionsDrawer({
                     }
                   >
                     {error}
-                  </Alert>
+                  </StudentFeedback>
                 ) : undefined
               }
             />
@@ -348,7 +350,15 @@ export function AssessmentManageSessionsDrawer({
                 inputProps={{ maxLength: 1024 }}
               />
             </ShakingTextField>
-            {cancelError && <Alert severity="error">{cancelError}</Alert>}
+            {cancelError && (
+              <StudentFeedback
+                notificationKey="STU-0260"
+                presentation="persistent"
+                severity="error"
+              >
+                {cancelError}
+              </StudentFeedback>
+            )}
           </Stack>
         }
         action={

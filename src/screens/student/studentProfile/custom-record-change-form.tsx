@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
 import { isAdmissionRuleVisible } from 'src/screens/student/admissions/admission-visibility-rules';
 import { useUpdateStudentRecordFormMutation } from 'src/redux/student/records/student-record-details-api';
@@ -19,7 +20,6 @@ import {
   Box,
   Grid,
   Stack,
-  Alert,
   Button,
   Divider,
   TextField,
@@ -205,7 +205,11 @@ export function CustomRecordChangeForm({
     [onBusyChange]
   );
   if (!canCreate || (!direct && loadedDetails.customDetailsMasked))
-    return <Alert severity="info">You do not have access to change these school details.</Alert>;
+    return (
+      <StudentFeedback notificationKey="STU-0734" presentation="inline" severity="info">
+        You do not have access to change these school details.
+      </StudentFeedback>
+    );
   return (
     <Box id={formId} component="form" onSubmit={form.handleSubmit} noValidate aria-busy={busy}>
       <FormBusyRegion
@@ -213,17 +217,25 @@ export function CustomRecordChangeForm({
         label={direct ? 'Saving student form…' : 'Submitting student details change…'}
       >
         <Stack spacing={2}>
-          {failure && <Alert severity="error">{failure}</Alert>}
+          {failure && (
+            <StudentFeedback notificationKey="STU-0735" presentation="persistent" severity="error">
+              {failure}
+            </StudentFeedback>
+          )}
           {form.submitCount > 0 && Object.keys(form.errors).length > 0 && (
-            <Alert severity="error">
+            <StudentFeedback notificationKey="STU-0736" presentation="inline" severity="error">
               Review the highlighted fields before submitting. {Object.values(form.errors)[0]}
-            </Alert>
+            </StudentFeedback>
           )}
           {loadedSnapshot.snapshot !== snapshot.snapshot && (
-            <Alert severity="warning">
+            <StudentFeedback
+              notificationKey="STU-0737"
+              presentation="persistent"
+              severity="warning"
+            >
               The student record changed while this draft was open. Your draft is preserved; reopen
               the latest details before submitting.
-            </Alert>
+            </StudentFeedback>
           )}
           {details.registrationSources
             .filter(
@@ -247,7 +259,9 @@ export function CustomRecordChangeForm({
                           source.editableFieldCodes.includes(difference.fieldCode)
                       )
                       .map((difference) => (
-                        <Alert
+                        <StudentFeedback
+                          notificationKey="STU-0738"
+                          presentation="inline"
                           key={difference.fieldCode}
                           severity="info"
                           sx={{ mb: 1.5 }}
@@ -266,7 +280,7 @@ export function CustomRecordChangeForm({
                           }
                         >
                           New admission answer available for {difference.label}.
-                        </Alert>
+                        </StudentFeedback>
                       ))}
                     <StudentRegistrationFormFields
                       studentId={studentId}
@@ -310,7 +324,9 @@ export function CustomRecordChangeForm({
                         source.editableFieldCodes.includes(difference.fieldCode)
                     )
                     .map((difference) => (
-                      <Alert
+                      <StudentFeedback
+                        notificationKey="STU-0739"
+                        presentation="inline"
                         key={difference.fieldCode}
                         severity="info"
                         action={
@@ -328,7 +344,7 @@ export function CustomRecordChangeForm({
                         }
                       >
                         New admission answer available for {difference.label}.
-                      </Alert>
+                      </StudentFeedback>
                     ))}
                   {sections.map(({ section, entryIndex }) => {
                     const row = profileSectionRowValues(section, values, entryIndex);

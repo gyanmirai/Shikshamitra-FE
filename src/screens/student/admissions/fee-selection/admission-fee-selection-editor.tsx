@@ -8,17 +8,9 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import {
-  Box,
-  Alert,
-  Stack,
-  Button,
-  Skeleton,
-  Typography,
-  LinearProgress,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Stack, Button, Skeleton, Typography, CircularProgress } from '@mui/material';
 import {
   useSaveAdmissionFeeSelectionMutation,
   useGetAdmissionFeeSelectionCandidatesQuery,
@@ -124,7 +116,11 @@ export function AdmissionFeeSelectionEditor({
     [onEditorStateChange]
   );
   const noCandidates =
-    !candidates.isError && !candidates.isLoading && candidates.currentData?.length === 0;
+    !candidates.isError &&
+    !candidates.isLoading &&
+    !candidates.isFetching &&
+    candidates.currentData?.length === 0;
+  const loadingCandidates = candidates.isLoading || candidates.isFetching;
 
   return (
     <Box
@@ -134,14 +130,28 @@ export function AdmissionFeeSelectionEditor({
       aria-busy={busy || candidates.isFetching}
     >
       <Stack spacing={compact ? 1 : 1.5} useFlexGap sx={{ flex: 1 }}>
-        {candidates.isLoading && (
-          <Skeleton role="status" aria-label="Loading published fee structures" height={80} />
-        )}
-        {!candidates.isLoading && candidates.isFetching && (
-          <LinearProgress aria-label="Checking published fee structures" />
+        {loadingCandidates && (
+          <Stack
+            role="status"
+            aria-label="Loading published fee structures"
+            aria-busy
+            spacing={1.5}
+          >
+            <Skeleton variant="text" width={160} height={24} />
+            <Skeleton variant="rounded" height={40} />
+            <Skeleton variant="text" width={180} height={24} />
+            {[0, 1, 2].map((row) => (
+              <Stack key={row} direction="row" justifyContent="space-between" spacing={2}>
+                <Skeleton variant="text" width="60%" height={32} />
+                <Skeleton variant="text" width="20%" height={32} />
+              </Stack>
+            ))}
+          </Stack>
         )}
         {candidates.isError && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0342"
+            presentation="toast"
             severity="error"
             action={
               <Button size="small" disabled={busy} onClick={() => candidates.refetch()}>
@@ -150,7 +160,7 @@ export function AdmissionFeeSelectionEditor({
             }
           >
             Published fee structures could not be loaded.
-          </Alert>
+          </StudentFeedback>
         )}
         {noCandidates && (
           <EmptyContent
@@ -177,7 +187,7 @@ export function AdmissionFeeSelectionEditor({
         {!candidates.isError && !candidates.isLoading && !noCandidates && (
           <Box
             sx={{
-              display: 'grid',
+              display: loadingCandidates ? 'none' : 'grid',
               gridTemplateColumns: compact
                 ? 'minmax(0, 1fr)'
                 : { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1.2fr) minmax(0, 1fr)' },
@@ -281,7 +291,11 @@ export function AdmissionFeeSelectionEditor({
             )}
           </Box>
         )}
-        {saveError && <Alert severity="error">{saveError}</Alert>}
+        {saveError && (
+          <StudentFeedback notificationKey="STU-0344" presentation="persistent" severity="error">
+            {saveError}
+          </StudentFeedback>
+        )}
         <Stack
           direction="row"
           spacing={1}

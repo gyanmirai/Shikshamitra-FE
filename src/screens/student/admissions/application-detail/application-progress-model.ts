@@ -1,5 +1,4 @@
 import type { LabelColor } from 'src/components/label';
-import type { AdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
 import type {
   AdmissionApplicationStage,
   AdmissionApplicationStatus,
@@ -135,8 +134,7 @@ export function getStageActionLabel(stage?: AdmissionApplicationStage) {
 export function getStageGuidance(
   stage: AdmissionApplicationStage | undefined,
   applicationStatus: AdmissionApplicationStatus,
-  nextRequiredAction?: string | null,
-  formPolicy?: Pick<AdmissionFormStagePolicy, 'requireSectionVerification'> | null
+  nextRequiredAction?: string | null
 ) {
   if (!stage) return 'No action is currently required.';
   if ([3, 6, 8].includes(stage.stageType))
@@ -150,8 +148,6 @@ export function getStageGuidance(
   if (stage.assessmentEnabled)
     return 'Manage the assessment below. The configured requirements determine when this step can continue.';
   if (isFormStage(stage)) {
-    if (applicationStatus === 1 && formPolicy?.requireSectionVerification)
-      return 'Review the submitted sections below. Complete any required verification before continuing.';
     if (applicationStatus === 1) {
       return 'The application form is submitted. Continue to the next admission step.';
     }

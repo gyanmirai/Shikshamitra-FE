@@ -109,6 +109,27 @@ const closedReason = (student: StudentOnboardingItem): string | undefined => {
   return undefined;
 };
 
+/** Batch Auto also supports active enrollments; the server verifies their current placement and policy. */
+export const getStudentSetupRollAutoTargets = (
+  students: readonly StudentOnboardingItem[],
+  scope: { standardId: string; divisionId: string }
+): StudentOnboardingItem[] =>
+  students.filter(
+    (student) =>
+      student.source === 'onboarding-case' &&
+      Boolean(student.id) &&
+      student.standardId === scope.standardId &&
+      student.divisionId === scope.divisionId &&
+      student.rollNo == null &&
+      student.backendStatus !== 5 &&
+      student.status !== 'cancelled' &&
+      (Boolean(student.studentEnrollmentId) ||
+        (student.backendStatus !== 4 &&
+          student.backendStatus !== 6 &&
+          student.status !== 'completed' &&
+          student.status !== 'provisioning'))
+  );
+
 export const studentSetupAssignmentNeedsReason = (
   student: StudentOnboardingItem,
   type: StudentSetupAssignmentType

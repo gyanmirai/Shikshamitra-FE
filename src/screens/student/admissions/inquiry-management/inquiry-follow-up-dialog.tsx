@@ -19,6 +19,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
@@ -26,7 +27,6 @@ import {
   Box,
   Stack,
   Paper,
-  Alert,
   Button,
   Avatar,
   Skeleton,
@@ -236,7 +236,9 @@ function InquiryFollowUpContent({
                 </Stack>
               )}
               {queryError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0406"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button size="small" color="inherit" onClick={reload}>
@@ -245,9 +247,17 @@ function InquiryFollowUpContent({
                   }
                 >
                   Follow-up notes could not be loaded.
-                </Alert>
+                </StudentFeedback>
               )}
-              {readOnlyReason && <Alert severity="info">{readOnlyReason}</Alert>}
+              {readOnlyReason && (
+                <StudentFeedback
+                  notificationKey="STU-0407"
+                  presentation="persistent"
+                  severity="info"
+                >
+                  {readOnlyReason}
+                </StudentFeedback>
+              )}
               {!queryError && initialized.value && !notes.length && !fetching && (
                 <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
                   No follow-up notes yet.
@@ -263,7 +273,9 @@ function InquiryFollowUpContent({
           >
             <Stack spacing={1.5}>
               {requestError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0408"
+                  presentation="inline"
                   severity="error"
                   action={
                     <Button
@@ -277,7 +289,7 @@ function InquiryFollowUpContent({
                   }
                 >
                   {requestError}
-                </Alert>
+                </StudentFeedback>
               )}
               <ShakingTextField error={noteError}>
                 <TextField

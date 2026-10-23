@@ -13,7 +13,15 @@ import { act, render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { defaultNumbering } from './admission-numbering-model';
 import { AdmissionNumberingFormDialog } from './admission-numbering-dialog';
 
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 [
   GlobalIcons.doc,
   GlobalIcons.scheduledReport,

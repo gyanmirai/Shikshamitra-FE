@@ -1,9 +1,10 @@
 import type { FormikProps } from 'formik';
 import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
-import { Alert, Stack, Button } from '@mui/material';
+import { Stack, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionDocumentClassesQuery } from 'src/redux/student/admissions/admission-document-settings-api';
 
 import { DocumentClassPicker } from './document-class-picker';
@@ -55,7 +56,9 @@ export function DocumentRequirementClasses({
             />
           </ShakingTextField>
           {isError && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0505"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" onClick={() => refetch()}>
@@ -64,12 +67,16 @@ export function DocumentRequirementClasses({
               }
             >
               Classes could not load. Your selection has been retained.
-            </Alert>
+            </StudentFeedback>
           )}
           {!isLoading && !isError && missing.length > 0 && (
-            <Alert severity="warning">
+            <StudentFeedback
+              notificationKey="STU-0506"
+              presentation="persistent"
+              severity="warning"
+            >
               A selected class is unavailable. Remove or replace it before publishing.
-            </Alert>
+            </StudentFeedback>
           )}
         </>
       )}

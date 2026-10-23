@@ -19,7 +19,13 @@ vi.mock('src/redux/student/admissions/admission-applications-api', () => ({
   useStartAdmissionApplicationMutation: () => [mocks.start, { isLoading: false }],
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: mocks.error },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    error: mocks.error,
+  },
 }));
 
 const inquiry = {

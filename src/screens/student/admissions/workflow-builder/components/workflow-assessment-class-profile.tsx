@@ -9,6 +9,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 import {
   assessmentProfileTotal,
   getAssessmentClassProfileError,
@@ -16,7 +17,6 @@ import {
 import {
   Grid,
   Stack,
-  Alert,
   Button,
   Accordion,
   TextField,
@@ -247,9 +247,13 @@ export function WorkflowAssessmentClassProfile({
             </Grid>
           </Grid>
           {unavailableScope && (
-            <Alert severity="warning">
+            <StudentFeedback
+              notificationKey="STU-0532"
+              presentation="persistent"
+              severity="warning"
+            >
               A selected class or scope is unavailable. Remove or replace it before publishing.
-            </Alert>
+            </StudentFeedback>
           )}
           <WorkflowAssessmentSubjects
             subjects={profile.subjects}
@@ -305,7 +309,11 @@ export function WorkflowAssessmentClassProfile({
               </Grid>
             )}
           </Grid>
-          {showErrors && error && <Alert severity="error">{error}</Alert>}
+          {showErrors && error && (
+            <StudentFeedback notificationKey="STU-0533" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
           <Stack direction="row" justifyContent="flex-end">
             <Button
               size="small"

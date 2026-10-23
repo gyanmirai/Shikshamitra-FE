@@ -9,8 +9,9 @@ import type {
 import Link from 'next/link';
 import { Iconify } from 'src/components/iconify';
 import { studentPaths } from 'src/constants/student-menu';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Grid, Alert, Paper, Stack, Button, Skeleton, LinearProgress } from '@mui/material';
+import { Box, Grid, Paper, Stack, Button, Skeleton, LinearProgress } from '@mui/material';
 
 import { AdminDashboardClasses } from './admin-dashboard-classes';
 import { AdminDashboardOverview } from './admin-dashboard-overview';
@@ -110,14 +111,14 @@ export default function AdminDashboardWorkspace({
       />
       {confirmingAccess && <LinearProgress aria-label="Confirming student dashboard access" />}
       {!context.sections.length ? (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0717" presentation="inline" severity="info">
           {context.scopeLabel}. No summaries are available with your current academic scope and
           permissions.
-        </Alert>
+        </StudentFeedback>
       ) : !year.id ? (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0718" presentation="inline" severity="info">
           Select an academic year in the Student header to see your dashboard.
-        </Alert>
+        </StudentFeedback>
       ) : (
         <>
           <Paper variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
@@ -152,7 +153,9 @@ export default function AdminDashboardWorkspace({
             </Stack>
           </Paper>
           {filterQuery.isError ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0719"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" color="inherit" onClick={() => filterQuery.refetch()}>
@@ -161,9 +164,11 @@ export default function AdminDashboardWorkspace({
               }
             >
               Academic filter choices could not be loaded. Retry to load your permitted dashboard.
-            </Alert>
+            </StudentFeedback>
           ) : options && !valid ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0720"
+              presentation="persistent"
               severity="warning"
               action={
                 <Button size="small" color="inherit" onClick={() => update(emptyDashboardFilters)}>
@@ -172,7 +177,7 @@ export default function AdminDashboardWorkspace({
               }
             >
               These academic filters are no longer available in this year or your permitted scope.
-            </Alert>
+            </StudentFeedback>
           ) : !options ? (
             <Skeleton variant="rounded" height={300} aria-label="Loading dashboard filters" />
           ) : (

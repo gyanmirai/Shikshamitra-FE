@@ -5,7 +5,8 @@ import type { AdmissionEligibilityCriterion } from 'src/redux/student/admissions
 import { useFormik } from 'formik';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Alert, Stack, Button, DialogActions } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Button, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { eligibilityCriterionSchema } from 'src/redux/student/admissions/admission-eligibility-validation';
 
@@ -13,7 +14,10 @@ import { EligibilityAgeFields } from './eligibility-age-fields';
 import { EligibilityCriterionBasics } from './eligibility-criterion-basics';
 import { AdmissionConditionFormPicker } from './admission-condition-form-picker';
 import { EligibilitySourceStageFields } from './eligibility-source-stage-fields';
-import { hasInquiryCondition, INQUIRY_RULE_REPLACEMENT_MESSAGE } from '../workflow-inquiry-retirement';
+import {
+  hasInquiryCondition,
+  INQUIRY_RULE_REPLACEMENT_MESSAGE,
+} from '../workflow-inquiry-retirement';
 
 export function EligibilityCriterionDialog({
   initial,
@@ -109,9 +113,14 @@ export function EligibilityCriterionDialog({
               )}
               {formik.submitCount > 0 &&
                 Object.values(formik.errors).map((error) => (
-                  <Alert severity="error" key={String(error)}>
+                  <StudentFeedback
+                    notificationKey="STU-0515"
+                    presentation="persistent"
+                    severity="error"
+                    key={String(error)}
+                  >
                     {String(error)}
-                  </Alert>
+                  </StudentFeedback>
                 ))}
             </Stack>
           </DialogScrollContent>

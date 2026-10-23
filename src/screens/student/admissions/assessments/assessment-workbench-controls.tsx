@@ -1,7 +1,8 @@
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import CustomSelect from 'src/components/custom-select';
-import { Tab, Tabs, Alert, Paper, Button, Tooltip, IconButton } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Tab, Tabs, Paper, Button, Tooltip, IconButton } from '@mui/material';
 
 import { AdmissionQueryError } from '../admission-query-error';
 import { assessmentQueues } from './assessment-workbench-model';
@@ -74,7 +75,9 @@ export function AssessmentWorkbenchControls({
             <AdmissionQueryError onRetry={sessions.refetch} />
           )}
           {invalidSession && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0284"
+              presentation="persistent"
               severity="warning"
               action={
                 <Button
@@ -90,7 +93,7 @@ export function AssessmentWorkbenchControls({
             >
               This session is unavailable in the selected offering and stage. Clear the filter to
               view applicants.
-            </Alert>
+            </StudentFeedback>
           )}
           <Paper
             variant="outlined"

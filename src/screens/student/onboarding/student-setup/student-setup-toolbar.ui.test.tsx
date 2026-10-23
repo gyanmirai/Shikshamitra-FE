@@ -85,12 +85,12 @@ describe('Student Setup assignment toolbar', () => {
   });
 
   it('keeps the heading, pending count and all controls in the same scrollable region', () => {
-    render(toolbarElement({ ...props(), locks: <button type="button">Lock GR numbers</button> }));
+    render(toolbarElement({ ...props(), locks: <button type="button">Lock</button> }));
     const region = screen.getByRole('region', { name: 'GR Number controls' });
     expect(region).toHaveAttribute('tabindex', '0');
     expect(region).toContainElement(screen.getByText('GR Number'));
     expect(region).toContainElement(screen.getByText('2 pending'));
-    ['All Students', 'Auto', 'Manual', 'Lock GR numbers'].forEach((name) => {
+    ['All Students', 'Auto', 'Manual', 'Lock'].forEach((name) => {
       expect(region).toContainElement(screen.getByRole('button', { name }));
     });
   });

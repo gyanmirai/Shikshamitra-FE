@@ -74,9 +74,9 @@ describe('Pipeline bulk counsellor UI', () => {
         disabled={false}
       />
     );
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'No counsellor has access to all selected admissions.'
-    );
+    expect(
+      screen.getByText('No counsellor has access to all selected admissions.', { exact: false })
+    ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
   });
@@ -89,7 +89,7 @@ describe('Pipeline bulk counsellor UI', () => {
     };
     const user = userEvent.setup();
     renderDocumentUi(<BulkPipelineCounsellor assignment={assignment} disabled={false} />);
-    expect(screen.getByRole('alert')).toHaveTextContent('Eligible staff could not be loaded.');
+    expect(screen.getByText('Eligible staff could not be loaded.', { exact: false })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(assignment.reloadOptions).toHaveBeenCalledOnce();
     expect(screen.getByRole('combobox', { name: 'Counsellor' })).toHaveAttribute(
@@ -129,9 +129,11 @@ describe('Pipeline bulk counsellor UI', () => {
       ],
     };
     renderDocumentUi(<BulkPipelineCounsellor assignment={assignment} disabled={false} />);
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      '1 assigned, 1 could not be assigned of 2 selected admissions.'
-    );
+    expect(
+      screen.getByText('1 assigned, 1 could not be assigned of 2 selected admissions.', {
+        exact: false,
+      })
+    ).toBeVisible();
     expect(screen.getByText('Kabir Shah: Another user changed this admission.')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Assign / change counsellor' })).toBeEnabled();
   });

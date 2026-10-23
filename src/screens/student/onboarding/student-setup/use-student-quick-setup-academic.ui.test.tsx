@@ -173,13 +173,22 @@ it('renders one compact academic card and changes modes without assigning anythi
   render(<Harness />);
   expect(await screen.findByRole('heading', { name: 'Class & Numbers' })).toBeInTheDocument();
   expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1);
+  expect(screen.getByRole('textbox', { name: 'Roll number' })).toHaveValue('0');
   const roll = screen.getByRole('group', { name: 'Roll number assignment method' });
   fireEvent.click(within(roll).getByRole('button', { name: 'Manual' }));
   expect(await screen.findByRole('textbox', { name: 'Roll number' })).toHaveValue('');
+  expect(screen.getByRole('textbox', { name: 'Roll number' })).toHaveAttribute('placeholder', '0');
   expect(mocks.gr).not.toHaveBeenCalled();
   expect(mocks.roll).not.toHaveBeenCalled();
   expect(mocks.preview).not.toHaveBeenCalled();
   expect(mocks.place).not.toHaveBeenCalled();
+});
+
+it('shows an assigned Roll number without changing it on open', async () => {
+  mocks.caseQuery.currentData = makeCase({ rollNumber: 1 });
+  render(<Harness />);
+  expect(await screen.findByRole('textbox', { name: 'Roll number' })).toHaveValue('1');
+  expect(mocks.roll).not.toHaveBeenCalled();
 });
 
 it('retains entered fields and dirty state when background data refreshes', async () => {
@@ -243,7 +252,7 @@ it('shows a recoverable initial error instead of an endless skeleton', () => {
   mocks.caseQuery.currentData = undefined;
   mocks.caseQuery.isError = true;
   render(<Harness />);
-  expect(screen.getByRole('alert')).toHaveTextContent('Student setup could not be loaded.');
+  expect(screen.getByText('Student setup could not be loaded.', { exact: false })).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   expect(mocks.caseQuery.refetch).toHaveBeenCalledOnce();
   expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();

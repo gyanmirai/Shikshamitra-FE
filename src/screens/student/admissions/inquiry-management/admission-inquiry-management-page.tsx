@@ -7,8 +7,9 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { studentPaths } from 'src/constants/student-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Paper, Stack, Button, Skeleton } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Alert, Paper, Stack, Button, Skeleton } from '@mui/material';
 import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
@@ -78,7 +79,9 @@ export function AdmissionInquiryManagementPage({
           </Stack>
         )}
         {(query.isError || detail.isError) && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0400"
+            presentation="toast"
             severity="error"
             sx={{ m: 2 }}
             action={
@@ -95,7 +98,7 @@ export function AdmissionInquiryManagementPage({
             }
           >
             Inquiry form could not be loaded. Try again.
-          </Alert>
+          </StudentFeedback>
         )}
         {query.data && detail.data && !query.isError && !detail.isError && (
           <InquiryOverviewForm

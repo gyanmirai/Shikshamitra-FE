@@ -8,8 +8,9 @@ import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, Skeleton, DialogActions } from '@mui/material';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Alert, Stack, Button, Skeleton, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetAdmissionApplicant360Query } from 'src/redux/student/admissions/admission-applicants-api';
 
@@ -61,14 +62,22 @@ export function ApplicationApplicantNotesDialog({
       >
         <DialogScrollContent>
           {!canView ? (
-            <Alert severity="warning">You do not have permission to view applicant notes.</Alert>
+            <StudentFeedback
+              notificationKey="STU-0178"
+              presentation="persistent"
+              severity="warning"
+            >
+              You do not have permission to view applicant notes.
+            </StudentFeedback>
           ) : query.isLoading || (!data && query.isFetching) ? (
             <Stack role="status" aria-label="Loading applicant notes" spacing={1}>
               <Skeleton height={48} />
               <Skeleton height={96} />
             </Stack>
           ) : query.isError || !data ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0180"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" disabled={busy} onClick={query.refetch}>
@@ -77,7 +86,7 @@ export function ApplicationApplicantNotesDialog({
               }
             >
               Applicant notes could not be loaded. Try again.
-            </Alert>
+            </StudentFeedback>
           ) : (
             <FormBusyRegion busy={query.isFetching}>
               <AdmissionApplicantNotes

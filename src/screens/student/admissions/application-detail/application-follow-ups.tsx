@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Alert, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 import { useApplicationFollowUps } from './use-application-follow-ups';
 import { InquiryFollowUpsPanel } from '../inquiry-management/inquiry-follow-ups';
@@ -37,7 +38,9 @@ export function ApplicationFollowUps({
         </Stack>
       )}
       {query.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0199"
+          presentation="toast"
           severity="error"
           action={
             !sourceUnavailable && (
@@ -57,7 +60,7 @@ export function ApplicationFollowUps({
             : sourceUnavailable
               ? 'The source inquiry is unavailable. Follow-ups cannot be loaded for this application.'
               : 'Unable to load application follow-ups. Retry to view the latest information.'}
-        </Alert>
+        </StudentFeedback>
       )}
       {!query.isLoading && !query.isError && value && (
         <Stack spacing={1.5}>

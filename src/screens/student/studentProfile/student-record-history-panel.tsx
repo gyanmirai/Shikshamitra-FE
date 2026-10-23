@@ -13,6 +13,7 @@ import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineSeparator from '@mui/lab/TimelineSeparator';
 import TimelineConnector from '@mui/lab/TimelineConnector';
 import { EmptyContent } from 'src/components/empty-content';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem';
 import { recordFieldLabel } from 'src/screens/student/records/record-diff';
@@ -21,7 +22,6 @@ import { useGetStudentRecordChangeQuery } from 'src/redux/student/records/studen
 import {
   Box,
   Stack,
-  Alert,
   Drawer,
   Button,
   Divider,
@@ -124,7 +124,9 @@ export function StudentRecordHistoryPanel({
               <Skeleton height={72} />
             </Stack>
           ) : isError ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0771"
+              presentation="toast"
               severity="error"
               action={
                 onRetry ? (
@@ -135,7 +137,7 @@ export function StudentRecordHistoryPanel({
               }
             >
               Record change history could not be loaded.
-            </Alert>
+            </StudentFeedback>
           ) : orderedChanges.length ? (
             <Timeline
               aria-label="Student record audit history"
@@ -230,9 +232,9 @@ export function StudentRecordHistoryPanel({
           )}
         </FormSectionCard>
       ) : (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0773" presentation="inline" severity="info">
           Record change history is not available with your current access.
-        </Alert>
+        </StudentFeedback>
       )}
       <Drawer
         anchor="right"
@@ -271,7 +273,9 @@ export function StudentRecordHistoryPanel({
               <Skeleton height={160} aria-label="Loading record change details" />
             )}
             {detail.isError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0774"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button size="small" onClick={() => detail.refetch()}>
@@ -280,10 +284,12 @@ export function StudentRecordHistoryPanel({
                 }
               >
                 This audit entry could not be loaded.
-              </Alert>
+              </StudentFeedback>
             )}
             {!selected && !detail.isError && !detail.isFetching && detail.currentData && (
-              <Alert severity="info">This audit entry is not available for this student.</Alert>
+              <StudentFeedback notificationKey="STU-0775" presentation="inline" severity="info">
+                This audit entry is not available for this student.
+              </StudentFeedback>
             )}
             {selected && (
               <>
@@ -305,7 +311,9 @@ export function StudentRecordHistoryPanel({
                 />
                 <Divider />
                 {selected.payloadMasked ? (
-                  <Alert severity="info">These details are restricted by school policy.</Alert>
+                  <StudentFeedback notificationKey="STU-0776" presentation="inline" severity="info">
+                    These details are restricted by school policy.
+                  </StudentFeedback>
                 ) : (
                   <>
                     <Stack spacing={0.5}>
@@ -320,7 +328,9 @@ export function StudentRecordHistoryPanel({
                         <Skeleton height={120} aria-label="Loading changed field labels" />
                       )}
                       {labelsError && (
-                        <Alert
+                        <StudentFeedback
+                          notificationKey="STU-0777"
+                          presentation="toast"
                           severity="error"
                           action={
                             <Button size="small" onClick={retryLabels}>
@@ -329,7 +339,7 @@ export function StudentRecordHistoryPanel({
                           }
                         >
                           Changed field labels could not be loaded.
-                        </Alert>
+                        </StudentFeedback>
                       )}
                       {!loadingLabels &&
                         !labelsError &&

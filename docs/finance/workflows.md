@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-10-23
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -40,6 +40,14 @@ explanations. Omit informational banners, visible section/page explanations, cha
 and nonessential field hints. Keep field validation, API/load errors and
 retry actions, blocking restrictions, concise empty/loading states, saved record descriptions,
 and transaction confirmations. Financial calculations, permissions, and submission rules are unchanged.
+
+## Admission and withdrawal proration results
+
+Finance's existing Proration Policy editor remains the only configuration surface. Its helper explains automatic use of the active academic-year default for new preparation and retention of the saved version.
+
+`FeeProrationResult` uses shared detail components for saved policy/version, joining/service dates and applicable monetary results. The common collection panel renders it in Admission Payment and Onboarding Fees. No additional section appears when Finance returns no result, including regular full-year cases. Withdrawal batch preview uses the same component per affected student. Ledger View details include separate withdrawal credit and explanation. Student screens contain no policy selector, override form or client-side proration formula.
+
+Applied withdrawal/correction invalidates Finance fee details, collection, adjustment/refund eligibility and audit tags. Preview alone does not invalidate money data. [Backend Finance workflow](../../../Shikshamitra-BE/docs/modules/finance/workflows.md#registration-joining-date-and-withdrawal-proration) owns business rules and permissions.
 
 ## Shared read-only details
 
@@ -101,16 +109,16 @@ loading, no history, and request errors have separate states, with Retry on erro
 The dialog body scrolls independently of its header and Close footer. Category
 and bank-account forms use the same section cards as Academic Subject forms.
 
-| UI behavior          | Implementation                                                                                                                                                                                       |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Names and limits     | Preserve entered case, numbers, symbols and Unicode; trim at save; show Income 40, Expense 128, bank names 100 and Purpose 500 limits; validate in Formik rather than relying only on HTML maxlength |
-| Duplicate failures   | Create/edit failures map to the Name or Account Number field and remain visible in a form alert; entered values are retained                                                                         |
-| Bank UPI             | Render/export the server's `maskedUpiId`; keep full detail values only in the edit form                                                                                                              |
-| Mobile tables        | Keep the identifying Name/Bank Name column on the left; disable right-side status/action pinning below the small breakpoint so it cannot cover names                                                 |
-| Status accessibility | Each switch names its action and selected record                                                                                                                                                     |
-| Bank deletion        | Confirmation identifies bank, branch and masked account number; the primary action reads Delete                                                                                                      |
+| UI behavior          | Implementation                                                                                                                                                                                        |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Names and limits     | Preserve entered case, numbers, symbols and Unicode; trim at save; show Income 40, Expense 128, bank names 100 and Purpose 500 limits; validate in Formik rather than relying only on HTML maxlength  |
+| Duplicate failures   | Create/edit failures map to the Name or Account Number field and remain visible in a form alert; entered values are retained                                                                          |
+| Bank UPI             | Render/export the server's `maskedUpiId`; keep full detail values only in the edit form                                                                                                               |
+| Mobile tables        | Keep the identifying Name/Bank Name column on the left; disable right-side status/action pinning below the small breakpoint so it cannot cover names                                                  |
+| Status accessibility | Each switch names its action and selected record                                                                                                                                                      |
+| Bank deletion        | Confirmation identifies bank, branch and masked account number; the primary action reads Delete                                                                                                       |
 | Income deletion      | Unused active categories can be deleted after confirmation; dependency restrictions use the server's `canDelete`. Failed deletes keep the dialog and error visible; pending deletes lock its actions. |
-| Exports              | Feature-specific filenames; Hindi/Gujarati exports use shaped embedded-font text; Actions remain excluded                                                                                            |
+| Exports              | Feature-specific filenames; Hindi/Gujarati exports use shaped embedded-font text; Actions remain excluded                                                                                             |
 
 The [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#category-and-bank-settings-data) owns validation, masking and history persistence.
 

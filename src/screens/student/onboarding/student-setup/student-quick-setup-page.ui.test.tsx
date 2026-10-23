@@ -1,7 +1,7 @@
 import type { StudentOnboardingCase } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentQuickSetupPage from './student-quick-setup-page';
 import { mapOnboardingCaseToItem } from './student-onboarding-model';
@@ -42,7 +42,15 @@ vi.mock('src/components/form-section-card', () => ({
     </section>
   ),
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.success } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: mocks.success,
+  },
+}));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useLazyGetStudentOnboardingCaseQuery: () => [mocks.getCase],
   useLazyPreviewStudentOnboardingActivationQuery: () => [mocks.previewActivation],
@@ -227,6 +235,33 @@ describe('single-student setup page', () => {
     opener.remove();
   });
 
+  it('places Details & History in the student name plate and opens it without submitting', () => {
+    const { props } = renderPage();
+    const namePlate = screen.getByRole('heading', { name: 'Aarav UXTest' }).closest('header')!;
+    const openDetails = within(namePlate).getByRole('button', { name: 'Details & History' });
+    expect(within(namePlate).getByText('Setup pending')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: 'Admission & Documents' })).queryByRole('button', {
+        name: 'Details & History',
+      })
+    ).not.toBeInTheDocument();
+    fireEvent.click(openDetails);
+    expect(props.onShowDetails).toHaveBeenCalledOnce();
+    expect(mocks.saveAcademic).not.toHaveBeenCalled();
+    expect(mocks.activate).not.toHaveBeenCalled();
+    expect(mocks.sendCredentials).not.toHaveBeenCalled();
+  });
+
+  it('locks Details & History while a request is pending or admission details fail to load', () => {
+    const { rerender, props } = renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Start credential request' }));
+    expect(screen.getByRole('button', { name: 'Details & History' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Finish credential request' }));
+    mocks.readError = true;
+    rerender(<StudentQuickSetupPage {...props} />);
+    expect(screen.getByRole('button', { name: 'Details & History' })).toBeDisabled();
+  });
+
   it('groups only Class & Numbers and App Login on top, followed by full-width Fees and Documents', () => {
     const { container } = renderPage();
     const academic = container.querySelector('#quick-setup-academic')!;
@@ -249,7 +284,7 @@ describe('single-student setup page', () => {
     renderPage();
     expect(screen.queryByText('Aarav UXTest')).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'App Login' })).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('no longer available');
+    expect(screen.getByText('no longer available', { exact: false })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Back to Students' })).toBeEnabled();
     expect(mocks.activate).not.toHaveBeenCalled();
   });
@@ -301,9 +336,9 @@ describe('single-student setup page', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
     await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Choose a division with available capacity.'
-      )
+      expect(
+        screen.getByText('Choose a division with available capacity.', { exact: false })
+      ).toBeVisible()
     );
     expect(mocks.saveFees).not.toHaveBeenCalled();
     expect(mocks.activate).not.toHaveBeenCalled();
@@ -326,9 +361,9 @@ describe('single-student setup page', () => {
     }));
     fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
     await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Verify the required transfer certificate.'
-      )
+      expect(
+        screen.getByText('Verify the required transfer certificate.', { exact: false })
+      ).toBeVisible()
     );
     expect(mocks.activate).not.toHaveBeenCalled();
   });

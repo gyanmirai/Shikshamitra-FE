@@ -1,9 +1,9 @@
-import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import {
   parseEditableAdmissionVisibilityRule,
@@ -55,7 +55,9 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
   if (parsedRule.error) {
     return (
       <Stack spacing={1.5}>
-        <Alert severity="warning">{parsedRule.error} It has not been changed.</Alert>
+        <StudentFeedback notificationKey="STU-0361" presentation="inline" severity="warning">
+          {parsedRule.error} It has not been changed.
+        </StudentFeedback>
         <TextField
           fullWidth
           size="small"

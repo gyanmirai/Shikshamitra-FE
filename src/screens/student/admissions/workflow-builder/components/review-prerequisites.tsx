@@ -1,7 +1,8 @@
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 import type { AdmissionReviewPrerequisite } from 'src/redux/student/admissions/admission-review-policy';
 
-import { Alert, Stack, Button, Checkbox, FormControlLabel } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, Checkbox, FormControlLabel } from '@mui/material';
 
 import { getReviewPrerequisiteKind } from '../review-stage-prerequisites';
 
@@ -31,10 +32,10 @@ export function ReviewPrerequisites({
   return (
     <Stack spacing={1}>
       {!options.length && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0529" presentation="inline" severity="info">
           Configure earlier Assessment, Document verification, or Eligibility stages to use their
           results here. You can review the application without these prerequisites.
-        </Alert>
+        </StudentFeedback>
       )}
       {options.map((stage) => {
         const checked = value.some((item) => item.sourceStageCode === stage.code);
@@ -62,7 +63,9 @@ export function ReviewPrerequisites({
         );
       })}
       {missing.map((item) => (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0530"
+          presentation="persistent"
           key={item.sourceStageCode}
           severity="error"
           action={
@@ -79,7 +82,7 @@ export function ReviewPrerequisites({
           {stages.find((stage) => stage.code === item.sourceStageCode)?.name ||
             'A saved prerequisite'}{' '}
           is no longer an earlier configured {item.kind} stage. Choose a valid source.
-        </Alert>
+        </StudentFeedback>
       ))}
     </Stack>
   );

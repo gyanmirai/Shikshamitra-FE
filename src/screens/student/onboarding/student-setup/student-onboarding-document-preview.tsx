@@ -4,18 +4,10 @@ import type { AdmissionDocumentEvidence } from 'src/redux/student/admissions/adm
 
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Stack, Button, Tooltip, Skeleton, Typography, IconButton } from '@mui/material';
 import { useDocumentPreview } from 'src/screens/student/admissions/document-verification/use-document-preview';
-import {
-  Box,
-  Stack,
-  Alert,
-  Button,
-  Tooltip,
-  Skeleton,
-  Typography,
-  IconButton,
-} from '@mui/material';
 import { DocumentDownloadButton } from 'src/screens/student/admissions/document-verification/document-download-button';
 
 /** The existing authenticated blob viewer in the shared read-only dialog shell. */
@@ -106,7 +98,9 @@ export function StudentOnboardingDocumentPreview({
             {preview.status === 'loading' ? (
               <Skeleton variant="rounded" height={320} aria-label="Loading document preview" />
             ) : preview.status === 'error' || imageFailed ? (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0987"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button size="small" color="inherit" onClick={retryPreview}>
@@ -115,11 +109,11 @@ export function StudentOnboardingDocumentPreview({
                 }
               >
                 Unable to preview this document.
-              </Alert>
+              </StudentFeedback>
             ) : preview.status === 'unsupported' ? (
-              <Alert severity="info">
+              <StudentFeedback notificationKey="STU-0988" presentation="inline" severity="info">
                 Preview is unavailable for this format. Download the document to open it.
-              </Alert>
+              </StudentFeedback>
             ) : preview.contentType === 'application/pdf' ? (
               <Box
                 component="object"

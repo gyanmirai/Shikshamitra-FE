@@ -1,6 +1,7 @@
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Alert, Stack, Paper, Button, Skeleton, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Paper, Button, Skeleton, Typography } from '@mui/material';
 import { useGetAdmissionInquiryTimelineQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { isInquiryFormActivity } from './inquiry-form-history';
@@ -45,7 +46,9 @@ export function InquiryTimeline({
           </Stack>
         )}
         {query.isError && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0430"
+            presentation="toast"
             severity="error"
             action={
               <Button
@@ -59,7 +62,7 @@ export function InquiryTimeline({
             }
           >
             {title} could not be loaded.
-          </Alert>
+          </StudentFeedback>
         )}
         {!loading && !query.isError && (
           <AdmissionActivityTimeline

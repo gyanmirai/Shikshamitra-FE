@@ -5,12 +5,14 @@ import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Alert, Stack, Button, Typography, DialogActions, LinearProgress } from '@mui/material';
+import { Stack, Button, Typography, DialogActions, LinearProgress } from '@mui/material';
 import { useGetStudentOnboardingPlacementOptionsQuery } from 'src/redux/student/onboarding/student-onboarding-api';
 
-import type { StudentOnboardingItem } from './student-onboarding-model';
 import StudentAssignmentDrawer from './student-assignment-drawer';
+
+import type { StudentOnboardingItem } from './student-onboarding-model';
 import type {
   StudentSetupAssignmentType,
   StudentSetupAssignmentResult,
@@ -105,7 +107,9 @@ export default function StudentSetupAutoAssignmentDialog({
             <>
               {divisions.isFetching && <LinearProgress aria-label="Loading target divisions" />}
               {divisions.isError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-1045"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button size="small" onClick={() => divisions.refetch()}>
@@ -114,7 +118,7 @@ export default function StudentSetupAutoAssignmentDialog({
                   }
                 >
                   Could not load division capacity.
-                </Alert>
+                </StudentFeedback>
               )}
               <ShakingTextField error={Boolean(form.touched.divisionId && form.errors.divisionId)}>
                 <CustomSelect
@@ -146,7 +150,9 @@ export default function StudentSetupAutoAssignmentDialog({
           {results.length > 0 && (
             <Stack spacing={1} aria-live="polite">
               {results.map((result) => (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-1046"
+                  presentation="inline"
                   key={result.student.id}
                   severity={
                     result.status === 'failed'
@@ -157,7 +163,7 @@ export default function StudentSetupAutoAssignmentDialog({
                   }
                 >
                   {result.student.studentName}: {result.message}
-                </Alert>
+                </StudentFeedback>
               ))}
             </Stack>
           )}

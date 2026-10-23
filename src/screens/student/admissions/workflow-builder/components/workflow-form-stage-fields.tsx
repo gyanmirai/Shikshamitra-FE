@@ -19,23 +19,11 @@ type Props = {
   forms: AdmissionForm[];
   stages: AdmissionWorkflowStage[];
   formDefinitionId: string;
-  formDetailsLoading?: boolean;
-  formDetailsError?: boolean;
-  onRetryFormDetails?: () => void;
   readOnly: boolean;
 };
 
 export function WorkflowFormStageFields(props: Props) {
-  const {
-    formik,
-    metadata,
-    forms,
-    formDefinitionId,
-    formDetailsLoading,
-    formDetailsError,
-    onRetryFormDetails,
-    readOnly,
-  } = props;
+  const { formik, metadata, forms, formDefinitionId, readOnly } = props;
 
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
@@ -53,9 +41,6 @@ export function WorkflowFormStageFields(props: Props) {
             formik={formik}
             forms={forms}
             formDefinitionId={formDefinitionId}
-            formDetailsLoading={formDetailsLoading}
-            formDetailsError={formDetailsError}
-            onRetryFormDetails={onRetryFormDetails}
             readOnly={readOnly}
             available={metadata?.supportedConfiguration?.includes('form') === true}
           />

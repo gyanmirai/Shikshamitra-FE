@@ -7,8 +7,9 @@ import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, MenuItem, TextField, DialogActions } from '@mui/material';
+import { Stack, Button, MenuItem, TextField, DialogActions } from '@mui/material';
 
 type RuntimeAction = 'skip' | 'override';
 
@@ -65,11 +66,16 @@ export function AdmissionWorkflowRuntimeActionDialog({
     >
       <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
         <Stack spacing={2}>
-          <Alert severity="warning" icon={<Iconify icon="mdi:alert-outline" />}>
+          <StudentFeedback
+            notificationKey="STU-0160"
+            presentation="inline"
+            severity="warning"
+            icon={<Iconify icon="mdi:alert-outline" />}
+          >
             {isOverride
               ? 'This privileged action bypasses normal transition conditions and is permanently audited.'
               : 'Skipping is allowed only for stages configured for manual skip and is permanently audited.'}
-          </Alert>
+          </StudentFeedback>
           {isOverride && (
             <ShakingTextField
               error={Boolean(

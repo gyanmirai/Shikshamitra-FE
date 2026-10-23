@@ -1,24 +1,10 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
-import { useState } from 'react';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Card,
-  Chip,
-  Alert,
-  Stack,
-  Button,
-  Skeleton,
-  Typography,
-  DialogActions,
-  LinearProgress,
-} from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Card, Chip, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 import { AdmissionQueryError } from '../admission-query-error';
-import { FormStageSectionList } from './form-stage-section-list';
 import { FormStageReasonDialog } from './form-stage-reason-dialog';
 import { useApplicationFormStage } from './hooks/use-application-form-stage';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
@@ -44,242 +30,128 @@ export function ApplicationFormStage({
   showCompletionAction?: boolean;
   onReadinessChange?: ApplicationStageReadinessHandler;
 }) {
-  const [verificationOpen, setVerificationOpen] = useState(false);
-  const {
-    action,
-    setAction,
-    summary,
-    busy,
-    query,
-    verifySection,
-    submitReason,
-    canEdit,
-    canReopen,
-  } = useApplicationFormStage({ applicationId, stageId: stage.id, advancing });
+  const { action, setAction, summary, busy, query, submitReason, canReopen } =
+    useApplicationFormStage({ applicationId, stageId: stage.id, advancing });
+  const loading = query.isLoading || query.isFetching;
   useApplicationStageReadiness(onReadinessChange, {
     stageId: stage.id,
     canComplete: Boolean(summary?.canComplete && !query.isError),
-    busy: busy || Boolean(action) || (compact && verificationOpen),
+    busy: busy || Boolean(action),
     concurrencyStamp: summary?.concurrencyStamp,
   });
-  const renderVerification = () =>
-    summary && (
-      <Stack spacing={1.5}>
-        {(!compact || summary.dueAt) && (
-          <Stack direction="row" flexWrap="wrap" gap={1}>
-            {!compact && (
-              <Chip
-                size="small"
-                label={`Owner: ${summary.policy?.responsibility ?? 'applicant'}`}
-              />
-            )}
-            {!compact && (
-              <Chip
-                size="small"
-                label={`Submissions: ${summary.submissionAttempts}/${summary.policy?.maxSubmissionAttempts ?? 1}`}
-              />
-            )}
-            {summary.dueAt && (
-              <Chip
-                size="small"
-                color={summary.isOverdue ? 'error' : 'default'}
-                label={`Due ${new Date(summary.dueAt).toLocaleDateString()}`}
-              />
-            )}
-          </Stack>
-        )}
-        {summary.blockers.length > 0 &&
-          (compact && !summary.isOverdue ? (
-            <Typography variant="body2" color="text.secondary" role="status">
-              {summary.blockers.join(' ')}
-            </Typography>
-          ) : (
-            <Alert severity={summary.isOverdue ? 'error' : 'info'}>
-              {summary.blockers.join(' ')}
-            </Alert>
-          ))}
-        <FormStageSectionList
-          sections={summary.sections}
-          disabled={busy || !summary.canVerify || !canEdit}
-          onVerify={verifySection}
-          onRevoke={(section) => setAction({ type: 'revoke', section })}
-          compact={compact}
-        />
-        {canReopen && (
-          <Button
-            size="small"
-            variant="outlined"
-            sx={{ alignSelf: compact ? 'flex-end' : 'flex-start' }}
-            disabled={busy || !summary.canRequestCorrection}
-            onClick={() => setAction({ type: 'correction' })}
-          >
-            Request correction
-          </Button>
-        )}
-      </Stack>
-    );
+
+  const correctionAction = summary && canReopen && summary.canRequestCorrection && (
+    <Button
+      size="small"
+      variant="outlined"
+      disabled={busy}
+      onClick={() => setAction({ type: 'correction' })}
+    >
+      Request correction
+    </Button>
+  );
+  const completionAction = showCompletionAction && canAdvance && summary && !query.isError && (
+    <Button
+      size="small"
+      variant="contained"
+      disabled={busy || !summary.canComplete}
+      loading={advancing}
+      loadingPosition="end"
+      onClick={onComplete}
+    >
+      Continue admission
+    </Button>
+  );
   const reasonDialog = action && summary && (
     <FormStageReasonDialog
-      title={
-        action.type === 'correction'
-          ? 'Request form correction'
-          : `Reopen ${action.section.sectionName}`
-      }
-      description={
-        action.type === 'correction'
-          ? 'The application returns to draft. Previous section verification becomes stale and the applicant must resubmit.'
-          : 'The section must be checked again before this Form stage can be completed.'
-      }
-      confirmLabel={action.type === 'correction' ? 'Request correction' : 'Reopen section'}
+      title="Request Form Correction"
+      description="The application returns to draft and the applicant must resubmit the corrected form."
+      confirmLabel="Request correction"
       busy={busy}
       onClose={() => setAction(null)}
       onSubmit={(reason) => submitReason(reason).then(() => undefined)}
     />
   );
+  const error = query.isError || (!loading && !summary);
+
   if (compact) {
-    const hasVerification = summary?.sections.some((section) => section.required);
     return (
       <>
-        {(!summary || hasVerification || query.isError) && (
-          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:clipboard-check-outline" width={16} />}
-              aria-haspopup="dialog"
-              disabled={busy}
-              onClick={() => setVerificationOpen(true)}
-            >
-              Section verification
-            </Button>
+        {loading ? (
+          <Stack role="status" aria-label="Loading Form stage" direction="row" spacing={1}>
+            <Skeleton variant="rounded" width={140} height={30} />
           </Stack>
-        )}
-        {summary && !hasVerification && canReopen && (
-          <Button
-            size="small"
-            variant="outlined"
-            disabled={busy || !summary.canRequestCorrection}
-            onClick={() => setAction({ type: 'correction' })}
-          >
-            Request correction
-          </Button>
-        )}
-        {showCompletionAction && canAdvance && summary && !query.isError && (
-          <Button
-            size="small"
-            variant="contained"
-            disabled={busy || !summary.canComplete}
-            onClick={() => onComplete()}
-          >
-            Continue admission
-          </Button>
-        )}
-        {verificationOpen && !action && (
-          <CustomDialog
-            open
-            title="Section Verification"
-            titleInfo="Review required sections and record staff verification after application submission."
-            maxWidth="md"
-            hasForm={false}
-            hasUnsavedChanges={false}
-            guardUnsavedChanges={false}
-            disableClose={busy}
-            handleClose={() => setVerificationOpen(false)}
-          >
-            <DialogScrollContent>
-              {query.isFetching && <LinearProgress aria-label="Refreshing Form stage" />}
-              {query.isLoading ? (
-                <Skeleton variant="rounded" height={160} />
-              ) : query.isError || !summary ? (
-                <AdmissionQueryError onRetry={query.refetch} />
-              ) : (
-                <Stack spacing={1.5}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    spacing={1}
-                  >
-                    <Box>
-                      <Typography variant="subtitle2">Required sections</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {
-                          summary.sections.filter((section) => section.required && section.verified)
-                            .length
-                        }{' '}
-                        of {summary.sections.filter((section) => section.required).length} required
-                        sections verified
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {summary.submissionAttempts} of {summary.policy?.maxSubmissionAttempts ?? 1}{' '}
-                        submission attempts used
-                      </Typography>
-                    </Box>
-                    <Label color={summary.canComplete ? 'success' : 'warning'}>
-                      {summary.canComplete ? 'Ready' : 'Pending'}
-                    </Label>
-                  </Stack>
-                  {renderVerification()}
-                </Stack>
-              )}
-            </DialogScrollContent>
-            <DialogActions sx={{ p: 2 }}>
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={busy}
-                onClick={() => setVerificationOpen(false)}
-                startIcon={<Iconify icon="mdi:close" width={16} />}
-              >
-                Close
-              </Button>
-            </DialogActions>
-          </CustomDialog>
+        ) : error ? (
+          <AdmissionQueryError onRetry={query.refetch} />
+        ) : (
+          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+            {correctionAction}
+            {completionAction}
+          </Stack>
         )}
         {reasonDialog}
       </>
     );
   }
+
   return (
     <Card sx={{ p: 2 }}>
       <Stack spacing={2}>
-        {!compact && (
-          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
-            <div>
-              <Typography variant="h6">{stage.name}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Managed application form
-              </Typography>
-            </div>
-            {summary && (
-              <Label color={summary.canComplete ? 'success' : summary.isOverdue ? 'error' : 'info'}>
-                {summary.canComplete ? 'Ready' : summary.isOverdue ? 'Overdue' : 'In progress'}
-              </Label>
-            )}
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
+          <div>
+            <Typography variant="h6">{stage.name}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Managed application form
+            </Typography>
+          </div>
+          {!loading && !error && summary && (
+            <Label color={summary.canComplete ? 'success' : summary.isOverdue ? 'error' : 'info'}>
+              {summary.canComplete ? 'Ready' : summary.isOverdue ? 'Overdue' : 'In progress'}
+            </Label>
+          )}
+        </Stack>
+        {loading ? (
+          <Stack spacing={1} role="status" aria-label="Loading Form stage">
+            <Skeleton width="50%" />
+            <Skeleton width="75%" />
+            <Skeleton variant="rounded" width={140} height={30} />
           </Stack>
-        )}
-        {query.isFetching && <LinearProgress aria-label="Refreshing Form stage" />}
-        {query.isLoading ? (
-          <Skeleton variant="rounded" height={160} />
-        ) : query.isError || !summary ? (
+        ) : error ? (
           <AdmissionQueryError onRetry={query.refetch} />
-        ) : (
+        ) : summary ? (
           <>
-            {renderVerification()}
-            <Stack direction="row" justifyContent={compact ? 'flex-end' : 'flex-start'} spacing={1}>
-              {showCompletionAction && canAdvance && (
-                <Button
+            <Stack direction="row" flexWrap="wrap" gap={1}>
+              <Chip
+                size="small"
+                label={`Owner: ${summary.policy?.responsibility ?? 'applicant'}`}
+              />
+              <Chip
+                size="small"
+                label={`Submissions: ${summary.submissionAttempts}/${summary.policy?.maxSubmissionAttempts ?? 1}`}
+              />
+              {summary.dueAt && (
+                <Chip
                   size="small"
-                  variant="contained"
-                  disabled={busy || !summary.canComplete}
-                  onClick={() => onComplete()}
-                >
-                  Continue admission
-                </Button>
+                  color={summary.isOverdue ? 'error' : 'default'}
+                  label={`Due ${new Date(summary.dueAt).toLocaleDateString()}`}
+                />
               )}
             </Stack>
+            {summary.blockers.length > 0 && (
+              <StudentFeedback
+                notificationKey="STU-0384"
+                presentation={summary.isOverdue ? 'persistent' : 'inline'}
+                severity={summary.isOverdue ? 'error' : 'info'}
+              >
+                {summary.blockers.join(' ')}
+              </StudentFeedback>
+            )}
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              {correctionAction}
+              {completionAction}
+            </Stack>
           </>
-        )}
+        ) : null}
         {reasonDialog}
       </Stack>
     </Card>

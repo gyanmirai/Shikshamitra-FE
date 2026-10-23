@@ -5,7 +5,8 @@ import type { StudentModuleDashboardMetric } from 'src/redux/student/dashboard/s
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { fNumber } from 'src/utils/format-number';
-import { Box, Stack, Alert, Skeleton, Typography, ButtonBase } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Skeleton, Typography, ButtonBase } from '@mui/material';
 import { useDeferredRender } from 'src/screens/academic/AcademicDashboard/hooks/useDeferredRender';
 import { DashboardSectionCard } from 'src/screens/academic/AcademicDashboard/Components/DashboardSectionCard';
 
@@ -41,7 +42,9 @@ export default function StudentDashboardChartCard({
     <DashboardSectionCard title={title} subheader={description} height="100%">
       <Box ref={targetRef}>
         {failed ? (
-          <Alert severity="warning">Summary unavailable. Retry its workspace section below.</Alert>
+          <StudentFeedback notificationKey="STU-0721" presentation="persistent" severity="warning">
+            Summary unavailable. Retry its workspace section below.
+          </StudentFeedback>
         ) : loading ? (
           <Skeleton variant="rounded" height={220} aria-label={`Loading ${title}`} />
         ) : rows.length ? (

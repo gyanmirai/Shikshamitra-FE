@@ -136,7 +136,7 @@ describe('Offering edit drawer experience', () => {
         />
       </ThemeProvider>
     );
-    expect(screen.getByRole('alert')).toHaveTextContent('Unable to load offering');
+    expect(screen.getByText('Unable to load offering', { exact: false })).toBeVisible();
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(retry).toHaveBeenCalledOnce();
     expect(screen.getByRole('button', { name: 'Close admission offering' })).toBeEnabled();
@@ -217,9 +217,9 @@ describe('Offering edit drawer experience', () => {
     show();
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await screen.findByRole('heading', { name: 'Preview offering' });
-    const warning = screen.getByRole('alert');
-    expect(warning).toHaveTextContent('Configuration incomplete');
-    expect(warning).toHaveClass('MuiAlert-colorError');
+    expect(screen.getByText('Configuration incomplete')).toBeVisible();
+    expect(screen.getByText('Select a published workflow')).toBeVisible();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
     expect(mocks.save).not.toHaveBeenCalled();
@@ -270,9 +270,9 @@ describe('Offering edit drawer experience', () => {
   it('shows option-load errors with Retry while blocking Continue', async () => {
     mocks.queryFailed = true;
     show();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Some academic options could not be loaded'
-    );
+    expect(
+      screen.getByText('Some academic options could not be loaded', { exact: false })
+    ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(mocks.retry).toHaveBeenCalledOnce();

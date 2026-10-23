@@ -8,9 +8,10 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { studentPaths } from 'src/constants/student-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Paper, Stack, Button, Skeleton } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Box, Alert, Paper, Stack, Button, Skeleton } from '@mui/material';
 import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
@@ -86,7 +87,9 @@ export default function AdmissionInquiryEditPage() {
           </Stack>
         )}
         {(inquiry.isError || management.isError) && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0072"
+            presentation="toast"
             severity="error"
             sx={{ m: 2 }}
             action={
@@ -103,14 +106,19 @@ export default function AdmissionInquiryEditPage() {
             }
           >
             Inquiry details could not be loaded. Try again.
-          </Alert>
+          </StudentFeedback>
         )}
         {inquiry.data && management.data && !inquiry.isError && !management.isError && (
           <>
             {management.data.isLocked && (
-              <Alert severity="info" sx={{ mx: 2, mt: 2 }}>
+              <StudentFeedback
+                notificationKey="STU-0073"
+                presentation="inline"
+                severity="info"
+                sx={{ mx: 2, mt: 2 }}
+              >
                 This inquiry is read-only because its application has already started.
-              </Alert>
+              </StudentFeedback>
             )}
             <InquiryOverviewForm
               inquiry={inquiry.data}

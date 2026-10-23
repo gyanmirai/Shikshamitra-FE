@@ -3,17 +3,10 @@ import type {
   AdmissionPaymentPolicy,
 } from 'src/redux/student/admissions/admission-payment-policy';
 
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { STAFF_PAYMENT_METHODS } from 'src/redux/student/admissions/admission-payment-policy';
-import {
-  Alert,
-  Stack,
-  Switch,
-  Checkbox,
-  TextField,
-  Typography,
-  FormControlLabel,
-} from '@mui/material';
+import { Stack, Switch, Checkbox, TextField, Typography, FormControlLabel } from '@mui/material';
 
 import { WorkflowSettingLabel } from './workflow-setting-label';
 
@@ -37,10 +30,10 @@ export function PaymentCollectionSettings({ policy, disabled, onChange }: Props)
       descriptionTooltip="Accepted methods, due dates and installment limits control collection. Completion still requires full settlement or an authorized waiver, including independent verification when enabled."
     >
       <Stack spacing={1.5}>
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0525" presentation="inline" severity="info">
           Staff collection is ready. Online collection becomes available after a trusted tenant
           payment gateway is connected.
-        </Alert>
+        </StudentFeedback>
         <Typography variant="body2" color="text.secondary">
           Accepted staff methods
         </Typography>

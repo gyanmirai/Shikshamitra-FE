@@ -2,9 +2,10 @@
 
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Stack, Alert, Button, Skeleton, TextField, Typography } from '@mui/material';
+import { Box, Stack, Button, Skeleton, TextField, Typography } from '@mui/material';
 
 import type { QuickAcademicMode } from './student-quick-setup-academic-model';
 import type { StudentQuickSetupAcademicEditor } from './use-student-quick-setup-academic';
@@ -54,7 +55,9 @@ export default function StudentQuickSetupAcademic({
       <Stack spacing={1.5} aria-label="Loading academic setup">
         {!editor.error && <Skeleton variant="rounded" height={244} />}
         {editor.error && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-1029"
+            presentation="persistent"
             severity="error"
             action={
               <Button size="small" onClick={editor.retry}>
@@ -63,7 +66,7 @@ export default function StudentQuickSetupAcademic({
             }
           >
             {editor.error}
-          </Alert>
+          </StudentFeedback>
         )}
       </Stack>
     );
@@ -102,7 +105,9 @@ export default function StudentQuickSetupAcademic({
   return (
     <Stack spacing={1.5} sx={{ flex: 1 }}>
       {editor.error && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-1030"
+          presentation="persistent"
           severity="error"
           action={
             <Button size="small" disabled={editor.busy} onClick={editor.retry}>
@@ -111,7 +116,7 @@ export default function StudentQuickSetupAcademic({
           }
         >
           {editor.error}
-        </Alert>
+        </StudentFeedback>
       )}
       <FormSectionCard
         title="Class & Numbers"
@@ -161,7 +166,9 @@ export default function StudentQuickSetupAcademic({
           )}
         </Box>
         {editor.placements.isError && !closed && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-1031"
+            presentation="toast"
             severity="error"
             action={
               <Button size="small" onClick={editor.retry}>
@@ -170,7 +177,7 @@ export default function StudentQuickSetupAcademic({
             }
           >
             Division capacity could not be loaded.
-          </Alert>
+          </StudentFeedback>
         )}
         {editor.placements.isLoading && !closed && <Skeleton variant="rounded" height={36} />}
         {!closed && values.divisionId !== (item.divisionId ?? '') && item.divisionId && (
@@ -260,7 +267,9 @@ export default function StudentQuickSetupAcademic({
               </Typography>
             )}
             {(editor.seriesQuery.isError || editor.settingsQuery.isError) && !closed && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-1032"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button size="small" onClick={editor.retry}>
@@ -269,7 +278,7 @@ export default function StudentQuickSetupAcademic({
                 }
               >
                 GR settings could not be loaded.
-              </Alert>
+              </StudentFeedback>
             )}
             {editor.editingGr && values.grValue !== item.grNumber && (
               <ShakingTextField error={Boolean(fieldError('grReason'))}>
@@ -311,13 +320,7 @@ export default function StudentQuickSetupAcademic({
                 size="small"
                 fullWidth
                 label="Roll number"
-                value={
-                  rollAssigned || closed
-                    ? (item.rollNumber ?? 'Not assigned')
-                    : values.rollMode === 'automatic'
-                      ? 'Next available on save'
-                      : 'Not assigned'
-                }
+                value={rollAssigned || closed ? (item.rollNumber ?? 0) : 0}
                 slotProps={{ input: { readOnly: true } }}
               />
             ) : (
@@ -333,6 +336,7 @@ export default function StudentQuickSetupAcademic({
                   roundToWholeRupees={false}
                   name="rollValue"
                   value={values.rollValue}
+                  placeholder="0"
                   onValueChange={(value, source) => {
                     if (source.source === 'event') form.setFieldValue('rollValue', value.value);
                   }}

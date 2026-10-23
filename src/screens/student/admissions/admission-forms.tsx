@@ -11,9 +11,10 @@ import { useSearchParams } from 'next/navigation';
 import { useMemo, useState, useEffect } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Stack, Button, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Stack, Alert, Button, Typography } from '@mui/material';
 import { useGetAdmissionFormsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { createFormColumns } from './form-list/form-columns';
@@ -211,7 +212,11 @@ export default function AdmissionFormsScreen() {
               Delete <strong>{actions.pendingDelete?.name}</strong> and its sections and fields?
             </Typography>
 
-            {actions.deleteError && <Alert severity="error">{actions.deleteError}</Alert>}
+            {actions.deleteError && (
+              <StudentFeedback notificationKey="STU-0070" presentation="inline" severity="error">
+                {actions.deleteError}
+              </StudentFeedback>
+            )}
           </Stack>
         }
         action={

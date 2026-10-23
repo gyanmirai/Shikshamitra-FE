@@ -1,7 +1,8 @@
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
-import { Alert, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import { AdmissionWorkflowDialog } from '../admission-workflow-dialog';
 import { useAdmissionDefinitionOptions } from '../use-admission-definition-options';
@@ -73,7 +74,9 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
                   : 'Archived workflows cannot be selected for new admission offerings.'}
             </Typography>
             {actions.confirmationNotice && (
-              <Alert severity="warning">{actions.confirmationNotice}</Alert>
+              <StudentFeedback notificationKey="STU-0621" presentation="inline" severity="warning">
+                {actions.confirmationNotice}
+              </StudentFeedback>
             )}
           </Stack>
         }

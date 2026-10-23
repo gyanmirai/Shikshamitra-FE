@@ -7,7 +7,8 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Alert, Stack, Button, TextField, Typography, CircularProgress } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Button, TextField, Typography, CircularProgress } from '@mui/material';
 import {
   type AdmissionCycle,
   type AdmissionCycleAction,
@@ -154,7 +155,9 @@ export function AdmissionCycleActionDialog({
             </Stack>
           )}
           {impactError && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0028"
+              presentation="toast"
               severity="error"
               action={
                 <Button color="inherit" size="small" onClick={() => loadImpact(cycle.id)}>
@@ -163,7 +166,7 @@ export function AdmissionCycleActionDialog({
               }
             >
               Could not check linked records. Retry before continuing.
-            </Alert>
+            </StudentFeedback>
           )}
 
           {action === 'publish' && (
@@ -235,14 +238,14 @@ export function AdmissionCycleActionDialog({
           )}
 
           {cannotArchive && (
-            <Alert severity="error">
+            <StudentFeedback notificationKey="STU-0029" presentation="persistent" severity="error">
               Close or deactivate active offerings before archiving this cycle.
-            </Alert>
+            </StudentFeedback>
           )}
           {cannotDelete && (
-            <Alert severity="error">
+            <StudentFeedback notificationKey="STU-0030" presentation="persistent" severity="error">
               Only an unused draft with no offerings or applications can be deleted.
-            </Alert>
+            </StudentFeedback>
           )}
           {action === 'reopen' && (
             <DatePicker

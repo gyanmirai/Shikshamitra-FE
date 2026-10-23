@@ -1,7 +1,8 @@
 import type { AdmissionInquiryManagement } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
 import { fDateTime } from 'src/utils/format-time';
-import { Chip, Grid, Alert, Paper, Stack, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Chip, Grid, Paper, Stack, Typography } from '@mui/material';
 
 const outcomeLabels = [
   'Interested',
@@ -71,23 +72,25 @@ export function InquiryManagementSummary({
         ))}
       </Grid>
       {value.blockers.length > 0 && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0415" presentation="persistent" severity="warning">
           <Typography variant="subtitle2">Before starting an application</Typography>
           {value.blockers.map((blocker) => (
             <Typography key={blocker} variant="body2">
               • {blocker}
             </Typography>
           ))}
-        </Alert>
+        </StudentFeedback>
       )}
       {value.outcomeReason && (
-        <Alert severity="info">Latest status reason: {value.outcomeReason}</Alert>
+        <StudentFeedback notificationKey="STU-0416" presentation="inline" severity="info">
+          Latest status reason: {value.outcomeReason}
+        </StudentFeedback>
       )}
       {value.qualificationEmailStatus && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0417" presentation="inline" severity="info">
           Qualification email: {value.qualificationEmailStatus}
           {value.qualificationEmailMessage ? ` · ${value.qualificationEmailMessage}` : ''}
-        </Alert>
+        </StudentFeedback>
       )}
     </Stack>
   );

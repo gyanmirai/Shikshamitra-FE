@@ -9,11 +9,11 @@ import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { Scrollbar } from 'src/components/scrollbar';
 import { studentPaths } from 'src/constants/student-menu';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetApplicationAssessmentQuery } from 'src/redux/student/admissions/admission-assessments-api';
 import {
   Box,
   Stack,
-  Alert,
   Drawer,
   Button,
   Divider,
@@ -180,7 +180,9 @@ export function AssessmentApplicantDrawer({
               />
             )}
             {!!query.currentData.blockers.length && (
-              <Alert severity="info">{query.currentData.blockers.join(' ')}</Alert>
+              <StudentFeedback notificationKey="STU-0285" presentation="persistent" severity="info">
+                {query.currentData.blockers.join(' ')}
+              </StudentFeedback>
             )}
             <Typography variant="subtitle2">Attempt history</Typography>
             {query.currentData.attempts.length ? (

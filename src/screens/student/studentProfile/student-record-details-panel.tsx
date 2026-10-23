@@ -7,8 +7,9 @@ import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { RouterLink } from 'src/routes/components';
 import { EmptyContent } from 'src/components/empty-content';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Grid, Menu, Stack, Alert, Button, MenuItem, Typography } from '@mui/material';
+import { Box, Grid, Menu, Stack, Button, MenuItem, Typography } from '@mui/material';
 
 import { ProfileValues } from './student-profile-overview';
 import {
@@ -31,7 +32,11 @@ export function RegistrationSourceFields({
 }) {
   const sections = visibleRegistrationSections(source, original, !original);
   if (!source.definition)
-    return <Alert severity="info">These captured details are restricted by school policy.</Alert>;
+    return (
+      <StudentFeedback notificationKey="STU-0766" presentation="inline" severity="info">
+        These captured details are restricted by school policy.
+      </StudentFeedback>
+    );
   if (!sections.length)
     return (
       <Typography variant="body2" color="text.secondary">
@@ -158,7 +163,9 @@ export function StudentRecordDetailsPanel({
                 }
               >
                 {item.isMasked ? (
-                  <Alert severity="info">These details are restricted by school policy.</Alert>
+                  <StudentFeedback notificationKey="STU-0767" presentation="inline" severity="info">
+                    These details are restricted by school policy.
+                  </StudentFeedback>
                 ) : item.hasData ? (
                   <ProfileValues values={structuredProfileEntries(item.data)} />
                 ) : (
@@ -172,7 +179,9 @@ export function StudentRecordDetailsPanel({
         })}
       </Grid>
       {details.customDetailsMasked ? (
-        <Alert severity="info">School-specific details are restricted by school policy.</Alert>
+        <StudentFeedback notificationKey="STU-0768" presentation="inline" severity="info">
+          School-specific details are restricted by school policy.
+        </StudentFeedback>
       ) : (
         sources.map((source) => (
           <FormSectionCard
@@ -191,7 +200,9 @@ export function StudentRecordDetailsPanel({
             <RegistrationSourceFields source={source} onHistory={onHistory} />
             {!source.isBaseline &&
               source.differences.some((difference) => difference.canReview) && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0769"
+                  presentation="inline"
                   severity="info"
                   action={
                     canCreate && details.customDetailsEditable ? (
@@ -201,7 +212,7 @@ export function StudentRecordDetailsPanel({
                 >
                   This admission contains new details for review. Current student values have been
                   kept.
-                </Alert>
+                </StudentFeedback>
               )}
           </FormSectionCard>
         ))

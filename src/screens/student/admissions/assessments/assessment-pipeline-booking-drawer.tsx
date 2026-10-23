@@ -8,11 +8,11 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionApplicationQuery } from 'src/redux/student/admissions/admission-applications-api';
 import {
   Box,
   Stack,
-  Alert,
   Drawer,
   Button,
   Divider,
@@ -268,7 +268,15 @@ export function AssessmentPipelineBookingDrawer({
                     .join(' · ')}
                 </Typography>
               </Box>
-              {error && <Alert severity="error">{error}</Alert>}
+              {error && (
+                <StudentFeedback
+                  notificationKey="STU-0263"
+                  presentation="persistent"
+                  severity="error"
+                >
+                  {error}
+                </StudentFeedback>
+              )}
               {mode === 'book' ? (
                 <AssessmentBookingField
                   {...scopeKey}
@@ -297,7 +305,9 @@ export function AssessmentPipelineBookingDrawer({
               ) : resourcesLoading ? (
                 <Skeleton variant="rounded" height={320} />
               ) : resourcesError ? (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0264"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button
@@ -312,7 +322,7 @@ export function AssessmentPipelineBookingDrawer({
                   }
                 >
                   Unable to load slot setup.
-                </Alert>
+                </StudentFeedback>
               ) : (
                 <AssessmentSessionSetupFields
                   pipeline
@@ -326,7 +336,9 @@ export function AssessmentPipelineBookingDrawer({
                 />
               )}
               {mode === 'create' && application.isError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0265"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button size="small" onClick={application.refetch}>
@@ -335,7 +347,7 @@ export function AssessmentPipelineBookingDrawer({
                   }
                 >
                   Unable to load student details.
-                </Alert>
+                </StudentFeedback>
               )}
             </Stack>
           </Scrollbar>

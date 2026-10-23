@@ -14,8 +14,9 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { LoadingButton } from 'src/components/loading-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
-import { Grid, Alert, TextField, DialogActions } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { suggestCloneName } from './admission-cycle-model';
@@ -138,13 +139,15 @@ export function AdmissionCycleConfigurationDialog({
             <>
               {dismissedNotice !== 'clone' && (
                 <Grid size={{ xs: 12 }}>
-                  <Alert
+                  <StudentFeedback
+                    notificationKey="STU-0041"
+                    presentation="inline"
                     severity="info"
                     onClose={() => setDismissedNotice('clone')}
                     closeText="Dismiss copy information"
                   >
                     The copy is created as a draft. Offerings and applications are not copied.
-                  </Alert>
+                  </StudentFeedback>
                 </Grid>
               )}
               <Grid size={{ xs: 12 }}>
@@ -263,13 +266,15 @@ export function AdmissionCycleConfigurationDialog({
               </Grid>
               {scheduleInvalid && dismissedNotice !== 'schedule' && (
                 <Grid size={{ xs: 12 }}>
-                  <Alert
+                  <StudentFeedback
+                    notificationKey="STU-0042"
+                    presentation="inline"
                     severity="warning"
                     onClose={() => setDismissedNotice('schedule')}
                     closeText="Dismiss schedule warning"
                   >
                     Choose a future time. Close time must be later than publish time.
-                  </Alert>
+                  </StudentFeedback>
                 </Grid>
               )}
             </>

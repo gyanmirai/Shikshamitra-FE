@@ -90,7 +90,7 @@ describe('workflow transition safety', () => {
     const onSave = renderDrawer(null);
 
     expect(screen.getByRole('region', { name: 'Next-step configuration' })).toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('This is the default route');
+    expect(screen.getByText('This is the default route', { exact: false })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Save path' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());

@@ -8,10 +8,10 @@ import { useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import {
   Stack,
-  Alert,
   Button,
   Checkbox,
   TextField,
@@ -167,7 +167,9 @@ export default function RenewalPortalAccounts({ renewal, onDirtyChange, onBusyCh
             Activate this renewal before setting up its required portal accounts.
           </Typography>
         ) : query.isError ? (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0826"
+            presentation="toast"
             severity="error"
             action={
               <Button color="inherit" onClick={() => query.refetch()}>
@@ -176,21 +178,23 @@ export default function RenewalPortalAccounts({ renewal, onDirtyChange, onBusyCh
             }
           >
             Portal account status could not be loaded with your current access.
-          </Alert>
+          </StudentFeedback>
         ) : !options ? (
           <LinearProgress aria-label="Loading renewal portal accounts" />
         ) : (
           <>
             {query.isFetching && <LinearProgress aria-label="Refreshing renewal portal accounts" />}
             {options.accounts.map((account) => (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0827"
+                presentation={account.isActive ? 'inline' : 'persistent'}
                 key={`${account.accountType}:${account.userId}`}
                 severity={account.isActive ? 'info' : 'warning'}
               >
                 {account.accountType === 'student' ? 'Student' : 'Guardian'} · {account.email} ·{' '}
                 {account.isActive ? 'Linked' : 'Inactive'}.
                 {!account.emailConfirmed && ' Email verification is pending.'}
-              </Alert>
+              </StudentFeedback>
             ))}
             {!options.studentRequired && !options.guardianRequired && (
               <Typography variant="body2">
@@ -201,10 +205,14 @@ export default function RenewalPortalAccounts({ renewal, onDirtyChange, onBusyCh
               (options.studentRequired || options.guardianRequired) && (
                 <>
                   {!canCreate || !options.canProvision ? (
-                    <Alert severity="info">
+                    <StudentFeedback
+                      notificationKey="STU-0828"
+                      presentation="inline"
+                      severity="info"
+                    >
                       An authorized onboarding and identity administrator must link the required
                       accounts.
-                    </Alert>
+                    </StudentFeedback>
                   ) : (
                     <>
                       <Typography variant="body2">
@@ -212,16 +220,24 @@ export default function RenewalPortalAccounts({ renewal, onDirtyChange, onBusyCh
                         verification and password setup through the account service.
                       </Typography>
                       {options.studentRequired && !options.studentEmail && (
-                        <Alert severity="warning">
+                        <StudentFeedback
+                          notificationKey="STU-0829"
+                          presentation="persistent"
+                          severity="warning"
+                        >
                           Add the student’s email through a reviewed contact correction before
                           creating their account.
-                        </Alert>
+                        </StudentFeedback>
                       )}
                       {options.guardianRequired && !options.guardians.length && (
-                        <Alert severity="warning">
+                        <StudentFeedback
+                          notificationKey="STU-0830"
+                          presentation="persistent"
+                          severity="warning"
+                        >
                           Add a guardian’s email through a reviewed family correction before
                           creating their account.
-                        </Alert>
+                        </StudentFeedback>
                       )}
                       <Stack component="form" spacing={1.5} onSubmit={form.handleSubmit} noValidate>
                         <CustomSelect
@@ -245,7 +261,9 @@ export default function RenewalPortalAccounts({ renewal, onDirtyChange, onBusyCh
                           helperText={form.touched.email ? form.errors.email : undefined}
                         />
                         {emailChanged && (
-                          <Alert
+                          <StudentFeedback
+                            notificationKey="STU-0831"
+                            presentation="persistent"
                             severity="warning"
                             action={
                               <Button
@@ -257,7 +275,7 @@ export default function RenewalPortalAccounts({ renewal, onDirtyChange, onBusyCh
                             }
                           >
                             The saved email changed. Review it and confirm ownership again.
-                          </Alert>
+                          </StudentFeedback>
                         )}
                         <FormControlLabel
                           control={
@@ -271,7 +289,13 @@ export default function RenewalPortalAccounts({ renewal, onDirtyChange, onBusyCh
                           label="I verified this person’s identity, mailbox ownership, and authority to access this student’s portal."
                         />
                         {form.touched.relationshipVerified && form.errors.relationshipVerified && (
-                          <Alert severity="error">{form.errors.relationshipVerified}</Alert>
+                          <StudentFeedback
+                            notificationKey="STU-0832"
+                            presentation="inline"
+                            severity="error"
+                          >
+                            {form.errors.relationshipVerified}
+                          </StudentFeedback>
                         )}
                         {person?.accountType === 'guardian' && canLink && (
                           <FormControlLabel
@@ -292,7 +316,15 @@ export default function RenewalPortalAccounts({ renewal, onDirtyChange, onBusyCh
                             any repair.
                           </Typography>
                         )}
-                        {form.status && <Alert severity="error">{form.status}</Alert>}
+                        {form.status && (
+                          <StudentFeedback
+                            notificationKey="STU-0833"
+                            presentation="persistent"
+                            severity="error"
+                          >
+                            {form.status}
+                          </StudentFeedback>
+                        )}
                         <Button
                           type="submit"
                           variant="contained"

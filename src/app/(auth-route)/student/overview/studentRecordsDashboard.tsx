@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Box, Grid, Alert, CircularProgress } from '@mui/material';
+import { Box, Grid, CircularProgress } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetStudentDashboardSummaryQuery } from 'src/redux/student';
 
 import OverviewCard from './overview';
@@ -18,9 +19,14 @@ const Overview = () => {
     <Box>
       {isLoading && <CircularProgress size={24} />}
       {isError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <StudentFeedback
+          notificationKey="STU-0687"
+          presentation="persistent"
+          severity="error"
+          sx={{ mb: 2 }}
+        >
           Unable to load student dashboard summary.
-        </Alert>
+        </StudentFeedback>
       )}
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid size={12}>

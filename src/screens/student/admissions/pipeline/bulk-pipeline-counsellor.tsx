@@ -8,18 +8,10 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { LoadingButton } from 'src/components/loading-button';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Alert,
-  Stack,
-  Paper,
-  Button,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Stack, Paper, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { describePipelineAssignmentOutcome } from './bulk-pipeline-counsellor-model';
 
@@ -93,9 +85,13 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
               )}
             </Stack>
             {assignment.outcome && (
-              <Alert severity={assignment.outcome.failed ? 'warning' : 'success'}>
+              <StudentFeedback
+                notificationKey="STU-0449"
+                presentation="inline"
+                severity={assignment.outcome.failed ? 'warning' : 'success'}
+              >
                 {describePipelineAssignmentOutcome(assignment.outcome)}
-              </Alert>
+              </StudentFeedback>
             )}
             {assignment.failures.length > 0 && (
               <Scrollbar sx={{ maxHeight: 160 }}>
@@ -131,7 +127,9 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
                 to this counsellor. Admission steps and status stay the same.
               </Typography>
               {assignment.optionsError ? (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0450"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button size="small" disabled={blocked} onClick={assignment.reloadOptions}>
@@ -140,12 +138,12 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
                   }
                 >
                   {assignment.optionsError}
-                </Alert>
+                </StudentFeedback>
               ) : !assignment.loadingOptions && assignment.counsellors.length === 0 ? (
-                <Alert severity="info">
+                <StudentFeedback notificationKey="STU-0451" presentation="inline" severity="info">
                   No counsellor has access to all selected admissions. Select admissions from the
                   same offering, or change fewer admissions together.
-                </Alert>
+                </StudentFeedback>
               ) : null}
               <CustomSelect
                 fullWidth

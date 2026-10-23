@@ -1,7 +1,8 @@
 import type { FormikProps } from 'formik';
 
-import { Alert, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import type { WorkflowTransitionFormValues } from '../workflow-transition-form';
 
@@ -54,10 +55,10 @@ export function WorkflowEligibilityRoute({
           });
         }}
       />
-      <Alert severity="info">
+      <StudentFeedback notificationKey="STU-0549" presentation="inline" severity="info">
         The evaluation must be current. Failed or incomplete checks need an explicit review or
         correction route; they do not automatically reject or finalize admission.
-      </Alert>
+      </StudentFeedback>
     </Stack>
   );
 }

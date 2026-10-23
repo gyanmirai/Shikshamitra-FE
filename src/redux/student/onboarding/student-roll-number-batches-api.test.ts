@@ -68,6 +68,35 @@ it('pages an immutable server batch without changing its cohort', async () => {
   query.unsubscribe();
 });
 
+it('sends explicit current-page case IDs and keeps server policy evidence intact', async () => {
+  const evidence = {
+    ...batch,
+    totalCount: 2,
+    caseIds: ['page-1', 'page-2'],
+    approvalRequired: true,
+    approvalStages: [['Principal']],
+    policyVersionId: 'published-policy-1',
+  };
+  let body: unknown;
+  mswServer.use(
+    http.post('*/api/students/roll-number-batches/preview', async ({ request }) => {
+      body = await request.json();
+      return HttpResponse.json({ data: evidence });
+    })
+  );
+  const result = await store
+    .dispatch(
+      studentRollNumberBatchesApi.endpoints.previewRollNumberBatch.initiate({
+        ...scope,
+        operation: 'assign-missing',
+        caseIds: ['page-1', 'page-2'],
+      })
+    )
+    .unwrap();
+  expect(body).toEqual({ ...scope, operation: 'assign-missing', caseIds: ['page-1', 'page-2'] });
+  expect(result).toEqual(evidence);
+});
+
 it('sends the concurrency stamp, reason and stable idempotency key exactly once', async () => {
   let body: unknown;
   let requests = 0;

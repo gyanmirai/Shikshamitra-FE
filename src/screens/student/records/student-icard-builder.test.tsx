@@ -1,8 +1,8 @@
+import { it, vi, expect } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { expect, it, vi } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentICardBuilder from './student-icard-builder';
 
@@ -11,20 +11,39 @@ const mocks = vi.hoisted(() => ({
   toast: vi.fn(),
   template: {
     // Older template responses can omit name even though the current API type requires it.
-    presetKey: 'formal-student', orientation: 'Horizontal', schoolName: 'School', schoolAddress: '',
-    headerText: 'Student Identity Card', footerText: '', primaryColor: '#00897B',
-    backgroundColor: '#FFFFFF', cardsPerPage: 8, showQrCode: false, showPhoto: true,
+    presetKey: 'formal-student',
+    orientation: 'Horizontal',
+    schoolName: 'School',
+    schoolAddress: '',
+    headerText: 'Student Identity Card',
+    footerText: '',
+    primaryColor: '#00897B',
+    backgroundColor: '#FFFFFF',
+    cardsPerPage: 8,
+    showQrCode: false,
+    showPhoto: true,
     fields: ['StudentName'],
   },
 }));
 
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.toast } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: mocks.toast,
+  },
+}));
 vi.mock('src/components/custom-stepper', () => ({ default: () => <div /> }));
 vi.mock('src/components/custom-select', () => ({ default: () => <div /> }));
 vi.mock('src/components/customizabaleTable', () => ({ default: () => <div /> }));
 vi.mock('src/redux/student/records/student-records-api', () => ({
   useGetStudentRecordsDirectoryOptionsQuery: () => ({ currentData: {}, isFetching: false }),
-  useGetStudentRecordsDirectoryQuery: () => ({ currentData: { items: [], totalCount: 0 }, isFetching: false }),
+  useGetStudentRecordsDirectoryQuery: () => ({
+    currentData: { items: [], totalCount: 0 },
+    isFetching: false,
+  }),
 }));
 vi.mock('src/redux/student/records/student-record-documents-api', () => ({
   useGetRecordIdTemplateQuery: () => ({
@@ -38,7 +57,11 @@ vi.mock('src/redux/student/records/student-record-documents-api', () => ({
 }));
 
 it('shows a required field error instead of crashing when a template has no name', async () => {
-  render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder onClose={vi.fn()} /></ThemeProvider>);
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <StudentICardBuilder onClose={vi.fn()} />
+    </ThemeProvider>
+  );
 
   expect(await screen.findByRole('textbox', { name: /Template name/ })).toHaveValue('');
   expect(screen.getByText('Name this design so you can find and reuse it.')).toBeVisible();
@@ -51,7 +74,11 @@ it('shows a required field error instead of crashing when a template has no name
 
 it('retains the entered name when the save response omits it', async () => {
   mocks.save.mockReturnValue({ unwrap: async () => mocks.template });
-  render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder onClose={vi.fn()} /></ThemeProvider>);
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <StudentICardBuilder onClose={vi.fn()} />
+    </ThemeProvider>
+  );
 
   fireEvent.change(await screen.findByRole('textbox', { name: /Template name/ }), {
     target: { value: 'QA Student I-Card' },
@@ -63,5 +90,7 @@ it('retains the entered name when the save response omits it', async () => {
   await waitFor(() => expect(mocks.toast).toHaveBeenCalled());
   fireEvent.click(screen.getByRole('button', { name: 'Back' }));
 
-  expect(await screen.findByRole('textbox', { name: /Template name/ })).toHaveValue('QA Student I-Card');
+  expect(await screen.findByRole('textbox', { name: /Template name/ })).toHaveValue(
+    'QA Student I-Card'
+  );
 });

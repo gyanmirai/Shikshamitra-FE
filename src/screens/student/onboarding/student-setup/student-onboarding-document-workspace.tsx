@@ -14,9 +14,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Box, Stack, Alert, Button, MenuItem, Typography } from '@mui/material';
+import { Box, Stack, Button, MenuItem, Typography } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { getDocumentTableFile } from 'src/screens/student/admissions/document-verification/document-table-model';
 import { documentActionLabels } from 'src/screens/student/admissions/document-verification/document-action-model';
@@ -274,7 +275,11 @@ export function StudentOnboardingDocumentWorkspace({
           A different authorized reviewer must check collected evidence.
         </Typography>
       )}
-      {blockers.length > 0 && !readOnly && <Alert severity="warning">{blockers.join(' ')}</Alert>}
+      {blockers.length > 0 && !readOnly && (
+        <StudentFeedback notificationKey="STU-0990" presentation="persistent" severity="warning">
+          {blockers.join(' ')}
+        </StudentFeedback>
+      )}
       <CustomizableTable
         tableId={`student-setup-documents-${summary.applicationId}-${summary.stageInstanceId}`}
         tableTitle="Admission documents"

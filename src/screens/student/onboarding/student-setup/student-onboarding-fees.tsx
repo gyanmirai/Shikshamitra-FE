@@ -11,10 +11,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useId, useRef, useState, useEffect, useImperativeHandle } from 'react';
 import {
-  Alert,
   Stack,
   Button,
   Skeleton,
@@ -203,7 +203,9 @@ export default function StudentOnboardingFees({
   }, [form.dirty, busy, loading, canSave, onStateChange]);
   if (readError && (!caseState || !feeState))
     return (
-      <Alert
+      <StudentFeedback
+        notificationKey="STU-0995"
+        presentation="toast"
         severity="error"
         action={
           <Button size="small" onClick={retry}>
@@ -212,7 +214,7 @@ export default function StudentOnboardingFees({
         }
       >
         Fee structures could not be loaded.
-      </Alert>
+      </StudentFeedback>
     );
   if (!caseState || !feeState || (!lockedSnapshot && candidates.isLoading))
     return (
@@ -274,7 +276,9 @@ export default function StudentOnboardingFees({
         </Stack>
       )}
       {readError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0997"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" onClick={retry}>
@@ -283,7 +287,7 @@ export default function StudentOnboardingFees({
           }
         >
           Fee structures could not be refreshed. Retry before making changes.
-        </Alert>
+        </StudentFeedback>
       )}
       {automaticallyConfirmed && (
         <Label color="success" sx={{ alignSelf: 'flex-end' }}>
@@ -297,15 +301,15 @@ export default function StudentOnboardingFees({
             Fee structure confirmed
           </Label>
         ) : (
-          <Alert severity="success">
+          <StudentFeedback notificationKey="STU-0998" presentation="inline" severity="success">
             Fee structure confirmed: {feeState.selection?.structureName}
-          </Alert>
+          </StudentFeedback>
         ))}
       {!structures.length && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0999" presentation="persistent" severity="info">
           No published fee structure matches this student&apos;s academic year and Class. Ask
           Finance to publish the matching structure.
-        </Alert>
+        </StudentFeedback>
       )}
       {automaticallyConfirmed ? (
         <Stack spacing={0.5}>
@@ -386,7 +390,11 @@ export default function StudentOnboardingFees({
           )}
         </>
       )}
-      {form.status && <Alert severity="error">{form.status}</Alert>}
+      {form.status && (
+        <StudentFeedback notificationKey="STU-1000" presentation="persistent" severity="error">
+          {form.status}
+        </StudentFeedback>
+      )}
       {!automaticallyConfirmed && !compact && (
         <Button
           type="submit"

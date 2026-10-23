@@ -1,8 +1,9 @@
 import type { AdmissionEligibilityPolicy } from 'src/redux/student/admissions/admission-eligibility-policy';
 
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Alert, Stack, Button, Switch, FormControlLabel } from '@mui/material';
+import { Stack, Button, Switch, FormControlLabel } from '@mui/material';
 import { useGetEligibilityReviewerRolesQuery } from 'src/redux/student/admissions/admission-eligibility-settings-api';
 
 import { WorkflowSettingLabel } from './workflow-setting-label';
@@ -64,7 +65,9 @@ export function EligibilityExceptionSettings({
               onChange={(role) => onChange({ exceptionApprovalRole: String(role) || null })}
             />
             {query.isError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0517"
+                presentation="persistent"
                 severity="warning"
                 action={
                   <Button size="small" onClick={query.refetch}>
@@ -73,7 +76,7 @@ export function EligibilityExceptionSettings({
                 }
               >
                 Reviewer roles could not load. The saved role has been preserved.
-              </Alert>
+              </StudentFeedback>
             )}
             <FormControlLabel
               label={

@@ -1,13 +1,14 @@
 'use client';
 
-import type { AlertProps } from '@mui/material';
+import type { StudentFeedbackProps } from 'src/components/student-feedback';
 
-import { Iconify } from 'src/components/iconify';
+import { Stack } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Alert, Stack, IconButton } from '@mui/material';
 import { useLocalStorage } from 'src/hooks/use-local-storage';
+import { StudentFeedback } from 'src/components/student-feedback';
 
-type Props = Omit<AlertProps, 'severity' | 'onClose'> & {
+type Props = Omit<StudentFeedbackProps, 'notificationKey' | 'severity' | 'onClose'> & {
+  notificationKey?: string;
   severity: 'info' | 'warning';
   closeDisabled?: boolean;
   dismissalKey?: string;
@@ -30,6 +31,7 @@ function PersistentAdmissionIntakeNotice({
   return (
     <DismissibleAdmissionIntakeNotice
       {...props}
+      scopeKey={dismissalKey}
       dismissed={dismissed}
       onDismiss={() => setState(true)}
     />
@@ -37,6 +39,7 @@ function PersistentAdmissionIntakeNotice({
 }
 
 function DismissibleAdmissionIntakeNotice({
+  notificationKey = 'admission-intake-notice',
   severity,
   action,
   closeDisabled = false,
@@ -56,26 +59,17 @@ function DismissibleAdmissionIntakeNotice({
   }
 
   return (
-    <Alert
+    <StudentFeedback
       {...props}
+      notificationKey={notificationKey}
       severity={severity}
-      action={
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          {action}
-          <IconButton
-            size="small"
-            color="inherit"
-            aria-label={`Dismiss ${severity === 'info' ? 'information' : 'warning'} message`}
-            disabled={closeDisabled}
-            onClick={() => {
-              visible.onFalse();
-              onDismiss?.();
-            }}
-          >
-            <Iconify icon="mdi:close" width={18} />
-          </IconButton>
-        </Stack>
-      }
+      closeDisabled={closeDisabled}
+      closeText={`Dismiss ${severity === 'info' ? 'information' : 'warning'} message`}
+      action={action}
+      onClose={() => {
+        visible.onFalse();
+        onDismiss?.();
+      }}
     />
   );
 }

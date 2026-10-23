@@ -10,9 +10,10 @@ import { fDateTime } from 'src/utils/format-time';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Stack, Alert, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useFlagStudentDuplicateMutation,
   useResolveStudentDuplicateMutation,
@@ -70,7 +71,9 @@ export default function StudentDuplicateReviews({
         onChange={(value) => onStatus(String(value))}
       />
       {list.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0854"
+          presentation="toast"
           severity="error"
           action={
             <Button color="inherit" onClick={() => list.refetch()}>
@@ -79,7 +82,7 @@ export default function StudentDuplicateReviews({
           }
         >
           Duplicate reviews could not be loaded.
-        </Alert>
+        </StudentFeedback>
       )}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
@@ -191,7 +194,11 @@ function FlagDuplicateForm({ onClose }: { onClose: () => void }) {
     >
       <DialogScrollContent>
         <Stack spacing={2}>
-          {failure && <Alert severity="error">{failure}</Alert>}
+          {failure && (
+            <StudentFeedback notificationKey="STU-0856" presentation="persistent" severity="error">
+              {failure}
+            </StudentFeedback>
+          )}
           <Typography variant="subtitle2">First permanent profile</Typography>
           <RecordsStudentPicker
             selectedId={form.values.studentId}
@@ -205,7 +212,9 @@ function FlagDuplicateForm({ onClose }: { onClose: () => void }) {
             disabled={state.isLoading}
           />
           {form.touched.otherStudentId && form.errors.otherStudentId && (
-            <Alert severity="error">{form.errors.otherStudentId}</Alert>
+            <StudentFeedback notificationKey="STU-0857" presentation="inline" severity="error">
+              {form.errors.otherStudentId}
+            </StudentFeedback>
           )}
           <TextField
             label="Reason for flag"
@@ -289,7 +298,11 @@ function ResolveDuplicateForm({
             {review.studentName} · {review.otherStudentName}
           </Typography>
           <Typography variant="body2">{review.reason}</Typography>
-          {failure && <Alert severity="error">{failure}</Alert>}
+          {failure && (
+            <StudentFeedback notificationKey="STU-0856" presentation="persistent" severity="error">
+              {failure}
+            </StudentFeedback>
+          )}
           <TextField
             label="Review reason"
             name="reason"

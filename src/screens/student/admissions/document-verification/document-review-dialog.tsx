@@ -6,10 +6,10 @@ import type {
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
-  Alert,
   Stack,
   Button,
   Accordion,
@@ -171,7 +171,15 @@ export function DocumentReviewDialog({
                   )}
                 </Stack>
               )}
-              {error && <Alert severity="error">{error}</Alert>}
+              {error && (
+                <StudentFeedback
+                  notificationKey="STU-0320"
+                  presentation="persistent"
+                  severity="error"
+                >
+                  {error}
+                </StudentFeedback>
+              )}
               {action ? (
                 <Box
                   component="fieldset"

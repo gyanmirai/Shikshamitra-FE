@@ -227,6 +227,29 @@ describe('Student Setup table task interactions', () => {
     ).toHaveLength(1);
   });
 
+  it.each(views)('uses the concise Export label without changing %s export scope', (view) => {
+    render(tableElement(props(view)));
+    expect(vi.mocked(CustomizableTable).mock.lastCall?.[0]).toMatchObject({
+      exportLabel: 'Export',
+    });
+    expect(vi.mocked(CustomizableTable).mock.lastCall?.[0].exportScope ?? 'loaded').toBe('loaded');
+  });
+
+  it('displays unassigned Roll as 0 without turning it into an assigned value', () => {
+    render(tableElement({ ...props('roll-number'), rows: [{ ...student, rollNo: undefined }] }));
+    const tableProps = vi.mocked(CustomizableTable).mock.lastCall?.[0];
+    expect(tableProps?.data[0]).toMatchObject({ rollNumberTask: 0 });
+    expect(tableProps?.data[0].rollNo).toBeUndefined();
+    expect(screen.getByText('0')).toBeVisible();
+  });
+
+  it('keeps an assigned Roll number unchanged', () => {
+    render(tableElement({ ...props('roll-number'), rows: [{ ...student, rollNo: 1 }] }));
+    const tableProps = vi.mocked(CustomizableTable).mock.lastCall?.[0];
+    expect(tableProps?.data[0]).toMatchObject({ rollNumberTask: 1, rollNo: 1 });
+    expect(screen.getByText('1')).toBeVisible();
+  });
+
   it('shows five readable columns by default while retaining optional information and filters', () => {
     render(tableElement(props()));
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
@@ -593,9 +616,13 @@ describe('Student Setup table task interactions', () => {
     ).not.toBeInTheDocument();
     expect(input.onManualChange).not.toHaveBeenCalled();
     expect(screen.getAllByText('Division capacity changed.')).toHaveLength(1);
-    expect(screen.getAllByRole('alert')).toHaveLength(1);
-    expect(screen.getByRole('alert')).toHaveTextContent('Division could not be saved.');
-    expect(screen.getByRole('alert').closest('td')).toContainElement(division);
+    expect(screen.getByText('Division could not be saved.', { exact: false })).toBeVisible();
+    expect(
+      screen.getByText('Division could not be saved.', { exact: false }).closest('.MuiAlert-root')
+    ).toBeNull();
+    expect(
+      screen.getByText('Division could not be saved.', { exact: false }).closest('td')
+    ).toContainElement(division);
   });
 
   it('locks Division while live choices load and offers Retry after a choice-query error', () => {
@@ -658,7 +685,7 @@ describe('Student Setup table task interactions', () => {
     ).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByText('GR number is required.')).toBeInTheDocument();
     expect(screen.getByText('Another assignment is in progress.')).toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('GR number is already assigned.');
+    expect(screen.getByText('GR number is already assigned.', { exact: false })).toBeVisible();
 
     rerender(
       tableElement({
@@ -684,7 +711,9 @@ describe('Student Setup table task interactions', () => {
     expect(input.onClearWorklistFilters).toHaveBeenCalledOnce();
 
     rerender(tableElement({ ...input, isError: true }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Onboarding cases could not be loaded.');
+    expect(
+      screen.getByText('Onboarding cases could not be loaded.', { exact: false })
+    ).toBeVisible();
     expect(screen.queryByText(input.noDataText)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(input.onRetry).toHaveBeenCalledOnce();

@@ -16,11 +16,12 @@ import { UploadAvatar } from 'src/components/upload';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { familyFields } from 'src/components/studentProfile/form-fields/register-fields';
+import { Box, Grid, Stack, Button, Skeleton, TextField, Typography } from '@mui/material';
 import { profileSectionPayload } from 'src/components/studentProfile/profile-section-payload';
-import { Box, Grid, Stack, Alert, Button, Skeleton, TextField, Typography } from '@mui/material';
 import { medicalFields } from 'src/components/studentProfile/form-fields/render-medical-details';
 import AddressSection from 'src/components/studentProfile/form-fields/components/AddressSection';
 import { bankDetailsFields } from 'src/components/studentProfile/form-fields/render-bank-details';
@@ -91,7 +92,11 @@ type RecordChangeFormProps = {
 export default function RecordChangeForm(props: RecordChangeFormProps) {
   const { snapshot } = props;
   if (snapshot.section === 'registration-form')
-    return <Alert severity="info">Edit the Registration form in Student Profile.</Alert>;
+    return (
+      <StudentFeedback notificationKey="STU-0798" presentation="inline" severity="info">
+        Edit the Registration form in Student Profile.
+      </StudentFeedback>
+    );
   return snapshot.section === 'custom-details' ? (
     <CustomRecordChangePage {...props} />
   ) : (
@@ -109,9 +114,14 @@ function CustomRecordChangePage(props: RecordChangeFormProps) {
   });
   if (details.isError && !ready)
     return (
-      <Alert severity="error" action={<Button onClick={() => details.refetch()}>Retry</Button>}>
+      <StudentFeedback
+        notificationKey="STU-0799"
+        presentation="toast"
+        severity="error"
+        action={<Button onClick={() => details.refetch()}>Retry</Button>}
+      >
         School details could not be loaded for this request.
-      </Alert>
+      </StudentFeedback>
     );
   if (!details.currentData || (details.isFetching && !ready))
     return <Skeleton height={180} aria-label="Loading school details" />;
@@ -267,7 +277,9 @@ function StructuredRecordChangeForm({
     <Box component="form" onSubmit={form.handleSubmit} noValidate>
       <Stack spacing={2}>
         {loadedSnapshot.snapshot !== snapshot.snapshot && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0801"
+            presentation="persistent"
             severity="warning"
             action={
               onReload ? (
@@ -282,9 +294,13 @@ function StructuredRecordChangeForm({
           >
             The student record has changed. Your draft is preserved; review the current details
             before submitting.
-          </Alert>
+          </StudentFeedback>
         )}
-        {failure && <Alert severity="error">{failure}</Alert>}
+        {failure && (
+          <StudentFeedback notificationKey="STU-0802" presentation="persistent" severity="error">
+            {failure}
+          </StudentFeedback>
+        )}
         <FormSectionCard
           icon="mdi:account-edit-outline"
           title={correctsChangeId ? 'Correction request' : 'Change details'}

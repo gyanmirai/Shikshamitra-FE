@@ -3,7 +3,8 @@ import type { AdmissionDocumentRequirement } from 'src/redux/student/admissions/
 import { useId } from 'react';
 import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Alert, Paper, Stack, Button, Collapse, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Paper, Stack, Button, Collapse, Typography } from '@mui/material';
 
 import { DocumentStatusLabel } from './document-status';
 import { DocumentDownloadButton } from './document-download-button';
@@ -91,7 +92,13 @@ export function DocumentRequirementCard({
               <Typography variant="body2">{latest.notes}</Typography>
             )}
             {review?.decision === 'rejected' && review.reason && (
-              <Alert severity="warning">{review.reason}</Alert>
+              <StudentFeedback
+                notificationKey="STU-0318"
+                presentation="persistent"
+                severity="warning"
+              >
+                {review.reason}
+              </StudentFeedback>
             )}
             <Stack direction="row" gap={1} flexWrap="wrap">
               {latest.canDownload && latest.fileName && permissions.download && (

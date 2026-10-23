@@ -44,7 +44,15 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
     </header>
   ),
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('src/components/confirm-dialog', () => ({
   ConfirmDialog: ({ open, title, content, action }: any) =>
     open ? (

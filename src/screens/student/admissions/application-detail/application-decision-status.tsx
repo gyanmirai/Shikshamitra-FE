@@ -1,6 +1,6 @@
 import type { AdmissionApplication } from 'src/redux/student/admissions/admission-applications-api';
 
-import { Alert } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 export function ApplicationDecisionStatus({
   application,
@@ -12,19 +12,34 @@ export function ApplicationDecisionStatus({
   return (
     <>
       {application.decisionReason && (
-        <Alert severity="info" sx={{ mt: compact ? 1 : 2 }}>
+        <StudentFeedback
+          notificationKey="STU-0190"
+          presentation="inline"
+          severity="info"
+          sx={{ mt: compact ? 1 : 2 }}
+        >
           Latest note: {application.decisionReason}
-        </Alert>
+        </StudentFeedback>
       )}
       {application.status === 10 && application.enrolledStudentId && (
-        <Alert severity="success" sx={{ mt: compact ? 1 : 2 }}>
+        <StudentFeedback
+          notificationKey="STU-0191"
+          presentation="inline"
+          severity="success"
+          sx={{ mt: compact ? 1 : 2 }}
+        >
           Historical enrollment record: {application.enrolledStudentId}
-        </Alert>
+        </StudentFeedback>
       )}
       {application.status === 11 && application.studentId && (
-        <Alert severity="success" sx={{ mt: compact ? 1 : 2 }}>
+        <StudentFeedback
+          notificationKey="STU-0192"
+          presentation="inline"
+          severity="success"
+          sx={{ mt: compact ? 1 : 2 }}
+        >
           Admission finalized. Student identity: {application.studentId}.
-        </Alert>
+        </StudentFeedback>
       )}
     </>
   );

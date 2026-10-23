@@ -4,7 +4,8 @@ import type { StudentDashboardMode } from 'src/redux/student/dashboard/student-m
 import Link from 'next/link';
 import { Iconify } from 'src/components/iconify';
 import { fNumber } from 'src/utils/format-number';
-import { Stack, Alert, Skeleton, Typography, ButtonBase } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Skeleton, Typography, ButtonBase } from '@mui/material';
 import { DashboardSectionCard } from 'src/screens/academic/AcademicDashboard/Components/DashboardSectionCard';
 
 import { dashboardPriorities } from '../dashboard-insights';
@@ -32,9 +33,9 @@ export default function StudentDashboardPriorities({
     >
       <Stack spacing={1}>
         {failed && (
-          <Alert severity="warning">
+          <StudentFeedback notificationKey="STU-0722" presentation="persistent" severity="warning">
             Some summaries are unavailable. This queue may be incomplete.
-          </Alert>
+          </StudentFeedback>
         )}
         {loading && <Skeleton variant="rounded" height={80} aria-label="Loading priority work" />}
         {priorities.map((item) => (

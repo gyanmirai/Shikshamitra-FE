@@ -1,8 +1,9 @@
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
-import { Grid, Alert, TextField } from '@mui/material';
+import { Grid, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LoadingScreen } from 'src/components/loading-screen';
+import { StudentFeedback } from 'src/components/student-feedback';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetBasicDetailsQuery,
@@ -245,7 +246,9 @@ export const StudentInformationForm = ({
     <Grid container spacing={2}>
       {saveError?.tabIndex === tabIndex && (
         <Grid size={12}>
-          <Alert severity="error">{saveError.message}</Alert>
+          <StudentFeedback notificationKey="STU-0787" presentation="persistent" severity="error">
+            {saveError.message}
+          </StudentFeedback>
         </Grid>
       )}
       {fields[tabIndex].map((field: FieldsType) => (
@@ -278,7 +281,9 @@ export const StudentInformationForm = ({
                   placeholder: field.placeholder,
                   fullWidth: true,
                   size: 'small',
-                  helperText: formik.touched[field.name] ? String(formik.errors[field.name] ?? '') : '',
+                  helperText: formik.touched[field.name]
+                    ? String(formik.errors[field.name] ?? '')
+                    : '',
                   error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
                 },
               }}

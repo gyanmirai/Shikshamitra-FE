@@ -13,13 +13,13 @@ import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { fDateTime, fTimestamp } from 'src/utils/format-time';
 import { useId, useState, useEffect, useCallback } from 'react';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useGetAdmissionApplicant360Query } from 'src/redux/student/admissions/admission-applicants-api';
 import {
   Box,
   Tab,
   Tabs,
-  Alert,
   Paper,
   Stack,
   Button,
@@ -219,7 +219,9 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
         <Scrollbar sx={{ flex: '1 1 auto', minHeight: 0 }}>
           <Stack spacing={2} sx={{ p: 2 }}>
             {canViewNotes && notesQuery.isError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0167"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button size="small" disabled={busy} onClick={notesQuery.refetch}>
@@ -228,10 +230,12 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
                 }
               >
                 Applicant notes could not be loaded. Try again.
-              </Alert>
+              </StudentFeedback>
             )}
             {canViewFollowUps && followUps.query.isError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0168"
+                presentation="toast"
                 severity="error"
                 action={
                   !followUps.sourceUnavailable && (
@@ -244,17 +248,19 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
                 {followUps.problem?.detail && followUps.problem.detail !== 'Something went wrong'
                   ? followUps.problem.detail
                   : 'Unable to load application follow-ups.'}
-              </Alert>
+              </StudentFeedback>
             )}
             {!canViewNotes && (
-              <Alert severity="info">Applicant notes require applicant View access.</Alert>
+              <StudentFeedback notificationKey="STU-0169" presentation="inline" severity="info">
+                Applicant notes require applicant View access.
+              </StudentFeedback>
             )}
             {!canViewFollowUps && (
-              <Alert severity="info">
+              <StudentFeedback notificationKey="STU-0170" presentation="inline" severity="info">
                 {application.inquiryId
                   ? 'Application access is required to view follow-ups.'
                   : 'No source inquiry is linked to this application. Follow-ups are unavailable.'}
-              </Alert>
+              </StudentFeedback>
             )}
             {loading && (
               <Stack role="status" aria-label="Loading notes and follow-ups" spacing={1}>

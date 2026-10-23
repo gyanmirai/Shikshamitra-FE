@@ -1,6 +1,7 @@
 'use client';
 
-import { Alert, Button } from '@mui/material';
+import { Button } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 type AdmissionQueryErrorProps = {
   onRetry: () => void;
@@ -8,7 +9,9 @@ type AdmissionQueryErrorProps = {
 
 export function AdmissionQueryError({ onRetry }: AdmissionQueryErrorProps) {
   return (
-    <Alert
+    <StudentFeedback
+      notificationKey="STU-0152"
+      presentation="toast"
       severity="error"
       action={
         <Button color="inherit" size="small" onClick={onRetry}>
@@ -17,6 +20,6 @@ export function AdmissionQueryError({ onRetry }: AdmissionQueryErrorProps) {
       }
     >
       Unable to load this enrollment data.
-    </Alert>
+    </StudentFeedback>
   );
 }

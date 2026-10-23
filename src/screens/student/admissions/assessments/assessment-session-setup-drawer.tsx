@@ -7,8 +7,9 @@ import { useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
-import { Box, Stack, Alert, Drawer, Button, Divider, Typography, IconButton } from '@mui/material';
+import { Box, Stack, Drawer, Button, Divider, Typography, IconButton } from '@mui/material';
 
 import { assessmentErrorMessage } from './assessment-utils';
 import { AdmissionDialogTitle } from '../admission-dialog-title';
@@ -303,7 +304,9 @@ function SessionSetupContent({
                     sx={{ p: 2, ...(step === 1 ? { height: 1, minHeight: 0 } : {}) }}
                   >
                     {resourcesError && (
-                      <Alert
+                      <StudentFeedback
+                        notificationKey="STU-0278"
+                        presentation="toast"
                         severity="error"
                         action={
                           onRetryResources ? (
@@ -314,28 +317,48 @@ function SessionSetupContent({
                         }
                       >
                         {resourcesError}
-                      </Alert>
+                      </StudentFeedback>
                     )}
                     {readOnly && (
-                      <Alert severity="info">
+                      <StudentFeedback
+                        notificationKey="STU-0279"
+                        presentation="inline"
+                        severity="info"
+                      >
                         You can review this session. Changes require the action permission and
                         access to every linked Offering.
-                      </Alert>
+                      </StudentFeedback>
                     )}
                     {mode === 'book' && !session?.roomId && (
-                      <Alert severity="warning">
+                      <StudentFeedback
+                        notificationKey="STU-0280"
+                        presentation="persistent"
+                        severity="warning"
+                      >
                         This session has no Institute room. Edit it and select a room before booking
                         applicants.
-                      </Alert>
+                      </StudentFeedback>
                     )}
-                    {error && <Alert severity="error">{error}</Alert>}
+                    {error && (
+                      <StudentFeedback
+                        notificationKey="STU-0281"
+                        presentation="persistent"
+                        severity="error"
+                      >
+                        {error}
+                      </StudentFeedback>
+                    )}
                     {session && (
-                      <Alert severity="info">
+                      <StudentFeedback
+                        notificationKey="STU-0282"
+                        presentation="inline"
+                        severity="info"
+                      >
                         Assessment type, classes and assessment choices stay unchanged for an
                         existing session.
                         {session.bookedCount > 0 &&
                           ` ${session.bookedCount} applicants are booked. Booked individual-interview timing is preserved.`}
-                      </Alert>
+                      </StudentFeedback>
                     )}
                     {step === 0 ? (
                       <AssessmentSessionSetupFields

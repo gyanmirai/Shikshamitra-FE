@@ -1,7 +1,8 @@
 import type { FormikProps } from 'formik';
 
+import { Grid, TextField, Typography } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Grid, Alert, TextField, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { AdmissionDefinitionSelect } from './admission-definition-select';
@@ -58,11 +59,16 @@ export function AdmissionOfferingConfigurationFields({
       )}
       {missingPublishedConfiguration && !hideConfigurationWarning && (
         <Grid size={12}>
-          <Alert severity="warning" onClose={onDismissConfigurationWarning}>
+          <StudentFeedback
+            notificationKey="STU-0110"
+            presentation="persistent"
+            severity="warning"
+            onClose={onDismissConfigurationWarning}
+          >
             Select a published workflow
             {startsWithInquiry ? ', plus an inquiry form' : ''} before activating this Offering. You
             may save it as inactive while configuration is incomplete.
-          </Alert>
+          </StudentFeedback>
         </Grid>
       )}
       <Grid size={12}>

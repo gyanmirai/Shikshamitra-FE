@@ -20,6 +20,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -31,7 +32,6 @@ import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admissi
 import {
   Box,
   Grid,
-  Alert,
   Stack,
   Button,
   Drawer,
@@ -477,12 +477,19 @@ export function AdmissionPublicInquiryLinks({
     <>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
         {error && !createOpen && (
-          <Alert severity="error" onClose={() => setError('')}>
+          <StudentFeedback
+            notificationKey="STU-0139"
+            presentation="persistent"
+            severity="error"
+            onClose={() => setError('')}
+          >
             {error}
-          </Alert>
+          </StudentFeedback>
         )}
         {links.isError && !links.data && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0140"
+            presentation="toast"
             severity="error"
             action={
               <Button size="small" onClick={() => links.refetch()}>
@@ -491,7 +498,7 @@ export function AdmissionPublicInquiryLinks({
             }
           >
             Unable to load inquiry links.
-          </Alert>
+          </StudentFeedback>
         )}
         {(!links.isError || links.data || rows.length > 0) && (
           <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
@@ -684,7 +691,11 @@ export function AdmissionPublicInquiryLinks({
         </Stack>
         <Divider />
         <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <StudentFeedback notificationKey="STU-0141" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
           <SectionCard title="Link details" paperProps={sectionProps} gridProps={{ spacing: 2 }}>
             <Grid size={12}>
               <TextField
@@ -811,7 +822,9 @@ export function AdmissionPublicInquiryLinks({
 
             {(cycles.isError || forms.isError || routingOptions.isError) && (
               <Grid size={12}>
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0144"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button
@@ -827,7 +840,7 @@ export function AdmissionPublicInquiryLinks({
                   }
                 >
                   Unable to load admission periods and forms.
-                </Alert>
+                </StudentFeedback>
               </Grid>
             )}
             {routingReady && !forms.isError && availableForms.length === 0 && (
@@ -843,7 +856,11 @@ export function AdmissionPublicInquiryLinks({
               !forms.isLoading &&
               publishedCycles.length === 0 && (
                 <Grid size={12}>
-                  <AdmissionIntakeNotice severity="info">
+                  <AdmissionIntakeNotice
+                    notificationKey="STU-0145"
+                    presentation="inline"
+                    severity="info"
+                  >
                     Publish an admission period before creating a link.
                   </AdmissionIntakeNotice>
                 </Grid>
@@ -977,11 +994,15 @@ export function AdmissionPublicInquiryLinks({
         </Stack>
         <Divider />
         <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
-          <AdmissionIntakeNotice severity="info">
+          <AdmissionIntakeNotice notificationKey="STU-0146" presentation="inline" severity="info">
             Future inquiries from this link will use the selected published form. Earlier responses
             keep their saved answers.
           </AdmissionIntakeNotice>
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <StudentFeedback notificationKey="STU-0141" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
           <TextField
             select
             fullWidth
@@ -1003,7 +1024,9 @@ export function AdmissionPublicInquiryLinks({
             ))}
           </TextField>
           {forms.isError && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0148"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" onClick={() => forms.refetch()}>
@@ -1012,7 +1035,7 @@ export function AdmissionPublicInquiryLinks({
               }
             >
               Unable to load published inquiry forms.
-            </Alert>
+            </StudentFeedback>
           )}
         </Stack>
         <Divider />

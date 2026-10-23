@@ -208,7 +208,7 @@ describe('Applications decision workspace', () => {
       totalCount: 500,
       page: 1,
       rowsPerPage: 25,
-      exportLabel: 'Export current page',
+      exportLabel: 'Export',
     });
     expect(screen.getByRole('heading', { name: 'Applications' })).toBeInTheDocument();
     expect(screen.getByText('Class 6')).toBeInTheDocument();

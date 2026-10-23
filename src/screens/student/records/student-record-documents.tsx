@@ -23,6 +23,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -32,7 +33,6 @@ import {
   Box,
   Tab,
   Stack,
-  Alert,
   Paper,
   Button,
   TextField,
@@ -106,11 +106,7 @@ export default function StudentRecordDocuments({
   return <RecordDocuments fixedKind={fixedKind} />;
 }
 
-function RecordDocuments({
-  fixedKind,
-}: {
-  fixedKind?: 'ids' | 'certificates';
-}) {
+function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -134,9 +130,10 @@ function RecordDocuments({
     kind === 'ids' ? 'Students.Records.StudentICard.Add' : 'Students.Records.Certificates.Add'
   );
   const [selectedCertificateType, setSelectedCertificateType] = useState<CertificateType>(1);
-  const certificateType = fixedKind === 'certificates'
-    ? CERTIFICATE_TAB_TYPES[certificateTab.value]
-    : selectedCertificateType;
+  const certificateType =
+    fixedKind === 'certificates'
+      ? CERTIFICATE_TAB_TYPES[certificateTab.value]
+      : selectedCertificateType;
   const [transitionId, setTransitionId] = useState('');
   const [reason, setReason] = useState('');
   const [certificatePreview, setCertificatePreview] = useState<CertificateResponse | null>(null);
@@ -251,23 +248,26 @@ function RecordDocuments({
     setFailure(null);
     setBulkBusy(true);
     try {
-      clientKey.current = fixedKind === 'certificates'
-        ? (batchIssueKeys.current[fingerprint] ?? crypto.randomUUID())
-        : crypto.randomUUID();
+      clientKey.current =
+        fixedKind === 'certificates'
+          ? (batchIssueKeys.current[fingerprint] ?? crypto.randomUUID())
+          : crypto.randomUUID();
       if (fixedKind === 'certificates') {
         batchIssueKeys.current[fingerprint] = clientKey.current;
-        const previews = await batch.reduce<Promise<CertificateResponse[]>>(async (previous, student) => {
-          const completed = await previous;
-          setBulkProgress(`Previewing ${completed.length + 1} of ${batch.length} students…`);
-          const preview = await previewCertificate({
-            ...request,
-            studentId: student.studentId,
-            transitionId: certificateType === 3
-              ? exitCasesByStudent[student.studentId]
-              : undefined,
-          }).unwrap();
-          return [...completed, preview];
-        }, Promise.resolve([]));
+        const previews = await batch.reduce<Promise<CertificateResponse[]>>(
+          async (previous, student) => {
+            const completed = await previous;
+            setBulkProgress(`Previewing ${completed.length + 1} of ${batch.length} students…`);
+            const preview = await previewCertificate({
+              ...request,
+              studentId: student.studentId,
+              transitionId:
+                certificateType === 3 ? exitCasesByStudent[student.studentId] : undefined,
+            }).unwrap();
+            return [...completed, preview];
+          },
+          Promise.resolve([])
+        );
         setBatchPreviews(previews);
         setPreviewFingerprint(fingerprint);
       } else if (kind === 'certificates') {
@@ -296,9 +296,7 @@ function RecordDocuments({
           await issueCertificate({
             ...request,
             studentId: student.studentId,
-            transitionId: certificateType === 3
-              ? exitCasesByStudent[student.studentId]
-              : undefined,
+            transitionId: certificateType === 3 ? exitCasesByStudent[student.studentId] : undefined,
             idempotencyKey: `${clientKey.current}-${student.studentId}`,
           }).unwrap();
           issuedCount += 1;
@@ -318,9 +316,10 @@ function RecordDocuments({
         setIdPreview([]);
       }
       shikshaMitraToast.success({
-        message: fixedKind === 'certificates'
-          ? `${issuedCount} ${certificateTab.label} certificate${issuedCount === 1 ? '' : 's'} generated and saved to history.`
-          : 'Issued documents saved to history.',
+        message:
+          fixedKind === 'certificates'
+            ? `${issuedCount} ${certificateTab.label} certificate${issuedCount === 1 ? '' : 's'} generated and saved to history.`
+            : 'Issued documents saved to history.',
       });
     } catch {
       setFailure(
@@ -343,18 +342,18 @@ function RecordDocuments({
           status: row.status,
         }))
       : (certificates.currentData ?? [])
-        .filter(
-          (row: CertificateHistory) =>
-            fixedKind !== 'certificates' ||
-            row.certificateType === CERTIFICATE_TYPE_NAMES[certificateType]
-        )
-        .map((row: CertificateHistory) => ({
-          id: row.certificateId,
-          number: row.certificateNumber,
-          type: row.certificateType,
-          date: row.issueDate,
-          status: row.status,
-        }));
+          .filter(
+            (row: CertificateHistory) =>
+              fixedKind !== 'certificates' ||
+              row.certificateType === CERTIFICATE_TYPE_NAMES[certificateType]
+          )
+          .map((row: CertificateHistory) => ({
+            id: row.certificateId,
+            number: row.certificateNumber,
+            type: row.certificateType,
+            date: row.issueDate,
+            status: row.status,
+          }));
   const columns: IColumn[] = [
     { id: 'number', label: 'Document number', minWidth: 200 },
     { id: 'type', label: 'Type', minWidth: 120 },
@@ -458,7 +457,9 @@ function RecordDocuments({
         ]}
         action={
           canIssue ? (
-            <Button onClick={() => kind === 'ids' ? setBuilderOpen(true) : setTemplatesOpen(true)}>
+            <Button
+              onClick={() => (kind === 'ids' ? setBuilderOpen(true) : setTemplatesOpen(true))}
+            >
               {kind === 'ids' ? 'Create Student I-Card' : 'Configure template'}
             </Button>
           ) : undefined
@@ -529,7 +530,9 @@ function RecordDocuments({
         </Paper>
       )}
       {!canView ? (
-        <Alert severity="warning">You do not have permission to view this document type.</Alert>
+        <StudentFeedback notificationKey="STU-0884" presentation="persistent" severity="warning">
+          You do not have permission to view this document type.
+        </StudentFeedback>
       ) : (
         <Box
           id="documents-panel"
@@ -544,125 +547,162 @@ function RecordDocuments({
           aria-label={fixedKind === 'ids' ? pageTitle : undefined}
           sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}
         >
-          {fixedKind !== 'ids' && <RecordDocumentFilters
-            kind={kind}
-            busy={busy}
-            canIssue={canIssue}
-            showCertificateTypeSelect={fixedKind !== 'certificates'}
-            showCertificateBatch={fixedKind === 'certificates'}
-            legacyEntryHref={fixedKind === 'certificates' && hasGrantedPermission(permissions, 'Students.Records.Overrides.View') ? studentPaths.records.directory : undefined}
-            selectedStudentId={studentId}
-            selectedStudentName={activeBatchStudent
-              ? [activeBatchStudent.firstName, activeBatchStudent.middleName,
-                  activeBatchStudent.lastName].filter(Boolean).join(' ')
-              : undefined}
-            certificateType={certificateType}
-            reason={reason}
-            transitionId={fixedKind === 'certificates'
-              ? exitCasesByStudent[studentId] ?? ''
-              : transitionId}
-            exitsLoading={exits.isFetching}
-            exitOptions={(exits.currentData?.items ?? [])
-              .filter(
-                (exit) =>
-                  ['Withdraw', 'Transfer'].includes(exit.outcome) ||
-                  (exit.outcome === 'Graduate' && exit.status === 'Applied')
-              )
-              .map((exit) => ({
-                id: exit.id,
-                label: `${exit.outcome} · ${fDate(exit.effectiveDate)} · ${exit.status}`,
-              }))}
-            batch={batch}
-            previewDisabled={
-              busy ||
-              (kind === 'certificates'
-                ? fixedKind === 'certificates'
-                  ? !batch.length || (certificateType === 3 && batch.some((student) =>
-                      !exitCasesByStudent[student.studentId]
-                    ))
-                  : !studentId || (certificateType === 3 && !transitionId)
-                : !batch.length)
-            }
-            issueDisabled={
-              busy ||
-              (kind === 'certificates'
-                ? fixedKind === 'certificates'
-                  ? !batch.length || batchPreviews.length !== batch.length ||
-                    fingerprint !== previewFingerprint
-                  : !certificatePreview || fingerprint !== previewFingerprint
-                : !idPreview.length)
-            }
-            onSelect={(student) => {
-              if (student && fixedKind === 'certificates' && batch.length >= 100 &&
-                !batch.some((selected) => selected.studentId === student.studentId)) {
-                shikshaMitraToast.error({ message: 'Select up to 100 students at a time.' });
-                return;
+          {fixedKind !== 'ids' && (
+            <RecordDocumentFilters
+              kind={kind}
+              busy={busy}
+              canIssue={canIssue}
+              showCertificateTypeSelect={fixedKind !== 'certificates'}
+              showCertificateBatch={fixedKind === 'certificates'}
+              legacyEntryHref={
+                fixedKind === 'certificates' &&
+                hasGrantedPermission(permissions, 'Students.Records.Overrides.View')
+                  ? studentPaths.records.directory
+                  : undefined
               }
-              router.push(
-                recordsQueryUrl(pathname, params.toString(), { student: student?.studentId }),
-                { scroll: false }
-              );
-              setCertificatePreview(null);
-              setTransitionId('');
-              if (student && (fixedKind === 'certificates' || kind === 'ids')) {
-                setBatch((previous) =>
-                  previous.some((s) => s.studentId === student.studentId)
-                    ? previous
-                    : [...previous, student].slice(0, 100)
+              selectedStudentId={studentId}
+              selectedStudentName={
+                activeBatchStudent
+                  ? [
+                      activeBatchStudent.firstName,
+                      activeBatchStudent.middleName,
+                      activeBatchStudent.lastName,
+                    ]
+                      .filter(Boolean)
+                      .join(' ')
+                  : undefined
+              }
+              certificateType={certificateType}
+              reason={reason}
+              transitionId={
+                fixedKind === 'certificates' ? (exitCasesByStudent[studentId] ?? '') : transitionId
+              }
+              exitsLoading={exits.isFetching}
+              exitOptions={(exits.currentData?.items ?? [])
+                .filter(
+                  (exit) =>
+                    ['Withdraw', 'Transfer'].includes(exit.outcome) ||
+                    (exit.outcome === 'Graduate' && exit.status === 'Applied')
+                )
+                .map((exit) => ({
+                  id: exit.id,
+                  label: `${exit.outcome} · ${fDate(exit.effectiveDate)} · ${exit.status}`,
+                }))}
+              batch={batch}
+              previewDisabled={
+                busy ||
+                (kind === 'certificates'
+                  ? fixedKind === 'certificates'
+                    ? !batch.length ||
+                      (certificateType === 3 &&
+                        batch.some((student) => !exitCasesByStudent[student.studentId]))
+                    : !studentId || (certificateType === 3 && !transitionId)
+                  : !batch.length)
+              }
+              issueDisabled={
+                busy ||
+                (kind === 'certificates'
+                  ? fixedKind === 'certificates'
+                    ? !batch.length ||
+                      batchPreviews.length !== batch.length ||
+                      fingerprint !== previewFingerprint
+                    : !certificatePreview || fingerprint !== previewFingerprint
+                  : !idPreview.length)
+              }
+              onSelect={(student) => {
+                if (
+                  student &&
+                  fixedKind === 'certificates' &&
+                  batch.length >= 100 &&
+                  !batch.some((selected) => selected.studentId === student.studentId)
+                ) {
+                  shikshaMitraToast.error({ message: 'Select up to 100 students at a time.' });
+                  return;
+                }
+                router.push(
+                  recordsQueryUrl(pathname, params.toString(), { student: student?.studentId }),
+                  { scroll: false }
                 );
+                setCertificatePreview(null);
+                setTransitionId('');
+                if (student && (fixedKind === 'certificates' || kind === 'ids')) {
+                  setBatch((previous) =>
+                    previous.some((s) => s.studentId === student.studentId)
+                      ? previous
+                      : [...previous, student].slice(0, 100)
+                  );
+                  setBatchPreviews([]);
+                  setIdPreview([]);
+                }
+              }}
+              onCertificateTypeChange={(value) => {
+                setSelectedCertificateType(value);
+                setCertificatePreview(null);
+              }}
+              onReasonChange={setReason}
+              onTransitionChange={(value) => {
+                if (fixedKind === 'certificates') {
+                  setExitCasesByStudent((previous) => ({ ...previous, [studentId]: value }));
+                  setBatchPreviews([]);
+                } else setTransitionId(value);
+              }}
+              onRemoveStudent={(id) => {
+                const remaining = batch.filter((student) => student.studentId !== id);
+                setBatch(remaining);
+                if (fixedKind === 'certificates' && studentId === id) {
+                  router.push(
+                    recordsQueryUrl(pathname, params.toString(), {
+                      student: remaining[0]?.studentId,
+                    }),
+                    { scroll: false }
+                  );
+                }
                 setBatchPreviews([]);
                 setIdPreview([]);
+              }}
+              onFocusStudent={(id) =>
+                router.push(recordsQueryUrl(pathname, params.toString(), { student: id }), {
+                  scroll: false,
+                })
               }
-            }}
-            onCertificateTypeChange={(value) => {
-              setSelectedCertificateType(value);
-              setCertificatePreview(null);
-            }}
-            onReasonChange={setReason}
-            onTransitionChange={(value) => {
-              if (fixedKind === 'certificates') {
-                setExitCasesByStudent((previous) => ({ ...previous, [studentId]: value }));
-                setBatchPreviews([]);
-              } else setTransitionId(value);
-            }}
-            onRemoveStudent={(id) => {
-              const remaining = batch.filter((student) => student.studentId !== id);
-              setBatch(remaining);
-              if (fixedKind === 'certificates' && studentId === id) {
-                router.push(recordsQueryUrl(pathname, params.toString(), {
-                  student: remaining[0]?.studentId,
-                }), { scroll: false });
-              }
-              setBatchPreviews([]);
-              setIdPreview([]);
-            }}
-            onFocusStudent={(id) => router.push(
-              recordsQueryUrl(pathname, params.toString(), { student: id }),
-              { scroll: false }
-            )}
-            onPreview={prepare}
-            onIssue={issue}
-          />}
+              onPreview={prepare}
+              onIssue={issue}
+            />
+          )}
           {certificateType === 3 &&
             kind === 'certificates' &&
             !hasGrantedPermission(permissions, 'Students.Records.Transitions.View') && (
-              <Alert severity="info">
+              <StudentFeedback notificationKey="STU-0886" presentation="inline" severity="info">
                 Leaving certificates require access to the linked exit case. Contact a staff member
                 with transition access.
-              </Alert>
+              </StudentFeedback>
             )}
           {failure && (
-            <Alert severity="error" onClose={() => setFailure(null)}>
+            <StudentFeedback
+              notificationKey="STU-0887"
+              presentation="persistent"
+              severity="error"
+              onClose={() => setFailure(null)}
+            >
               {failure}
-            </Alert>
+            </StudentFeedback>
           )}
           {query.isError && (
-            <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
+            <StudentFeedback
+              notificationKey="STU-0888"
+              presentation="toast"
+              severity="error"
+              action={<Button onClick={() => query.refetch()}>Retry</Button>}
+            >
               Issue history could not be loaded.
-            </Alert>
+            </StudentFeedback>
           )}
           {(busy || query.isFetching) && <LinearProgress aria-label="Loading documents" />}
-          {bulkProgress && <Typography variant="caption" role="status">{bulkProgress}</Typography>}
+          {bulkProgress && (
+            <Typography variant="caption" role="status">
+              {bulkProgress}
+            </Typography>
+          )}
           {certificatePreview && fingerprint === previewFingerprint && (
             <Paper variant="outlined" sx={{ p: 1.5 }}>
               <Typography variant="subtitle2">
@@ -676,10 +716,13 @@ function RecordDocuments({
               </Typography>
             </Paper>
           )}
-          {fixedKind === 'certificates' && batchPreviews.length > 0 &&
+          {fixedKind === 'certificates' &&
+            batchPreviews.length > 0 &&
             fingerprint === previewFingerprint && (
-              <Box sx={{ maxHeight: 240, overflow: 'auto', flexShrink: 0 }}
-                aria-label="Certificate previews">
+              <Box
+                sx={{ maxHeight: 240, overflow: 'auto', flexShrink: 0 }}
+                aria-label="Certificate previews"
+              >
                 <Stack spacing={1}>
                   {batchPreviews.map((preview) => (
                     <Paper key={preview.student.studentId} variant="outlined" sx={{ p: 1.5 }}>
@@ -732,12 +775,16 @@ function RecordDocuments({
           )}
           <CustomizableTable
             key={fixedKind === 'certificates' ? certificateTab.value : kind}
-            tableId={fixedKind === 'certificates'
-              ? `student-record-${certificateTab.value}-certificate-history`
-              : `student-record-${kind}-history`}
-            tableTitle={fixedKind === 'certificates'
-              ? `${certificateTab.label} certificate history`
-              : 'Issued document history'}
+            tableId={
+              fixedKind === 'certificates'
+                ? `student-record-${certificateTab.value}-certificate-history`
+                : `student-record-${kind}-history`
+            }
+            tableTitle={
+              fixedKind === 'certificates'
+                ? `${certificateTab.label} certificate history`
+                : 'Issued document history'
+            }
             columns={columns}
             data={history}
             isLoading={query.isLoading}
@@ -765,7 +812,13 @@ function RecordDocuments({
         certificateType={certificateType}
         onClose={() => setTemplatesOpen(false)}
       />
-      <CustomDialog fullScreen hasForm={false} title="Create Student I-Card" open={builderOpen} handleClose={() => setBuilderOpen(false)}>
+      <CustomDialog
+        fullScreen
+        hasForm={false}
+        title="Create Student I-Card"
+        open={builderOpen}
+        handleClose={() => setBuilderOpen(false)}
+      >
         <Box sx={{ flex: 1, minHeight: 0, p: 1, bgcolor: 'background.neutral' }}>
           {builderOpen && <StudentICardBuilder onClose={() => setBuilderOpen(false)} />}
         </Box>
@@ -811,7 +864,15 @@ function RecordDocuments({
                 error={!!decisionForm.touched.reason && !!decisionForm.errors.reason}
                 helperText={decisionForm.touched.reason && decisionForm.errors.reason}
               />
-              {failure && <Alert severity="error">{failure}</Alert>}
+              {failure && (
+                <StudentFeedback
+                  notificationKey="STU-0890"
+                  presentation="persistent"
+                  severity="error"
+                >
+                  {failure}
+                </StudentFeedback>
+              )}
             </Stack>
           </FormBusyRegion>
         </DialogScrollContent>

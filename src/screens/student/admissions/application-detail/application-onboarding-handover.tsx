@@ -3,11 +3,11 @@ import type { StudentOnboardingCase } from 'src/redux/student/onboarding/student
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { StudentFeedback } from 'src/components/student-feedback';
 import {
   Box,
   Paper,
   Stack,
-  Alert,
   Button,
   Divider,
   Skeleton,
@@ -94,9 +94,14 @@ export function ApplicationOnboardingHandover({
       </Stack>
       <Divider sx={{ mt: 1 }} />
       {!hasCase ? (
-        <Alert severity="warning" sx={{ mt: 1.5 }}>
+        <StudentFeedback
+          notificationKey="STU-0201"
+          presentation="persistent"
+          severity="warning"
+          sx={{ mt: 1.5 }}
+        >
           No onboarding case is linked to this application.
-        </Alert>
+        </StudentFeedback>
       ) : !canView ? (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
           Onboarding viewing access is required to see placement, identifiers and activation status.
@@ -109,7 +114,9 @@ export function ApplicationOnboardingHandover({
           <Skeleton variant="rounded" height={56} />
         </Stack>
       ) : error || !value ? (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0202"
+          presentation="toast"
           severity="error"
           sx={{ mt: 1.5 }}
           action={
@@ -119,7 +126,7 @@ export function ApplicationOnboardingHandover({
           }
         >
           Onboarding details could not be loaded.
-        </Alert>
+        </StudentFeedback>
       ) : (
         <>
           {refreshing && (

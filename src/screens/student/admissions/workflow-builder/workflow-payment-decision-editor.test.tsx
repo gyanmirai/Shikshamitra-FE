@@ -67,10 +67,13 @@ function setup(type: 4 | 7, readOnly = false) {
 describe('Finance fee confirmation and admission decision setup', () => {
   it('uses runtime readiness for fee confirmation and removes stale payment configuration without losing extensions', async () => {
     const { user, onSave } = setup(4);
-    expect(screen.getByRole('heading', { name: 'Fee structure confirmation' })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Completion requirement' })).toHaveValue(
-      'Confirmed Finance fee structure'
-    );
+    expect(screen.getByRole('heading', { name: 'Payment Completion' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('textbox', { name: 'Completion requirement' })
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('combobox', { name: /Payment rule/ }));
+    await user.click(screen.getByRole('option', { name: 'Full payment required' }));
+    await user.click(screen.getByRole('switch', { name: 'Allow collection later in Onboarding' }));
     expect(screen.queryByText(/not available in this environment/)).not.toBeInTheDocument();
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: /Purpose code/ })).not.toBeInTheDocument();
@@ -80,6 +83,7 @@ describe('Finance fee confirmation and admission decision setup', () => {
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toEqual({
       extension: 'preserve',
+      paymentCompletion: { version: 1, paymentRule: 'full', allowCollectionLater: false },
     });
   });
   it('keeps Admission Decision terminal behavior on the same page', async () => {
@@ -96,6 +100,13 @@ describe('Finance fee confirmation and admission decision setup', () => {
   it('shows Payment read-only and closes without saving', async () => {
     const { user, onSave, onClose } = setup(4, true);
     expect(screen.getByRole('textbox', { name: 'Stage name *' })).toBeDisabled();
+    expect(screen.getByRole('combobox', { name: /Payment rule/ })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(
+      screen.getByRole('switch', { name: 'Allow collection later in Onboarding' })
+    ).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledOnce();

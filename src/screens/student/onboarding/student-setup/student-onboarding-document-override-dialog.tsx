@@ -7,12 +7,12 @@ import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useOverrideStudentOnboardingDocumentsMutation } from 'src/redux/student/onboarding/student-onboarding-api';
 import {
   Box,
-  Alert,
   Stack,
   Button,
   TextField,
@@ -91,9 +91,9 @@ export default function StudentOnboardingDocumentOverrideDialog({
             <Typography variant="body2" fontWeight={600}>
               {document?.name || 'All required documents for this student'}
             </Typography>
-            <Alert severity="warning">
+            <StudentFeedback notificationKey="STU-0985" presentation="inline" severity="warning">
               This bypasses document verification and records the note in the audit history.
-            </Alert>
+            </StudentFeedback>
             <ShakingTextField error={Boolean(formik.touched.reason && formik.errors.reason)}>
               <TextField
                 required
@@ -112,7 +112,15 @@ export default function StudentOnboardingDocumentOverrideDialog({
                 inputProps={{ maxLength: 1000 }}
               />
             </ShakingTextField>
-            {formik.status && <Alert severity="error">{formik.status}</Alert>}
+            {formik.status && (
+              <StudentFeedback
+                notificationKey="STU-0986"
+                presentation="persistent"
+                severity="error"
+              >
+                {formik.status}
+              </StudentFeedback>
+            )}
           </Stack>
           {busy && (
             <Box

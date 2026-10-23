@@ -1,7 +1,8 @@
 import type { EligibilitySummary } from 'src/redux/student/admissions/admission-eligibility-types';
 
 import { fDateTime } from 'src/utils/format-time';
-import { Alert, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 export function EligibilityActionContext({
   summary,
@@ -20,9 +21,14 @@ export function EligibilityActionContext({
         </Typography>
       )}
       {exception && (
-        <Alert severity="info" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+        <StudentFeedback
+          notificationKey="STU-0324"
+          presentation="inline"
+          severity="info"
+          sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
+        >
           Request reason: {exception.reason}
-        </Alert>
+        </StudentFeedback>
       )}
       {summary.policy?.requireIndependentReviewer && (
         <Typography variant="caption" color="text.secondary">

@@ -20,6 +20,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -27,7 +28,6 @@ import {
   Box,
   Tab,
   Stack,
-  Alert,
   Paper,
   Button,
   Tooltip,
@@ -321,17 +321,24 @@ export default function StudentRecordReports() {
         </Paper>
       )}
       {failure && (
-        <Alert severity="error" onClose={() => setFailure(null)}>
+        <StudentFeedback
+          notificationKey="STU-0901"
+          presentation="persistent"
+          severity="error"
+          onClose={() => setFailure(null)}
+        >
           {failure}
-        </Alert>
+        </StudentFeedback>
       )}
       {tab === 'preview' && !canRead(reportType) && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0902" presentation="inline" severity="info">
           You need permission to view the source module for this report.
-        </Alert>
+        </StudentFeedback>
       )}
       {(tab === 'preview' ? preview.isError : jobs.isError) && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0903"
+          presentation="toast"
           severity="error"
           action={
             <Button
@@ -343,7 +350,7 @@ export default function StudentRecordReports() {
           }
         >
           Reports could not be loaded. Your selected scope has been kept.
-        </Alert>
+        </StudentFeedback>
       )}
       {(tab === 'preview' ? preview.isFetching : jobs.isFetching) && (
         <LinearProgress aria-label="Refreshing report data" />
@@ -416,7 +423,15 @@ export default function StudentRecordReports() {
               and {generation?.studentId ? 'the selected student' : 'all students in your scope'}.
               You can leave this page while it runs. Downloads expire after seven days.
             </Typography>
-            {failure && <Alert severity="error">{failure}</Alert>}
+            {failure && (
+              <StudentFeedback
+                notificationKey="STU-0905"
+                presentation="persistent"
+                severity="error"
+              >
+                {failure}
+              </StudentFeedback>
+            )}
           </Stack>
         }
         action={

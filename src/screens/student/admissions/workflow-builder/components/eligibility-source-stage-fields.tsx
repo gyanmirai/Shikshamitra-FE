@@ -1,8 +1,9 @@
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 import type { AdmissionEligibilityCriterion } from 'src/redux/student/admissions/admission-eligibility-policy';
 
+import { Stack, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import { Alert, Stack, TextField } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { readAdmissionDocumentPolicy } from 'src/redux/student/admissions/admission-document-policy';
 import { readAdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
 
@@ -49,21 +50,21 @@ export function EligibilitySourceStageFields({
         }
       />
       {!options.length && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0518" presentation="inline" severity="info">
           Add and configure an earlier {assessment ? 'assessment' : 'document verification'} stage
           before using this check.
-        </Alert>
+        </StudentFeedback>
       )}
       {selectedMissing && (
-        <Alert severity="error">
+        <StudentFeedback notificationKey="STU-0519" presentation="persistent" severity="error">
           The saved source stage is unavailable. Choose an earlier configured stage.
-        </Alert>
+        </StudentFeedback>
       )}
       {!assessment && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0520" presentation="inline" severity="info">
           Checks whether the required documents for this stage are verified, including any waivers
           approved under its document policy.
-        </Alert>
+        </StudentFeedback>
       )}
       {assessment && (
         <CustomSelect

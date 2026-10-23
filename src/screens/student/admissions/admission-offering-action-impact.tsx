@@ -1,6 +1,7 @@
 import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 
-import { Alert, Stack, AlertTitle, Typography } from '@mui/material';
+import { Stack, AlertTitle, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 type Props = {
   action: 'activate' | 'deactivate' | 'delete';
@@ -51,10 +52,15 @@ export function AdmissionOfferingActionImpact({ action, offering }: Props) {
           Current usage: {applications}
         </Typography>
       </Stack>
-      <Alert severity={impact.severity} variant="outlined">
+      <StudentFeedback
+        notificationKey="STU-0109"
+        presentation="persistent"
+        severity={impact.severity}
+        variant="outlined"
+      >
         <AlertTitle>{impact.title}</AlertTitle>
         {impact.message}
-      </Alert>
+      </StudentFeedback>
     </Stack>
   );
 }

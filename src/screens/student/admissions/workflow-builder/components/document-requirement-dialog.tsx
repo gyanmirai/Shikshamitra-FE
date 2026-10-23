@@ -9,11 +9,11 @@ import CustomDialog from 'src/components/customDialog';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomPopover } from 'src/components/custom-popover';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { documentRequirementSchema } from 'src/redux/student/admissions/admission-document-policy-validation';
 import {
   Box,
   Grid,
-  Alert,
   Stack,
   Button,
   Switch,
@@ -120,7 +120,9 @@ export function DocumentRequirementDialog({
         <Stack spacing={1.5} sx={{ p: 2 }}>
           <DocumentRequirementBasics formik={formik} />
           {formik.values.requirement === 'conditional' && (
-            <Alert severity="warning">Choose required or optional for this document.</Alert>
+            <StudentFeedback notificationKey="STU-0510" presentation="inline" severity="warning">
+              Choose required or optional for this document.
+            </StudentFeedback>
           )}
           <Grid container spacing={1.5}>
             <Grid size={{ xs: 12 }}>

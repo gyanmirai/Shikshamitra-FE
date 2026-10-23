@@ -12,11 +12,11 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { formatDateOnly } from 'src/utils/date-only';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   Box,
   Grid,
-  Alert,
   Stack,
   Button,
   Drawer,
@@ -334,7 +334,9 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                   )}
                 </Stack>
                 {capacityQuery.isError && (
-                  <Alert
+                  <StudentFeedback
+                    notificationKey="STU-0113"
+                    presentation="toast"
                     severity="error"
                     action={
                       <Button size="small" onClick={() => capacityQuery.refetch()}>
@@ -344,13 +346,13 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                     sx={{ mb: 1.5 }}
                   >
                     Current room capacity could not be refreshed.
-                  </Alert>
+                  </StudentFeedback>
                 )}
                 {!capacity && capacityQuery.isError ? null : capacity?.capacity == null ? (
-                  <Alert severity="info">
+                  <StudentFeedback notificationKey="STU-0114" presentation="inline" severity="info">
                     No rooms are assigned for admission capacity. Division seat limits are checked
                     separately during onboarding.
-                  </Alert>
+                  </StudentFeedback>
                 ) : (
                   <Grid container spacing={2.5}>
                     <Grid size={{ xs: 4 }}>
@@ -392,15 +394,22 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                   </Box>
                 ) : null}
                 {capacity?.isFull && (
-                  <Alert severity="warning" sx={{ mt: 2 }}>
+                  <StudentFeedback
+                    notificationKey="STU-0115"
+                    presentation="persistent"
+                    severity="warning"
+                    sx={{ mt: 2 }}
+                  >
                     Admission room capacity is full. New inquiries and registrations remain allowed
                     with a warning.
-                  </Alert>
+                  </StudentFeedback>
                 )}
                 {canManage && editingRooms && (
                   <Stack spacing={1.5} sx={{ mt: 2 }}>
                     {roomsQuery.isError && (
-                      <Alert
+                      <StudentFeedback
+                        notificationKey="STU-0116"
+                        presentation="toast"
                         severity="error"
                         action={
                           <Button size="small" onClick={() => roomsQuery.refetch()}>
@@ -409,7 +418,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                         }
                       >
                         Room choices could not be loaded.
-                      </Alert>
+                      </StudentFeedback>
                     )}
                     <Autocomplete
                       multiple

@@ -1,5 +1,6 @@
 import type { AttendanceDay } from 'src/redux/student/take-attendance/attendance-types';
 
+import { shikshaMitraToast } from 'src/components/toast';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
@@ -151,7 +152,13 @@ vi.mock('src/components/label', () => ({
   Label: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 vi.mock('src/components/custom-select', () => ({
   default: ({
@@ -342,9 +349,7 @@ beforeEach(() => {
   mocks.params = new URLSearchParams(
     'date=2026-09-30&organization=level&class=class&division=division'
   );
-  mocks.permissions = [
-    { name: 'Students.Attendance.MarkAttendance.Add', isGranted: true },
-  ];
+  mocks.permissions = [{ name: 'Students.Attendance.MarkAttendance.Add', isGranted: true }];
   mocks.context = {
     currentData: {
       isAdmin: true,
@@ -541,7 +546,9 @@ describe('Daily Attendance workspace', () => {
       canManageLock: true,
     };
     const registered = day({ isSubmitted: true, attendanceDayId: 'day' });
-    registered.students.forEach((student) => { student.status = 1; });
+    registered.students.forEach((student) => {
+      student.status = 1;
+    });
     mocks.query = { ...mocks.query, currentData: registered };
     render(<TakeAttendanceScreen />);
     expect(await screen.findByRole('button', { name: 'Lock attendance' })).toBeEnabled();
@@ -703,9 +710,11 @@ describe('Daily Attendance workspace', () => {
     render(<TakeAttendanceScreen />);
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Lock attendance' })).toBeDisabled();
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Attendance cannot be taken for a future date.'
+    expect(screen.getAllByText('Attendance cannot be taken for a future date.')[0]).toBeVisible();
+    expect(shikshaMitraToast.warning).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Attendance cannot be taken for a future date.' })
     );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
   it('shows Student List filters and clears dependent choices when either changes', () => {
     mocks.params = new URLSearchParams(
@@ -893,7 +902,13 @@ describe('Daily Attendance workspace', () => {
   it('warns after cutoff while leaving authorized draft marking available', async () => {
     mocks.query = { ...mocks.query, currentData: day({ isPastMarkingCutoff: true }) };
     render(<TakeAttendanceScreen />);
-    expect(await screen.findByText(/school marking cutoff has passed/)).toBeVisible();
+    await waitFor(() =>
+      expect(shikshaMitraToast.warning).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringMatching(/school marking cutoff has passed/),
+        })
+      )
+    );
     expect(screen.getByRole('button', { name: 'Present: Aarav' })).toBeEnabled();
   });
   it.each([
@@ -907,6 +922,11 @@ describe('Daily Attendance workspace', () => {
     render(<TakeAttendanceScreen />);
     await screen.findByRole('button', { name: 'Present: Aarav' });
     expect(screen.queryByText(/school marking cutoff has passed/)).not.toBeInTheDocument();
+    expect(shikshaMitraToast.warning).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringMatching(/school marking cutoff has passed/),
+      })
+    );
   });
   it('shows only the four mark choices for an ineligible day and disables them', async () => {
     const closed = day({ isExpected: false, canMark: false, notExpectedReason: 'Weather closure' });

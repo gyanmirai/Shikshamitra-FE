@@ -5,7 +5,6 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
-import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
@@ -17,6 +16,7 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { StudentFeedback } from 'src/components/student-feedback';
 import {
   useSensor,
   DndContext,
@@ -117,7 +117,9 @@ export function FormBuilderSections({
           fields={
             <Stack sx={{ flex: 1, minHeight: 0 }}>
               {commands.systemFieldsQuery.isError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0368"
+                  presentation="persistent"
                   severity="warning"
                   action={
                     <Button size="small" onClick={() => commands.systemFieldsQuery.refetch()}>
@@ -126,7 +128,7 @@ export function FormBuilderSections({
                   }
                 >
                   Student fields could not load. Custom fields are still available.
-                </Alert>
+                </StudentFeedback>
               )}
               <FormBuilderPalette
                 systemFields={commands.systemFieldsQuery.data ?? []}

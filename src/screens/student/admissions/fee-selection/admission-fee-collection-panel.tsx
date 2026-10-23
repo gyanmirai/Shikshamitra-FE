@@ -19,20 +19,13 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Box, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
+import FeeProrationResult from 'src/screens/finance/FeeCollection/FeeCollectionComponent/FeeProrationResult';
 import FeeCollectComponentForm from 'src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm';
-import {
-  Box,
-  Alert,
-  Stack,
-  Button,
-  Skeleton,
-  IconButton,
-  Typography,
-  LinearProgress,
-} from '@mui/material';
 import {
   useCollectAdmissionFeeMutation,
   useGetAdmissionFeeCollectFormQuery,
@@ -54,6 +47,42 @@ type Props = {
 
 const collectionGuardError = (status: number, detail: string) =>
   Object.assign(new Error(detail), { status, data: { detail } });
+
+function FeeCollectionSkeleton({ refreshing = false }: { refreshing?: boolean }) {
+  return (
+    <Stack
+      role="status"
+      aria-label={refreshing ? 'Refreshing fee collection' : 'Loading fee collection'}
+      aria-busy
+      spacing={2}
+      sx={{ flex: 1, minWidth: 0 }}
+    >
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+          gap: 1.5,
+        }}
+      >
+        {[0, 1, 2].map((column) => (
+          <Stack key={column} spacing={0.5}>
+            <Skeleton variant="text" width="70%" height={18} />
+            <Skeleton variant="text" width="55%" height={28} />
+          </Stack>
+        ))}
+      </Box>
+      <Stack spacing={1.5}>
+        <Skeleton variant="text" width={120} height={24} />
+        {[0, 1, 2].map((row) => (
+          <Stack key={row} direction="row" spacing={2} justifyContent="space-between">
+            <Skeleton variant="text" width="45%" height={40} />
+            <Skeleton variant="text" width="25%" height={40} />
+          </Stack>
+        ))}
+      </Stack>
+    </Stack>
+  );
+}
 
 export default function AdmissionFeeCollectionPanel({
   applicationId,
@@ -104,8 +133,13 @@ export default function AdmissionFeeCollectionPanel({
   const state = summary.currentData;
   const refreshingCollection = refreshing || summary.isFetching;
   const prepareAndOpen = async (variableFeeHeads: AdmissionVariableFeeHead[]) => {
-    await prepare({ applicationId, variableFeeHeads }).unwrap();
+    const prepared = await prepare({ applicationId, variableFeeHeads }).unwrap();
     variableAmounts.onFalse();
+    if (prepared.isSettled) {
+      onOpenChange?.(false);
+      await summary.refetch();
+      return;
+    }
     dialog.onTrue();
   };
   const open = async () => {
@@ -212,15 +246,11 @@ export default function AdmissionFeeCollectionPanel({
   };
   if (summary.isLoading || (!state && summary.isFetching))
     return (
-      <Stack
-        role="status"
-        aria-label="Loading fee collection"
-        spacing={1.5}
-        useFlexGap
-        sx={panelSx}
-      >
-        <Skeleton variant="text" width={180} />
-        <Skeleton variant="rounded" height={76} />
+      <Stack spacing={1.5} useFlexGap sx={panelSx}>
+        <Typography variant="subtitle2" component="h3">
+          Fee collection
+        </Typography>
+        <FeeCollectionSkeleton />
         {footerAction && <Box sx={{ mt: 'auto', alignSelf: 'flex-end' }}>{footerAction}</Box>}
       </Stack>
     );
@@ -228,16 +258,17 @@ export default function AdmissionFeeCollectionPanel({
     return (
       <Stack component="section" aria-label="Fee collection" spacing={1.5} useFlexGap sx={panelSx}>
         <Typography variant="subtitle2">Fee collection</Typography>
-        <Alert
-          severity="error"
-          action={
-            <Button size="small" onClick={() => summary.refetch()}>
-              Retry
-            </Button>
-          }
-        >
+        <StudentFeedback notificationKey="STU-0332" presentation="toast" severity="error">
           Fee collection details could not be loaded.
-        </Alert>
+        </StudentFeedback>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => summary.refetch()}
+          sx={{ alignSelf: 'flex-start' }}
+        >
+          Retry
+        </Button>
         {footerAction && <Box sx={{ mt: 'auto' }}>{footerAction}</Box>}
       </Stack>
     );
@@ -251,7 +282,7 @@ export default function AdmissionFeeCollectionPanel({
       size="small"
       variant="contained"
       startIcon={<Iconify icon="mdi:cash-plus" width={16} />}
-      loading={preparing.isLoading || refreshingCollection}
+      loading={preparing.isLoading}
       disabled={
         disabled ||
         refreshingCollection ||
@@ -264,7 +295,9 @@ export default function AdmissionFeeCollectionPanel({
       onClick={open}
       sx={{ flexShrink: 0 }}
     >
-      Collect fees
+      {state.totalAmount === 0 && state.outstandingAmount === 0 && !requiresVariableAmounts
+        ? 'Confirm no payment due'
+        : 'Collect fees'}
     </Button>
   );
   return (
@@ -301,19 +334,25 @@ export default function AdmissionFeeCollectionPanel({
         </Stack>
         {!stretch && collectAction}
       </Stack>
-      <Stack spacing={1.5} useFlexGap sx={{ flex: stretch ? 1 : undefined, minWidth: 0 }}>
-        {refreshingCollection && <LinearProgress aria-label="Refreshing fee collection" />}
+      {refreshingCollection && <FeeCollectionSkeleton refreshing />}
+      <Stack
+        spacing={1.5}
+        useFlexGap
+        sx={{
+          flex: stretch ? 1 : undefined,
+          minWidth: 0,
+          display: refreshingCollection ? 'none' : 'flex',
+        }}
+      >
         {summary.isError && (
-          <Alert
-            severity="error"
-            action={
-              <Button size="small" onClick={() => summary.refetch()}>
-                Retry
-              </Button>
-            }
-          >
-            Fee collection details could not be refreshed. Retry before collecting fees.
-          </Alert>
+          <Stack alignItems="flex-start" spacing={1}>
+            <StudentFeedback notificationKey="STU-0333" presentation="toast" severity="error">
+              Fee collection details could not be refreshed. Retry before collecting fees.
+            </StudentFeedback>
+            <Button size="small" variant="outlined" onClick={() => summary.refetch()}>
+              Retry
+            </Button>
+          </Stack>
         )}
         <Box
           component="dl"
@@ -325,7 +364,7 @@ export default function AdmissionFeeCollectionPanel({
           }}
         >
           {[
-            ['Scheduled fees', state.totalAmount],
+            [state.proration ? 'Payable fees' : 'Scheduled fees', state.totalAmount],
             ['Confirmed payments', state.confirmedPaidAmount],
             ['Fee balance', state.outstandingAmount],
           ].map(([title, value]) => (
@@ -351,16 +390,17 @@ export default function AdmissionFeeCollectionPanel({
             </Box>
           ))}
         </Box>
+        <FeeProrationResult result={state.proration} />
         {!stretch && !state.isSettled && (
           <Typography variant="caption" color="text.secondary">
             Charges and late fees are shown separately in the collection form.
           </Typography>
         )}
         {state.pendingVerificationAmount > 0 && (
-          <Alert severity="warning">
+          <StudentFeedback notificationKey="STU-0334" presentation="persistent" severity="warning">
             {amount(state.pendingVerificationAmount)} is awaiting Finance verification. It is shown
             separately from confirmed payments.
-          </Alert>
+          </StudentFeedback>
         )}
         {state.blocker &&
           (stretch ? (
@@ -375,14 +415,20 @@ export default function AdmissionFeeCollectionPanel({
               </Typography>
             </Stack>
           ) : (
-            <Alert severity="info">{state.blocker}</Alert>
+            <StudentFeedback notificationKey="STU-0336" presentation="persistent" severity="info">
+              {state.blocker}
+            </StudentFeedback>
           ))}
         {!access.canCollect && !state.isSettled && (
           <Typography variant="caption" color="text.secondary">
             An authorized fee collection user can record payments here.
           </Typography>
         )}
-        {openingError && <Alert severity="error">{openingError}</Alert>}
+        {openingError && (
+          <StudentFeedback notificationKey="STU-0337" presentation="persistent" severity="error">
+            {openingError}
+          </StudentFeedback>
+        )}
         {access.canViewReceipts && Boolean(state.receipts.length) && (
           <CustomizableTable
             tableId="admission-fee-collection-receipts"

@@ -16,13 +16,13 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Grid,
-  Alert,
   Stack,
   Button,
   Skeleton,
@@ -177,7 +177,9 @@ export function AdmissionNumberingFormDialog({
         <DialogScrollContent>
           <Stack spacing={2}>
             {loadError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0105"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button size="small" onClick={onRetry} disabled={loading}>
@@ -186,9 +188,17 @@ export function AdmissionNumberingFormDialog({
                 }
               >
                 Unable to load numbering settings.
-              </Alert>
+              </StudentFeedback>
             )}
-            {error && <Alert severity="error">{error}</Alert>}
+            {error && (
+              <StudentFeedback
+                notificationKey="STU-0106"
+                presentation="persistent"
+                severity="error"
+              >
+                {error}
+              </StudentFeedback>
+            )}
             {!settings ? (
               <Stack spacing={2} aria-label={loading ? 'Loading numbering settings' : undefined}>
                 {[0, 1, 2].map(

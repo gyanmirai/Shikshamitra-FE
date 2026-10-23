@@ -11,9 +11,10 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useId, useRef, useState, useEffect } from 'react';
 import CustomAccordion from 'src/components/custom-accordian';
 import { LoadingButton } from 'src/components/loading-button';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { Box, Alert, Paper, Stack, Button, TextField, Typography } from '@mui/material';
+import { Box, Paper, Stack, Button, TextField, Typography } from '@mui/material';
 import {
   useCancelAdmissionInquiryFollowUpMutation,
   useScheduleAdmissionInquiryFollowUpMutation,
@@ -204,7 +205,9 @@ export function InquiryFollowUpsPanel({
       ) : (
         <>
           {value.followUps.length === 0 && (
-            <Alert severity="info">No follow-ups recorded yet.</Alert>
+            <StudentFeedback notificationKey="STU-0412" presentation="inline" severity="info">
+              No follow-ups recorded yet.
+            </StudentFeedback>
           )}
           {value.followUps.map((item) => (
             <FollowUpCard

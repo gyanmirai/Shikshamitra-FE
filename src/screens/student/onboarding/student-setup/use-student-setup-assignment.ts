@@ -1,6 +1,5 @@
 'use client';
 
-
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useRef, useMemo, useState, useEffect } from 'react';
@@ -36,6 +35,7 @@ type Baseline = {
   type: StudentSetupAssignmentType;
   totalCount: number;
 };
+type RetainedPage = Pick<Baseline, 'rows' | 'contextKey' | 'type' | 'totalCount'>;
 const toText = (student: StudentOnboardingItem, type: StudentSetupAssignmentType) =>
   String(getStudentSetupAssignmentValue(student, type) ?? '');
 
@@ -60,6 +60,9 @@ export function useStudentSetupAssignment({
   const busyRef = useRef(false);
   const [results, setResults] = useState<StudentSetupAssignmentResult[]>([]);
   const [overrides, setOverrides] = useState<Record<string, StudentOnboardingItem>>({});
+  const [automaticPage, setAutomaticPage] = useState<RetainedPage | null>(null);
+  const retainedPage =
+    automaticPage?.contextKey === contextKey && automaticPage.type === type ? automaticPage : null;
   const contextChanged = Boolean(
     baseline && (baseline.contextKey !== contextKey || baseline.type !== type)
   );
@@ -85,6 +88,9 @@ export function useStudentSetupAssignment({
   useEffect(() => {
     if (!busyRef.current) setOverrides({});
   }, [rows]);
+  useEffect(() => {
+    setAutomaticPage(null);
+  }, [contextKey, type]);
 
   const run = async (
     mode: 'automatic' | 'manual',
@@ -105,6 +111,17 @@ export function useStudentSetupAssignment({
         services,
         onResult: (result) => {
           setResults((current) => [...current, result]);
+          if (result.updatedStudent)
+            setAutomaticPage((current) =>
+              current?.contextKey === contextKey && current.type === type
+                ? {
+                    ...current,
+                    rows: current.rows.map((row) =>
+                      row.id === result.student.id ? result.updatedStudent! : row
+                    ),
+                  }
+                : current
+            );
           if (result.updatedStudent)
             setOverrides((current) => ({
               ...current,
@@ -196,7 +213,43 @@ export function useStudentSetupAssignment({
     },
   });
 
-  const currentRows = rows.map((row) => overrides[row.id] ?? row);
+  const currentRows = useMemo(
+    () => (retainedPage?.rows ?? rows).map((row) => overrides[row.id] ?? row),
+    [retainedPage?.rows, rows, overrides]
+  );
+  const displayedRows = useMemo(
+    () => (baseline?.rows ?? retainedPage?.rows ?? rows).map((row) => overrides[row.id] ?? row),
+    [baseline?.rows, retainedPage?.rows, rows, overrides]
+  );
+  // Pending queries remove saved rows and backfill the page. Keep this operation's page stable.
+  const retainAutomaticPage = () => {
+    if (type !== 'gr-number' && type !== 'roll-number') return;
+    setAutomaticPage((current) =>
+      current?.contextKey === contextKey && current.type === type
+        ? current
+        : { rows: currentRows, totalCount, contextKey, type }
+    );
+  };
+  const applyRollBatchRows = (
+    items: { studentId: string; proposedRollNumber?: number | null }[]
+  ) => {
+    const numbers = new Map(items.map((item) => [item.studentId, item.proposedRollNumber]));
+    const updateRow = (row: StudentOnboardingItem) => {
+      const rollNo = row.studentId ? numbers.get(row.studentId) : undefined;
+      return Number.isInteger(rollNo) && Number(rollNo) > 0 ? { ...row, rollNo } : row;
+    };
+    setAutomaticPage((current) =>
+      current?.contextKey === contextKey && current.type === 'roll-number'
+        ? {
+            ...current,
+            rows: current.rows.map(updateRow),
+          }
+        : current
+    );
+    setOverrides((current) =>
+      Object.fromEntries(Object.entries(current).map(([id, row]) => [id, updateRow(row)]))
+    );
+  };
   const eligible = (mode: 'automatic' | 'manual', targetRows = currentRows) =>
     !type || !canManage
       ? []
@@ -208,7 +261,14 @@ export function useStudentSetupAssignment({
     const ids = eligible('manual', targetRows).map((row) => row.id);
     if (!ids.length) return;
     const values = Object.fromEntries(currentRows.map((row) => [row.id, toText(row, type)]));
-    setBaseline({ rows: currentRows, values, ids, contextKey, type, totalCount });
+    setBaseline({
+      rows: currentRows,
+      values,
+      ids,
+      contextKey,
+      type,
+      totalCount: retainedPage?.totalCount ?? totalCount,
+    });
     form.resetForm({ values: { values, reason: '' } });
     setResults([]);
   };
@@ -218,8 +278,10 @@ export function useStudentSetupAssignment({
     form.resetForm();
     setResults([]);
   };
-  const runAutomatic = (targetRows: StudentOnboardingItem[], divisionId?: string) =>
-    run(
+  const runAutomatic = (targetRows: StudentOnboardingItem[], divisionId?: string) => {
+    if (!type || !canManage || busyRef.current || !targetRows.length) return Promise.resolve([]);
+    retainAutomaticPage();
+    return run(
       'automatic',
       targetRows.map((student) => ({
         student,
@@ -227,6 +289,7 @@ export function useStudentSetupAssignment({
       })),
       divisionId
     );
+  };
   const manualErrors = Object.fromEntries(
     Object.entries(form.errors.values ?? {}).filter(
       ([id]) => form.touched.values?.[id] || form.submitCount > 0
@@ -252,14 +315,16 @@ export function useStudentSetupAssignment({
     startManual,
     cancel,
     runAutomatic,
+    retainAutomaticPage,
+    applyRollBatchRows,
     clearResults: () => setResults([]),
     manualEditing: Boolean(baseline),
     contextChanged,
     editableIds: baseline?.ids ?? [],
     manualErrors,
     manualBlockers,
-    displayedRows: (baseline?.rows ?? rows).map((row) => overrides[row.id] ?? row),
-    displayedTotalCount: baseline?.totalCount ?? totalCount,
+    displayedRows,
+    displayedTotalCount: baseline?.totalCount ?? retainedPage?.totalCount ?? totalCount,
     needsReason: Boolean(
       type &&
       baseline?.rows.some(

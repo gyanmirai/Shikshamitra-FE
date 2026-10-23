@@ -13,9 +13,10 @@ import { useSelector } from 'react-redux';
 import { fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useGetStudentRecordsLegacyOverridesQuery,
   useGetStudentRecordsLegacyCandidatesQuery,
@@ -131,7 +132,11 @@ export default function LegacyRecordEntry({
             Only verified historical enrollments without completed onboarding are eligible. Entry
             requires a reason and approval by a different staff member.
           </Typography>
-          {failure && <Alert severity="error">{failure}</Alert>}
+          {failure && (
+            <StudentFeedback notificationKey="STU-0796" presentation="persistent" severity="error">
+              {failure}
+            </StudentFeedback>
+          )}
           {selected ? (
             <Box component="form" onSubmit={form.handleSubmit}>
               <Stack spacing={1.5}>
@@ -241,7 +246,9 @@ export default function LegacyRecordEntry({
                 </Button>
               </Stack>
               {query.isError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0797"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button color="inherit" onClick={() => query.refetch()}>
@@ -250,7 +257,7 @@ export default function LegacyRecordEntry({
                   }
                 >
                   Historical records could not be loaded.
-                </Alert>
+                </StudentFeedback>
               )}
               {/* Bounded table is an embedded selection/history inside this dialog, not a primary workspace. */}
               <Box sx={{ height: 360, minHeight: 0 }}>

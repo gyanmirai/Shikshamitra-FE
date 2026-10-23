@@ -18,6 +18,7 @@ import { fDate, fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -27,7 +28,6 @@ import {
   Tab,
   Stack,
   Paper,
-  Alert,
   Button,
   TextField,
   Typography,
@@ -245,7 +245,9 @@ export default function StudentRecordTransitions() {
           {canCreate ? (
             <TransitionBatchForm onSubmitted={() => update({ view: undefined, page: 0 })} />
           ) : (
-            <Alert severity="info">You do not have permission to create transitions.</Alert>
+            <StudentFeedback notificationKey="STU-0909" presentation="inline" severity="info">
+              You do not have permission to create transitions.
+            </StudentFeedback>
           )}
         </Box>
       ) : view === 'return' ? (
@@ -258,7 +260,9 @@ export default function StudentRecordTransitions() {
           {canCreate ? (
             <ReturningStudentForm />
           ) : (
-            <Alert severity="info">You do not have permission to start a student return.</Alert>
+            <StudentFeedback notificationKey="STU-0910" presentation="inline" severity="info">
+              You do not have permission to start a student return.
+            </StudentFeedback>
           )}
         </Box>
       ) : (
@@ -291,7 +295,9 @@ export default function StudentRecordTransitions() {
             </Button>
           </Paper>
           {list.isError && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0911"
+              presentation="toast"
               severity="error"
               action={
                 <Button color="inherit" onClick={() => list.refetch()}>
@@ -300,7 +306,7 @@ export default function StudentRecordTransitions() {
               }
             >
               Student transitions could not be loaded.
-            </Alert>
+            </StudentFeedback>
           )}
           <Box
             role="tabpanel"
@@ -475,10 +481,10 @@ export default function StudentRecordTransitions() {
                 <Typography variant="body2">{selected.reason}</Typography>
                 <Typography variant="body2">Effective: {fDate(selected.effectiveDate)}</Typography>
                 {selected.status === 'AwaitingAdmission' && (
-                  <Alert severity="info">
+                  <StudentFeedback notificationKey="STU-0912" presentation="inline" severity="info">
                     Records approval is complete. Finish Admissions and Onboarding before this
                     return becomes active.
-                  </Alert>
+                  </StudentFeedback>
                 )}
                 {selected.admissionInquiryId && canViewInquiries && (
                   <Button
@@ -499,10 +505,14 @@ export default function StudentRecordTransitions() {
                   </Button>
                 )}
                 {selected.lastError && (
-                  <Alert severity="warning">
+                  <StudentFeedback
+                    notificationKey="STU-0913"
+                    presentation="persistent"
+                    severity="warning"
+                  >
                     This transition needs attention before application. Review its required checks
                     and dependent records.
-                  </Alert>
+                  </StudentFeedback>
                 )}
                 {selected.history.map((event, index) => (
                   <Typography key={index} variant="body2">
@@ -529,9 +539,14 @@ export default function StudentRecordTransitions() {
                   review: {renewal.portalReviewRequired ? 'Required' : 'Not required'}
                 </Typography>
                 {renewal.issues.map((issue, index) => (
-                  <Alert key={index} severity="warning">
+                  <StudentFeedback
+                    notificationKey="STU-0914"
+                    presentation="persistent"
+                    key={index}
+                    severity="warning"
+                  >
                     {issue.message}
-                  </Alert>
+                  </StudentFeedback>
                 ))}
                 <RenewalPortalAccounts
                   key={renewal.id}
@@ -541,7 +556,15 @@ export default function StudentRecordTransitions() {
                 />
               </>
             )}
-            {failure && <Alert severity="error">{failure}</Alert>}
+            {failure && (
+              <StudentFeedback
+                notificationKey="STU-0915"
+                presentation="persistent"
+                severity="error"
+              >
+                {failure}
+              </StudentFeedback>
+            )}
             {command && (
               <TextField
                 label="Reason or review remarks"
@@ -557,11 +580,15 @@ export default function StudentRecordTransitions() {
               />
             )}
             {correction && (
-              <Alert severity={correction.row.ready ? 'info' : 'warning'}>
+              <StudentFeedback
+                notificationKey="STU-0916"
+                presentation={correction.row.ready ? 'inline' : 'persistent'}
+                severity={correction.row.ready ? 'info' : 'warning'}
+              >
                 {correction.row.ready
                   ? 'The correction preview passed. Submit it for the required review.'
                   : correction.row.issues.map((issue) => issue.message).join('; ')}
-              </Alert>
+              </StudentFeedback>
             )}
           </Stack>
         </DialogScrollContent>

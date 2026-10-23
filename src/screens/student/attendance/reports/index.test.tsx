@@ -27,6 +27,7 @@ const state = vi.hoisted(() => ({
   isError: false,
   refetch: vi.fn(),
   query: vi.fn(),
+  table: vi.fn(),
 }));
 
 vi.mock('../setting/attendance-context', () => ({
@@ -59,18 +60,22 @@ vi.mock('./components/AttendanceAiReportButton', () => ({
   AttendanceAiReportButton: () => <button type="button">Generate with AI</button>,
 }));
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ data, noDataText }: { data: Record<string, unknown>[]; noDataText: string }) => (
-    <div>
-      {data.length
-        ? data.map((row) => (
-            <div key={String(row.studentId)}>
-              {String(row.fullName)} {String(row.percentageLabel)} {String(row.completion)}{' '}
-              {String(row.calculationState)} {String(row.targetState)}
-            </div>
-          ))
-        : noDataText}
-    </div>
-  ),
+  default: (props: { data: Record<string, unknown>[]; noDataText: string }) => {
+    state.table(props);
+    const { data, noDataText } = props;
+    return (
+      <div>
+        {data.length
+          ? data.map((row) => (
+              <div key={String(row.studentId)}>
+                {String(row.fullName)} {String(row.percentageLabel)} {String(row.completion)}{' '}
+                {String(row.calculationState)} {String(row.targetState)}
+              </div>
+            ))
+          : noDataText}
+      </div>
+    );
+  },
 }));
 
 describe('canonical attendance register', () => {
@@ -98,6 +103,18 @@ describe('canonical attendance register', () => {
       }),
       { skip: false }
     );
+  });
+  it('uses Export as the button label without changing loaded-page report scope', () => {
+    render(<AttendanceReportScreen />);
+    expect(state.table).toHaveBeenCalledWith(
+      expect.objectContaining({
+        exportLabel: 'Export',
+        serverSidePagination: true,
+        rowsPerPage: 50,
+        data: [expect.objectContaining({ studentId: 'student-1' })],
+      })
+    );
+    expect(state.table.mock.lastCall?.[0].exportScope ?? 'loaded').toBe('loaded');
   });
   it('does not request attendance before school year context is ready', () => {
     state.year = '';

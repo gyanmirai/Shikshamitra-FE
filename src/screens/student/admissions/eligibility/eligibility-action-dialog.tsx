@@ -5,9 +5,10 @@ import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { EligibilityActionContext } from './eligibility-action-context';
 import {
@@ -67,7 +68,11 @@ export function EligibilityActionDialog({
     >
       <DialogScrollContent>
         <Stack spacing={2}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <StudentFeedback notificationKey="STU-0326" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
           <Typography variant="body2">{eligibilityActionDescriptions[action]}</Typography>
           {action !== 'evaluate' && (
             <EligibilityActionContext summary={summary} exceptionId={exceptionId} />

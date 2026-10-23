@@ -15,19 +15,11 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Stack,
-  Paper,
-  Alert,
-  Button,
-  Skeleton,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Stack, Paper, Button, Skeleton, Typography, DialogActions } from '@mui/material';
 import {
   useGetStudentRecordsSettingsQuery,
   useSaveStudentRecordsDraftMutation,
@@ -63,9 +55,9 @@ export default function RecordsSettings({ task = 'changes' }: { task?: RecordsSe
   if (scope === 'year' && !academicYearId)
     return (
       <RecordsSettingsWorkspace task={task}>
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0815" presentation="persistent" severity="warning">
           Select an academic year in the school context before configuring an override.
-        </Alert>
+        </StudentFeedback>
         <Button component={RouterLink} href={sectionPath(task)}>
           Open school defaults
         </Button>
@@ -75,7 +67,9 @@ export default function RecordsSettings({ task = 'changes' }: { task?: RecordsSe
     return (
       <RecordsSettingsWorkspace task={task} suffix={taskQuery(scope, academicYearId)}>
         {query.isError ? (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0816"
+            presentation="toast"
             severity="error"
             action={
               <Button color="inherit" onClick={() => query.refetch()}>
@@ -84,7 +78,7 @@ export default function RecordsSettings({ task = 'changes' }: { task?: RecordsSe
             }
           >
             Student Records settings could not be loaded. Retry before editing.
-          </Alert>
+          </StudentFeedback>
         ) : (
           <>
             <Skeleton variant="rounded" height={96} />
@@ -311,12 +305,14 @@ function RecordsSettingsEditor({
         </Typography>
       </Paper>
       {!canEdit && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0819" presentation="inline" severity="info">
           You can review these settings. Ask an authorized administrator to edit the draft.
-        </Alert>
+        </StudentFeedback>
       )}
       {failure && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0820"
+          presentation="persistent"
           severity="error"
           action={
             <Button color="inherit" onClick={() => guard.requestNavigation(reloadDraft)}>
@@ -325,10 +321,12 @@ function RecordsSettingsEditor({
           }
         >
           {failure}
-        </Alert>
+        </StudentFeedback>
       )}
       {roleQuery.isError && (task === 'changes' || task === 'access') && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0821"
+          presentation="toast"
           severity="error"
           action={
             <Button color="inherit" onClick={() => roleQuery.refetch()}>
@@ -338,7 +336,7 @@ function RecordsSettingsEditor({
         >
           Security roles could not be loaded. Existing selections are preserved; role selection is
           unavailable until this succeeds.
-        </Alert>
+        </StudentFeedback>
       )}
       <Box component="form" onSubmit={form.handleSubmit} noValidate>
         {task === 'changes' && <ChangesSettings {...editor} />}
@@ -362,9 +360,13 @@ function RecordsSettingsEditor({
               </Typography>
             ))}
             {!previewCurrent && (
-              <Alert severity="warning">
+              <StudentFeedback
+                notificationKey="STU-0822"
+                presentation="persistent"
+                severity="warning"
+              >
                 The draft changed after this preview. Preview again before publishing.
-              </Alert>
+              </StudentFeedback>
             )}
           </Stack>
         </DialogScrollContent>

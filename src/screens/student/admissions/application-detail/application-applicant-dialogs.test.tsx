@@ -42,7 +42,13 @@ vi.mock('src/redux/student/admissions/admission-applicants-api', () => ({
   useUpdateAdmissionApplicantNoteMutation: () => [state.updateNote, { isLoading: state.saving }],
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: state.toastSuccess, error: state.toastError },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: state.toastSuccess,
+    error: state.toastError,
+  },
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/empty-content', () => ({

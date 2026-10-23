@@ -44,7 +44,13 @@ vi.mock('react-redux', () => ({
     select({ globalState: { currentYear: mocks.year }, auth: { permissions: mocks.permissions } }),
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingSettingsQuery: () => mocks.query,
@@ -93,19 +99,27 @@ describe('Persisted onboarding settings year isolation', () => {
       wrapper: PersistedOnboardingSettingsProvider,
     });
     await act(async () => {
-      await expect(result.current.applyReadinessAccess(result.current.settings.readinessAccess)).rejects.toThrow('Add/Update');
+      await expect(
+        result.current.applyReadinessAccess(result.current.settings.readinessAccess)
+      ).rejects.toThrow('Add/Update');
       await expect(result.current.resetToInherited()).rejects.toThrow('Delete');
     });
     expect(mocks.save).not.toHaveBeenCalled();
     expect(mocks.remove).not.toHaveBeenCalled();
     mocks.permissions.push({ name: 'Students.Onboarding.Add', isGranted: true });
     rerender();
-    await act(async () => { await result.current.applyReadinessAccess(result.current.settings.readinessAccess); });
+    await act(async () => {
+      await result.current.applyReadinessAccess(result.current.settings.readinessAccess);
+    });
     expect(mocks.save).toHaveBeenCalledOnce();
-    await act(async () => { await expect(result.current.resetToInherited()).rejects.toThrow('Delete'); });
+    await act(async () => {
+      await expect(result.current.resetToInherited()).rejects.toThrow('Delete');
+    });
     mocks.permissions = [{ name: 'Students.Onboarding.Delete', isGranted: true }];
     rerender();
-    await act(async () => { await result.current.resetToInherited(); });
+    await act(async () => {
+      await result.current.resetToInherited();
+    });
     expect(mocks.remove).toHaveBeenCalledOnce();
   });
 
@@ -134,7 +148,7 @@ describe('Persisted onboarding settings year isolation', () => {
     mocks.query = { ...mocks.query, currentData: undefined, isError: true, refetch: vi.fn() };
     render(view());
     expect(screen.queryByTestId('saved-settings')).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('could not be loaded');
+    expect(screen.getByText('could not be loaded', { exact: false })).toBeVisible();
   });
 
   it('inherits saved school rules when the selected year has no override', () => {
@@ -149,9 +163,9 @@ describe('Persisted onboarding settings year isolation', () => {
     mocks.query = { ...mocks.query, data: rows, currentData: rows };
     render(view());
     expect(screen.queryByTestId('saved-settings')).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'saved rules have not been replaced with defaults'
-    );
+    expect(
+      screen.getByText('saved rules have not been replaced with defaults', { exact: false })
+    ).toBeVisible();
   });
 
   it.each([
@@ -175,7 +189,7 @@ describe('Persisted onboarding settings year isolation', () => {
       mocks.query = { ...mocks.query, isLoading: false, isError: true, refetch };
       rerender(view());
       expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
-      expect(screen.getByRole('alert')).toHaveTextContent('could not be loaded');
+      expect(screen.getByText('could not be loaded', { exact: false })).toBeVisible();
       expect(screen.queryByTestId('saved-settings')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
       expect(refetch).toHaveBeenCalledOnce();

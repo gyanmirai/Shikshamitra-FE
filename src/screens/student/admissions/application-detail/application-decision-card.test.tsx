@@ -117,7 +117,7 @@ it('preserves role and busy guards in compact mode', () => {
   mocks.decisions.mockReturnValue(decisions({ canDecide: false, canFinalize: false }));
   panel();
   expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
-  expect(screen.getByRole('alert')).toHaveTextContent('not available for your role');
+  expect(screen.getByText('not available for your role', { exact: false })).toBeVisible();
 });
 
 it('preserves finalization and the durable Onboarding handoff', () => {

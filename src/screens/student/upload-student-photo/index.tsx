@@ -13,6 +13,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { studentPermissions } from 'src/constants/student-menu';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -20,7 +21,6 @@ import { useGetStudentsByDivisionQuery, useUploadStudentPhotoMutation } from 'sr
 import {
   Box,
   Grid,
-  Alert,
   Select,
   Button,
   Divider,
@@ -147,9 +147,14 @@ const UploadStudentPhotoScreen = () => {
       {division && (
         <>
           {isError && (
-            <Alert severity="error" sx={{ my: 2 }}>
+            <StudentFeedback
+              notificationKey="STU-0674"
+              presentation="toast"
+              severity="error"
+              sx={{ my: 2 }}
+            >
               Unable to load students for the selected division.
-            </Alert>
+            </StudentFeedback>
           )}
           <CustomizableTable
             tableId="upload-student-photo"

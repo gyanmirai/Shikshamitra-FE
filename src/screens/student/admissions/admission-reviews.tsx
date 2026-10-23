@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Stack, Button, Checkbox, FormControlLabel } from '@mui/material';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
-import { Box, Alert, Stack, Button, Checkbox, FormControlLabel } from '@mui/material';
 import { useGetAdmissionReviewQueueQuery } from 'src/redux/student/admissions/admission-review-api';
 
 import { AdmissionQueryError } from './admission-query-error';
@@ -43,7 +44,11 @@ export default function AdmissionReviewsScreen() {
     setPagination((current) => ({ ...current, page: 0 }));
   };
   if (!permissions.view)
-    return <Alert severity="info">Review access is required to view this queue.</Alert>;
+    return (
+      <StudentFeedback notificationKey="STU-0153" presentation="inline" severity="info">
+        Review access is required to view this queue.
+      </StudentFeedback>
+    );
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs

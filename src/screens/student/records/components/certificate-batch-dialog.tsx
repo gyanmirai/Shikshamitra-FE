@@ -1,6 +1,9 @@
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { CertificateType, CertificateResponse } from 'src/redux/student/records/student-record-documents-api';
+import type {
+  CertificateType,
+  CertificateResponse,
+} from 'src/redux/student/records/student-record-documents-api';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -10,51 +13,106 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Stack, Alert, Button, TextField, DialogActions } from '@mui/material';
 import {
-  downloadRecordPdf, useVoidRecordDocumentMutation, useReprintRecordDocumentMutation,
-  useGetRecordCertificateBatchQuery, useDownloadRecordDocumentMutation, useDuplicateRecordCertificateMutation,
+  downloadRecordPdf,
+  useVoidRecordDocumentMutation,
+  useReprintRecordDocumentMutation,
+  useGetRecordCertificateBatchQuery,
+  useDownloadRecordDocumentMutation,
+  useDuplicateRecordCertificateMutation,
 } from 'src/redux/student/records/student-record-documents-api';
 
 import DocumentHistoryActions from './document-history-actions';
 import CertificatePreviewDialog from './certificate-preview-dialog';
 
-export default function CertificateBatchDialog({ batchId, certificateType, label, onClose }: {
-  batchId: string; certificateType: CertificateType; label: string; onClose: () => void;
+export default function CertificateBatchDialog({
+  batchId,
+  certificateType,
+  label,
+  onClose,
+}: {
+  batchId: string;
+  certificateType: CertificateType;
+  label: string;
+  onClose: () => void;
 }) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canIssue = hasGrantedPermission(permissions, 'Students.Records.Certificates.Add');
   const canVoid = hasGrantedPermission(permissions, 'Students.Records.Certificates.Add');
   const query = useGetRecordCertificateBatchQuery({ batchId, certificateType });
   const [view, setView] = useState<CertificateResponse | null>(null);
-  const [decision, setDecision] = useState<{ action: 'Reprint' | 'Duplicate' | 'Void'; certificate: CertificateResponse } | null>(null);
+  const [decision, setDecision] = useState<{
+    action: 'Reprint' | 'Duplicate' | 'Void';
+    certificate: CertificateResponse;
+  } | null>(null);
   const [error, setError] = useState('');
   const [download, downloadState] = useDownloadRecordDocumentMutation();
   const [reprint, reprintState] = useReprintRecordDocumentMutation();
   const [voidDocument, voidState] = useVoidRecordDocumentMutation();
   const [duplicate, duplicateState] = useDuplicateRecordCertificateMutation();
   const key = useRef('');
-  const busy = downloadState.isLoading || reprintState.isLoading || voidState.isLoading || duplicateState.isLoading;
-  const closeDecision = () => { setDecision(null); setError(''); key.current = ''; form.resetForm(); };
-  const form = useFormik({ initialValues: { reason: '' }, validationSchema: Yup.object({ reason: Yup.string().trim().min(5, 'Enter at least 5 characters.').max(2000).required('Enter a reason.') }),
-    onSubmit: async values => {
+  const busy =
+    downloadState.isLoading ||
+    reprintState.isLoading ||
+    voidState.isLoading ||
+    duplicateState.isLoading;
+  const closeDecision = () => {
+    setDecision(null);
+    setError('');
+    key.current = '';
+    form.resetForm();
+  };
+  const form = useFormik({
+    initialValues: { reason: '' },
+    validationSchema: Yup.object({
+      reason: Yup.string()
+        .trim()
+        .min(5, 'Enter at least 5 characters.')
+        .max(2000)
+        .required('Enter a reason.'),
+    }),
+    onSubmit: async (values) => {
       if (!decision?.certificate.certificateId) return;
-      setError(''); const id = decision.certificate.certificateId;
+      setError('');
+      const id = decision.certificate.certificateId;
       try {
-        if (decision.action === 'Reprint') downloadRecordPdf(await reprint({ kind: 'certificates', id, reason: values.reason.trim() }).unwrap(), `${decision.certificate.certificateNo}.pdf`);
-        else if (decision.action === 'Void') await voidDocument({ kind: 'certificates', id, reason: values.reason.trim() }).unwrap();
-        else { key.current ||= crypto.randomUUID(); await duplicate({ id, reason: values.reason.trim(), idempotencyKey: key.current }).unwrap(); }
-        shikshaMitraToast.success({ message: `${decision.action} recorded.` }); closeDecision();
-      } catch { setError('The certificate action could not be completed. Refresh and retry.'); }
+        if (decision.action === 'Reprint')
+          downloadRecordPdf(
+            await reprint({ kind: 'certificates', id, reason: values.reason.trim() }).unwrap(),
+            `${decision.certificate.certificateNo}.pdf`
+          );
+        else if (decision.action === 'Void')
+          await voidDocument({ kind: 'certificates', id, reason: values.reason.trim() }).unwrap();
+        else {
+          key.current ||= crypto.randomUUID();
+          await duplicate({
+            id,
+            reason: values.reason.trim(),
+            idempotencyKey: key.current,
+          }).unwrap();
+        }
+        shikshaMitraToast.success({ message: `${decision.action} recorded.` });
+        closeDecision();
+      } catch {
+        setError('The certificate action could not be completed. Refresh and retry.');
+      }
     },
   });
   const downloadCertificate = async (certificate: CertificateResponse) => {
     if (!certificate.certificateId) return;
     setError('');
-    try { downloadRecordPdf(await download({ kind: 'certificates', id: certificate.certificateId }).unwrap(), `${certificate.certificateNo}.pdf`); }
-    catch { setError('The certificate PDF could not be downloaded. Try again.'); }
+    try {
+      downloadRecordPdf(
+        await download({ kind: 'certificates', id: certificate.certificateId }).unwrap(),
+        `${certificate.certificateNo}.pdf`
+      );
+    } catch {
+      setError('The certificate PDF could not be downloaded. Try again.');
+    }
   };
   const columns: IColumn[] = [
     { id: 'student.studentName', label: 'Student', filterType: 'string' },
@@ -62,44 +120,224 @@ export default function CertificateBatchDialog({ batchId, certificateType, label
     { id: 'student.grNo', label: 'GR number', filterType: 'string' },
     { id: 'student.className', label: 'Class', filterType: 'string' },
     { id: 'student.divisionName', label: 'Division', filterType: 'string' },
-    { id: 'status', label: 'Status', filterType: 'string', render: value => <Label color={value === 'Cancelled' ? 'error' : 'success'}>{value === 'Cancelled' ? 'Voided' : value}</Label> },
-    { id: 'actions', label: 'Actions', isFilter: false, isSort: false, excludeFromExport: true, sticky: true,
+    {
+      id: 'status',
+      label: 'Status',
+      filterType: 'string',
+      render: (value) => (
+        <Label color={value === 'Cancelled' ? 'error' : 'success'}>
+          {value === 'Cancelled' ? 'Voided' : value}
+        </Label>
+      ),
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      isFilter: false,
+      isSort: false,
+      excludeFromExport: true,
+      sticky: true,
       render: (_, row) => {
-        const certificate = row as CertificateResponse; const cancelled = certificate.status === 'Cancelled';
-        return <DocumentHistoryActions number={certificate.certificateNo} actions={[
-          { label: 'View', icon: 'solar:eye-bold', disabled: busy, onClick: () => setView(certificate) },
-          { label: 'Download', icon: 'solar:download-bold', disabled: busy || cancelled, onClick: () => { downloadCertificate(certificate); } },
-          ...(canIssue ? [{ label: 'Reprint', icon: 'solar:printer-bold', disabled: busy || cancelled, onClick: () => setDecision({ action: 'Reprint' as const, certificate }) },
-            { label: 'Duplicate', icon: 'solar:copy-bold', disabled: busy || cancelled, onClick: () => setDecision({ action: 'Duplicate' as const, certificate }) }] : []),
-          ...(canVoid ? [{ label: 'Void', icon: 'solar:trash-bin-trash-bold', danger: true, disabled: busy || cancelled, onClick: () => setDecision({ action: 'Void' as const, certificate }) }] : []),
-        ]} />;
-      } },
+        const certificate = row as CertificateResponse;
+        const cancelled = certificate.status === 'Cancelled';
+        return (
+          <DocumentHistoryActions
+            number={certificate.certificateNo}
+            actions={[
+              {
+                label: 'View',
+                icon: 'solar:eye-bold',
+                disabled: busy,
+                onClick: () => setView(certificate),
+              },
+              {
+                label: 'Download',
+                icon: 'solar:download-bold',
+                disabled: busy || cancelled,
+                onClick: () => {
+                  downloadCertificate(certificate);
+                },
+              },
+              ...(canIssue
+                ? [
+                    {
+                      label: 'Reprint',
+                      icon: 'solar:printer-bold',
+                      disabled: busy || cancelled,
+                      onClick: () => setDecision({ action: 'Reprint' as const, certificate }),
+                    },
+                    {
+                      label: 'Duplicate',
+                      icon: 'solar:copy-bold',
+                      disabled: busy || cancelled,
+                      onClick: () => setDecision({ action: 'Duplicate' as const, certificate }),
+                    },
+                  ]
+                : []),
+              ...(canVoid
+                ? [
+                    {
+                      label: 'Void',
+                      icon: 'solar:trash-bin-trash-bold',
+                      danger: true,
+                      disabled: busy || cancelled,
+                      onClick: () => setDecision({ action: 'Void' as const, certificate }),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        );
+      },
+    },
   ];
   return (
-    <CustomDialog open handleClose={onClose} title={`${label} Certificates — Students`}
+    <CustomDialog
+      open
+      handleClose={onClose}
+      title={`${label} Certificates — Students`}
       titleInfo="Review students in this batch, download certificates, and use the available actions to manage issued certificates."
-      maxWidth="lg" hasForm={false} disableClose={busy} hasUnsavedChanges={false}>
+      maxWidth="lg"
+      hasForm={false}
+      disableClose={busy}
+      hasUnsavedChanges={false}
+    >
       <DialogScrollContent>
         <Stack spacing={1}>
-          {error && !decision && <Alert severity="error">{error}</Alert>}
-          <Box sx={{ height: 420, minHeight: 0 }}><CustomizableTable tableId="certificate-batch-students" tableTitle="Generated certificates for students"
-            columns={columns} data={query.currentData?.certificates ?? []} isLoading={query.isFetching} isPagination isSearch
-            noDataText="No certificates are available in this batch."
-            errorContent={query.isError ? <Alert severity="error" action={<Button size="small" startIcon={<Iconify icon="solar:restart-bold" />} onClick={() => query.refetch()}>Retry</Button>}>The student list could not be loaded.</Alert> : undefined}
-            wrapperProps={{ sx: { height: 1 } }} tableContainerProps={{ sx: { height: 1 } }} /></Box>
+          {error && !decision && (
+            <StudentFeedback notificationKey="STU-0789" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
+          <Box sx={{ height: 420, minHeight: 0 }}>
+            <CustomizableTable
+              tableId="certificate-batch-students"
+              tableTitle="Generated certificates for students"
+              columns={columns}
+              data={query.currentData?.certificates ?? []}
+              isLoading={query.isFetching}
+              isPagination
+              isSearch
+              noDataText="No certificates are available in this batch."
+              errorContent={
+                query.isError ? (
+                  <StudentFeedback
+                    notificationKey="STU-0790"
+                    presentation="toast"
+                    severity="error"
+                    action={
+                      <Button
+                        size="small"
+                        startIcon={<Iconify icon="solar:restart-bold" />}
+                        onClick={() => query.refetch()}
+                      >
+                        Retry
+                      </Button>
+                    }
+                  >
+                    The student list could not be loaded.
+                  </StudentFeedback>
+                ) : undefined
+              }
+              wrapperProps={{ sx: { height: 1 } }}
+              tableContainerProps={{ sx: { height: 1 } }}
+            />
+          </Box>
         </Stack>
       </DialogScrollContent>
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}><Button size="small" variant="outlined" startIcon={<Iconify icon="mingcute:close-line" />} onClick={onClose} disabled={busy}>Close</Button></DialogActions>
-      <CertificatePreviewDialog open={!!view} title="Generated Certificate" certificates={view ? [view] : []} onClose={() => setView(null)} />
-      <CustomDialog open={!!decision} handleClose={closeDecision} title={`${decision?.action ?? 'Review'} Certificate${decision ? ` — ${decision.certificate.certificateNo}` : ''}`}
-        titleInfo={decision?.action === 'Void' ? 'Enter a reason to void this certificate. Voided certificates cannot be downloaded or reprinted.' : 'Enter a reason for this certificate action. The reason will be recorded in its history.'}
-        maxWidth="sm" disableClose={busy} hasUnsavedChanges={form.dirty} onSubmit={event => { event.preventDefault(); form.submitForm(); }}>
-        <DialogScrollContent><Stack spacing={2}><TextField size="small" label="Reason" required multiline minRows={2} name="reason" value={form.values.reason}
-          onChange={form.handleChange} onBlur={form.handleBlur} disabled={busy} error={!!form.touched.reason && !!form.errors.reason}
-          helperText={form.touched.reason && form.errors.reason} />{error && <Alert severity="error">{error}</Alert>}</Stack></DialogScrollContent>
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}><Button size="small" variant="outlined" startIcon={<Iconify icon="mingcute:close-line" />} onClick={closeDecision} disabled={busy}>Cancel</Button><Button size="small" type="submit" variant="contained"
-          startIcon={<Iconify icon={decision?.action === 'Void' ? 'solar:trash-bin-trash-bold' : decision?.action === 'Reprint' ? 'solar:printer-bold' : 'solar:copy-bold'} />}
-          color={decision?.action === 'Void' ? 'error' : 'primary'} loading={busy} disabled={busy}>{decision?.action ?? 'Save'}</Button></DialogActions>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon="mingcute:close-line" />}
+          onClick={onClose}
+          disabled={busy}
+        >
+          Close
+        </Button>
+      </DialogActions>
+      <CertificatePreviewDialog
+        open={!!view}
+        title="Generated Certificate"
+        certificates={view ? [view] : []}
+        onClose={() => setView(null)}
+      />
+      <CustomDialog
+        open={!!decision}
+        handleClose={closeDecision}
+        title={`${decision?.action ?? 'Review'} Certificate${decision ? ` — ${decision.certificate.certificateNo}` : ''}`}
+        titleInfo={
+          decision?.action === 'Void'
+            ? 'Enter a reason to void this certificate. Voided certificates cannot be downloaded or reprinted.'
+            : 'Enter a reason for this certificate action. The reason will be recorded in its history.'
+        }
+        maxWidth="sm"
+        disableClose={busy}
+        hasUnsavedChanges={form.dirty}
+        onSubmit={(event) => {
+          event.preventDefault();
+          form.submitForm();
+        }}
+      >
+        <DialogScrollContent>
+          <Stack spacing={2}>
+            <TextField
+              size="small"
+              label="Reason"
+              required
+              multiline
+              minRows={2}
+              name="reason"
+              value={form.values.reason}
+              onChange={form.handleChange}
+              onBlur={form.handleBlur}
+              disabled={busy}
+              error={!!form.touched.reason && !!form.errors.reason}
+              helperText={form.touched.reason && form.errors.reason}
+            />
+            {error && (
+              <StudentFeedback
+                notificationKey="STU-0789"
+                presentation="persistent"
+                severity="error"
+              >
+                {error}
+              </StudentFeedback>
+            )}
+          </Stack>
+        </DialogScrollContent>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mingcute:close-line" />}
+            onClick={closeDecision}
+            disabled={busy}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            type="submit"
+            variant="contained"
+            startIcon={
+              <Iconify
+                icon={
+                  decision?.action === 'Void'
+                    ? 'solar:trash-bin-trash-bold'
+                    : decision?.action === 'Reprint'
+                      ? 'solar:printer-bold'
+                      : 'solar:copy-bold'
+                }
+              />
+            }
+            color={decision?.action === 'Void' ? 'error' : 'primary'}
+            loading={busy}
+            disabled={busy}
+          >
+            {decision?.action ?? 'Save'}
+          </Button>
+        </DialogActions>
       </CustomDialog>
     </CustomDialog>
   );

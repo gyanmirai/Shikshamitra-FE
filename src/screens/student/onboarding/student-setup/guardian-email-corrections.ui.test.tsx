@@ -11,7 +11,15 @@ const mocks = vi.hoisted(() => ({
   success: vi.fn(),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.success } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: mocks.success,
+  },
+}));
 vi.mock('src/components/customDialog', () => ({
   default: ({ children, title }: any) => (
     <div role="dialog" aria-label={title}>
@@ -65,9 +73,12 @@ describe('Case-scoped guardian email corrections', () => {
         onSaved={vi.fn()}
       />
     );
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Activate the student before correcting family details in Student Records.'
-    );
+    expect(
+      screen.getByText(
+        'Activate the student before correcting family details in Student Records.',
+        { exact: false }
+      )
+    ).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(mocks.save).not.toHaveBeenCalled();
   });

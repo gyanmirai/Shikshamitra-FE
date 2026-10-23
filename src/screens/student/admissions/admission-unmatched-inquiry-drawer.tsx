@@ -7,13 +7,13 @@ import { Iconify } from 'src/components/iconify';
 import { normalizeEmail } from 'src/utils/input-format';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
 import { useCreateAdmissionInquiryMutation } from 'src/redux/student/admissions/admission-inquiries-api';
 import {
   Box,
   Grid,
   Stack,
-  Alert,
   Button,
   Drawer,
   Divider,
@@ -119,7 +119,11 @@ export function AdmissionUnmatchedInquiryDrawer({
       </Stack>
       <Divider />
       <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
-        {error && <Alert severity="error">{error}</Alert>}
+        {error && (
+          <StudentFeedback notificationKey="STU-0155" presentation="persistent" severity="error">
+            {error}
+          </StudentFeedback>
+        )}
         <TextField
           select
           fullWidth

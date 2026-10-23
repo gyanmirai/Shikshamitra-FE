@@ -284,7 +284,8 @@ it('keeps real document blockers visible even when no write action is currently 
   summary.blockers = ['Independent review is still required.'];
   summary.requirements[0].status = 'pendingReview';
   renderWorkspace({ summary });
-  expect(screen.getByRole('alert')).toHaveTextContent('Independent review is still required.');
+  expect(screen.getByText('Independent review is still required.')).toBeVisible();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   expect(screen.getByText('0 of 1 required documents resolved')).toBeVisible();
 });
 
@@ -308,12 +309,11 @@ it('retains genuine missing or approval blockers alongside an inactive-stage rea
     'Approval is pending.',
   ];
   renderWorkspace({ summary });
-  expect(screen.getByRole('alert')).toHaveTextContent(
-    'Birth certificate is required. Approval is pending.'
-  );
-  expect(screen.getByRole('alert')).not.toHaveTextContent(
-    'This document verification stage is read-only.'
-  );
+  expect(screen.getByText('Birth certificate is required. Approval is pending.')).toBeVisible();
+  expect(
+    screen.queryByText('This document verification stage is read-only.')
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   expect(screen.getByText('Missing')).toBeVisible();
 });
 

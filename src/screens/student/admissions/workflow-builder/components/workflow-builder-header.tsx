@@ -3,10 +3,11 @@
 import type { ReactNode } from 'react';
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { Card, Stack } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { studentPaths } from 'src/constants/student-menu';
-import { Card, Alert, Stack } from '@mui/material';
 import { LoadingButton } from 'src/components/loading-button';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 export type WorkflowBuilderHeaderProps = {
@@ -139,16 +140,26 @@ export function WorkflowBuilderHeader({
         >
           {afterBreadcrumb}
           {readOnlyReason === 'permission' && (
-            <Alert severity="warning" sx={{ flexShrink: 0 }}>
+            <StudentFeedback
+              notificationKey="STU-0541"
+              presentation="inline"
+              severity="warning"
+              sx={{ flexShrink: 0 }}
+            >
               You can view this workflow, but Workflow Add permission is required to add stages,
               edit routes, or save this draft.
-            </Alert>
+            </StudentFeedback>
           )}
           {readOnlyReason === 'status' && (
-            <Alert severity="info" sx={{ flexShrink: 0 }}>
+            <StudentFeedback
+              notificationKey="STU-0542"
+              presentation="inline"
+              severity="info"
+              sx={{ flexShrink: 0 }}
+            >
               Published and historical versions are read-only. Create a new version to edit the
               journey; publishing remains available for eligible existing drafts.
-            </Alert>
+            </StudentFeedback>
           )}
           {children}
         </Card>

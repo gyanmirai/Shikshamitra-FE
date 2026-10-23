@@ -5,8 +5,9 @@ import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycl
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { Box, Alert, Stack, Button, Divider, Typography, IconButton } from '@mui/material';
+import { Box, Stack, Button, Divider, Typography, IconButton } from '@mui/material';
 import { useGetAdmissionCampusQuery } from 'src/redux/student/admissions/admission-campuses-api';
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
@@ -174,7 +175,9 @@ export function AdmissionOfferingMoreFilters({ cycles, cycle, values, onChange }
               }
             />
             {hierarchyQuery.isError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0128"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button size="small" color="inherit" onClick={() => hierarchyQuery.refetch()}>
@@ -183,7 +186,7 @@ export function AdmissionOfferingMoreFilters({ cycles, cycle, values, onChange }
                 }
               >
                 Could not load School level options.
-              </Alert>
+              </StudentFeedback>
             )}
             <CustomSelect
               options={[{ id: ALL_FILTER_VALUE, name: 'All school levels' }, ...stages]}
@@ -256,11 +259,14 @@ export function AdmissionOfferingMoreFilters({ cycles, cycle, values, onChange }
               variant="contained"
               startIcon={<Iconify icon="mdi:check" />}
               onClick={() => {
-                const cycleChanged = draft.admissionCycleId !== (values.admissionCycleId || cycle?.id);
+                const cycleChanged =
+                  draft.admissionCycleId !== (values.admissionCycleId || cycle?.id);
                 const stageChanged = draft.stageId !== values.stageId;
                 onChange({
                   ...draft,
-                  ...(cycleChanged ? { boardId: '', mediumId: '', stageId: '', standardId: '' } : {}),
+                  ...(cycleChanged
+                    ? { boardId: '', mediumId: '', stageId: '', standardId: '' }
+                    : {}),
                   ...(!cycleChanged && stageChanged ? { standardId: '' } : {}),
                 });
                 popover.onClose();

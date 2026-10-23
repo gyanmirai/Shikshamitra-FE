@@ -33,7 +33,13 @@ const hooks = vi.hoisted(() => ({
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: vi.fn(), info: hooks.info },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    info: hooks.info,
+  },
 }));
 vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
   useGetAdmissionIntakeCounsellorsQuery: (...args: unknown[]) => {

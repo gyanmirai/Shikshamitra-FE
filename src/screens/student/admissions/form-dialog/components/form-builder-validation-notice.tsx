@@ -2,7 +2,8 @@ import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import { getIn } from 'formik';
-import { Alert, Button } from '@mui/material';
+import { Button } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import {
   focusFirstFormikError,
   getFirstFormikErrorPath,
@@ -21,7 +22,9 @@ export function FormBuilderValidationNotice({ formik, onSelect }: Props) {
   const section = indices ? formik.values.sections[Number(indices[1])] : undefined;
   const field = indices?.[2] ? section?.fields[Number(indices[2])] : undefined;
   return (
-    <Alert
+    <StudentFeedback
+      notificationKey="STU-0366"
+      presentation="inline"
       severity="error"
       sx={{ flexShrink: 0 }}
       action={
@@ -40,6 +43,6 @@ export function FormBuilderValidationNotice({ formik, onSelect }: Props) {
       }
     >
       {typeof message === 'string' ? message : 'Check the highlighted form settings.'}
-    </Alert>
+    </StudentFeedback>
   );
 }

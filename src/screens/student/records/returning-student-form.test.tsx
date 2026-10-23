@@ -26,7 +26,15 @@ vi.mock('src/routes/components', () => ({
 vi.mock('src/hooks/use-unsaved-navigation', () => ({
   useUnsavedNavigation: () => ({ confirmation: null }),
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('src/components/form-section-card', () => ({
   FormSectionCard: ({ children }: any) => <section>{children}</section>,
 }));

@@ -8,7 +8,8 @@ import type {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Alert, Stack, Skeleton, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Card, Stack, Skeleton, Typography } from '@mui/material';
 
 import { WorkflowVersionHistory } from './workflow-version-history';
 import { WorkflowSimulationPanel } from './workflow-simulation-panel';
@@ -75,7 +76,12 @@ function WorkflowPreview({
   transitions: AdmissionWorkflowTransition[];
 }) {
   const stageById = new Map(stages.map((stage) => [stage.id, stage]));
-  if (stages.length === 0) return <Alert severity="info">Add stages to preview the journey.</Alert>;
+  if (stages.length === 0)
+    return (
+      <StudentFeedback notificationKey="STU-0566" presentation="inline" severity="info">
+        Add stages to preview the journey.
+      </StudentFeedback>
+    );
   return stages.map((stage) => {
     const outgoing = transitions
       .filter((transition) => transition.fromStageId === stage.id)
@@ -120,9 +126,15 @@ function WorkflowPreview({
               ))}
             </Stack>
           ) : !stage.isTerminalStage ? (
-            <Alert severity="warning" icon={false} sx={{ py: 0.5 }}>
+            <StudentFeedback
+              notificationKey="STU-0567"
+              presentation="persistent"
+              severity="warning"
+              icon={false}
+              sx={{ py: 0.5 }}
+            >
               No onward route
-            </Alert>
+            </StudentFeedback>
           ) : null}
         </Stack>
       </Card>
@@ -135,11 +147,15 @@ function WorkflowUsage({ usage, loading }: { usage?: AdmissionWorkflowUsage; loa
   if (!usage) return null;
   return (
     <>
-      <Alert severity={usage.canDelete ? 'info' : 'warning'}>
+      <StudentFeedback
+        notificationKey="STU-0568"
+        presentation={usage.canDelete ? 'inline' : 'persistent'}
+        severity={usage.canDelete ? 'info' : 'warning'}
+      >
         {usage.canDelete
           ? 'This draft is not in use.'
           : 'This workflow is in use and cannot be deleted.'}
-      </Alert>
+      </StudentFeedback>
       <Box
         sx={{
           display: 'grid',

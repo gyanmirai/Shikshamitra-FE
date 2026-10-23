@@ -2,13 +2,17 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 
 import { useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
-import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, Typography, LinearProgress } from '@mui/material';
 import { emptyCondition } from 'src/redux/student/admissions/admission-condition-rule';
+import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { getTypedConditionFields } from './admission-condition-fields';
 import { AdmissionConditionEditor } from './admission-condition-editor';
-import { hasInquiryCondition, INQUIRY_RULE_REPLACEMENT_MESSAGE } from '../workflow-inquiry-retirement';
+import {
+  hasInquiryCondition,
+  INQUIRY_RULE_REPLACEMENT_MESSAGE,
+} from '../workflow-inquiry-retirement';
 
 import type { AdmissionConditionField } from './admission-condition-fields';
 
@@ -32,10 +36,7 @@ export function AdmissionConditionFormPicker({
   readOnly?: boolean;
   strictTypes?: boolean;
   groupLabel?: string;
-  getFields?: (
-    form: AdmissionForm | undefined,
-    source: 'application'
-  ) => AdmissionConditionField[];
+  getFields?: (form: AdmissionForm | undefined, source: 'application') => AdmissionConditionField[];
 }) {
   const [localFormId, setLocalFormId] = useState('');
   const formId = formDefinitionId ?? localFormId;
@@ -45,9 +46,15 @@ export function AdmissionConditionFormPicker({
   if (legacyInquiry) {
     return (
       <Stack spacing={1}>
-        <Alert severity="info">{INQUIRY_RULE_REPLACEMENT_MESSAGE} The saved rule remains unchanged until you replace it.</Alert>
+        <StudentFeedback notificationKey="STU-0501" presentation="inline" severity="info">
+          {INQUIRY_RULE_REPLACEMENT_MESSAGE} The saved rule remains unchanged until you replace it.
+        </StudentFeedback>
         {!readOnly && (
-          <Button variant="outlined" size="small" onClick={() => onChange(JSON.stringify(emptyCondition()))}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => onChange(JSON.stringify(emptyCondition()))}
+          >
             Replace inquiry condition
           </Button>
         )}
@@ -82,7 +89,9 @@ export function AdmissionConditionFormPicker({
       />
       {formId && query.isFetching && <LinearProgress aria-label="Loading published form fields" />}
       {formId && query.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0502"
+          presentation="persistent"
           severity="warning"
           action={
             <Button size="small" onClick={query.refetch}>
@@ -93,7 +102,7 @@ export function AdmissionConditionFormPicker({
           {strictTypes
             ? 'Fields for the selected form could not load. Retry before configuring this criterion.'
             : 'Fields for the selected form could not load. Retry or enter a known field directly.'}
-        </Alert>
+        </StudentFeedback>
       )}
       {detail &&
         !query.isError &&
@@ -108,7 +117,10 @@ export function AdmissionConditionFormPicker({
         strictTypes={strictTypes}
         groupLabel={groupLabel}
         onChange={onChange}
-        fields={getFields(detail && !query.isError && detail.purpose !== 0 ? detail : undefined, 'application')}
+        fields={getFields(
+          detail && !query.isError && detail.purpose !== 0 ? detail : undefined,
+          'application'
+        )}
       />
       <Typography variant="caption" color="text.secondary">
         A missing field pauses this requirement. “Is empty” matches an answer explicitly saved

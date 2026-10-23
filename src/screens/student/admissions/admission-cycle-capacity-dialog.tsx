@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   type AdmissionCycle,
@@ -12,7 +13,6 @@ import {
 import {
   Box,
   Chip,
-  Alert,
   Stack,
   Table,
   Button,
@@ -144,7 +144,9 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
             </Stack>
           )}
           {isError && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0034"
+              presentation="toast"
               severity="error"
               action={
                 <Button color="inherit" size="small" onClick={() => refetch()}>
@@ -153,7 +155,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
               }
             >
               Capacity and reservation details could not be loaded.
-            </Alert>
+            </StudentFeedback>
           )}
 
           {data && (
@@ -182,30 +184,38 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
               </Box>
 
               {data.unconfiguredOfferingCount > 0 && (
-                <Alert severity="warning">
+                <StudentFeedback
+                  notificationKey="STU-0035"
+                  presentation="persistent"
+                  severity="warning"
+                >
                   {data.unconfiguredOfferingCount} of {data.offeringCount} offerings have no
                   capacity yet. Configure them before applications reach seat allocation.
-                </Alert>
+                </StudentFeedback>
               )}
               {data.notSeatManagedOfferingCount > 0 && (
-                <Alert severity="info">
+                <StudentFeedback notificationKey="STU-0036" presentation="inline" severity="info">
                   {data.notSeatManagedOfferingCount} of {data.offeringCount} offerings do not use a
                   Seat stage. Assign a published Admission Stage workflow with a Seat stage before
                   configuring capacity.
-                </Alert>
+                </StudentFeedback>
               )}
               {data.overCapacityOfferingCount > 0 && (
-                <Alert severity="error">
+                <StudentFeedback
+                  notificationKey="STU-0037"
+                  presentation="persistent"
+                  severity="error"
+                >
                   {data.overCapacityOfferingCount} offerings are over capacity. Review them
                   immediately.
-                </Alert>
+                </StudentFeedback>
               )}
               {isReadOnly && data.offeringCount > 0 && (
-                <Alert severity="info">
+                <StudentFeedback notificationKey="STU-0038" presentation="inline" severity="info">
                   {canManage
                     ? 'Closed or archived admission periods are read-only.'
                     : 'You can view capacity, but you do not have permission to change it.'}
-                </Alert>
+                </StudentFeedback>
               )}
 
               {editing && (
@@ -262,10 +272,10 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
 
               <Divider />
               {!data.offerings.length ? (
-                <Alert severity="info">
+                <StudentFeedback notificationKey="STU-0039" presentation="inline" severity="info">
                   No offerings are linked to this admission period yet. Create an offering before
                   setting capacity.
-                </Alert>
+                </StudentFeedback>
               ) : (
                 <TableContainer sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}>
                   <Table size="small" aria-label={`Capacity for ${cycle.name}`}>

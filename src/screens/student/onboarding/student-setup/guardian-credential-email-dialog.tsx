@@ -6,9 +6,10 @@ import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { useEnableGuardianCredentialEmailMutation } from 'src/redux/student/onboarding/student-onboarding-api';
 
 export default function GuardianCredentialEmailDialog({
@@ -86,7 +87,11 @@ export default function GuardianCredentialEmailDialog({
               slotProps={{ htmlInput: { maxLength: 400 } }}
             />
           </ShakingTextField>
-          {formik.status && <Alert severity="error">{formik.status}</Alert>}
+          {formik.status && (
+            <StudentFeedback notificationKey="STU-0946" presentation="persistent" severity="error">
+              {formik.status}
+            </StudentFeedback>
+          )}
         </Stack>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
@@ -95,7 +100,8 @@ export default function GuardianCredentialEmailDialog({
           variant="outlined"
           startIcon={<Iconify icon="mdi:close" />}
           onClick={() => {
-            if (!formik.dirty || window.confirm('Are you sure you want to leave this page?')) onClose();
+            if (!formik.dirty || window.confirm('Are you sure you want to leave this page?'))
+              onClose();
           }}
           disabled={busy}
         >

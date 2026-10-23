@@ -7,8 +7,9 @@ import { RouterLink } from 'src/routes/components';
 import { studentPaths } from 'src/constants/student-menu';
 import { useGetStudentByIdQuery } from 'src/redux/student';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Grid, Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { Grid, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 export type ProfileAcademicYearContext = { id?: string; name?: string };
 type Props = {
@@ -68,7 +69,9 @@ export function StudentProfileDataBoundary({
     return (
       <>
         {header}
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0757"
+          presentation="toast"
           severity="error"
           action={
             <Button
@@ -82,7 +85,7 @@ export function StudentProfileDataBoundary({
         >
           Unable to load this student profile. Please try again. If the problem continues, check
           your student record access.
-        </Alert>
+        </StudentFeedback>
       </>
     );
   }
@@ -98,10 +101,10 @@ export function StudentProfileDataBoundary({
             { name: 'Student summary' },
           ]}
         />
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0758" presentation="inline" severity="info">
           School rules allow a read-only summary during provisioning. Complete onboarding to open
           the full permanent profile.
-        </Alert>
+        </StudentFeedback>
         <Typography variant="h6">
           {[student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') ||
             'Restricted student identity'}
@@ -127,7 +130,9 @@ export function StudentProfileDataBoundary({
     <>
       {header}
       {query.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0759"
+          presentation="toast"
           severity="error"
           action={
             <Button onClick={() => query.refetch()} disabled={query.isFetching}>
@@ -136,13 +141,18 @@ export function StudentProfileDataBoundary({
           }
         >
           The profile could not be refreshed. Your current view and draft have been kept.
-        </Alert>
+        </StudentFeedback>
       )}
       {children(student, query.refetch)}
       {student.maskedFields?.length ? (
-        <Alert severity="info" sx={{ my: 1.5 }}>
+        <StudentFeedback
+          notificationKey="STU-0760"
+          presentation="inline"
+          severity="info"
+          sx={{ my: 1.5 }}
+        >
           Some sensitive fields are restricted by school policy.
-        </Alert>
+        </StudentFeedback>
       ) : null}
     </>
   );

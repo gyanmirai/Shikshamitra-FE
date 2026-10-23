@@ -58,7 +58,7 @@ describe('five-stage configuration boundaries', () => {
     const decision = { ...stage(7), isRequired: false, allowManualSkip: true };
     expect(normalizeStageConfiguration(decision)).toBe(decision);
   });
-  it('retains form resubmission and verification contracts while always allowing save and resume', () => {
+  it('retains form resubmission settings while removing retired section verification', () => {
     const result = configuration(
       normalizeStageConfiguration(
         stage(1, {
@@ -83,7 +83,8 @@ describe('five-stage configuration boundaries', () => {
         allowSaveAndResume: true,
         maxSubmissionAttempts: 7,
         autoAdvanceOnSubmit: true,
-        verificationSectionCodes: ['CONTACT'],
+        requireSectionVerification: false,
+        verificationSectionCodes: [],
       },
     });
   });

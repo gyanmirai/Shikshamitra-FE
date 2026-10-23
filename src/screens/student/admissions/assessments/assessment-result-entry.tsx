@@ -1,8 +1,9 @@
 import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/admission-assessment-types';
 
 import CustomSelect from 'src/components/custom-select';
+import { Box, Stack, InputAdornment } from '@mui/material';
 import { LoadingButton } from 'src/components/loading-button';
-import { Box, Stack, Alert, InputAdornment } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { validateAssessmentSubjectValues } from './assessment-subject-results';
@@ -26,9 +27,9 @@ export function AssessmentResultEntry({
   const { formik } = quick;
   if (assessment.policy.scoringMode === 'subjects' && !quick.profile)
     return (
-      <Alert severity="warning">
+      <StudentFeedback notificationKey="STU-0267" presentation="persistent" severity="warning">
         The class assessment profile is unavailable. Refresh before recording results.
-      </Alert>
+      </StudentFeedback>
     );
   if (quick.profile) {
     return (

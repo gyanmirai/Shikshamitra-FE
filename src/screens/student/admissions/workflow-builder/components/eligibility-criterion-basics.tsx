@@ -4,8 +4,9 @@ import type {
   AdmissionEligibilityCriterion,
 } from 'src/redux/student/admissions/admission-eligibility-policy';
 
-import { Alert, Stack, TextField } from '@mui/material';
+import { Stack, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 export const ELIGIBILITY_KIND_OPTIONS = [
   { value: 'age', label: 'Age on a cutoff date' },
@@ -74,10 +75,10 @@ export function EligibilityCriterionBasics({
         }
       />
       {formik.values.kind === 'inquiry' && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0514" presentation="inline" severity="info">
           This saved criterion uses inquiry answers. Choose another check to replace it in this
           draft. Existing published applications keep their original criterion.
-        </Alert>
+        </StudentFeedback>
       )}
       <TextField
         fullWidth

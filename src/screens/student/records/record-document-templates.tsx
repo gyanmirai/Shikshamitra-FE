@@ -9,14 +9,16 @@ import type {
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
-import { TemplateIdentityAsset } from 'src/screens/setting/school-identity/components/template-identity-asset';
-import { selectionSchema, templateIdentitySchema } from 'src/screens/setting/school-identity/identity-form';
-import { CertificateIdentityAssets } from './components/certificate-identity-assets';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { TemplateIdentityAsset } from 'src/screens/setting/school-identity/components/template-identity-asset';
 import {
-  Alert,
+  selectionSchema,
+  templateIdentitySchema,
+} from 'src/screens/setting/school-identity/identity-form';
+import {
   Stack,
   Button,
   Checkbox,
@@ -31,6 +33,8 @@ import {
   useGetRecordCertificateTemplateQuery,
   useSaveRecordCertificateTemplateMutation,
 } from 'src/redux/student/records/student-record-documents-api';
+
+import { CertificateIdentityAssets } from './components/certificate-identity-assets';
 
 export default function RecordDocumentTemplates({
   open,
@@ -65,9 +69,14 @@ export default function RecordDocumentTemplates({
     >
       <DialogScrollContent>
         {query.isError ? (
-          <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
+          <StudentFeedback
+            notificationKey="STU-0803"
+            presentation="toast"
+            severity="error"
+            action={<Button onClick={() => query.refetch()}>Retry</Button>}
+          >
             Template could not be loaded.
-          </Alert>
+          </StudentFeedback>
         ) : (
           <Typography role="status">Loading template…</Typography>
         )}
@@ -142,8 +151,15 @@ function IdTemplateForm({ initial, onClose }: { initial: IdCardTemplate; onClose
                 helperText={form.touched[name] && form.errors[name]}
               />
             ))}
-            <TemplateIdentityAsset kind="logo" value={form.values.logo} disabled={state.isLoading} onBusy={setUploading}
-              onChange={(logo) => { form.setFieldValue('logo', logo); }} />
+            <TemplateIdentityAsset
+              kind="logo"
+              value={form.values.logo}
+              disabled={state.isLoading}
+              onBusy={setUploading}
+              onChange={(logo) => {
+                form.setFieldValue('logo', logo);
+              }}
+            />
             <FormControlLabel
               label="Include student photo when available"
               control={
@@ -188,12 +204,18 @@ function IdTemplateForm({ initial, onClose }: { initial: IdCardTemplate; onClose
               )}
             </Stack>
             {typeof form.errors.fields === 'string' && (
-              <Alert severity="error">{form.errors.fields}</Alert>
+              <StudentFeedback notificationKey="STU-0806" presentation="inline" severity="error">
+                {form.errors.fields}
+              </StudentFeedback>
             )}
             {error && (
-              <Alert severity="error">
+              <StudentFeedback
+                notificationKey="STU-0807"
+                presentation="persistent"
+                severity="error"
+              >
                 Template could not be saved. It may have changed; close and reload before retrying.
-              </Alert>
+              </StudentFeedback>
             )}
           </Stack>
         </FormBusyRegion>
@@ -264,10 +286,10 @@ function CertificateTemplateForm({
       <DialogScrollContent>
         <FormBusyRegion busy={state.isLoading} label="Saving template…">
           <Stack spacing={2}>
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0809" presentation="inline" severity="info">
               Use placeholders such as {'{{StudentName}}'}, {'{{GRNo}}'}, {'{{Class}}'},{' '}
               {'{{IssueDate}}'}, and {'{{CertificateNo}}'} in the text.
-            </Alert>
+            </StudentFeedback>
             <TextField
               fullWidth
               multiline
@@ -302,12 +324,22 @@ function CertificateTemplateForm({
               error={!!form.touched.schoolAddress && !!form.errors.schoolAddress}
               helperText={form.touched.schoolAddress && form.errors.schoolAddress}
             />
-            <CertificateIdentityAssets value={form.values} disabled={state.isLoading} onBusy={setUploading}
-              onChange={(choices) => { form.setFieldValue('identityChoices', choices); }} />
+            <CertificateIdentityAssets
+              value={form.values}
+              disabled={state.isLoading}
+              onBusy={setUploading}
+              onChange={(choices) => {
+                form.setFieldValue('identityChoices', choices);
+              }}
+            />
             {error && (
-              <Alert severity="error">
+              <StudentFeedback
+                notificationKey="STU-0810"
+                presentation="persistent"
+                severity="error"
+              >
                 Template could not be saved. Check the fields and your access before retrying.
-              </Alert>
+              </StudentFeedback>
             )}
           </Stack>
         </FormBusyRegion>

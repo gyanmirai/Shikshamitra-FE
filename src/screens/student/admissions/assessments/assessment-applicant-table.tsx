@@ -6,9 +6,9 @@ import { useResponsive } from 'src/hooks/use-responsive';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Button, Tooltip, Checkbox, Typography } from '@mui/material';
 
-import { assessmentActionLabels, latestAssessmentAttempt } from './assessment-action-model';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { getPrimaryAssessmentAction } from './assessment-workbench-model';
+import { assessmentActionLabels, latestAssessmentAttempt } from './assessment-action-model';
 
 import type { AssessmentAction } from './assessment-action-model';
 
@@ -293,7 +293,7 @@ export function AssessmentApplicantTable({
       columns={columns}
       data={data}
       tableTitle="Assessment students"
-      exportLabel="Export current page"
+      exportLabel="Export"
       wrapperProps={{ sx: { height: 1 } }}
       tableContainerProps={{ sx: { height: 1 } }}
       isSearch
