@@ -3,14 +3,24 @@ module: finance
 domain: fee-structure
 content_type: Reference
 status: canonical
-updated_on: 2026-10-22
+updated_on: 2026-10-23
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Fee Structure workspace UI
 
-The active screen at `/finance/settings/create-fee-structure` uses one class workspace for viewing and editing draft/published structures. This implementation covers configuration only. It does not change Fee Structure Assignment, demands, collections or refunds.
+The active screen at `/finance/settings/create-fee-structure` uses one class workspace for viewing and editing draft/published structures. Saving configuration creates no monetary transaction. Per-head collection eligibility is enforced by the backend during assignment/due generation.
+
+## Collect at admission
+
+The Add/Edit Fee Head dialog includes a **Collect at admission** switch, defaulting to off for existing and new heads. Its adjacent keyboard-focusable information icon explains that enabling it excludes the head from regular dues, Fee Collection and income, and records no admission payment. The enabled state also shows this consequence as visible helper text. There is no new admission payment screen or action.
+
+The row's choice stays local until it is saved and the owning structure draft is saved. The typed `StructureLine.collectAtAdmission` field round-trips through create/PATCH/read/revision; `buildStructureChanges` sends a changed boolean explicitly, including `false`. Admission-only heads do not require or automatically receive a payment frequency. Switching the option off restores normal payment-frequency validation. The existing read-only/published/busy states protect the choice with the rest of the form.
+
+The fee-head summary identifies **Admission only · Excluded from collection and income**, displays no applicable payment frequency, and disables schedule opening. Review counts admission-only heads and explains that its configured fixed-fee total includes reference amounts and is not a student's collectible balance. Publication coverage comes from the server and identifies the exclusion. Backend eligibility, migration and history rules are owned by the [backend workspace contract](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md#admission-only-fee-heads).
+
+Verify the switch with no published terms, help on keyboard focus, row edit/reopen, save/reload, revision, both themes and a narrow viewport. `feeStructureModel.test.ts` covers defaults, explicit boolean PATCH, clone retention and payment-term rules; `feeStructureFields.test.tsx` exercises the actual dialog and visible help.
 
 The workspace uses a visible structure list beside the three-step editor. Add and Copy share one row above the structure search. At narrower widths the same list opens in a drawer, with paired creation actions also available in the workspace toolbar. Structure navigation preserves each mounted editor's unsaved values and saved step. The earlier [UI and language proposal](fee-structure-ui-redesign.md) supplies background; the active layout is described here.
 

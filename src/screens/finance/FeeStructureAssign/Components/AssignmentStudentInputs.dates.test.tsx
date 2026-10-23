@@ -47,15 +47,23 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
 const year = { id: 'year', startDate: '2026-06-15', endDate: '2027-05-14' };
 const candidate = {
   heads: [
-    { feeHeadId: 'tuition', feeHeadName: 'Tuition', isOptional: false, configuredAmount: 1200 },
+    {
+      feeHeadId: 'tuition',
+      feeHeadName: 'Tuition',
+      isOptional: false,
+      configuredAmount: 1200,
+      supportsTransportSource: true,
+    },
   ],
 } as AssignmentCandidate;
 function Harness({
   changed,
   available = true,
+  allowTransportSource = true,
 }: {
   changed: (value: AssignmentRequest) => void;
   available?: boolean;
+  allowTransportSource?: boolean;
 }) {
   const [request, setRequest] = useState<AssignmentRequest>({
     studentId: 'student',
@@ -71,6 +79,7 @@ function Harness({
       request={request}
       disabled={false}
       canOverrideDates
+      allowTransportSource={allowTransportSource}
       yearBounds={available ? assignmentYearBounds(year, 'year') : undefined}
       onChange={(value) => {
         changed(value);
@@ -87,6 +96,15 @@ const openDates = () => {
 };
 
 describe('shared assignment date pickers', () => {
+  it('keeps individual transport sources out of the common bulk editor', () => {
+    const view = render(<Harness changed={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand Tuition' }));
+    expect(screen.getByRole('option', { name: 'Transport service' })).toBeInTheDocument();
+    view.rerender(<Harness changed={vi.fn()} allowTransportSource={false} />);
+    expect(screen.queryByRole('option', { name: 'Transport service' })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Academic year' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Custom dates' })).toBeInTheDocument();
+  });
   it('passes configured global bounds and preserves typed out-of-year values with an error', () => {
     const changed = vi.fn();
     render(<Harness changed={changed} />);

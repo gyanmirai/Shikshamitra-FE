@@ -7,10 +7,7 @@ import type {
 } from 'src/redux/finance/feeStructureWorkspace';
 
 export type StructurePolicyFamily = Exclude<PolicyFamily, 'concession'>;
-export const structurePolicyFamilies: StructurePolicyFamily[] = [
-  'collection',
-  'refund',
-];
+export const structurePolicyFamilies: StructurePolicyFamily[] = ['collection', 'refund'];
 
 /** Exact server contract: do not refill explicit nulls with a previous/default attachment. */
 export const structureCandidate = (source?: Partial<StructureRecord>): StructureCandidate => ({
@@ -20,6 +17,7 @@ export const structureCandidate = (source?: Partial<StructureRecord>): Structure
   feeHeads: (source?.feeHeads ?? []).map((line) => ({
     ...line,
     isVariable: line.isVariable ?? false,
+    collectAtAdmission: line.collectAtAdmission ?? false,
     payableMonth: line.payableMonth ?? 0,
     payableYear: line.payableYear ?? 0,
     paymentTermId: line.paymentTermId ?? null,
@@ -77,6 +75,7 @@ const fields = [
   'amount',
   'isOneTime',
   'isOptional',
+  'collectAtAdmission',
   'payableMonth',
   'payableYear',
 ] as const;
@@ -170,6 +169,7 @@ export function withDefaultPaymentTerm(
   term?: StructureSettings['terms'][number]
 ): StructureLine {
   if (
+    line.collectAtAdmission ||
     !term ||
     line.paymentTermId ||
     line.paymentTermVersionId ||
@@ -187,9 +187,9 @@ export function withDefaultPaymentTerm(
 }
 
 export const paymentTermError = (
-  line: Pick<StructureLine, 'paymentTermId' | 'paymentTermVersionId'>
+  line: Pick<StructureLine, 'paymentTermId' | 'paymentTermVersionId' | 'collectAtAdmission'>
 ) =>
-  !line.paymentTermId || !line.paymentTermVersionId
+  !line.collectAtAdmission && (!line.paymentTermId || !line.paymentTermVersionId)
     ? 'Select a published Payment Term for this Fee Head.'
     : '';
 

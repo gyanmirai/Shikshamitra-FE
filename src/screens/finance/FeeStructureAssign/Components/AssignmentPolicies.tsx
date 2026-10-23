@@ -7,8 +7,8 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { DetailField, DetailSection } from 'src/components/detail-view';
 import {
   useAssignmentPolicyOptionsQuery,
@@ -179,7 +179,7 @@ export default function AssignmentPolicies({
         onClose={restoreConfirmation.onFalse}
         title="Restore Default Policies?"
         icon="warning"
-        content="This will replace this student's policy selections with the fee structure defaults and clear the policy override reason. Fee amounts and service dates will stay as entered."
+        content="This will replace the current policy selections with the fee structure defaults and clear the policy override reason. Fee amounts and service dates will stay as entered."
         action={
           <Button
             variant="contained"

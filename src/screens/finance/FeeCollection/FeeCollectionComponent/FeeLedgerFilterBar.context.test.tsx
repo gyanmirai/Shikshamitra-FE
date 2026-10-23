@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 
 import FeeLedgerFilterBar, { FEE_LEDGER_INITIAL_FILTERS } from './FeeLedgerFilterBar';
@@ -22,8 +22,21 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/custom-tabs', () => ({ CustomTabs: ({ children }: any) => children }));
 vi.mock('src/components/custom-select', () => ({
-  default: ({ label, options, labelKey, valueKey }: any) => (
-    <select aria-label={label}>
+  default: ({
+    label,
+    options,
+    labelKey = 'label',
+    valueKey = 'value',
+    value,
+    disabled,
+    onChange,
+  }: any) => (
+    <select
+      aria-label={label}
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+    >
       {options.map((option: any) => (
         <option key={option[valueKey]} value={option[valueKey]}>
           {option[labelKey]}
@@ -42,6 +55,26 @@ vi.mock('framer-motion', () => ({
 
 describe('Finance ledger filter context', () => {
   beforeEach(() => vi.clearAllMocks());
+  it('allows either grouping when installment data is present', () => {
+    const onFilterChange = vi.fn();
+    render(
+      <FeeLedgerFilterBar
+        filters={FEE_LEDGER_INITIAL_FILTERS}
+        onFilterChange={onFilterChange}
+        groupByInstallment
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+    const grouping = screen.getByRole('combobox', { name: 'Group by' });
+    expect(grouping).toBeEnabled();
+    fireEvent.change(grouping, { target: { value: 'by-month' } });
+    expect(onFilterChange).toHaveBeenCalledWith({
+      ...FEE_LEDGER_INITIAL_FILTERS,
+      activeTab: 'by-month',
+    });
+    expect(screen.getByRole('option', { name: 'By installment' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'By Fee Head' })).toBeInTheDocument();
+  });
   it('retains default Student lookup and uses an explicit academic year when provided', () => {
     const view = render(
       <FeeLedgerFilterBar
@@ -83,6 +116,7 @@ describe('Finance ledger filter context', () => {
     expect(mocks.query).toHaveBeenLastCalledWith(
       expect.objectContaining({ options: { skip: true } })
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
     expect(screen.getByRole('option', { name: 'Form fee' })).toBeVisible();
     expect(screen.queryByRole('option', { name: 'Tuition' })).not.toBeInTheDocument();
   });

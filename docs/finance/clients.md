@@ -3,12 +3,16 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-23
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Finance frontend clients
+
+Collection Policy forms, summaries and saved details use calendar days for the grace period.
+Create/update and fee-head override requests omit `gracePeriodType`; the calculation selector has been removed.
+See the [backend policy contract](../../../Shikshamitra-BE/docs/modules/finance/api.md) for legacy snapshot compatibility.
 
 Collection Policy create/update/clone/read/version responses carry `allocationBasis`; no priority
 list is sent. `src/redux/feeCollection/feeCollection.ts` types the collect form's resolved basis,

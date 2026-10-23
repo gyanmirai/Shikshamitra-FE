@@ -246,18 +246,18 @@ export default function FinancePolicyDetailsDrawer({
                     {type === 'collection' && (
                       <>
                         <DetailSection
-                          title="Payment Allocation"
+                          title="Automatic Payment Priority"
                           icon={GlobalIcons.receiptIcon}
                           sx={{ mb: 2 }}
-                          helpText="Payments follow the top-to-bottom order shown on the fee collection screen."
+                          helpText="Applies when an amount is entered without selecting fees or charges. Selecting items limits the payment to those items. Ledger grouping does not change payment priority."
                         >
                           <DetailField
-                            label="Allocate payment by"
+                            label="Prioritize automatic payments by"
                             value={
                               policyDetails.allocationBasis === 'FeeHead'
-                                ? 'By fee head'
+                                ? 'Fee head first (A–Z)'
                                 : policyDetails.allocationBasis === 'Installment'
-                                  ? 'By installment'
+                                  ? 'Installment first (earliest due)'
                                   : 'Existing selection order'
                             }
                           />
@@ -273,8 +273,7 @@ export default function FinancePolicyDetailsDrawer({
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Grace Period"
-                                value={`${policyDetails.gracePeriodDays ?? 0} days`}
-                                secondary={`Type: ${policyDetails.gracePeriodType || 'Calendar'}`}
+                                value={`${policyDetails.gracePeriodDays ?? 0} calendar days`}
                               />
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>

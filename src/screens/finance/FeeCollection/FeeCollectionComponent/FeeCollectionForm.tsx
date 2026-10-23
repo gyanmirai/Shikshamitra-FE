@@ -1,7 +1,5 @@
 'use client';
 
-import CollectionPaymentDateField from '../Components/CollectionPaymentDateField';
-import { getCollectionPaymentDateError } from '../Components/collectionPaymentDate';
 
 import type { RootState } from 'src/redux/store';
 import type {
@@ -19,16 +17,14 @@ import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { arrayMove } from '@dnd-kit/sortable';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { shikshaMitraToast } from 'src/components/toast';
-
+import CustomTooltip from 'src/components/custom-tooltip';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import { financePermissions } from 'src/constants/finance-menu';
@@ -70,14 +66,16 @@ import { normalizeLedgerStatus } from './feeLedgerStatus';
 import UnifiedReceiptDisplay from './UnifiedReceiptDisplay';
 import CollectionLedgerTable from './CollectionLedgerTable';
 import SelectedCollectionItems from './SelectedCollectionItems';
-import { orderSelectedCollectionItems } from './collectionAllocationOrder';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import FeeCollectionOutcomePanel from './FeeCollectionOutcomePanel';
+import { resolveCollectionItems } from './collectionAllocationOrder';
 import { collectionPaymentDetails } from './collectionPaymentDetails';
 import { useFinancePermissions } from '../../hooks/useFinancePermissions';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
 import FeeCollectionPreviewDialog from './preview/FeeCollectionPreviewDialog';
+import CollectionPaymentDateField from '../Components/CollectionPaymentDateField';
+import { getCollectionPaymentDateError } from '../Components/collectionPaymentDate';
 import FeeLedgerFilterBar, { FEE_LEDGER_INITIAL_FILTERS } from './FeeLedgerFilterBar';
 import {
   collectionDisplayStudent,
@@ -163,11 +161,7 @@ const normalizeDetailValue = (value: unknown): string => {
 
 const validationSchema = Yup.object({
   selectedItems: Yup.array(),
-  charges: Yup.array().when('selectedItems', {
-    is: (selectedItems: any[]) => !selectedItems || selectedItems.length === 0,
-    then: (schema) => schema.min(1, 'Select at least one fee item or charge to collect'),
-    otherwise: (schema) => schema,
-  }),
+  charges: Yup.array(),
   payment: Yup.object({
     paymentMethod: Yup.string().required('Payment method is required'),
     amount: Yup.number()
@@ -671,6 +665,60 @@ const FeeCollectComponentForm = ({
     return map;
   }, [formData]);
 
+  const collectibleLedgerItems = useMemo(
+    () =>
+      ledgerData.monthWise.flatMap((group) => {
+        const period = toPeriod(
+          FeeMonth[group.month] as string,
+          group.year ?? currentYear?.year ?? new Date().getFullYear()
+        );
+        return group.items
+          .filter((item) => isLedgerItemCollectible(item))
+          .map((item) => {
+            const roundedDue = roundUpToRupee(item.due);
+            return {
+              status: item.status,
+              reconciliationAmount: item.reconciliationAmount ?? 0,
+              selection: {
+                dueFeeId: item.dueFeeId,
+                feeHeadId: item.feeHeadId,
+                period,
+                dueAmount: roundedDue,
+                originalDueAmount: item.due,
+                roundingAdjustment: safeRoundingDifference(item.due, roundedDue),
+                lateFeeAmount: item.lateFeeAmount,
+                installmentLabel: item.installmentLabel,
+              },
+            };
+          });
+      }),
+    [ledgerData, currentYear?.year]
+  );
+  // Amount-only entry uses eligible fees from the complete, unfiltered ledger.
+  const automaticFeeItems = collectibleLedgerItems
+    .filter(
+      ({ status, selection, reconciliationAmount }) =>
+        [
+          FeeCollectionStatusType.Pending,
+          FeeCollectionStatusType.Overdue,
+          FeeCollectionStatusType.Partial,
+        ].includes(status) &&
+        reconciliationAmount <= 0 &&
+        (formData?.allocationDueFeeOrder ?? []).includes(selection.dueFeeId ?? '')
+    )
+    .map(({ selection }) => selection);
+  const resolveItems = (items: SelectedItem[], charges: string[]) =>
+    resolveCollectionItems(
+      items,
+      charges,
+      automaticFeeItems,
+      usesAutomaticAllocation,
+      formData?.allocationDueFeeOrder ?? []
+    );
+  const hasInstallments = ledgerData.monthWise.some((group) =>
+    group.items.some((item) => Boolean(item.installmentId || item.installmentLabel))
+  );
+
   // ── Formik ─────────────────────────────────────────────────────────────────
   const formik = useFormik<FeeCollectionFormValues>({
     initialValues: buildInitialValues(student),
@@ -679,7 +727,10 @@ const FeeCollectComponentForm = ({
     validateOnChange: true,
     validate: (values) => {
       const errors: any = {};
-      const itemsTotal = values.selectedItems.reduce(
+      const resolvedItems = resolveItems(values.selectedItems, values.charges);
+      if (!resolvedItems.length && !values.charges.length)
+        errors.charges = 'Select at least one fee item or charge to collect';
+      const itemsTotal = resolvedItems.reduce(
         (s, i) => s + roundUpToRupee(i.dueAmount) + (i.lateFeeAmount ?? 0),
         0
       );
@@ -765,7 +816,8 @@ const FeeCollectComponentForm = ({
           (row) => row.paidAmount > 0 && row.type === 'charge' && row.sourceType === 'Charge'
         );
         if (hasFeeReceipt && hasChargeReceipt) {
-          const message = 'Non-cash payments require separate fee and charge receipts for finance verification. Collect fees and charges separately.';
+          const message =
+            'Non-cash payments require separate fee and charge receipts for finance verification. Collect fees and charges separately.';
           setCollectionError(message);
           shikshaMitraToast.error({ message });
           return;
@@ -814,17 +866,18 @@ const FeeCollectComponentForm = ({
     return itemsTotal + chargesTotal;
   }, [formik.values.selectedItems, formik.values.charges, chargesData]);
 
-  const finalAmount = subtotal;
-  const orderedSelectedItems = useMemo(
-    () =>
-      usesAutomaticAllocation
-        ? orderSelectedCollectionItems(
-            formik.values.selectedItems,
-            formData?.allocationDueFeeOrder ?? []
-          )
-        : formik.values.selectedItems,
-    [usesAutomaticAllocation, formik.values.selectedItems, formData?.allocationDueFeeOrder]
-  );
+  const orderedSelectedItems = resolveItems(formik.values.selectedItems, formik.values.charges);
+  const isAmountOnly =
+    usesAutomaticAllocation && !formik.values.selectedItems.length && !formik.values.charges.length;
+  const finalAmount =
+    orderedSelectedItems.reduce(
+      (sum, item) => sum + roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0),
+      0
+    ) +
+    selectedChargesInOrder(chargesData, formik.values.charges).reduce(
+      (sum, charge) => sum + charge.amount,
+      0
+    );
   const allocationFormValues = { ...formik.values, selectedItems: orderedSelectedItems };
   const showLiveAllocation =
     usesAutomaticAllocation &&
@@ -856,7 +909,7 @@ const FeeCollectComponentForm = ({
 
   const resolveAllocatedDueFeeId = (row: AllocatedFeeRow): string => {
     if (row.dueFeeId) return row.dueFeeId;
-    const matchingItem = formik.values.selectedItems.find(
+    const matchingItem = orderedSelectedItems.find(
       (item) => `${item.feeHeadId}-${item.period}` === row.key
     );
     if (!matchingItem) throw new Error(`Matching item not found for key ${row.key}`);
@@ -1010,7 +1063,7 @@ const FeeCollectComponentForm = ({
     const dueFeePayments = allocation.allocatedRows
       .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.principalPaidAmount > 0)
       .map((r) => {
-        const matchingItem = formik.values.selectedItems.find(
+        const matchingItem = orderedSelectedItems.find(
           (item) =>
             (r.dueFeeId && item.dueFeeId === r.dueFeeId) ||
             (!r.dueFeeId && `${item.feeHeadId}-${item.period}` === r.key)
@@ -1165,7 +1218,15 @@ const FeeCollectComponentForm = ({
       ...previous,
       selectionFilters: FEE_LEDGER_INITIAL_FILTERS.selectionFilters,
     }));
-    formik.setValues((values) => ({ ...values, selectedItems: [], charges: [] }), false);
+    formik.setValues(
+      (values) => ({
+        ...values,
+        selectedItems: [],
+        charges: [],
+        payment: { ...values.payment, amount: '' },
+      }),
+      false
+    );
   };
 
   const entryCount = useMemo(
@@ -1187,34 +1248,6 @@ const FeeCollectComponentForm = ({
   const firstSixPeriodSet = new Set(orderedAcademicPeriods.slice(0, 6));
   const lastSixPeriodSet = new Set(orderedAcademicPeriods.slice(-6));
 
-  const collectibleLedgerItems = useMemo(
-    () =>
-      ledgerData.monthWise.flatMap((group) => {
-        const period = toPeriod(
-          FeeMonth[group.month] as string,
-          group.year ?? currentYear?.year ?? new Date().getFullYear()
-        );
-        return group.items
-          .filter((item) => isLedgerItemCollectible(item))
-          .map((item) => {
-            const roundedDue = roundUpToRupee(item.due);
-            return {
-              status: item.status,
-              selection: {
-                dueFeeId: item.dueFeeId,
-                feeHeadId: item.feeHeadId,
-                period,
-                dueAmount: roundedDue,
-                originalDueAmount: item.due,
-                roundingAdjustment: safeRoundingDifference(item.due, roundedDue),
-                lateFeeAmount: item.lateFeeAmount,
-                installmentLabel: item.installmentLabel,
-              },
-            };
-          });
-      }),
-    [ledgerData, currentYear?.year]
-  );
   const pendingItems = collectibleLedgerItems
     .filter(({ status }) =>
       [
@@ -1741,7 +1774,7 @@ const FeeCollectComponentForm = ({
               sx={{ minHeight: 0, minWidth: 0, m: 0, p: 0, border: 0 }}
             >
               <FeeLedgerFilterBar
-                allocationBasis={usesAutomaticAllocation ? allocationBasis : undefined}
+                groupByInstallment={hasInstallments}
                 filters={filters}
                 onFilterChange={handleFilterChange}
                 academicYearMonths={academicYearMonths}
@@ -1753,13 +1786,11 @@ const FeeCollectComponentForm = ({
                 academicYearId={currentYear?.id}
                 feeHeads={collectionAdapter ? adapterFeeHeads : undefined}
               />
-              {formik.submitCount > 0 &&
-                !formik.values.selectedItems.length &&
-                !formik.values.charges.length && (
-                  <Typography variant="caption" color="error">
-                    Select at least one fee item or charge to collect
-                  </Typography>
-                )}
+              {formik.submitCount > 0 && finalAmount <= 0 && (
+                <Typography variant="caption" color="error">
+                  Select at least one fee item or charge to collect
+                </Typography>
+              )}
 
               <Box
                 sx={{
@@ -1771,18 +1802,9 @@ const FeeCollectComponentForm = ({
               >
                 <FeeCollectionWaiverContext.Provider value={!collectionAdapter}>
                   <CollectionLedgerTable
-                    allocationBasis={usesAutomaticAllocation ? allocationBasis : undefined}
-                    allocationDueFeeOrder={
-                      usesAutomaticAllocation ? formData?.allocationDueFeeOrder : undefined
-                    }
+                    groupByInstallment={hasInstallments}
                     data={filteredLedgerData}
-                    activeTab={
-                      usesAutomaticAllocation
-                        ? allocationBasis === 'FeeHead'
-                          ? 'by-fee-head'
-                          : 'by-month'
-                        : filters.activeTab
-                    }
+                    activeTab={filters.activeTab}
                     layout="ledger"
                     onPeriodFocus={(period) => {
                       const [periodYear, periodMonth] = period.split('-');
@@ -1816,7 +1838,7 @@ const FeeCollectComponentForm = ({
               }}
             >
               <FormSectionCard
-                descriptionTooltip="Select fees, choose a payment method, and record the collection."
+                descriptionTooltip="Enter an amount to apply automatic payment priority, or select specific fees or charges. Review the allocation before collecting."
                 title="Payment summary"
                 icon="solar:wallet-money-linear"
                 contentSpacing={1}
@@ -1832,7 +1854,9 @@ const FeeCollectComponentForm = ({
                       collectLoading ||
                       adaptedOutcomeUnresolved ||
                       collectionReadBlocked ||
-                      (!formik.values.selectedItems.length && !formik.values.charges.length)
+                      (!formik.values.selectedItems.length &&
+                        !formik.values.charges.length &&
+                        !formik.values.payment.amount)
                     }
                     onClick={handleRemoveAll}
                   >
@@ -1860,8 +1884,17 @@ const FeeCollectComponentForm = ({
                 {usesAutomaticAllocation && (
                   <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
                     {formData?.collectionPolicyName} · v{formData?.collectionPolicyVersion} ·{' '}
-                    {allocationBasis === 'FeeHead' ? 'By fee head' : 'By installment'} · Top to
-                    bottom as shown in the ledger
+                    Automatic priority:{' '}
+                    {allocationBasis === 'FeeHead'
+                      ? 'Fee head first (A–Z)'
+                      : 'Installment first (earliest due)'}
+                  </Typography>
+                )}
+                {usesAutomaticAllocation && (
+                  <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
+                    {isAmountOnly
+                      ? 'Enter an amount to allocate across outstanding fees automatically. Select specific fees or charges to limit the payment. Filters and grouping only change the ledger view.'
+                      : 'Payment is limited to your selected items, with fees paid in policy order.'}
                   </Typography>
                 )}
                 <Scrollbar
@@ -1883,28 +1916,42 @@ const FeeCollectComponentForm = ({
                     sx={{ m: 0, px: 0.5, py: 1, border: 0, minWidth: 0 }}
                   >
                     <SelectedCollectionItems
+                      emptyText={
+                        usesAutomaticAllocation
+                          ? 'Enter an amount to preview automatic fee allocation, or select specific items from the ledger.'
+                          : undefined
+                      }
                       fixedFeeOrder={usesAutomaticAllocation}
                       showAllocation={showLiveAllocation}
                       disabled={collectLoading || adaptedOutcomeUnresolved || collectionReadBlocked}
-                      fees={orderedSelectedItems.map((item) => ({
-                        id: selectionItemKey(item),
-                        label: feeHeadMap[item.feeHeadId] ?? item.feeHeadId,
-                        term:
-                          (usesAutomaticAllocation && item.installmentLabel) ||
-                          dayjs(`${item.period}-01`).format('MMM YYYY'),
-                        amount: showLiveAllocation
-                          ? (feeAllocationById.get(item.dueFeeId)?.paidAmount ?? 0)
-                          : roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0),
-                        remainingAmount: showLiveAllocation
-                          ? feeAllocationById.get(item.dueFeeId)?.remainingAmount
-                          : undefined,
-                        onRemove: () =>
-                          handleSelectionChange(
-                            formik.values.selectedItems.filter(
-                              (selected) => selectionItemKey(selected) !== selectionItemKey(item)
-                            )
-                          ),
-                      }))}
+                      fees={orderedSelectedItems
+                        .filter(
+                          (item) =>
+                            !isAmountOnly ||
+                            (feeAllocationById.get(item.dueFeeId)?.paidAmount ?? 0) > 0
+                        )
+                        .map((item) => ({
+                          id: selectionItemKey(item),
+                          label: feeHeadMap[item.feeHeadId] ?? item.feeHeadId,
+                          term:
+                            (usesAutomaticAllocation && item.installmentLabel) ||
+                            dayjs(`${item.period}-01`).format('MMM YYYY'),
+                          amount: showLiveAllocation
+                            ? (feeAllocationById.get(item.dueFeeId)?.paidAmount ?? 0)
+                            : roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0),
+                          remainingAmount: showLiveAllocation
+                            ? feeAllocationById.get(item.dueFeeId)?.remainingAmount
+                            : undefined,
+                          onRemove: isAmountOnly
+                            ? undefined
+                            : () =>
+                                handleSelectionChange(
+                                  formik.values.selectedItems.filter(
+                                    (selected) =>
+                                      selectionItemKey(selected) !== selectionItemKey(item)
+                                  )
+                                ),
+                        }))}
                       charges={selectedChargesInOrder(chargesData ?? [], formik.values.charges).map(
                         (charge) => ({
                           id: charge.chargeId,
@@ -2142,8 +2189,15 @@ const FeeCollectComponentForm = ({
                                       required
                                       value={value}
                                       onChange={(date) => formik.setFieldValue(fieldPath, date)}
-                                      onBlur={() => { formik.setFieldTouched(fieldPath, true); }}
-                                      error={(touched || formik.submitCount > 0) && typeof error === 'string' ? error : undefined}
+                                      onBlur={() => {
+                                        formik.setFieldTouched(fieldPath, true);
+                                      }}
+                                      error={
+                                        (touched || formik.submitCount > 0) &&
+                                        typeof error === 'string'
+                                          ? error
+                                          : undefined
+                                      }
                                     />
                                   ) : field.type === 'select' ? (
                                     <TextField
@@ -2390,7 +2444,8 @@ const FeeCollectComponentForm = ({
                             toPaise(Number(formik.values.payment.amount))) ||
                         adaptedOutcomeUnresolved ||
                         collectionReadBlocked ||
-                        (!formik.values.selectedItems.length && !formik.values.charges.length)
+                        finalAmount <= 0 ||
+                        Number(formik.values.payment.amount) <= 0
                       }
                       type="button"
                       color="inherit"

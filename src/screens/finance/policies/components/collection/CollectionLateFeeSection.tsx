@@ -101,9 +101,9 @@ export default function CollectionLateFeeSection({
                         <InputAdornment position="end">
                           <CollectionInfoTip
                             label="Grace period"
-                            title="Number of buffer days after the due date before late fees start accruing."
+                            title="Number of calendar days after the due date before late fees start accruing, including weekends and holidays."
                           />
-                          days
+                          calendar days
                         </InputAdornment>
                       ),
                     },
@@ -115,45 +115,6 @@ export default function CollectionLateFeeSection({
                     undefined
                   }
                 />
-              </ShakingTextField>
-            </Grid>
-
-            {/* Grace Day Type */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <ShakingTextField
-                error={formik.touched.gracePeriodType && Boolean(formik.errors.gracePeriodType)}
-              >
-                <FormControl
-                  fullWidth
-                  size="small"
-                  error={formik.touched.gracePeriodType && Boolean(formik.errors.gracePeriodType)}
-                >
-                  <InputLabel id="collection-grace-day-type">Grace day calculation *</InputLabel>
-                  <Select
-                    label="Grace day calculation *"
-                    labelId="collection-grace-day-type"
-                    name="gracePeriodType"
-                    value={formik.values.gracePeriodType}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                  >
-                    <MenuItem value="Calendar">
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Iconify icon={GlobalIcons.calendar} width={16} height={16} />
-                        <Typography variant="body2">Calendar Days (Standard)</Typography>
-                      </Stack>
-                    </MenuItem>
-                    <MenuItem value="WorkingDay">
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Iconify icon="solar:calendar-date-bold" width={16} height={16} />
-                        <Typography variant="body2">Working Days Only</Typography>
-                      </Stack>
-                    </MenuItem>
-                  </Select>
-                  {formik.touched.gracePeriodType && formik.errors.gracePeriodType && (
-                    <FormHelperText>{formik.errors.gracePeriodType as string}</FormHelperText>
-                  )}
-                </FormControl>
               </ShakingTextField>
             </Grid>
 

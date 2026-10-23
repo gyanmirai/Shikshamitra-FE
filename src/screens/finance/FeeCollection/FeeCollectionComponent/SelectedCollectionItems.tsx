@@ -26,7 +26,7 @@ export interface SelectedCollectionRow {
   label: string;
   term: string;
   amount: number;
-  onRemove: () => void;
+  onRemove?: () => void;
   remainingAmount?: number;
 }
 
@@ -38,6 +38,7 @@ interface Props {
   onMoveCharge: (from: number, to: number) => void;
   fixedFeeOrder?: boolean;
   showAllocation?: boolean;
+  emptyText?: string;
 }
 
 const rowLayout = {
@@ -125,19 +126,21 @@ function SortableRow({
         )}
       </Typography>
       <Box role="cell">
-        <CustomTooltip title={`Remove ${name} from collection`}>
-          <span>
-            <IconButton
-              aria-label={`Remove ${name} from collection`}
-              disabled={disabled}
-              size="small"
-              onClick={row.onRemove}
-              sx={{ p: 0.5, color: 'text.secondary' }}
-            >
-              <Iconify icon={GlobalIcons.cancel} width={18} />
-            </IconButton>
-          </span>
-        </CustomTooltip>
+        {row.onRemove && (
+          <CustomTooltip title={`Remove ${name} from collection`}>
+            <span>
+              <IconButton
+                aria-label={`Remove ${name} from collection`}
+                disabled={disabled}
+                size="small"
+                onClick={row.onRemove}
+                sx={{ p: 0.5, color: 'text.secondary' }}
+              >
+                <Iconify icon={GlobalIcons.cancel} width={18} />
+              </IconButton>
+            </span>
+          </CustomTooltip>
+        )}
       </Box>
     </Box>
   );
@@ -151,6 +154,7 @@ export default function SelectedCollectionItems({
   onMoveCharge,
   fixedFeeOrder = false,
   showAllocation = false,
+  emptyText = 'Select fees or charges from the ledger to start collecting.',
 }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -224,7 +228,7 @@ export default function SelectedCollectionItems({
       )}
       {fees.length === 0 && charges.length === 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-          Select fees or charges from the ledger to start collecting.
+          {emptyText}
         </Typography>
       )}
     </Box>
