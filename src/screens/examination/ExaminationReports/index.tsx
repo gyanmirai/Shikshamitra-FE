@@ -60,7 +60,9 @@ const ExaminationReports = ({ addReportDialog }: { addReportDialog: UseBooleanRe
     name: opt.label,
     id: `SubjectPerformance-${opt.label.replace(/\s+/g, '-')}-${index}`,
     icon: '',
-    description: opt.label,
+    description: 'Choose the available filters, preview the report, then queue the export.',
+    configurationHelp:
+      'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
     categoryId: 'SubjectPerformance',
     render: () => <SubjectPerformanceReports report={opt.label} />,
   }));
@@ -69,7 +71,9 @@ const ExaminationReports = ({ addReportDialog }: { addReportDialog: UseBooleanRe
     name: opt.label,
     id: `StudentRanking-${opt.label.replace(/\s+/g, '-')}-${index}`,
     icon: '',
-    description: opt.label,
+    description: 'Choose the available filters, preview the report, then queue the export.',
+    configurationHelp:
+      'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
     categoryId: 'StudentRanking',
     render: () => <StudentRankingReports report={opt.label} />,
   }));
@@ -78,7 +82,9 @@ const ExaminationReports = ({ addReportDialog }: { addReportDialog: UseBooleanRe
     name: opt.label,
     id: `StandardResultList-${opt.label.replace(/\s+/g, '-')}-${index}`,
     icon: '',
-    description: opt.label,
+    description: 'Choose the available filters, preview the report, then queue the export.',
+    configurationHelp:
+      'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
     categoryId: 'StandardResultList',
     render: () => <StandardResultListReports report={opt.label} />,
   }));
@@ -87,7 +93,9 @@ const ExaminationReports = ({ addReportDialog }: { addReportDialog: UseBooleanRe
     name: opt.label,
     id: `ConsolidatedMultiExam-${opt.label.replace(/\s+/g, '-')}-${index}`,
     icon: '',
-    description: opt.label,
+    description: 'Choose the available filters, preview the report, then queue the export.',
+    configurationHelp:
+      'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
     categoryId: 'ConsolidatedMultiExam',
     render: () => <ConsolidatedMultiExamReports report={opt.label} />,
   }));
@@ -96,7 +104,9 @@ const ExaminationReports = ({ addReportDialog }: { addReportDialog: UseBooleanRe
     name: opt.label,
     id: `StudentWiseResult-${opt.label.replace(/\s+/g, '-')}-${index}`,
     icon: '',
-    description: opt.label,
+    description: 'Choose the available filters, preview the report, then queue the export.',
+    configurationHelp:
+      'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
     categoryId: 'StudentWiseResult',
     render: () => <StudentWiseResultReports report={opt.label} />,
   }));
@@ -106,7 +116,9 @@ const ExaminationReports = ({ addReportDialog }: { addReportDialog: UseBooleanRe
       name: opt.label,
       id: `GeneralGradePerformance-${opt.label.replace(/\s+/g, '-')}-${index}`,
       icon: '',
-      description: opt.label,
+      description: 'Choose the available filters, preview the report, then queue the export.',
+      configurationHelp:
+        'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
       categoryId: 'GeneralGradePerformance',
       render: () => <GeneralGradePerformanceReports report={opt.label} />,
     })
@@ -119,7 +131,7 @@ const ExaminationReports = ({ addReportDialog }: { addReportDialog: UseBooleanRe
         heading="Generate Report"
         description="Generate and manage examination reports to gain insights into student performance, subject analysis, and overall academic outcomes."
         links={[
-          { name: 'Academic', href: '/academic/dashboard/' },
+          { name: 'Academics', href: '/academic/dashboard/' },
           { name: 'Examination' },
           { name: 'Generate Report' },
         ]}

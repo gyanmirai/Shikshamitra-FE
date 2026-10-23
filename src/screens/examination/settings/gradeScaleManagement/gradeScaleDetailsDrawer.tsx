@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+import HelpTooltip from 'src/components/help-tooltip';
 import {
   Box,
   Card,
@@ -15,7 +15,6 @@ import {
   Paper,
   Drawer,
   Button,
-  Divider,
   TableRow,
   TableBody,
   TableCell,
@@ -155,7 +154,7 @@ export default function GradeScaleDetailsDrawer({
                 <Typography variant="h6" fontWeight={700}>
                   {gradeScale.name}
                 </Typography>
-                <CustomTooltip
+                <HelpTooltip
                   arrow
                   placement="top"
                   title="View grade scale parameters, tier breakdown, and interactive simulator."
@@ -164,7 +163,7 @@ export default function GradeScaleDetailsDrawer({
                     icon="lucide:info"
                     sx={{ cursor: 'pointer', color: 'info.main', width: 18, height: 18 }}
                   />
-                </CustomTooltip>
+                </HelpTooltip>
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.5 }}>
                 {statusInfo && <Label color={statusInfo.color}>{statusInfo.label}</Label>}

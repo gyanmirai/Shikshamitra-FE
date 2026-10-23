@@ -9,22 +9,19 @@ import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import HelpTooltip from 'src/components/help-tooltip';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { AssignmentStatus, AssignmentSubmissionType } from 'src/enums/assignment';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
-import {
-  AssignmentStatus,
-  AssignmentSubmissionType,
-} from 'src/enums/assignment';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useGetAssignmentsQuery,
@@ -328,25 +325,8 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             dispatch(setIsChanges(false));
           }, 200);
         }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedAssignment ? 'Update Assignment' : 'Add Assignment'}
-            </Typography>
-            <CustomTooltip
-              sx={{ textAlign: 'justify' }}
-              arrow
-              placement="right"
-              title={
-                selectedAssignment
-                  ? 'You can update the assignment details including title, description, due date and other information'
-                  : 'You can create a new assignment by entering the title, description, due date and other required details'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={selectedAssignment ? 'Update Assignment' : 'Add Assignment'}
+        titleInfo="Set the assignment title, instructions, due date, and submission settings."
         maxWidth="md"
       >
         <AssignmentForm
@@ -500,8 +480,8 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         title="Close Assignment"
         content={
           <>
-            Close assignment <strong>{selectedAssignment?.title}</strong>? Students will no longer be
-            able to submit work.
+            Close assignment <strong>{selectedAssignment?.title}</strong>? Students will no longer
+            be able to submit work.
           </>
         }
         action={
@@ -557,14 +537,14 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Assignment Details</Typography>
-            <CustomTooltip
+            <HelpTooltip
               sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title="View complete details of the assignment including title, description, due date, submission status and other information"
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
+            </HelpTooltip>
           </Box>
         }
         open={viewAssignmentDetails.value}

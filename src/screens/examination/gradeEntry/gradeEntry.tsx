@@ -746,6 +746,7 @@ const GradeEntry = (props: TabComponentType) => {
       return (
         <CustomTooltip title={row.status === 1 ? 'Update Marks' : 'Assign Marks'} placement="left">
           <IconButton
+            aria-label={`${row.status === 1 ? 'Update' : 'Assign'} marks for ${row.studentName} (${row.grNo})`}
             size="small"
             onClick={() => {
               viewSubmissionDialog.onTrue();
@@ -981,7 +982,11 @@ const GradeEntry = (props: TabComponentType) => {
                     />
                   )}
                   <Typography variant="caption" color="text.secondary" aria-live="polite">
-                    {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : 'Not saved ·'}
+                    {saveState === 'saving'
+                      ? 'Saving…'
+                      : saveState === 'saved'
+                        ? 'Saved'
+                        : 'Not saved ·'}
                   </Typography>
                   {canManageMarks && saveState === 'failed' && (
                     <Button

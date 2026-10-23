@@ -217,6 +217,7 @@ const TimeTableCell = ({
               <Box className="action-menu">
                 {showThreeDots && (
                   <AdaptiveThreeDotsActions
+                    moreLabel={`More actions for ${slotData.subjects.map((subject: { name?: string; subjectName?: string }) => subject.name || subject.subjectName).join(', ')}`}
                     actions={[
                       {
                         id: 'teacher',
@@ -317,19 +318,8 @@ const TimeTableCell = ({
           <CustomDialog
             open={teacherDialog.value}
             handleClose={teacherDialog.onFalse}
-            title={
-              <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-                <Typography variant="h5">Assign Teacher</Typography>
-                <CustomTooltip
-                  arrow
-                  placement="right"
-                  sx={{ textAlign: 'justify' }}
-                  title="Assign teacher for subject for specific lecture"
-                >
-                  <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-                </CustomTooltip>
-              </Box>
-            }
+            title="Assign Teacher"
+            titleInfo="Assign a teacher to this subject and lecture."
             maxWidth="sm"
           >
             <AssignTeacher

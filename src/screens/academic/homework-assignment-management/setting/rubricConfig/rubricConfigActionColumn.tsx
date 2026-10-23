@@ -14,7 +14,6 @@ export const getRubricActionColumn = ({
   onEdit,
   onDuplicate,
   onPublish,
-  onVersion,
   onUsage,
   onArchive,
 }: RubricConfigTableProps): IColumn => ({
@@ -35,16 +34,16 @@ export const getRubricActionColumn = ({
       onEdit,
       onDuplicate,
       onPublish,
-      onVersion,
       onUsage,
       onArchive,
     });
 
     return (
       <AdaptiveThreeDotsActions
+        directActionLimit={2}
         actions={actions}
         placement="right-top"
-        moreLabel="More rubric actions"
+        moreLabel={`More actions for ${rubric.title}`}
       />
     );
   },

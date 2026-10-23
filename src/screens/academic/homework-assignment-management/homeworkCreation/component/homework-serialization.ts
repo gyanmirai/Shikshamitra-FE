@@ -1,6 +1,6 @@
 import type { Dayjs } from 'dayjs';
 
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { serializeLearningTaskDateTime } from 'src/utils/learning-task-date-time';
 
 export interface HomeworkScheduleFormValue {
   divisionId: string;
@@ -59,13 +59,13 @@ export const serializeHomeworkFormData = (values: HomeworkFormDataValues): FormD
     if (division.publishDate) {
       formData.append(
         `DivisionSchedules[${index}].PublishAt`,
-        dateConvertor(division.publishDate.format(dateFormat), false)
+        serializeLearningTaskDateTime(division.publishDate)
       );
     }
     if (division.dueDate) {
       formData.append(
         `DivisionSchedules[${index}].DueAt`,
-        dateConvertor(division.dueDate.format(dateFormat), false)
+        serializeLearningTaskDateTime(division.dueDate)
       );
     }
   });

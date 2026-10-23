@@ -1,4 +1,5 @@
 import { Box, Paper, Stack, Typography } from '@mui/material';
+import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 
 import { Iconify } from '../iconify';
 
@@ -39,25 +40,33 @@ export default function RightPanel({ selectedReport }: RightPanelProps) {
       }}
     >
       <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
-          <Box
-            sx={{
-              p: 1,
-              borderRadius: 1,
-              bgcolor: 'primary',
-              color: 'primary.main',
-              display: 'flex',
-            }}
-          >
-            <Iconify icon="proicons:document" width={32} />
-          </Box>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="h6">{selectedReport?.name}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {selectedReport?.description}
-            </Typography>
-          </Box>
-        </Stack>
+        {selectedReport.configurationHelp ? (
+          <FormSectionHeader
+            icon="mdi:file-document-outline"
+            title={selectedReport.name}
+            descriptionTooltip={selectedReport.configurationHelp}
+          />
+        ) : (
+          <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
+            <Box
+              sx={{
+                p: 1,
+                borderRadius: 1,
+                bgcolor: 'primary',
+                color: 'primary.main',
+                display: 'flex',
+              }}
+            >
+              <Iconify icon="proicons:document" width={32} />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h6">{selectedReport?.name}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {selectedReport?.description}
+              </Typography>
+            </Box>
+          </Stack>
+        )}
       </Box>
 
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>

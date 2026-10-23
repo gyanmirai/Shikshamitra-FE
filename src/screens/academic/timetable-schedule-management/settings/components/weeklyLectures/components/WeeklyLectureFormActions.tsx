@@ -38,7 +38,7 @@ export function WeeklyLectureFormActions({
         size="small"
         variant="contained"
       >
-        {isEdit ? 'Update' : 'Submit'}
+        Submit
       </LoadingButton>
     </DialogActions>
   );

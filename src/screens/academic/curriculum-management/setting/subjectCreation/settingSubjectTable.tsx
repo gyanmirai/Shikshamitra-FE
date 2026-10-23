@@ -169,7 +169,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
                 '&:hover': canView && value ? { textDecoration: 'underline' } : {},
               }}
             >
-              {value ? `Used in ${value} classes` : 'Unused'}
+              {value ? `Used in ${value} ${Number(value) === 1 ? 'class' : 'classes'}` : 'Unused'}
             </Typography>
           </Box>
         ),
@@ -265,6 +265,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
       />
 
       <CustomizableTable
+        tableTitle="Subjects"
         tableId="subject-data-table"
         isLoading={isLoading || isFetching}
         noDataText={

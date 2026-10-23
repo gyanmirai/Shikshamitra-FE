@@ -4,6 +4,7 @@ import { Box, Chip, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseWallClockTime, formatWallClockTime } from 'src/utils/time-of-day';
+import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 import { useGetExamScheduleQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import type { IExamFormValues } from '../type';
@@ -65,121 +66,129 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
   if (!examData) return null;
 
   return (
-    <CustomizableTable
-      tableId="subjects-table"
-      isPagination={false}
-      isFilter={false}
-      isSearch={false}
-      isShowedDense={false}
-      isLoading={scheduleLoading}
-      columns={[
-        {
-          id: 'subjectName',
-          label: 'Subject',
-          width: 260,
-          minWidth: 240,
-          align: 'left',
-          isFilter: true,
-          sticky: true,
-          isSort: true,
-          render(value, row) {
-            return (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Box
-                  sx={{
-                    width: 4,
-                    height: 18,
-                    borderRadius: 1,
-                    backgroundColor: row.subjectColor,
-                    flexShrink: 0,
-                  }}
-                />
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                    {value}
-                    {row.subjectCode ? ` (${row.subjectCode})` : ''}
-                  </Typography>
-                  {row.electiveGroupName && (
-                    <Chip
-                      label={row.electiveGroupName}
-                      size="small"
-                      color="warning"
-                      variant="soft"
-                      sx={{ fontSize: '0.62rem', height: 16, mt: 0.25 }}
-                    />
-                  )}
+    <>
+      <FormSectionHeader
+        title="Exam Timetable"
+        icon="mdi:calendar-clock"
+        descriptionTooltip="Review subject dates, school-local times, marks and allocated rooms."
+      />
+      <CustomizableTable
+        tableTitle="Exam Timetable"
+        tableId="subjects-table"
+        isPagination={false}
+        isFilter={false}
+        isSearch={false}
+        isShowedDense={false}
+        isLoading={scheduleLoading}
+        columns={[
+          {
+            id: 'subjectName',
+            label: 'Subject',
+            width: 260,
+            minWidth: 240,
+            align: 'left',
+            isFilter: true,
+            sticky: true,
+            isSort: true,
+            render(value, row) {
+              return (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box
+                    sx={{
+                      width: 4,
+                      height: 18,
+                      borderRadius: 1,
+                      backgroundColor: row.subjectColor,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                      {value}
+                      {row.subjectCode ? ` (${row.subjectCode})` : ''}
+                    </Typography>
+                    {row.electiveGroupName && (
+                      <Chip
+                        label={row.electiveGroupName}
+                        size="small"
+                        color="warning"
+                        variant="soft"
+                        sx={{ fontSize: '0.62rem', height: 16, mt: 0.25 }}
+                      />
+                    )}
+                  </Box>
                 </Box>
-              </Box>
-            );
+              );
+            },
           },
-        },
-        {
-          id: 'examDate',
-          label: 'Date',
-          align: 'left',
-          isFilter: true,
-          filterType: 'date',
-          isSort: true,
-          render: (value) => {
-            const d = dayjs(value);
-            return (
+          {
+            id: 'examDate',
+            label: 'Date',
+            align: 'left',
+            isFilter: true,
+            filterType: 'date',
+            isSort: true,
+            render: (value) => {
+              const d = dayjs(value);
+              return (
+                <Typography variant="caption" gutterBottom>
+                  {d.isValid() ? d.format('DD-MM-YYYY') : '-'}
+                </Typography>
+              );
+            },
+          },
+          {
+            id: 'startTime',
+            label: 'Start Time',
+            align: 'left',
+            isFilter: true,
+            isSort: true,
+            render: (value) => (
               <Typography variant="caption" gutterBottom>
-                {d.isValid() ? d.format('DD-MM-YYYY') : '-'}
+                {formatWallClockTime(value)}
               </Typography>
-            );
+            ),
           },
-        },
-        {
-          id: 'startTime',
-          label: 'Start Time',
-          align: 'left',
-          isFilter: true,
-          isSort: true,
-          render: (value) => (
-            <Typography variant="caption" gutterBottom>
-              {formatWallClockTime(value)}
-            </Typography>
-          ),
-        },
-        {
-          id: 'endTime',
-          label: 'End Time',
-          align: 'left',
-          isFilter: true,
-          isSort: true,
-          render: (value) => (
-            <Typography variant="caption" gutterBottom>
-              {formatWallClockTime(value)}
-            </Typography>
-          ),
-        },
-        {
-          id: 'totalMarks',
-          label: 'Total Marks',
-          align: 'left',
-          filterType: 'number',
-          isFilter: true,
-          isSort: true,
-        },
-        {
-          id: 'passingMarks',
-          label: 'Passing Marks',
-          align: 'left',
-          filterType: 'number',
-          isFilter: true,
-          isSort: true,
-        },
-        {
-          id: 'notes',
-          label: 'Notes',
-          align: 'left',
-          isFilter: true,
-          isSort: true,
-          render: (value: any) => <Typography variant="caption">{value || '-'}</Typography>,
-        },
-      ]}
-      data={sortedSubjects}
-    />
+          {
+            id: 'endTime',
+            label: 'End Time',
+            align: 'left',
+            isFilter: true,
+            isSort: true,
+            render: (value) => (
+              <Typography variant="caption" gutterBottom>
+                {formatWallClockTime(value)}
+              </Typography>
+            ),
+          },
+          {
+            id: 'totalMarks',
+            label: 'Total Marks',
+            align: 'left',
+            filterType: 'number',
+            isFilter: true,
+            isSort: true,
+          },
+          {
+            id: 'passingMarks',
+            label: 'Passing Marks',
+            align: 'left',
+            filterType: 'number',
+            isFilter: true,
+            isSort: true,
+          },
+          {
+            id: 'notes',
+            label: 'Notes',
+            align: 'left',
+            isFilter: true,
+            isSort: true,
+            render: (value: any) => <Typography variant="caption">{value || '-'}</Typography>,
+          },
+        ]}
+        data={sortedSubjects}
+      />
+    </>
   );
 };
 

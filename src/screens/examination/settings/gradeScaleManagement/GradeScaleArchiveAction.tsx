@@ -1,6 +1,6 @@
 import { Box, IconButton } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+import HelpTooltip from 'src/components/help-tooltip';
 
 type Props = {
   title: string;
@@ -11,7 +11,7 @@ type Props = {
 
 export function GradeScaleArchiveAction({ title, archived, disabled, onClick }: Props) {
   return (
-    <CustomTooltip title={title} arrow placement="top">
+    <HelpTooltip title={title} arrow placement="top">
       <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center' }}>
         <IconButton
           size="small"
@@ -31,6 +31,6 @@ export function GradeScaleArchiveAction({ title, archived, disabled, onClick }: 
           />
         </IconButton>
       </Box>
-    </CustomTooltip>
+    </HelpTooltip>
   );
 }

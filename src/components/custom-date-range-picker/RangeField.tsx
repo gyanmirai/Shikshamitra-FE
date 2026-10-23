@@ -2,13 +2,13 @@ import type { Dayjs } from 'dayjs';
 import type { InputProps } from '@mui/material';
 
 import dayjs from 'dayjs';
-import { useRef, useState, useEffect } from 'react';
 import Stack from '@mui/material/Stack';
-import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import { Iconify } from 'src/components/iconify';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
+import IconButton from '@mui/material/IconButton';
+import { useRef, useState, useEffect } from 'react';
 import InputAdornment from '@mui/material/InputAdornment';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import type { DateRange } from './types';
 
@@ -30,6 +30,7 @@ type RangeFieldProps = {
   placeholder?: string;
   readOnly?: boolean;
   disabled?: boolean;
+  required?: boolean;
   error?: boolean;
   helperText?: React.ReactNode;
   dateFormat?: string;
@@ -51,6 +52,7 @@ export function RangeField({
   placeholder,
   readOnly,
   disabled,
+  required,
   error,
   helperText,
   dateFormat = 'MM/DD/YYYY',
@@ -104,6 +106,7 @@ export function RangeField({
   if (singleInput) {
     return (
       <TextField
+        required={required}
         fullWidth
         label={label || 'Date Range'}
         value={editable ? inputText : formattedRange}
@@ -155,6 +158,7 @@ export function RangeField({
   return (
     <Stack direction="row" spacing={2} sx={sx}>
       <TextField
+        required={required}
         fullWidth
         label={startLabel}
         value={startStr}
@@ -178,6 +182,7 @@ export function RangeField({
       />
 
       <TextField
+        required={required}
         fullWidth
         label={endLabel}
         value={endStr}

@@ -414,7 +414,7 @@ const CurriculumNotificationManagement = ({ dialog, setIsViewMode }: any) => {
   // Determines whether the dialog is opened in view-only mode
   const [view, setView] = useState(false);
   return (
-    <Box sx={{ height: '100%' }}>
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {dialog.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <EditNotificationDialog
@@ -428,6 +428,9 @@ const CurriculumNotificationManagement = ({ dialog, setIsViewMode }: any) => {
         </Card>
       ) : (
         <CustomizableTable
+          tableTitle="Curriculum Notifications"
+          wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
+          tableContainerProps={{ sx: { height: 1 } }}
           tableId="curriculum-auto-notification-configuration"
           data={subjectNotificationsData}
           columns={[
@@ -460,8 +463,9 @@ const CurriculumNotificationManagement = ({ dialog, setIsViewMode }: any) => {
                 return (
                   <Box>
                     <Switch
+                      slotProps={{ input: { 'aria-label': `Enable ${row.event} notification` } }}
                       checked={NotificationStatusType.Active === row.isActive}
-                      onChange={(event) => {}}
+                      disabled
                     />
                   </Box>
                 );
@@ -477,14 +481,10 @@ const CurriculumNotificationManagement = ({ dialog, setIsViewMode }: any) => {
               render(value, row) {
                 return (
                   <ThreeDotsActions
+                    editLabel={`Edit ${row.event} notification`}
+                    viewLabel={`View ${row.event} notification`}
                     showThreeDots={false}
-                    showEditIcon
-                    handleEditClick={() => {
-                      setSelectedData(row);
-                      dialog.onTrue();
-                      setView(false);
-                      setIsViewMode(false);
-                    }}
+                    showEditIcon={false}
                     showViewIcon
                     handleViewClick={() => {
                       setSelectedData(row);

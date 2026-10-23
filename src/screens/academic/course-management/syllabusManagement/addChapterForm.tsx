@@ -13,6 +13,7 @@ import { Iconify } from 'src/components/iconify';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import HelpTooltip from 'src/components/help-tooltip';
 import CustomDialog from 'src/components/customDialog';
 import { fileData } from 'src/components/file-thumbnail';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -301,6 +302,9 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               open={additionalFieldsDrawer.value}
               onClose={additionalFieldsDrawer.onFalse}
               PaperProps={{
+                role: 'dialog',
+                'aria-modal': true,
+                'aria-label': 'Additional Chapter Details',
                 sx: {
                   width: { xs: '100%', sm: 680, md: 760 },
                   display: 'flex',
@@ -356,7 +360,12 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         </Box>
                       }
                     >
-                      <IconButton size="small" color="info" sx={{ p: 0.5, ml: 0.25 }}>
+                      <IconButton
+                        aria-label="Additional chapter details information"
+                        size="small"
+                        color="info"
+                        sx={{ p: 0.5, ml: 0.25 }}
+                      >
                         <Iconify icon="lucide:info" width={18} />
                       </IconButton>
                     </CustomTooltip>
@@ -413,12 +422,17 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         <Iconify icon="solar:calendar-mark-bold-duotone" width={18} />
                       </Box>
                       <Box>
-                        <Typography variant="subtitle2" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                          1. Planning & Scheduling
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Define unit, term, topic name and time allocations
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
+                            Planning & Scheduling
+                          </Typography>
+                          <HelpTooltip
+                            label="Planning & scheduling information"
+                            title="Define unit, term, topic name and time allocations"
+                          >
+                            <Iconify icon="lucide:info" width={16} />
+                          </HelpTooltip>
+                        </Box>
                       </Box>
                     </Stack>
                     <Divider sx={{ my: 1.5 }} />
@@ -473,7 +487,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           size="small"
                           type="number"
                           name="estimatedTeachingDays"
-                          label="Teaching Days"
+                          label="Teaching days"
                           value={formik.values.estimatedTeachingDays ?? ''}
                           onChange={formik.handleChange}
                         />
@@ -484,7 +498,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           size="small"
                           type="number"
                           name="estimatedPeriods"
-                          label="Estimated Periods"
+                          label="Estimated periods"
                           value={formik.values.estimatedPeriods ?? ''}
                           onChange={formik.handleChange}
                         />
@@ -495,7 +509,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           size="small"
                           type="number"
                           name="revisionDays"
-                          label="Revision Days"
+                          label="Revision days"
                           value={formik.values.revisionDays ?? ''}
                           onChange={formik.handleChange}
                         />
@@ -506,7 +520,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           size="small"
                           type="number"
                           name="bufferDays"
-                          label="Buffer Days"
+                          label="Buffer days"
                           value={formik.values.bufferDays ?? ''}
                           onChange={formik.handleChange}
                         />
@@ -536,12 +550,17 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         <Iconify icon="solar:target-bold-duotone" width={18} />
                       </Box>
                       <Box>
-                        <Typography variant="subtitle2" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                          2. Pedagogy & Learning Objectives
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Difficulty level, taxonomy, outcomes and teaching methodology
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
+                            Pedagogy & Learning Objectives
+                          </Typography>
+                          <HelpTooltip
+                            label="Pedagogy & learning objectives information"
+                            title="Difficulty level, taxonomy, outcomes and teaching methodology"
+                          >
+                            <Iconify icon="lucide:info" width={16} />
+                          </HelpTooltip>
+                        </Box>
                       </Box>
                     </Stack>
                     <Divider sx={{ my: 1.5 }} />
@@ -569,7 +588,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           fullWidth
                           size="small"
                           name="bloomLevel"
-                          label="Bloom Level"
+                          label="Bloom level"
                           value={formik.values.bloomLevel}
                           onChange={formik.handleChange}
                         >
@@ -587,7 +606,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={2}
                           size="small"
                           name="learningOutcomes"
-                          label="Learning Outcomes"
+                          label="Learning outcomes"
                           placeholder="Expected outcomes after completing this chapter"
                           value={formik.values.learningOutcomes}
                           onChange={formik.handleChange}
@@ -600,7 +619,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={2}
                           size="small"
                           name="skillsCovered"
-                          label="Skills Covered"
+                          label="Skills covered"
                           placeholder="Key skills developed"
                           value={formik.values.skillsCovered}
                           onChange={formik.handleChange}
@@ -626,7 +645,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={2}
                           size="small"
                           name="teachingMethods"
-                          label="Teaching Methods"
+                          label="Teaching methods"
                           placeholder="Pedagogical approaches"
                           value={formik.values.teachingMethods}
                           onChange={formik.handleChange}
@@ -639,7 +658,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={2}
                           size="small"
                           name="classActivities"
-                          label="Class Activities"
+                          label="Class activities"
                           placeholder="Hands-on tasks or group work"
                           value={formik.values.classActivities}
                           onChange={formik.handleChange}
@@ -652,7 +671,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={2}
                           size="small"
                           name="completionCriteria"
-                          label="Completion Criteria"
+                          label="Completion criteria"
                           placeholder="Criteria to mark topic complete"
                           value={formik.values.completionCriteria}
                           onChange={formik.handleChange}
@@ -683,16 +702,24 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         <Iconify icon="solar:document-text-bold-duotone" width={18} />
                       </Box>
                       <Box>
-                        <Typography variant="subtitle2" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                          3. Chapter Overview & Detailed Description
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Rich-text description of key topics and coverage
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
+                            Chapter Overview & Detailed Description
+                          </Typography>
+                          <HelpTooltip
+                            label="Chapter overview & detailed description information"
+                            title="Rich-text description of key topics and coverage"
+                          >
+                            <Iconify icon="lucide:info" width={16} />
+                          </HelpTooltip>
+                        </Box>
                       </Box>
                     </Stack>
                     <Divider sx={{ my: 1.5 }} />
                     <Editor
+                      editorProps={{
+                        attributes: { 'aria-label': 'Chapter overview and detailed description' },
+                      }}
                       value={formik.values.description}
                       onChange={(value) => formik.setFieldValue('description', value)}
                       placeholder="Describe what this chapter covers, key topics and learning outcomes…"
@@ -733,12 +760,17 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         <Iconify icon="solar:users-group-two-rounded-bold-duotone" width={18} />
                       </Box>
                       <Box>
-                        <Typography variant="subtitle2" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                          4. Summaries & Stakeholder Notes
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Dedicated guidance for teachers, students, and parents
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
+                            Summaries & Stakeholder Notes
+                          </Typography>
+                          <HelpTooltip
+                            label="Summaries & stakeholder notes information"
+                            title="Dedicated guidance for teachers, students, and parents"
+                          >
+                            <Iconify icon="lucide:info" width={16} />
+                          </HelpTooltip>
+                        </Box>
                       </Box>
                     </Stack>
                     <Divider sx={{ my: 1.5 }} />
@@ -750,7 +782,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={3}
                           size="small"
                           name="teacherNotes"
-                          label="Teacher Notes"
+                          label="Teacher notes"
                           placeholder="Internal notes for educators"
                           value={formik.values.teacherNotes}
                           onChange={formik.handleChange}
@@ -763,7 +795,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={3}
                           size="small"
                           name="studentSummary"
-                          label="Student Summary"
+                          label="Student summary"
                           placeholder="Summary for students"
                           value={formik.values.studentSummary}
                           onChange={formik.handleChange}
@@ -776,7 +808,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={3}
                           size="small"
                           name="parentSummary"
-                          label="Parent Summary"
+                          label="Parent summary"
                           placeholder="Summary for parents"
                           value={formik.values.parentSummary}
                           onChange={formik.handleChange}
@@ -807,12 +839,17 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         <Iconify icon="solar:library-bold-duotone" width={18} />
                       </Box>
                       <Box>
-                        <Typography variant="subtitle2" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                          5. Resources & Study Materials
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Links, worksheets, audio/video media, and board reference documents
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
+                            Resources & Study Materials
+                          </Typography>
+                          <HelpTooltip
+                            label="Resources & study materials information"
+                            title="Links, worksheets, audio/video media, and board reference documents"
+                          >
+                            <Iconify icon="lucide:info" width={16} />
+                          </HelpTooltip>
+                        </Box>
                       </Box>
                     </Stack>
                     <Divider sx={{ my: 1.5 }} />
@@ -824,7 +861,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={2}
                           size="small"
                           name="referenceLinks"
-                          label="Reference Links"
+                          label="Reference links"
                           placeholder="External reference URLs"
                           value={formik.values.referenceLinks}
                           onChange={formik.handleChange}
@@ -850,7 +887,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={2}
                           size="small"
                           name="audioVideoMaterials"
-                          label="Audio/Video Materials"
+                          label="Audio/video materials"
                           placeholder="Media references"
                           value={formik.values.audioVideoMaterials}
                           onChange={formik.handleChange}
@@ -863,7 +900,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           minRows={2}
                           size="small"
                           name="boardDocuments"
-                          label="Board Documents"
+                          label="Board documents"
                           placeholder="Official board guidelines or docs"
                           value={formik.values.boardDocuments}
                           onChange={formik.handleChange}
@@ -894,12 +931,17 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         <Iconify icon="solar:chart-square-bold-duotone" width={18} />
                       </Box>
                       <Box>
-                        <Typography variant="subtitle2" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                          6. Assessment & Weightage Metrics
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Exam weightage, question counts and bloom coverage
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
+                            Assessment & Weightage Metrics
+                          </Typography>
+                          <HelpTooltip
+                            label="Assessment & weightage metrics information"
+                            title="Exam weightage, question counts and bloom coverage"
+                          >
+                            <Iconify icon="lucide:info" width={16} />
+                          </HelpTooltip>
+                        </Box>
                       </Box>
                     </Stack>
                     <Divider sx={{ my: 1.5 }} />
@@ -909,7 +951,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           fullWidth
                           size="small"
                           name="assessmentMethod"
-                          label="Assessment Method"
+                          label="Assessment method"
                           placeholder="e.g. Quiz, Exam, Project"
                           value={formik.values.assessmentMethod}
                           onChange={formik.handleChange}
@@ -920,7 +962,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           fullWidth
                           size="small"
                           name="questionTypes"
-                          label="Question Types"
+                          label="Question types"
                           placeholder="e.g. MCQ, Short Answer"
                           value={formik.values.questionTypes}
                           onChange={formik.handleChange}
@@ -931,7 +973,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           fullWidth
                           size="small"
                           name="bloomCoverage"
-                          label="Bloom Coverage"
+                          label="Bloom coverage"
                           placeholder="e.g. Remember, Understand"
                           value={formik.values.bloomCoverage}
                           onChange={formik.handleChange}
@@ -942,7 +984,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           fullWidth
                           size="small"
                           name="difficultyDistribution"
-                          label="Difficulty Distribution"
+                          label="Difficulty distribution"
                           placeholder="e.g. 30% Easy, 50% Med, 20% Hard"
                           value={formik.values.difficultyDistribution}
                           onChange={formik.handleChange}
@@ -954,7 +996,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           size="small"
                           type="number"
                           name="marksWeightage"
-                          label="Marks Weightage"
+                          label="Marks weightage"
                           value={formik.values.marksWeightage ?? ''}
                           onChange={formik.handleChange}
                         />
@@ -965,7 +1007,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           size="small"
                           type="number"
                           name="questionCount"
-                          label="Question Count"
+                          label="Question count"
                           value={formik.values.questionCount ?? ''}
                           onChange={formik.handleChange}
                         />
@@ -976,7 +1018,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                           size="small"
                           type="number"
                           name="healthScore"
-                          label="Health Score"
+                          label="Health score"
                           value={formik.values.healthScore ?? ''}
                           onChange={formik.handleChange}
                         />
@@ -1091,7 +1133,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 '&:hover': { boxShadow: 4 },
               }}
             >
-              {initialValues ? 'Update' : 'Add Chapter'}
+              Submit
             </Button>
           </DialogActions>
 

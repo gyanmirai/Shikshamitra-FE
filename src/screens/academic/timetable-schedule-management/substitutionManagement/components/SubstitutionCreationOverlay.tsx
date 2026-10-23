@@ -3,6 +3,8 @@
 import type { ReactNode } from 'react';
 
 import { Close } from '@mui/icons-material';
+import { Iconify } from 'src/components/iconify';
+import HelpTooltip from 'src/components/help-tooltip';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Drawer, Divider, IconButton } from '@mui/material';
 
@@ -10,6 +12,7 @@ type SubstitutionCreationOverlayProps = {
   open: boolean;
   displayAsDrawer: boolean;
   title: ReactNode;
+  titleInfo?: string;
   children: ReactNode;
   onClose: () => void;
   disableClose?: boolean;
@@ -20,6 +23,7 @@ export function SubstitutionCreationOverlay({
   open,
   displayAsDrawer,
   title,
+  titleInfo,
   children,
   onClose,
   disableClose = false,
@@ -30,6 +34,7 @@ export function SubstitutionCreationOverlay({
       <CustomDialog
         open={open}
         title={title}
+        titleInfo={titleInfo}
         maxWidth="md"
         handleClose={onClose}
         disableClose={disableClose}
@@ -73,7 +78,17 @@ export function SubstitutionCreationOverlay({
             flexShrink: 0,
           }}
         >
-          <Box id="create-substitution-drawer-title">{title}</Box>
+          <Box
+            id="create-substitution-drawer-title"
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+          >
+            {title}
+            {titleInfo && (
+              <HelpTooltip label="Create substitution information" title={titleInfo}>
+                <Iconify icon="lucide:info" width={16} />
+              </HelpTooltip>
+            )}
+          </Box>
           <IconButton aria-label={closeLabel} onClick={onClose} disabled={disableClose}>
             <Close sx={{ fontSize: 20 }} />
           </IconButton>

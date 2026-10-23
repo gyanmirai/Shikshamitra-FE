@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -126,6 +127,7 @@ const ToggleRow = ({ name, label, description, checked, onChange }: ToggleRowPro
         )}
       </Box>
       <Switch
+        slotProps={{ input: { 'aria-label': label } }}
         size="small"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
@@ -145,6 +147,7 @@ interface Props {
 }
 
 const CalendarSettingsForm = ({ settingsData, onSave, isSaving }: Props) => {
+  const labelPrefix = useId();
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
@@ -222,9 +225,11 @@ const CalendarSettingsForm = ({ settingsData, onSave, isSaving }: Props) => {
             iconColor={colors.primary}
           >
             <FormControl fullWidth size="small">
-              <InputLabel>Weekend Rule</InputLabel>
+              <InputLabel id={`${labelPrefix}-weekend`}>Weekend Rule</InputLabel>
               <Select
+                labelId={`${labelPrefix}-weekend`}
                 label="Weekend Rule"
+                SelectDisplayProps={{ 'aria-labelledby': `${labelPrefix}-weekend` }}
                 name="weekendRule"
                 value={formik.values.weekendRule}
                 onChange={formik.handleChange}
@@ -246,9 +251,11 @@ const CalendarSettingsForm = ({ settingsData, onSave, isSaving }: Props) => {
             iconColor={colors.primary}
           >
             <FormControl fullWidth size="small">
-              <InputLabel>Calendar Visibility</InputLabel>
+              <InputLabel id={`${labelPrefix}-visibility`}>Calendar Visibility</InputLabel>
               <Select
+                labelId={`${labelPrefix}-visibility`}
                 label="Calendar Visibility"
+                SelectDisplayProps={{ 'aria-labelledby': `${labelPrefix}-visibility` }}
                 name="calendarVisibility"
                 value={formik.values.calendarVisibility}
                 onChange={formik.handleChange}
@@ -542,9 +549,11 @@ const CalendarSettingsForm = ({ settingsData, onSave, isSaving }: Props) => {
             />
             <Divider sx={{ my: 1 }} />
             <FormControl fullWidth size="small">
-              <InputLabel>Reschedule Mode</InputLabel>
+              <InputLabel id={`${labelPrefix}-reschedule`}>Reschedule Mode</InputLabel>
               <Select
+                labelId={`${labelPrefix}-reschedule`}
                 label="Reschedule Mode"
+                SelectDisplayProps={{ 'aria-labelledby': `${labelPrefix}-reschedule` }}
                 name="rescheduleMode"
                 value={formik.values.rescheduleMode}
                 onChange={formik.handleChange}

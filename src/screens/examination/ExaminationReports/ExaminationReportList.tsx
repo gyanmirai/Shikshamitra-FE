@@ -162,8 +162,7 @@ const ExaminationReportsList = () => {
     const examReportTypes = Object.values(ExamReportApiTypeMap);
     return allExports.filter(
       (job: any) =>
-        examReportTypes.includes(job.reportType) ||
-        (job.isDynamic && job.module === 'Examination')
+        examReportTypes.includes(job.reportType) || (job.isDynamic && job.module === 'Examination')
     );
   }, [exportsData]);
 
@@ -175,7 +174,7 @@ const ExaminationReportsList = () => {
           heading="Reports"
           description="View and manage generated examination reports"
           links={[
-            { name: 'Academic', href: '/academic/dashboard/' },
+            { name: 'Academics', href: '/academic/dashboard/' },
             { name: 'Examination' },
             { name: 'Reports' },
           ]}
@@ -201,6 +200,7 @@ const ExaminationReportsList = () => {
         <ExaminationReports addReportDialog={addReportDialog} />
       ) : (
         <CustomizableTable
+          tableTitle="Examination Reports"
           tableId="exam-reports"
           isLoading={isExportsLoading}
           data={rows}

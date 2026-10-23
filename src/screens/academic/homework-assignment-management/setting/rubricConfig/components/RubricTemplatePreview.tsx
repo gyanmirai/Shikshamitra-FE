@@ -1,5 +1,6 @@
 'use client';
 
+import { FormSectionCard } from 'src/components/form-section-card';
 import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
@@ -51,17 +52,21 @@ export function RubricTemplatePreview({ scoringModel, criteria, performanceLevel
       </Typography>
       {criteria.map((criterion, index) => {
         const name = criterion.title.trim() || `Criterion ${index + 1}`;
-        const max = scoringModel === RubricScoringModel.PerformanceLevels
-          ? Math.max(0, ...levels.map((level) => Number(level.score))) : Number(criterion.points ?? criterion.weight);
+        const max =
+          scoringModel === RubricScoringModel.PerformanceLevels
+            ? Math.max(0, ...levels.map((level) => Number(level.score)))
+            : Number(criterion.points ?? criterion.weight);
         const availableLevels = levels.filter((level) => Number(level.score) <= max);
 
         return (
-          <Paper key={`${name}-${index}`} variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
+          <FormSectionCard
+            key={`${name}-${index}`}
+            title={name}
+            icon="mdi:clipboard-check-outline"
+            descriptionTooltip="Review this criterion and its scoring choices and guidance."
+          >
             <Stack spacing={1.5}>
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="subtitle2" fontWeight={700}>
-                  {name}
-                </Typography>
                 {criterion.description && (
                   <Typography variant="body2" color="text.secondary">
                     {criterion.description}
@@ -137,7 +142,7 @@ export function RubricTemplatePreview({ scoringModel, criteria, performanceLevel
                 </Typography>
               )}
             </Stack>
-          </Paper>
+          </FormSectionCard>
         );
       })}
     </Stack>

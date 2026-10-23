@@ -150,6 +150,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
             <Tooltip title="Day options" placement="top" arrow>
               <IconButton
                 size="small"
+                aria-label={`Options for ${day.toLowerCase()}`}
                 onClick={handleMenuOpen}
                 sx={{
                   position: 'absolute',

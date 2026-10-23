@@ -20,7 +20,7 @@ Paths are relative to the owning repository.
 | FE behavior | Same folder, `hooks/useElectiveSubjectForm.ts`, `hooks/useElectiveSubjectSetting.ts`, `components/electiveSubjectTable.tsx`, `ElectiveGroupUsageDrawer.tsx`, `electiveSubjectTableActions.ts` |
 | FE client | `src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi.ts` |
 | BE contract | `Shikshamitra-BE/src/ShikshaMitra.Application.Contracts/Academic/Curriculum/CreateUpdateElectiveGroupDto.cs` |
-| BE rules | `Shikshamitra-BE/src/ShikshaMitra.Domain/Academic/Curriculum/Settings/ElectiveGroupManager.cs`, `Shikshamitra.Application/Academic/Curriculum/ElectiveGroupAppService.cs` |
+| BE rules | `Shikshamitra-BE/src/ShikshaMitra.Domain/Academic/Curriculum/Settings/ElectiveGroupManager.cs`, `Shikshamitra-BE/src/ShikshaMitra.Application/Academic/Curriculum/ElectiveGroupAppService.cs` |
 | BE controller | `Shikshamitra-BE/src/ShikshaMitra.HttpApi/Controllers/Academic/Curriculum/ElectiveGroupController.cs` |
 | Existing automation | FE `tests/catalog/academic.yaml`: `ACM-CUR-ELECT-001`, `e2e/academic/academic-curriculum-api.spec.ts`; broad navigation `ACM-CUR-001` in `academic-smoke.spec.ts`. These are existing mappings, not evidence of execution in this run. |
 

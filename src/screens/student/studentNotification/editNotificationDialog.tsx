@@ -131,6 +131,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
                 </Box>
 
                 <Editor
+                  editorProps={{ attributes: { 'aria-label': `Message for ${recipient.name}` } }}
                   mentionable
                   mentionItems={
                     recipient.placeHolderOptions?.map((item: any) => ({

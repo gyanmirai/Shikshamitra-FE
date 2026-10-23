@@ -49,7 +49,7 @@ describe('calendar form DateTimeOffset payloads', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Title *' }), {
       target: { value: 'School holiday' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Add Day' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(payloads).toHaveLength(1));
     expect(payloads[0]).toMatchObject({
       date: datePickerToDateTimeOffset(selectedDay),
@@ -83,7 +83,7 @@ describe('calendar form DateTimeOffset payloads', () => {
     expect(screen.getByRole('textbox', { name: 'Vacation dates *' })).toHaveValue(
       '15/09/2026 - 17/09/2026'
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Update Day' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(payloads).toHaveLength(1));
     expect(payloads[0]).toMatchObject({
       date: datePickerToDateTimeOffset(selectedDay),

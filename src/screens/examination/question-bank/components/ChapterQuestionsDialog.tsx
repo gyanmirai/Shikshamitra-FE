@@ -4,11 +4,10 @@ import type { RootState } from 'src/redux/store';
 
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 import { useGetQuestionsQuery } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -120,7 +119,7 @@ export default function ChapterQuestionsDialog({
         render: (v: any) => (
           <Typography variant="caption" fontSize="13px">
             {QUESTION_TYPE_OPTIONS.find((q) => q.value === v)?.label || '—'}
-          </Typography >
+          </Typography>
         ),
       },
       {
@@ -156,7 +155,7 @@ export default function ChapterQuestionsDialog({
         render: (v: any) => (
           <Chip
             size="small"
-            variant='soft'
+            variant="soft"
             color={(STATUS_COLOR[v] as any) || 'default'}
             label={STATUS_OPTIONS.find((s) => s.value === v)?.label || '—'}
           />
@@ -170,24 +169,16 @@ export default function ChapterQuestionsDialog({
     <CustomDialog
       open={open}
       handleClose={onClose}
-      title={
-        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-          <Typography variant="h5">
-            <Box component="span">Questions —</Box> {chapterName || 'Chapter Questions'}
-          </Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            sx={{ textAlign: 'justify' }}
-            title="View all questions added under this chapter."
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
-        </Box>
-      }
+      title={`Questions for ${chapterName || 'Chapter'}`}
+      titleInfo="Review questions linked to this chapter in the selected academic year."
       maxWidth="lg"
     >
       <Box sx={{ p: 2 }}>
+        <FormSectionHeader
+          title="Chapter Questions"
+          icon="mdi:help-box-outline"
+          descriptionTooltip="Question text, type, marks and status are shown for the linked chapter."
+        />
         <CustomizableTable
           tableId="chapter-questions-view"
           tableTitle={`${data?.items?.length ?? 0} Question${data?.items?.length === 1 ? '' : 's'}`}

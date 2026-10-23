@@ -5,16 +5,18 @@ interface LectureStepButtonProps {
   disabled: boolean;
   hasError: boolean;
   onClick: () => void;
+  subjectName?: string;
 }
 
 export function LectureStepButton({
   direction,
+  subjectName,
   disabled,
   hasError,
   onClick,
 }: LectureStepButtonProps) {
   const isIncrease = direction === 'increase';
-  const label = `${isIncrease ? 'Increase' : 'Decrease'} lecture count`;
+  const label = `${isIncrease ? 'Increase' : 'Decrease'} lecture count${subjectName ? ` for ${subjectName}` : ''}`;
 
   return (
     <Tooltip title={isIncrease ? 'Increase' : 'Decrease'} arrow>

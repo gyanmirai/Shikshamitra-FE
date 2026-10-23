@@ -13,6 +13,7 @@ export interface ReportSubCategory {
   render: (item: ReportSubCategory) => ReactNode;
   icon: string | ReactNode;
   description?: string;
+  configurationHelp?: string;
 }
 
 export interface ReportSchemaField {

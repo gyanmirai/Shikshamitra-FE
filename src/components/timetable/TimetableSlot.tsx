@@ -80,7 +80,10 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
 
   const displaySubjects = hasSubjects ? slot.subjects! : attachedSubject ? [attachedSubject] : [];
   const allTeachersAssigned = displaySubjects.every((s) => s.teacherId);
-  const roomText = displaySubjects.map((s) => s.roomName).filter(Boolean).join(' | ');
+  const roomText = displaySubjects
+    .map((s) => s.roomName)
+    .filter(Boolean)
+    .join(' | ');
   const theme = useTheme();
 
   const [{ isDragging }, drag] = useDrag({
@@ -630,6 +633,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           <ThreeDotsActions
+            moreLabel={`More actions for ${day} ${slot.startTime} to ${slot.endTime}`}
             placement="bottom-center"
             onClickThreeDots={(e) => {
               e.stopPropagation();

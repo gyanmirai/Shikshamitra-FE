@@ -10,7 +10,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -19,7 +18,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Card, Stack, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Card, Stack, Button, MenuItem, MenuList } from '@mui/material';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useDeleteChapterMutation,
@@ -478,21 +477,8 @@ const Subjects = () => {
           viewDocumentDialog.onFalse();
           setSelectedChapter(null);
         }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              Documents for {selectedChapter?.chapterNumber} Chapter
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="View and download learning materials, worksheets, and other educational resources."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={`Documents for ${selectedChapter?.chapterName || 'Chapter'}`}
+        titleInfo="Review the saved learning materials and worksheets attached to this chapter."
       >
         <ChapterDocuments chapter={selectedChapter} />
       </CustomDialog>

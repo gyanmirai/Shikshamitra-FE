@@ -4,9 +4,10 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
+import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Typography } from '@mui/material';
+import HelpTooltip from 'src/components/help-tooltip';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -244,6 +245,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     >
       <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <CustomizableTable
+          tableTitle="Homework Submissions"
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents?.length > 0}
           tableId="student-submissions"
@@ -422,7 +424,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                   ? 'Edit Feedback'
                   : 'Add Feedback'}
             </Typography>
-            <CustomTooltip
+            <HelpTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
@@ -441,7 +443,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                 sx={{ cursor: 'pointer' }}
                 color="info.main"
               />
-            </CustomTooltip>
+            </HelpTooltip>
           </Box>
         }
         maxWidth="md"

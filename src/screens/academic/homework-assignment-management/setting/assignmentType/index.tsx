@@ -5,13 +5,12 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -110,6 +109,7 @@ const AssignmentTypeCreation = () => {
     type: 'query',
     currentQueryAndMutation: useGetAssignmentTypesQuery,
     params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: true },
+    options: { skip: !currentMedium?.id },
   });
 
   const assignmentTypes = assignmentTypeData?.data || [];
@@ -240,25 +240,8 @@ const AssignmentTypeCreation = () => {
             setSelectedData(null);
           }, 200); // Match this delay to your dialog's transition duration
         }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedData ? 'Update Assignment Type' : 'Add Assignment Type'}
-            </Typography>
-            <CustomTooltip
-              sx={{ textAlign: 'justify' }}
-              arrow
-              placement="right"
-              title={
-                selectedData
-                  ? 'You can update the assignment type details entering the name.'
-                  : 'You can create a new assignment type by entering the name.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={selectedData ? 'Update Assignment Type' : 'Add Assignment Type'}
+        titleInfo="Set the assignment type name and its submission and evaluation defaults."
       >
         <AssignmentTypeForm
           open={addAssignmentTypeDialog}

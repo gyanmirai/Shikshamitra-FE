@@ -48,8 +48,8 @@ export function ChapterDetailsSection({
     <Stack spacing={1.5} mb={2.5}>
       <FormSectionCard
         icon="mdi:book-open-page-variant-outline"
-        title="Chapter details"
-        description="Enter the chapter identity and its expected teaching window."
+        title="Chapter Details"
+        descriptionTooltip="Enter the chapter identity and its expected teaching window."
       >
         <Grid container spacing={1.5}>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -67,7 +67,7 @@ export function ChapterDetailsSection({
             >
               <LanguageInputField
                 fullWidth
-                label="Chapter Name *"
+                label="Chapter name *"
                 name="chapterName"
                 placeholder="e.g. Introduction to Algebra"
                 InputProps={{
@@ -119,7 +119,7 @@ export function ChapterDetailsSection({
 
       <FormSectionCard
         icon="mdi:text-box-plus-outline"
-        title="Additional chapter details"
+        title="Additional Chapter Details"
         descriptionTooltip="Add planning, learning outcomes, resources, notes, and assessment details."
         action={
           <AdditionalFieldsActionButton

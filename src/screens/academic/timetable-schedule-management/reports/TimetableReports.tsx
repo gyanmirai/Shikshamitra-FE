@@ -23,7 +23,9 @@ const TimetableReports = ({ addReportDialog }: { addReportDialog: UseBooleanRetu
     name: opt.label,
     id: `TimetableReports-${opt.label.replace(/\s+/g, '-')}-${index}`,
     icon: '',
-    description: opt.label,
+    description: 'Choose the available filters, preview the report, then queue the export.',
+    configurationHelp:
+      'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
     categoryId: 'TimetableReports',
     render: () => <TimetableReportForm report={opt.name} />,
   }));
@@ -35,7 +37,7 @@ const TimetableReports = ({ addReportDialog }: { addReportDialog: UseBooleanRetu
         heading="Generate Report"
         description="Generate and manage timetable reports"
         links={[
-          { name: 'Academic', href: '/academic/dashboard/' },
+          { name: 'Academics', href: '/academic/dashboard/' },
           {
             name: 'Timetable',
           },

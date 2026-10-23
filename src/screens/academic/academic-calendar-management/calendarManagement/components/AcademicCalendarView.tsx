@@ -4,7 +4,7 @@ import type { EventInput } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
-import { Box, Alert } from '@mui/material';
+import { Box, Alert, Button } from '@mui/material';
 import CommonCalender from 'src/components/calender';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useResponsive } from 'src/hooks/use-responsive';
@@ -108,6 +108,20 @@ export default function AcademicCalendarView({
         droppable={false}
         selectable={false}
         eventResizableFromStart={false}
+        eventInteractive
+        dayCellContent={({ date, dayNumberText }) => (
+          <Button
+            size="small"
+            aria-label={`Add calendar marker on ${dayjs(date).format('D MMMM YYYY')}`}
+            disabled={isLoading || !isInsideCalendar(dayjs(date).format('YYYY-MM-DD'))}
+            onClick={(event) => {
+              event.stopPropagation();
+              onDayClick(dayjs(date).format('YYYY-MM-DD'));
+            }}
+          >
+            {dayNumberText}
+          </Button>
+        )}
         dateClick={({ dateStr }) => {
           if (isInsideCalendar(dateStr)) onDayClick(dayjs(dateStr).format('YYYY-MM-DD'));
         }}

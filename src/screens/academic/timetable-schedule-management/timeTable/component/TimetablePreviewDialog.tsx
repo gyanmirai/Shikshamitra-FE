@@ -1,23 +1,20 @@
 import type { TimetableBoardProps } from 'src/components/timetable/TimetableBoard';
 
 import { alpha } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify';
+import { DialogContent } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
 import TimetableBoard from 'src/components/timetable/TimetableBoard';
-import { Box, IconButton, Typography, DialogContent } from '@mui/material';
 
-interface TimetablePreviewDialogProps
-  extends Pick<
-    TimetableBoardProps,
-    | 'slots'
-    | 'subjects'
-    | 'selectedClass'
-    | 'selectedDivision'
-    | 'standardId'
-    | 'divisionId'
-    | 'timetableStatus'
-  > {
+interface TimetablePreviewDialogProps extends Pick<
+  TimetableBoardProps,
+  | 'slots'
+  | 'subjects'
+  | 'selectedClass'
+  | 'selectedDivision'
+  | 'standardId'
+  | 'divisionId'
+  | 'timetableStatus'
+> {
   open: boolean;
   onClose: () => void;
 }
@@ -54,22 +51,8 @@ export function TimetablePreviewDialog({
           },
         },
       }}
-      title={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h6" fontWeight={700}>
-            Timetable Preview
-          </Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            title="Full-screen read-only preview of the complete weekly timetable board."
-          >
-            <IconButton aria-label="About timetable preview" size="small" color="info" sx={{ p: 0.5 }}>
-              <Iconify icon="mdi:information-outline" width={18} />
-            </IconButton>
-          </CustomTooltip>
-        </Box>
-      }
+      title="Timetable Preview"
+      titleInfo="Review the complete weekly timetable without changing its assignments."
     >
       <DialogContent
         data-testid="timetable-preview-surface"

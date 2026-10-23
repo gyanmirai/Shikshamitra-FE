@@ -104,6 +104,9 @@ export const RoomAuditLogDrawer = ({
         },
       }}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-label': 'Room Audit Log',
         sx: {
           width: { xs: '100%', sm: 540 },
           display: 'flex',
@@ -165,7 +168,11 @@ export const RoomAuditLogDrawer = ({
             </Typography>
           </Box>
         </Stack>
-        <IconButton onClick={onClose} sx={{ p: 0.5, color: 'text.secondary' }}>
+        <IconButton
+          aria-label="Close room audit log"
+          onClick={onClose}
+          sx={{ p: 0.5, color: 'text.secondary' }}
+        >
           <Iconify icon="mdi:close" />
         </IconButton>
       </Stack>
@@ -192,11 +199,7 @@ export const RoomAuditLogDrawer = ({
             </Box>
           )}
           renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Room"
-              placeholder="Search building, floor, or room…"
-            />
+            <TextField {...params} label="Room" placeholder="Search building, floor, or room…" />
           )}
         />
 

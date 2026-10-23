@@ -3,7 +3,6 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { useRef, useEffect } from 'react';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
-import { FormSectionCard } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Grid, Alert, Button, MenuItem, TextField, AlertTitle, DialogActions } from '@mui/material';
 
@@ -65,60 +64,54 @@ export default function SetupUserDialog({
               Unable to load password requirements.
             </Alert>
           )}
-          <FormSectionCard
-            title="User details and access"
-            icon="mdi:account-outline"
-            descriptionTooltip="Credentials stay only in this form until submission. Share the initial password securely."
-          >
-            <Grid container spacing={2}>
-              <SetupUserFields
-                form={form}
-                serverErrors={serverErrors}
-                clearServerError={clearServerError}
-                passwordHelp={passwordHelp}
-              />
-              {canReadRoles && (
-                <Grid size={12}>
-                  <TextField
-                    select
-                    fullWidth
-                    size="small"
-                    label="Roles"
-                    value={form.values.roleNames}
-                    error={Boolean(serverErrors.roleNames)}
-                    disabled={form.isSubmitting || roles.isLoading || roles.isError}
-                    slotProps={{
-                      select: { multiple: true },
-                      inputLabel: { sx: setupUserErrorTextSx },
-                      formHelperText: { sx: setupUserErrorTextSx },
-                    }}
-                    onChange={(event) => {
-                      clearServerError('roleNames');
-                      form.setFieldValue(
-                        'roleNames',
-                        typeof event.target.value === 'string'
-                          ? event.target.value.split(',')
-                          : event.target.value
-                      );
-                    }}
-                    helperText={
-                      serverErrors.roleNames ||
-                      (roles.isError
-                        ? 'Unable to load roles. Retry to assign access.'
-                        : 'Optional. Choose the roles this staff member needs.')
-                    }
-                  >
-                    {(roles.data?.items ?? []).map((role) => (
-                      <MenuItem key={role.id} value={role.name}>
-                        {role.name}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  {roles.isError && <Button onClick={() => roles.refetch()}>Retry roles</Button>}
-                </Grid>
-              )}
-            </Grid>
-          </FormSectionCard>
+          <Grid container spacing={2}>
+            <SetupUserFields
+              form={form}
+              serverErrors={serverErrors}
+              clearServerError={clearServerError}
+              passwordHelp={passwordHelp}
+            />
+            {canReadRoles && (
+              <Grid size={12}>
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Roles"
+                  value={form.values.roleNames}
+                  error={Boolean(serverErrors.roleNames)}
+                  disabled={form.isSubmitting || roles.isLoading || roles.isError}
+                  slotProps={{
+                    select: { multiple: true },
+                    inputLabel: { sx: setupUserErrorTextSx },
+                    formHelperText: { sx: setupUserErrorTextSx },
+                  }}
+                  onChange={(event) => {
+                    clearServerError('roleNames');
+                    form.setFieldValue(
+                      'roleNames',
+                      typeof event.target.value === 'string'
+                        ? event.target.value.split(',')
+                        : event.target.value
+                    );
+                  }}
+                  helperText={
+                    serverErrors.roleNames ||
+                    (roles.isError
+                      ? 'Unable to load roles. Retry to assign access.'
+                      : 'Optional. Choose the roles this staff member needs.')
+                  }
+                >
+                  {(roles.data?.items ?? []).map((role) => (
+                    <MenuItem key={role.id} value={role.name}>
+                      {role.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                {roles.isError && <Button onClick={() => roles.refetch()}>Retry roles</Button>}
+              </Grid>
+            )}
+          </Grid>
         </div>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>

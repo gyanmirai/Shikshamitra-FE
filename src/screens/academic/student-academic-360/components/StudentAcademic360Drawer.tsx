@@ -138,6 +138,9 @@ export function StudentAcademic360Drawer({
       open={open}
       onClose={onClose}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-label': 'Student Academic 360',
         sx: {
           width: isExpanded ? '100%' : { xs: '100%', md: '80vw', lg: '85vw' },
           maxWidth: isExpanded ? '100%' : 1440,
@@ -172,7 +175,17 @@ export function StudentAcademic360Drawer({
             value={activeTab}
             onChange={(_event, value: string) => setActiveTab(value)}
             variant="scrollable"
-            sx={{ minHeight: 44, '& .MuiTab-root': { minHeight: 44, textTransform: 'none', fontWeight: 600, fontSize: 13, py: 1, px: 1.5 } }}
+            sx={{
+              minHeight: 44,
+              '& .MuiTab-root': {
+                minHeight: 44,
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: 13,
+                py: 1,
+                px: 1.5,
+              },
+            }}
           >
             {tabs.map((tab) => {
               const isLearningTab = tab.value === 'learning';
@@ -207,7 +220,9 @@ export function StudentAcademic360Drawer({
             <Button
               size="small"
               variant="text"
-              startIcon={<Iconify icon={isExpanded ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'} width={16} />}
+              startIcon={
+                <Iconify icon={isExpanded ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'} width={16} />
+              }
               onClick={() => setIsExpanded((value) => !value)}
               sx={{ fontSize: 12, height: 32 }}
             >
@@ -294,7 +309,12 @@ function DrawerSkeleton({ activeTab }: DrawerSkeletonProps) {
                 <Skeleton variant="text" width="35%" height={24} />
                 <Stack spacing={1} sx={{ mt: 1 }}>
                   {[1, 2].map((i) => (
-                    <Skeleton key={i} variant="rectangular" height={40} sx={{ borderRadius: 1.25 }} />
+                    <Skeleton
+                      key={i}
+                      variant="rectangular"
+                      height={40}
+                      sx={{ borderRadius: 1.25 }}
+                    />
                   ))}
                 </Stack>
               </Card>
@@ -317,7 +337,12 @@ function DrawerSkeleton({ activeTab }: DrawerSkeletonProps) {
                 <Skeleton variant="text" width="45%" height={24} />
                 <Stack spacing={0.75} sx={{ mt: 1 }}>
                   {[1, 2].map((i) => (
-                    <Skeleton key={i} variant="rectangular" height={42} sx={{ borderRadius: 1.25 }} />
+                    <Skeleton
+                      key={i}
+                      variant="rectangular"
+                      height={42}
+                      sx={{ borderRadius: 1.25 }}
+                    />
                   ))}
                 </Stack>
               </Card>
@@ -325,7 +350,12 @@ function DrawerSkeleton({ activeTab }: DrawerSkeletonProps) {
                 <Skeleton variant="text" width="50%" height={24} />
                 <Stack spacing={0.75} sx={{ mt: 1 }}>
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} variant="rectangular" height={36} sx={{ borderRadius: 1.25 }} />
+                    <Skeleton
+                      key={i}
+                      variant="rectangular"
+                      height={36}
+                      sx={{ borderRadius: 1.25 }}
+                    />
                   ))}
                 </Stack>
               </Card>
@@ -333,7 +363,12 @@ function DrawerSkeleton({ activeTab }: DrawerSkeletonProps) {
                 <Skeleton variant="text" width="45%" height={24} />
                 <Stack spacing={0.75} sx={{ mt: 1 }}>
                   {[1, 2].map((i) => (
-                    <Skeleton key={i} variant="rectangular" height={38} sx={{ borderRadius: 1.25 }} />
+                    <Skeleton
+                      key={i}
+                      variant="rectangular"
+                      height={38}
+                      sx={{ borderRadius: 1.25 }}
+                    />
                   ))}
                 </Stack>
               </Card>

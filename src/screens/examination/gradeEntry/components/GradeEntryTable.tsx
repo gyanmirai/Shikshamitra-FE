@@ -353,6 +353,7 @@ const GradeEntryTable = ({
   return (
     <CustomizableTable
       tableId="grade-entry-table"
+      tableTitle="Student Exam Grades"
       noDataText={<>Students Data Not Found For Grading</>}
       totalCount={gradingData?.totalCount}
       isLoading={isLoading || isFetching}
@@ -364,6 +365,7 @@ const GradeEntryTable = ({
           stickyPosition: 'left',
           label: (
             <Checkbox
+              slotProps={{ input: { 'aria-label': 'Select all students on this page' } }}
               size="small"
               disabled={isLocked}
               checked={selectedStudents.length === localRows.length && localRows.length > 0}
@@ -389,6 +391,7 @@ const GradeEntryTable = ({
           minWidth: 50,
           render: (value, row) => (
             <Checkbox
+              slotProps={{ input: { 'aria-label': `Select ${row.studentName} (${row.grNo})` } }}
               size="small"
               disabled={isLocked}
               checked={selectedStudents.includes(row.studentId)}
@@ -429,6 +432,7 @@ const GradeEntryTable = ({
           render: (value, row) => (
             <FormControl size="small" sx={{ minWidth: 110 }}>
               <Select
+                inputProps={{ 'aria-label': `Attendance for ${row.studentName} (${row.grNo})` }}
                 value={value ?? 0}
                 disabled={isLocked}
                 onChange={(e) =>
@@ -465,6 +469,7 @@ const GradeEntryTable = ({
                 disabled={isLocked || isAbsent}
                 value={value === null ? '' : value}
                 inputProps={{
+                  'aria-label': `Obtained marks for ${row.studentName} (${row.grNo})`,
                   min: 0,
                   max: row.totalMarks,
                   style: { padding: '4px 8px', fontSize: '13px' },
@@ -525,6 +530,7 @@ const GradeEntryTable = ({
                   style: { padding: '4px 8px', fontSize: '13px' },
                   'data-student-id': row.studentId,
                   'data-col-type': 'remarks',
+                  'aria-label': `Feedback for ${row.studentName} (${row.grNo})`,
                 }}
                 onChange={(e) => handleCellEdit(row.studentId, 'feedback', e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, row.studentId, 'remarks')}

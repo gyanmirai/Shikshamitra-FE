@@ -21,7 +21,7 @@ const SubjectBreadcrumbs = ({
   if (isFormOpen) {
     return (
       <CustomBreadcrumbs
-        heading="Subject allocation"
+        heading="Subject Allocation"
         description={
           selectedSubject
             ? 'Update and modify existing subject assignments by revising key details, curriculum mappings, teacher assignments, and assessment criteria for improved academic delivery.'
@@ -32,7 +32,7 @@ const SubjectBreadcrumbs = ({
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum', href: '/academic/curriculumSubjects' },
-          { name: 'Subject allocation', href: '/academic/curriculumSubjects' },
+          { name: 'Subject Allocation', href: '/academic/curriculumSubjects' },
         ]}
         sx={{ px: 1 }}
       />
@@ -42,7 +42,7 @@ const SubjectBreadcrumbs = ({
   return (
     <CustomBreadcrumbs
       // sx={{ mb: 1 }}
-      heading="Subject allocation"
+      heading="Subject Allocation"
       description={
         isViewOpen
           ? 'Access detailed information on the selected subject, such as name, code, curriculum mapping, and assessment criteria to support structured academic planning.'
@@ -52,7 +52,7 @@ const SubjectBreadcrumbs = ({
         { name: 'Academics', href: '/academic/dashboard' },
         { name: 'Curriculum', href: '/academic/curriculumSubjects' },
         {
-          name: 'Subject allocation',
+          name: 'Subject Allocation',
           href: isViewOpen ? '/academic/curriculumSubjects' : undefined,
         },
       ]}

@@ -7,12 +7,13 @@ import { alpha } from '@mui/material/styles';
 import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import HelpTooltip from 'src/components/help-tooltip';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
+import { useAcademicDiscardGuard } from 'src/screens/academic/components/useAcademicDiscardGuard';
 import {
   Box,
   Chip,
@@ -179,6 +180,7 @@ export const SmartRoomReservationDrawer = ({
   const [requirements, setRequirements] = useState<ReservationRequirements>({
     ...defaultRequirements,
   });
+  const [baseline, setBaseline] = useState<ReservationRequirements>({ ...defaultRequirements });
   const [searched, setSearched] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [bookingRoomId, setBookingRoomId] = useState<string | null>(null);
@@ -189,6 +191,11 @@ export const SmartRoomReservationDrawer = ({
   const suggestions = useRoomSuggestions();
   const { suggest } = suggestions;
   const createReservation = useCreateRoomReservation();
+
+  const discardGuard = useAcademicDiscardGuard(
+    open && JSON.stringify(requirements) !== JSON.stringify(baseline),
+    Boolean(bookingRoomId)
+  );
 
   const buildingOptions = useMemo(
     () => getRoomSuggestionFilterOptions(suggestions.data, 'buildingName'),
@@ -240,13 +247,13 @@ export const SmartRoomReservationDrawer = ({
           date: prefillDate || dayjs().format('YYYY-MM-DD'),
         };
         setRequirements(reqs);
+        setBaseline(reqs);
         suggest(reqs);
         setSearched(true);
       } else {
-        setRequirements({
-          ...defaultRequirements,
-          date: prefillDate || dayjs().format('YYYY-MM-DD'),
-        });
+        const reqs = { ...defaultRequirements, date: prefillDate || dayjs().format('YYYY-MM-DD') };
+        setRequirements(reqs);
+        setBaseline(reqs);
         setSearched(false);
       }
       setFieldErrors({});
@@ -315,7 +322,7 @@ export const SmartRoomReservationDrawer = ({
             : 'Room reserved successfully!',
         });
         onSuccess?.(result);
-        handleClose();
+        closeAndReset();
       }
     } catch (err: any) {
       const errorMsg = err?.data?.error?.message || 'Failed to create reservation.';
@@ -325,7 +332,7 @@ export const SmartRoomReservationDrawer = ({
     }
   };
 
-  const handleClose = () => {
+  const closeAndReset = () => {
     setRequirements({ ...defaultRequirements });
     setSearched(false);
     setFieldErrors({});
@@ -335,12 +342,17 @@ export const SmartRoomReservationDrawer = ({
     onClose();
   };
 
+  const handleClose = () => discardGuard.requestNavigation(closeAndReset);
+
   return (
     <Drawer
       anchor="right"
       open={open}
       onClose={handleClose}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-label': 'Reserve a Room',
         sx: {
           width: { xs: '100%', md: 1080, xl: 1320 },
           display: 'flex',
@@ -385,7 +397,7 @@ export const SmartRoomReservationDrawer = ({
               <Typography variant="h6" fontWeight={700} lineHeight={1.3}>
                 Reserve a Room
               </Typography>
-              <CustomTooltip
+              <HelpTooltip
                 title="Select date, timeslot, and room requirements to view instant AI recommendations with match scoring and conflict checks."
                 arrow
                 placement="right"
@@ -397,7 +409,7 @@ export const SmartRoomReservationDrawer = ({
                   height={18}
                   sx={{ cursor: 'pointer', mt: 0.25 }}
                 />
-              </CustomTooltip>
+              </HelpTooltip>
             </Stack>
             <Typography variant="body2" color="text.secondary">
               Find and book the perfect space in seconds
@@ -405,6 +417,7 @@ export const SmartRoomReservationDrawer = ({
           </Box>
         </Stack>
         <IconButton
+          aria-label="Close room reservation"
           onClick={handleClose}
           sx={{
             bgcolor: 'background.paper',
@@ -607,6 +620,7 @@ export const SmartRoomReservationDrawer = ({
                       </Typography>
                     </Stack>
                     <Switch
+                      slotProps={{ input: { 'aria-label': 'Recurring reservation' } }}
                       checked={requirements.isRecurring}
                       onChange={(e) => patchRequirements({ isRecurring: e.target.checked })}
                     />
@@ -1282,6 +1296,7 @@ export const SmartRoomReservationDrawer = ({
           Cancel
         </Button>
       </Stack>
+      {discardGuard.confirmation}
     </Drawer>
   );
 };

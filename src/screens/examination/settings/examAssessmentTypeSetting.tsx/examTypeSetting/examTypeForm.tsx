@@ -4,28 +4,21 @@ import type { RootState } from 'src/redux/store';
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import SubmitButton from 'src/components/submit-button';
-import CancelButton from 'src/components/cancel-button';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
+import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Stack, TextField, Autocomplete, DialogActions } from '@mui/material';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
-import {
-  Box,
-  Grid,
-  Stack,
-  TextField,
-  Typography,
-  DialogActions,
-  Autocomplete,
-} from '@mui/material';
 import {
   useAddExaminationTypeMutation,
   useUpdateExaminationTypeMutation,
@@ -54,44 +47,6 @@ const SELECTABLE_SETTING_STATUSES = new Set([0, 2, 'Active', 'SystemDefault']);
 
 const isSelectableSetting = (item: any) =>
   item?.status == null || SELECTABLE_SETTING_STATUSES.has(item.status);
-
-const SectionHeader = ({
-  icon,
-  title,
-  caption,
-  iconBg,
-}: {
-  icon: string;
-  title: string;
-  caption: string;
-  iconBg: string;
-}) => (
-  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-    <Box
-      sx={{
-        width: 34,
-        height: 34,
-        flexShrink: 0,
-        borderRadius: 1.5,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: iconBg,
-        color: 'primary.main',
-      }}
-    >
-      <Iconify icon={icon} width={18} height={18} />
-    </Box>
-    <Box>
-      <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
-        {title}
-      </Typography>
-      <Typography variant="caption" color="text.secondary">
-        {caption}
-      </Typography>
-    </Box>
-  </Stack>
-);
 
 const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
   onClose,
@@ -192,11 +147,11 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
           <Stack spacing={1} sx={{ p: 2 }}>
             {/* Section 1: Basic Information */}
             <Box sx={sectionCardSx}>
-              <SectionHeader
+              <FormSectionHeader
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
                 icon="solar:notes-bold-duotone"
                 title="Basic Information"
-                caption="Name, category and current status"
-                iconBg={alpha(theme.palette.primary.main, 0.1)}
+                descriptionTooltip="Name, category and current status"
               />
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -278,11 +233,11 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
 
             {/* Section 2: Default Rules & Parameters */}
             <Box sx={sectionCardSx}>
-              <SectionHeader
+              <FormSectionHeader
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
                 icon="solar:ruler-cross-pen-bold-duotone"
                 title="Default Rules & Parameters"
-                caption="Defaults applied when this exam type is used"
-                iconBg={alpha(theme.palette.primary.main, 0.1)}
+                descriptionTooltip="Defaults applied when this exam type is used"
               />
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 4 }}>

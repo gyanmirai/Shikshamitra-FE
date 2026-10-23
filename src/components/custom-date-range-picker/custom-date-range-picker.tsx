@@ -181,6 +181,7 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
     <>
       {/* Trigger Field */}
       <RangeField
+        required={required}
         startDate={inputs[0]}
         endDate={inputs[1]}
         onOpen={handleOpen}

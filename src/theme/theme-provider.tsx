@@ -16,6 +16,7 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import { createTheme } from './create-theme';
 import { RTL } from './with-settings/right-to-left';
 import { schemeConfig } from './color-scheme-script';
+import { ModuleFeedbackStyles } from './module-feedback-styles';
 
 // ----------------------------------------------------------------------
 
@@ -55,6 +56,7 @@ export function ThemeProvider({ children }: Props) {
          * resizes every component (buttons, tables, typography, etc.).
          */}
         <GlobalStyles styles={{ html: { fontSize: htmlFontSize } }} />
+        <ModuleFeedbackStyles />
         <RTL direction={settings.direction}>{children}</RTL>
       </CssVarsProvider>
     </AppRouterCacheProvider>

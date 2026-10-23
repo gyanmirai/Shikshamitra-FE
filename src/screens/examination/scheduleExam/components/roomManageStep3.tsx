@@ -327,6 +327,7 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
     >
       <Grid size={{ xs: 12 }}>
         <CustomizableTable
+          tableTitle="Exam Room Assignments"
           tableId={`room-assignment-${subjectName}`}
           isLoading={isRoomsLoading}
           isSearch={false}

@@ -23,7 +23,9 @@ const CurriculumReports = ({ addReportDialog }: { addReportDialog: UseBooleanRet
     name: opt.label,
     id: `CurriculumReports-${opt.label.replace(/\s+/g, '-')}-${index}`,
     icon: '',
-    description: opt.label,
+    description: 'Choose the available filters, preview the report, then queue the export.',
+    configurationHelp:
+      'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
     categoryId: 'CurriculumReports',
     render: () => (
       <CurriculumReportForm report={opt.name} onSuccess={() => addReportDialog?.onFalse()} />
@@ -36,7 +38,7 @@ const CurriculumReports = ({ addReportDialog }: { addReportDialog: UseBooleanRet
         sx={{ mb: 1 }}
         heading="Generate Report"
         links={[
-          { name: 'Academic', href: '/academic/dashboard/' },
+          { name: 'Academics', href: '/academic/dashboard/' },
           { name: 'Curriculum' },
           { name: 'Generate Report' },
         ]}

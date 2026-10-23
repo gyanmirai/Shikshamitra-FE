@@ -21,6 +21,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Paper, Stack, Avatar, Button, Skeleton, Typography } from '@mui/material';
 import { DayType, CalendarStatus, CalendarDayStatus } from 'src/enums/academic-calendar';
+import { AcademicContextContent } from 'src/screens/academic/components/AcademicContextContent';
 import {
   useGetCalendarsQuery,
   useGetCalendarDaysQuery,
@@ -101,10 +102,7 @@ const CalendarManagement = () => {
   );
 
   // Queries
-  const {
-    data: calendarsData,
-    isLoading: calendarsLoading,
-  } = useQueryAndMutation({
+  const { data: calendarsData, isLoading: calendarsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarsQuery,
     params: calendarsParams,
@@ -112,10 +110,7 @@ const CalendarManagement = () => {
     popupConfig: { error: true },
   });
 
-  const {
-    data: calendarDaysData,
-    isLoading: daysLoading,
-  } = useQueryAndMutation({
+  const { data: calendarDaysData, isLoading: daysLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCalendarDaysQuery,
     params: calendarDaysParams,
@@ -123,7 +118,8 @@ const CalendarManagement = () => {
     popupConfig: { error: false },
   });
 
-  const isCalendarLoading = (calendarsLoading || daysLoading) && (!calendarsData || calendarsData?.items?.length === 0);
+  const isCalendarLoading =
+    (calendarsLoading || daysLoading) && (!calendarsData || calendarsData?.items?.length === 0);
 
   // Mutations
   const [createCalendar, { isLoading: creatingCal }] = useCreateCalendarMutation();
@@ -326,270 +322,284 @@ const CalendarManagement = () => {
         ]}
         action={null}
       />
-
-      {/* Calendar Selector + Status Banner */}
-      <Paper
-        sx={{
-          borderRadius: 3,
-          overflow: 'hidden',
-          border: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
-          boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.05)}`,
-        }}
-      >
-        <Box
+      <AcademicContextContent loading={calendarsLoading}>
+        {/* Calendar Selector + Status Banner */}
+        <Paper
           sx={{
-            px: 2.5,
-            py: 1.5,
-            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.primary.light, 0.02)} 100%)`,
-            borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+            borderRadius: 3,
+            overflow: 'hidden',
+            border: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+            boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.05)}`,
           }}
         >
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            alignItems={{ sm: 'center' }}
-            gap={1}
-            flexWrap="wrap"
+          <Box
+            sx={{
+              px: 2.5,
+              py: 1.5,
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.primary.light, 0.02)} 100%)`,
+              borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+            }}
           >
-            {/* Selected Calendar Indicator / Skeleton Loader */}
-            {isCalendarLoading ? (
-              <Stack direction="row" alignItems="center" gap={1.5} width="100%">
-                <Skeleton
-                  variant="rounded"
-                  width={36}
-                  height={36}
-                  sx={{ borderRadius: 2, flexShrink: 0 }}
-                />
-                <Stack spacing={0.75} flex={1}>
-                  <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
-                    <Skeleton variant="text" width={180} height={22} sx={{ borderRadius: 1 }} />
-                    <Skeleton variant="rounded" width={115} height={24} sx={{ borderRadius: 2 }} />
-                    <Skeleton variant="rounded" width={90} height={24} sx={{ borderRadius: 2 }} />
-                  </Stack>
-                  <Stack direction="row" alignItems="center" gap={1}>
-                    <Skeleton variant="circular" width={14} height={14} />
-                    <Skeleton variant="text" width={170} height={16} sx={{ borderRadius: 1 }} />
-                  </Stack>
-                </Stack>
-                <Box sx={{ ml: 'auto' }}>
-                  <Skeleton variant="rounded" width={75} height={24} sx={{ borderRadius: 1 }} />
-                </Box>
-              </Stack>
-            ) : selectedCalendar ? (
-              <Stack direction="row" alignItems="center" gap={1}>
-                <Avatar
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 2,
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                    flexShrink: 0,
-                  }}
-                >
-                  <Iconify icon="mdi:calendar-month-outline" width={18} sx={{ color: '#fff' }} />
-                </Avatar>
-                <Stack spacing={1}>
-                  <Box display="flex" gap={1} alignItems="center">
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      {selectedCalendar.name}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        px: 1.25,
-                        py: 0.4,
-                        borderRadius: 2,
-                        backgroundColor: alpha(theme.palette.success.main, 0.1),
-                        border: `1px solid ${alpha(theme.palette.success.main, 0.25)}`,
-                      }}
-                    >
-                      <Iconify icon="mdi:briefcase-check-outline" width={13} color="success.main" />
-                      <Typography variant="caption" fontWeight={700} color="success.main">
-                        {calendarSummary.totalWorkingDays}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Working Days
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        px: 1.25,
-                        py: 0.4,
-                        borderRadius: 2,
-                        backgroundColor: alpha(theme.palette.error.main, 0.1),
-                        border: `1px solid ${alpha(theme.palette.error.main, 0.25)}`,
-                      }}
-                    >
-                      <Iconify icon="mdi:flag-outline" width={13} color="error.main" />
-                      <Typography variant="caption" fontWeight={700} color="error.main">
-                        {calendarSummary.totalHolidays}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Holidays
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Stack direction="row" alignItems="center" gap={1}>
-                    <Iconify icon="mdi:calendar-range-outline" width={15} color="text.secondary" />
-                    <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                      {dayjs(calendarStartDate).format('DD MMM YYYY')} –{' '}
-                      {dayjs(calendarEndDate).format('DD MMM YYYY')}
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </Stack>
-            ) : (
-              <Stack direction="row" alignItems="center" gap={1}>
-                <Avatar
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 2,
-                    background: theme.palette.grey[400],
-                    flexShrink: 0,
-                  }}
-                >
-                  <Iconify icon="mdi:calendar-remove-outline" width={18} sx={{ color: '#fff' }} />
-                </Avatar>
-                <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
-                  No active calendar for this academic medium
-                </Typography>
-              </Stack>
-            )}
-
-            {/* Actions */}
-            {selectedCalendar && (
-              <Stack direction="row" gap={1.5} alignItems="center" ml="auto">
-                {canPublish && selectedCalendar?.status === CalendarStatus.Draft && (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    startIcon={<Iconify icon="mdi:publish" width={16} />}
-                    onClick={publishConfirm.onTrue}
-                  >
-                    Publish
-                  </Button>
-                )}
-                <Label
-                  variant="soft"
-                  color={selectedCalendar?.status === CalendarStatus.Draft ? 'info' : 'success'}
-                >
-                  {CalendarStatus[selectedCalendar?.status]}
-                </Label>
-              </Stack>
-            )}
-          </Stack>
-        </Box>
-      </Paper>
-
-      <CalendarViewControls
-        activeTab={activeTab}
-        onTabChange={(tab) => setParam('tab', tab)}
-        classOptions={classFilterOptions}
-        classId={filterStandardId}
-        onClassChange={setFilterStandardId}
-      />
-
-      {/* Tab Content */}
-      <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-        {/* YEAR VIEW TAB */}
-        {activeTab === 'yearView' && (
-          <>
-            {calendarsLoading ? (
-              <CalendarYearSkeleton />
-            ) : !selectedCalendarId ? (
-              <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2 }}>
-                <Typography color="text.secondary">Select a calendar to view</Typography>
-              </Paper>
-            ) : (
-              <CalendarYearView
-                dayMap={visibleCalendarDayMap}
-                calendarStartDate={calendarStartDate}
-                calendarEndDate={calendarEndDate}
-                isLoading={daysLoading && calendarDays.length === 0}
-                onDayClick={handleDayClick}
-                activeDayType={activeDayType}
-                onToggleDayType={(type) =>
-                  setActiveDayType((prev) => (prev === type ? null : type))
-                }
-              />
-            )}
-          </>
-        )}
-
-        {/* MONTH VIEW TAB */}
-        {activeTab === 'monthView' && (
-          <>
-            {calendarsLoading ? (
-              <CalendarMonthSkeleton />
-            ) : !selectedCalendar ? (
-              <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
-                <Typography color="text.secondary">Select a calendar to view</Typography>
-              </Paper>
-            ) : (
-              <AcademicCalendarView
-                calendarId={selectedCalendarId}
-                dayMap={visibleCalendarDayMap}
-                calendarStartDate={calendarStartDate}
-                calendarEndDate={calendarEndDate}
-                onDayClick={handleDayClick}
-                isLoading={daysLoading || calendarsLoading}
-              />
-            )}
-          </>
-        )}
-      </Box>
-
-      {/* ── Dialogs ─────────────────────────────────────────────────────── */}
-
-      {/* Add Day Marker */}
-      {selectedCalendarId && selectedCalendar && (
-        <CalendarDayFormDialog
-          open={addDayDialog.value}
-          onClose={() => {
-            addDayDialog.onFalse();
-            setSelectedDayDate('');
-            setSelectedDayMarkerId('');
-          }}
-          calendarId={selectedCalendarId}
-          calendarStatus={selectedCalendar.status}
-          academicMediumId={selectedCalendar.academicMediumId}
-          editData={selectedDayEditData}
-          prefillDate={selectedDayDate || undefined}
-          canDelete={canDelete}
-          deleting={deletingDay}
-          onDelete={handleDeleteDay}
-          standards={standards}
-        />
-      )}
-
-      {/* Publish Confirmation Dialog */}
-      {selectedCalendar && (
-        <ConfirmDialog
-          open={publishConfirm.value}
-          onClose={publishConfirm.onFalse}
-          title="Publish Calendar"
-          content="Are you sure you want to publish this academic calendar?"
-          icon="warning"
-          action={
-            <LoadingButton
-              variant="contained"
-              loading={publishing}
-              startIcon={<Iconify icon="mdi:publish" width={16} />}
-              onClick={async () => {
-                await handlePublish(selectedCalendar);
-                publishConfirm.onFalse();
-              }}
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              alignItems={{ sm: 'center' }}
+              gap={1}
+              flexWrap="wrap"
             >
-              Publish
-            </LoadingButton>
-          }
+              {/* Selected Calendar Indicator / Skeleton Loader */}
+              {isCalendarLoading ? (
+                <Stack direction="row" alignItems="center" gap={1.5} width="100%">
+                  <Skeleton
+                    variant="rounded"
+                    width={36}
+                    height={36}
+                    sx={{ borderRadius: 2, flexShrink: 0 }}
+                  />
+                  <Stack spacing={0.75} flex={1}>
+                    <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+                      <Skeleton variant="text" width={180} height={22} sx={{ borderRadius: 1 }} />
+                      <Skeleton
+                        variant="rounded"
+                        width={115}
+                        height={24}
+                        sx={{ borderRadius: 2 }}
+                      />
+                      <Skeleton variant="rounded" width={90} height={24} sx={{ borderRadius: 2 }} />
+                    </Stack>
+                    <Stack direction="row" alignItems="center" gap={1}>
+                      <Skeleton variant="circular" width={14} height={14} />
+                      <Skeleton variant="text" width={170} height={16} sx={{ borderRadius: 1 }} />
+                    </Stack>
+                  </Stack>
+                  <Box sx={{ ml: 'auto' }}>
+                    <Skeleton variant="rounded" width={75} height={24} sx={{ borderRadius: 1 }} />
+                  </Box>
+                </Stack>
+              ) : selectedCalendar ? (
+                <Stack direction="row" alignItems="center" gap={1}>
+                  <Avatar
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 2,
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Iconify icon="mdi:calendar-month-outline" width={18} sx={{ color: '#fff' }} />
+                  </Avatar>
+                  <Stack spacing={1}>
+                    <Box display="flex" gap={1} alignItems="center">
+                      <Typography variant="subtitle2" fontWeight={700}>
+                        {selectedCalendar.name}
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          px: 1.25,
+                          py: 0.4,
+                          borderRadius: 2,
+                          backgroundColor: alpha(theme.palette.success.main, 0.1),
+                          border: `1px solid ${alpha(theme.palette.success.main, 0.25)}`,
+                        }}
+                      >
+                        <Iconify
+                          icon="mdi:briefcase-check-outline"
+                          width={13}
+                          color="success.main"
+                        />
+                        <Typography variant="caption" fontWeight={700} color="success.main">
+                          {calendarSummary.totalWorkingDays}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Working Days
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          px: 1.25,
+                          py: 0.4,
+                          borderRadius: 2,
+                          backgroundColor: alpha(theme.palette.error.main, 0.1),
+                          border: `1px solid ${alpha(theme.palette.error.main, 0.25)}`,
+                        }}
+                      >
+                        <Iconify icon="mdi:flag-outline" width={13} color="error.main" />
+                        <Typography variant="caption" fontWeight={700} color="error.main">
+                          {calendarSummary.totalHolidays}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Holidays
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Stack direction="row" alignItems="center" gap={1}>
+                      <Iconify
+                        icon="mdi:calendar-range-outline"
+                        width={15}
+                        color="text.secondary"
+                      />
+                      <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                        {dayjs(calendarStartDate).format('DD MMM YYYY')} –{' '}
+                        {dayjs(calendarEndDate).format('DD MMM YYYY')}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </Stack>
+              ) : (
+                <Stack direction="row" alignItems="center" gap={1}>
+                  <Avatar
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 2,
+                      background: theme.palette.grey[400],
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Iconify icon="mdi:calendar-remove-outline" width={18} sx={{ color: '#fff' }} />
+                  </Avatar>
+                  <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
+                    No active calendar for this academic medium
+                  </Typography>
+                </Stack>
+              )}
+
+              {/* Actions */}
+              {selectedCalendar && (
+                <Stack direction="row" gap={1.5} alignItems="center" ml="auto">
+                  {canPublish && selectedCalendar?.status === CalendarStatus.Draft && (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<Iconify icon="mdi:publish" width={16} />}
+                      onClick={publishConfirm.onTrue}
+                    >
+                      Publish
+                    </Button>
+                  )}
+                  <Label
+                    variant="soft"
+                    color={selectedCalendar?.status === CalendarStatus.Draft ? 'info' : 'success'}
+                  >
+                    {CalendarStatus[selectedCalendar?.status]}
+                  </Label>
+                </Stack>
+              )}
+            </Stack>
+          </Box>
+        </Paper>
+
+        <CalendarViewControls
+          activeTab={activeTab}
+          onTabChange={(tab) => setParam('tab', tab)}
+          classOptions={classFilterOptions}
+          classId={filterStandardId}
+          onClassChange={setFilterStandardId}
         />
-      )}
+
+        {/* Tab Content */}
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+          {/* YEAR VIEW TAB */}
+          {activeTab === 'yearView' && (
+            <>
+              {calendarsLoading ? (
+                <CalendarYearSkeleton />
+              ) : !selectedCalendarId ? (
+                <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2 }}>
+                  <Typography color="text.secondary">Select a calendar to view</Typography>
+                </Paper>
+              ) : (
+                <CalendarYearView
+                  dayMap={visibleCalendarDayMap}
+                  calendarStartDate={calendarStartDate}
+                  calendarEndDate={calendarEndDate}
+                  isLoading={daysLoading && calendarDays.length === 0}
+                  onDayClick={handleDayClick}
+                  activeDayType={activeDayType}
+                  onToggleDayType={(type) =>
+                    setActiveDayType((prev) => (prev === type ? null : type))
+                  }
+                />
+              )}
+            </>
+          )}
+
+          {/* MONTH VIEW TAB */}
+          {activeTab === 'monthView' && (
+            <>
+              {calendarsLoading ? (
+                <CalendarMonthSkeleton />
+              ) : !selectedCalendar ? (
+                <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
+                  <Typography color="text.secondary">Select a calendar to view</Typography>
+                </Paper>
+              ) : (
+                <AcademicCalendarView
+                  calendarId={selectedCalendarId}
+                  dayMap={visibleCalendarDayMap}
+                  calendarStartDate={calendarStartDate}
+                  calendarEndDate={calendarEndDate}
+                  onDayClick={handleDayClick}
+                  isLoading={daysLoading || calendarsLoading}
+                />
+              )}
+            </>
+          )}
+        </Box>
+
+        {/* ── Dialogs ─────────────────────────────────────────────────────── */}
+
+        {/* Add Day Marker */}
+        {selectedCalendarId && selectedCalendar && (
+          <CalendarDayFormDialog
+            open={addDayDialog.value}
+            onClose={() => {
+              addDayDialog.onFalse();
+              setSelectedDayDate('');
+              setSelectedDayMarkerId('');
+            }}
+            calendarId={selectedCalendarId}
+            calendarStatus={selectedCalendar.status}
+            academicMediumId={selectedCalendar.academicMediumId}
+            editData={selectedDayEditData}
+            prefillDate={selectedDayDate || undefined}
+            canDelete={canDelete}
+            deleting={deletingDay}
+            onDelete={handleDeleteDay}
+            standards={standards}
+          />
+        )}
+
+        {/* Publish Confirmation Dialog */}
+        {selectedCalendar && (
+          <ConfirmDialog
+            open={publishConfirm.value}
+            onClose={publishConfirm.onFalse}
+            title="Publish Calendar"
+            content="Are you sure you want to publish this academic calendar?"
+            icon="warning"
+            action={
+              <LoadingButton
+                variant="contained"
+                loading={publishing}
+                startIcon={<Iconify icon="mdi:publish" width={16} />}
+                onClick={async () => {
+                  await handlePublish(selectedCalendar);
+                  publishConfirm.onFalse();
+                }}
+              >
+                Publish
+              </LoadingButton>
+            }
+          />
+        )}
+      </AcademicContextContent>
     </Box>
   );
 };

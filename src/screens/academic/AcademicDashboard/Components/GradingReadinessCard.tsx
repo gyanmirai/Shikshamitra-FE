@@ -7,12 +7,14 @@ import { academicPaths } from 'src/constants/academic-menu';
 import { Box, Grid, Chip, Stack, Typography } from '@mui/material';
 
 import { TopMetricTile } from './TopMetricTile';
+import { getGradingStatus } from './academic-readiness';
 import { DashboardSectionCard } from './DashboardSectionCard';
 
 const formatCount = (value?: number | null) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 export function GradingReadinessCard({ data }: { data: AdminAcademicDashboardAssessmentData }) {
-  const requiresAction = data.pendingGradeEntries > 0;
+  const gradingStatus = getGradingStatus(data);
+  const requiresAction = gradingStatus !== 'Compiled';
 
   return (
     <DashboardSectionCard
@@ -58,7 +60,7 @@ export function GradingReadinessCard({ data }: { data: AdminAcademicDashboardAss
                   Assessment Cycle
                 </Typography>
                 <Typography variant="h3" sx={{ lineHeight: 1.05 }}>
-                  {requiresAction ? 'Pending Grade Entry' : 'Compiled'}
+                  {gradingStatus}
                 </Typography>
               </Box>
               <Box

@@ -1,6 +1,9 @@
 import type { AcademicYear } from 'src/types/school';
 import type { FileData } from 'src/components/custom-upload';
-import type { AssignmentV2Dto, AssignmentTypeDto } from 'src/redux/academicAPI/HomeworkAssignmentApi/contracts';
+import type {
+  AssignmentV2Dto,
+  AssignmentTypeDto,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/contracts';
 import type {
   AssignmentFormDataValue,
   AssignmentScheduleFormValue,
@@ -8,6 +11,7 @@ import type {
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
+import { learningTaskDateTime } from 'src/utils/learning-task-date-time';
 import {
   evaluationUsesMarks,
   AssignmentSubmissionType,
@@ -71,8 +75,8 @@ export const getAssignmentInitialValues = (
       editData?.divisionSchedules?.map((division) => ({
         divisionId: division.divisionId,
         divisionName: division.divisionName,
-        publishDate: division.publishAt ? dayjs(division.publishAt) : null,
-        dueDate: division.dueAt ? dayjs(division.dueAt) : null,
+        publishDate: division.publishAt ? learningTaskDateTime(division.publishAt) : null,
+        dueDate: division.dueAt ? learningTaskDateTime(division.dueAt) : null,
         status: division.isPublished ? 1 : 0,
       })) ?? [],
     subjectName: editData?.subjectName ?? '',
@@ -114,13 +118,11 @@ export const applyAssignmentTypeDefaults = (
   };
 };
 
-const scheduleMatchesDefault = (
-  schedule: AssignmentScheduleFormValue,
-  defaultDueDays: number
-) =>
+const scheduleMatchesDefault = (schedule: AssignmentScheduleFormValue, defaultDueDays: number) =>
   !schedule.publishDate ||
   !schedule.dueDate ||
-  schedule.dueDate.valueOf() - schedule.publishDate.valueOf() === defaultDueDays * 24 * 60 * 60 * 1000;
+  schedule.dueDate.valueOf() - schedule.publishDate.valueOf() ===
+    defaultDueDays * 24 * 60 * 60 * 1000;
 
 export const hasAssignmentTypeOverrides = (
   values: AssignmentFormValues,
@@ -129,7 +131,10 @@ export const hasAssignmentTypeOverrides = (
   if (!assignmentType) return false;
 
   const { evaluationRequired, evaluationMethod } = getEffectiveEvaluation(assignmentType);
-  if (values.evaluationRequired !== evaluationRequired || values.evaluationMethod !== evaluationMethod) {
+  if (
+    values.evaluationRequired !== evaluationRequired ||
+    values.evaluationMethod !== evaluationMethod
+  ) {
     return true;
   }
   if (
@@ -156,10 +161,10 @@ export const hasAssignmentTypeOverrides = (
 const validAcademicYear = (currentYear?: Partial<AcademicYear> | null) =>
   Boolean(
     currentYear?.id &&
-      currentYear.startDate &&
-      currentYear.endDate &&
-      dayjs(currentYear.startDate).isValid() &&
-      dayjs(currentYear.endDate).isValid()
+    currentYear.startDate &&
+    currentYear.endDate &&
+    dayjs(currentYear.startDate).isValid() &&
+    dayjs(currentYear.endDate).isValid()
   );
 
 export const assignmentValidationSchema = (
@@ -176,14 +181,10 @@ export const assignmentValidationSchema = (
         Boolean(value && dayjs(value as dayjs.ConfigType).isValid())
       )
       .test('min-date', `${label} is outside the selected academic year`, (value) =>
-        !value || !minDate
-          ? true
-          : dayjs(value as dayjs.ConfigType).isSameOrAfter(minDate, 'day')
+        !value || !minDate ? true : dayjs(value as dayjs.ConfigType).isSameOrAfter(minDate, 'day')
       )
       .test('max-date', `${label} is outside the selected academic year`, (value) =>
-        !value || !maxDate
-          ? true
-          : dayjs(value as dayjs.ConfigType).isSameOrBefore(maxDate, 'day')
+        !value || !maxDate ? true : dayjs(value as dayjs.ConfigType).isSameOrBefore(maxDate, 'day')
       )
       .required(`${label} is required`);
 
@@ -237,7 +238,9 @@ export const assignmentValidationSchema = (
     rubricTemplateId: Yup.string().when('evaluationMethod', {
       is: AssignmentEvaluationMethod.Rubric,
       then: (schema) =>
-        isEdit ? schema.optional() : schema.required('Rubric Template is required for Rubric evaluation'),
+        isEdit
+          ? schema.optional()
+          : schema.required('Rubric Template is required for Rubric evaluation'),
       otherwise: (schema) => schema.optional(),
     }),
   });
