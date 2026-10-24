@@ -22,9 +22,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
-import FeeHeadDependencies, {
-  feeHeadDependencyMessage,
-} from '../../components/FeeHeadDependencies';
+import { feeHeadDependencyMessage } from '../../components/FeeHeadDependencies';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   useGetFeeCategoriesQuery,
@@ -124,8 +122,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
   });
 
   const incomeCategoryOptions = useMemo(
-    () =>
-      (incomeCategoryData?.items ?? []).map((category: any) => {
+    () => [
+      { id: '', displayName: 'None', name: 'None', code: '' },
+      ...(incomeCategoryData?.items ?? []).map((category: any) => {
         const displayName = String(category.name ?? '');
         const match = displayName.match(/^(.*?)\s*\[([^\]]+)\]$/);
         return {
@@ -135,6 +134,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
           code: match?.[2] || '',
         };
       }),
+    ],
     [incomeCategoryData]
   );
 
@@ -836,15 +836,6 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                     </span>
                                   </Tooltip>
                                 </Box>
-                                {removalBlocked && (
-                                  <Box sx={{ gridColumn: '1 / -1', minWidth: 0 }}>
-                                    <FeeHeadDependencies
-                                      name={fh.name}
-                                      feeHeadId={fh.id}
-                                      dependencies={originalHead?.dependencies}
-                                    />
-                                  </Box>
-                                )}
                               </Paper>
                             </Box>
                           );

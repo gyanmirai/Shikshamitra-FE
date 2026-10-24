@@ -50,6 +50,8 @@ export const GlobalIcons = {
   transfer: 'bx:transfer',
   maintenanceIcon: 'pajamas:issue-type-maintenance',
   approvedIcon: 'hugeicons:tick-01',
+  approveDecision: 'mdi:approve',
+  rejectDecision: 'mdi:close-circle',
   delete: 'solar:trash-bin-trash-bold',
   receiptIcon: 'tabler:receipt',
   tick: 'mdi:tick-circle',

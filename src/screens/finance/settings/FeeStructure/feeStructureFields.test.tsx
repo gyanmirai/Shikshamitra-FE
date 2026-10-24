@@ -140,7 +140,7 @@ async function chooseCollection(name: string) {
   fireEvent.click(await screen.findByRole('button', { name: `Select ${name} version 1` }));
 }
 
-it('saves admission-only heads without a payment frequency and explains the exclusion', async () => {
+it('requires a payment frequency for every head and has no admission collection option', async () => {
   state.lookups.settings.terms = [];
   render(ui());
   await addHead();
@@ -148,20 +148,12 @@ it('saves admission-only heads without a payment frequency and explains the excl
   fireEvent.change(within(dialog).getByRole('textbox', { name: /Annual amount/ }), {
     target: { value: '500' },
   });
-  fireEvent.click(within(dialog).getByRole('switch', { name: 'Collect at admission' }));
-  expect(within(dialog).queryByRole('combobox', { name: /Payment frequency/ })).toBeNull();
-  expect(within(dialog).getByText(/Excluded from Fee Collection and income/)).toBeVisible();
-  const info = within(dialog).getByRole('button', { name: 'About collect at admission' });
-  act(() => info.focus());
-  expect(await screen.findByRole('tooltip', {}, { timeout: 4000 })).toHaveTextContent(
-    'does not collect money'
-  );
-  act(() => info.blur());
+  expect(within(dialog).queryByRole('switch', { name: 'Collect at admission' })).toBeNull();
+  expect(within(dialog).getByRole('combobox', { name: /Payment frequency/ })).toBeVisible();
   fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add Fee Head' })).toBeNull());
-  expect(screen.getByText(/Admission only · Excluded from collection and income/)).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Tuition' }));
-  expect(screen.getByRole('switch', { name: 'Collect at admission' })).toBeChecked();
+  expect(await within(dialog).findByText('Select a published payment frequency.')).toBeVisible();
+  expect(screen.getByRole('dialog', { name: 'Add Fee Head' })).toBeVisible();
+  expect(state.mutate).not.toHaveBeenCalled();
 });
 
 it('blocks Next and direct Review when collection is missing while allowing incomplete draft saves', () => {

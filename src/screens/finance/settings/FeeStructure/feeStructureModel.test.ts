@@ -13,7 +13,7 @@ import {
 } from './feeStructureModel';
 
 describe('Fee Structure editor contract', () => {
-  it('defaults existing heads to regular collection and patches admission collection independently', () => {
+  it('requires schedules for every head and strips the retired admission field from requests', () => {
     const before = structureCandidate({
       feeHeads: [
         {
@@ -28,33 +28,27 @@ describe('Fee Structure editor contract', () => {
           paymentTermVersionId: null,
           scheduleMode: 'Inherited',
           installmentOverrides: [],
-        },
+          collectAtAdmission: true,
+        } as any,
       ],
     });
-    expect(before.feeHeads[0].collectAtAdmission).toBe(false);
     expect(paymentTermError(before.feeHeads[0])).toBeTruthy();
+    expect(before.feeHeads[0]).not.toHaveProperty('collectAtAdmission');
     const after = structureCandidate(before);
-    after.feeHeads[0].collectAtAdmission = true;
-    expect(paymentTermError(after.feeHeads[0])).toBe('');
-    expect(buildStructureChanges(before, after)).toEqual({
-      feeHeads: {
-        add: [],
-        update: [{ lineId: 'line', collectAtAdmission: true }],
-        removeLineIds: [],
-      },
+    after.feeHeads[0] = withDefaultPaymentTerm(after.feeHeads[0], {
+      id: 'term',
+      versionId: 'v1',
+      name: 'Term',
+      versionNumber: 1,
+      isCurrent: true,
+      demandGenerationRule: '',
+      installments: [],
     });
-    expect(structureCandidate(after).feeHeads[0].collectAtAdmission).toBe(true);
-    expect(
-      withDefaultPaymentTerm(after.feeHeads[0], {
-        id: 'term',
-        versionId: 'v1',
-        name: 'Term',
-        versionNumber: 1,
-        isCurrent: true,
-        demandGenerationRule: '',
-        installments: [],
-      }).paymentTermId
-    ).toBeNull();
+    expect(after.feeHeads[0].paymentTermId).toBe('term');
+    expect(paymentTermError(after.feeHeads[0])).toBe('');
+    expect(JSON.stringify(buildStructureChanges(before, after))).not.toContain(
+      'collectAtAdmission'
+    );
   });
   it('patches fixed to variable pricing together without changing the payment term or optional flag', () => {
     const before = structureCandidate({
@@ -115,7 +109,6 @@ describe('Fee Structure editor contract', () => {
           feeHeadId: 'head',
           isVariable: false,
           amount: 1000.01,
-          collectAtAdmission: false,
           isOneTime: false,
           isOptional: false,
           payableMonth: 0,

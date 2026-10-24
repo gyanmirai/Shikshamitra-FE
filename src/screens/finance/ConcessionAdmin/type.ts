@@ -103,7 +103,7 @@ export interface IStudentConcessionDetailsResponse {
 
 export interface IViewConcessionRequestProps {
   student: IStudentInfo | null;
-  onEdit?: () => void;
+  onEdit?: (item: IConcessionRequestItem) => void;
   onApprove?: () => void;
   onReject?: () => void;
   onClose: () => void;

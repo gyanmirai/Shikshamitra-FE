@@ -1,4 +1,31 @@
+import type { Dayjs } from 'dayjs';
+
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
+
+// Match the common MUI picker's inclusive supported range for typed dates too.
+export const bankAccountDateBounds = {
+  minDate: dayjs('1900-01-01'),
+  maxDate: dayjs('2099-12-31'),
+};
+
+const effectiveDate = (label: string) =>
+  Yup.mixed<Dayjs>()
+    .nullable()
+    .test(
+      'valid-date',
+      `${label} must be a valid date (DD/MM/YYYY)`,
+      (value, context) =>
+        !context.parent[`${context.path}Incomplete`] &&
+        (value == null || (dayjs.isDayjs(value) && value.isValid()))
+    )
+    .test('date-range', `${label} must be between 01/01/1900 and 31/12/2099`, (value) => {
+      if (!dayjs.isDayjs(value) || !value.isValid()) return true;
+      return (
+        !value.isBefore(bankAccountDateBounds.minDate, 'day') &&
+        !value.isAfter(bankAccountDateBounds.maxDate, 'day')
+      );
+    });
 
 export const bankAccountValidationSchema = Yup.object().shape({
   bankName: Yup.string()
@@ -41,9 +68,22 @@ export const bankAccountValidationSchema = Yup.object().shape({
     .transform((value) => (value === '' ? null : value))
     .matches(/^[\w.-]+@[\w.-]+$/, 'Invalid UPI ID. Example: prerna123@paytm')
     .nullable(),
-  effectiveFrom: Yup.date().required('Effective from is required'),
-  effectiveTo: Yup.date()
-    .nullable()
-    .transform((v, o) => (o === '' ? null : v))
-    .min(Yup.ref('effectiveFrom'), 'Effective to must be on or after effective from'),
+  effectiveFromIncomplete: Yup.boolean(),
+  effectiveToIncomplete: Yup.boolean(),
+  effectiveFrom: effectiveDate('Effective from').required('Effective from is required'),
+  effectiveTo: effectiveDate('Effective to').test(
+    'date-order',
+    'Effective to must be on or after effective from',
+    (value, context) => {
+      const { effectiveFrom } = context.parent;
+      if (
+        !dayjs.isDayjs(value) ||
+        !value.isValid() ||
+        !dayjs.isDayjs(effectiveFrom) ||
+        !effectiveFrom.isValid()
+      )
+        return true;
+      return !value.isBefore(effectiveFrom, 'day');
+    }
+  ),
 });

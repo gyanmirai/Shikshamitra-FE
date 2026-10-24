@@ -14,6 +14,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
+import { fDate, formatStr } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { financePermissions } from 'src/constants/finance-menu';
@@ -27,7 +28,8 @@ import {
   PaymentMethodsStatusType,
   PaymentMethodsStatusOptions,
 } from 'src/enums/finance-reconcilition-status';
-import { useGetReconciliationListQuery ,
+import {
+  useGetReconciliationListQuery,
   useRejectReconciliationMutation,
   useApproveReconciliationMutation,
   useDownloadReconciliationReceiptPdfMutation,
@@ -84,7 +86,8 @@ const DemandDraftTable = ({
         divisionName: item.division,
         ddNumber: item.instrumentDetails?.ddNumber,
         bankName: item.instrumentDetails?.issuingBankName || item.instrumentDetails?.branchName,
-        receivedDDDate: item.instrumentDetails?.ddDate,
+        ddIssueDate: item.instrumentDetails?.ddDate,
+        paymentDate: item.instrumentDetails?.paymentDate ?? item.paymentDate,
       })),
     [listResponse?.items]
   );
@@ -186,33 +189,34 @@ const DemandDraftTable = ({
         },
       },
       {
-        id: 'receivedDDDate',
-        label: 'DD Date',
-        width: 120,
-        minWidth: 100,
-        maxWidth: 160,
+        id: 'ddIssueDate',
+        label: 'DD Issue Date',
+        width: 190,
+        minWidth: 190,
+        maxWidth: 210,
         align: 'left',
         isFilter: true,
         filterType: 'date',
-        render: (value) => {
-          if (!value)
-            return (
-              <Typography variant="caption" fontSize="13px">
-                -
-              </Typography>
-            );
-
-          const date = new Date(value);
-          const formattedDate = Number.isNaN(date.getTime())
-            ? '-'
-            : `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
-
-          return (
-            <Typography variant="caption" fontSize="13px">
-              {formattedDate}
-            </Typography>
-          );
-        },
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value && dayjs(value).isValid() ? fDate(value, formatStr.paramCase.date) : '-'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'paymentDate',
+        label: 'Payment Date',
+        width: 190,
+        minWidth: 190,
+        maxWidth: 210,
+        align: 'left',
+        isFilter: true,
+        filterType: 'date',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value && dayjs(value).isValid() ? fDate(value, formatStr.paramCase.date) : '-'}
+          </Typography>
+        ),
       },
       {
         id: 'remarks',

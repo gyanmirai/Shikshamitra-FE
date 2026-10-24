@@ -1767,6 +1767,11 @@ Use `EmptyContent` from `src/components/empty-content/` for an explicit empty st
 
 Use `CustomTooltip` from `src/components/custom-tooltip/` for concise supplementary information.
 
+Section headers and Finance policy drawer headers use `InfoTooltipIcon` from
+`src/components/custom-tooltip/info-tooltip-icon.tsx`. It keeps a 44px focusable/touch target
+while anchoring Popper to the visible 16px glyph. Right placement flips within the nearest
+dialog panel (or viewport); keep that shared anchoring when adding section help.
+
 The existing `InfoTooltipIcon` in `src/screens/hr/policies/components/HRPolicySharedUI.tsx` accepts an optional `label` for a named, keyboard-focusable icon button. Use it for explanatory Finance table headers and row details; existing callers without `label` retain their original presentation.
 
 **Rules**

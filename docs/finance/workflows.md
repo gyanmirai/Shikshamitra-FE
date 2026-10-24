@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-23
+updated_on: 2026-10-24
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,6 +16,26 @@ The backend [security standard](https://github.com/gyanmirai/Shikshamitra-BE/blo
 Existing backend operations that share one permission identifier remain one capability until a separately approved domain change.
 
 # Trace Finance frontend workflows
+
+## Copy policies, refund details and Demand Draft dates
+
+Copy Fee Structure checks linked policies before enabling submission. Each supported policy
+shows its name, source snapshot, current active version and version selected for the copy.
+New copies select the current Collection/Refund version of the same policy; the source retains
+its historical snapshots. Retired structure-level concession attachments are identified as
+legacy information and are not copied; concession request policy selection remains separate.
+Unavailable policies block copying. A policy changed during submission produces a named
+version error; **Refresh and select current versions** reloads the selection without losing
+the target name. Retries retain the existing idempotency behavior.
+
+Refund Policy details anchor header/section help to the visible info icon while retaining
+the keyboard/touch target and panel collision handling. Settlement Guarantees & Constraints
+shows saved per-request and student/year caps, or **No settlement guarantees or constraints
+configured.** when both are absent.
+
+Demand Draft reconciliation displays **DD Issue Date** and **Payment Date** independently.
+Missing issue dates remain unavailable. See the [backend date contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#demand-draft-collection-dates)
+for persisted values and historical limitations.
 
 ## Table row actions
 
@@ -90,17 +110,32 @@ student facts show an unavailable marker rather than sample student data.
 
 ## Concession request presentation
 
+Pending cards keep icon-only Approve and Reject controls for their respective permission holders,
+using the green approval badge and red close-circle icons from Leave Center. The card header has
+no leading decorative icon. Saved requests in the Pending bucket can be decided without a separate
+submission action when the server permits it. Decisions still require server eligibility,
+independent-checker identity and the existing mandatory-document approval checks.
+Final requests do not offer Approve or Reject.
+
 View Concession shows six student facts in one row at desktop container widths: student name,
 GR number, roll number, class, division, and combined Board / Medium. Board and medium names
-come from the saved student record. Narrow layouts wrap these facts. Edit uses an accessible
-icon-only action beside Delete, retaining the existing draft and permission checks.
+come from the saved student record. Student Information uses the same DetailSection, DetailGrid
+and DetailField components and saved-label styling as the Concession Policy view. Narrow layouts
+wrap these facts. Segmented request cards use two columns when their container has room, and
+one column on smaller screens. Each card separates the request header/status, requested amount,
+documents, latest activity and icon-only action footer. Shared ThreeDotsActions renders all
+applicable icons with tooltips and accessible names; card icons retain 44 px touch targets.
+The eye action opens a read-only CustomDialog with full recorded amounts, documents, linked
+refunds and activity. Review/submit, Edit, Approve, Reject, Reverse, Delete and refund creation
+retain their existing permission, state, reason and confirmation workflows.
 
-Concession requests retain student scope above a two-column workspace. Policy/type, selectable
-fee heads, supporting documents and remarks sit on the left; inspecting a fee shows its
-original/paid totals, eligible installment amounts and concession in the right panel. Checkboxes
-change request inclusion independently of fee inspection. The panel also shows the entire
-request's server-calculated eligible amount, concession and net payable, with a named reminder
-for missing required documents. The columns stack at narrow container widths. Cancel, Save draft
+Concession requests retain student scope above common FormSectionCard sections. Concession
+Details contains policy/type, eligible fee selection and compact installment inputs. Request
+Summary shows only server-calculated eligible fees, concession and net payable; Supporting
+Documents sits below it with the existing file requirements and field-level missing-evidence
+errors. Fee Breakdown uses CustomAccordion. The request form has no remarks field.
+Inspecting a fee opens its original/paid/eligible breakdown without changing fee selection or
+request totals. The cards stack at narrow container widths. Cancel, Save draft
 and the permitted submit action retain their labels and styling in the fixed footer. Policy/type
 use the shared searchable CustomSelect with required markers and touch/submission-gated
 ShakingTextField validation. Shared section headings use subtitle1/600, Title Case, neutral icons,
@@ -149,6 +184,12 @@ The Fee Category table applies category name and description text filters, fee-h
 Export retrieves every page matching the current query and visible column order; cancellation or incomplete results do not produce a partial file.
 Category details keep one income-category value per fee head, labeled concession badges, wrapping text, and responsive cards inside the shared scrollable dialog.
 
+Fee-head usage restrictions use a compact neutral message with an amber icon. “View usage”
+expands the server's student, assignment, fee-structure and payment-term counts and the existing
+permission-gated review links. Missing counts are reported as unavailable. The removal and
+deactivation guards remain unchanged. These warnings belong in the affected action dialogs;
+editing a fee category does not display a usage warning beneath each fee head.
+
 Charge authoring keeps academic scope and selected students in the form. Search and quick filters narrow results without removing selections; Select All applies to matching results, and All students in scope remains the complete eligible academic scope. Failed reloads preserve selections and offer retry. Invalid selections are removed only after an authoritative scope load and a visible notice. The persistent footer checks the canonical Add/Update grant, required values and audience. Successful creation returns to the list as Pending; Cancel and back use the unsaved-changes guard. Fee Structure Policies validate Collection before Next/Review while retaining optional Refund and incomplete draft saves.
 
 ## Accounts setting forms and history
@@ -173,6 +214,13 @@ and bank-account forms use the same section cards as Academic Subject forms.
 | Exports              | Feature-specific filenames; Hindi/Gujarati exports use shaped embedded-font text; Actions remain excluded                                                                                             |
 
 The [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#category-and-bank-settings-data) owns validation, masking and history persistence.
+
+Bank-account effective dates use the common themed MUI date picker with `DD/MM/YYYY`
+display and Dayjs/null form values. Effective from is required; Effective to may be
+empty or on/after the start date. Invalid or incomplete typing and
+dates outside the common picker range (1900–2099) block submission. Changing the
+start revalidates the end. Submission preserves the selected calendar days as UTC
+start-of-day/end-of-day timestamps; an empty end is sent as `null`.
 
 ## Accounts source activity
 
@@ -405,7 +453,7 @@ The request form loads active policies for the selected academic year and fee as
 3. Save Draft remains available after student, year, type, and assignment context resolve even when fee selections or mandatory evidence are incomplete. Submit requires the current authoritative preview and all mandatory evidence. Removing all evidence sends an empty replacement list.
 4. Draft, Pending, Approved, Rejected, Cancelled, Partially Reversed, and Reversed are distinct tabs and labels. Edit/delete appear only for Draft; an owner with Cancel can withdraw Draft or Pending with a reason.
 5. Approval is two-step: Review Impact calls the approval-preview endpoint, then Confirm and Apply sends the returned fingerprint and current request stamp. The panel shows submitted and current maximum amounts, warns when balances changed, and requires a reason for a reduction. Reversal follows the same preview/confirm pattern and sends allocation due-row stamps.
-6. Buttons require both the matching `Finance.Fees.Concession` permission and the server-provided available action. Detail views render the stored lifecycle timeline. Opening a View-only detail does not call an approval mutation. API authorization and maker-checker checks remain authoritative.
+6. Buttons require both the matching `Finance.Fees.Concession` permission and the server-provided available action. Administrators can approve or reject their own concession requests; ordinary creators and submitters remain blocked. Apply the same decision eligibility in the request cards, review dialogs and register. The backend verifies current configured administrator membership, exact action permission and record scope. Detail views render the stored lifecycle timeline. Opening a View-only detail does not call an approval mutation.
 
 ## Trace settings changes
 

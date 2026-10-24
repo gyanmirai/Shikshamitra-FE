@@ -26,10 +26,11 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
+import FinanceListActionRow from 'src/screens/finance/components/FinanceListActionRow';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
-import FinanceListActionRow from 'src/screens/finance/components/FinanceListActionRow';
 import {
   Box,
   Tab,
@@ -128,9 +129,9 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
     );
   }, [scopeKey]);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const currentUserId = useSelector(
-    (state: RootState) => state.auth.user?.sub as string | undefined
-  );
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const currentUserId = currentUser?.sub as string | undefined;
+  const isAdministrator = isFinanceAdministratorSession({ profile: currentUser });
   const actions = financePermissions.fees.concessionActions;
   const canApprove = hasGrantedPermission(permissions, actions.approve);
   const canReject = hasGrantedPermission(permissions, actions.reject);
@@ -181,7 +182,8 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
       !canDecideConcession(
         currentUserId,
         approvalRequest.requesterId,
-        approvalRequest.submittedById
+        approvalRequest.submittedById,
+        isAdministrator
       )
     ) {
       closeApproval();
@@ -212,7 +214,8 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
       !canDecideConcession(
         currentUserId,
         approvalRequest.requesterId,
-        approvalRequest.submittedById
+        approvalRequest.submittedById,
+        isAdministrator
       )
     ) {
       closeApproval();
@@ -575,7 +578,8 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
               const canDecide = canDecideConcession(
                 currentUserId,
                 row.requesterId,
-                row.submittedById
+                row.submittedById,
+                isAdministrator
               );
               const decisionTooltip =
                 !currentUserId || !row.requesterId
@@ -609,8 +613,13 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                             label: `Approve ${row.studentIdentity}`,
                             icon: 'solar:check-circle-bold',
                             color: 'success.main',
-                            disabled: !canDecide,
-                            tooltip: !canDecide ? decisionTooltip : undefined,
+                            disabled:
+                              !canDecide || row.availableActions?.includes('approve') === false,
+                            tooltip: !canDecide
+                              ? decisionTooltip
+                              : row.availableActions?.includes('approve') === false
+                                ? 'Approval is unavailable for this request. Refresh to check its current state.'
+                                : undefined,
                             onClick: () => {
                               setApprovalPreview(null);
                               setApprovalRequest(row as ConcessionApplication);
@@ -627,8 +636,13 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                             label: `Reject ${row.studentIdentity}`,
                             icon: 'solar:close-circle-bold',
                             color: 'error.main',
-                            disabled: !canDecide,
-                            tooltip: !canDecide ? decisionTooltip : undefined,
+                            disabled:
+                              !canDecide || row.availableActions?.includes('reject') === false,
+                            tooltip: !canDecide
+                              ? decisionTooltip
+                              : row.availableActions?.includes('reject') === false
+                                ? 'Rejection is unavailable for this request. Refresh to check its current state.'
+                                : undefined,
                             onClick: () => onReject(row as IStudentInfo),
                           },
                         ]

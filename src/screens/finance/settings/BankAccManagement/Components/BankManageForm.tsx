@@ -1,13 +1,15 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -25,11 +27,13 @@ import {
 
 import { getBankAccountInitialValues } from './bankInitialValues';
 import { BankAccountType, type IBankAccountFormProps } from './type';
-import { bankAccountValidationSchema } from './BankValidationSchema';
+import { bankAccountDateBounds, bankAccountValidationSchema } from './BankValidationSchema';
 
 const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [saveError, setSaveError] = useState('');
+  const fromDateInputRef = useRef<HTMLInputElement>(null);
+  const toDateInputRef = useRef<HTMLInputElement>(null);
 
   const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
   const [pendingFormValues, setPendingFormValues] = useState<ReturnType<
@@ -65,7 +69,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
   });
 
   // Perform the actual form submission
-  const performSubmission = async (values: any) => {
+  const performSubmission = async (values: ReturnType<typeof getBankAccountInitialValues>) => {
     setSaveError('');
     try {
       // Transform form data to API format
@@ -79,9 +83,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
         purpose: values.purpose || '',
         ifscCode: values.ifscCode,
         upiId: values.upiId || '',
-        effectiveFrom: new Date(`${values.effectiveFrom}T00:00:00Z`).toISOString(),
+        effectiveFrom: `${values.effectiveFrom!.format('YYYY-MM-DD')}T00:00:00.000Z`,
         effectiveTo: values.effectiveTo
-          ? new Date(`${values.effectiveTo}T23:59:59Z`).toISOString()
+          ? `${values.effectiveTo.format('YYYY-MM-DD')}T23:59:59.000Z`
           : null,
         concurrencyStamp: editData ? values.concurrencyStamp : null,
       };
@@ -116,6 +120,23 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
   const handleSubmit = useCallback(() => {
     formik.submitForm();
   }, [formik]);
+
+  const handleDateChange = (field: 'effectiveFrom' | 'effectiveTo', value: Dayjs | null) => {
+    formik.setValues((values) => ({ ...values, [field]: value, [`${field}Incomplete`]: false }));
+  };
+
+  const handleDateBlur = (
+    field: 'effectiveFrom' | 'effectiveTo',
+    input: HTMLInputElement | null
+  ) => {
+    // MUI keeps an incomplete draft in its input without publishing onChange when
+    // the previous value was empty. Do not submit that draft as an optional null.
+    formik.setFieldTouched(field, true, false);
+    formik.setValues((values) => ({
+      ...values,
+      [`${field}Incomplete`]: values[field] === null && Boolean(input?.value.trim()),
+    }));
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -157,36 +178,65 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  type="date"
-                  size="small"
-                  label="Effective From *"
-                  name="effectiveFrom"
-                  InputLabelProps={{ shrink: true }}
-                  value={formik.values.effectiveFrom}
-                  onChange={formik.handleChange}
+                <ShakingTextField
                   error={Boolean(formik.touched.effectiveFrom && formik.errors.effectiveFrom)}
-                  helperText={
-                    (formik.touched.effectiveFrom && formik.errors.effectiveFrom) || undefined
-                  }
-                />
+                >
+                  <DatePicker
+                    {...bankAccountDateBounds}
+                    label="Effective from"
+                    format="DD/MM/YYYY"
+                    value={formik.values.effectiveFrom}
+                    inputRef={fromDateInputRef}
+                    disabled={isAddLoading || isUpdateLoading}
+                    onChange={(value) => handleDateChange('effectiveFrom', value)}
+                    slotProps={{
+                      textField: {
+                        name: 'effectiveFrom',
+                        required: true,
+                        fullWidth: true,
+                        size: 'small',
+                        onBlur: () => handleDateBlur('effectiveFrom', fromDateInputRef.current),
+                        error: Boolean(formik.touched.effectiveFrom && formik.errors.effectiveFrom),
+                        helperText: formik.touched.effectiveFrom
+                          ? (formik.errors.effectiveFrom as string)
+                          : undefined,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  type="date"
-                  size="small"
-                  label="Effective To"
-                  name="effectiveTo"
-                  InputLabelProps={{ shrink: true }}
-                  value={formik.values.effectiveTo}
-                  onChange={formik.handleChange}
+                <ShakingTextField
                   error={Boolean(formik.touched.effectiveTo && formik.errors.effectiveTo)}
-                  helperText={
-                    (formik.touched.effectiveTo && formik.errors.effectiveTo) || undefined
-                  }
-                />
+                >
+                  <DatePicker
+                    {...bankAccountDateBounds}
+                    label="Effective to"
+                    format="DD/MM/YYYY"
+                    value={formik.values.effectiveTo}
+                    inputRef={toDateInputRef}
+                    minDate={
+                      formik.values.effectiveFrom?.isValid() &&
+                      formik.values.effectiveFrom.isAfter(bankAccountDateBounds.minDate, 'day')
+                        ? formik.values.effectiveFrom
+                        : bankAccountDateBounds.minDate
+                    }
+                    disabled={isAddLoading || isUpdateLoading}
+                    onChange={(value) => handleDateChange('effectiveTo', value)}
+                    slotProps={{
+                      textField: {
+                        name: 'effectiveTo',
+                        fullWidth: true,
+                        size: 'small',
+                        onBlur: () => handleDateBlur('effectiveTo', toDateInputRef.current),
+                        error: Boolean(formik.touched.effectiveTo && formik.errors.effectiveTo),
+                        helperText: formik.touched.effectiveTo
+                          ? (formik.errors.effectiveTo as string)
+                          : undefined,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
               </Grid>
 
               {/* Branch Name */}

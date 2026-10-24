@@ -1,6 +1,7 @@
 import React from 'react';
 import { it, vi, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { formatNumber } from 'src/utils/formate_number';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import FinancePolicyDetailsDrawer from './FinancePolicyDetailsDrawer';
 
@@ -85,4 +86,60 @@ it('shows refund fee head names and lifecycle labels without exposing reference 
   expect(screen.getByText('Student refunds')).toBeInTheDocument();
   expect(screen.getByText('Main payout account')).toBeInTheDocument();
   expect(screen.queryByText(feeHeadId)).not.toBeInTheDocument();
+});
+
+it('shows saved settlement limits in their section without duplicating them in calculation', () => {
+  render(
+    <FinancePolicyDetailsDrawer
+      open
+      onClose={vi.fn()}
+      policy={policy}
+      policyDetails={{ maximumPerRequest: 12500, maximumPerStudentYear: 25000 }}
+    />
+  );
+  const settlement = screen
+    .getByRole('heading', { name: 'Settlement Guarantees & Constraints' })
+    .closest('section')!;
+  expect(within(settlement).getByText(formatNumber(12500, 'INR'))).toBeInTheDocument();
+  expect(within(settlement).getByText(formatNumber(25000, 'INR'))).toBeInTheDocument();
+  expect(
+    within(settlement).getByText('Enforced across all processed and reserved refunds')
+  ).toBeInTheDocument();
+  expect(screen.getAllByText(formatNumber(12500, 'INR'))).toHaveLength(1);
+  expect(
+    screen.queryByText('No settlement guarantees or constraints configured.')
+  ).not.toBeInTheDocument();
+});
+
+it('explains the empty settlement configuration instead of rendering an empty box', () => {
+  render(
+    <FinancePolicyDetailsDrawer
+      open
+      onClose={vi.fn()}
+      policy={policy}
+      policyDetails={{ maximumPerRequest: null, maximumPerStudentYear: null }}
+    />
+  );
+  const settlement = screen
+    .getByRole('heading', { name: 'Settlement Guarantees & Constraints' })
+    .closest('section')!;
+  expect(
+    within(settlement).getByText('No settlement guarantees or constraints configured.')
+  ).toBeInTheDocument();
+});
+
+it('shows an unset student-year cap clearly when only the request limit is configured', () => {
+  render(
+    <FinancePolicyDetailsDrawer
+      open
+      onClose={vi.fn()}
+      policy={policy}
+      policyDetails={{ maximumPerRequest: 5000, maximumPerStudentYear: null }}
+    />
+  );
+  const settlement = screen
+    .getByRole('heading', { name: 'Settlement Guarantees & Constraints' })
+    .closest('section')!;
+  expect(within(settlement).getByText(formatNumber(5000, 'INR'))).toBeInTheDocument();
+  expect(within(settlement).getByText('No cumulative student cap')).toBeInTheDocument();
 });

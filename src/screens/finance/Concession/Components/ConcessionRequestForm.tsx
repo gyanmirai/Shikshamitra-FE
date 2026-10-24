@@ -19,16 +19,16 @@ import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useGetStudentsByScopeQuery } from 'src/redux/student';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
 import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import {
   Box,
@@ -41,6 +41,7 @@ import {
   TextField,
   Typography,
   Autocomplete,
+  DialogActions,
 } from '@mui/material';
 import {
   useGetConcessionRequestByIdQuery,
@@ -503,7 +504,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         setSubmitError(message);
         shikshaMitraToast.error({ message });
         if ((err?.data?.errorCode ?? err?.data?.error?.code) === 'Finance:Concession:010020') {
-          void refetchRequestContext();
+          refetchRequestContext();
         }
       }
     },
@@ -985,12 +986,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             <FormBusyRegion busy={isSaving} label="Saving concession request…">
               <Box
                 sx={{
-                  p: { xs: 1.5, sm: 2 },
+                  p: 1.5,
                   containerType: 'inline-size',
                   '& .MuiCard-root': { boxShadow: 'none' },
                 }}
               >
-                <Grid container spacing={2}>
+                <Grid container spacing={1.5}>
                   {/* 1. Student Information */}
                   <Grid size={{ xs: 12 }}>
                     <FormSectionCard
@@ -998,8 +999,11 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       icon="solar:users-group-rounded-bold-duotone"
                       title="Student Information"
                       titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                      iconContainerSize={28}
+                      contentSpacing={1.25}
+                      sx={{ p: 1.5 }}
                     >
-                      <Grid container spacing={2}>
+                      <Grid container spacing={1.5}>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                           <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
                             <CustomSelect
@@ -1435,15 +1439,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         valueFields={
                           values.concessionTypeId && hasSelectedFeeHeads ? (
                             <Box>
-                              {selectedPolicy?.valueSource !== 'PolicyFixed' && (
-                                <FormSectionHeader
-                                  title="Concession Values"
-                                  titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-                                  icon={GlobalIcons.usage}
-                                  descriptionTooltip="Enter concession values for the selected eligible installments."
-                                />
-                              )}
                               <ValueEntryStep
+                                compact
                                 showPolicyFixedDetails={false}
                                 formik={{
                                   ...formik,
@@ -1472,19 +1469,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               canView={canViewDocuments}
                             />
                           ) : undefined
-                        }
-                        remarks={
-                          <TextField
-                            fullWidth
-                            size="small"
-                            multiline
-                            rows={2}
-                            label="Remarks (optional)"
-                            name="remarks"
-                            onBlur={formik.handleBlur}
-                            value={values.remarks}
-                            onChange={(event) => setFieldValue('remarks', event.target.value)}
-                          />
                         }
                       />
                     </Grid>
@@ -1597,38 +1581,90 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             </Box>
           </Box>
         </Box>
-        <ConfirmDialog
+        <CustomDialog
           open={adminConfirmation !== null}
-          icon="warning"
-          title="Submit and approve concession?"
-          disableBackdropClick
-          cancelText="Keep editing"
-          onClose={() => setAdminConfirmation(null)}
-          content={
-            <Stack spacing={1}>
-              <Typography>
-                {adminConfirmation?.studentName || 'Selected student'} · {currentYear?.name}
-              </Typography>
-              <Typography>
-                {adminConfirmation?.concessionType} · {adminConfirmation?.policyName}
-              </Typography>
-              <Typography>
-                Concession: {formatNumber(adminConfirmation?.amount ?? 0, 'INR')}
-              </Typography>
-              <Typography>
-                This request will be approved automatically when you confirm and will affect dues
-                immediately.
-              </Typography>
-              {adminConfirmation?.autoCreateRefund && (
-                <Typography>
-                  Any linked refund request follows its own approval workflow.
-                </Typography>
-              )}
+          title={
+            <Stack component="span" direction="row" alignItems="center" spacing={1}>
+              <Iconify icon="mdi:alert-outline" color="warning.main" sx={{ flexShrink: 0 }} />
+              <Box component="span">Submit and Approve Concession?</Box>
             </Stack>
           }
-          action={
+          maxWidth="sm"
+          paperProps={{
+            sx: { '& > #dialog-form': { height: 'auto !important', flex: '0 1 auto' } },
+          }}
+          hasForm={false}
+          guardUnsavedChanges={false}
+          handleClose={() => setAdminConfirmation(null)}
+        >
+          <DialogScrollContent scrollBarProps={{ sx: { flexGrow: 0 } }}>
+            <Stack spacing={2.5}>
+              <Box
+                component="dl"
+                sx={{
+                  m: 0,
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: '140px minmax(0, 1fr)' },
+                  columnGap: 2,
+                  rowGap: { xs: 0.5, sm: 1.5 },
+                }}
+              >
+                {[
+                  ['Student', adminConfirmation?.studentName || 'Selected student'],
+                  ['Academic year', currentYear?.name || '—'],
+                  ['Concession type', adminConfirmation?.concessionType || '—'],
+                  ['Policy', adminConfirmation?.policyName || '—'],
+                  ['Concession amount', formatNumber(adminConfirmation?.amount ?? 0, 'INR')],
+                ].map(([label, value]) => (
+                  <React.Fragment key={label}>
+                    <Typography component="dt" variant="body2" color="text.secondary">
+                      {label}
+                    </Typography>
+                    <Typography
+                      component="dd"
+                      variant="body2"
+                      sx={{
+                        m: 0,
+                        mb: { xs: 1, sm: 0 },
+                        fontWeight: label === 'Concession amount' ? 700 : 500,
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {value}
+                    </Typography>
+                  </React.Fragment>
+                ))}
+              </Box>
+              <Stack spacing={1}>
+                <Typography variant="body2">
+                  Confirming will automatically approve this request and update the student’s dues
+                  immediately.
+                </Typography>
+                {adminConfirmation?.autoCreateRefund && (
+                  <Typography variant="body2" color="text.secondary">
+                    Any linked refund request follows its own approval workflow.
+                  </Typography>
+                )}
+              </Stack>
+            </Stack>
+          </DialogScrollContent>
+          <DialogActions
+            sx={{ p: 2, borderTop: 1, borderColor: 'divider', flexWrap: 'wrap', rowGap: 1 }}
+          >
+            <Button
+              type="button"
+              size="small"
+              variant="outlined"
+              color="inherit"
+              autoFocus
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={() => setAdminConfirmation(null)}
+            >
+              Keep editing
+            </Button>
             <LoadingButton
-              startIcon={<Iconify icon="mdi:check-circle-outline" />}
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
               type="button"
               variant="contained"
               loading={formik.isSubmitting || createLoading || submitLoading}
@@ -1640,8 +1676,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             >
               Submit and approve
             </LoadingButton>
-          }
-        />
+          </DialogActions>
+        </CustomDialog>
       </form>
     </BackPopUpChecked>
   );

@@ -15,9 +15,17 @@ export const structureCandidate = (source?: Partial<StructureRecord>): Structure
   concurrencyStamp: source?.concurrencyStamp,
   saveAsDraft: true,
   feeHeads: (source?.feeHeads ?? []).map((line) => ({
-    ...line,
+    id: line.id,
+    feeHeadId: line.feeHeadId,
+    feeHeadName: line.feeHeadName,
+    categoryName: line.categoryName,
+    amount: line.amount,
+    isOneTime: line.isOneTime,
+    isOptional: line.isOptional,
+    scheduleMode: line.scheduleMode,
+    paymentTermName: line.paymentTermName,
+    paymentTermVersionNumber: line.paymentTermVersionNumber,
     isVariable: line.isVariable ?? false,
-    collectAtAdmission: line.collectAtAdmission ?? false,
     payableMonth: line.payableMonth ?? 0,
     payableYear: line.payableYear ?? 0,
     paymentTermId: line.paymentTermId ?? null,
@@ -75,7 +83,6 @@ const fields = [
   'amount',
   'isOneTime',
   'isOptional',
-  'collectAtAdmission',
   'payableMonth',
   'payableYear',
 ] as const;
@@ -169,7 +176,6 @@ export function withDefaultPaymentTerm(
   term?: StructureSettings['terms'][number]
 ): StructureLine {
   if (
-    line.collectAtAdmission ||
     !term ||
     line.paymentTermId ||
     line.paymentTermVersionId ||
@@ -187,9 +193,9 @@ export function withDefaultPaymentTerm(
 }
 
 export const paymentTermError = (
-  line: Pick<StructureLine, 'paymentTermId' | 'paymentTermVersionId' | 'collectAtAdmission'>
+  line: Pick<StructureLine, 'paymentTermId' | 'paymentTermVersionId'>
 ) =>
-  !line.collectAtAdmission && (!line.paymentTermId || !line.paymentTermVersionId)
+  !line.paymentTermId || !line.paymentTermVersionId
     ? 'Select a published Payment Term for this Fee Head.'
     : '';
 

@@ -15,13 +15,11 @@ type Props = {
 /** Keeps a blocking form visible while disabling native and custom controls. */
 export function FormBusyRegion({ busy, label = 'Saving…', children, showOverlay = true }: Props) {
   return (
-    <Box
-      component="fieldset"
-      disabled={busy}
-      aria-busy={busy}
-      sx={{ position: 'relative', border: 0, p: 0, m: 0, minWidth: 0 }}
-    >
-      <Box inert={busy || undefined}>{children}</Box>
+    <Box aria-busy={busy} sx={{ position: 'relative', minWidth: 0 }}>
+      <Box component="fieldset" disabled={busy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
+        <Box inert={busy || undefined}>{children}</Box>
+      </Box>
+      {/* Keep feedback outside the fieldset so loading transitions preserve container-query layout. */}
       {busy && !showOverlay && (
         <Box
           role="status"

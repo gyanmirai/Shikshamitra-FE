@@ -61,6 +61,8 @@ export interface ReconciliationListItemDto {
   verificationStatus: ReconciliationVerificationStatus;
   finalReceiptNumber: string | null;
   receiptDate: string;
+  /** Recorded collection date; DD instrument details can contain the entered payment date. */
+  paymentDate?: string | null;
   actedBy: string | null;
   actedByName: string | null;
   actedOn: string | null;
