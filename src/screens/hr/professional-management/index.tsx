@@ -851,6 +851,7 @@ function GuidedSetupTab() {
         >
           <PerformanceDataTable
             tableId="performance-sqaaf-evidence-setup"
+            tableTitle="SQAAF evidence setup"
             columns={[
               {
                 id: 'domain',
@@ -1299,6 +1300,7 @@ function TemplatesTab() {
 
       <PerformanceDataTable
         tableId="performance-templates"
+        tableTitle="Performance templates"
         onExport={exportTable}
         error={tableError}
         onRetry={retryTable}
@@ -1382,6 +1384,7 @@ function TemplatesTab() {
             render: (_value, row) => `${getSectionWeightTotal(row.sections || [])}%`,
           },
           {
+            excludeFromExport: true,
             id: 'actions',
             label: 'Actions',
             isSort: false,
@@ -1391,6 +1394,10 @@ function TemplatesTab() {
             minWidth: '80px',
             render: (_value, row) => (
               <ThreeDotsActions
+                viewLabel={`View ${String(row.title || row.name || row.id)}`}
+                editLabel={`Edit ${String(row.title || row.name || row.id)}`}
+                deleteLabel={`Delete ${String(row.title || row.name || row.id)}`}
+                moreLabel={`More actions for ${String(row.title || row.name || row.id)}`}
                 actions={({ popover }) => (
                   <Stack sx={{ minWidth: 150 }}>
                     <MenuItem
@@ -1850,6 +1857,7 @@ function CyclesTab() {
       />
       <PerformanceDataTable
         tableId="performance-cycles"
+        tableTitle="Performance cycles"
         onExport={exportTable}
         error={tableError}
         onRetry={retryTable}
@@ -1890,6 +1898,7 @@ function CyclesTab() {
           { id: 'assignedCount', label: 'Assigned', minWidth: '110px' },
           { id: 'finalizedCount', label: 'Finalized', minWidth: '110px' },
           {
+            excludeFromExport: true,
             id: 'actions',
             label: 'Actions',
             isSort: false,
@@ -1899,6 +1908,10 @@ function CyclesTab() {
             minWidth: '80px',
             render: (_value, row) => (
               <ThreeDotsActions
+                viewLabel={`View ${String(row.title || row.name || row.id)}`}
+                editLabel={`Edit ${String(row.title || row.name || row.id)}`}
+                deleteLabel={`Delete ${String(row.title || row.name || row.id)}`}
+                moreLabel={`More actions for ${String(row.title || row.name || row.id)}`}
                 actions={({ popover }) => (
                   <Stack sx={{ minWidth: 160 }}>
                     <MenuItem
@@ -2229,6 +2242,7 @@ function DevelopmentPlansTab() {
       <TabHeader title="Development plans and training needs" />
       <PerformanceDataTable
         tableId="performance-development-plans"
+        tableTitle="Development plans"
         columns={[
           { id: 'goal', label: 'Goal', minWidth: '220px' },
           { id: 'actionPlan', label: 'Action Plan', minWidth: '260px' },
@@ -2335,6 +2349,7 @@ function ReportsTab() {
         <SectionPanel title="SQAAF Evidence Coverage">
           <PerformanceDataTable
             tableId="performance-report-sqaaf-evidence"
+            tableTitle="SQAAF evidence"
             error={sqaaQuery.error}
             onRetry={sqaaQuery.refetch}
             isLoading={sqaaQuery.isFetching}
@@ -2370,6 +2385,7 @@ function ReportsTab() {
         <SectionPanel title="Pending Reviews">
           <PerformanceDataTable
             tableId="performance-report-pending-actions"
+            tableTitle="Pending performance actions"
             error={pendingQuery.error}
             onRetry={pendingQuery.refetch}
             isLoading={pendingQuery.isFetching}
@@ -2558,6 +2574,7 @@ function SqaaAuditPackSection() {
 
         <PerformanceDataTable
           tableId="performance-report-sqaaf-audit-pack-domains"
+          tableTitle="SQAAF audit domains"
           columns={[
             {
               id: 'domain',
@@ -2607,6 +2624,7 @@ function SqaaAuditPackSection() {
 
         <PerformanceDataTable
           tableId="performance-report-sqaaf-audit-pack-missing-evidence"
+          tableTitle="Missing SQAAF evidence"
           columns={[
             {
               id: 'domain',
@@ -2672,6 +2690,7 @@ function ReviewTable({
   return (
     <PerformanceDataTable
       tableId="performance-reviews"
+      tableTitle="Performance reviews"
       columns={[
         { id: 'employeeName', label: 'Staff', minWidth: '220px', sticky: true },
         { id: 'employeeIdentifier', label: 'Code', minWidth: '110px' },
@@ -2696,6 +2715,7 @@ function ReviewTable({
           ),
         },
         {
+          excludeFromExport: true,
           id: 'actions',
           label: 'Actions',
           isSort: false,

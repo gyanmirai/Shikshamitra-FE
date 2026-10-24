@@ -111,7 +111,17 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const currentTabLabel = HR_POLICY_TABS.find((t) => t.value === tab)?.label || 'Policies';
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, minWidth: 0 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+        overflowY: { xs: 'auto', sm: 'hidden' },
+        overflowX: 'hidden',
+      }}
+    >
       <CustomBreadcrumbs
         heading={currentTabLabel}
         description={
@@ -129,7 +139,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       {!academicYearId ? <Alert severity="warning">Select an academic year</Alert> : null}
       {isLoading ? <LinearProgress /> : null}
       {academicYearId && !drawer ? (
-        <>
+        <Box sx={{ flexShrink: 0 }}>
           <PolicySetupAlert
             state={ctx.leaveSetupState}
             policy="leave"
@@ -148,11 +158,21 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             canOpen={ctx.canOpenPayrollPolicies}
             onOpen={() => router.push(hrPaths.policies.payroll)}
           />
-        </>
+        </Box>
       ) : null}
 
       {/* Tab content */}
-      <Box sx={{ display: 'flex', flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden', mt: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flex: { xs: '1 0 auto', sm: 1 },
+          // Mobile setup warnings may consume the viewport; keep records and the footer reachable.
+          minHeight: { xs: 420, sm: 0 },
+          minWidth: 0,
+          overflow: 'hidden',
+          mt: 1,
+        }}
+      >
         {tab === 'calendars' ? <CalendarsTab ctx={ctx} /> : null}
         {tab === 'payroll' ? <PolicyTable type="payroll" ctx={ctx} /> : null}
         {tab === 'attendance' ? <PolicyTable type="attendance" ctx={ctx} /> : null}

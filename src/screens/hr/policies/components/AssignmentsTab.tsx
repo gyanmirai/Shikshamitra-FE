@@ -58,6 +58,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     setDraftAssignmentFilters,
     assignmentsLoading,
     assignmentsError,
+    refetchAssignments,
     activePayroll = [],
     activeAttendance = [],
     activeLeavePolicies = [],
@@ -217,6 +218,8 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       },
     },
     {
+      isSort: false,
+      excludeFromExport: true,
       id: 'actions',
       label: 'Actions',
       sticky: true,
@@ -226,6 +229,10 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         const item = (row as AssignmentTableRow).assignment;
         return (
           <ThreeDotsActions
+            viewLabel={`View ${String(row.targetName || row.id)}`}
+            editLabel={`Edit ${String(row.targetName || row.id)}`}
+            deleteLabel={`Delete ${String(row.targetName || row.id)}`}
+            moreLabel={`More actions for ${String(row.targetName || row.id)}`}
             showViewIcon
             handleViewClick={() => openAssignmentDrawer(item, 'view')}
             showEditIcon={canAssignPolicy}
@@ -590,6 +597,8 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         searchFieldProps={{ placeholder: 'Search targets and reasons' }}
         columns={assignmentColumns}
         data={assignmentRows}
+        error={assignmentsError}
+        onRetry={refetchAssignments}
         isLoading={assignmentsLoading}
         isFilter
         isPagination

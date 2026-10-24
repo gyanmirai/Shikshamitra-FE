@@ -25,6 +25,7 @@ const EventsAndHolidaysRequest = () => (
     <CustomizableTable
       noDataText={<>No Leave Requet Found </>}
       tableId="event-holiday-request"
+      tableTitle="Event and holiday requests"
       columns={[
         { id: 'createdBy', label: 'Created By' },
         { id: 'createdAt', label: 'Created At', filterType: 'date' },

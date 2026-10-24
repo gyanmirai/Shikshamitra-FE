@@ -750,6 +750,7 @@ const AttendanceImportHistoryScreen = () => {
         },
       },
       {
+        excludeFromExport: true,
         id: 'actions',
         label: 'Actions',
         isSort: false,
@@ -759,7 +760,14 @@ const AttendanceImportHistoryScreen = () => {
         sticky: true,
         stickyPosition: 'right' as const,
         render: (_value: string, row: any) => (
-          <ThreeDotsActions actions={(props) => actions({ ...props, row })} placement="right-top" />
+          <ThreeDotsActions
+            viewLabel={`View ${String(row.fileName || row.id)}`}
+            editLabel={`Edit ${String(row.fileName || row.id)}`}
+            deleteLabel={`Delete ${String(row.fileName || row.id)}`}
+            moreLabel={`More actions for ${String(row.fileName || row.id)}`}
+            actions={(props) => actions({ ...props, row })}
+            placement="right-top"
+          />
         ),
       },
     ],

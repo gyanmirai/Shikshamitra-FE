@@ -99,7 +99,13 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
     search: page.search,
   });
 
-  const { data, isLoading } = useQueryAndMutation({
+  const {
+    currentData: data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: {
@@ -358,8 +364,13 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
         showFullScreen
         exportScope="all"
         noDataText="No Leave Requests Found"
-        isLoading={isLoading}
+        isLoading={isLoading || (isFetching && !data)}
+        isRefreshing={isFetching && Boolean(data)}
+        paginationDisabled={isFetching}
+        error={error}
+        onRetry={refetch}
         tableId="leave-approvals-table"
+        tableTitle="Leave approvals"
         data={tableData}
         columns={columns}
       />

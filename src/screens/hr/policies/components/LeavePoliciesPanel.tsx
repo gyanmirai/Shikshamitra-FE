@@ -68,7 +68,7 @@ export function LeavePoliciesPanel() {
     archivedOnly: archiveView === 'archived',
   });
   const {
-    data: leavePolicyData,
+    currentData: leavePolicyData,
     isFetching: isLoading,
     refetch,
     error,
@@ -357,6 +357,8 @@ export function LeavePoliciesPanel() {
         },
       },
       {
+        isSort: false,
+        excludeFromExport: true,
         id: 'actions',
         label: 'Actions',
         align: 'right',
@@ -370,6 +372,10 @@ export function LeavePoliciesPanel() {
 
           return (
             <ThreeDotsActions
+              viewLabel={`View ${String(row.policyTitle || row.id)}`}
+              editLabel={`Edit ${String(row.policyTitle || row.id)}`}
+              deleteLabel={`Delete ${String(row.policyTitle || row.id)}`}
+              moreLabel={`More actions for ${String(row.policyTitle || row.id)}`}
               showViewIcon
               handleViewClick={() => {
                 setImpactReview(buildLeavePolicyImpactReview(policy, 'update'));
@@ -504,10 +510,15 @@ export function LeavePoliciesPanel() {
         showFullScreen
         exportScope="all"
         tableId="hr-leave-policies-workspace"
+        tableTitle="Leave policies"
         onExport={exportTable}
         columns={columns}
         data={rows}
-        isLoading={isLoading}
+        error={error}
+        onRetry={refetch}
+        isRefreshing={isLoading && Boolean(leavePolicyData)}
+        paginationDisabled={isLoading}
+        isLoading={isLoading && !leavePolicyData}
         isSearch
         serverSidePagination
         serverSideSearch

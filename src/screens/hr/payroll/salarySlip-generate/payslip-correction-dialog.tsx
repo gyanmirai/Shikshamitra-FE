@@ -467,6 +467,7 @@ export default function PayslipCorrectionDialog({
                               columns={[
                                 { id: 'label', label: 'Amount', minWidth: 180 },
                                 {
+                                  filterType: 'number',
                                   id: 'before',
                                   label: 'Issued',
                                   valueType: 'money',
@@ -474,6 +475,7 @@ export default function PayslipCorrectionDialog({
                                   render: formatPayrollCurrency,
                                 },
                                 {
+                                  filterType: 'number',
                                   id: 'after',
                                   label: 'Recalculated',
                                   valueType: 'money',

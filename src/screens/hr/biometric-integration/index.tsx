@@ -328,6 +328,7 @@ const BiometricIntegrationScreen = () => {
         isLoading={isPreviewing || isConfirming || isPreviewingFetching || isConfirmingFetching}
         noDataText={<>No Import Attendance Data Found </>}
         tableId="biometric-integration-table"
+        tableTitle="Biometric attendance preview"
         columns={columns}
         data={importResults?.rows || []}
       />

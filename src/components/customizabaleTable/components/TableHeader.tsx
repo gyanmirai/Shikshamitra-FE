@@ -63,7 +63,7 @@ export const TableHeader = React.memo(
               columnVisibility[column.id] && (
                 <TableCell
                   key={column.id}
-                  align={column.align}
+                  align={column.headerAlign || 'left'}
                   sortDirection={
                     sorts.find((sort) => sort.column === column.id)?.direction || false
                   }
@@ -159,7 +159,7 @@ export const TableHeader = React.memo(
                         <Box
                           className="customizable-table-header-content"
                           display="block"
-                          textAlign={column.align}
+                          textAlign={column.headerAlign || 'left'}
                           minWidth={0}
                           overflow={column.renderColumn ? 'visible' : 'hidden'}
                           textOverflow="ellipsis"
@@ -202,7 +202,7 @@ export const TableHeader = React.memo(
                       <Box
                         className="customizable-table-header-content"
                         display="block"
-                        textAlign={column.align}
+                        textAlign={column.headerAlign || 'left'}
                         minWidth={0}
                         overflow={column.renderColumn ? 'visible' : 'hidden'}
                         textOverflow="ellipsis"

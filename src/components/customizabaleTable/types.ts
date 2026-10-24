@@ -19,11 +19,19 @@ export interface IColumn {
   id: string;
   label: React.ReactNode; // allow rich header content
   filterType?: 'string' | 'number' | 'date' | 'dateTime' | 'enum' | 'formattedNumber';
+  /** Override filter data for computed cells; null excludes a value from numeric/date predicates. */
+  filterValue?: (value: unknown, row: IData) => unknown;
+  /** Numeric filters accept decimals unless a column explicitly requires an integer or other step. */
+  filterStep?: number | 'any';
   isFilter?: boolean;
   width?: number | string;
   minWidth?: number | string;
   maxWidth?: number | string;
   align?: 'right' | 'left' | 'center';
+  /** Headings stay left aligned independently of numeric or action cell alignment. */
+  headerAlign?: 'right' | 'left' | 'center';
+  /** Identify each record with a semantic body-row header, without changing cell styling. */
+  rowHeader?: boolean;
   headerSx?: SxProps<Theme>;
   cellSx?: SxProps<Theme>;
   render?: (value: any, row: IData) => React.ReactNode;
@@ -108,6 +116,8 @@ export interface ICustomizableTableProps {
   /** Primary record action, available by clicking the row or pressing Enter/Space. */
   getRowAction?: (row: IData, index: number) => TableRowAction | undefined;
   isLoading?: boolean;
+  /** Same-scope refresh: retain safe rows and show a labelled progress indicator. */
+  isRefreshing?: boolean;
   isPagination?: boolean;
   isFilter?: boolean;
   isSearch?: boolean;

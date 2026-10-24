@@ -194,6 +194,8 @@ export const TableBody = ({
                   columnVisibility[column.id] && (
                     <TableCell
                       key={column.id}
+                      component={column.rowHeader ? 'th' : 'td'}
+                      scope={column.rowHeader ? 'row' : undefined}
                       align={column.align}
                       onClick={
                         column.id === 'action' || column.id === 'actions'

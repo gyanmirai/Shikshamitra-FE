@@ -83,9 +83,10 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   };
   const exportTable = useHrTableExport('hr-policy-calendar', listArgs);
   const {
-    data: policyPage,
+    currentData: policyPage,
     isFetching: calendarsLoading,
     error: calendarsError,
+    refetch,
   } = useGetWorkCalendarPoliciesQuery(listArgs, { skip: !academicYearId });
   const { data: archivedSummary } = useGetWorkCalendarPoliciesQuery(
     { academicYearId, maxResultCount: 1, isArchived: true },
@@ -164,6 +165,8 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       },
     },
     {
+      isSort: false,
+      excludeFromExport: true,
       id: 'actions',
       label: 'Actions',
       align: 'right',
@@ -175,6 +178,10 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         const item = row.calendarItem as WorkCalendarPolicy;
         return (
           <ThreeDotsActions
+            viewLabel={`View ${String(row.name || row.id)}`}
+            editLabel={`Edit ${String(row.name || row.id)}`}
+            deleteLabel={`Delete ${String(row.name || row.id)}`}
+            moreLabel={`More actions for ${String(row.name || row.id)}`}
             showViewIcon={canPreviewImpact}
             handleViewClick={() => previewPolicyRowImpact('work_calendar', item)}
             showEditIcon={canEditPolicy && item.status !== 'archived'}
@@ -303,10 +310,15 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         showFullScreen
         exportScope="all"
         tableId="hr-work-calendars"
+        tableTitle="Work calendars"
         onExport={exportTable}
         columns={calendarColumns}
         data={calendarRows}
-        isLoading={calendarsLoading}
+        error={calendarsError}
+        onRetry={refetch}
+        isRefreshing={calendarsLoading && Boolean(policyPage)}
+        paginationDisabled={calendarsLoading}
+        isLoading={calendarsLoading && !policyPage}
         isSearch
         serverSidePagination
         serverSideSearch

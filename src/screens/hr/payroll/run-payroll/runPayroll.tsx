@@ -1335,6 +1335,7 @@ const RunPayroll = () => {
                 )
               }
               tableId="payroll-monthly-workbench-table"
+              tableTitle="Monthly payroll workbench"
               onExport={exportTable}
               isLoading={(previewBusy || preview.fetching) && !preview.data}
               serverSidePagination

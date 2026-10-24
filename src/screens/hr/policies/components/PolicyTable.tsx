@@ -112,9 +112,9 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
   const pageResult = type === 'payroll' ? payrollPage : attendancePage;
   const archiveSummary =
     type === 'payroll' ? payrollArchiveSummary.data : attendanceArchiveSummary.data;
-  const items = (pageResult.data?.items || []) as Array<PayrollPolicy | AttendancePolicy>;
+  const items = (pageResult.currentData?.items || []) as Array<PayrollPolicy | AttendancePolicy>;
   const { error } = pageResult;
-  const isLoading = pageResult.isFetching;
+  const isLoading = pageResult.isFetching && !pageResult.currentData;
   const archivedCount = archiveSummary?.totalCount || 0;
 
   const columns: IColumn[] = [
@@ -194,6 +194,8 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
       },
     },
     {
+      isSort: false,
+      excludeFromExport: true,
       id: 'actions',
       label: 'Actions',
       align: 'right',
@@ -207,6 +209,10 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         const { isCurrentDefault } = row;
         return (
           <ThreeDotsActions
+            viewLabel={`View ${String(row.name || row.id)}`}
+            editLabel={`Edit ${String(row.name || row.id)}`}
+            deleteLabel={`Delete ${String(row.name || row.id)}`}
+            moreLabel={`More actions for ${String(row.name || row.id)}`}
             showViewIcon={canPreviewImpact}
             handleViewClick={() =>
               previewPolicyRowImpact(isPayroll ? 'payroll' : 'attendance', item)
@@ -380,9 +386,14 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         showFullScreen
         exportScope="all"
         tableId={`hr-${type}-policies`}
+        tableTitle={type === 'payroll' ? 'Payroll policies' : 'Attendance policies'}
         onExport={exportTable}
         columns={columns}
         data={rows}
+        error={error}
+        onRetry={pageResult.refetch}
+        isRefreshing={pageResult.isFetching && Boolean(pageResult.currentData)}
+        paginationDisabled={pageResult.isFetching}
         isLoading={isLoading}
         isSearch
         serverSidePagination

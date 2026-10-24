@@ -290,6 +290,7 @@ export function LeaveYearEndSettlementsPanel() {
                         render: formatDays,
                       })),
                       {
+                        filterType: 'number',
                         id: 'amount',
                         label: 'Amount',
                         valueType: 'money',

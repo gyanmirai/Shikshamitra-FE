@@ -183,6 +183,7 @@ const HrEventsAndHolidaysScreen = () => {
             </>
           }
           tableId="events-holidays-table"
+          tableTitle="Events and holidays"
           isLoading={isLoading}
           columns={[
             { id: 'name', label: 'Title', minWidth: '10vw', align: 'left' },

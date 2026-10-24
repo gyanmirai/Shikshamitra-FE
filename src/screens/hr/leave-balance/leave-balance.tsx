@@ -64,7 +64,7 @@ const LeaveSectionHeader = ({
   </Stack>
 );
 
-const LeaveBalanceLedger = ({
+export const LeaveBalanceLedger = ({
   rows,
   isLoading,
 }: {
@@ -91,8 +91,10 @@ const LeaveBalanceLedger = ({
     columns={[
       { id: 'bucketName', label: 'Paid type', minWidth: 160, sticky: true },
       {
+        filterType: 'number',
         id: 'remaining',
         label: 'Available',
+        filterValue: (value, row) => (row.isUnlimited ? null : value),
         valueType: 'number',
         align: 'right',
         exportValue: (value, row) => (row.isUnlimited ? 'Unlimited' : Number(value)),
@@ -104,6 +106,7 @@ const LeaveBalanceLedger = ({
           ),
       },
       {
+        filterType: 'number',
         id: 'total',
         label: 'Accrued',
         valueType: 'number',
@@ -111,6 +114,7 @@ const LeaveBalanceLedger = ({
         render: (value) => formatLeaveDays(value),
       },
       {
+        filterType: 'number',
         id: 'used',
         label: 'Used',
         valueType: 'number',
@@ -118,6 +122,7 @@ const LeaveBalanceLedger = ({
         render: (value) => formatLeaveDays(value),
       },
       {
+        filterType: 'number',
         id: 'pending',
         label: 'Pending',
         valueType: 'number',

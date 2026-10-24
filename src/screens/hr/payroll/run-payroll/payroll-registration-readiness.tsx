@@ -73,6 +73,9 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
             tableId="payroll-registration-review"
             onExport={exportTable}
             tableTitle="Staff registrations"
+            variant="embedded"
+            error={query.error}
+            onRetry={query.refetch}
             data={query.currentData?.items.map((row) => ({ ...row, id: row.employeeId })) ?? []}
             columns={[
               { id: 'employeeCode', label: 'Staff code' },
@@ -89,6 +92,9 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
               },
               { id: 'effectiveMonth', label: 'Registration effective month' },
               {
+                isSort: false,
+                isFilter: false,
+                excludeFromExport: true,
                 id: 'action',
                 label: '',
                 render: (_, row) => (
