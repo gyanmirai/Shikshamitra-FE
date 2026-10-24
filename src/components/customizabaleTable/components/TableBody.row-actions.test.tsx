@@ -39,6 +39,34 @@ function renderBody(overrides: Partial<ComponentProps<typeof TableBody>> = {}) {
 }
 
 describe('table record row actions', () => {
+  it('preserves ordinary cells unless the column explicitly identifies a row header', () => {
+    const { rerender } = renderBody();
+    expect(screen.getByRole('cell', { name: record.name }).tagName).toBe('TD');
+    expect(screen.queryByRole('rowheader')).not.toBeInTheDocument();
+    rerender(
+      <ThemeProvider theme={theme}>
+        <Table>
+          <TableBody
+            isLoading={false}
+            data={[record]}
+            columns={[{ id: 'name', label: 'Name', rowHeader: true }]}
+            columnVisibility={{ name: true }}
+            getStickyStyle={() => ({})}
+            dense
+            onRowClick={vi.fn()}
+            rowProps={() => ({})}
+            expandedRows={{}}
+            onExpandRow={vi.fn()}
+            tableRef={600}
+          />
+        </Table>
+      </ThemeProvider>
+    );
+    const rowHeader = screen.getByRole('rowheader', { name: record.name });
+    expect(rowHeader.tagName).toBe('TH');
+    expect(rowHeader).toHaveAttribute('scope', 'row');
+  });
+
   it('opens the record by mouse, Enter and Space, with a focusable return target', () => {
     const open = vi.fn();
     renderBody({ getRowAction: (row) => ({ label: `Open ${row.name}`, onClick: open }) });

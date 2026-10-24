@@ -64,7 +64,7 @@ const LeaveSectionHeader = ({
   </Stack>
 );
 
-const LeaveBalanceLedger = ({
+export const LeaveBalanceLedger = ({
   rows,
   isLoading,
 }: {
@@ -94,6 +94,7 @@ const LeaveBalanceLedger = ({
         filterType: 'number',
         id: 'remaining',
         label: 'Available',
+        filterValue: (value, row) => (row.isUnlimited ? null : value),
         valueType: 'number',
         align: 'right',
         exportValue: (value, row) => (row.isUnlimited ? 'Unlimited' : Number(value)),

@@ -71,7 +71,14 @@ export default function EmployeeAttendanceTrendChart({ data }: { data: EmployeeD
           isPagination={false}
           isSearch={false}
           columns={[
-            { id: 'month', label: 'Month' },
+            {
+              id: 'month',
+              label: 'Month',
+              rowHeader: true,
+              filterType: 'date',
+              render: (_value, row) => row.monthLabel,
+              exportValue: (_value, row) => String(row.monthLabel),
+            },
             ...chart.series.map((series, index) => ({
               id: `series${index}`,
               label: series.name,
@@ -79,9 +86,10 @@ export default function EmployeeAttendanceTrendChart({ data }: { data: EmployeeD
               align: 'right' as const,
             })),
           ]}
-          data={chart.categories.map((month, index) => ({
-            id: month,
-            month,
+          data={chart.categories.map((monthLabel, index) => ({
+            id: data.attendanceTrend[index].month,
+            month: `${data.attendanceTrend[index].month}-01`,
+            monthLabel,
             ...Object.fromEntries(
               chart.series.map((series, seriesIndex) => [
                 `series${seriesIndex}`,

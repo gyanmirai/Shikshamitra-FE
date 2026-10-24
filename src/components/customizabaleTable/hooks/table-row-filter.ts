@@ -3,7 +3,12 @@ import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 
-import { parseTableDate, getColumnDisplayText, parseFormattedNumber } from '../utils';
+import {
+  parseTableDate,
+  getColumnDisplayText,
+  parseFormattedNumber,
+  extractTextFromReactNode,
+} from '../utils';
 
 import type { IData, IColumn, IParams } from '../types';
 
@@ -18,8 +23,9 @@ export const matchesTableRowFilters = (
 
   return Object.values(filtersByColumn).every((columnFilters) =>
     columnFilters.some((filter) => {
-      const value = _.get(row, filter.column, '');
       const column = columns.find((col) => col.id === filter.column);
+      const rawValue = _.get(row, filter.column, '');
+      const value = column?.filterValue ? column.filterValue(rawValue, row) : rawValue;
       const isDateType = filter.valueType === 'date';
       const isDateTimeType = filter.valueType === 'dateTime';
       const isEnumType = filter.valueType === 'enum';
@@ -93,7 +99,9 @@ export const matchesTableRowFilters = (
 
         // Compare against what the user actually sees (the rendered cell text),
         // falling back to the raw value when there's no render function.
-        const displayValue = getColumnDisplayText(row, column);
+        const displayValue = column?.filterValue
+          ? extractTextFromReactNode(value)
+          : getColumnDisplayText(row, column);
         const safeValue = (displayValue || (value ?? '')).toString().toLowerCase();
         const safeFilterValue = (filter.value ?? '').toString().toLowerCase();
         switch (filter.type) {

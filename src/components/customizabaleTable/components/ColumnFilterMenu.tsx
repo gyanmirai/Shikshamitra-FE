@@ -38,6 +38,25 @@ interface ColumnFilterMenuProps {
 export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFilterMenuProps) => {
   const filterTypeLabelId = React.useId();
   const filterValueLabelId = React.useId();
+  const numericStep = anchorEl?.column.filterStep ?? 'any';
+  const stepMessage =
+    numericStep === 1 ? 'Use a whole number.' : `Use increments of ${numericStep}.`;
+  const matchesNumericStep = (value: unknown) => {
+    if (
+      anchorEl?.column.filterType !== 'number' ||
+      numericStep === 'any' ||
+      value === null ||
+      value === undefined ||
+      value === ''
+    )
+      return true;
+    const increments = Number(value) / numericStep;
+    return (
+      numericStep > 0 &&
+      Number.isFinite(increments) &&
+      Math.abs(increments - Math.round(increments)) < 1e-8
+    );
+  };
   const formik = useFormik<{
     min: number | null;
     max: number | null;
@@ -52,21 +71,45 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
         }
         return !!value;
       }),
-      min: yup.number().when('filterType', {
-        is: 'between',
-        then: (schema) => schema.required('Min value is required'),
-        otherwise: (schema) => schema.nullable(),
-      }),
-      max: yup.number().when('filterType', {
-        is: 'between',
-        then: (schema) => schema.required('Max value is required').min(yup.ref('min'), 'Max must be at least min'),
-        otherwise: (schema) => schema.nullable(),
-      }),
-      filterValue: yup.mixed().when('filterType', {
-        is: 'between',
-        then: (schema) => schema.nullable(),
-        otherwise: (schema) => schema.required('value is required'),
-      }),
+      min: yup
+        .number()
+        .when('filterType', {
+          is: 'between',
+          then: (schema) => schema.required('Min value is required'),
+          otherwise: (schema) => schema.nullable(),
+        })
+        .test(
+          'numeric-step',
+          stepMessage,
+          (value, context) => context.parent.filterType !== 'between' || matchesNumericStep(value)
+        ),
+      max: yup
+        .number()
+        .when('filterType', {
+          is: 'between',
+          then: (schema) =>
+            schema
+              .required('Max value is required')
+              .min(yup.ref('min'), 'Max must be at least min'),
+          otherwise: (schema) => schema.nullable(),
+        })
+        .test(
+          'numeric-step',
+          stepMessage,
+          (value, context) => context.parent.filterType !== 'between' || matchesNumericStep(value)
+        ),
+      filterValue: yup
+        .mixed()
+        .when('filterType', {
+          is: 'between',
+          then: (schema) => schema.nullable(),
+          otherwise: (schema) => schema.required('value is required'),
+        })
+        .test(
+          'numeric-step',
+          stepMessage,
+          (value, context) => context.parent.filterType === 'between' || matchesNumericStep(value)
+        ),
     }),
     onSubmit: () => {
       handleApply();
@@ -262,6 +305,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
                 value={formik.values.min ?? ''}
                 onChange={(e) => formik.setFieldValue('min', e.target.value)}
                 type="number"
+                slotProps={{ htmlInput: { step: numericStep } }}
                 label={`${anchorEl?.column.label} Min *`}
                 sx={{ mb: 2 }}
                 error={Boolean(formik.touched.min && formik.errors.min)}
@@ -274,6 +318,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
                 value={formik.values.max ?? ''}
                 onChange={(e) => formik.setFieldValue('max', e.target.value)}
                 type="number"
+                slotProps={{ htmlInput: { step: numericStep } }}
                 label={`${anchorEl?.column.label} Max *`}
                 error={Boolean(formik.touched.max && formik.errors.max)}
                 helperText={formik.touched.max && formik.errors.max}
@@ -289,6 +334,10 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
                 formik.setFieldValue('filterValue', sanitizedValue);
               }}
               type={anchorEl?.column.filterType === 'number' ? 'number' : 'text'}
+              slotProps={{
+                htmlInput:
+                  anchorEl?.column.filterType === 'number' ? { step: numericStep } : undefined,
+              }}
               label={`${anchorEl?.column.label} *`}
               error={Boolean(formik.touched.filterValue && formik.errors.filterValue)}
               helperText={formik.touched.filterValue && formik.errors.filterValue}

@@ -257,3 +257,26 @@ They do not prove live backend authorization, real tenant records, financial cal
 Existing financial, permission, selection and workflow regression tests remain part of the 958-test run.
 The UI pass changes no permission identifiers, endpoints, payroll calculations, CI or security settings.
 The shared header alignment correction applies to every CustomizableTable consumer; body-cell alignment is preserved and the explicit headerAlign option supports specialized controls.
+
+## 24 October independent review and regression fixes
+
+Independent review identified four regressions in the table migration; all four are corrected with focused coverage.
+
+- Monthly attendance keeps semantic Month row headers through the optional shared `rowHeader` column flag. Other body cells keep their existing semantics.
+- Month sorting and date filters use the original ISO month date, including across year boundaries. Display and export retain the existing month labels.
+- Numeric filter inputs accept fractional leave days and monetary amounts in Equals and Between criteria, including keyboard Enter and Apply submission. Columns can explicitly set `filterStep` to preserve integer or increment constraints.
+- Unlimited leave retains its stored zero, calculations, display and export, while the Available column supplies a null `filterValue` so finite numeric criteria do not treat it as exhausted leave.
+
+The final HR/shared-table unit run passed 142 files and 967 tests.
+The independent reviewer additionally verified five focused files and 20 tests and reported no remaining substantive findings.
+The isolated real-browser numeric-filter fixture passed ten scenarios: fractional Equals/Between for leave days and money with both Enter and Apply, plus explicit integer constraints.
+Run it with `node node_modules/@playwright/test/cli.js test --config tests/browser/hr-table-filter.config.ts`.
+It mounts the actual shared filter menu with local synthetic values and requires no authentication or backend.
+
+The four Enter-submission fractional cases failed before the fix; native step validation blocked submission.
+Pointer submission could mask the issue after blur, so both submission paths are covered.
+The 61-route/74-table ownership checklist and both editable-grid exceptions remain unchanged.
+Final validation also passed TypeScript, the production webpack build, all changed-file ESLint checks, HR documentation and whitespace checks.
+The eight synthetic responsive/state scenarios passed again on the final code, producing 24 screenshots across light/dark 390, 768 and 1440-pixel viewports.
+Representative final desktop and mobile screenshots were visually inspected.
+The previously documented authenticated-browser restriction and baseline lint errors remain verification limits.
