@@ -48,6 +48,7 @@ import {
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
+import { AdmissionSiblingFamilyMatch } from './admission-sibling-family-match';
 
 type Props = { open: boolean; academicYearId: string; onClose: () => void };
 type FormValues = {
@@ -65,7 +66,9 @@ type FormValues = {
   guardianMobile: string;
   guardianEmail: string;
   guardianRelationship: 0 | 1 | 2 | 3;
+  parentRelationship: '' | 'father' | 'mother';
   existingFamilyId: string;
+  existingParentApplicantId: string;
   createSeparateFamily: boolean;
   separateFamilyReason: string;
 };
@@ -85,7 +88,9 @@ const initialValues: FormValues = {
   guardianMobile: '',
   guardianEmail: '',
   guardianRelationship: 0,
+  parentRelationship: '',
   existingFamilyId: '',
+  existingParentApplicantId: '',
   createSeparateFamily: false,
   separateFamilyReason: '',
 };
@@ -105,13 +110,16 @@ const schema = Yup.object({
       (value) => !value || (dayjs(value).isValid() && !dayjs(value).isAfter(dayjs(), 'day'))
     ),
   applicantGender: Yup.string().oneOf(['Male', 'Female']).required('Gender is required.'),
-  guardianFirstName: Yup.string().trim().required('Guardian first name is required.').max(128),
+  guardianFirstName: Yup.string().trim().required('Parent first name is required.').max(128),
   guardianLastName: Yup.string().trim().max(128),
   guardianMobile: Yup.string()
-    .required('Guardian mobile is required.')
+    .required('Parent mobile is required.')
     .matches(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number.'),
   guardianEmail: Yup.string().email('Enter a valid email address.').max(256),
   guardianRelationship: Yup.number().oneOf([0, 1, 2, 3]).required('Relationship is required.'),
+  parentRelationship: Yup.string()
+    .oneOf(['father', 'mother'], 'Select Father or Mother.')
+    .required('Select Father or Mother.'),
   separateFamilyReason: Yup.string()
     .max(512)
     .when('createSeparateFamily', {
@@ -155,9 +163,11 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         selectedOffering.admissionCycleId !== values.admissionCycle?.id
       )
         return;
-      const lookupKey = `${values.offeringId}:${values.guardianMobile}`;
+      const lookupKey = `${values.offeringId}:${values.guardianMobile}:${normalizeEmail(values.guardianEmail)}`;
       if (familyLookupKey !== lookupKey) {
-        setRequestError('Check existing families using this guardian mobile before continuing.');
+        setRequestError(
+          'Check existing families using these parent contact details before continuing.'
+        );
         return;
       }
       if (familyMatches?.length && !values.existingFamilyId && !values.createSeparateFamily) {
@@ -175,6 +185,8 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
           admissionOfferingId: values.offeringId,
           counsellorId: null,
           existingFamilyId: values.existingFamilyId || null,
+          existingParentApplicantId: values.existingParentApplicantId || null,
+          parentRelationship: values.parentRelationship || undefined,
           createSeparateFamily: values.createSeparateFamily,
           separateFamilyReason: values.createSeparateFamily
             ? values.separateFamilyReason.trim()
@@ -197,9 +209,9 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         onClose();
         router.push(`${studentPaths.enrollment.applications}/${application.id}`);
       } catch (error) {
-        setRequestError(
-          parseApiProblemDetail(error).detail || 'Registration could not be started.'
-        );
+        shikshaMitraToast.error({
+          message: parseApiProblemDetail(error).detail || 'Registration could not be started.',
+        });
       }
     },
   });
@@ -293,7 +305,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
   );
 
   const changeIdentity = (
-    field: 'offeringId' | 'guardianMobile',
+    field: 'offeringId' | 'guardianMobile' | 'guardianEmail' | 'parentRelationship',
     value: string,
     changes: Partial<FormValues> = {}
   ) => {
@@ -303,6 +315,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
       [field]: value,
       ...(field === 'offeringId' && { counsellorId: '' }),
       existingFamilyId: '',
+      existingParentApplicantId: '',
       createSeparateFamily: false,
       separateFamilyReason: '',
     }));
@@ -313,21 +326,28 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
   };
   const checkFamilies = async () => {
     const { offeringId, guardianMobile } = formik.values;
+    const guardianEmail = normalizeEmail(formik.values.guardianEmail);
     if (!offeringId || !/^[6-9]\d{9}$/.test(guardianMobile)) {
       setRequestError('Select an offering and enter a valid mobile number first.');
       return;
     }
     setRequestError('');
-    const lookupKey = `${offeringId}:${guardianMobile}`;
+    const lookupKey = `${offeringId}:${guardianMobile}:${guardianEmail}`;
     identityRef.current = lookupKey;
     try {
-      const matches = await findFamilies({ offeringId, guardianMobile }).unwrap();
+      const matches = await findFamilies({
+        offeringId,
+        guardianMobile,
+        guardianEmail: guardianEmail || undefined,
+      }).unwrap();
       if (identityRef.current !== lookupKey) return;
       setFamilyMatches(matches);
-      setFamilyLookupKey(`${offeringId}:${guardianMobile}`);
+      setFamilyLookupKey(lookupKey);
     } catch (error) {
       if (identityRef.current !== lookupKey) return;
-      setRequestError(parseApiProblemDetail(error).detail || 'Family check failed. Please retry.');
+      shikshaMitraToast.error({
+        message: parseApiProblemDetail(error).detail || 'Family check failed. Please retry.',
+      });
     }
   };
   const field = (name: keyof FormValues, label: string, required = false) => (
@@ -342,7 +362,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         value={formik.values[name]}
         onChange={
           name === 'guardianEmail'
-            ? (event) => formik.setFieldValue(name, normalizeEmail(event.target.value))
+            ? (event) => changeIdentity('guardianEmail', normalizeEmail(event.target.value))
             : formik.handleChange
         }
         inputProps={
@@ -616,8 +636,8 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
               </FormSectionCard>
               <FormSectionCard
                 icon="mdi:account-group-outline"
-                title="Primary guardian"
-                descriptionTooltip="Check the guardian mobile for existing families before starting registration. Link the matching family, or record a reason to keep a separate family."
+                title="Parent Details"
+                descriptionTooltip="Check the parent's email and mobile for an existing family. Confirm the parent before adding a sibling."
               >
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   {field('guardianFirstName', 'First name', true)}
@@ -639,20 +659,36 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                   />
                   {field('guardianEmail', 'Email')}
                 </Stack>
-                <CustomSelect
-                  fullWidth
-                  size="small"
-                  label="Relationship"
-                  required
-                  value={formik.values.guardianRelationship}
-                  onChange={(value) => formik.setFieldValue('guardianRelationship', Number(value))}
-                  options={[
-                    { value: 0, label: 'Parent' },
-                    { value: 1, label: 'Guardian' },
-                    { value: 2, label: 'Relative' },
-                    { value: 3, label: 'Other' },
-                  ]}
-                />
+                <ShakingTextField
+                  error={Boolean(
+                    (formik.touched.parentRelationship || formik.submitCount) &&
+                    formik.errors.parentRelationship
+                  )}
+                >
+                  <CustomSelect
+                    fullWidth
+                    size="small"
+                    label="Relationship"
+                    required
+                    name="parentRelationship"
+                    value={formik.values.parentRelationship}
+                    onChange={(value) => changeIdentity('parentRelationship', String(value))}
+                    onBlur={() => formik.setFieldTouched('parentRelationship', true)}
+                    error={Boolean(
+                      (formik.touched.parentRelationship || formik.submitCount) &&
+                      formik.errors.parentRelationship
+                    )}
+                    helperText={
+                      formik.touched.parentRelationship || formik.submitCount
+                        ? formik.errors.parentRelationship
+                        : undefined
+                    }
+                    options={[
+                      { value: 'father', label: 'Father' },
+                      { value: 'mother', label: 'Mother' },
+                    ]}
+                  />
+                </ShakingTextField>
                 <Button
                   type="button"
                   size="small"
@@ -676,27 +712,36 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                   </StudentFeedback>
                 )}
                 {familyMatches?.map((family) => (
-                  <Button
+                  <AdmissionSiblingFamilyMatch
                     key={family.familyId}
-                    type="button"
-                    size="small"
-                    variant={
-                      formik.values.existingFamilyId === family.familyId ? 'contained' : 'outlined'
-                    }
-                    onClick={() => {
-                      formik.setFieldValue('existingFamilyId', family.familyId);
-                      formik.setFieldValue('createSeparateFamily', false);
+                    parents={family.parents ?? []}
+                    children={`${family.familyNumber}${family.applicants.length ? ` · ${family.applicants.join(', ')}` : ''}`}
+                    busy={busy}
+                    enteredMobile={formik.values.guardianMobile}
+                    mobileDiffers={family.matchByEmail === true && family.matchByMobile !== true}
+                    onConfirm={(parent) => {
+                      const nextMobile = parent.mobile || formik.values.guardianMobile;
+                      const nextEmail = normalizeEmail(parent.email || '');
+                      formik.setValues((values) => ({
+                        ...values,
+                        existingFamilyId: family.familyId,
+                        existingParentApplicantId: parent.sourceApplicantId,
+                        parentRelationship: parent.relationship,
+                        guardianFirstName: parent.firstName,
+                        guardianLastName: parent.lastName || '',
+                        guardianEmail: nextEmail,
+                        guardianMobile: nextMobile,
+                        createSeparateFamily: false,
+                      }));
+                      const key = `${formik.values.offeringId}:${nextMobile}:${nextEmail}`;
+                      identityRef.current = key;
+                      setFamilyLookupKey(key);
                     }}
-                    sx={{ justifyContent: 'flex-start', textAlign: 'left' }}
-                  >
-                    Link {family.familyNumber} · {family.primaryGuardianName}
-                    {family.applicants.length ? ` · ${family.applicants.join(', ')}` : ''}
-                  </Button>
+                  />
                 ))}
                 {formik.values.existingFamilyId && (
                   <StudentFeedback notificationKey="STU-0057" presentation="inline" severity="info">
-                    The selected family’s saved primary guardian details will be reused. This
-                    registration will not overwrite that guardian record.
+                    Sibling family confirmed. Saved parent details will be reused.
                   </StudentFeedback>
                 )}
                 {Boolean(familyMatches?.length) && (
@@ -707,6 +752,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                     variant={formik.values.createSeparateFamily ? 'contained' : 'outlined'}
                     onClick={() => {
                       formik.setFieldValue('existingFamilyId', '');
+                      formik.setFieldValue('existingParentApplicantId', '');
                       formik.setFieldValue('createSeparateFamily', true);
                     }}
                   >
@@ -762,7 +808,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         open={discard.value}
         onClose={discard.onFalse}
         title="Discard Unsaved Registration?"
-        content="The applicant and guardian details entered here will be lost."
+        content="The applicant and parent details entered here will be lost."
         icon="warning"
         disableBackdropClick
         action={

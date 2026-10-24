@@ -8,6 +8,10 @@ import {
 } from 'src/redux/tagTypes';
 
 import type { ReviewDecisionCapabilities } from './admission-review-types';
+import type {
+  AdmissionFamilyParent,
+  AdmissionParentRelationship,
+} from './admission-parent-family-types';
 
 const dashboardTag = { type: studentType.student, id: 'MODULE-DASHBOARD-admissions' } as const;
 const applicationMutationTags = (_result: unknown, error: unknown) =>
@@ -19,6 +23,9 @@ export type AdmissionDirectFamilyMatch = {
   familyNumber: string;
   primaryGuardianName: string;
   applicants: string[];
+  parents?: AdmissionFamilyParent[];
+  matchByEmail?: boolean;
+  matchByMobile?: boolean;
 };
 export type AdmissionApplicationCounsellor = { id: string; userName: string; name: string };
 export type AssignAdmissionApplicationCounsellorInput = {
@@ -31,6 +38,8 @@ export type StartAdmissionDirectRegistrationInput = {
   admissionOfferingId: string;
   counsellorId?: string | null;
   existingFamilyId?: string | null;
+  existingParentApplicantId?: string | null;
+  parentRelationship?: AdmissionParentRelationship;
   createSeparateFamily: boolean;
   separateFamilyReason?: string | null;
   applicantFirstName: string;
@@ -376,7 +385,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
     }),
     findAdmissionDirectFamilies: builder.query<
       AdmissionDirectFamilyMatch[],
-      { offeringId: string; guardianMobile: string }
+      { offeringId: string; guardianMobile: string; guardianEmail?: string }
     >({
       query: (params) => ({
         url: '/student/enrollment/admissions/applications/direct-registration/family-matches',

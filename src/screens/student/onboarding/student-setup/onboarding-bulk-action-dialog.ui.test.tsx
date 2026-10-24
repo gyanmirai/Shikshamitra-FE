@@ -153,3 +153,17 @@ it('activates only ready students from a mixed selection', async () => {
     idempotencyKey: 'activation-request-1',
   });
 });
+it('keeps a sibling-parent conflict as a failed row and directs staff to the single-student App Login instead of guessing', async () => {
+  const message = 'Choose Father or Mother in the student App Login before activation.';
+  apiMocks.activate.mockReturnValue({
+    unwrap: () => Promise.reject(Object.assign(new Error(message), { data: { detail: message } })),
+  });
+  render(
+    <OnboardingBulkActionDialog action="activate" students={[readyStudent]} onClose={vi.fn()} />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Activate 1 student' }));
+  await screen.findByText(message);
+  expect(screen.getByText('Needs attention')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Retry 1 student' })).toBeEnabled();
+  expect(apiMocks.activate.mock.calls[0][0]).not.toHaveProperty('siblingParentSelection');
+});

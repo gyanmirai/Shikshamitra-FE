@@ -3,7 +3,7 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-10-24
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,14 @@ audience: humans-and-agents
 # Find Student Admissions routes
 
 TL;DR: use this page to map the implemented Admissions and Onboarding routes to their screens and visible Student menu entries.
+
+## Public app-login email verification
+
+`/account/confirm-portal-email` is an owner-token entry, not a staff navigation item.
+`src/constants/student-portal.ts` records the route; its App Router entry is under `src/app/(public-route)/account/confirm-portal-email/`, outside the signed-in guest-page redirect.
+`src/screens/login/confirm-portal-email-screen.tsx` reuses AuthLayout/AuthCard and does not mutate on mount or display token values.
+The page is excluded from indexing and uses no-referrer metadata.
+The owner must click Confirm email change before the API validates the protected request.
 
 ## Attendance settings route
 

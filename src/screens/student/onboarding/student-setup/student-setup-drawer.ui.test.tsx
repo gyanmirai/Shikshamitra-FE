@@ -87,13 +87,37 @@ vi.mock('./student-onboarding-fees', () => ({
   },
 }));
 vi.mock('./student-onboarding-portal-accounts', () => ({
-  default: ({ onBusyChange }: { onBusyChange?: (busy: boolean) => void }) => (
+  default: ({
+    onBusyChange,
+    onParentStateChange,
+    student: current,
+  }: {
+    onBusyChange?: (busy: boolean) => void;
+    onParentStateChange?: (state: any) => void;
+    student: { id: string };
+  }) => (
     <>
       <button type="button" onClick={() => onBusyChange?.(true)}>
         Simulate credential request
       </button>
       <button type="button" onClick={() => onBusyChange?.(false)}>
         Complete credential request
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onParentStateChange?.({
+            caseId: current.id,
+            loaded: true,
+            selection: {
+              relationship: 'mother',
+              expectedEmail: 'mother@example.com',
+              expectedUserId: 'parent-2',
+            },
+          })
+        }
+      >
+        Choose sibling parent
       </button>
     </>
   ),
@@ -443,6 +467,50 @@ describe('Student Setup drawer readiness UI', () => {
     });
 
     expect(onPrimaryAction).toHaveBeenCalledWith(liveStudent, 'latest-case-stamp', 'activate');
+  });
+  it('passes an explicitly selected sibling parent from App Login through the legacy activation callback', async () => {
+    const onPrimaryAction = vi.fn();
+    const liveStudent = {
+      ...student,
+      id: 'case-1',
+      source: 'onboarding-case' as const,
+      status: 'ready-to-activate' as const,
+      backendStatus: 2 as const,
+      studentEnrollmentId: undefined,
+    };
+    const view = render(
+      <StudentSetupDrawer
+        open
+        canManage
+        student={liveStudent}
+        taskView="credentials"
+        onClose={vi.fn()}
+        onPrimaryAction={onPrimaryAction}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Choose sibling parent' }));
+    view.rerender(
+      <StudentSetupDrawer
+        open
+        canManage
+        student={liveStudent}
+        taskView="readiness"
+        onClose={vi.fn()}
+        onPrimaryAction={onPrimaryAction}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Activate student' })).toBeEnabled()
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Activate student' }));
+    });
+    expect(onPrimaryAction).toHaveBeenCalledWith(liveStudent, 'latest-case-stamp', 'activate', {
+      relationship: 'mother',
+      expectedEmail: 'mother@example.com',
+      expectedUserId: 'parent-2',
+    });
   });
 
   it('offers activation when only the system-owned final-readiness step is pending', () => {

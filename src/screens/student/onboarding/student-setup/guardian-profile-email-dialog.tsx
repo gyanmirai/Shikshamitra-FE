@@ -27,12 +27,13 @@ type Props = {
   studentId: string;
   relationship: 'father' | 'mother' | 'guardian';
   caseLabel: string;
+  parentOnly?: boolean;
   onClose: () => void;
   onSaved: (change: Pick<RecordChange, 'id' | 'status'>) => void;
 };
 
 export default function GuardianProfileEmailDialog(props: Props) {
-  const { studentId, onClose } = props;
+  const { studentId, onClose, parentOnly } = props;
   const snapshot = useGetStudentRecordSnapshotQuery(
     { studentId, section: 'family' },
     { refetchOnMountOrArgChange: true }
@@ -46,7 +47,7 @@ export default function GuardianProfileEmailDialog(props: Props) {
   return (
     <CustomDialog
       open
-      title="Correct Guardian Profile Email"
+      title={parentOnly ? 'Correct Parent Email' : 'Correct Guardian Profile Email'}
       maxWidth="sm"
       handleClose={onClose}
       hasForm={false}
@@ -121,7 +122,7 @@ function EmailForm({ snapshot: loadedSnapshot, ...props }: Props & { snapshot: R
         shikshaMitraToast.success({
           message:
             result.status === 'Applied'
-              ? 'Guardian profile email saved and added to Records history.'
+              ? `${props.parentOnly ? 'Parent' : 'Guardian profile'} email saved and added to Records history.`
               : 'Email correction submitted to Changes & Approvals. The saved profile updates after approval.',
         });
         props.onSaved(result);
@@ -138,7 +139,7 @@ function EmailForm({ snapshot: loadedSnapshot, ...props }: Props & { snapshot: R
   return (
     <CustomDialog
       open
-      title="Correct Guardian Profile Email"
+      title={props.parentOnly ? 'Correct Parent Email' : 'Correct Guardian Profile Email'}
       maxWidth="sm"
       handleClose={props.onClose}
       disableClose={busy}

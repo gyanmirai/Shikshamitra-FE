@@ -10,6 +10,10 @@ import type {
   AdmissionInquirySource,
   CreateAdmissionInquiry,
 } from 'src/redux/student/admissions/admission-inquiries-api';
+import type {
+  AdmissionParentRelationship,
+  AdmissionSiblingParentSelection,
+} from 'src/redux/student/admissions/admission-parent-family-types';
 
 import * as Yup from 'yup';
 import { normalizeEmail } from 'src/utils/input-format';
@@ -26,6 +30,7 @@ export type AdmissionInquiryFormValues = {
   source: AdmissionInquirySource;
   sourceDetail: string;
   sendAcknowledgement: boolean;
+  parentRelationship?: '' | AdmissionParentRelationship;
   fields: Record<string, string>;
 };
 
@@ -74,6 +79,7 @@ export const initialAdmissionInquiryValues: AdmissionInquiryFormValues = {
   source: 0,
   sourceDetail: '',
   sendAcknowledgement: true,
+  parentRelationship: '',
   fields: {},
 };
 
@@ -86,6 +92,9 @@ export const admissionInquirySchema = Yup.object({
   source: Yup.number().integer().min(0).max(12).required('Source is required'),
   sourceDetail: Yup.string().max(128, 'Source details must be 128 characters or fewer'),
   sendAcknowledgement: Yup.boolean().required(),
+  parentRelationship: Yup.string()
+    .oneOf(['father', 'mother'], 'Select Father or Mother.')
+    .required('Select Father or Mother.'),
   fields: Yup.object().required(),
 });
 
@@ -104,7 +113,7 @@ const applicantFirstNameFallback: AdmissionFormField = {
 const guardianFirstNameFallback: AdmissionFormField = {
   id: 'inquiry-guardian-first-name',
   code: 'guardianFirstName',
-  label: 'Guardian first name',
+  label: 'Parent first name',
   fieldType: 0,
   bindingType: 0,
   bindingKey: 'Guardian.FirstName',
@@ -116,7 +125,7 @@ const guardianFirstNameFallback: AdmissionFormField = {
 const guardianPhoneFallback: AdmissionFormField = {
   id: 'inquiry-guardian-phone',
   code: 'guardianPhone',
-  label: 'Guardian mobile number',
+  label: 'Parent mobile number',
   fieldType: 4,
   bindingType: 0,
   bindingKey: 'Guardian.Mobile',
@@ -153,6 +162,10 @@ const legacyIdentityFieldCodes: Record<string, readonly string[]> = {
   'Guardian.LastName': ['GUARDIAN_LAST_NAME', 'PARENT_LAST_NAME'],
   'Guardian.Mobile': ['GUARDIAN_MOBILE', 'GUARDIAN_PHONE', 'PARENT_MOBILE', 'PARENT_PHONE'],
   'Guardian.Email': ['GUARDIAN_EMAIL', 'PARENT_EMAIL'],
+  'Father.Email': ['FATHER_EMAIL'],
+  'Father.Mobile': ['FATHER_MOBILE', 'FATHER_PHONE'],
+  'Mother.Email': ['MOTHER_EMAIL'],
+  'Mother.Mobile': ['MOTHER_MOBILE', 'MOTHER_PHONE'],
 };
 
 const equalsIgnoreCase = (left?: string, right?: string) =>
@@ -219,7 +232,7 @@ export const getAdmissionInquirySections = (
           {
             id: 'inquiry-guardian-details',
             code: 'INQUIRY_GUARDIAN_DETAILS',
-            name: 'Guardian details',
+            name: 'Parent Details',
             displayOrder: Number.MAX_SAFE_INTEGER,
             fields: guardianFallbackFields,
           },
@@ -312,13 +325,44 @@ const serializeFieldValue = (field: AdmissionFormField, value: string) => {
   return JSON.stringify(normalized);
 };
 
+const selectedParentAnswer = (
+  field: AdmissionFormField,
+  parent?: AdmissionSiblingParentSelection
+) => {
+  if (!parent) return undefined;
+  const role = parent.relationship === 'father' ? 'Father' : 'Mother';
+  const answers: Record<string, string> = {
+    FirstName: parent.firstName,
+    LastName: parent.lastName || '',
+    Name: parent.name,
+    FullName: parent.name,
+    Mobile: parent.mobile || '',
+    Phone: parent.mobile || '',
+    Email: parent.email || '',
+  };
+  return Object.entries(answers).find(([suffix]) => {
+    const generic = `Guardian.${suffix}`;
+    const aliases = legacyIdentityFieldCodes[generic] ?? [];
+    const legacyAlias =
+      (!field.bindingKey || equalsIgnoreCase(field.bindingKey, field.code)) &&
+      (aliases.some((alias) => equalsIgnoreCase(alias, field.code)) ||
+        field.code.replace(/[._\s-]/g, '').toLowerCase() === `${role}${suffix}`.toLowerCase());
+    return (
+      equalsIgnoreCase(field.bindingKey, `${role}.${suffix}`) ||
+      equalsIgnoreCase(field.bindingKey, generic) ||
+      legacyAlias
+    );
+  })?.[1];
+};
+
 export function buildAdmissionInquiryPayload(
   values: AdmissionInquiryFormValues,
   fields: AdmissionFormField[],
   offering: AdmissionOfferingListItem,
   existingFamilyId?: string | null,
   createSeparateFamily = false,
-  duplicateOverrideReason?: string
+  duplicateOverrideReason?: string,
+  parentSelection?: AdmissionSiblingParentSelection
 ): CreateAdmissionInquiry {
   const applicantFirstName = boundValue(
     values,
@@ -342,18 +386,22 @@ export function buildAdmissionInquiryPayload(
     mediumId: values.mediumId,
     standardId: values.standardId,
     existingFamilyId,
+    existingParentApplicantId: parentSelection?.sourceApplicantId,
+    parentRelationship: parentSelection?.relationship || values.parentRelationship || undefined,
     createSeparateFamily,
     duplicateOverrideReason: duplicateOverrideReason?.trim() || null,
     applicantName,
-    phone: guardianPhone,
-    email: guardianEmail || null,
+    phone: parentSelection?.mobile || guardianPhone,
+    email: parentSelection ? parentSelection.email || null : guardianEmail || null,
     preferredLanguageCode: 'en',
     source: values.source,
     sourceDetail: values.sourceDetail.trim() || null,
-    guardianFirstName,
-    guardianLastName: boundValue(values, fields, 'Guardian.LastName', 'guardianLastName') || null,
-    guardianPhone,
-    guardianEmail: guardianEmail || null,
+    guardianFirstName: parentSelection?.firstName ?? guardianFirstName,
+    guardianLastName: parentSelection
+      ? parentSelection.lastName || null
+      : boundValue(values, fields, 'Guardian.LastName', 'guardianLastName') || null,
+    guardianPhone: parentSelection?.mobile || guardianPhone,
+    guardianEmail: parentSelection ? parentSelection.email || null : guardianEmail || null,
     applicantFirstName,
     applicantLastName: applicantLastName || null,
     applicantDateOfBirth:
@@ -361,11 +409,16 @@ export function buildAdmissionInquiryPayload(
     formValues: fields
       .filter(
         (field) =>
-          !inquiryIdentityFallbackIds.has(field.id) && values.fields[field.code] !== undefined
+          !inquiryIdentityFallbackIds.has(field.id) &&
+          (values.fields[field.code] !== undefined ||
+            selectedParentAnswer(field, parentSelection) !== undefined)
       )
       .map((field) => ({
         fieldCode: field.code,
-        valueJson: serializeFieldValue(field, values.fields[field.code]),
+        valueJson: serializeFieldValue(
+          field,
+          selectedParentAnswer(field, parentSelection) ?? values.fields[field.code]
+        ),
       })),
   };
 }
@@ -453,21 +506,51 @@ export function buildAdmissionInquiryDuplicateInput(
   offering: AdmissionOfferingListItem
 ) {
   const payload = buildAdmissionInquiryPayload(values, fields, offering);
+  const parentContacts = (['father', 'mother'] as const)
+    .map((relationship) => {
+      const prefix = relationship === 'father' ? 'Father' : 'Mother';
+      const email = normalizeEmail(
+        boundValue(values, fields, `${prefix}.Email`, `${relationship}Email`)
+      );
+      const mobile = boundValue(values, fields, `${prefix}.Mobile`, `${relationship}Mobile`);
+      return { relationship, email: email || undefined, mobile: mobile || undefined };
+    })
+    .filter((parent) => parent.email || parent.mobile);
+  if (
+    values.parentRelationship &&
+    !parentContacts.some((parent) => parent.relationship === values.parentRelationship)
+  ) {
+    parentContacts.push({
+      relationship: values.parentRelationship,
+      email: payload.guardianEmail || undefined,
+      mobile: payload.guardianPhone || undefined,
+    });
+  }
   return {
     admissionCycleId: payload.admissionCycleId,
     guardianPhone: payload.guardianPhone,
     guardianEmail: payload.guardianEmail ?? undefined,
+    parentContacts,
     applicantName: payload.applicantName,
     applicantDateOfBirth: payload.applicantDateOfBirth ?? undefined,
   };
 }
 
-export function canLinkAdmissionInquiryFamily(match: DuplicateMatch, guardianPhone: string) {
+export function canLinkAdmissionInquiryFamily(
+  match: DuplicateMatch,
+  guardianPhone: string,
+  guardianEmail = ''
+) {
   const enteredPhone = guardianPhone.replace(/\D/g, '');
   const matchedPhone = (match.guardianPhone ?? '').replace(/\D/g, '');
   return (
-    /^[6-9]\d{9}$/.test(enteredPhone) &&
-    matchedPhone === enteredPhone &&
+    ((/^[6-9]\d{9}$/.test(enteredPhone) && matchedPhone === enteredPhone) ||
+      Boolean(
+        normalizeEmail(guardianEmail) &&
+        normalizeEmail(guardianEmail) === normalizeEmail(match.guardianEmail || '')
+      ) ||
+      match.matchByEmail === true ||
+      match.matchByMobile === true) &&
     match.canLinkFamily !== false
   );
 }

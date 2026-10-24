@@ -3,7 +3,7 @@ import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/adm
 
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionDirectRegistrationDialog from './admission-direct-registration-dialog';
 
@@ -14,6 +14,7 @@ const state = vi.hoisted(() => ({
   start: vi.fn(),
   push: vi.fn(),
   success: vi.fn(),
+  error: vi.fn(),
   close: vi.fn(),
   cyclesError: false,
   offeringsError: false,
@@ -23,7 +24,7 @@ vi.mock('./use-admission-unsaved-changes', () => ({ useAdmissionUnsavedChanges: 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
-    error: vi.fn(),
+    error: state.error,
     warning: vi.fn(),
     info: vi.fn(),
     dismiss: vi.fn(),
@@ -68,26 +69,31 @@ vi.mock('src/components/custom-select', () => ({
     options,
     onChange,
     disabled,
+    helperText,
   }: {
     label: string;
     value: string | number;
     options: { value: string | number; label: string }[];
     onChange: (value: string) => void;
     disabled?: boolean;
+    helperText?: string;
   }) => (
-    <select
-      aria-label={label}
-      value={value}
-      disabled={disabled}
-      onChange={(event) => onChange(event.target.value)}
-    >
-      <option value="">Select</option>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        aria-label={label}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        <option value="">Select</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {helperText && <span>{helperText}</span>}
+    </>
   ),
 }));
 type Option = { id: string; name: string };
@@ -184,6 +190,7 @@ const fillApplicant = () => {
   fireEvent.change(screen.getByLabelText('Date of birth'), { target: { value: '2018-01-01' } });
   fireEvent.change(screen.getByLabelText('Gender'), { target: { value: 'Female' } });
   fireEvent.change(screen.getByLabelText(/Mobile/), { target: { value: '9876543210' } });
+  fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: 'mother' } });
 };
 beforeEach(() => {
   vi.clearAllMocks();
@@ -359,7 +366,7 @@ describe('Special direct-registration entry', () => {
     });
     expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('parent+direct@example.com');
     fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
-    await screen.findByText(/Check existing families using this guardian mobile/);
+    await screen.findByText(/Check existing families using these parent contact details/);
     expect(state.start).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
     await screen.findByText(/No family is available to link/);
@@ -388,7 +395,13 @@ describe('Special direct-registration entry', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
     await screen.findByText(/No family is available to link/);
     fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
-    await screen.findByText(/Registration response did not include/);
+    await waitFor(() =>
+      expect(state.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringMatching(/Registration response did not include/),
+        })
+      )
+    );
     expect(state.success).not.toHaveBeenCalled();
     expect(state.close).not.toHaveBeenCalled();
     expect(screen.getAllByLabelText(/First name/)[0]).toHaveValue('Riya');
@@ -405,6 +418,16 @@ describe('Special direct-registration entry', () => {
           familyNumber: 'FAM-1',
           primaryGuardianName: 'Aarti',
           applicants: [],
+          parents: [
+            {
+              sourceApplicantId: 'existing-child',
+              relationship: 'mother',
+              name: 'Aarti',
+              firstName: 'Aarti',
+              email: 'parent@example.com',
+              mobile: '9876543210',
+            },
+          ],
         },
       ],
     }));
@@ -420,14 +443,28 @@ describe('Special direct-registration entry', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await screen.findByText('Reason for separate family is required.');
     expect(state.start).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: /Link FAM-1/ }));
+    fireEvent.change(screen.getByLabelText('Parent'), {
+      target: { value: 'existing-child:mother' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add sibling' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Add Sibling?' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add sibling' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Add Sibling?' })).not.toBeInTheDocument()
+    );
+    await screen.findByText(/Sibling family confirmed/);
     fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await waitFor(() =>
       expect(state.start).toHaveBeenCalledWith(
-        expect.objectContaining({ existingFamilyId: 'family-1', createSeparateFamily: false })
+        expect.objectContaining({
+          existingFamilyId: 'family-1',
+          existingParentApplicantId: 'existing-child',
+          parentRelationship: 'mother',
+          createSeparateFamily: false,
+        })
       )
     );
-  });
+  }, 15000);
   it('invalidates the family lookup when guardian mobile changes', async () => {
     renderDrawer();
     await selectOffering();
@@ -436,7 +473,38 @@ describe('Special direct-registration entry', () => {
     await screen.findByText(/No family is available to link/);
     fireEvent.change(screen.getByLabelText(/Mobile/), { target: { value: '9876543211' } });
     fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
-    await screen.findByText(/Check existing families using this guardian mobile/);
+    await screen.findByText(/Check existing families using these parent contact details/);
+    expect(state.start).not.toHaveBeenCalled();
+  });
+  it('includes normalized parent email in matching and invalidates the result when email changes', async () => {
+    renderDrawer();
+    await selectOffering();
+    fillApplicant();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), {
+      target: { value: 'Parent@Example.COM' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
+    expect(state.findFamilies).toHaveBeenLastCalledWith({
+      offeringId: offering.id,
+      guardianMobile: '9876543210',
+      guardianEmail: 'parent@example.com',
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), {
+      target: { value: 'changed@example.com' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
+    await screen.findByText(/Check existing families using these parent contact details/);
+    expect(state.start).not.toHaveBeenCalled();
+    expect(screen.queryByRole('option', { name: 'Guardian' })).not.toBeInTheDocument();
+  });
+  it('requires explicit Father or Mother for the first parent before creating an account-ready admission', async () => {
+    renderDrawer();
+    await selectOffering();
+    fillApplicant();
+    fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
+    await screen.findByText('Select Father or Mother.');
     expect(state.start).not.toHaveBeenCalled();
   });
   it('locks all conflicting interactions during submit and restores the form after a server rejection', async () => {
@@ -458,7 +526,9 @@ describe('Special direct-registration entry', () => {
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByLabelText('Admission type')).toBeDisabled();
     reject({ data: { detail: 'This offering is no longer open.' } });
-    await screen.findByText('This offering is no longer open.');
+    await waitFor(() =>
+      expect(state.error).toHaveBeenCalledWith({ message: 'This offering is no longer open.' })
+    );
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
     expect(state.success).not.toHaveBeenCalled();
     expect(state.close).not.toHaveBeenCalled();
@@ -470,15 +540,21 @@ describe('Special direct-registration entry', () => {
         throw new Error('Unavailable');
       },
     }));
-    renderDrawer();
-    expect(screen.getByText(/Admission choices could not be loaded/)).toBeInTheDocument();
+    const view = renderDrawer();
+    expect(state.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringMatching(/Admission choices could not be loaded/),
+      })
+    );
     expect(screen.getByRole('button', { name: 'Start registration' })).toBeDisabled();
     await waitFor(() => expect(state.loadCycles).toHaveBeenCalledOnce());
     state.cyclesError = false;
     state.loadCycles.mockImplementation(() => ({
       unwrap: async () => ({ totalCount: 1, items: [cycle] }),
     }));
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    view.unmount();
+    renderDrawer();
     await screen.findByRole('option', { name: cycle.name });
   });
   it('protects unsaved applicant data when cancelling', async () => {

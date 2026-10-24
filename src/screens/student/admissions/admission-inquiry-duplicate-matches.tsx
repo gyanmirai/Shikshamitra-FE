@@ -1,16 +1,22 @@
 import type { DuplicateMatch } from 'src/redux/student/admissions/admission-inquiries-api';
+import type { AdmissionSiblingParentSelection } from 'src/redux/student/admissions/admission-parent-family-types';
 
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Stack, Button, TextField, Typography } from '@mui/material';
 
 import { formatAdmissionReference } from './admission-reference';
 import { canLinkAdmissionInquiryFamily } from './admission-inquiry-model';
+import { AdmissionSiblingFamilyMatch } from './admission-sibling-family-match';
 
 type Props = {
   matches: DuplicateMatch[];
   guardianPhone: string;
+  guardianEmail?: string;
   busy: boolean;
-  onUseExisting: (familyId: string) => void;
+  onUseExisting: (
+    familyId: string,
+    parent: AdmissionSiblingParentSelection
+  ) => void | Promise<void>;
   onOpenExisting: (inquiryId: string) => void;
   onCreateSeparate: () => void;
   overrideReason: string;
@@ -20,6 +26,7 @@ type Props = {
 export function AdmissionInquiryDuplicateMatches({
   matches,
   guardianPhone,
+  guardianEmail = '',
   busy,
   onUseExisting,
   onOpenExisting,
@@ -31,7 +38,7 @@ export function AdmissionInquiryDuplicateMatches({
   return (
     <Stack spacing={1}>
       {matches.map((match) => {
-        const canLink = canLinkAdmissionInquiryFamily(match, guardianPhone);
+        const canLink = canLinkAdmissionInquiryFamily(match, guardianPhone, guardianEmail);
         return (
           <StudentFeedback
             notificationKey="STU-0071"
@@ -49,17 +56,11 @@ export function AdmissionInquiryDuplicateMatches({
                     Open inquiry
                   </Button>
                 )}
-                <Button
-                  size="small"
-                  disabled={busy || !canLink}
-                  onClick={() => onUseExisting(match.familyId)}
-                >
-                  Add sibling
-                </Button>
               </Stack>
             }
           >
-            Possible existing family: {match.applicantName} · {match.guardianPhone ?? '—'}
+            Possible existing family: {match.applicantName} ·{' '}
+            {match.guardianEmail || match.guardianPhone || '—'}
             {match.existingInquiryNumber
               ? ` · ${formatAdmissionReference(match.existingInquiryNumber)}`
               : ''}
@@ -67,9 +68,19 @@ export function AdmissionInquiryDuplicateMatches({
               <Typography variant="body2">
                 {match.canLinkFamily === false && match.guardianPhone === guardianPhone
                   ? 'This family is not available for linking. Review the existing inquiry or create a separate family.'
-                  : 'Guardian mobile does not match. Verify the number before adding a sibling.'}
+                  : 'Parent contact details do not match. Check the email or mobile before adding a sibling.'}
               </Typography>
             )}
+            <AdmissionSiblingFamilyMatch
+              key={`${match.familyId}:${guardianPhone}:${guardianEmail}`}
+              parents={match.parents ?? []}
+              children={match.applicantName}
+              busy={busy}
+              enteredMobile={guardianPhone}
+              disabled={!canLink}
+              mobileDiffers={match.matchByEmail === true && match.matchByMobile !== true}
+              onConfirm={(parent) => onUseExisting(match.familyId, parent)}
+            />
           </StudentFeedback>
         );
       })}
@@ -86,6 +97,8 @@ export function AdmissionInquiryDuplicateMatches({
         helperText="Explain why this inquiry belongs to a separate family. Use Add sibling for another child in the same family."
       />
       <Button
+        type="button"
+        size="small"
         variant="outlined"
         disabled={busy || !overrideReason.trim()}
         onClick={onCreateSeparate}

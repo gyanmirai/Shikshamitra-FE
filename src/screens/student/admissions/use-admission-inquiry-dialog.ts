@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { AdmissionFormField } from 'src/redux/student/admissions/admission-forms-api';
 import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
+import type { AdmissionSiblingParentSelection } from 'src/redux/student/admissions/admission-parent-family-types';
 
 import { useSelector } from 'react-redux';
 import { useFormik, type FormikProps } from 'formik';
@@ -49,6 +50,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     values: Record<string, string>;
   } | null>(null);
   const [matches, setMatches] = useState<DuplicateMatch[]>([]);
+  const [matchesKey, setMatchesKey] = useState('');
+  const identityKeyRef = useRef('');
   const [requestError, setRequestError] = useState<string | null>(null);
   const [duplicateOverrideReason, setDuplicateOverrideReason] = useState('');
   const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
@@ -81,15 +84,20 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
       const offering = offeringChoices.find((item) => item.id === values.offeringId);
       if (!offering || !canCreateInquiry || readingPhoto || runtimeLoading || runtimeError) return;
       setRequestError(null);
+      const key = JSON.stringify([
+        offering.id,
+        buildAdmissionInquiryDuplicateInput(values, fields, offering),
+      ]);
       try {
         const result = await checkDuplicates(
           buildAdmissionInquiryDuplicateInput(values, fields, offering)
         ).unwrap();
+        if (identityKeyRef.current !== key) return;
         setMatches(result);
+        setMatchesKey(key);
         if (!result.length) await submit();
       } catch (error) {
         const message = parseApiProblemDetail(error).detail || 'Duplicate check failed';
-        setRequestError(message);
         shikshaMitraToast.error({ message });
       }
     },
@@ -124,6 +132,18 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
   const currentGuardianPhone = selectedOffering
     ? buildAdmissionInquiryDuplicateInput(formik.values, fields, selectedOffering).guardianPhone
     : '';
+  const currentGuardianEmail = selectedOffering
+    ? (buildAdmissionInquiryDuplicateInput(formik.values, fields, selectedOffering).guardianEmail ??
+      '')
+    : '';
+  const identityKey = selectedOffering
+    ? JSON.stringify([
+        selectedOffering.id,
+        buildAdmissionInquiryDuplicateInput(formik.values, fields, selectedOffering),
+      ])
+    : '';
+  identityKeyRef.current = identityKey;
+  const currentMatches = matchesKey === identityKey ? matches : [];
 
   useEffect(() => {
     if (
@@ -181,9 +201,15 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     }
   }, [allowedSources, formik, workflowLoading]);
 
-  async function submit(existingFamilyId?: string | null, createSeparateFamily = false) {
+  async function submit(
+    existingFamilyId?: string | null,
+    createSeparateFamily = false,
+    parentSelection?: AdmissionSiblingParentSelection
+  ) {
     const offering = offeringChoices.find((item) => item.id === formik.values.offeringId);
     if (!offering || !canCreateInquiry || readingPhoto || runtimeLoading || runtimeError) return;
+    const errors = await formik.validateForm();
+    if (Object.keys(errors).length) return;
     setRequestError(null);
     try {
       const inquiry = await create(
@@ -193,7 +219,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
           offering,
           existingFamilyId,
           createSeparateFamily,
-          duplicateOverrideReason
+          duplicateOverrideReason,
+          parentSelection
         )
       ).unwrap();
       if (formik.values.sendAcknowledgement && canAutoAcknowledge) {
@@ -225,7 +252,6 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
       onClose();
     } catch (error) {
       const message = parseApiProblemDetail(error).detail || 'Unable to create inquiry';
-      setRequestError(message);
       shikshaMitraToast.error({ message });
     }
   }
@@ -236,8 +262,9 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     form,
     sections,
     fields,
-    matches,
+    matches: currentMatches,
     currentGuardianPhone,
+    currentGuardianEmail,
     requestError,
     duplicateOverrideReason,
     setDuplicateOverrideReason,
@@ -296,22 +323,26 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
       createState.isLoading ||
       duplicateState.isLoading ||
       communicationState.isLoading,
-    useExistingFamily: async (familyId: string) => {
+    useExistingFamily: async (familyId: string, parent: AdmissionSiblingParentSelection) => {
       if (
-        !matches.some(
+        !currentMatches.some(
           (match) =>
             match.familyId === familyId &&
-            canLinkAdmissionInquiryFamily(match, currentGuardianPhone)
+            canLinkAdmissionInquiryFamily(match, currentGuardianPhone, currentGuardianEmail) &&
+            match.parents?.some(
+              (candidate) =>
+                candidate.sourceApplicantId === parent.sourceApplicantId &&
+                (!candidate.relationship || candidate.relationship === parent.relationship)
+            )
         )
       ) {
-        setRequestError('Verify the primary guardian mobile before linking this family.');
+        setRequestError('Check the parent details again before linking this family.');
         return;
       }
-      setMatches([]);
-      await submit(familyId);
+      await submit(familyId, false, parent);
     },
     createSeparateFamily: async () => {
-      setMatches([]);
+      if (!currentMatches.length || !duplicateOverrideReason.trim()) return;
       await submit(null, true);
     },
   };

@@ -509,6 +509,39 @@ export default function AdmissionInquiryFormPage() {
                 !controller.runtimeError && (
                   <InquiryFormSection title="Inquiry details">
                     <ShakingTextField
+                      error={Boolean(
+                        (formik.touched.parentRelationship || formik.submitCount) &&
+                        formik.errors.parentRelationship
+                      )}
+                    >
+                      <CustomSelect
+                        label="Parent relationship"
+                        name="parentRelationship"
+                        required
+                        fullWidth
+                        size="small"
+                        disabled={controller.busy}
+                        value={formik.values.parentRelationship ?? ''}
+                        options={[
+                          { value: 'father', label: 'Father' },
+                          { value: 'mother', label: 'Mother' },
+                        ]}
+                        onChange={(value) =>
+                          formik.setFieldValue('parentRelationship', String(value))
+                        }
+                        onBlur={() => formik.setFieldTouched('parentRelationship', true)}
+                        error={Boolean(
+                          (formik.touched.parentRelationship || formik.submitCount) &&
+                          formik.errors.parentRelationship
+                        )}
+                        helperText={
+                          formik.touched.parentRelationship || formik.submitCount
+                            ? formik.errors.parentRelationship
+                            : undefined
+                        }
+                      />
+                    </ShakingTextField>
+                    <ShakingTextField
                       error={Boolean(formik.touched.source && formik.errors.source)}
                     >
                       <TextField
@@ -584,6 +617,7 @@ export default function AdmissionInquiryFormPage() {
               <AdmissionInquiryDuplicateMatches
                 matches={controller.matches}
                 guardianPhone={controller.currentGuardianPhone}
+                guardianEmail={controller.currentGuardianEmail}
                 busy={controller.busy}
                 onUseExisting={controller.useExistingFamily}
                 onOpenExisting={(inquiryId) => {

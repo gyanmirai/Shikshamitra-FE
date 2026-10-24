@@ -22,6 +22,7 @@ export const GlobalIcons = {
   usage: 'solar:chart-2-bold-duotone',
   pdf: 'mdi:file-pdf-box',
   sendNotification: 'mynaui:send',
+  email: 'mdi:email-outline',
   alertIcon: 'fluent:alert-on-24-regular',
   resetIcon: 'ix:reset',
   publish: 'mdi:publish',

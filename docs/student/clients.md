@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-23
+updated_on: 2026-10-24
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -33,7 +33,7 @@ Historical stages remain read-only and existing card-layout consumers retain the
 
 ## Unified Student Setup commands
 
-`student-quick-setup-page.tsx` reuses the existing case, placement, identifier, fee, credentials and activation clients; no new backend contract is introduced. The owning screen retains the `case` URL parameter and keeps the worklist mounted but hidden while the full-page student workspace is open. `use-student-quick-setup-academic.ts` retains an editing baseline across refetches and acknowledges each saved field. `student-quick-setup-save.ts` sequences academic saves, fee confirmation, then a fresh activation preview and activation. These commands commit independently, not as a single atomic transaction; failed later steps preserve prior progress. Activation retries retain an idempotency key. The fee section exposes a focused editor handle so the shared page footer can save it with a fresh case stamp; its collection-open state locks navigation without disabling the existing payment adapter. Manual credential sending stays a separate command after activation. The lazy activation-preview hook is an additional export of the existing endpoint, not a new API.
+`student-quick-setup-page.tsx` reuses the existing case, placement, identifier, fee, credentials and activation clients, with the optional sibling-parent activation identity described below. The owning screen retains the `case` URL parameter and keeps the worklist mounted but hidden while the full-page student workspace is open. `use-student-quick-setup-academic.ts` retains an editing baseline across refetches and acknowledges each saved field. `student-quick-setup-save.ts` sequences academic saves, fee confirmation, then a fresh activation preview and activation. These commands commit independently, not as a single atomic transaction; failed later steps preserve prior progress. Activation retries retain an idempotency key. The fee section exposes a focused editor handle so the shared page footer can save it with a fresh case stamp; its collection-open state locks navigation without disabling the existing payment adapter. Manual credential sending stays a separate command after activation. The lazy activation-preview hook is an additional export of the existing endpoint, not a new API.
 
 The Student-owned document workspace reuses Admissions document requirements, permissions, action commands and evidence history. View uses the existing authenticated `useDocumentPreview` blob hook; images support zoom, PDFs use an embedded browser preview, and unsupported formats retain Download. View and Download require the existing file-access permissions and evidence eligibility. The icon-only row actions keep specific accessible labels and tooltips; no public file URL, new download client or backend permission is introduced. Below `sm`, status moves into the Document cell so the sticky icon actions do not crowd out the file name. Non-applicable documents stay collapsed by default. The inactive-stage read-only notice is a compact caption; genuine missing-document and approval blockers remain visible.
 
@@ -87,7 +87,23 @@ Offering list, detail and availability reads provide the existing Admission Cycl
 The Applications special-registration drawer uses the existing paginated cycle and offering reads, scoped to the current academic year and explicitly selected cycle/type. It never defaults to the first cycle or truncates a global offering list. General and inquiry-only offerings are excluded; historical Management/Staff Inquiry-or-direct offerings remain eligible. Loading, paging, failure/Retry and empty results use the existing selectors. The existing special-registration and family-match mutations preserve child/guardian identity, sibling verification, and idempotency; General fresh direct registration remains server-rejected.
 
 The offering lookup sends `forSpecialRegistration=true` so eligible entry modes are filtered before server counts and paging. RTE retains its Direct-only request; Management/Staff include retained Both routing. Refresh choices remounts the cycle/offering selectors and requests fresh data while preserving entered applicant/guardian details and selection. The drawer reuses `FormSectionCard` and `Scrollbar`, with a fixed header/footer, cycle prerequisite guidance, contextual empty results and recoverable lookup errors.
-Deploy the backend query contract before the frontend lookup change; an older host cannot provide the eligibility-before-paging guarantee. Validation focuses the first invalid field, and a failed registration/family request focuses its visible inline error without discarding the draft.
+Deploy the backend query contract before the frontend lookup change; an older host cannot provide the eligibility-before-paging guarantee.
+Validation focuses the first invalid field; failed registration/family requests use Student toast feedback without discarding the draft.
+
+## Confirmed parent and sibling clients
+
+`admission-parent-family-types.ts` shares Father/Mother contact and selected-parent request types between Inquiry and Direct Registration.
+Inquiry duplicate checks add `parentContacts`; Direct Registration family checks add `guardianEmail` alongside the retained mobile field.
+Match responses expose saved parent candidates identified by `sourceApplicantId` and nullable relationship, plus email/mobile match flags.
+The owning forms send `existingFamilyId`, `existingParentApplicantId` and explicit `parentRelationship` only after staff confirms Add sibling; autofill uses that saved parent contact and does not replace the other parent's authored answers.
+Matching keys include the current academic/admission identity and contact inputs so late responses cannot confirm an edited family.
+
+The existing credentials workspace adds `parentSibling`; `student-parent-sibling-state.ts` derives activation readiness from that same case-bound query without another lookup.
+Quick Setup and the legacy activation callback pass optional `siblingParentSelection` with the relationship, expected email and expected user ID.
+The server's selected relationship is restored and cannot be replaced by a draft choice after reviewed activation intent is saved.
+`retryStudentOnboardingParentSetup` posts the existing case stamp to `/student/onboarding/{id}/credentials/retry-parent-setup`, updates the workspace cache and invalidates the existing case tags.
+`linkStudentOnboardingParent` posts the current workspace stamp and reviewed parent identity to `/student/onboarding/{id}/credentials/link-parent` for an already-enrolled child, then refreshes the same workspace/case caches without invoking activation, academic or fee commands.
+The backend remains authoritative for matching, permissions, identity reuse, concurrency and original-setup recovery; see [Student API](../../../Shikshamitra-BE/docs/modules/student/api.md) and [product rules](../../../Shikshamitra-BE/docs/modules/student/product.md).
 
 `src/redux/student/admissions/admission-cycles-api.ts` owns the Admission Cycle RTK Query contract.
 It provides server-paged list/detail reads, impact/history reads, Draft create/edit, readiness validation, publish, close, reopen, archive, unused-Draft delete, clone, window revision, and schedule commands.
@@ -346,7 +362,9 @@ Failed or unknown writes are not silently retried, and refresh disables Send unt
 No client ownership-verification flag, password or token is sent or returned.
 The backend recipient contract and provenance checks are described in [Student APIs](../../../Shikshamitra-BE/docs/modules/student/api.md#onboarding-credential-delivery).
 
-`GuardianProfileEmailDialog` reuses the Records family snapshot and audited change APIs. It changes only the selected parent's email, preserving every other profile/sibling value and the expected snapshot hash. Records Changes View and Create plus editable Onboarding access guard the entry action. Pending corrections link to the owning Changes & Approvals review; approval and apply conflicts are never reported as a saved email.
+The retained `GuardianProfileEmailDialog` reuses Records family snapshot/change APIs for historical guardian corrections and legacy repair.
+The new Student/Father/Mother Add/Update email path uses `StudentCredentialProfileEmailDialog` and the scoped Onboarding email command, including owner verification for linked accounts.
+Neither path reports a pending review or pending email verification as a completed saved-login change.
 
 The legacy provisioning, credential-email and Configure-gated case-only parent-email correction clients remain compatible for their existing consumers.
 The simplified Credentials panel does not invoke a policy correction or change automatic-email preferences.
@@ -364,6 +382,16 @@ Commands retain the server stamp and stable batch key; failed commands are not a
 Applied batches refresh Onboarding cases/counts, Records Directory, placement snapshots, profiles and Changes history through Student-owned tags.
 Approval-only responses refresh batch status without claiming rolls changed.
 No Finance client or command is changed.
+
+## App-login email editor
+
+`student-onboarding-api.ts` owns `updateStudentCredentialsEmail` through the existing shared API and case tags.
+The editor's conditional Cancel change action uses the same mutation with `cancelPendingChange: true`; it cancels pending verification without sending credentials or modifying the current login.
+Its returned workspace replaces only the matching cached credentials workspace; normal Student case invalidation refreshes other affected reads after successful saves.
+Failed writes retain the old saved workspace and the editor draft; no implicit retry, credential send or account creation follows an email save.
+Recipient metadata controls Add/Update availability and shared-parent confirmation; `emailEditToken`, selected owner and expected saved address remain bound to the reviewed edit session.
+`confirmStudentPortalEmail` sends the owner token only after an explicit click and includes the link's school ID in the normal `__tenant` header.
+See [backend email contracts](../../../Shikshamitra-BE/docs/modules/student/api.md#onboarding-app-login-email-edits) for authority, token expiry and transaction rules.
 
 ## Actual handling history
 
