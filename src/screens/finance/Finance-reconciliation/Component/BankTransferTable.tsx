@@ -6,19 +6,18 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
-
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-
-import { useMemo, useState, useEffect } from 'react';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
-import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
+import { useGetReconciliationListQuery , useDownloadReconciliationReceiptPdfMutation } from 'src/redux/finance/reconciliation';
 import {
   PamentMethodsStatusColor,
   PaymentMethodsStatusType,
@@ -27,8 +26,6 @@ import {
 
 import { ApproveRejectForm } from './DemandDraftTable';
 import ReconciliationReceiptDialog from './ReconciliationReceiptDialog';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const BankTransferTable = ({
   queryParams,
@@ -39,6 +36,7 @@ const BankTransferTable = ({
   const [isClearCheck, setIsClearCheck] = useState(false);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  const [receiptFileName, setReceiptFileName] = useState('Receipt.pdf');
   const [receiptBlobUrl, setReceiptBlobUrl] = useState<string | null>(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
 
@@ -62,7 +60,7 @@ const BankTransferTable = ({
 
   const [downloadReceiptPdf] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDownloadReceiptPdfMutation,
+    currentQueryAndMutation: useDownloadReconciliationReceiptPdfMutation,
     popupConfig: {
       error: true,
       errorMessage: 'Unable to load receipt',
@@ -240,12 +238,13 @@ const BankTransferTable = ({
             setReceiptDialogOpen(true);
 
             try {
-              const blob = await downloadReceiptPdf({
+              const { blob, fileName } = await downloadReceiptPdf({
                 receiptId:
                   row?.status === PaymentMethodsStatusType.Approved
                     ? row?.finalReceiptId
                     : row?.provisionalReceiptId,
               }).unwrap();
+              setReceiptFileName(fileName);
               const objectUrl = URL.createObjectURL(blob);
               setReceiptBlobUrl(objectUrl);
             } catch {
@@ -322,7 +321,7 @@ const BankTransferTable = ({
     if (!selectedReceipt || !receiptBlobUrl) return;
     const anchor = document.createElement('a');
     anchor.href = receiptBlobUrl;
-    anchor.download = `receipt-${selectedReceipt.receiptNumber || selectedReceipt.id}.pdf`;
+    anchor.download = receiptFileName;
     anchor.target = '_blank';
     document.body.appendChild(anchor);
     anchor.click();

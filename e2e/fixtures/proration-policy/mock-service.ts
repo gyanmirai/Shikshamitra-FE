@@ -13,6 +13,13 @@ export const api = createApi({
         data: [
           { id: 'tuition', name: 'Tuition fee', academicYearId: 'synthetic-year' },
           { id: 'transport', name: 'Transport fee', academicYearId: 'synthetic-year' },
+          ...(new URLSearchParams(window.location.search).get('scroll') === 'long'
+            ? Array.from({ length: 34 }, (_, index) => ({
+                id: `synthetic-${index + 3}`,
+                name: `Synthetic Fee ${String(index + 3).padStart(2, '0')}`,
+                academicYearId: 'synthetic-year',
+              }))
+            : []),
         ],
       };
     }

@@ -4,13 +4,24 @@ import { useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Alert, Stack, Button, Drawer, Typography, CircularProgress } from '@mui/material';
+import {
+  Box,
+  Alert,
+  Stack,
+  Button,
+  Drawer,
+  Typography,
+  DialogActions,
+  CircularProgress,
+} from '@mui/material';
 import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 
 import { FormFooter } from './FormFooter';
@@ -190,33 +201,58 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
               });
             }}
           />
-          <ConfirmDialog
-            open={Boolean(confirmationImpact)}
-            icon="warning"
-            title="Replace default payment term?"
-            onClose={cancelDefaultConfirmation}
-            disableCancel={isSubmitting}
-            disableBackdropClick={isSubmitting}
-            content={
-              confirmationImpact && (
+          {confirmationImpact && (
+            <CustomDialog
+              open
+              hasForm={false}
+              guardUnsavedChanges={false}
+              disableClose={isSubmitting}
+              title={
+                <Stack component="span" direction="row" spacing={1} alignItems="center">
+                  <Iconify
+                    icon={GlobalIcons.alertIcon}
+                    sx={{ color: 'warning.main', flexShrink: 0 }}
+                  />
+                  <span>Replace Default Payment Term?</span>
+                </Stack>
+              }
+              handleClose={() => {
+                if (!isSubmitting) cancelDefaultConfirmation();
+              }}
+            >
+              <DialogScrollContent>
                 <PaymentTermDefaultSummary
                   impact={confirmationImpact}
                   name={formik.values.paymentTermName}
                   version={nextVersion}
                 />
-              )
-            }
-            action={
-              <Button
-                startIcon={<Iconify icon="mdi:check-circle-outline" />}
-                variant="contained"
-                disabled={isSubmitting}
-                onClick={() => handleSubmit(true)}
-              >
-                Confirm
-              </Button>
-            }
-          />
+              </DialogScrollContent>
+              <DialogActions>
+                <Button
+                  type="button"
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                  disabled={isSubmitting}
+                  onClick={cancelDefaultConfirmation}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="small"
+                  startIcon={<Iconify icon="mdi:check-circle-outline" />}
+                  variant="contained"
+                  loading={isSubmitting}
+                  disabled={isSubmitting}
+                  onClick={() => handleSubmit(true)}
+                >
+                  Confirm
+                </Button>
+              </DialogActions>
+            </CustomDialog>
+          )}
           <ConfirmDialog
             open={discardDialog.value}
             icon="warning"

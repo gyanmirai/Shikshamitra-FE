@@ -77,6 +77,7 @@ export interface AdjustmentFormValues {
 }
 
 export interface IAdjustmentTableProps {
+  primaryAction?: React.ReactNode;
   activeTab: import('../enums/adjustment.enum').AdjustmentTabEnum;
   onTabChange: (tab: import('../enums/adjustment.enum').AdjustmentTabEnum) => void;
   tabCounts: Record<import('../enums/adjustment.enum').AdjustmentTabEnum, number>;

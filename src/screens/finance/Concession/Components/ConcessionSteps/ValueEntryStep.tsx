@@ -17,6 +17,7 @@ interface Props {
   requestContext?: ConcessionRequestContext;
   policy?: ConcessionPolicyOption;
   preview?: ConcessionRequestPreview;
+  showPolicyFixedDetails?: boolean;
 }
 
 const ValueEntryStep: React.FC<Props> = ({
@@ -25,6 +26,7 @@ const ValueEntryStep: React.FC<Props> = ({
   requestContext,
   policy,
   preview,
+  showPolicyFixedDetails = true,
 }) => {
   const { values, setFieldValue } = formik;
   const selectedTypes = useMemo(
@@ -107,6 +109,7 @@ const ValueEntryStep: React.FC<Props> = ({
             requestContext={requestContext}
             policy={policy}
             preview={preview}
+            showPolicyFixedDetails={showPolicyFixedDetails}
           />
         ))
       )}
@@ -126,6 +129,7 @@ const ValueEntryStepItem = ({
   requestContext,
   policy,
   preview,
+  showPolicyFixedDetails,
 }: any) => {
   const assignedStructureData =
     requestContext && policy
@@ -228,7 +232,7 @@ const ValueEntryStepItem = ({
   ]);
   // Better to check if update is needed inside to avoid loop. The check `!existingEntry || existingEntry.netAmount === undefined` protects against loop if we set it correctly.
 
-  if (selectedFeeHeads.length === 0) return null;
+  if (selectedFeeHeads.length === 0 || (isPolicyFixed && !showPolicyFixedDetails)) return null;
 
   const formatCurrency = (amount: number) => formatNumber(amount, 'INR');
   const selectedBaseTotal = selectedFeeHeads.reduce(

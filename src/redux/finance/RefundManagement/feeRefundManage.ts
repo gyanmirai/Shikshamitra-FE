@@ -8,12 +8,13 @@ import { financeModuleApi } from '../financeModuleApi';
 
 export interface FeeRefundLineDto {
   id: string;
-  dueFeeId: string;
+  dueFeeId: string | null;
+  chargeId?: string | null;
   amount: number;
   calculatedAmount: number;
   sourceAllocationId?: string;
   sourceReceiptId?: string;
-  feeHeadId: string;
+  feeHeadId: string | null;
   feeHeadName: string;
   installmentLabel: string;
   settledPaidAmount: number;
@@ -103,7 +104,7 @@ export interface FeeRefundFeeHeadMonthDto {
 }
 
 export interface FeeRefundFeeHeadDto {
-  feeHeadId: string;
+  feeHeadId: string | null;
   feeHeadName: string;
   totalPaid: number;
   totalRefunded: number;
@@ -116,7 +117,9 @@ export interface PagedRefundResult {
 }
 
 export interface RefundEligibilityMonthDto {
-  dueFeeId: string;
+  chargeName?: string | null;
+  dueFeeId: string | null;
+  chargeId?: string | null;
   sourceAllocationId: string;
   sourceReceiptId: string;
   receiptNumber: string;
@@ -129,7 +132,7 @@ export interface RefundEligibilityMonthDto {
 }
 
 export interface RefundEligibilityFeeHeadDto {
-  feeHeadId: string;
+  feeHeadId: string | null;
   feeHeadName: string;
   totalPaid: number;
   totalRefunded: number;
@@ -197,9 +200,10 @@ export interface RecordRefundPayoutInput {
   method: string;
   amount: number;
   paymentDate: string;
-  bankAccountId?: string;
+  bankAccountId: string;
+  expenseCategoryId: string;
   externalReference?: string;
-  evidenceReference: string;
+  evidenceReference?: string;
 }
 
 export interface ResolveRefundPayoutInput {
@@ -344,7 +348,11 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       { id: string; body: Record<string, unknown> }
     >({
       query: ({ id, body }) => ({ url: `/fee-refunds/${id}/process`, method: 'POST', body }),
-      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.accountPosting],
+      invalidatesTags: [
+        financeModuleType.charges,
+        financeModuleType.feeRefund,
+        financeModuleType.accountPosting,
+      ],
     }),
 
     reverseFeeRefund: builder.mutation<
@@ -356,7 +364,11 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body: { settlementId, reason },
       }),
-      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.accountPosting],
+      invalidatesTags: [
+        financeModuleType.charges,
+        financeModuleType.feeRefund,
+        financeModuleType.accountPosting,
+      ],
     }),
 
     updateFeeRefund: builder.mutation<FeeRefundRequestDto, UpdateFeeRefundInput>({
@@ -397,8 +409,11 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
     >({
       query: ({ id, body }) => ({ url: `/fee-refunds/${id}/payout`, method: 'POST', body }),
       invalidatesTags: [
+        financeModuleType.charges,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
+        financeModuleType.accountPosting,
         financeModuleType.expenseDetails,
         financeModuleType.incomeTracking,
       ],
@@ -413,6 +428,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.charges,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
         financeModuleType.feeCollection,
@@ -429,6 +445,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.charges,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
         financeModuleType.expenseDetails,
@@ -445,6 +462,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.charges,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
         financeModuleType.feeCollection,

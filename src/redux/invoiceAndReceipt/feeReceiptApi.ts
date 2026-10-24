@@ -6,9 +6,10 @@ export const FEE_RECEIPT_BASE_URL = '/v1/fee-receipts';
 // ─── Enum mirrors (match backend values) ─────────────────────────────────────
 
 export enum FeeReceiptKind {
-  FinalFee,
-  ProvisionalFee,
-  ProvisionalCharge,
+  FinalFee = 1,
+  ProvisionalFee = 2,
+  ProvisionalCharge = 3,
+  FinalCharge = 4,
 }
 
 export enum FeeReceiptVerificationStatus {
@@ -19,22 +20,25 @@ export enum FeeReceiptVerificationStatus {
 }
 
 export enum FeeReceiptScope {
-  Fee,
-  Charge,
+  Fee = 1,
+  Charge = 2,
+  Combined = 3,
 }
 
 // ─── Label helpers ────────────────────────────────────────────────────────────
 
 export const FEE_RECEIPT_KIND_LABELS: Record<FeeReceiptKind, string> = {
-  [FeeReceiptKind.FinalFee]: 'Final Receipt',
-  [FeeReceiptKind.ProvisionalFee]: 'Kachi Receipt (Fee)',
-  [FeeReceiptKind.ProvisionalCharge]: 'Kachi Receipt (Charge)',
+  [FeeReceiptKind.FinalFee]: 'Official Receipt (Fee)',
+  [FeeReceiptKind.FinalCharge]: 'Official Receipt (Charge)',
+  [FeeReceiptKind.ProvisionalFee]: 'Provisional Receipt (Fee)',
+  [FeeReceiptKind.ProvisionalCharge]: 'Provisional Receipt (Charge)',
 };
 
 export type ReceiptKindColor = 'success' | 'warning' | 'info' | 'default';
 
 export const FEE_RECEIPT_KIND_COLORS: Record<FeeReceiptKind, ReceiptKindColor> = {
   [FeeReceiptKind.FinalFee]: 'success',
+  [FeeReceiptKind.FinalCharge]: 'success',
   [FeeReceiptKind.ProvisionalFee]: 'warning',
   [FeeReceiptKind.ProvisionalCharge]: 'info',
 };
@@ -53,6 +57,8 @@ export interface FeeReceiptListItem {
   receiptNumber: string;
   receiptKind: FeeReceiptKind;
   receiptKindLabel: string;
+  paymentMethodLabel?: string;
+  pdfFileName?: string;
   receiptScope: FeeReceiptScope;
   verificationStatus: FeeReceiptVerificationStatus;
   linkedFinalReceiptNumber: string | null;
@@ -68,6 +74,8 @@ export interface FeeReceiptListItem {
 }
 
 export interface FeeReceiptDetail extends FeeReceiptListItem {
+  feePaidAmount?: number;
+  chargePaidAmount?: number;
   linkedProvisionalReceiptId: string | null;
   linkedProvisionalReceiptNumber: string | null;
   linkedFinalReceiptId: string | null;

@@ -6,8 +6,10 @@ import type {
 import { Box, Stack, Alert, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
 
 import { concessionInstallmentLabel } from '../concessionInstallmentLabel';
+import { validateConcessionInstallments } from '../concessionValueValidation';
 
 export default function RequestEnteredInstallments({
   formik,
@@ -24,6 +26,13 @@ export default function RequestEnteredInstallments({
     (line) => selectedHeads.has(line.feeHeadId) && line.eligibleConcessionAmount > 0
   );
   const entries: Record<string, number | string> = values.dueFeeEntries || {};
+  const validationErrors = validateConcessionInstallments(
+    [...selectedHeads],
+    entries,
+    requestContext,
+    policy
+  );
+  const hasInvalidValues = Object.keys(validationErrors).length > 0;
   const enteredTotal = lines.reduce((sum, line) => sum + Number(entries[line.dueFeeId] || 0), 0);
   const percentage = policy.calculationMethod === 'Percentage';
   const maximum = percentage
@@ -50,7 +59,9 @@ export default function RequestEnteredInstallments({
             aria-label="Concession request allowance"
             sx={{ fontVariantNumeric: 'tabular-nums' }}
           >
-            Entered: {money(enteredTotal)} | Remaining: {money(remaining)}
+            {hasInvalidValues
+              ? 'Correct the invalid installment amounts to calculate the remaining allowance.'
+              : `Entered: ${money(enteredTotal)} | Remaining: ${money(remaining)}`}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             This allowance is shared across all selected installments.
@@ -101,11 +112,15 @@ export default function RequestEnteredInstallments({
                 Math.max(0, Number((maximum - enteredTotal + value).toFixed(2)))
               );
           const estimate = percentage
-            ? Math.round(line.eligibleConcessionAmount * value) / 100
+            ? roundUpWithinAmount(
+                (line.eligibleConcessionAmount * value) / 100,
+                line.eligibleConcessionAmount
+              )
             : Math.min(value, line.eligibleConcessionAmount);
           const error =
-            formik.touched.dueFeeEntries?.[line.dueFeeId] &&
-            formik.errors.dueFeeEntries?.[line.dueFeeId];
+            validationErrors[line.dueFeeId] ||
+            (formik.touched.dueFeeEntries?.[line.dueFeeId] &&
+              formik.errors.dueFeeEntries?.[line.dueFeeId]);
           return (
             <Box
               key={line.dueFeeId}
@@ -182,7 +197,7 @@ export default function RequestEnteredInstallments({
                   Estimated reduction
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
-                  −{money(estimate)}
+                  {error ? '—' : `−${money(estimate)}`}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Calculated

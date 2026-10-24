@@ -7,6 +7,7 @@ import { fDateTime } from 'src/utils/format-time';
 import React, { useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import PdfPreview from 'src/components/preview-document/pdf-preview';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
@@ -129,7 +130,11 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
           <Box component="span" sx={{ overflowWrap: 'anywhere' }}>
             {receipt?.receiptNumber || 'Receipt Preview'}
           </Box>
-          {receiptKindMeta && <Label color={receiptKindMeta.color}>{receiptKindMeta.label}</Label>}
+          {receiptKindMeta && (
+            <Label color={receiptKindMeta.color}>
+              {receipt?.receiptKindLabel || receiptKindMeta.label}
+            </Label>
+          )}
         </Stack>
       }
 
@@ -156,7 +161,11 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
           <Box>Receipt not found.</Box>
         ) : (
           <Stack spacing={2}>
-            <DetailSection title="Receipt Details" icon="mdi:receipt-text-outline">
+            <DetailSection
+              title="Receipt Details"
+              icon="mdi:receipt-text-outline"
+              helpText="Recorded receipt amount, payment method, and links between provisional and official documents."
+            >
               <DetailGrid>
                 <DetailField
                   label="Receipt date"
@@ -166,7 +175,24 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
                   label="Amount paid"
                   value={formatNumber(receipt.totalPaidAmount, 'INR')}
                 />
+                {receipt.receiptScope === 3 && (
+                  <>
+                    <DetailField label="Receipt covers" value="Fees and charges" />
+                    <DetailField
+                      label="Fees including late fees"
+                      value={formatNumber(receipt.feePaidAmount, 'INR')}
+                    />
+                    <DetailField
+                      label="Charges"
+                      value={formatNumber(receipt.chargePaidAmount, 'INR')}
+                    />
+                  </>
+                )}
                 <DetailField label="Academic year" value={receipt.academicYearName} />
+                <DetailField
+                  label="Payment method"
+                  value={receipt.paymentMethodLabel || 'Not recorded'}
+                />
                 {FEE_RECEIPT_VERIFICATION_LABELS[
                   receipt.verificationStatus as keyof typeof FEE_RECEIPT_VERIFICATION_LABELS
                 ] && (
@@ -180,7 +206,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
                   />
                 )}
                 {receipt.linkedFinalReceiptNumber && (
-                  <DetailField label="Final receipt" value={receipt.linkedFinalReceiptNumber} />
+                  <DetailField label="Official receipt" value={receipt.linkedFinalReceiptNumber} />
                 )}
                 {receipt.linkedProvisionalReceiptNumber && (
                   <DetailField
@@ -196,7 +222,11 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
                 )}
               </DetailGrid>
             </DetailSection>
-            <DetailSection title="Student Information" icon="mdi:account-school-outline">
+            <DetailSection
+              title="Student Information"
+              icon="mdi:account-school-outline"
+              helpText="Student and academic context associated with this receipt."
+            >
               <DetailGrid>
                 <DetailField label="Student name" value={receipt.studentName} />
                 <DetailField label="GR number" value={receipt.grNo} />
@@ -209,7 +239,11 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
                 <DetailField label="Medium" value={receipt.mediumName} />
               </DetailGrid>
             </DetailSection>
-            <DetailSection title="Receipt Document" icon="mdi:file-document-outline">
+            <DetailSection
+              title="Receipt Document"
+              icon="mdi:file-document-outline"
+              helpText="Preview and download the printable PDF for this receipt number."
+            >
               {isPdfLoading ? (
                 <Stack
                   alignItems="center"
@@ -224,17 +258,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
                   </Typography>
                 </Stack>
               ) : receiptBlobUrl ? (
-                <Box
-                  component="iframe"
-                  title="Fee Receipt PDF"
-                  src={receiptBlobUrl}
-                  sx={{
-                    border: 0,
-                    width: '100%',
-                    height: { xs: '55dvh', sm: '65dvh' },
-                    display: 'block',
-                  }}
-                />
+                <PdfPreview url={receiptBlobUrl} title="Fee Receipt" />
               ) : (
                 <Box>Receipt preview is not available right now.</Box>
               )}
@@ -243,6 +267,17 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
         )}
       </DialogScrollContent>
       <DialogActions sx={{ px: 2, py: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Button
+          component="a"
+          href={receiptBlobUrl || undefined}
+          download={receipt?.pdfFileName || `Receipt-${receipt?.receiptNumber || receiptId}.pdf`}
+          disabled={!receiptBlobUrl}
+          variant="contained"
+          size="small"
+          startIcon={<Iconify icon="mdi:download" />}
+        >
+          Download PDF
+        </Button>
         <Button
           variant="outlined"
           size="small"

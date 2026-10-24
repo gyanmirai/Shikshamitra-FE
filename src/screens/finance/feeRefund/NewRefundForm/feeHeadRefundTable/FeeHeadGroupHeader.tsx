@@ -18,10 +18,10 @@ export interface FeeHeadGroupHeaderProps {
   selectedReceiptId?: string;
   onCheckboxToggle: () => void;
   onExpandToggle: () => void;
-  applyInAllState?: { isApplying: boolean; amount: number | string };
+  applyInAllState?: { amount: number | string };
   isFullRefund?: boolean;
   onApplyInAllAmountChange?: (amount: number | string) => void;
-  onApplyInAllToggle?: () => void;
+  onApplyInAll?: () => void;
 }
 
 const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
@@ -33,10 +33,10 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   selectedReceiptId,
   onCheckboxToggle,
   onExpandToggle,
-  applyInAllState = { isApplying: false, amount: '' },
+  applyInAllState = { amount: '' },
   isFullRefund = false,
   onApplyInAllAmountChange,
-  onApplyInAllToggle,
+  onApplyInAll,
 }): React.ReactElement => {
   const theme = useTheme();
   const isAdj = mode === 'adjustment';
@@ -49,7 +49,10 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
   const hasSelectable = selectableItems.length > 0;
   const hasSelectedMonths = selectedMonths.length > 0;
-  const hasValidApplyAmount = applyInAllState.amount !== '' && Number(applyInAllState.amount) >= 0;
+  const hasValidApplyAmount =
+    String(applyInAllState.amount).trim() !== '' &&
+    Number.isFinite(Number(applyInAllState.amount)) &&
+    Number(applyInAllState.amount) > 0;
 
   return (
     <Box
@@ -59,6 +62,8 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
       px={1.5}
       py={1.25}
       sx={{
+        flexWrap: 'wrap',
+        minWidth: 0,
         cursor: 'pointer',
         userSelect: 'none',
         bgcolor: isAllSelected ? alpha(theme.palette.primary.main, 0.06) : 'transparent',
@@ -108,7 +113,11 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
       </Tooltip>
 
       {/* Fee head name */}
-      <Typography variant="subtitle2" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+      <Typography
+        variant="subtitle2"
+        fontWeight={700}
+        sx={{ lineHeight: 1.4, minWidth: 0, overflowWrap: 'anywhere', flex: '1 1 120px' }}
+      >
         {feeHead.feeHeadName}
       </Typography>
 
@@ -143,13 +152,14 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
         <Typography
           variant="caption"
           fontWeight={700}
-          color="primary.main"
+          color="info.main"
           sx={{
             mr: 0.5,
             px: 1,
             py: 0.25,
             borderRadius: '6px',
-            bgcolor: alpha(theme.palette.primary.main, 0.08),
+            bgcolor: alpha(theme.palette.info.main, 0.08),
+            whiteSpace: 'nowrap',
             fontVariantNumeric: 'tabular-nums',
           }}
         >
@@ -157,11 +167,22 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
         </Typography>
       )}
 
-      <Box flex={1} />
       {hasSelectedMonths && !isFullRefund && (
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box
+          display="flex"
+          alignItems="center"
+          gap={1}
+          sx={{
+            width: { xs: 1, sm: 'auto' },
+            order: { xs: 1, sm: 0 },
+            justifyContent: 'flex-end',
+            flexShrink: 0,
+          }}
+        >
           <NumericFormatCustom
             size="small"
+            label="Amount per installment"
+            fullWidth
             name={`apply-amount-${feeHead.feeHeadId}`}
             roundToWholeRupees={false}
             decimalScale={2}
@@ -170,7 +191,6 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
               if (source.source === 'event') onApplyInAllAmountChange?.(vals.value);
             }}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            placeholder=""
             inputProps={{
               'aria-label': `Amount for selected installments in ${feeHead.feeHeadName}`,
               // min: 0,
@@ -181,21 +201,15 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
               },
             }}
             sx={{
-              width: 100,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                fontSize: 12,
-                height: 32,
-                '&.Mui-focused': {
-                  boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.15)}`,
-                },
-              },
+              width: { xs: 'auto', sm: 180 },
+              minWidth: 140,
+              flex: { xs: 1, sm: 'initial' },
             }}
           />
           <Tooltip
             title={
               hasValidApplyAmount
-                ? `Apply to ${selectedMonths.length} selected month${selectedMonths.length !== 1 ? 's' : ''}`
+                ? `Replace amounts for ${selectedMonths.length} selected installment${selectedMonths.length !== 1 ? 's' : ''}, up to each ${isAdj ? 'adjustable' : 'refundable'} balance`
                 : 'Enter an amount first'
             }
           >
@@ -203,11 +217,10 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
               <Button
                 size="small"
                 variant="contained"
-                color="success"
                 disabled={!hasValidApplyAmount}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onApplyInAllToggle?.();
+                  onApplyInAll?.();
                 }}
                 sx={{ minWidth: 50, fontWeight: 700, fontSize: '0.72rem', borderRadius: 1 }}
               >

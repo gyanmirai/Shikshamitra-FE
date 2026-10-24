@@ -47,8 +47,9 @@ describe('concession supporting documents', () => {
       unwrap: () => Promise.resolve({ url: '/files/income-proof.pdf' }),
     });
     render(<Documents />);
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Required documents missing: Income proof.'
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Upload Income proof' })).toHaveAccessibleDescription(
+      'Income proof is required. Upload this document to continue.'
     );
     expect(screen.getByText('Not uploaded')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Upload Income proof' })).toBeEnabled();
@@ -56,10 +57,14 @@ describe('concession supporting documents', () => {
       target: { files: [new File(['proof'], 'income-proof.pdf', { type: 'application/pdf' })] },
     });
     await waitFor(() => expect(screen.getByText('Uploaded · income-proof.pdf')).toBeVisible());
+    expect(screen.queryByText(/Income proof is required/)).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Replace Income proof' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Remove Income proof' }));
     expect(screen.getByText('Not uploaded')).toBeVisible();
-    expect(screen.getByRole('alert')).toHaveTextContent('Income proof');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Upload Income proof' })).toHaveAccessibleDescription(
+      'Income proof is required. Upload this document to continue.'
+    );
   });
 });

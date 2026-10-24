@@ -61,7 +61,7 @@ vi.mock('src/components/adaptive-three-dots-actions', () => ({
   default: ({ actions }: any) => (
     <>
       {actions.map((action: any) => (
-        <button key={action.id} type="button" onClick={action.onClick}>
+        <button key={action.id} type="button" disabled={action.disabled} onClick={action.onClick}>
           {action.label}
         </button>
       ))}
@@ -93,6 +93,9 @@ describe('Charge lifecycle inbox', () => {
             amount: 500,
             studentCount: 2,
             processedCount: 2,
+            paidStudentCount: 1,
+            outstandingStudentCount: 1,
+            waivedStudentCount: 1,
             workflowStatus: params.status,
             displayStatus: params.status,
             availableActions: params.status === 0 ? ['View', 'Approve', 'Reject'] : ['View'],
@@ -136,6 +139,55 @@ describe('Charge lifecycle inbox', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'In Process 3' }));
     expect(screen.queryByRole('button', { name: 'Approve School trip' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Reject School trip' })).not.toBeInTheDocument();
+  });
+
+  it('disables cancellation when the server says a collected batch cannot be cancelled', () => {
+    render(<ChargesTable {...props} selectedTab={1} />);
+    const cancel = screen.getByRole('button', { name: 'Cancel Charge' });
+    expect(cancel).toBeDisabled();
+    fireEvent.click(cancel);
+    expect(props.onVoid).not.toHaveBeenCalled();
+  });
+
+  it('permits cancellation when the server confirms the uncollected batch is eligible', () => {
+    const implementation = mocks.query.getMockImplementation()!;
+    mocks.query.mockImplementation((args) => {
+      const result = implementation(args);
+      result.data.items[0].availableActions = ['View', 'Void'];
+      return result;
+    });
+    render(<ChargesTable {...props} selectedTab={1} />);
+    const cancel = screen.getByRole('button', { name: 'Cancel Charge' });
+    expect(cancel).toBeEnabled();
+    fireEvent.click(cancel);
+    expect(props.onVoid).toHaveBeenCalledOnce();
+  });
+
+  it('keeps cancellation disabled for collected students while other students await approval', () => {
+    render(<ChargesTable {...props} selectedTab={0} />);
+    expect(screen.getByRole('button', { name: 'Cancel Charge' })).toBeDisabled();
+  });
+
+  it('does not turn an unavailable payment summary into zero paid and zero outstanding', () => {
+    render(<ChargesTable {...props} selectedTab={1} />);
+    const column = mocks.table.mock.lastCall?.[0].columns.find((item: any) => item.id === 'paidStudentCount');
+    render(column.render(undefined, {}));
+    expect(screen.getByText('Payment progress unavailable')).toBeInTheDocument();
+    expect(column.exportValue(undefined, {})).toBe('Payment progress unavailable');
+  });
+
+  it('shows sortable payment progress and exports every payment count', () => {
+    render(<ChargesTable {...props} selectedTab={1} />);
+    const table = mocks.table.mock.lastCall?.[0];
+    const column = table.columns.find((item: any) => item.id === 'paidStudentCount');
+    expect(column).toMatchObject({ label: 'Student Payment Status', isSort: true });
+    expect(column.excludeFromExport).not.toBe(true);
+    expect(column.exportValue(undefined, table.data[0])).toBe('1 paid · 1 outstanding · 1 with waiver');
+    render(column.render(undefined, table.data[0]));
+    expect(screen.getByText('1 paid · 1 outstanding')).toBeInTheDocument();
+    expect(screen.getByText('1 with waiver')).toBeInTheDocument();
+    act(() => table.onServerSort('paidStudentCount', [{ column: 'paidStudentCount', direction: 'desc' }]));
+    expect(mocks.query.mock.lastCall?.[0].params).toMatchObject({ sortBy: 'paidStudentCount', sortOrder: 'desc' });
   });
 
   it('uses one-based API pages and preserves filters and sorting while paging', () => {

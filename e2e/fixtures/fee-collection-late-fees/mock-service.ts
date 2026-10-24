@@ -209,9 +209,7 @@ function collect(body: CollectFeeInput): CollectFeeOutput {
   return result;
 }
 
-export const api = createApi({
-  reducerPath: 'api', tagTypes,
-  baseQuery: async (args: string | FetchArgs) => {
+export const fixtureBaseQuery = async (args: string | FetchArgs) => {
     const request = typeof args === 'string' ? { url: args } : args;
     const { url, method = 'GET', body } = request;
     requests.push({ url, method, body });
@@ -270,6 +268,6 @@ export const api = createApi({
     } catch (error) {
       return { error: { status: 400, data: { message: error instanceof Error ? error.message : 'Fixture request failed' } } };
     }
-  },
-  endpoints: () => ({}),
-});
+};
+
+export const api = createApi({ reducerPath: 'api', tagTypes, baseQuery: fixtureBaseQuery, endpoints: () => ({}) });

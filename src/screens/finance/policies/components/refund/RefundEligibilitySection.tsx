@@ -10,6 +10,7 @@ import {
   Paper,
   Stack,
   Switch,
+  Checkbox,
   Skeleton,
   TextField,
   Typography,
@@ -91,14 +92,32 @@ export default function RefundEligibilitySection({
           ) : (
             <Autocomplete
               multiple
+              disableCloseOnSelect
+              fullWidth
               size="small"
               options={options}
+              getOptionKey={(option) => option.id}
               getOptionLabel={(option) =>
                 `${option.name}${option.status && option.status !== 'Active' ? ` (${option.status})` : ''}`
               }
               getOptionDisabled={(option) =>
                 option.status === 'Deleted' || option.status === 'Inactive'
               }
+              renderOption={({ key, ...optionProps }, option, { selected }) => (
+                <li key={key} {...optionProps}>
+                  <Checkbox
+                    size="small"
+                    checked={selected}
+                    disabled={option.status === 'Deleted' || option.status === 'Inactive'}
+                    tabIndex={-1}
+                    disableRipple
+                    sx={{ mr: 1 }}
+                    slotProps={{ input: { 'aria-hidden': true } }}
+                  />
+                  {option.name}
+                  {option.status && option.status !== 'Active' ? ` (${option.status})` : ''}
+                </li>
+              )}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               value={selectedOptions}
               onChange={(_, selected) =>

@@ -1,12 +1,12 @@
 import { useFormik } from 'formik';
-import userEvent from '@testing-library/user-event';
 import { vi, it, expect, describe } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { createTheme } from 'src/theme/create-theme';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { InstallmentSection } from './InstallmentSection';
 import { getInitialPaymentTermData } from '../PaymentTermInitialValues';
@@ -95,10 +95,19 @@ function renderSection(specificDate = false) {
 }
 
 describe('Payment Term installment date entry', () => {
-  it('focuses the newly added installment name', async () => {
+  it('scrolls only the installment list and focuses the newly added name', async () => {
     renderSection();
+    const list = screen.getByRole('region', { name: 'Installments' });
+    const scrollTo = vi.fn();
+    Object.defineProperty(list, 'scrollTo', { value: scrollTo, configurable: true });
+    expect(within(list).queryByRole('button', { name: 'Add Installment' })).toBeNull();
+    expect(within(list).queryByRole('button', { name: 'Apply Template' })).toBeNull();
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
     fireEvent.click(screen.getByRole('button', { name: 'Add Installment' }));
     await waitFor(() => expect(screen.getByDisplayValue('Third')).toHaveFocus());
+    expect(scrollTo).toHaveBeenCalledOnce();
+    expect(within(list).getAllByRole('listitem')).toHaveLength(3);
+    expect(screen.getByDisplayValue('First')).toBeInTheDocument();
   });
 
   it('shows required range errors after leaving that field, without marking other rows', async () => {
@@ -159,17 +168,16 @@ describe('Payment Term installment date entry', () => {
     renderSection(true);
     const invoice = screen.getAllByRole('group', { name: 'Invoice Date *' })[0];
     const due = screen.getAllByRole('group', { name: 'Payment Due Date *' })[0];
-    for (const field of [invoice, due]) {
-      for (const [name, text] of [
-        ['Day', '10'],
-        ['Month', '06'],
-        ['Year', '2026'],
-      ]) {
-        const section = within(field).getByRole('spinbutton', { name });
-        await user.click(section);
-        await user.keyboard(text);
-      }
-    }
+    const enterDate = async (field: HTMLElement) => {
+      await user.click(within(field).getByRole('spinbutton', { name: 'Day' }));
+      await user.keyboard('10');
+      await user.click(within(field).getByRole('spinbutton', { name: 'Month' }));
+      await user.keyboard('06');
+      await user.click(within(field).getByRole('spinbutton', { name: 'Year' }));
+      await user.keyboard('2026');
+    };
+    await enterDate(invoice);
+    await enterDate(due);
     await waitFor(() => {
       expect(screen.getByTestId('schedule')).toHaveTextContent('"demandDate":"2026-06-10"');
       expect(screen.getByTestId('schedule')).toHaveTextContent('"dueDate":"2026-06-10"');

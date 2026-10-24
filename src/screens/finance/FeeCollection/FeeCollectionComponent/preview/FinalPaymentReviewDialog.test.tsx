@@ -1,9 +1,10 @@
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { it, vi, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
+import { render, screen, fireEvent } from '@testing-library/react';
+
 import FinalPaymentReviewDialog from './FinalPaymentReviewDialog';
 
 vi.mock('src/components/customDialog', () => ({
@@ -27,36 +28,35 @@ const wrap = (props: ReturnType<typeof buildProps>) => (
   <ThemeProvider theme={theme}><FinalPaymentReviewDialog {...props} /></ThemeProvider>
 );
 
-describe('Payment verification actions', () => {
-  it.each(['Credit Card', 'Debit Card', 'Bank Transfer', 'UPI'])(
-    '%s explains that Accept & Confirm remains pending finance verification', (method) => {
-      render(wrap(buildProps(method)));
-      expect(screen.getByText(/Both actions create a provisional receipt in Verify pending receipts/)).toBeVisible();
-      expect(screen.getByRole('button', { name: 'Accept & Confirm' })).toBeEnabled();
-      expect(screen.getByRole('button', { name: 'Move to Reconciliation' })).toBeEnabled();
+describe('Payment receipt issuance', () => {
+  it.each(['Credit Card', 'Debit Card', 'Bank Transfer', 'UPI', 'Cheque', 'Demand Draft'])(
+    '%s issues provisional evidence and cannot finalize at the counter', (method) => {
+      const props = buildProps(method);
+      render(wrap(props));
+      expect(screen.getByText(/A provisional receipt is generated immediately and appears in Receipts/)).toBeVisible();
+      fireEvent.click(screen.getByRole('button', { name: 'Record & Issue Provisional Receipt' }));
+      expect(props.onSavePending).toHaveBeenCalledOnce();
+      expect(props.onConfirmCollect).not.toHaveBeenCalled();
+      expect(screen.queryByRole('button', { name: 'Accept & Confirm' })).not.toBeInTheDocument();
     }
   );
 
-  it.each(['Accept & Confirm', 'Move to Reconciliation'])(
-    'shows exactly one loader on %s and locks its sibling and dismissal', (action) => {
-      const props = buildProps();
-      const view = render(wrap(props));
-      fireEvent.click(screen.getByRole('button', { name: action }));
-      expect(action === 'Accept & Confirm' ? props.onConfirmCollect : props.onSavePending).toHaveBeenCalledOnce();
-      view.rerender(wrap({ ...props, loading: true }));
-      const active = screen.getByRole('button', { name: action });
-      expect(screen.getAllByRole('progressbar')).toHaveLength(1);
-      expect(within(active).getByRole('progressbar')).toBeInTheDocument();
-      screen.getAllByRole('button').forEach((button) => expect(button).toBeDisabled());
-      expect(screen.getByRole('dialog')).toHaveAttribute('data-close-disabled', 'true');
-      fireEvent.click(active);
-      expect(action === 'Accept & Confirm' ? props.onConfirmCollect : props.onSavePending).toHaveBeenCalledOnce();
-    }
-  );
+  it('prevents duplicate submission and dismissal while saving', () => {
+    const props = { ...buildProps(), loading: true };
+    render(wrap(props));
+    const action = screen.getByRole('button', { name: 'Record & Issue Provisional Receipt' });
+    expect(action).toBeDisabled();
+    expect(screen.getAllByRole('progressbar')).toHaveLength(1);
+    expect(screen.getByRole('dialog')).toHaveAttribute('data-close-disabled', 'true');
+    fireEvent.click(action);
+    expect(props.onSavePending).not.toHaveBeenCalled();
+  });
 
-  it('keeps immediate final receipt action for cash', () => {
-    render(wrap(buildProps('Cash')));
-    expect(screen.getByRole('button', { name: 'Final Submit & Generate Receipt' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Move to Reconciliation' })).not.toBeInTheDocument();
+  it('issues an official cash receipt immediately', () => {
+    const props = buildProps('Cash');
+    render(wrap(props));
+    fireEvent.click(screen.getByRole('button', { name: 'Collect & Issue Official Receipt' }));
+    expect(props.onConfirmCollect).toHaveBeenCalledOnce();
+    expect(props.onSavePending).not.toHaveBeenCalled();
   });
 });

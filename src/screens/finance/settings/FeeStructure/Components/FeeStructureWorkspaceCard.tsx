@@ -599,7 +599,7 @@ export default function FeeStructureWorkspaceCard({
             >
               {writable && tab === 'heads' && (
                 <Button
-                  aria-label="Add fee head"
+                  aria-label="Add Fee Head"
                   size="small"
                   variant="contained"
                   startIcon={<Iconify icon={GlobalIcons.addIcon} />}
@@ -611,7 +611,7 @@ export default function FeeStructureWorkspaceCard({
                   }
                   onClick={addHeadDialog.onTrue}
                 >
-                  Fee Head
+                  Add Fee Head
                 </Button>
               )}
               {!viewOnly && locked && settings?.permissions.add && settings?.permissions.edit && (
@@ -623,7 +623,7 @@ export default function FeeStructureWorkspaceCard({
                   startIcon={<Iconify icon="mdi:file-document-edit-outline" />}
                   onClick={() => setConfirmation('revision')}
                 >
-                  Create revision
+                  Create Revision
                 </LoadingButton>
               )}
               <AdaptiveThreeDotsActions
@@ -634,7 +634,7 @@ export default function FeeStructureWorkspaceCard({
                     ? [
                         {
                           id: 'edit',
-                          label: 'Edit draft',
+                          label: 'Edit Draft',
                           icon: GlobalIcons.edit,
                           disabled: navigationBusy,
                           onClick: () => setEditing(true),
@@ -712,11 +712,6 @@ export default function FeeStructureWorkspaceCard({
               minHeight: 0,
               minWidth: 0,
               pt: 1,
-              '& .MuiStepper-horizontal': {
-                minWidth: 0,
-                overflowX: 'hidden',
-                '& .MuiStep-root': { flex: 1, minWidth: 0 },
-              },
               '& form > .MuiBox-root:last-child': {
                 borderTop: 1,
                 borderColor: 'divider',
@@ -750,11 +745,11 @@ export default function FeeStructureWorkspaceCard({
                 await save();
               }}
               showSaveButton={writable}
-              saveButtonLabel="Save draft"
+              saveButtonLabel="Save Draft"
               nextButtonLabel={
-                writable ? (tab === 'policies' ? 'Review & continue' : 'Save & continue') : 'Next'
+                writable ? (tab === 'policies' ? 'Review & Continue' : 'Save & Continue') : 'Next'
               }
-              finalButtonLabel="Publish structure"
+              finalButtonLabel="Publish Structure"
               disableSubmit={!canPublish || !!publishBlockReason}
               saveButtonProps={{
                 loading: saving,
@@ -969,12 +964,12 @@ export default function FeeStructureWorkspaceCard({
             onClick={confirm}
           >
             {confirmation === 'publish'
-              ? 'Publish structure'
+              ? 'Publish Structure'
               : confirmation === 'revision'
-                ? 'Create revision'
+                ? 'Create Revision'
                 : confirmation === 'delete'
-                  ? 'Delete draft'
-                  : 'Discard changes'}
+                  ? 'Delete Draft'
+                  : 'Discard Changes'}
           </LoadingButton>
         }
       />

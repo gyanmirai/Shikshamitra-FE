@@ -177,7 +177,7 @@ export default function ManualEntryForm({
       <Box inert={blocking} sx={{ flexShrink: 0 }}>
         <CustomBreadcrumbs
           description="Record a school transaction with its category and payment details."
-          heading={income ? 'Add income' : 'Add expense'}
+          heading={income ? 'Add Income' : 'Add Expense'}
 
           isBack
           onBack={requestClose}
@@ -192,7 +192,7 @@ export default function ManualEntryForm({
                 requestClose();
               },
             },
-            { name: income ? 'Add income' : 'Add expense' },
+            { name: income ? 'Add Income' : 'Add Expense' },
           ]}
         />
       </Box>

@@ -26,6 +26,13 @@ const LightTooltip = styled(({ className, ...props }: TooltipProps) => (
 
 const CustomTooltip = ({ title, children, sx, ...props }: TooltipProps) => (
   <LightTooltip
+    slotProps={{
+      popper: {
+        modifiers: [
+          { name: 'flip', options: { fallbackPlacements: ['top', 'bottom', 'right', 'left'] } },
+        ],
+      },
+    }}
     TransitionComponent={Fade}
     TransitionProps={{ timeout: 800 }}
     title={title}

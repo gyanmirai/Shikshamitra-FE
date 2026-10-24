@@ -64,7 +64,8 @@ describe('legacy finance fee detail payment history', () => {
         receiptNumber: 'REC-1',
         date: '2026-10-15T11:13:33Z',
         amount: 275.25,
-        paymentMethods: ['Cash'],
+        paymentMethods: [0],
+        status: 1,
       },
     ];
     renderDetail(

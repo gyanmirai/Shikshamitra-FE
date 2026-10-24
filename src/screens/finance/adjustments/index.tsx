@@ -14,6 +14,8 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
@@ -28,8 +30,6 @@ import AdjustmentApproveRejectForm from './components/AdjustmentApproveRejectFor
 
 import type { AdjustmentRequest } from './types/adjustment.types';
 import type { IAdjustmentFullFormValues } from './types/adjustmentFormValues';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const Adjustments = () => {
   const access = useFinancePermissions(financePermissions.fees.adjustment);
@@ -210,20 +210,6 @@ const Adjustments = () => {
         heading="Adjustments"
 
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Adjustments' }]}
-        action={
-          <Button
-            size="small"
-            variant="contained"
-            disabled={!access.canAdd}
-            startIcon={<Add />}
-            sx={{ px: '32px' }}
-            onClick={() => {
-              addDialog.onTrue();
-            }}
-          >
-            New Adjustment
-          </Button>
-        }
       />
     );
   };
@@ -235,6 +221,18 @@ const Adjustments = () => {
 
       {!addDialog.value && !viewDialog.value && !applyScreen.value && (
         <AdjustmentTable
+          primaryAction={
+            <Button
+              size="small"
+              variant="contained"
+              disabled={!access.canAdd}
+              startIcon={<Add />}
+              sx={{ px: 4 }}
+              onClick={addDialog.onTrue}
+            >
+              New Adjustment
+            </Button>
+          }
           activeTab={activeTab}
           onTabChange={setActiveTab}
           tabCounts={tabCounts}

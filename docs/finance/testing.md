@@ -70,6 +70,15 @@ npm run docs:check
 
 ## Focused frontend checks
 
+### Concession status groups
+
+Run `StudentConcessionTable.test.tsx` and `concessionTablePresentation.test.ts` under
+`src/screens/finance/Concession/Components`. Check exactly Pending, Approved and Rejected in
+the Status dropdown, a draft rendered as Pending, grouped server criteria including status zero,
+status/tab synchronization, retained unrelated filters, and unchanged action eligibility.
+The `e2e/fixtures/concession-status` browser fixture renders the production table with synthetic
+responses; it does not establish backend persistence or approval behavior.
+
 ### Policy clone, names and recorded scope
 
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/policies --pool=threads --maxWorkers=1 --no-file-parallelism`.
@@ -88,7 +97,15 @@ archiving previous copies and rejecting normalized duplicate names through direc
 
 ### Concession request form presentation
 
-In the Codex in-app browser, open Concession Request and compare its section cards with Add Charge. Check neutral icons, keyboard-accessible heading help, compact academic fields on desktop and stacked fields on narrow screens. Select a student and verify the fee-assignment warning or the concession details, fee heads, values, preview, and documents as applicable. Confirm the body scrolls while Cancel, Save draft, and the permitted submit action remain reachable, with no horizontal page overflow. Presentation checks do not prove financial persistence or approval behavior.
+For View Concession, run the focused `ConcessionAdmin/StucentConcessionCard.test.tsx` and
+`ConcessionAdmin/ConcessionItemCard.test.tsx` suites. The `e2e/fixtures/concession-card` fixture
+renders production cards with synthetic data. Check six student facts in one desktop row,
+saved Board / Medium values, responsive wrapping, and equal-sized icon-only Edit/Delete
+controls. Check the Edit accessible name and delegation without changing draft permissions.
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/finance/Concession/Components/ConcessionPolicyFields.test.tsx src/screens/finance/Concession/Components/ConcessionFeeHeadSelection.test.tsx --pool=forks --maxWorkers=1` for required searchable policy/type controls, exact policy-version selection, associated errors, disabled edits and independent fee inspection. The synthetic fixture's **Preview saving lock** control exposes the shared busy overlay and locks fields and footer actions without submitting a financial request. Verify the authenticated form also blocks its breadcrumb/back controls during draft validation, latest-draft refresh and submission; confirm values return after a failed save.
+
+In the Codex in-app browser, open Concession Request. Check neutral icons, keyboard-accessible heading help, compact academic fields on desktop and stacked fields on narrow screens. Select a student and verify the fee-assignment warning or the Policy & Fees workspace as applicable. Inspect each fee without changing checkbox selection or request totals; check its installment breakdown, original/paid/eligible amounts, and server concession. Verify document reminders name the missing evidence, request-entered values remain editable, and the right panel stacks below the form at narrow container widths. Confirm the body scrolls while the unchanged Cancel, Save draft, and permitted submit action remain reachable, with no horizontal page overflow. Presentation checks do not prove financial persistence or approval behavior.
 
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run --config e2e/fixtures/concession-request-ui/vitest.config.mts` for decimal/empty numeric entry, percentage limits, the fixed request cap across installments, read-only policy values, stable review metrics, server preview before approval, preserved approval metadata, changed-balance blocking and error retry.
 
@@ -145,7 +162,9 @@ Use these commands as the first validation set.
 
 Collect Fees UI regressions are included in `FeeCollectionForm.charges.test.tsx`: visible
 student context, grouped fee selection, grouping changes with an edited payment amount, table
-sorting without selection loss, and row View breakdown access. Run the collection selection/status suites in
+sorting without selection loss, and row View breakdown access. Automatic ledger-selection regressions
+cover both policy priorities, partial allocation, increasing/decreasing/clearing the amount, display
+filters/grouping, and switching to manual selection without restricting automatic candidates. Run the collection selection/status suites in
 the command table above. The `e2e/fixtures/fee-collection-late-fees` fixture renders the actual
 form against synthetic RTK Query responses. Finish in the in-app browser at 390, 768 and
 1440 px: exercise fee-group expansion and selection, Filters and month grouping, filtered hidden selections,
@@ -187,6 +206,8 @@ numeric boundaries, shared rounding, payload compatibility, checklist consistenc
 collapsed error rows, and invalid-submit focus.
 Use `e2e/fixtures/proration-policy` in the in-app browser for desktop/mobile create and edit
 checks. Its create/update API is an in-memory fixture; it never writes financial records.
+
+Run `node node_modules/@playwright/test/cli.js test --config e2e/finance/configuration-section-scroll.config.ts` for Fee Head Configuration and Payment Term Installment Schedule scrolling regressions. Verify short and long lists, first/last-item access, stable section controls and footer positions during internal scrolling, retained expansion, and new-installment focus. The fixtures render production drawers with synthetic responses; these checks do not establish backend persistence or authorization.
 
 Receipt visibility and collection cache refresh are covered by
 `npm run test -- src/screens/finance/InvoiceAndReceipt/Components/ReceiptManagement/index.test.tsx`.
@@ -303,6 +324,12 @@ The fixture exercises both registers, View, cash/non-cash creates, year/month fi
 
 ## Finance consistency and form lifecycle regressions
 
+Refund detail drawer regression: run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/finance/feeRefund/Components/RefundRemarksForm.test.tsx --pool=threads`.
+In the in-app browser, open a refund row and verify the status/help header, section
+help, saved amounts, timeline and settlement history, both Close controls, Escape,
+focus return, and eligible approval actions. Check narrow screens for local
+installment scrolling and a visible footer; check loading and Retry on read failure.
+
 Focused regressions cover the three-direct-action threshold, disabled assignment-dependent
 collection actions, protected confirmation dialogs, in-app discard and unload cleanup,
 Fee Category Edit-to-Add reset, normalized/archived duplicate guidance, Payment Term code
@@ -323,3 +350,69 @@ a signed-in API-backed smoke test in the target academic year before deployment 
 Backend suites independently cover current/archived copy names, default-source cloning,
 repeated clone-code uniqueness, normalized names, and Status ordering before pagination.
 Existing historical duplicate records are preserved; no reconciliation migration is included.
+
+
+## Finance list and request regressions
+
+Finance list creation actions belong below domain filters, beside the status tabs where present.
+Check Adjustments, Concessions, Refunds, Charges, Income and Expenses at 390×844, 768×1024 and
+1440×900. Actions use the requested labels New Adjustment, Concession Request, Fee Refund,
+Add Charge, Add Income and Add Expense; table search, Columns and Export stay in the table toolbar.
+
+Run the date-range picker and Payment Term InstallmentSection suites after date-entry changes.
+An equivalent controlled date tuple recreated by Formik must preserve the calendar draft.
+Check typed, partial, invalid and calendar ranges in create and edit; Apply requires both valid
+ordered endpoints. Cancel retains committed dates. Date-only payloads must round-trip without
+timezone conversion. The real-component browser harness is `e2e/fixtures/payment-term-template`.
+
+Refund request regressions cover repeatable bulk Apply, every selected amount being required,
+blocked confirmation for incomplete selections, and complete requests reaching confirmation.
+Use `e2e/finance/refund-request-validation.config.ts` for desktop/mobile automated checks and
+`e2e/fixtures/refund-request-validation` for the final in-app browser smoke. Synthetic harnesses
+do not prove persistence against a deployed tenant.
+
+### Local verification evidence (24 October 2026)
+
+The signed-in local application was checked in the Codex in-app browser across all six list
+pages. On the GSEB In Process Charges list, Uniform charge showed six assigned, two paid and
+four outstanding; the detailed student amounts matched, and Cancel Charge was disabled.
+Uncollected charges retained Cancel Charge with a required-reason dialog. Payment-status
+sorting, column hide/restore and the downloaded Excel values were verified. The narrow-screen
+action row wrapped below the tabs without overlapping the search toolbar.
+
+Real-component browser fixtures covered refund Apply twice, incomplete selected installments,
+valid confirmation, mobile/tablet refund detail layout, concession decimal validation and the
+valid fixed-amount ceiling, plus typed and calendar Payment Term ranges in create and edit.
+Fixture responses are synthetic and do not perform tenant financial writes. The backend
+Payment Term create/edit round-trip test independently verifies persisted date endpoints.
+
+Focused frontend suites passed for charges, refunds, concessions, account register labels,
+date ranges and unsaved-form navigation. Backend domain and HTTP API regressions passed for
+charge collection counts, reversal, waiver, list/detail parity and cancellation rejection.
+The full frontend TypeScript check, scoped ESLint and backend API compilation passed. Evidence images and
+validation logs are retained in the wrapper workspace's `output/finance-bugfix-verification/`
+and `tmp/` folders, with backend logs under its ignored `.artifacts/` directory.
+
+## Collection receipt grouping
+
+Run the focused `useCollectionPolicyForm`, `CollectionPolicyDrawer`, `FeeCollectionForm.charges` and `FeeCollectionOutcomePanel` Vitest suites after changing receipt configuration or collection preview. The policy tests cover both choices, historical defaults, payloads and invalid submissions. The outcome test covers one versus two verification entries. Use the existing `e2e/fixtures/collection-policy` harness for the final in-app browser smoke: select each receipt option, inspect its accessible info, check discard/reopen, and verify the fixed footer and narrow-screen layout. Backend persistence and reversal evidence belongs to [Finance backend testing](../../../Shikshamitra-BE/docs/modules/finance/testing.md).
+
+## Receipt lifecycle checks
+
+Run the focused FinalPaymentReviewDialog.test.tsx and paymentReceiptSummary.test.ts tests, npm run ts, and npm run docs:check.
+
+Browser acceptance: collect cash fees and charges → Official Receipt in Receipts and read-only Cash reconciliation tab; record each non-cash method → Provisional Receipt; approve → linked Official Receipt; reject → rejected history without an official document. Check fee-only, charge-only, combined, PDF download filename, payment method, long student names and narrow screens. Old cashier confirmation flags must never finalize a new non-cash payment. Mixed non-cash instruments must fail validation. Backend behavior and test suites: [Receipt lifecycle](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md).
+
+### Local verification evidence (23 October 2026)
+
+The receipt change passed the full Next.js production build, independent TypeScript checking, and focused ESLint checking. The production build used one worker and isolated output to fit local memory; it loaded the project configuration without changing production settings. Focused Vitest checks passed: FinalPaymentReviewDialog and paymentReceiptSummary (12), ReceiptManagement (5), and reconciliation PDF transport/filename parsing (4), for 21 passing tests.
+
+The real Collections, Receipts and Reconciliation components were exercised in the in-app browser using `e2e/fixtures/receipt-lifecycle`: cash issuance and the read-only Cash tab, UPI provisional issuance, approval with linked official history, required rejection remarks, rejected history, and receipt-type filtering. Browser state and payment identifiers are synthetic. The fixture makes no backend financial writes; persisted collection, idempotency and reversal invariants are verified separately by the HTTP API suite. See the fixture README for setup and PDF sample provenance.
+
+Final browser PDF checks: the Provisional Receipt downloaded from Receipts with the canonical provisional filename. After approval, reconciliation displayed the linked official number and rendered/downloaded its PDF with the canonical official filename. The official download bytes matched the real API export; no browser console errors were reported. The seven non-cash tables use the typed reconciliation download endpoint, which returns the blob plus server filename. The standalone fixture bundle and focused ESLint check passed after correcting these hook imports.
+
+The final preview implementation reuses `src/components/preview-document/pdf-preview` in collection outcomes, receipt detail and reconciliation detail. Native PDF iframes were blank in the in-app browser; the canvas viewer renders pages directly with navigation, zoom/fit width, accessible page text and retry. The final project `npm run ts` check passed with its configured 8 GiB Node heap, and the changed preview components passed focused ESLint and the standalone browser bundle build.
+
+In-app browser visual acceptance passed for canvas-rendered provisional pages in collection outcomes and receipt detail, and the linked official page in reconciliation. Zoom/fit width was checked on the provisional viewer; one-page navigation is disabled at its bounds. Both API-exported pages were rendered independently and inspected for clipping, alignment, payment method, exact INR totals and the official predecessor reference.
+
+The final full Next.js production build after the shared viewer change exited successfully: compilation, all seven static pages, route traces and standalone server output completed. Isolated build files are retained in the wrapper workspace `tmp/receipt-next-production-build`; generated receipt-validation TypeScript config paths were removed afterward. Validation logs and PDF/browser evidence are retained under the wrapper `tmp/` and `output/` folders.

@@ -19,6 +19,7 @@ vi.mock('../hooks/useClassWiseFeeStructureHooks', () => ({
 }));
 vi.mock('src/hooks/use-responsive', () => ({ useResponsive: () => true }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
+vi.mock('./CopyFeeStructureDialog', () => ({ default: () => null }));
 vi.mock('./FeeStructureWorkspaceCard', () => ({
   default: function Editor({
     initialData,
@@ -98,6 +99,24 @@ it('keeps edits and updates the structure list name when switching between struc
   expect(screen.queryByRole('combobox', { name: 'Fee structure' })).toBeNull();
 });
 
+it('exposes a long structure name in the navigation and its keyboard tooltip', async () => {
+  setup();
+  const name = '8th Fee Structure GSEB with additional annual transport and activity fees';
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: name },
+  });
+  const structure = screen.getByRole('button', { name: new RegExp(name) });
+  expect(structure).toHaveAttribute('aria-current', 'true');
+  expect(within(structure).getByText(name)).toBeVisible();
+  // Happy DOM does not implement the browser's keyboard :focus-visible state.
+  const matches = structure.matches.bind(structure);
+  vi.spyOn(structure, 'matches').mockImplementation(
+    (selector) => selector === ':focus-visible' || matches(selector)
+  );
+  fireEvent.focus(structure);
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(name);
+});
+
 it('shows an unsaved dot on the changed structure across navigation and clears it after saving', () => {
   setup();
   const navigation = within(screen.getByRole('list', { name: 'Fee structures' }));
@@ -133,7 +152,7 @@ it('filters structures without losing edits and clears the filter when adding a 
   expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Updated general fees');
   fireEvent.change(search, { target: { value: 'no matching structure' } });
   expect(screen.getByText('No structures match your search.')).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Add structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
   expect(search).toHaveValue('');
   const newStructure = navigation.getByRole('button', { name: /New fee structure/ });
   expect(newStructure).toHaveAttribute('aria-current', 'true');
@@ -145,7 +164,7 @@ it('filters structures without losing edits and clears the filter when adding a 
 
 it('selects a new local draft and preserves its name after visiting a saved structure', () => {
   setup();
-  fireEvent.click(screen.getByRole('button', { name: 'Add structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'Bus fees' },
   });
@@ -161,17 +180,17 @@ it('locks structure navigation and creation while a save is running', () => {
     'aria-disabled',
     'true'
   );
-  expect(screen.getByRole('button', { name: 'Add structure' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Add Structure' })).toBeDisabled();
 });
 
 it('does not offer structure creation without its permission', () => {
   setup(false);
-  expect(screen.queryByRole('button', { name: 'Add structure' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Add Structure' })).toBeNull();
 });
 
 it('keeps a new editor mounted and selected after saving and list refetch', () => {
   const view = setup();
-  fireEvent.click(screen.getByRole('button', { name: 'Add structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'New fees' },
   });

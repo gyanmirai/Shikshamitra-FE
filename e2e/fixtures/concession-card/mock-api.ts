@@ -5,3 +5,5 @@ export default function useQueryAndMutation() {
 export const useCreateConcessionRefundRequestsMutation = () => [noop, { isLoading: false }];
 export const useGetCurriculumFileByNameMutation = () => [noop, { isLoading: false }];
 export const getCachedAuthSession = async () => null;
+export const getAuthSessionCacheRevision = () => 0;
+export const isAuthSessionCacheCurrent = () => true;

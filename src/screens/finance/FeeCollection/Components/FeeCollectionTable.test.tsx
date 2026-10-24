@@ -20,6 +20,7 @@ vi.mock('src/components/adaptive-three-dots-actions', () => ({
     <>
       {actions.map((action: any) => (
         <button
+          type="button"
           key={action.id}
           disabled={action.disabled}
           title={action.tooltip}
@@ -42,7 +43,7 @@ vi.mock('src/redux/feeCollection/feeCollection', () => ({ useGetFeeCollectionLis
 vi.mock('src/redux/customQueryAndMutation', () => ({
   default: () => ({
     data: {
-      totalCount: 2,
+      totalCount: 4,
       items: [
         {
           studentId: 'unassigned',
@@ -65,6 +66,26 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
           isFeeStructureAssigned: true,
           status: FeeCollectionStatusType.Paid,
         },
+        {
+          studentId: 'partly-overdue',
+          studentName: 'Partly Overdue Student',
+          totalFees: 18000,
+          paidFees: 6000,
+          pendingFees: 12000,
+          overdueFees: 6000,
+          isFeeStructureAssigned: true,
+          status: FeeCollectionStatusType.Overdue,
+        },
+        {
+          studentId: 'fully-overdue',
+          studentName: 'Fully Overdue Student',
+          totalFees: 6000,
+          paidFees: 0,
+          pendingFees: 6000,
+          overdueFees: 6000,
+          isFeeStructureAssigned: true,
+          status: FeeCollectionStatusType.Overdue,
+        },
       ],
     },
     isLoading: false,
@@ -76,7 +97,6 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 vi.mock('src/components/customizabaleTable', () => ({
   default: ({ columns, data, getRowAction }: any) => {
     const statusColumn = columns.find((column: any) => column.id === 'status');
-    const actionColumn = columns.find((column: any) => column.id === 'action');
     return (
       <>
         <select aria-label="Status filter">
@@ -87,12 +107,30 @@ vi.mock('src/components/customizabaleTable', () => ({
           ))}
         </select>
         <table data-status-sort={String(statusColumn.isSort)}>
+          <thead>
+            <tr>
+              {columns.map((column: any) => (
+                <th key={column.id}>{column.label}</th>
+              ))}
+            </tr>
+          </thead>
           <tbody>
             {data.map((row: any) => (
-              <tr key={row.studentId} tabIndex={getRowAction?.(row) ? 0 : -1} onClick={() => getRowAction?.(row)?.onClick()}>
-                <td>{row.name}</td>
-                <td>{statusColumn.render(row.status, row)}</td>
-                <td onClick={(event) => event.stopPropagation()}>{actionColumn.render(null, row)}</td>
+              <tr
+                key={row.studentId}
+                tabIndex={getRowAction?.(row) ? 0 : -1}
+                onClick={() => getRowAction?.(row)?.onClick()}
+              >
+                {columns.map((column: any) => (
+                  <td
+                    key={column.id}
+                    onClick={
+                      column.id === 'action' ? (event) => event.stopPropagation() : undefined
+                    }
+                  >
+                    {column.render ? column.render(row[column.id], row) : row[column.id]}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
@@ -127,7 +165,9 @@ describe('Collections status', () => {
     const paidRow = screen.getByText('Paid Student').closest('tr')!;
     expect(within(paidRow).getByText('Paid')).toBeVisible();
     expect(within(paidRow).getByRole('button', { name: /Collect fee/ })).toBeEnabled();
-    expect(within(unassignedRow).queryByRole('button', { name: /View details/ })).not.toBeInTheDocument();
+    expect(
+      within(unassignedRow).queryByRole('button', { name: /View details/ })
+    ).not.toBeInTheDocument();
     expect(unassignedRow).toHaveAttribute('tabindex', '0');
     expect(screen.getByRole('option', { name: 'No Fee Assigned' })).toHaveValue('7');
     expect(screen.getByRole('table')).toHaveAttribute('data-status-sort', 'true');
@@ -138,5 +178,33 @@ describe('Collections status', () => {
       'No fee structure assigned. Assign a fee structure to collect fees.'
     );
     expect(screen.queryByRole('button', { name: /Give fee adjustment/ })).not.toBeInTheDocument();
+  });
+
+  it('shows the complete pending balance including overdue fees without a separate overdue column', () => {
+    render(
+      <FeeCollectionTable
+        academicFilters={{ selectedMedium: 'medium', isReady: true, filterPayload: {} } as any}
+        onAddFee={{} as any}
+        onCollectFee={vi.fn()}
+        onView={vi.fn()}
+        onGiveAdjustment={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByRole('columnheader', { name: 'Overdue Fees' })).not.toBeInTheDocument();
+    const pendingIndex = screen
+      .getAllByRole('columnheader')
+      .findIndex((header) => header.textContent === 'Pending Fees');
+    expect(pendingIndex).toBeGreaterThanOrEqual(0);
+    [
+      ['Partly Overdue Student', '₹ 12,000'],
+      ['Fully Overdue Student', '₹ 6,000'],
+      ['Paid Student', '₹ 0'],
+    ].forEach(([name, expected]) => {
+      const row = screen.getByText(name).closest('tr')!;
+      expect(within(row).getAllByRole('cell')[pendingIndex]).toHaveTextContent(expected);
+      if (name !== 'Paid Student') expect(within(row).getByText('Overdue')).toBeVisible();
+    });
   });
 });

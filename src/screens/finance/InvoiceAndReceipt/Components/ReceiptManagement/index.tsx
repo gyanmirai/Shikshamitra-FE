@@ -12,7 +12,6 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
-
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
@@ -21,6 +20,8 @@ import {
   FeeReceiptKind,
   FEE_RECEIPT_KIND_LABELS,
   useGetFeeReceiptListQuery,
+  FeeReceiptVerificationStatus,
+  FEE_RECEIPT_VERIFICATION_LABELS,
 } from 'src/redux/invoiceAndReceipt/feeReceiptApi';
 
 import ReceiptPreviewDialog from './Components/ReceiptPreviewDialog';
@@ -28,6 +29,7 @@ import ReceiptPreviewDialog from './Components/ReceiptPreviewDialog';
 const RECEIPT_KIND_OPTIONS = [
   { label: 'All', value: 'All' },
   { label: FEE_RECEIPT_KIND_LABELS[FeeReceiptKind.FinalFee], value: FeeReceiptKind.FinalFee },
+  { label: FEE_RECEIPT_KIND_LABELS[FeeReceiptKind.FinalCharge], value: FeeReceiptKind.FinalCharge },
   {
     label: FEE_RECEIPT_KIND_LABELS[FeeReceiptKind.ProvisionalFee],
     value: FeeReceiptKind.ProvisionalFee,
@@ -188,7 +190,21 @@ const ReceiptManagement = () => {
         minWidth: 140,
         maxWidth: 200,
         sticky: true,
-        render: (value) => FEE_RECEIPT_KIND_LABELS[value as FeeReceiptKind] ?? '—',
+        render: (value, row) => row.receiptKindLabel || FEE_RECEIPT_KIND_LABELS[value as FeeReceiptKind] || '—',
+      },
+      {
+        id: 'paymentMethodLabel',
+        label: 'Payment Method',
+        minWidth: 140,
+        render: (value) => value || 'Not recorded',
+      },
+      {
+        id: 'verificationStatus',
+        label: 'Verification',
+        minWidth: 140,
+        render: (value, row) => row.linkedFinalReceiptNumber
+          ? `Official: ${row.linkedFinalReceiptNumber}`
+          : FEE_RECEIPT_VERIFICATION_LABELS[value as FeeReceiptVerificationStatus] || 'Not required',
       },
       {
         id: 'rollNo',
@@ -207,7 +223,7 @@ const ReceiptManagement = () => {
         minWidth: 100,
         filterType: 'number',
         maxWidth: 160,
-        render: (value) => `₹ ${formatNumber(value ?? 0)}`,
+        render: (value) => formatNumber(value ?? 0, 'INR'),
       },
       {
         id: 'receiptDate',

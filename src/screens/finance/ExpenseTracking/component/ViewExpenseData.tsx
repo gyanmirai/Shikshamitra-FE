@@ -96,30 +96,6 @@ const ViewExpenseData = ({
                   fontWeight="bold"
                   sx={{ textTransform: 'uppercase' }}
                 >
-                  TAGS
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.primary' }}>
-                  {expenseByIdDataLoading ? (
-                    <Skeleton width={120} />
-                  ) : Array.isArray(expenseInfo?.categoryTags) ? (
-                    expenseInfo?.categoryTags.join(', ')
-                  ) : Array.isArray(expenseData?.categoryTags) ? (
-                    expenseData?.categoryTags.join(', ')
-                  ) : (
-                    '—'
-                  )}
-                </Typography>
-              </Stack>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Stack spacing={0.5}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight="bold"
-                  sx={{ textTransform: 'uppercase' }}
-                >
                   TOTAL AMOUNT SPENT
                 </Typography>
                 <Typography variant="h5" color="error.main" fontWeight="800">

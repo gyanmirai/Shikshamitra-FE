@@ -17,6 +17,7 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 function renderPicker(props: Partial<DateRangePickerProps> = {}) {
   function ControlledPicker() {
     const [value, setValue] = useState<DateRange>(props.value ?? [null, null]);
+    const [revision, setRevision] = useState(0);
     return (
       <>
         <CustomDateRangePicker
@@ -28,12 +29,15 @@ function renderPicker(props: Partial<DateRangePickerProps> = {}) {
           maxDate={dayjs('2027-05-31')}
           referenceDate={dayjs('2026-06-01')}
           {...props}
-          value={value}
+          value={[value[0]?.clone() ?? null, value[1]?.clone() ?? null]}
           onChange={(range) => {
             setValue(range);
             props.onChange?.(range);
           }}
         />
+        <button type="button" onClick={() => setRevision((previous) => previous + 1)}>
+          Revalidate parent {revision}
+        </button>
         <output data-testid="stored-range">
           {JSON.stringify(value.map((date) => date?.format('YYYY-MM-DD') ?? null))}
         </output>
@@ -50,6 +54,17 @@ function renderPicker(props: Partial<DateRangePickerProps> = {}) {
 }
 
 describe('manual date range entry', () => {
+  it('preserves a draft when the parent recreates an equivalent controlled date tuple', async () => {
+    renderPicker();
+    fireEvent.click(screen.getByRole('button', { name: 'Open calendar for Installment dates' }));
+    fireEvent.click(await screen.findByRole('gridcell', { name: '1' }));
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled();
+    fireEvent.click(screen.getByText('Revalidate parent 0'));
+    fireEvent.click(screen.getByRole('gridcell', { name: '15' }));
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    expect(screen.getByTestId('stored-range')).toHaveTextContent('["2026-06-01","2026-06-15"]');
+  });
   it('accepts a typed range across academic years without opening the calendar', () => {
     renderPicker();
     const input = screen.getByRole('textbox', { name: 'Installment dates' });

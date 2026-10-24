@@ -263,6 +263,29 @@ export default function FinancePolicyDetailsDrawer({
                           />
                         </DetailSection>
                         <DetailSection
+                          title="Receipt Generation"
+                          icon={GlobalIcons.receiptIcon}
+                          sx={{ mb: 2 }}
+                          helpText="Applies when fees and charges are collected together. Late fees are included with fees. A fees-only or charges-only payment produces one receipt. Separate receipts for the same payment are verified together."
+                        >
+                          <DetailField
+                            label="Receipts for fees and charges"
+                            value={
+                              policyDetails.receiptGrouping === 'Combined'
+                                ? 'Single combined receipt'
+                                : 'Separate fee and charge receipts'
+                            }
+                          />
+                          <DetailField
+                            label="Reconciliation entries when verification is required"
+                            value={
+                              policyDetails.receiptGrouping === 'Combined'
+                                ? 'One entry'
+                                : 'Two entries'
+                            }
+                          />
+                        </DetailSection>
+                        <DetailSection
                           helpText="Online collection settings and how collected payments are treated as income."
                           sx={{ mb: 2 }}
                           title="Collection & Gateway Settings"

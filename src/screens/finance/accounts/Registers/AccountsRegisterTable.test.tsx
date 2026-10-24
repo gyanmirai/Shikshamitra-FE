@@ -60,7 +60,7 @@ vi.mock('src/redux/finance/accountsActivityApi', () => ({
           reference: 'REF-001',
           source: state.income ? 'Collection' : 'Refund',
           amount: 400,
-          sourceStatus: state.income ? 'Received' : 'Awaiting payout',
+          sourceStatus: state.income ? 'Received' : 'Paid',
         },
         {
           id: 'manual',
@@ -119,7 +119,16 @@ vi.mock('src/components/customizabaleTable', () => ({
         </button>
         {props.errorContent}
         {props.data.map((row: any) => (
-          <div key={row.id} role="row" aria-label={props.getRowAction(row)?.label} onClick={() => props.getRowAction(row)?.onClick()}>
+          <div
+            key={row.id}
+            role="row"
+            tabIndex={0}
+            aria-label={props.getRowAction(row)?.label}
+            onClick={() => props.getRowAction(row)?.onClick()}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') props.getRowAction(row)?.onClick();
+            }}
+          >
             {row.studentIdentity}
           </div>
         ))}
@@ -146,13 +155,15 @@ describe('Accounts register table', () => {
         'Student (GR No.)',
         'Class/Division',
         state.income ? 'Payer' : 'Payee',
-        'Source',
         state.income ? 'Income Category' : 'Expense Category',
         'Bank Account',
         'Amount',
         'Transaction Date',
         'Status',
       ]);
+      expect(
+        screen.getByRole('button', { name: state.income ? 'Add Income' : 'Add Expense' })
+      ).toHaveTextContent(state.income ? 'Add Income' : 'Add Expense');
       expect(state.table.data[0]).toMatchObject({
         studentIdentity: 'Asha Patel (1001)',
         classDivision: 'Class 4 - B',
@@ -213,19 +224,18 @@ describe('Accounts register table', () => {
     expect(state.params.filters).toBeUndefined();
   });
 
-  it('offers exact status/source choices and opens the selected record', () => {
+  it('offers exact status choices without a source column and opens the selected record', () => {
     render(<AccountsRegister direction="expense" />);
     expect(
       state.table.columns
         .find((column: any) => column.id === 'sourceStatus')
         .enumOptions.map((option: any) => option.value)
-    ).toEqual(['Awaiting payout', 'Paid', 'Returned']);
+    ).toEqual(['Paid', 'Returned']);
+    expect(state.table.columns.some((column: any) => column.id === 'source')).toBe(false);
+    expect(state.params.source).toBeUndefined();
     expect(
-      state.table.columns
-        .find((column: any) => column.id === 'source')
-        .enumOptions.map((option: any) => option.value)
-    ).toEqual(['Expense', 'Refund']);
-    expect(screen.queryByRole('button', { name: 'View details for REF-001' })).not.toBeInTheDocument();
+      screen.queryByRole('button', { name: 'View details for REF-001' })
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('row', { name: 'Open REF-001' }));
     expect(screen.getByText('Details for REF-001')).toBeVisible();
   });
@@ -234,7 +244,7 @@ describe('Accounts register table', () => {
     state.canAdd = false;
     state.error = true;
     render(<AccountsRegister direction="expense" />);
-    expect(screen.queryByRole('button', { name: 'Add expense' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Expense' })).not.toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Expenses could not be loaded.');
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(state.refetch).toHaveBeenCalledOnce();

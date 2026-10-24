@@ -22,9 +22,9 @@ export interface FeeHeadGroupProps {
   selectedReceiptId?: string;
   onToggleMonth: (month: string, dueFeeId: string) => void;
   onToggleAll: () => void;
-  applyInAllState?: { isApplying: boolean; amount: number | string };
+  applyInAllState?: { amount: number | string };
   onApplyInAllAmountChange?: (amount: number | string) => void;
-  onApplyInAllToggle?: () => void;
+  onApplyInAll?: () => void;
 }
 
 const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
@@ -36,9 +36,9 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   selectedReceiptId,
   onToggleMonth,
   onToggleAll,
-  applyInAllState = { isApplying: false, amount: 0 },
+  applyInAllState = { amount: '' },
   onApplyInAllAmountChange,
-  onApplyInAllToggle,
+  onApplyInAll,
 }): React.ReactElement => {
   const theme = useTheme();
   const isAdj = mode === 'adjustment';
@@ -139,7 +139,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         onExpandToggle={() => setOpen((o) => !o)}
         applyInAllState={applyInAllState}
         onApplyInAllAmountChange={onApplyInAllAmountChange}
-        onApplyInAllToggle={onApplyInAllToggle}
+        onApplyInAll={onApplyInAll}
       />
 
       <Collapse in={open} timeout={250}>
@@ -156,6 +156,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                 showValidation &&
                 isSelected &&
                 (refundValue === '' ||
+                  !Number.isFinite(Number(refundValue)) ||
                   Number(refundValue) <= 0 ||
                   Number(refundValue) > refundable);
               const receiptLocked = Boolean(

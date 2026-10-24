@@ -452,7 +452,7 @@ describe('Collect Fees presentation and shared ledger', () => {
     expect(
       screen.getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, June 2026' })
     ).toBeChecked();
-    expect(screen.getByLabelText(/Cash Received/)).toHaveValue('₹ 500');
+    expect(screen.queryByLabelText(/Cash Received/)).not.toBeInTheDocument();
   }, 30_000);
 
   it('shows the fee breakdown by clicking the ledger row and keeps the selection on close', () => {
@@ -474,12 +474,114 @@ describe('Collect Fees presentation and shared ledger', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select Class 3 Tuition Fee' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select Additional Charges' }));
     await expectSelection(5, 2400);
-    fireEvent.change(screen.getByLabelText(/Cash Received/), { target: { value: '3000' } });
-    expect(screen.getByLabelText(/Cash Received/)).toHaveValue('₹ 3,000');
     fireEvent.click(screen.getByRole('button', { name: 'Clear All' }));
-    expect(screen.getByLabelText(/Cash Received/)).toHaveValue('');
+    expect(screen.getByLabelText(/Amount to collect/)).toHaveValue('');
     expect(screen.getByRole('button', { name: 'Clear All' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
+  }, 30_000);
+});
+
+describe('Fee Collection automatic ledger selection', () => {
+  beforeEach(() => {
+    mocks.currentYear = { id: 'year-2026', year: 2026, name: '2026-2027' };
+    mocks.data = buildForm(false);
+    const tuition = mocks.data.ledger[0].items[0];
+    mocks.data.ledger[0].items.push({
+      ...tuition,
+      dueFeeId: 'transport-june',
+      feeHeadId: 'transport',
+      feeHeadName: 'Transport',
+    });
+    mocks.data.ledger.push({
+      month: FeeMonth.July,
+      year: 2026,
+      totalDue: 2000,
+      items: [{ ...tuition, dueFeeId: 'tuition-july', installmentLabel: 'Jul 2026' }],
+    });
+    mocks.data.ledger[0].totalDue = 4000;
+    mocks.data.summary = { totalFee: 6000, paidFee: 0, pendingFee: 6000 };
+    mocks.data.allocationRevision = 'ledger-selection-revision';
+  });
+
+  it.each([
+    {
+      basis: 'Installment',
+      order: ['due-0', 'transport-june', 'tuition-july'],
+      first: 'Class 3 Tuition Fee',
+      second: 'Transport',
+    },
+    {
+      basis: 'FeeHead',
+      order: ['transport-june', 'due-0', 'tuition-july'],
+      first: 'Transport',
+      second: 'Class 3 Tuition Fee',
+    },
+  ])(
+    'highlights only funded ledger rows using $basis policy priority',
+    async ({ basis, order, first, second }) => {
+      mocks.data.allocationBasis = basis;
+      mocks.data.allocationDueFeeOrder = order;
+      render(<FeeCollectComponentForm student={student} />);
+      const checkbox = (name: string) => ledger().getByRole('checkbox', { name });
+      const firstBox = () => checkbox(`Select ${first}, June 2026`);
+      const secondBox = () => checkbox(`Select ${second}, June 2026`);
+      const lastBox = () => checkbox('Select Class 3 Tuition Fee, July 2026');
+      const amount = screen.getByLabelText(/Amount to collect/);
+
+      fireEvent.change(amount, { target: { value: '500' } });
+      await waitFor(() => expect(firstBox()).toBeChecked());
+      expect(secondBox()).not.toBeChecked();
+      expect(lastBox()).not.toBeChecked();
+      expect(amount).toHaveValue('₹ 500');
+      expect(
+        within(screen.getByRole('table', { name: 'Selected collection items' })).getAllByRole('row')
+      ).toHaveLength(2);
+
+      fireEvent.change(amount, { target: { value: '2500' } });
+      await waitFor(() => expect(secondBox()).toBeChecked());
+      expect(firstBox()).toBeChecked();
+      expect(lastBox()).not.toBeChecked();
+      expect(amount).toHaveValue('₹ 2,500');
+
+      fireEvent.change(amount, { target: { value: '500' } });
+      expect(secondBox()).not.toBeChecked();
+      fireEvent.change(screen.getByLabelText('Fee Head'), { target: { value: 'tuition' } });
+      fireEvent.change(screen.getByLabelText('Fee Head'), { target: { value: 'All' } });
+      fireEvent.click(screen.getByText('Switch ledger view'));
+      expect(firstBox()).toBeChecked();
+      expect(secondBox()).not.toBeChecked();
+      expect(amount).toHaveValue('₹ 500');
+
+      fireEvent.change(amount, { target: { value: '' } });
+      expect(firstBox()).not.toBeChecked();
+      expect(secondBox()).not.toBeChecked();
+      expect(lastBox()).not.toBeChecked();
+      expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
+    },
+    30_000
+  );
+
+  it('clears the amount when the last automatically funded row is unchecked and supports manual selection', async () => {
+    mocks.data.allocationBasis = 'Installment';
+    mocks.data.allocationDueFeeOrder = ['due-0', 'transport-june', 'tuition-july'];
+    render(<FeeCollectComponentForm student={student} />);
+    const amount = screen.getByLabelText(/Amount to collect/);
+    fireEvent.change(amount, { target: { value: '500' } });
+    const first = ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, June 2026' });
+    await waitFor(() => expect(first).toBeChecked());
+    fireEvent.click(first);
+    expect(first).not.toBeChecked();
+    expect(amount).toHaveValue('');
+    const later = ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, July 2026' });
+    fireEvent.click(later);
+    await waitFor(() => expect(amount).toHaveValue('₹ 2,000'));
+    fireEvent.change(amount, { target: { value: '500' } });
+    expect(later).toBeChecked();
+    expect(first).not.toBeChecked();
+    expect(amount).toHaveValue('₹ 500');
+    fireEvent.click(screen.getByRole('button', { name: 'Clear All' }));
+    expect(later).not.toBeChecked();
+    expect(amount).toHaveValue('');
   }, 30_000);
 });
 

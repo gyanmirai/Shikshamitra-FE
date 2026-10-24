@@ -1,5 +1,4 @@
 import type { RootState } from 'src/redux/store';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -13,29 +12,28 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useMemo, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-
-import { useMemo, useState, useEffect } from 'react';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
 import { Button, TextField, Typography, DialogActions } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   PamentMethodsStatusColor,
   PaymentMethodsStatusType,
   PaymentMethodsStatusOptions,
 } from 'src/enums/finance-reconcilition-status';
-import {
-  useGetReconciliationListQuery,
+import { useGetReconciliationListQuery ,
   useRejectReconciliationMutation,
   useApproveReconciliationMutation,
+  useDownloadReconciliationReceiptPdfMutation,
 } from 'src/redux/finance/reconciliation';
 
 import ReconciliationReceiptDialog from './ReconciliationReceiptDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const DemandDraftTable = ({
   queryParams,
@@ -46,6 +44,7 @@ const DemandDraftTable = ({
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  const [receiptFileName, setReceiptFileName] = useState('Receipt.pdf');
   const [receiptBlobUrl, setReceiptBlobUrl] = useState<string | null>(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
 
@@ -69,7 +68,7 @@ const DemandDraftTable = ({
 
   const [downloadReceiptPdf] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDownloadReceiptPdfMutation,
+    currentQueryAndMutation: useDownloadReconciliationReceiptPdfMutation,
     popupConfig: {
       error: true,
       errorMessage: 'Unable to load receipt',
@@ -262,12 +261,13 @@ const DemandDraftTable = ({
             setReceiptDialogOpen(true);
 
             try {
-              const blob = await downloadReceiptPdf({
+              const { blob, fileName } = await downloadReceiptPdf({
                 receiptId:
                   row?.status === PaymentMethodsStatusType.Approved
                     ? row?.finalReceiptId
                     : row?.provisionalReceiptId,
               }).unwrap();
+              setReceiptFileName(fileName);
               const objectUrl = URL.createObjectURL(blob);
               setReceiptBlobUrl(objectUrl);
             } catch {
@@ -344,7 +344,7 @@ const DemandDraftTable = ({
     if (!selectedReceipt || !receiptBlobUrl) return;
     const anchor = document.createElement('a');
     anchor.href = receiptBlobUrl;
-    anchor.download = `receipt-${selectedReceipt.receiptNumber || selectedReceipt.id}.pdf`;
+    anchor.download = receiptFileName;
     anchor.target = '_blank';
     document.body.appendChild(anchor);
     anchor.click();
@@ -461,7 +461,16 @@ export const ApproveRejectForm = ({
   return (
     <>
       <DialogScrollContent>
+        {editData?.paymentReceiptCount > 1 && (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            This payment has separate fee and charge receipts.{' '}
+            {editData.type === 'reject' ? 'Rejecting' : 'Approving'} this payment updates both
+            reconciliation entries together.
+          </Typography>
+        )}
         <TextField
+          size="small"
+          disabled={isLoading}
           fullWidth
           multiline
           rows={4}

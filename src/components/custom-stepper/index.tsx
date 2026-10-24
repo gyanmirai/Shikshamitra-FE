@@ -95,6 +95,8 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
               sx={{
                 m: 0,
                 p: 1,
+                width: '100%',
+                boxSizing: 'border-box',
                 textAlign: 'left',
                 '&.Mui-focusVisible': {
                   outline: '2px solid',
@@ -531,10 +533,11 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               },
             }
           : {
-              overflowX: 'auto',
+              minWidth: 0,
               flexShrink: 0,
               p: isMobile ? 1 : 0,
               pt: 1,
+              '& .MuiStep-root': { flex: '1 1 0', minWidth: 0 },
               '& .MuiStepLabel-label': {
                 display: 'block',
                 fontSize: isMobile ? '10px' : '12px',
@@ -545,6 +548,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               },
               '& .MuiStepLabel-labelContainer': {
                 width: '100%',
+                minWidth: 0,
               },
             }
       }
@@ -580,6 +584,9 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               sx={{
                 m: 0,
                 p: 1,
+                width: '100%',
+                boxSizing: 'border-box',
+                minWidth: 0,
                 minHeight: 44,
                 position: 'relative',
                 zIndex: 1,
@@ -628,6 +635,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       sx={{
         display: 'flex',
         justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 1,
         position: 'sticky',
         bottom: 0,
         flexShrink: footerPlacement === 'content' ? 0 : undefined,
@@ -652,7 +661,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       >
         {activeStep === 0 && onCancel ? 'Cancel' : 'Back'}
       </Button>
-      <Box display="flex" gap={1}>
+      <Box display="flex" flexWrap="wrap" justifyContent="flex-end" gap={1} sx={{ ml: 'auto' }}>
         {showSaveButton && <Button {...mergedSaveButtonProps}>{saveButtonLabel}</Button>}
         <Button {...mergedSaveAndNextButtonProps}>
           {activeStep === steps.length - 1 ? finalButtonLabel : nextButtonLabel}
@@ -712,6 +721,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       sx={{
         width: '100%',
         height: '100%',
+        minWidth: 0,
+        minHeight: 0,
         display: 'flex',
         flexDirection: isVertical ? 'row' : 'column',
         position: 'relative',

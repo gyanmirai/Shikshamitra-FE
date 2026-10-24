@@ -19,7 +19,7 @@ export const ChargesPaymentStatusOptions = [
     value: ChargesPaymentStatus.Rejected,
   },
   {
-    label: 'Voided',
+    label: 'Cancelled',
     value: ChargesPaymentStatus.Voided,
   },
 ];

@@ -5,6 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import confirmPopup, { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import ChargesManagement from './index';
+
 vi.mock('src/screens/finance/hooks/useFinanceAcademicFilters', () => ({
   useFinanceAcademicFilters: () => ({ selectedBoard: 'board', selectedMedium: 'medium' }),
 }));
@@ -21,11 +23,17 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ onBack, action }: any) => (
     <div>
       {action}
-      {onBack && <button onClick={onBack}>Back</button>}
+      {onBack && (
+        <button type="button" onClick={onBack}>
+          Back
+        </button>
+      )}
     </div>
   ),
 }));
-vi.mock('./Component/ChargesTable', () => ({ default: () => <div>Charges list</div> }));
+vi.mock('./Component/ChargesTable', () => ({
+  default: ({ primaryAction }: any) => <div>Charges list{primaryAction}</div>,
+}));
 vi.mock('./Component/ViewChargeForm', () => ({ default: () => null }));
 vi.mock('../ChargeApprovalReview', () => ({ ChargeApprovalReview: () => null }));
 vi.mock('./Component/ChargeApproveRejectForm', () => ({ default: () => null }));
@@ -34,15 +42,20 @@ vi.mock('../UpdateChargeForm', () => ({
     const dispatch = useDispatch();
     return (
       <div>
-        Charge form<button onClick={() => dispatch(setIsChanges(true))}>Enter data</button>
-        <button onClick={() => onClose(null, false)}>Cancel form</button>
-        <button onClick={() => onClose(null, true)}>Save successfully</button>
+        Charge form
+        <button type="button" onClick={() => dispatch(setIsChanges(true))}>
+          Enter data
+        </button>
+        <button type="button" onClick={() => onClose(null, false)}>
+          Cancel form
+        </button>
+        <button type="button" onClick={() => onClose(null, true)}>
+          Save successfully
+        </button>
       </div>
     );
   },
 }));
-
-import ChargesManagement from './index';
 
 describe('charge unsaved navigation guard', () => {
   function setup() {
@@ -52,7 +65,7 @@ describe('charge unsaved navigation guard', () => {
         <ChargesManagement />
       </Provider>
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Charge' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Charge' }));
     fireEvent.click(screen.getByRole('button', { name: 'Enter data' }));
     return store;
   }

@@ -8,7 +8,9 @@ import { Iconify } from 'src/components/iconify';
 import { InfoItem } from 'src/components/info-item';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
-
+import { formatNumber } from 'src/utils/formate_number';
+import CustomTooltip from 'src/components/custom-tooltip';
+import PdfPreview from 'src/components/preview-document/pdf-preview';
 import {
   Box,
   Card,
@@ -23,11 +25,11 @@ import {
   DialogContent,
   CircularProgress,
 } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 interface ReconciliationReceiptData {
   id: string;
   receiptNumber: string;
+  finalReceiptNumber?: string | null;
   studentName: string;
   studentId: string;
   amount: number;
@@ -119,7 +121,7 @@ const ReconciliationReceiptDialog = ({
                     <InfoItem
                       icon={<Iconify icon="mdi:receipt" />}
                       label="Receipt Number"
-                      value={receiptData.receiptNumber}
+                      value={receiptData.finalReceiptNumber || receiptData.receiptNumber}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -198,7 +200,7 @@ const ReconciliationReceiptDialog = ({
                     <InfoItem
                       icon={<Iconify icon="mdi:cash" />}
                       label="Amount"
-                      value={`₹${receiptData.amount.toLocaleString('en-IN')}`}
+                      value={formatNumber(receiptData.amount, 'INR')}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -234,16 +236,7 @@ const ReconciliationReceiptDialog = ({
                   </Box>
                 ) : receiptBlobUrl ? (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box
-                      component="iframe"
-                      src={receiptBlobUrl}
-                      sx={{
-                        width: '100%',
-                        height: 400,
-                        border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                        borderRadius: 1,
-                      }}
-                    />
+                    <PdfPreview url={receiptBlobUrl} title="Receipt" />
                     <Box display="flex" gap={1}>
                       <Button
                         size="small"

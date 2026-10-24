@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { varAlpha } from 'src/theme/styles';
 import { alpha } from '@mui/material/styles';
 import { Box, Stack, Typography, CircularProgress } from '@mui/material';
 
@@ -52,7 +53,10 @@ export function FormBusyRegion({ busy, label = 'Saving…', children, showOverla
             inset: 0,
             zIndex: 2,
             minHeight: 64,
-            bgcolor: (theme) => alpha(theme.palette.background.paper, 0.8),
+            bgcolor: (theme) =>
+              theme.vars
+                ? varAlpha(theme.vars.palette.background.paperChannel, 0.8)
+                : alpha(theme.palette.background.paper, 0.8),
           }}
         >
           <CircularProgress size={24} aria-hidden="true" />

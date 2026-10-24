@@ -1,6 +1,5 @@
 'use client';
 
-import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
@@ -15,13 +14,14 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { useNewSearchParam } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { ReconciliationStatusType } from 'src/enums/reconciliation-status-type';
 import { useGetReconciliationTabCountsQuery } from 'src/redux/finance/reconciliation';
 
 import UpiTable from './Component/UpiTable';
 import DebitCardTable from './Component/DebitCardTable';
 import CreditCardTable from './Component/CreditCardTable';
+import CashReceiptTable from './Component/CashReceiptTable';
 import DemandDraftTable from './Component/DemandDraftTable';
 import BankTransferTable from './Component/BankTransferTable';
 import ChequeDetailsForm from './Component/ChequeDetailsTable';
@@ -29,6 +29,12 @@ import { academicMonthOptions, defaultAcademicMonth } from '../accounts/Register
 
 // Map enum to label and component
 const reconciliationTabConfig = [
+  {
+    label: 'Cash',
+    value: ReconciliationStatusType.Cash,
+    color: 'success' as LabelColor,
+    component: (props: any) => <CashReceiptTable key={`${props.queryParams?.academicYearId}-${props.queryParams?.year}-${props.queryParams?.month}`} {...props} />,
+  },
   {
     label: 'Cheque',
     value: ReconciliationStatusType.Cheque,
@@ -127,7 +133,7 @@ const FinanceReconciliation = () => {
       ({
         [ReconciliationStatusType.Cash]: {
           pending: 0,
-          approved: 0,
+          approved: tabCounts?.cashOfficial ?? 0,
           rejected: 0,
         },
         [ReconciliationStatusType.Cheque]: {
@@ -236,8 +242,8 @@ const FinanceReconciliation = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {discardConfirmation}
       <CustomBreadcrumbs
-        description="Confirm or reject provisional payment receipts using the instrument evidence. Bank statement matching is a separate Accounts process."
-        heading="Verify pending receipts"
+        description="Cash receipts are official immediately. Approve non-cash provisional receipts after checking payment evidence to issue linked official receipts. Bank statement matching is a separate Accounts process."
+        heading="Reconciliation"
 
         links={[
           { name: 'Finance', href: '/finance/dashboard/' },

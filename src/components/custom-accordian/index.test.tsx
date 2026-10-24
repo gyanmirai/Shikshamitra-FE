@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { it, expect } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -41,11 +42,36 @@ function AccordionHarness({ custom = false }: { custom?: boolean }) {
 it('preserves the standard controlled accordion summary for existing consumers', () => {
   render(<AccordionHarness />);
   const summary = screen.getByRole('button', { name: 'School details' });
+  const chevron = screen.getByTestId('ExpandMoreIcon');
   expect(summary).toHaveAttribute('aria-expanded', 'false');
+  expect(chevron.parentElement).not.toHaveClass('Mui-expanded');
   fireEvent.click(summary);
   expect(summary).toHaveAttribute('aria-expanded', 'true');
+  expect(chevron.parentElement).toHaveClass('Mui-expanded');
   fireEvent.click(summary);
   expect(summary).toHaveAttribute('aria-expanded', 'false');
+  expect(chevron.parentElement).not.toHaveClass('Mui-expanded');
+});
+
+it('supports Enter and Space expansion with the default uncontrolled summary', async () => {
+  const user = userEvent.setup();
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <CustomAccordion title="Additional details" content={<p>Additional content</p>} />
+    </ThemeProvider>
+  );
+  const summary = screen.getByRole('button', { name: 'Additional details' });
+  const chevron = screen.getByTestId('ExpandMoreIcon');
+  await user.tab();
+  expect(summary).toHaveFocus();
+  expect(summary).toHaveAttribute('aria-expanded', 'false');
+  await user.keyboard('{Enter}');
+  expect(summary).toHaveAttribute('aria-expanded', 'true');
+  expect(chevron.parentElement).toHaveClass('Mui-expanded');
+  await user.keyboard(' ');
+  expect(summary).toHaveAttribute('aria-expanded', 'false');
+  expect(chevron.parentElement).not.toHaveClass('Mui-expanded');
+  expect(summary).toHaveFocus();
 });
 
 it('allows independent header actions without toggling a custom summary', () => {

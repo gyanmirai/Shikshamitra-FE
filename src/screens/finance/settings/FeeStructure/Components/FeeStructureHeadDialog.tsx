@@ -158,6 +158,8 @@ export default function FeeStructureHeadDialog({
   });
   const { setFieldValue, values: dialogValues } = formik;
   const { requestNavigation, confirmation } = useUnsavedNavigation(formik.dirty, {
+    keepEditingLabel: 'Keep Editing',
+    discardLabel: 'Discard Changes',
     blockNavigation: busy,
     push: (href) => window.location.assign(href),
   });
@@ -405,7 +407,7 @@ export default function FeeStructureHeadDialog({
               if (replacement && !busy) onSave(replacement);
             }}
           >
-            Replace schedule
+            Replace Schedule
           </Button>
         }
       />

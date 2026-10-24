@@ -100,6 +100,8 @@ export default function CopyFeeStructureDialog({
   });
   const busy = formik.isSubmitting;
   const { requestNavigation, confirmation } = useUnsavedNavigation(formik.dirty, {
+    keepEditingLabel: 'Keep Editing',
+    discardLabel: 'Discard Changes',
     blockNavigation: busy,
   });
   const requestClose = () => requestNavigation(onClose);

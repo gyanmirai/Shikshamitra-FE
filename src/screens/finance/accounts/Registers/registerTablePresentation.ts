@@ -1,21 +1,10 @@
 import type { AccountsActivityRow } from 'src/redux/finance/accountsActivityApi';
 
-export function registerSourceOptions(income: boolean) {
-  return income
-    ? [
-        { value: 'Collection', label: 'Student Payment' },
-        { value: 'Income', label: 'Other Income' },
-      ]
-    : [
-        { value: 'Expense', label: 'School Expense' },
-        { value: 'Refund', label: 'Student Refund' },
-      ];
-}
-
 export function registerStatusOptions(income: boolean) {
-  return (income ? ['Received', 'Reversed'] : ['Awaiting payout', 'Paid', 'Returned']).map(
-    (value) => ({ value, label: value })
-  );
+  return (income ? ['Received', 'Reversed'] : ['Paid', 'Returned']).map((value) => ({
+    value,
+    label: value,
+  }));
 }
 
 export function toRegisterTableRow(row: AccountsActivityRow) {

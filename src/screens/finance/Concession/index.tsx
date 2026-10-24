@@ -8,10 +8,11 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
-
+import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
@@ -23,7 +24,6 @@ import StudentConcessionTable from './Components/StudentConcessionTable';
 import ViewConcessionRequest from '../ConcessionAdmin/ConcessionAdminViewForm';
 
 import type { IStudentInfo } from './type';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const Concession = () => {
   // Redux state and dispatch
@@ -34,6 +34,7 @@ const Concession = () => {
   const dispatch = useDispatch();
   // Boolean state to control the visibility of add concession request modal/form
   const addConcessionRequest = useBoolean();
+  const [requestBusy, setRequestBusy] = useState(false);
   const viewConcessionRequest = useBoolean();
   const onViewAllConcession = useBoolean();
   const academicFilters = useFinanceAcademicFilters();
@@ -55,6 +56,7 @@ const Concession = () => {
   };
 
   const handleClose = (_e?: unknown, isSubmit?: boolean) => {
+    if (requestBusy && !isSubmit) return;
     if (!isSubmit && isChanges) {
       confirmClose.onTrue();
       return;
@@ -81,39 +83,41 @@ const Concession = () => {
       }}
     >
       {addConcessionRequest.value ? (
-        <CustomBreadcrumbs
-          description="View and manage student concession requests."
-          heading={
-            selectedConcession?.sourceRequestId
-              ? 'Replacement Concession Request'
-              : selectedConcession
-                ? 'Update Concession Request'
-                : 'Concession Request'
-          }
-
-          links={[
-            { name: 'Finance', href: financePaths.dashboard },
-            { name: 'Fees', href: financePaths.concession },
-            {
-              name: 'Concessions',
-              href: financePaths.concession,
-              onClick(e) {
-                handleClose(null, false);
-              },
-            },
-            {
-              name: selectedConcession?.sourceRequestId
+        <FormBusyRegion busy={requestBusy} showOverlay={false} label="Saving concession request…">
+          <CustomBreadcrumbs
+            description="View and manage student concession requests."
+            heading={
+              selectedConcession?.sourceRequestId
                 ? 'Replacement Concession Request'
                 : selectedConcession
                   ? 'Update Concession Request'
-                  : 'Concession Request',
-            },
-          ]}
-          isBack
-          onBack={() => {
-            handleClose(null, false);
-          }}
-        />
+                  : 'Concession Request'
+            }
+
+            links={[
+              { name: 'Finance', href: financePaths.dashboard },
+              { name: 'Fees', href: financePaths.concession },
+              {
+                name: 'Concessions',
+                href: financePaths.concession,
+                onClick(e) {
+                  handleClose(null, false);
+                },
+              },
+              {
+                name: selectedConcession?.sourceRequestId
+                  ? 'Replacement Concession Request'
+                  : selectedConcession
+                    ? 'Update Concession Request'
+                    : 'Concession Request',
+              },
+            ]}
+            isBack
+            onBack={() => {
+              handleClose(null, false);
+            }}
+          />
+        </FormBusyRegion>
       ) : viewConcessionRequest.value ? (
         <CustomBreadcrumbs
           description="View and manage student concession requests."
@@ -147,25 +151,25 @@ const Concession = () => {
             { name: 'Fees', href: financePaths.concession },
             { name: 'Concessions', href: financePaths.concession },
           ]}
-          action={
-            canAdd ? (
-              <Button
-                onClick={() => addConcessionRequest.onTrue()}
-                size="small"
-                startIcon={<Add />}
-                variant="contained"
-                sx={{ px: '32px' }}
-              >
-                Concession Request
-              </Button>
-            ) : undefined
-          }
         />
       )}
 
       {/* Show table only when no dialog is open */}
       {!addConcessionRequest.value && !viewConcessionRequest.value && (
         <StudentConcessionTable
+          primaryAction={
+            canAdd ? (
+              <Button
+                onClick={addConcessionRequest.onTrue}
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                sx={{ px: 4 }}
+              >
+                Concession Request
+              </Button>
+            ) : undefined
+          }
           onRequestConcession={(data) => {
             setSelectedConcession(data);
             addConcessionRequest.onTrue();
@@ -199,6 +203,7 @@ const Concession = () => {
       {addConcessionRequest.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <ConcessionRequestForm
+            onBusyChange={setRequestBusy}
             open={addConcessionRequest.value}
             onClose={handleClose}
             student={selectedConcession as IStudentInfo}

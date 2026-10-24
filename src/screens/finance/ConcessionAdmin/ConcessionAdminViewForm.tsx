@@ -38,6 +38,7 @@ import {
   Typography,
   IconButton,
   DialogActions,
+  FormHelperText,
   CircularProgress,
 } from '@mui/material';
 import {
@@ -321,6 +322,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
 
   const mandatoryDocuments = localDocs.filter((document) => document.isRequired ?? true);
   const allMandatoryUploaded = mandatoryDocuments.every((document) => document.isUploaded);
+  const documentHelperId = React.useId();
 
   return (
     <>
@@ -408,6 +410,11 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
                         }
                         disabled={isBusy && uploadingDocId !== doc.documentId}
                         onClick={() => handleUploadClick(doc.documentId)}
+                        aria-describedby={
+                          (doc.isRequired ?? true) && !doc.isUploaded
+                            ? `${documentHelperId}-${doc.documentId}-error`
+                            : undefined
+                        }
                         startIcon={<Iconify icon="eva:cloud-upload-outline" />}
                       >
                         {doc.isUploaded ? 'Replace' : 'Upload'}
@@ -415,27 +422,19 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
                     )}
                   </Box>
                 </Box>
+                {(doc.isRequired ?? true) && !doc.isUploaded && (
+                  <FormHelperText
+                    error
+                    id={`${documentHelperId}-${doc.documentId}-error`}
+                    sx={{ mx: 0 }}
+                  >
+                    {doc.documentName} is required.{' '}
+                    {canUpload ? 'Upload this document before approval.' : ''}
+                  </FormHelperText>
+                )}
               </Box>
             ))}
           </Stack>
-
-          {!allMandatoryUploaded && mandatoryDocuments.length > 0 && (
-            <Box
-              mt={2}
-              px={1.5}
-              py={1}
-              sx={{
-                borderRadius: 1,
-                bgcolor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.08),
-                border: '1px solid',
-                borderColor: 'warning.light',
-              }}
-            >
-              <Typography variant="caption" color="warning.dark" fontWeight={600}>
-                Upload all mandatory documents before the application can be approved.
-              </Typography>
-            </Box>
-          )}
         </Box>
         <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
           {isBusy && (

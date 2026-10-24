@@ -1,6 +1,6 @@
 import { useFormik } from 'formik';
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import ValueEntryStep from './ValueEntryStep';
 import ConcessionImpactSummary from '../ConcessionImpactSummary';
@@ -12,7 +12,7 @@ import {
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
-function Editor({ fixed = false, policyFixed = false, empty = false }) {
+function Editor({ fixed = false, policyFixed = false, empty = false, compact = false }) {
   const formik = useFormik({
     initialValues: {
       concessionTypeId: 'sibling',
@@ -26,6 +26,7 @@ function Editor({ fixed = false, policyFixed = false, empty = false }) {
   return (
     <>
       <ValueEntryStep
+        showPolicyFixedDetails={!compact}
         formik={formik}
         concessionTypes={[{ id: 'sibling', name: 'Sibling tuition concession' }]}
         requestContext={context}
@@ -38,11 +39,28 @@ function Editor({ fixed = false, policyFixed = false, empty = false }) {
         }}
       />
       <output aria-label="Raw entries">{JSON.stringify(formik.values.dueFeeEntries)}</output>
+      <output aria-label="Policy entries">{JSON.stringify(formik.values.valueEntries)}</output>
     </>
   );
 }
 
 describe('concession values and review', () => {
+  it('shows fractional money as invalid without rounding its reduction to a rupee', () => {
+    render(<Editor fixed />);
+    const input = screen.getByRole('textbox', {
+      name: 'Half-Yearly 1 School tuition concession amount',
+    });
+    fireEvent.change(input, { target: { value: '0.1' } });
+    expect(input).toHaveValue('₹ 0.1');
+    expect(input).toHaveAccessibleDescription(/whole rupee/);
+    const row = input.closest('.MuiTextField-root')?.parentElement as HTMLElement;
+    expect(within(row).getByText('—')).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Concession request allowance' })).toHaveTextContent(
+      'Correct the invalid installment amounts'
+    );
+    fireEvent.change(input, { target: { value: '1' } });
+    expect(input).not.toHaveAccessibleDescription(/whole rupee/);
+  });
   it('keeps decimal percentage text, clears to empty, and enforces the policy limit', () => {
     render(<Editor />);
     const input = screen.getByRole('textbox', {
@@ -112,6 +130,14 @@ describe('concession values and review', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.getByText(/calculated automatically/i)).toBeInTheDocument();
     expect(screen.getByText(/4,600/)).toBeInTheDocument();
+  });
+  it('preserves policy command defaults when the side panel presents the fee impact', () => {
+    render(<Editor policyFixed compact />);
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByText(/calculated automatically/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Policy entries')).toHaveTextContent(
+      '"tuition":{"basedOn":1,"amount":0,"netAmount":5000}'
+    );
   });
   it('explains an empty selection without referring to nonexistent steps', () => {
     render(<Editor empty />);

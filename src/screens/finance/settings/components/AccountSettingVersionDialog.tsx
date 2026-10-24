@@ -24,6 +24,7 @@ interface Props {
   open: boolean;
   title: string;
   recordType?: string;
+  hiddenFields?: string[];
   data?: { items?: AccountSettingHistoryItem[]; totalCount?: number };
   isLoading?: boolean;
   isError?: boolean;
@@ -35,13 +36,22 @@ export default function AccountSettingVersionDialog({
   open,
   title,
   recordType = 'Account setting',
+  hiddenFields = [],
   data,
   isLoading,
   isError,
   onRetry,
   onClose,
 }: Props) {
-  const items = [...(data?.items || [])].sort((a, b) => b.versionNumber - a.versionNumber);
+  const items = (data?.items || [])
+    .map((item) => ({
+      ...item,
+      changedFields: item.changedFields?.filter(
+        (change) =>
+          !hiddenFields.some((field) => field.toLowerCase() === change.fieldName.toLowerCase())
+      ),
+    }))
+    .sort((a, b) => b.versionNumber - a.versionNumber);
   const { timeZone } = Intl.DateTimeFormat().resolvedOptions();
 
   return (

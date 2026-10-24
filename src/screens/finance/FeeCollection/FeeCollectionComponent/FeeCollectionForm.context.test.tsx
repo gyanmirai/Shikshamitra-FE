@@ -455,12 +455,15 @@ describe('embedded Finance collection context', () => {
     );
   });
 
-  it('keeps checkout values and collection actions in the payment summary', async () => {
+  it('keeps payment fields in the summary and collection actions in the bottom footer', async () => {
     render(<FeeCollectComponentForm academicYear={academicYear} collectionAdapter={adapter()} />);
     const checkout = screen.getByRole('heading', { name: 'Payment summary' }).closest('section')!;
     expect(within(checkout).getByRole('combobox', { name: /Payment method/i })).toBeInTheDocument();
-    expect(checkout).toContainElement(screen.getByRole('button', { name: 'Collect Payment' }));
-    expect(checkout).toContainElement(screen.getByRole('button', { name: 'Cancel' }));
+    const footer = screen.getByLabelText('Collection actions');
+    expect(checkout).not.toContainElement(footer);
+    expect(footer).toContainElement(screen.getByRole('button', { name: 'Collect Payment' }));
+    expect(footer).toContainElement(screen.getByRole('button', { name: 'Cancel' }));
+    expect(footer).toContainElement(screen.getByText('Collecting now'));
     const details = screen.getByRole('region', { name: 'Payment details' });
     expect(details).not.toContainElement(screen.getByRole('heading', { name: 'Payment summary' }));
     expect(details).not.toContainElement(screen.getByText('Collecting now'));
@@ -678,7 +681,7 @@ describe('embedded Finance collection context', () => {
     });
   });
 
-  it('returns cash change without adding the tender to the collection or receipt', async () => {
+  it('collects cash using only the amount to collect', async () => {
     const collect = vi.fn().mockResolvedValue(output);
     render(
       <FeeCollectComponentForm
@@ -688,12 +691,9 @@ describe('embedded Finance collection context', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
     await waitFor(() => expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 500'));
-    fireEvent.change(screen.getByLabelText('Cash Received'), { target: { value: '499' } });
-    expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
-    expect(screen.getByText('Cash received must cover the amount to collect.')).toBeVisible();
-    fireEvent.change(screen.getByLabelText('Cash Received'), { target: { value: '1000' } });
-    const change = screen.getByText('Change to return').parentElement!;
-    expect(within(change).getByText('₹ 500')).toBeVisible();
+    expect(screen.queryByLabelText('Cash Received')).not.toBeInTheDocument();
+    expect(screen.queryByText('Change to return')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));

@@ -47,7 +47,9 @@
     ".artifacts/host-tenant-next/types/**/*.ts",
     ".artifacts/host-tenant-next/dev/types/**/*.ts",
     ".artifacts/onboarding-next/types/**/*.ts",
-    ".artifacts/onboarding-next/dev/types/**/*.ts"
+    ".artifacts/onboarding-next/dev/types/**/*.ts",
+    "build-receipt-grouping-browser/types/**/*.ts",
+    "build-receipt-grouping-browser/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

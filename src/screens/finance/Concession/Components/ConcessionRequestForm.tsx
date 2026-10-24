@@ -14,22 +14,21 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useGetStudentsByScopeQuery } from 'src/redux/student';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
 import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import {
   Box,
@@ -54,9 +53,13 @@ import {
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import ConcessionDocumentList from './ConcessionDocumentList';
-import ConcessionFeeHeadSelection from './ConcessionFeeHeadSelection';
+import ConcessionPolicyFields from './ConcessionPolicyFields';
 import ValueEntryStep from './ConcessionSteps/ValueEntryStep';
-import ConcessionImpactSummary from './ConcessionImpactSummary';
+import ConcessionRequestWorkspace from './ConcessionRequestWorkspace';
+import {
+  concessionErrorMessage,
+  validateConcessionInstallments,
+} from './concessionValueValidation';
 
 import type { IConcessionFormProps } from '../type';
 
@@ -230,6 +233,7 @@ const buildDueFeeConcessions = (values: FormValues, context?: ConcessionRequestC
 
 const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   onClose,
+  onBusyChange,
   student,
   editData,
   defaultBoardId = '',
@@ -307,6 +311,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const [updateConcessionRequest, { isLoading: updateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateConcessionRequestMutation,
+    popupConfig: { error: false },
   });
 
   const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
@@ -317,6 +322,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const [createConcessionRequest, { isLoading: createLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateConcessionRequestMutation,
+    popupConfig: { error: false },
   });
   const [createConcessionDraft, { isLoading: createDraftLoading }] =
     useCreateConcessionDraftMutation();
@@ -329,11 +335,13 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   );
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<unknown>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const previewIsError = previewError !== null;
 
   // -- Derived lists ---------------------------------------------------------
 
   const commandKeys = useRef<Record<string, string>>({});
+  const draftSaveInFlight = useRef(false);
   const getCommandKey = useCallback((action: string) => {
     commandKeys.current[action] ||= window.crypto.randomUUID();
     return commandKeys.current[action];
@@ -369,7 +377,17 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     enableReinitialize: true,
     validationSchema,
     validateOnChange: true,
+    validate: (currentValues) => {
+      const dueFeeEntries = validateConcessionInstallments(
+        currentValues.selectedFeeHeads[currentValues.concessionTypeId] || [],
+        currentValues.dueFeeEntries,
+        requestContext,
+        selectedPolicy
+      );
+      return Object.keys(dueFeeEntries).length ? { dueFeeEntries } : {};
+    },
     onSubmit: async (values) => {
+      setSubmitError(null);
       try {
         const typeId = values.concessionTypeId;
         const feeHeadConcessions =
@@ -478,14 +496,15 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         onClose(null, true);
       } catch (err: any) {
         confirmedAdminSnapshotRef.current = null;
-        shikshaMitraToast.error({
-          message:
-            err?.data?.title ||
-            err?.data?.detail ||
-            err?.data?.message ||
-            err?.message ||
-            'Something went wrong',
-        });
+        const message = concessionErrorMessage(
+          err,
+          'Could not submit the concession request. Review the values and try again.'
+        );
+        setSubmitError(message);
+        shikshaMitraToast.error({ message });
+        if ((err?.data?.errorCode ?? err?.data?.error?.code) === 'Finance:Concession:010020') {
+          void refetchRequestContext();
+        }
       }
     },
   });
@@ -496,6 +515,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   }, [currentYear?.id]); // Log formik values on every change for debugging
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
+  const isSaving =
+    formik.isSubmitting || createLoading || createDraftLoading || updateLoading || submitLoading;
+  useEffect(() => {
+    onBusyChange?.(isSaving);
+    return () => onBusyChange?.(false);
+  }, [isSaving, onBusyChange]);
   const {
     currentData: studentsData,
     isLoading: studentLoading,
@@ -614,7 +639,17 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     [currentYear?.id, requestContext, selectedPolicy?.valueSource, values]
   );
 
+  const hasInvalidInstallmentValues =
+    Object.keys(
+      validateConcessionInstallments(
+        values.selectedFeeHeads[values.concessionTypeId] || [],
+        values.dueFeeEntries,
+        requestContext,
+        selectedPolicy
+      )
+    ).length > 0;
   const previewReady =
+    !hasInvalidInstallmentValues &&
     Boolean(
       previewRequest.academicYearId &&
       previewRequest.studentId &&
@@ -686,95 +721,91 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
   const selectedFeeHeadCount = (values.selectedFeeHeads[values.concessionTypeId] || []).length;
   const hasSelectedFeeHeads = selectedFeeHeadCount > 0;
-  const selectedEligibleTotal = feeHeads.reduce(
-    (total, head) =>
-      total +
-      ((values.selectedFeeHeads[values.concessionTypeId] || []).includes(head.feeHeadId)
-        ? head.amount
-        : 0),
-    0
-  );
-
   // -- Handlers --------------------------------------------------------------
 
   const handleSubmit = useCallback(() => {
-    formik.validateForm().then(() => {
-      formik.handleSubmit();
-    });
-  }, [formik]);
+    if (!isSaving) formik.handleSubmit();
+  }, [formik, isSaving]);
 
   const handleSaveDraft = useCallback(async () => {
-    const validationErrors = await formik.validateForm();
-    if (Object.keys(validationErrors).length > 0 || !hasResolvedAssignment || !requestContext) {
-      formik.setTouched({
-        boardId: true,
-        mediumId: true,
-        standardId: true,
-        divisionId: true,
-        studentId: true,
-        concessionPolicyId: true,
-        concessionPolicyVersionId: true,
-        concessionTypeId: true,
-      });
-      shikshaMitraToast.error({
-        message: 'Select the student, concession policy, and concession type before saving.',
-      });
-      return;
-    }
-
-    const typeId = values.concessionTypeId;
-    const docBlock = values.concessionTypeDocuments?.find(
-      (item: any) => item.concessionTypeId === typeId
-    );
-    const documents = (docBlock?.documents || [])
-      .filter((item: any) => item.url)
-      .map((item: any) => ({ documentId: item.documentId, url: item.url, status: 1 as const }));
-    const command: ConcessionDraftCommand = {
-      academicYearId: currentYear?.id || '',
-      studentId: values.studentId,
-      studentFeeStructureId: requestContext.studentFeeStructureId,
-      concessionPolicyId: values.concessionPolicyId,
-      concessionPolicyVersionId: values.concessionPolicyVersionId,
-      concessionTypeId: typeId,
-      sourceRequestId: student?.sourceRequestId,
-      remarks: values.remarks,
-      feeHeadConcessions:
-        selectedPolicy?.valueSource === 'PolicyFixed' ? buildFeeHeadConcessions(values) : [],
-      dueFeeConcessions:
-        selectedPolicy?.valueSource === 'RequestEnteredWithinLimits'
-          ? buildDueFeeConcessions(values, requestContext)
-          : [],
-      documents,
-    };
-
+    if (isSaving || draftSaveInFlight.current) return;
+    setSubmitError(null);
+    draftSaveInFlight.current = true;
+    formik.setSubmitting(true);
     try {
-      if (values.concessionRequestId) {
-        const latestDraft = await refetchConcessionData().unwrap();
-        await updateConcessionRequest({
-          ...command,
-          concessionRequestId: values.concessionRequestId,
-          concurrencyStamp:
-            latestDraft?.data?.concurrencyStamp || concessionData?.data?.concurrencyStamp || '',
-          idempotencyKey: getCommandKey('update-draft'),
-        }).unwrap();
-        clearCommandKey('update-draft');
-      } else {
-        await createConcessionDraft({
-          ...command,
-          idempotencyKey: getCommandKey('create-draft'),
-        }).unwrap();
-        clearCommandKey('create-draft');
+      const validationErrors = await formik.validateForm();
+      if (Object.keys(validationErrors).length > 0 || !hasResolvedAssignment || !requestContext) {
+        formik.setTouched({
+          boardId: true,
+          mediumId: true,
+          standardId: true,
+          divisionId: true,
+          studentId: true,
+          concessionPolicyId: true,
+          concessionPolicyVersionId: true,
+          concessionTypeId: true,
+        });
+        shikshaMitraToast.error({
+          message: validationErrors.dueFeeEntries
+            ? 'Correct the invalid installment concession values before saving the draft.'
+            : 'Select the student, concession policy, and concession type before saving.',
+        });
+        return;
       }
-      shikshaMitraToast.success({ message: 'Concession request saved as a draft.' });
-      onClose(null, true);
-    } catch (error: any) {
-      shikshaMitraToast.error({
-        message:
-          error?.data?.error?.message ||
-          error?.data?.message ||
-          error?.message ||
-          'Could not save the concession draft.',
-      });
+
+      const typeId = values.concessionTypeId;
+      const docBlock = values.concessionTypeDocuments?.find(
+        (item: any) => item.concessionTypeId === typeId
+      );
+      const documents = (docBlock?.documents || [])
+        .filter((item: any) => item.url)
+        .map((item: any) => ({ documentId: item.documentId, url: item.url, status: 1 as const }));
+      const command: ConcessionDraftCommand = {
+        academicYearId: currentYear?.id || '',
+        studentId: values.studentId,
+        studentFeeStructureId: requestContext.studentFeeStructureId,
+        concessionPolicyId: values.concessionPolicyId,
+        concessionPolicyVersionId: values.concessionPolicyVersionId,
+        concessionTypeId: typeId,
+        sourceRequestId: student?.sourceRequestId,
+        remarks: values.remarks,
+        feeHeadConcessions:
+          selectedPolicy?.valueSource === 'PolicyFixed' ? buildFeeHeadConcessions(values) : [],
+        dueFeeConcessions:
+          selectedPolicy?.valueSource === 'RequestEnteredWithinLimits'
+            ? buildDueFeeConcessions(values, requestContext)
+            : [],
+        documents,
+      };
+
+      try {
+        if (values.concessionRequestId) {
+          const latestDraft = await refetchConcessionData().unwrap();
+          await updateConcessionRequest({
+            ...command,
+            concessionRequestId: values.concessionRequestId,
+            concurrencyStamp:
+              latestDraft?.data?.concurrencyStamp || concessionData?.data?.concurrencyStamp || '',
+            idempotencyKey: getCommandKey('update-draft'),
+          }).unwrap();
+          clearCommandKey('update-draft');
+        } else {
+          await createConcessionDraft({
+            ...command,
+            idempotencyKey: getCommandKey('create-draft'),
+          }).unwrap();
+          clearCommandKey('create-draft');
+        }
+        shikshaMitraToast.success({ message: 'Concession request saved as a draft.' });
+        onClose(null, true);
+      } catch (error: any) {
+        const message = concessionErrorMessage(error, 'Could not save the concession draft.');
+        setSubmitError(message);
+        shikshaMitraToast.error({ message });
+      }
+    } finally {
+      draftSaveInFlight.current = false;
+      formik.setSubmitting(false);
     }
   }, [
     clearCommandKey,
@@ -784,6 +815,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     formik,
     getCommandKey,
     hasResolvedAssignment,
+    isSaving,
     onClose,
     refetchConcessionData,
     requestContext,
@@ -883,7 +915,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
               <Skeleton variant="text" width={140} height={20} />
             </Box>
           </Stack>
-          <Grid container spacing={1.5}>
+          <Grid container spacing={2}>
             {[...Array(4)].map((_, i) => (
               <Grid size={{ xs: 12, sm: 6 }} key={i}>
                 <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
@@ -903,7 +935,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
               <Skeleton variant="text" width={140} height={20} />
             </Box>
           </Stack>
-          <Grid container spacing={1.5}>
+          <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
             </Grid>
@@ -935,7 +967,14 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <form
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!isSaving) formik.handleSubmit(event);
+        }}
+        style={{ height: '100%' }}
+      >
         <Box display="flex" flexDirection="column" height="100%" minHeight={0}>
           <Box
             role="region"
@@ -943,570 +982,516 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             tabIndex={0}
             sx={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}
           >
-            <Box
-              sx={{
-                p: { xs: 1.5, sm: 2 },
-                containerType: 'inline-size',
-                '& .MuiCard-root': { boxShadow: 'none' },
-              }}
-            >
-              <Grid container spacing={1.5}>
-                {/* 1. Student Information */}
-                <Grid size={{ xs: 12 }}>
-                  <FormSectionCard
-                    descriptionTooltip="Select the board, medium, class, division, and student for this request."
-                    icon="solar:users-group-rounded-bold-duotone"
-                    title="Student information"
-                  >
-                    <Grid container spacing={1.5}>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
-                          <CustomSelect
-                            size="small"
-                            label="Board *"
-                            options={boards}
-                            labelKey="name"
-                            valueKey="id"
-                            value={values.boardId}
-                            disabled={isEditMode}
-                            onChange={(val) => {
-                              const board = boards.find((b) => b.id === val);
-                              setFieldValue('boardId', val);
-                              setFieldTouched('boardId', false);
-                              setFieldValue('boardName', board?.name || '');
-                              setFieldValue('mediumId', '');
-                              setFieldValue('mediumName', '');
-                              setFieldValue('standardId', '');
-                              setFieldValue('standardName', '');
-                              setFieldValue('divisionId', '');
-                              setFieldValue('divisionName', '');
-                              setFieldValue('studentId', '');
-                              setFieldValue('studentName', '');
-                              setFieldValue('selectedStudent', null);
-                            }}
-                            error={!!errors.boardId && touched.boardId}
-                            helperText={
-                              ((touched.boardId && errors.boardId) as string) || undefined
-                            }
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <ShakingTextField error={!!(touched.mediumId && errors.mediumId)}>
-                          <CustomSelect
-                            size="small"
-                            label="Medium *"
-                            disabled={isEditMode || !values.boardId}
-                            options={mediums}
-                            labelKey="name"
-                            valueKey="id"
-                            value={values.mediumId}
-                            onChange={(val) => {
-                              const medium = mediums.find((m) => m.id === val);
-                              setFieldValue('mediumId', val);
-                              setFieldTouched('mediumId', false);
-                              setFieldValue('mediumName', medium?.name || '');
-                              setFieldValue('standardId', '');
-                              setFieldValue('standardName', '');
-                              setFieldValue('divisionId', '');
-                              setFieldValue('divisionName', '');
-                              setFieldValue('studentId', '');
-                              setFieldValue('studentName', '');
-                              setFieldValue('selectedStudent', null);
-                            }}
-                            error={!!errors.mediumId && touched.mediumId}
-                            helperText={
-                              ((touched.mediumId && errors.mediumId) as string) || undefined
-                            }
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <ShakingTextField error={!!(touched.standardId && errors.standardId)}>
-                          <CustomSelect
-                            size="small"
-                            label="Class *"
-                            disabled={isEditMode || !values.mediumId}
-                            options={classes || []}
-                            isLoading={classLoading}
-                            labelKey="name"
-                            valueKey="id"
-                            value={values.standardId}
-                            onChange={(val) => {
-                              const standard = classes?.find((c: any) => c.id === val);
-                              setFieldValue('standardId', val);
-                              setFieldTouched('standardId', false);
-                              setFieldValue('standardName', standard?.name || '');
-                              setFieldValue('divisionId', '');
-                              setFieldValue('divisionName', '');
-                              setFieldValue('studentId', '');
-                              setFieldValue('studentName', '');
-                              setFieldValue('selectedStudent', null);
-                            }}
-                            error={!!errors.standardId && touched.standardId}
-                            helperText={
-                              ((touched.standardId && errors.standardId) as string) || undefined
-                            }
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <ShakingTextField error={!!(touched.divisionId && errors.divisionId)}>
-                          <CustomSelect
-                            size="small"
-                            label="Division *"
-                            disabled={isEditMode || !values.standardId}
-                            options={allDivisions}
-                            labelKey="name"
-                            valueKey="id"
-                            value={values.divisionId}
-                            onChange={(val) => {
-                              const division = allDivisions.find((d) => d.id === val);
-                              setFieldValue('divisionId', val);
-                              setFieldTouched('divisionId', false);
-                              setFieldValue('divisionName', division?.name || '');
-                              setFieldValue('studentId', '');
-                              setFieldValue('studentName', '');
-                              setFieldValue('selectedStudent', null);
-                            }}
-                            error={!!errors.divisionId && touched.divisionId}
-                            helperText={
-                              ((touched.divisionId && errors.divisionId) as string) || undefined
-                            }
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                      <Grid size={{ xs: 12 }}>
-                        <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
-                          <Autocomplete
-                            size="small"
-                            loading={studentLoading || studentFetching}
-                            noOptionsText={
-                              studentsError ? 'Unable to load students' : 'No Student Found'
-                            }
-                            fullWidth
-                            disabled={isEditMode || !values.divisionId}
-                            options={studentOptions}
-                            value={
-                              studentOptions.find((s) => s.studentId === values.studentId) ||
-                              (isEditMode && values.studentId
-                                ? { studentId: values.studentId, name: values.studentName }
-                                : null)
-                            }
-                            isOptionEqualToValue={(option, value) =>
-                              option.studentId === value.studentId
-                            }
-                            onChange={(_e, value: any) => {
-                              setSelectedAssignmentId('');
-                              setFieldValue('studentId', value?.studentId || '');
-                              setFieldTouched('studentId', false);
-                              setFieldValue('studentName', value?.name || '');
-                              setFieldValue('selectedStudent', value || null);
-                              setFieldValue('concessionPolicyId', '');
-                              setFieldValue('concessionPolicyVersionId', '');
-                              setFieldValue('dueFeeEntries', {});
-                            }}
-                            getOptionLabel={(option: any) => option.name || ''}
-                            renderOption={(props, option: any) => (
-                              <li {...props} key={option.studentId}>
-                                {option.name}
-                              </li>
-                            )}
-                            renderInput={(params) => (
-                              <TextField
-                                {...params}
-                                size="small"
-                                label="Student *"
-                                fullWidth
-                                error={!!errors.studentId && touched.studentId}
-                                helperText={
-                                  ((touched.studentId && errors.studentId) as string) || undefined
-                                }
-                              />
-                            )}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                    </Grid>
-                  </FormSectionCard>
-                </Grid>
-                {requestContext?.assignmentSelectionRequired && (
+            <FormBusyRegion busy={isSaving} label="Saving concession request…">
+              <Box
+                sx={{
+                  p: { xs: 1.5, sm: 2 },
+                  containerType: 'inline-size',
+                  '& .MuiCard-root': { boxShadow: 'none' },
+                }}
+              >
+                <Grid container spacing={2}>
+                  {/* 1. Student Information */}
                   <Grid size={{ xs: 12 }}>
                     <FormSectionCard
-                      descriptionTooltip="Choose the fee assignment whose dues this concession will apply to."
-                      icon="solar:bill-list-bold-duotone"
-                      title="Fee assignment"
+                      descriptionTooltip="Select the board, medium, class, division, and student for this request."
+                      icon="solar:users-group-rounded-bold-duotone"
+                      title="Student Information"
+                      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
                     >
-                      <CustomSelect
-                        size="small"
-                        label="Fee assignment *"
-                        options={requestContext.assignments.map((assignment) => ({
-                          ...assignment,
-                          displayName: `${assignment.feeStructureName} (${new Date(
-                            assignment.chargeStartDate
-                          ).toLocaleDateString('en-IN')} – ${new Date(
-                            assignment.chargeEndDate
-                          ).toLocaleDateString('en-IN')})`,
-                        }))}
-                        labelKey="displayName"
-                        valueKey="studentFeeStructureId"
-                        value={selectedAssignmentId}
-                        onChange={(value) => {
-                          setSelectedAssignmentId(String(value));
-                          setFieldValue('concessionPolicyId', '');
-                          setFieldValue('concessionPolicyVersionId', '');
-                          setFieldValue('concessionTypeId', '');
-                          setFieldValue('selectedFeeHeads', {});
-                          setFieldValue('valueEntries', {});
-                          setFieldValue('dueFeeEntries', {});
-                          setFieldValue('concessionTypeDocuments', []);
-                        }}
-                      />
-                    </FormSectionCard>
-                  </Grid>
-                )}
-                {/* Fee structure loading skeleton */}
-                {values.studentId && feeStructureLoading && (
-                  <Grid size={{ xs: 12 }}>
-                    <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
-                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                        <Skeleton variant="rounded" width={36} height={36} />
-                        <Box>
-                          <Skeleton variant="text" width={160} height={20} />
-                        </Box>
-                      </Stack>
-                      <Grid container spacing={1.5}>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                          <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
+                            <CustomSelect
+                              size="small"
+                              label="Board"
+                              name="boardId"
+                              required
+                              onBlur={() => setFieldTouched('boardId', true)}
+                              options={boards}
+                              labelKey="name"
+                              valueKey="id"
+                              value={values.boardId}
+                              disabled={isEditMode}
+                              onChange={(val) => {
+                                const board = boards.find((b) => b.id === val);
+                                setFieldValue('boardId', val);
+                                setFieldTouched('boardId', false);
+                                setFieldValue('boardName', board?.name || '');
+                                setFieldValue('mediumId', '');
+                                setFieldValue('mediumName', '');
+                                setFieldValue('standardId', '');
+                                setFieldValue('standardName', '');
+                                setFieldValue('divisionId', '');
+                                setFieldValue('divisionName', '');
+                                setFieldValue('studentId', '');
+                                setFieldValue('studentName', '');
+                                setFieldValue('selectedStudent', null);
+                              }}
+                              error={!!errors.boardId && touched.boardId}
+                              helperText={
+                                ((touched.boardId && errors.boardId) as string) || undefined
+                              }
+                            />
+                          </ShakingTextField>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                          <ShakingTextField error={!!(touched.mediumId && errors.mediumId)}>
+                            <CustomSelect
+                              size="small"
+                              label="Medium"
+                              name="mediumId"
+                              required
+                              onBlur={() => setFieldTouched('mediumId', true)}
+                              disabled={isEditMode || !values.boardId}
+                              options={mediums}
+                              labelKey="name"
+                              valueKey="id"
+                              value={values.mediumId}
+                              onChange={(val) => {
+                                const medium = mediums.find((m) => m.id === val);
+                                setFieldValue('mediumId', val);
+                                setFieldTouched('mediumId', false);
+                                setFieldValue('mediumName', medium?.name || '');
+                                setFieldValue('standardId', '');
+                                setFieldValue('standardName', '');
+                                setFieldValue('divisionId', '');
+                                setFieldValue('divisionName', '');
+                                setFieldValue('studentId', '');
+                                setFieldValue('studentName', '');
+                                setFieldValue('selectedStudent', null);
+                              }}
+                              error={!!errors.mediumId && touched.mediumId}
+                              helperText={
+                                ((touched.mediumId && errors.mediumId) as string) || undefined
+                              }
+                            />
+                          </ShakingTextField>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                          <ShakingTextField error={!!(touched.standardId && errors.standardId)}>
+                            <CustomSelect
+                              size="small"
+                              label="Class"
+                              name="standardId"
+                              required
+                              onBlur={() => setFieldTouched('standardId', true)}
+                              disabled={isEditMode || !values.mediumId}
+                              options={classes || []}
+                              isLoading={classLoading}
+                              labelKey="name"
+                              valueKey="id"
+                              value={values.standardId}
+                              onChange={(val) => {
+                                const standard = classes?.find((c: any) => c.id === val);
+                                setFieldValue('standardId', val);
+                                setFieldTouched('standardId', false);
+                                setFieldValue('standardName', standard?.name || '');
+                                setFieldValue('divisionId', '');
+                                setFieldValue('divisionName', '');
+                                setFieldValue('studentId', '');
+                                setFieldValue('studentName', '');
+                                setFieldValue('selectedStudent', null);
+                              }}
+                              error={!!errors.standardId && touched.standardId}
+                              helperText={
+                                ((touched.standardId && errors.standardId) as string) || undefined
+                              }
+                            />
+                          </ShakingTextField>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                          <ShakingTextField error={!!(touched.divisionId && errors.divisionId)}>
+                            <CustomSelect
+                              size="small"
+                              label="Division"
+                              name="divisionId"
+                              required
+                              onBlur={() => setFieldTouched('divisionId', true)}
+                              disabled={isEditMode || !values.standardId}
+                              options={allDivisions}
+                              labelKey="name"
+                              valueKey="id"
+                              value={values.divisionId}
+                              onChange={(val) => {
+                                const division = allDivisions.find((d) => d.id === val);
+                                setFieldValue('divisionId', val);
+                                setFieldTouched('divisionId', false);
+                                setFieldValue('divisionName', division?.name || '');
+                                setFieldValue('studentId', '');
+                                setFieldValue('studentName', '');
+                                setFieldValue('selectedStudent', null);
+                              }}
+                              error={!!errors.divisionId && touched.divisionId}
+                              helperText={
+                                ((touched.divisionId && errors.divisionId) as string) || undefined
+                              }
+                            />
+                          </ShakingTextField>
                         </Grid>
                         <Grid size={{ xs: 12 }}>
-                          <Skeleton variant="rounded" height={60} sx={{ borderRadius: 1 }} />
-                        </Grid>
-                      </Grid>
-                    </Paper>
-                  </Grid>
-                )}
-
-                {/* No Fee Structure assigned alert */}
-                {values.studentId && !feeStructureLoading && noFeeStructureError && (
-                  <Grid size={{ xs: 12 }}>
-                    <Paper
-                      variant="outlined"
-                      sx={{
-                        p: 2,
-                        mb: 1.5,
-                        borderRadius: 2,
-                        border: '1.5px solid',
-                        borderColor: 'warning.main',
-                        bgcolor: 'warning.lighter',
-                        display: 'flex',
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        alignItems: 'flex-start',
-                        gap: 1.5,
-                      }}
-                    >
-                      <Iconify
-                        icon="solar:danger-triangle-bold-duotone"
-                        width={24}
-                        sx={{ color: 'warning.dark', flexShrink: 0, mt: 0.25 }}
-                      />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="subtitle2" color="warning.dark">
-                          Fee structure assignment required
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" mt={0.25}>
-                          {FEE_STRUCTURE_ASSIGNMENT_MESSAGE}
-                        </Typography>
-                      </Box>
-                      {canOpenFeeStructureAssignment && (
-                        <Button
-                          variant="contained"
-                          color="warning"
-                          size="small"
-                          startIcon={<Iconify icon="mdi:file-document-edit-outline" />}
-                          onClick={() => router.push(financePaths.fees.structureAssign)}
-                          sx={{ flexShrink: 0 }}
-                        >
-                          Assign Fee Structure
-                        </Button>
-                      )}
-                    </Paper>
-                  </Grid>
-                )}
-
-                {previewIsError && previewReady && (
-                  <Grid size={{ xs: 12 }}>
-                    <Alert severity="error">
-                      {(previewError as any)?.data?.error?.message ||
-                        (previewError as any)?.data?.message ||
-                        'The server could not calculate this concession. Review the selected heads and values.'}
-                    </Alert>
-                  </Grid>
-                )}
-
-                {/* 2. Concession Details */}
-                {values.studentId && !feeStructureLoading && !noFeeStructureError && (
-                  <Grid size={{ xs: 12 }}>
-                    <FormSectionCard
-                      descriptionTooltip="Choose the concession policy and type, then add remarks for the request."
-                      icon="solar:tag-price-bold-duotone"
-                      title="Concession details"
-                    >
-                      <Grid container spacing={1.5}>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <ShakingTextField
-                            error={!!(touched.concessionPolicyId && errors.concessionPolicyId)}
-                          >
+                          <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
                             <Autocomplete
                               size="small"
-                              options={concessionPoliciesList}
-                              disabled={feeStructureLoading || !requestContext}
-                              value={selectedPolicy || null}
-                              onChange={(_, newValue) => {
-                                setFieldValue(
-                                  'concessionPolicyId',
-                                  newValue?.concessionPolicyId || ''
-                                );
-                                setFieldValue(
-                                  'concessionPolicyVersionId',
-                                  newValue?.concessionPolicyVersionId || ''
-                                );
-                                setFieldValue('selectedFeeHeads', {});
-                                setFieldValue('valueEntries', {});
+                              loading={studentLoading || studentFetching}
+                              noOptionsText={
+                                studentsError ? 'Unable to load students' : 'No Student Found'
+                              }
+                              fullWidth
+                              disabled={isEditMode || !values.divisionId}
+                              options={studentOptions}
+                              value={
+                                studentOptions.find((s) => s.studentId === values.studentId) ||
+                                (isEditMode && values.studentId
+                                  ? { studentId: values.studentId, name: values.studentName }
+                                  : null)
+                              }
+                              isOptionEqualToValue={(option, value) =>
+                                option.studentId === value.studentId
+                              }
+                              onChange={(_e, value: any) => {
+                                setSelectedAssignmentId('');
+                                setFieldValue('studentId', value?.studentId || '');
+                                setFieldTouched('studentId', false);
+                                setFieldValue('studentName', value?.name || '');
+                                setFieldValue('selectedStudent', value || null);
+                                setFieldValue('concessionPolicyId', '');
+                                setFieldValue('concessionPolicyVersionId', '');
                                 setFieldValue('dueFeeEntries', {});
                               }}
-                              getOptionLabel={(option) =>
-                                `${option.policyName} (${option.policyCode}, v${option.version})`
-                              }
+                              getOptionLabel={(option: any) => option.name || ''}
+                              renderOption={(props, option: any) => (
+                                <li {...props} key={option.studentId}>
+                                  {option.name}
+                                </li>
+                              )}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
                                   size="small"
-                                  label="Concession policy *"
+                                  label="Student"
+                                  name="studentId"
+                                  required
+                                  onBlur={formik.handleBlur}
                                   fullWidth
-                                  error={!!errors.concessionPolicyId && touched.concessionPolicyId}
+                                  error={!!errors.studentId && touched.studentId}
                                   helperText={
-                                    (!values.studentId
-                                      ? 'Choose a student to load policies.'
-                                      : feeStructureIsError
-                                        ? 'Could not load concession policies. Retry or check the student fee assignment.'
-                                        : feeStructureLoading
-                                          ? 'Loading active policies…'
-                                          : !requestContext
-                                            ? 'Select the student fee assignment to continue.'
-                                            : concessionPoliciesList.length === 0
-                                              ? 'No active concession policy for this academic year.'
-                                              : ((touched.concessionPolicyId &&
-                                                  errors.concessionPolicyId) as string)) ||
-                                    undefined
+                                    ((touched.studentId && errors.studentId) as string) || undefined
                                   }
                                 />
                               )}
                             />
                           </ShakingTextField>
-                          {feeStructureIsError && values.studentId && (
-                            <Button size="small" onClick={() => refetchRequestContext()}>
-                              Retry loading policies
-                            </Button>
-                          )}
                         </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <ShakingTextField
-                            error={!!(touched.concessionTypeId && errors.concessionTypeId)}
+                      </Grid>
+                    </FormSectionCard>
+                  </Grid>
+                  {requestContext?.assignmentSelectionRequired && (
+                    <Grid size={{ xs: 12 }}>
+                      <FormSectionCard
+                        descriptionTooltip="Choose the fee assignment whose dues this concession will apply to."
+                        icon="solar:bill-list-bold-duotone"
+                        title="Fee assignment"
+                      >
+                        <CustomSelect
+                          size="small"
+                          label="Fee assignment *"
+                          options={requestContext.assignments.map((assignment) => ({
+                            ...assignment,
+                            displayName: `${assignment.feeStructureName} (${new Date(
+                              assignment.chargeStartDate
+                            ).toLocaleDateString('en-IN')} – ${new Date(
+                              assignment.chargeEndDate
+                            ).toLocaleDateString('en-IN')})`,
+                          }))}
+                          labelKey="displayName"
+                          valueKey="studentFeeStructureId"
+                          value={selectedAssignmentId}
+                          onChange={(value) => {
+                            setSelectedAssignmentId(String(value));
+                            setFieldValue('concessionPolicyId', '');
+                            setFieldValue('concessionPolicyVersionId', '');
+                            setFieldValue('concessionTypeId', '');
+                            setFieldValue('selectedFeeHeads', {});
+                            setFieldValue('valueEntries', {});
+                            setFieldValue('dueFeeEntries', {});
+                            setFieldValue('concessionTypeDocuments', []);
+                          }}
+                        />
+                      </FormSectionCard>
+                    </Grid>
+                  )}
+                  {/* Fee structure loading skeleton */}
+                  {values.studentId && feeStructureLoading && (
+                    <Grid size={{ xs: 12 }}>
+                      <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+                        <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                          <Skeleton variant="rounded" width={36} height={36} />
+                          <Box>
+                            <Skeleton variant="text" width={160} height={20} />
+                          </Box>
+                        </Stack>
+                        <Grid container spacing={2}>
+                          <Grid size={{ xs: 12, md: 6 }}>
+                            <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <Skeleton variant="rounded" height={60} sx={{ borderRadius: 1 }} />
+                          </Grid>
+                        </Grid>
+                      </Paper>
+                    </Grid>
+                  )}
+
+                  {/* No Fee Structure assigned alert */}
+                  {values.studentId && !feeStructureLoading && noFeeStructureError && (
+                    <Grid size={{ xs: 12 }}>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 2,
+                          mb: 1.5,
+                          borderRadius: 2,
+                          border: '1.5px solid',
+                          borderColor: 'warning.main',
+                          bgcolor: 'warning.lighter',
+                          display: 'flex',
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          alignItems: 'flex-start',
+                          gap: 1.5,
+                        }}
+                      >
+                        <Iconify
+                          icon="solar:danger-triangle-bold-duotone"
+                          width={24}
+                          sx={{ color: 'warning.dark', flexShrink: 0, mt: 0.25 }}
+                        />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="subtitle2" color="warning.dark">
+                            Fee structure assignment required
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" mt={0.25}>
+                            {FEE_STRUCTURE_ASSIGNMENT_MESSAGE}
+                          </Typography>
+                        </Box>
+                        {canOpenFeeStructureAssignment && (
+                          <Button
+                            variant="contained"
+                            color="warning"
+                            size="small"
+                            startIcon={<Iconify icon="mdi:file-document-edit-outline" />}
+                            onClick={() => router.push(financePaths.fees.structureAssign)}
+                            sx={{ flexShrink: 0 }}
                           >
-                            <Autocomplete
-                              size="small"
-                              options={concessionTypesList}
-                              value={
-                                concessionTypesList.find(
-                                  (ct: any) => ct.id === values.concessionTypeId
-                                ) ||
-                                (isEditMode
-                                  ? {
-                                      id: values.concessionTypeId,
-                                      name: concessionData?.data?.concessionTypeName || '',
-                                    }
-                                  : null)
+                            Assign Fee Structure
+                          </Button>
+                        )}
+                      </Paper>
+                    </Grid>
+                  )}
+
+                  {previewIsError && previewReady && (
+                    <Grid size={{ xs: 12 }}>
+                      <Alert severity="error">
+                        {concessionErrorMessage(
+                          previewError,
+                          'The server could not calculate this concession. Review the selected heads and values.'
+                        )}
+                      </Alert>
+                    </Grid>
+                  )}
+
+                  {values.studentId && !feeStructureLoading && !noFeeStructureError && (
+                    <Grid size={{ xs: 12 }}>
+                      <ConcessionRequestWorkspace
+                        key={`${values.studentId}:${values.concessionPolicyVersionId}:${
+                          values.concessionTypeId
+                        }`}
+                        policyFields={
+                          <Stack spacing={1}>
+                            <ConcessionPolicyFields
+                              policies={concessionPoliciesList}
+                              types={
+                                isEditMode &&
+                                values.concessionTypeId &&
+                                !concessionTypesList.some(
+                                  (type) => type.id === values.concessionTypeId
+                                )
+                                  ? [
+                                      ...concessionTypesList,
+                                      {
+                                        id: values.concessionTypeId,
+                                        name: concessionData?.data?.concessionTypeName || '',
+                                      },
+                                    ]
+                                  : concessionTypesList
                               }
-                              onChange={(_, newValue: any) => {
-                                setFieldValue('concessionTypeId', newValue?.id || '');
+                              policyVersionId={values.concessionPolicyVersionId}
+                              typeId={values.concessionTypeId}
+                              onPolicyChange={(policy) => {
+                                setFieldValue(
+                                  'concessionPolicyId',
+                                  policy?.concessionPolicyId || ''
+                                );
+                                setFieldValue(
+                                  'concessionPolicyVersionId',
+                                  policy?.concessionPolicyVersionId || ''
+                                );
+                                setFieldValue('selectedFeeHeads', {});
+                                setFieldValue('valueEntries', {});
+                                setFieldValue('dueFeeEntries', {});
+                              }}
+                              onTypeChange={(id) => {
+                                setFieldValue('concessionTypeId', id);
                                 setFieldValue('concessionTypeDocuments', []);
                                 setFieldValue('selectedFeeHeads', {});
                                 setFieldValue('valueEntries', {});
                                 setFieldValue('dueFeeEntries', {});
                               }}
-                              disabled={isEditMode}
-                              getOptionLabel={(option: any) => option.name || ''}
-                              renderOption={(props, option: any) => (
-                                <Box
-                                  component="li"
-                                  {...props}
-                                  sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    width: '100%',
-                                  }}
-                                >
-                                  {option.name}
-                                </Box>
+                              onPolicyBlur={() => setFieldTouched('concessionPolicyId', true)}
+                              onTypeBlur={() => setFieldTouched('concessionTypeId', true)}
+                              policyDisabled={isSaving || feeStructureLoading || !requestContext}
+                              typeDisabled={isSaving || isEditMode}
+                              policyError={Boolean(
+                                (touched.concessionPolicyId || formik.submitCount > 0) &&
+                                errors.concessionPolicyId
                               )}
-                              renderInput={(params) => (
-                                <TextField
-                                  {...params}
-                                  size="small"
-                                  label="Concession type *"
-                                  fullWidth
-                                  error={!!errors.concessionTypeId && touched.concessionTypeId}
-                                  helperText={
-                                    ((touched.concessionTypeId &&
-                                      errors.concessionTypeId) as string) || undefined
-                                  }
+                              typeError={Boolean(
+                                (touched.concessionTypeId || formik.submitCount > 0) &&
+                                errors.concessionTypeId
+                              )}
+                              policyHelperText={
+                                feeStructureIsError
+                                  ? 'Could not load concession policies. Retry or check the student fee assignment.'
+                                  : !requestContext
+                                    ? 'Select the student fee assignment to continue.'
+                                    : concessionPoliciesList.length === 0
+                                      ? 'No active concession policy for this academic year.'
+                                      : touched.concessionPolicyId || formik.submitCount > 0
+                                        ? errors.concessionPolicyId
+                                        : undefined
+                              }
+                              typeHelperText={
+                                touched.concessionTypeId || formik.submitCount > 0
+                                  ? errors.concessionTypeId
+                                  : undefined
+                              }
+                            />
+                            {feeStructureIsError && values.studentId && (
+                              <Button
+                                size="small"
+                                disabled={isSaving}
+                                startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                                onClick={() => refetchRequestContext()}
+                              >
+                                Retry loading policies
+                              </Button>
+                            )}
+                          </Stack>
+                        }
+                        feeHeads={
+                          feeHeads.length > 0
+                            ? feeHeads
+                            : isEditMode
+                              ? (concessionData?.data?.feeHeadConcessions || []).map(
+                                  (head: any) => ({
+                                    feeHeadId: head.feeHeadId,
+                                    feeHeadName: head.feeHeadName,
+                                    amount: head.annualBaseAmount ?? head.amount ?? 0,
+                                  })
+                                )
+                              : []
+                        }
+                        installments={requestContext?.eligibleDueFees || []}
+                        selectedIds={values.selectedFeeHeads[values.concessionTypeId] || []}
+                        onToggle={(id) => handleFeeHeadToggle(values.concessionTypeId, id)}
+                        policy={selectedPolicy}
+                        preview={authoritativePreview}
+                        loading={previewLoading}
+                        missingDocumentNames={missingRequiredDocuments.map(
+                          (document) => document.documentName
+                        )}
+                        feeSelectionMessage={
+                          !values.concessionPolicyId ? (
+                            <Typography color="text.secondary" variant="body2">
+                              Select a concession policy to load eligible fees.
+                            </Typography>
+                          ) : !values.concessionTypeId ? (
+                            <Typography color="text.secondary" variant="body2">
+                              Select a concession type to map fee heads.
+                            </Typography>
+                          ) : feeStructureFetching ? (
+                            <Typography color="text.secondary" variant="body2">
+                              Loading eligible installments…
+                            </Typography>
+                          ) : feeHeads.length === 0 &&
+                            !(isEditMode && concessionData?.data?.feeHeadConcessions?.length) ? (
+                            <Alert severity="error">
+                              {requestContext?.blockers?.[0] ||
+                                'No outstanding fee heads are eligible for this policy and fee assignment.'}
+                            </Alert>
+                          ) : undefined
+                        }
+                        valueFields={
+                          values.concessionTypeId && hasSelectedFeeHeads ? (
+                            <Box>
+                              {selectedPolicy?.valueSource !== 'PolicyFixed' && (
+                                <FormSectionHeader
+                                  title="Concession Values"
+                                  titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                                  icon={GlobalIcons.usage}
+                                  descriptionTooltip="Enter concession values for the selected eligible installments."
                                 />
                               )}
+                              <ValueEntryStep
+                                showPolicyFixedDetails={false}
+                                formik={{
+                                  ...formik,
+                                  values: {
+                                    ...formik.values,
+                                    concessionTypeIds: [formik.values.concessionTypeId],
+                                  },
+                                }}
+                                concessionTypes={concessionTypesList}
+                                requestContext={requestContext}
+                                policy={selectedPolicy}
+                                preview={authoritativePreview ?? undefined}
+                              />
+                            </Box>
+                          ) : undefined
+                        }
+                        documents={
+                          values.concessionTypeId ? (
+                            <ConcessionDocumentList
+                              concessionId={values.concessionTypeId}
+                              concessionName={selectedConcessionType?.name || ''}
+                              submittedDocuments={getSubmittedDocs(values.concessionTypeId)}
+                              onSave={(newDocs) => handleSaveDocs(values.concessionTypeId, newDocs)}
+                              requirements={selectedTypeRequirements}
+                              canUpload={canUploadDocuments}
+                              canView={canViewDocuments}
                             />
-                          </ShakingTextField>
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
+                          ) : undefined
+                        }
+                        remarks={
                           <TextField
                             fullWidth
                             size="small"
                             multiline
                             rows={2}
                             label="Remarks (optional)"
+                            name="remarks"
+                            onBlur={formik.handleBlur}
                             value={values.remarks}
-                            onChange={(e) => setFieldValue('remarks', e.target.value)}
+                            onChange={(event) => setFieldValue('remarks', event.target.value)}
                           />
-                        </Grid>
-                      </Grid>
-                    </FormSectionCard>
-                  </Grid>
-                )}
-
-                {/* 4. Fee Head Mapping */}
-                {values.studentId && !feeStructureLoading && !noFeeStructureError && (
-                  <Grid size={{ xs: 12 }}>
-                    <FormSectionCard
-                      descriptionTooltip="Select fee heads; the selection applies to every eligible installment shown below."
-                      icon="solar:bill-list-bold-duotone"
-                      title="Fee Heads"
-                      action={
-                        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                          Selected eligible total:{' '}
-                          <strong>{formatNumber(selectedEligibleTotal, 'INR')}</strong>
-                        </Typography>
-                      }
-                    >
-                      {!values.concessionPolicyId ? (
-                        <Typography color="text.secondary" textAlign="center" py={2}>
-                          Please select a concession policy above to calculate eligible fee heads.
-                        </Typography>
-                      ) : !values.concessionTypeId ? (
-                        <Typography color="text.secondary" textAlign="center" py={2}>
-                          Please select a concession type above to map fee heads.
-                        </Typography>
-                      ) : feeStructureFetching ? (
-                        <Typography color="text.secondary" textAlign="center" py={2}>
-                          Loading eligible installments...
-                        </Typography>
-                      ) : (
-                        (() => {
-                          // In edit mode, fall back to feeHeadConcessions from API if feeStructureData hasn't loaded yet
-                          const displayFeeHeads =
-                            feeHeads.length > 0
-                              ? feeHeads
-                              : isEditMode
-                                ? (concessionData?.data?.feeHeadConcessions || []).map(
-                                    (fhc: any) => ({
-                                      feeHeadId: fhc.feeHeadId,
-                                      feeHeadName: fhc.feeHeadName,
-                                      amount: fhc.annualBaseAmount ?? fhc.amount ?? 0,
-                                      categoryName: '',
-                                    })
-                                  )
-                                : [];
-
-                          if (displayFeeHeads.length === 0) {
-                            return (
-                              <Alert severity="error">
-                                {requestContext?.blockers?.[0] ||
-                                  'No outstanding fee heads are eligible for this policy and fee assignment.'}
-                              </Alert>
-                            );
-                          }
-
-                          return (
-                            <ConcessionFeeHeadSelection
-                              feeHeads={displayFeeHeads}
-                              installments={requestContext?.eligibleDueFees || []}
-                              selectedIds={values.selectedFeeHeads[values.concessionTypeId] || []}
-                              onToggle={(id) => handleFeeHeadToggle(values.concessionTypeId, id)}
-                            />
-                          );
-                        })()
-                      )}
-                    </FormSectionCard>
-                  </Grid>
-                )}
-
-                {/* 5. Concession Values */}
-                {values.studentId && values.concessionTypeId && hasSelectedFeeHeads && (
-                  <Grid size={{ xs: 12 }}>
-                    <FormSectionCard
-                      descriptionTooltip="Enter concession amounts per fee head and review the eligible installments."
-                      icon="solar:calculator-bold-duotone"
-                      title="Concession Values"
-                    >
-                      <ValueEntryStep
-                        formik={{
-                          ...formik,
-                          values: {
-                            ...formik.values,
-                            concessionTypeIds: [formik.values.concessionTypeId],
-                          },
-                        }}
-                        concessionTypes={concessionTypesList}
-                        requestContext={requestContext}
-                        policy={selectedPolicy}
-                        preview={authoritativePreview ?? undefined}
+                        }
                       />
-                    </FormSectionCard>
-                  </Grid>
-                )}
-
-                {values.studentId && values.concessionTypeId && hasSelectedFeeHeads && (
-                  <Grid size={{ xs: 12 }}>
-                    <ConcessionImpactSummary
-                      preview={authoritativePreview}
-                      loading={previewLoading}
-                      concessionName={selectedConcessionType?.name}
-                      selectedFeeHeadCount={selectedFeeHeadCount}
-                    />
-                  </Grid>
-                )}
-
-                {/* 7. Documents */}
-                {values.concessionTypeId && (
-                  <Grid size={{ xs: 12 }}>
-                    <FormSectionCard
-                      descriptionTooltip="Upload the required supporting documents for the selected concession type."
-                      icon="solar:document-bold-duotone"
-                      title="Documents"
-                    >
-                      <ConcessionDocumentList
-                        concessionId={values.concessionTypeId}
-                        concessionName={selectedConcessionType?.name || ''}
-                        submittedDocuments={getSubmittedDocs(values.concessionTypeId)}
-                        onSave={(newDocs) => handleSaveDocs(values.concessionTypeId, newDocs)}
-                        requirements={selectedTypeRequirements}
-                        canUpload={canUploadDocuments}
-                        canView={canViewDocuments}
-                      />
-                    </FormSectionCard>
-                  </Grid>
-                )}
-              </Grid>
-            </Box>
+                    </Grid>
+                  )}
+                </Grid>
+              </Box>
+            </FormBusyRegion>
           </Box>
 
           {/* ── Sticky Action Bar ── */}
@@ -1526,6 +1511,11 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 Approve permission is required to submit an automatically approved concession.
               </Alert>
             )}
+            {submitError && (
+              <Alert severity="error" sx={{ mb: 1 }}>
+                {submitError}
+              </Alert>
+            )}
             <Box
               display="flex"
               alignItems="center"
@@ -1542,7 +1532,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
               >
                 <Button
                   startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                  onClick={() => onClose(null, false)}
+                  onClick={() => {
+                    if (!isSaving) onClose(null, false);
+                  }}
+                  disabled={isSaving}
                   variant="outlined"
                   size="small"
                 >
@@ -1583,6 +1576,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       !previewReady ||
                       !authoritativePreview ||
                       previewIsError ||
+                      hasInvalidInstallmentValues ||
                       hasMissingRequiredDocuments ||
                       !hasResolvedAssignment
                     }

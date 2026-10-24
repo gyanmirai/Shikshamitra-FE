@@ -57,15 +57,6 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         filterType: 'string',
       },
       {
-        id: 'categoryTags',
-        label: 'Expense Category Tags',
-        minWidth: 200,
-        align: 'left',
-        render(value) {
-          return Array.isArray(value) ? value.join(', ') : '-';
-        },
-      },
-      {
         id: 'amount',
         label: 'Amount',
         align: 'left',
@@ -107,7 +98,8 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
               sticky: true,
               minWidth: 100,
               render: (_value: unknown, row: unknown) => (
-                <AdaptiveThreeDotsActions directActionLimit={3}
+                <AdaptiveThreeDotsActions
+                  directActionLimit={3}
                   actions={[
                     ...(onEdit && !(row as any).isAutomatic
                       ? [

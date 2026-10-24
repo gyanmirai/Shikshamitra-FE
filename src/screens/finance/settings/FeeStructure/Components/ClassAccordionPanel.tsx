@@ -1,4 +1,5 @@
 import { CONFIG } from 'src/config-global';
+import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -172,7 +173,7 @@ export default function ClassAccordionPanel({
   const activeCard = cards.find(({ key }) => key === activeKey)?.card;
   const activeName = (names[activeKey ?? ''] ?? activeCard?.name) || 'New fee structure';
   const structureList = (
-    <Stack sx={{ height: 1, minHeight: 0 }}>
+    <Stack sx={{ height: 1, minHeight: 0, minWidth: 0 }}>
       <Stack
         direction="row"
         alignItems="center"
@@ -188,7 +189,7 @@ export default function ClassAccordionPanel({
         {!desktop && (
           <IconButton
             size="small"
-            aria-label="Close structures"
+            aria-label="Close Structures"
             disabled={busy}
             onClick={() => setListOpen(false)}
           >
@@ -203,18 +204,18 @@ export default function ClassAccordionPanel({
             variant="contained"
             color="inherit"
             fullWidth
-            aria-label="Add structure"
+            aria-label="Add Structure"
             startIcon={<Iconify icon={GlobalIcons.addIcon} />}
             onClick={addNew}
             disabled={busy}
           >
-            Add
+            Add Structure
           </Button>
           <Button
             size="small"
             variant="outlined"
             fullWidth
-            aria-label="Copy structure"
+            aria-label="Copy Structure"
             startIcon={<Iconify icon={GlobalIcons.copy} />}
             onClick={() => {
               setListOpen(false);
@@ -222,7 +223,7 @@ export default function ClassAccordionPanel({
             }}
             disabled={busy}
           >
-            Copy
+            Copy Structure
           </Button>
         </Stack>
       )}
@@ -244,7 +245,7 @@ export default function ClassAccordionPanel({
         />
       </Box>
       <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-        <List aria-label="Fee structures" sx={{ p: 1.5 }}>
+        <List aria-label="Fee structures" sx={{ p: 1.5, minWidth: 0 }}>
           {cards
             .filter(({ card, key }) =>
               ((names[key] ?? card.name) || 'New fee structure')
@@ -256,78 +257,84 @@ export default function ClassAccordionPanel({
               const selected = key === activeKey;
               const unsaved = dirtyKeys.has(key) || (isLocal && !card._id);
               return (
-                <ListItemButton
-                  key={key}
-                  selected={selected}
-                  disabled={busy}
-                  aria-current={selected ? 'true' : undefined}
-                  onClick={() => {
-                    setSelectedKey(key);
-                    setListOpen(false);
-                  }}
-                  sx={(theme) => ({
-                    borderRadius: 2,
-                    minHeight: 56,
-                    gap: 1.5,
-                    p: 1.25,
-                    mb: 1,
-                    bgcolor: 'background.paper',
-                    border: '1px solid',
-                    borderColor: selected ? 'primary.main' : 'transparent',
-                    boxShadow: theme.shadows[selected ? 4 : 1],
-                    transition: theme.transitions.create(
-                      ['background-color', 'border-color', 'box-shadow', 'transform'],
-                      { duration: theme.transitions.duration.shorter }
-                    ),
-                    '&.Mui-selected': { bgcolor: 'action.selected' },
-                    '&:hover, &.Mui-selected:hover': {
-                      bgcolor: 'action.hover',
-                      transform: 'translateY(-2px)',
-                      boxShadow: theme.shadows[3],
-                    },
-                    '&.Mui-focusVisible': {
-                      outline: '2px solid',
-                      outlineColor: 'primary.main',
-                      outlineOffset: 2,
-                    },
-                    '@media (prefers-reduced-motion: reduce)': {
-                      transition: 'none',
-                      '&:hover, &.Mui-selected:hover': { transform: 'none' },
-                    },
-                  })}
-                >
-                  <SvgColor
-                    src={`${CONFIG.site.basePath}/assets/icons/navbar/ic-file.svg`}
-                    width={24}
-                    aria-hidden="true"
-                    sx={{ color: selected ? 'primary.main' : 'text.secondary', flexShrink: 0 }}
-                  />
-                  <CustomTooltip title={name}>
+                <CustomTooltip key={key} title={name} describeChild placement="right">
+                  <ListItemButton
+                    selected={selected}
+                    disabled={busy}
+                    aria-current={selected ? 'true' : undefined}
+                    onClick={() => {
+                      setSelectedKey(key);
+                      setListOpen(false);
+                    }}
+                    sx={(theme) => ({
+                      borderRadius: 2,
+                      minHeight: 56,
+                      minWidth: 0,
+                      display: 'grid',
+                      gridTemplateColumns: '24px minmax(0, 1fr) 8px',
+                      columnGap: 1,
+                      p: 1.25,
+                      mb: 1,
+                      bgcolor: 'background.paper',
+                      border: '1px solid',
+                      borderColor: selected ? 'primary.main' : 'transparent',
+                      transition: theme.transitions.create(['background-color', 'border-color'], {
+                        duration: theme.transitions.duration.shorter,
+                      }),
+                      '&.Mui-selected': {
+                        bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.12),
+                      },
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                      '&.Mui-selected:hover': {
+                        bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
+                      },
+                      '&.Mui-focusVisible': {
+                        outline: '2px solid',
+                        outlineColor: 'primary.main',
+                        outlineOffset: 2,
+                      },
+                      '@media (prefers-reduced-motion: reduce)': {
+                        transition: 'none',
+                      },
+                    })}
+                  >
+                    <SvgColor
+                      src={`${CONFIG.site.basePath}/assets/icons/navbar/ic-file.svg`}
+                      width={24}
+                      aria-hidden="true"
+                      sx={{ color: selected ? 'primary.main' : 'text.secondary', flexShrink: 0 }}
+                    />
                     <Typography
                       variant="subtitle2"
                       noWrap
-                      sx={{ minWidth: 0, flex: 1, color: 'text.secondary' }}
+                      sx={{
+                        minWidth: 0,
+                        color: selected ? 'primary.main' : 'text.primary',
+                        fontWeight: selected ? 700 : 500,
+                      }}
                     >
                       {name}
                     </Typography>
-                  </CustomTooltip>
-                  {unsaved && (
-                    <CustomTooltip title="Unsaved changes">
-                      <Box
-                        component="span"
-                        role="img"
-                        aria-label="Unsaved changes"
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          bgcolor: 'warning.main',
-                          flexShrink: 0,
-                        }}
-                      />
-                    </CustomTooltip>
-                  )}
-                </ListItemButton>
+                    {unsaved && (
+                      <CustomTooltip title="Unsaved changes">
+                        <Box
+                          component="span"
+                          role="img"
+                          aria-label="Unsaved changes"
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            bgcolor: 'warning.main',
+                            flexShrink: 0,
+                          }}
+                        />
+                      </CustomTooltip>
+                    )}
+                  </ListItemButton>
+                </CustomTooltip>
               );
             })}
         </List>
@@ -409,7 +416,7 @@ export default function ClassAccordionPanel({
                 disabled={busy}
                 onClick={addNew}
               >
-                Add structure
+                Add Structure
               </Button>
               <Button
                 size="small"
@@ -418,7 +425,7 @@ export default function ClassAccordionPanel({
                 disabled={busy}
                 onClick={copyDialog.onTrue}
               >
-                Copy structure
+                Copy Structure
               </Button>
             </Stack>
           )}
@@ -457,7 +464,7 @@ export default function ClassAccordionPanel({
               title="No fee structures"
               description={
                 canAdd
-                  ? 'Use Add structure to start configuring fees for this class.'
+                  ? 'Use Add Structure to start configuring fees for this class.'
                   : 'No fee structures are configured for this class.'
               }
               sx={{ flex: 1 }}

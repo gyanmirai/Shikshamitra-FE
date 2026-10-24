@@ -244,11 +244,10 @@ export default function FeeStructureHeadsStep({
               ),
             },
             {
-              cellSx: { textAlign: 'right' as const },
               id: 'amount',
               label: 'Annual amount',
               minWidth: 160,
-              align: 'left',
+              align: 'right',
               isFilter: false,
               isSort: false,
               render: (_value, row) => (
@@ -265,6 +264,7 @@ export default function FeeStructureHeadsStep({
                   <Typography
                     variant="body2"
                     color={row.amountError ? 'error.main' : 'text.primary'}
+                    sx={{ fontVariantNumeric: 'tabular-nums' }}
                   >
                     {row.isVariable
                       ? 'Set during assignment'
@@ -335,7 +335,8 @@ export default function FeeStructureHeadsStep({
               label: 'Actions',
               width: 128,
               minWidth: 128,
-              align: 'left',
+              maxWidth: 128,
+              align: 'center',
               sticky: true,
               stickyPosition: 'right',
               isFilter: false,
@@ -343,9 +344,10 @@ export default function FeeStructureHeadsStep({
               excludeFromExport: true,
               render: (_value, row) => (
                 <AdaptiveThreeDotsActions
-                  directActionLimit={3}
+                  directActionLimit={2}
                   collapseOnOverflow={false}
                   moreLabel={`More actions for ${row.feeHeadName}`}
+                  sx={{ justifyContent: 'center' }}
                   actions={[
                     ...(writable
                       ? [
@@ -353,7 +355,7 @@ export default function FeeStructureHeadsStep({
                             id: 'edit',
                             label: `Edit ${row.feeHeadName}`,
                             icon: GlobalIcons.edit,
-                            tooltip: 'Edit fee head',
+                            tooltip: 'Edit Fee Head',
                             disabled: busy,
                             onClick: () => {
                               setEditingLine(
@@ -366,7 +368,7 @@ export default function FeeStructureHeadsStep({
                             id: 'remove',
                             label: `Delete ${row.feeHeadName}`,
                             icon: GlobalIcons.delete,
-                            tooltip: 'Delete fee head',
+                            tooltip: 'Delete Fee Head',
                             color: 'error.main',
                             disabled: busy,
                             onClick: () => setRemovingLine(row as StructureLine),
@@ -435,7 +437,7 @@ export default function FeeStructureHeadsStep({
               }
             }}
           >
-            Delete fee head
+            Delete Fee Head
           </Button>
         }
       />

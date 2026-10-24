@@ -62,6 +62,8 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 
 Stepper navigation preserves the parent candidate without a leave prompt. The horizontal steps fit the workspace width without a horizontal scrollbar; the active body retains its own scrolling. The nested schedule dialog opts out of the global leave prompt through `guardUnsavedChanges={false}`. Leaving the workspace or switching class uses the shared confirmation dialog and the actual aggregate dirty state.
 
+This workspace uses Title Case action labels by explicit product request, including Add Structure, Copy Structure, Add Fee Head, Save Draft, and nested confirmation actions. Other modules retain their existing copy convention. Structure navigation reserves separate icon/name/status columns, uses an accent selected state, and truncates long names with the full name available on hover or keyboard focus. The shared horizontal stepper sizes its buttons within each step including padding; its footer wraps on narrow screens. Default shared accordions use a chevron that rotates with expansion.
+
 Fee-head columns allocate flexible width to the name, right-align annual amounts, show payment-term identity as payment frequency, and keep a compact sticky Actions column. Policy coverage uses proportional column widths. Review installments are grouped by fee head so its name and term version appear once per group; demand date and allocation percentage remain available through Show Details. The fee-head View dialog shows every installment's dates, allocations and calculated amounts as readable values. All setup/review tables disable irrelevant sorting/filtering. Readiness keeps every server blocker visible and offers navigation to the relevant step; policy mismatch guidance is also shown on Policies when exact-version coverage is available.
 
 Metadata list pagination/search uses the server. Empty, loading and error states are distinct. Settings refresh preserves unsaved changes and invalidates the previous readiness result. Parent refetch never overwrites a dirty card. Out-of-order previews are discarded using an editor generation counter. Publication is disabled for an unsaved or unreviewed draft.
@@ -101,6 +103,8 @@ npm run docs:check
 ```
 
 `e2e/fixtures/fee-structure/` is a standalone component-verification fixture with synthetic API responses. It renders the actual editor, theme, tables, selects and dialogs, and is not an App Router route or production API fallback.
+
+Run `node node_modules/@playwright/test/cli.js test --config e2e/finance/fee-structure-layout.config.ts` for layout regressions at 1440, 768, and 390 pixels in light and dark themes. It checks stepper overflow, amount header/cell boundaries, action alignment, long-name containment, keyboard tooltips, and draft preservation across steps. This local configuration uses installed Microsoft Edge.
 
 ```powershell
 node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin/vite.js --config e2e/fixtures/fee-structure/vite.config.mts

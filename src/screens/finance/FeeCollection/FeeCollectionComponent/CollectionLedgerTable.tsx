@@ -9,9 +9,8 @@ import { Iconify } from 'src/components/iconify';
 import CancelButton from 'src/components/cancel-button';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailGrid, DetailField } from 'src/components/detail-view';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import {
   Box,
   Stack,
@@ -39,14 +38,6 @@ import type { FeeLedgerListProps } from './FeeLedgerList';
 import type { IFeeCharge, SelectedItem, MonthWiseFeeItem } from '../Components/type';
 
 export type CollectionLayout = 'ledger' | 'period' | 'wide';
-
-// This contextual view uses sentence-case, secondary labels from the detail-view rulebook.
-const detailFieldProps = {
-  labelTypographyProps: {
-    color: 'text.secondary',
-    sx: { fontWeight: 'fontWeightRegular', letterSpacing: 'normal', textTransform: 'none' },
-  },
-} as const;
 
 type LedgerRow = MonthWiseFeeItem & {
   id: string;
@@ -461,107 +452,61 @@ export default function CollectionLedgerTable({
         {detail && (
           <DialogScrollContent>
             <Stack spacing={2}>
-              <FormSectionCard
-                descriptionTooltip="The due period, installment, and current payment status of this entry."
+              <DetailSection
+                helpText="The due period, installment, and current payment status of this entry."
                 title={detail.charge ? 'Charge Details' : 'Fee Details'}
                 icon={GlobalIcons.calendar}
-                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-
-                sx={{ containerType: 'inline-size', boxShadow: 'none' }}
+                action={
+                  <Label color={FeeCollectionStatusTypeColors[detail.status] ?? 'default'}>
+                    {detail.charge
+                      ? chargeCollectionStatusLabel(detail.status)
+                      : feeInstallmentStatusLabel(detail.status)}
+                  </Label>
+                }
               >
                 <DetailGrid>
-                  <DetailField
-                    {...detailFieldProps}
-                    label="Due period"
-                    value={detail.periodLabel}
-                  />
-                  <DetailField
-                    {...detailFieldProps}
-                    label="Installment"
-                    value={detail.installmentLabel}
-                  />
-                  <DetailField
-                    {...detailFieldProps}
-                    label="Status"
-                    value={
-                      <Label color={FeeCollectionStatusTypeColors[detail.status] ?? 'default'}>
-                        {detail.charge
-                          ? chargeCollectionStatusLabel(detail.status)
-                          : feeInstallmentStatusLabel(detail.status)}
-                      </Label>
-                    }
-                  />
+                  <DetailField label="Due period" value={detail.periodLabel} />
+                  <DetailField label="Installment" value={detail.installmentLabel} />
                 </DetailGrid>
-              </FormSectionCard>
-              <FormSectionCard
-                descriptionTooltip="Recorded fee or charge amounts, payments, outstanding balance, and applicable concessions, waivers, refunds, or proration. All amounts are in INR."
+              </DetailSection>
+              <DetailSection
+                helpText="Recorded fee or charge amounts, payments, outstanding balance, and applicable concessions, waivers, refunds, or proration. All amounts are in INR."
                 title="Amount Breakdown"
                 icon={GlobalIcons.receiptIcon}
-                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-
-                sx={{
-                  containerType: 'inline-size',
-                  boxShadow: 'none',
-                  fontVariantNumeric: 'tabular-nums',
-                }}
+                sx={{ fontVariantNumeric: 'tabular-nums' }}
               >
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  spacing={2}
-                  sx={{ p: 1.5, bgcolor: 'background.neutral', borderRadius: 1 }}
-                >
-                  <Typography variant="body2">Outstanding amount</Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{ overflowWrap: 'anywhere', minWidth: 0, textAlign: 'right' }}
-                  >
-                    {formatNumber(detail.outstanding, 'INR')}
-                  </Typography>
-                </Stack>
                 <DetailGrid>
                   <DetailField
-                    {...detailFieldProps}
-                    label="Total"
-                    value={formatNumber(detail.total, 'INR')}
+                    label="Outstanding amount"
+                    value={formatNumber(detail.outstanding, 'INR')}
                   />
+                  <DetailField label="Total" value={formatNumber(detail.total, 'INR')} />
+                  <DetailField label="Paid" value={formatNumber(detail.paid, 'INR')} />
                   <DetailField
-                    {...detailFieldProps}
-                    label="Paid"
-                    value={formatNumber(detail.paid, 'INR')}
-                  />
-                  <DetailField
-                    {...detailFieldProps}
                     label="Outstanding principal"
                     value={formatNumber(detail.due, 'INR')}
                   />
                   <DetailField
-                    {...detailFieldProps}
                     label="Reconciliation amount"
                     value={formatNumber(detail.reconciliationAmount ?? 0, 'INR')}
                   />
                   <DetailField
-                    {...detailFieldProps}
                     label="Concession"
                     value={formatNumber(detail.concessionAmount ?? 0, 'INR')}
                   />
                   <DetailField
-                    {...detailFieldProps}
                     label="Late fee"
                     value={formatNumber(detail.lateFeeAmount ?? 0, 'INR')}
                     secondary={detail.lateFeeExplanation}
                   />
                   {detail.lateFeeWaivedAmount != null && (
                     <DetailField
-                      {...detailFieldProps}
                       label="Late fee waived"
                       value={formatNumber(detail.lateFeeWaivedAmount, 'INR')}
                     />
                   )}
                   {detail.refundAmount != null && (
                     <DetailField
-                      {...detailFieldProps}
                       label="Refund"
                       value={formatNumber(detail.refundAmount, 'INR')}
                       secondary={detail.refundDescription}
@@ -569,14 +514,12 @@ export default function CollectionLedgerTable({
                   )}
                   {detail.scheduledTotal != null && (
                     <DetailField
-                      {...detailFieldProps}
                       label="Scheduled total"
                       value={formatNumber(detail.scheduledTotal, 'INR')}
                     />
                   )}
                   {detail.prorationExplanation && (
                     <DetailField
-                      {...detailFieldProps}
                       label="Proration"
                       value={detail.prorationExplanation}
                       secondary={
@@ -589,7 +532,6 @@ export default function CollectionLedgerTable({
                   )}
                   {Number(detail.withdrawalProrationCredit) > 0 && (
                     <DetailField
-                      {...detailFieldProps}
                       label="Withdrawal credit"
                       value={formatNumber(detail.withdrawalProrationCredit ?? 0, 'INR')}
                       secondary={detail.withdrawalProrationExplanation ?? undefined}
@@ -597,7 +539,6 @@ export default function CollectionLedgerTable({
                   )}
                   {detail.charge?.explanation && (
                     <DetailField
-                      {...detailFieldProps}
                       label="Charge explanation"
                       value={detail.charge.explanation}
                       fullWidth
@@ -605,13 +546,12 @@ export default function CollectionLedgerTable({
                   )}
                   {detail.charge?.waivedAmount != null && (
                     <DetailField
-                      {...detailFieldProps}
                       label="Charge waived"
                       value={formatNumber(detail.charge.waivedAmount, 'INR')}
                     />
                   )}
                 </DetailGrid>
-              </FormSectionCard>
+              </DetailSection>
               {allowWaivers &&
                 (detail.charge ? (
                   <FeeWaiverToggle

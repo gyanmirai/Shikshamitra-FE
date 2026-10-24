@@ -143,6 +143,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
         rollNumber: item.rollNumber || '-',
         totalFees: item.totalFees ?? 0,
         paidFees: item.paidFees ?? 0,
+        // The API's pending balance already includes overdue fees.
         pendingFees: item.pendingFees ?? 0,
         overdueFees: item.overdueFees ?? 0,
         totalConcessionAmount: item.totalConcessionAmount ?? 0,
@@ -278,17 +279,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             {
               id: 'pendingFees',
               label: 'Pending Fees',
-              filterType: 'number',
-              align: 'left',
-              isFilter: true,
-              width: 140,
-              minWidth: 120,
-              maxWidth: 170,
-              render: (value: any) => formatNumber(value ?? 0, 'INR'),
-            },
-            {
-              id: 'overdueFees',
-              label: 'Overdue Fees',
               filterType: 'number',
               align: 'left',
               isFilter: true,

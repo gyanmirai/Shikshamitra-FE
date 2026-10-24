@@ -3,8 +3,8 @@
 import React from 'react';
 import { Label } from 'src/components/label';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Box, Tooltip, Checkbox, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
+import { Box, Tooltip, Checkbox, Typography } from '@mui/material';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import {
   FeeCollectionStatusType,
@@ -52,10 +52,11 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
       display="flex"
       alignItems="center"
       gap={1}
-      pl={4}
+      pl={1.5}
       pr={1.5}
       sx={{
-        minHeight: 52,
+        minHeight: 76,
+        py: 1,
         opacity: effectivelyDisabled ? 0.45 : 1,
         cursor: effectivelyDisabled ? 'default' : 'pointer',
         transition: 'background-color 0.15s ease',
@@ -78,6 +79,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
             onChange={onToggle}
             onClick={(e) => e.stopPropagation()}
             sx={{
+              width: 32,
               p: 0.5,
               borderRadius: '5px',
               transition: 'transform 0.15s',
@@ -136,10 +138,13 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
       </Typography>
 
       {/* Refund/Adjustment amount input or placeholder */}
-      <Box sx={{ width: 124, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+      <Box sx={{ width: 148, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
         {isSelected ? (
           <NumericFormatCustom
             size="small"
+            label={isAdj ? 'Adjustment amount' : 'Refund amount'}
+            fullWidth
+            required
             name={`refund-${item.sourceAllocationId || item.dueFeeId}`}
             roundToWholeRupees={false}
             decimalScale={2}
@@ -157,8 +162,10 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
               showInputError
                 ? Number(refundValue) > refundable
                   ? `Max ${formatNumber(refundable, 'INR')}`
-                  : 'Required'
-                : undefined
+                  : refundValue === ''
+                    ? 'Required'
+                    : 'Enter an amount above zero'
+                : ' '
             }
             inputProps={{
               'aria-label': `${isAdj ? 'Adjustment' : 'Refund'} amount for ${item.month}`,
@@ -170,15 +177,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
               },
             }}
             sx={{
-              width: 100,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                fontSize: 12,
-                height: 32,
-                '&.Mui-focused': {
-                  boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.15)}`,
-                },
-              },
+              '& .MuiFormHelperText-root': { mx: 0, textAlign: 'right' },
             }}
           />
         ) : (

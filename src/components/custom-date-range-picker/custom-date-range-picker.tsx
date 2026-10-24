@@ -160,6 +160,9 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
               disabled={
                 !startDate ||
                 !endDate ||
+                !startDate.isValid() ||
+                !endDate.isValid() ||
+                endDate.isBefore(startDate, 'day') ||
                 Boolean(validation.validateDate(startDate) || validation.validateDate(endDate))
               }
             >
@@ -187,6 +190,7 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
         onOpen={handleOpen}
         singleInput={singleInput}
         label={label}
+        name={name}
         startLabel={startLabel}
         endLabel={endLabel}
         placeholder={placeholder}

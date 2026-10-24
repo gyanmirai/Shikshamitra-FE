@@ -46,6 +46,8 @@ export interface IStudentFeeData {
   _voucherNumber?: string;
   _receiptNumber?: string;
   _payoutPending?: boolean;
+  _payoutReference?: string;
+  _paymentDate?: string;
   _workflowVersion?: number;
 }
 
