@@ -9,6 +9,11 @@ import type {
   AdmissionOfferingListItem,
   AdmissionOfferingAvailability,
 } from './admission-offerings-api';
+import type {
+  AdmissionFamilyParent,
+  AdmissionParentContact,
+  AdmissionParentRelationship,
+} from './admission-parent-family-types';
 
 const dashboardTag = { type: studentType.student, id: 'MODULE-DASHBOARD-admissions' } as const;
 const inquiryMutationTags = (_result: unknown, error: unknown) =>
@@ -159,6 +164,8 @@ export type CreateAdmissionInquiry = {
   mediumId: string;
   standardId: string;
   existingFamilyId?: string | null;
+  existingParentApplicantId?: string | null;
+  parentRelationship?: AdmissionParentRelationship;
   createSeparateFamily?: boolean;
   duplicateOverrideReason?: string | null;
   applicantName: string;
@@ -186,6 +193,9 @@ export type DuplicateMatch = {
   guardianEmail?: string | null;
   dateOfBirth?: string | null;
   canLinkFamily?: boolean;
+  parents?: AdmissionFamilyParent[];
+  matchByEmail?: boolean;
+  matchByMobile?: boolean;
 };
 export type UpdateAdmissionInquiry = {
   applicantName: string;
@@ -348,6 +358,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
         admissionCycleId: string;
         guardianPhone: string;
         guardianEmail?: string;
+        parentContacts?: AdmissionParentContact[];
         applicantName: string;
         applicantDateOfBirth?: string;
       }

@@ -62,6 +62,8 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
     mocks.sendCredentials,
     { isLoading: mocks.sending },
   ],
+  useRetryStudentOnboardingParentSetupMutation: () => [vi.fn(), { isLoading: false }],
+  useLinkStudentOnboardingParentMutation: () => [vi.fn(), { isLoading: false }],
 }));
 beforeEach(() => {
   mocks.send.mockReset();

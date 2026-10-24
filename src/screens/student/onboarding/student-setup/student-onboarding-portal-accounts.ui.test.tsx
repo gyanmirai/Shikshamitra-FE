@@ -5,6 +5,7 @@ import type {
 } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import { vi, it, expect, beforeEach } from 'vitest';
+import { shikshaMitraToast } from 'src/components/toast';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
@@ -107,6 +108,8 @@ vi.mock('./guardian-profile-email-dialog', () => ({
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingCredentialsQuery: () => mocks.query,
   useSendStudentOnboardingCredentialsMutation: () => [mocks.send, { isLoading: mocks.sending }],
+  useRetryStudentOnboardingParentSetupMutation: () => [vi.fn(), { isLoading: false }],
+  useLinkStudentOnboardingParentMutation: () => [vi.fn(), { isLoading: false }],
   useGetStudentPortalAccountsQuery: mocks.legacyAccounts,
   useGetStudentOnboardingServiceHandoffsQuery: mocks.legacyHandoffs,
   useGetStudentCredentialEmailsQuery: mocks.legacyEmails,
@@ -277,7 +280,7 @@ it('requires an explicit recipient when both parent emails are available', async
   );
 });
 
-it('auto-selects the only parent email without requiring a choice for another blank parent profile', async () => {
+it('defaults to the only saved parent email while retaining the missing-email parent choice', async () => {
   setRecipients([
     studentRecipient,
     fatherRecipient,
@@ -286,7 +289,8 @@ it('auto-selects the only parent email without requiring a choice for another bl
   panel();
   chooseGuardian();
   await waitFor(() => expect(email()).toHaveValue('raj@example.test'));
-  expect(screen.queryByRole('combobox', { name: 'Recipient' })).not.toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Recipient' })).toBeVisible();
+  expect(screen.getByRole('option', { name: /Mother/ })).toBeVisible();
   fireEvent.click(sendButton());
   await waitFor(() =>
     expect(mocks.send).toHaveBeenCalledWith(
@@ -376,14 +380,16 @@ it('never displays a previous case recipient while the selected case loads', () 
   expect(screen.queryByRole('button', { name: 'Send Credentials' })).not.toBeInTheDocument();
 });
 
-it('shows an initial error with retry instead of an empty state', () => {
+it('toasts an initial error without claiming empty data or adding a Retry row', () => {
   mocks.query.data = undefined;
   mocks.query.currentData = undefined;
   mocks.query.isError = true;
   panel();
-  expect(screen.getByText('Credentials could not be loaded.', { exact: false })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(mocks.query.refetch).toHaveBeenCalledOnce();
+  expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+    expect.objectContaining({ message: expect.stringMatching(/Credentials could not be loaded/) })
+  );
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(screen.queryByText(/No saved account-owner profiles/)).not.toBeInTheDocument();
 });
 
 it('offers refresh for an empty workspace without a send action', () => {
@@ -419,7 +425,11 @@ it('preserves the chosen parent and email after a failed background refresh', as
     </ThemeProvider>
   );
   expect(email()).toHaveValue('raj@example.test');
-  expect(screen.getByText('Credentials could not be refreshed.', { exact: false })).toBeVisible();
+  expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: expect.stringMatching(/Credentials could not be refreshed/),
+    })
+  );
   expect(sendButton()).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
   expect(mocks.query.refetch).toHaveBeenCalledOnce();
@@ -529,7 +539,9 @@ it('preserves the selected recipient and displays the actual server Reason after
   await waitFor(() => expect(email()).toHaveValue('raj@example.test'));
   fireEvent.click(sendButton());
   await waitFor(() =>
-    expect(screen.getByText('The saved email changed.', { exact: false })).toBeVisible()
+    expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('The saved email changed.') })
+    )
   );
   expect(type()).toHaveValue('guardian');
   expect(email()).toHaveValue('raj@example.test');

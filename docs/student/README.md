@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-24
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -24,7 +24,8 @@ App Login offers Not needed, Optional and Required separately for students and p
 Pending cases inherit admission requirements automatically; activated and completed cases preserve their saved snapshots.
 Fees selects and confirms an existing published fee structure through Onboarding. An explicit Collect Fees action opens the reused Finance collection form without navigating to Finance; fee settlement is not required for activation. Admissions Payment also allows Collect later in Onboarding with a mandatory reason and no structure or payment.
 Activation creates the operational enrollment and refreshes Student Records; pending account or email work remains visible in Credentials after activation.
-Credentials selects the account type and saved email, then uses one Send Credentials command for safe account preparation and durable email delivery, with a Recipient choice only when needed.
+Credentials selects the account type and saved email, then uses one manual Send Credentials command for safe account preparation and durable delivery.
+Staff can add or update the selected Student/Father/Mother email in a compact dialog; existing login changes require owner verification and preserve the password and sibling links.
 Student List uses the selected header year, four visible academic selectors and Active/Former inside Filters, with a compact server-backed table and preserved profile navigation context.
 Student Profile has Overview, Details, Documents and History. Details renders the retained offering Registration form with inline edits; immediate saves update current values and create an audit entry while preserving submitted originals. Inquiry remains in Admissions.
 Division-wide GR and Roll locks protect those identifiers without locking placement, and task drawers display only the selected task.

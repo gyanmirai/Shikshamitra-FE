@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { StudentSiblingParentSelection } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import Link from 'next/link';
 import { LoadingButton } from '@mui/lab';
@@ -55,6 +56,7 @@ import {
   mapOnboardingEventToActivity,
 } from './student-onboarding-model';
 
+import type { StudentParentSiblingActivationState } from './student-parent-sibling-state';
 import type { StudentOnboardingItem, OnboardingChecklistItem } from './student-onboarding-model';
 
 type StudentSetupDrawerProps = {
@@ -67,7 +69,8 @@ type StudentSetupDrawerProps = {
   onPrimaryAction?: (
     student: StudentOnboardingItem,
     concurrencyStamp?: string,
-    action?: 'refresh' | 'activate'
+    action?: 'refresh' | 'activate',
+    siblingParentSelection?: StudentSiblingParentSelection
   ) => void | Promise<void>;
   primaryActionLoading?: boolean;
   canManage?: boolean;
@@ -186,6 +189,8 @@ export default function StudentSetupDrawer({
   const [waiverCheck, setWaiverCheck] = useState<OnboardingChecklistItem | null>(null);
   const [showPassedChecks, setShowPassedChecks] = useState(false);
   const [credentialsBusy, setCredentialsBusy] = useState(false);
+  const [parentState, setParentState] = useState<StudentParentSiblingActivationState>();
+  const [parentValidationAttempt, setParentValidationAttempt] = useState(0);
   const drawerBusy = primaryActionLoading || credentialsBusy;
   const permissions = useSelector((state: RootState) => state.auth?.permissions);
   const canViewAdmissions = hasGrantedPermission(
@@ -432,6 +437,8 @@ export default function StudentSetupDrawer({
                   student={activeStudent}
                   canManage={canManage}
                   onBusyChange={setCredentialsBusy}
+                  onParentStateChange={setParentState}
+                  parentValidationAttempt={parentValidationAttempt}
                 />
               </SectionCard>
             ) : (
@@ -631,6 +638,8 @@ export default function StudentSetupDrawer({
                             student={activeStudent}
                             canManage={canManage}
                             onBusyChange={setCredentialsBusy}
+                            onParentStateChange={setParentState}
+                            parentValidationAttempt={parentValidationAttempt}
                           />
                         </AccordionDetails>
                       </Accordion>
@@ -1159,15 +1168,38 @@ export default function StudentSetupDrawer({
               primaryActionLoading ||
               activationPreviewQuery.isFetching ||
               activationPreviewQuery.isError ||
+              (parentState?.caseId === activeStudent.id && !parentState.loaded) ||
               !activationPreviewReady
             }
             onClick={async () => {
               if (!canManage) return;
-              await onPrimaryAction?.(
-                activeStudent,
-                activationPreview?.concurrencyStamp,
-                'activate'
-              );
+              const currentParentState =
+                parentState?.caseId === activeStudent.id ? parentState : undefined;
+              if (currentParentState?.blockedReason) {
+                setParentValidationAttempt((attempt) => attempt + 1);
+                setConfirmActivation(false);
+                window.requestAnimationFrame(() =>
+                  scrollRef.current
+                    ?.querySelector<HTMLElement>(
+                      '[data-parent-sibling-selection] [role="combobox"], [data-parent-sibling-selection] select'
+                    )
+                    ?.focus()
+                );
+                return;
+              }
+              if (currentParentState?.selection)
+                await onPrimaryAction?.(
+                  activeStudent,
+                  activationPreview?.concurrencyStamp,
+                  'activate',
+                  currentParentState.selection
+                );
+              else
+                await onPrimaryAction?.(
+                  activeStudent,
+                  activationPreview?.concurrencyStamp,
+                  'activate'
+                );
               setConfirmActivation(false);
             }}
           >

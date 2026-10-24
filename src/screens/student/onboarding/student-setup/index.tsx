@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { TooltipProps } from '@mui/material';
 import type { IParams } from 'src/components/customizabaleTable/types';
 import type { RollNumberScope } from 'src/redux/student/onboarding/student-roll-number-batches-api';
+import type { StudentSiblingParentSelection } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
@@ -12,6 +13,7 @@ import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -855,7 +857,8 @@ export default function StudentSetupScreen() {
   const runPrimaryCaseAction = async (
     student: StudentOnboardingItem,
     latestConcurrencyStamp?: string,
-    action: 'refresh' | 'activate' = 'refresh'
+    action: 'refresh' | 'activate' = 'refresh',
+    siblingParentSelection?: StudentSiblingParentSelection
   ) => {
     if (student.source !== 'onboarding-case') return;
     if (!canManageOnboarding) {
@@ -871,6 +874,7 @@ export default function StudentSetupScreen() {
           id: student.id,
           concurrencyStamp: latestConcurrencyStamp ?? student.concurrencyStamp,
           idempotencyKey: crypto.randomUUID(),
+          ...(siblingParentSelection ? { siblingParentSelection } : {}),
         }).unwrap();
         shikshaMitraToast.success({
           message: `${student.studentName} is active and available in Student Records. Open App Login if app access is pending.`,
@@ -886,12 +890,13 @@ export default function StudentSetupScreen() {
       shikshaMitraToast.success({
         message: `Readiness refreshed for ${student.studentName}.`,
       });
-    } catch {
+    } catch (error) {
       shikshaMitraToast.error({
         message:
-          action === 'activate' || student.backendStatus === 2
+          parseApiProblemDetail(error).detail ||
+          (action === 'activate' || student.backendStatus === 2
             ? 'Student activation could not be completed. Refresh the case and resolve any new blockers.'
-            : 'Readiness could not be refreshed. Please retry with the latest case data.',
+            : 'Readiness could not be refreshed. Please retry with the latest case data.'),
       });
     }
   };

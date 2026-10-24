@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
@@ -104,12 +105,14 @@ export default function OnboardingBulkActionDialog({
                 : 'Readiness refreshed.',
             },
           }));
-        } catch {
+        } catch (error) {
           setResults((current) => ({
             ...current,
             [student.id]: {
               success: false,
-              message: 'Not saved. Open the latest case to resolve blockers or changed data.',
+              message:
+                parseApiProblemDetail(error).detail ||
+                'Not saved. Open the latest case to resolve blockers or changed data.',
             },
           }));
         } finally {

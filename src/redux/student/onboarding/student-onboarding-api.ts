@@ -21,6 +21,8 @@ import type {
   StudentOnboardingListInput,
   StudentCredentialsWorkspace,
   StudentOnboardingStepStatus,
+  UpdateStudentCredentialsEmail,
+  StudentSiblingParentSelection,
   SaveStudentOnboardingSettings,
   UpsertStudentOnboardingPolicy,
   CreateStudentIdentifierSeries,
@@ -310,6 +312,110 @@ export const studentOnboardingApi = api.injectEndpoints({
       },
       invalidatesTags: (_result, error, { id }) => (error ? [] : caseTags(id)),
     }),
+    updateStudentCredentialsEmail: builder.mutation<
+      StudentCredentialsWorkspace,
+      UpdateStudentCredentialsEmail
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/credentials/email`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (
+        response: Result<StudentCredentialsWorkspace> | StudentCredentialsWorkspace
+      ) => unwrap(response),
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            studentOnboardingApi.util.updateQueryData(
+              'getStudentOnboardingCredentials',
+              id,
+              () => data
+            )
+          );
+        } catch {
+          // Failed writes retain the current saved profile and the caller's draft.
+        }
+      },
+      invalidatesTags: (_result, error, { id }) => (error ? [] : caseTags(id)),
+    }),
+    confirmStudentPortalEmail: builder.mutation<
+      void,
+      {
+        tenantId: string;
+        userId: string;
+        requestId: string;
+        token: string;
+      }
+    >({
+      query: (body) => ({
+        url: '/student/portal/email/confirm',
+        method: 'POST',
+        body,
+        headers: { __tenant: body.tenantId },
+      }),
+    }),
+    linkStudentOnboardingParent: builder.mutation<
+      StudentCredentialsWorkspace,
+      {
+        id: string;
+        concurrencyStamp: string;
+        siblingParentSelection?: StudentSiblingParentSelection;
+      }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/credentials/link-parent`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (
+        response: Result<StudentCredentialsWorkspace> | StudentCredentialsWorkspace
+      ) => unwrap(response),
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            studentOnboardingApi.util.updateQueryData(
+              'getStudentOnboardingCredentials',
+              id,
+              () => data
+            )
+          );
+        } catch {
+          /* A failed link never changes the saved parent locally. */
+        }
+      },
+      invalidatesTags: (_result, error, { id }) => (error ? [] : caseTags(id)),
+    }),
+    retryStudentOnboardingParentSetup: builder.mutation<
+      StudentCredentialsWorkspace,
+      { id: string; concurrencyStamp: string }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/credentials/retry-parent-setup`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (
+        response: Result<StudentCredentialsWorkspace> | StudentCredentialsWorkspace
+      ) => unwrap(response),
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            studentOnboardingApi.util.updateQueryData(
+              'getStudentOnboardingCredentials',
+              id,
+              () => data
+            )
+          );
+        } catch {
+          /* Failed retries never create a successful local state. */
+        }
+      },
+      invalidatesTags: (_result, error, { id }) => (error ? [] : caseTags(id)),
+    }),
     sendStudentCredentialEmail: builder.mutation<
       StudentCredentialEmail,
       { id: string; accountType: 'student' | 'guardian'; concurrencyStamp?: string | null }
@@ -575,7 +681,12 @@ export const studentOnboardingApi = api.injectEndpoints({
     }),
     activateStudentOnboarding: builder.mutation<
       StudentOnboardingCase,
-      { id: string; concurrencyStamp?: string | null; idempotencyKey: string }
+      {
+        id: string;
+        concurrencyStamp?: string | null;
+        idempotencyKey: string;
+        siblingParentSelection?: StudentSiblingParentSelection;
+      }
     >({
       query: ({ id, ...body }) => ({
         url: `/student/onboarding/${id}/activate`,
@@ -864,6 +975,8 @@ export const {
   useGetStudentCredentialEmailsQuery,
   useGetStudentOnboardingCredentialsQuery,
   useSendStudentOnboardingCredentialsMutation,
+  useUpdateStudentCredentialsEmailMutation,
+  useConfirmStudentPortalEmailMutation,
   useSendStudentCredentialEmailMutation,
   useOverrideStudentOnboardingDocumentsMutation,
   useGetStudentPortalAccountsQuery,
@@ -887,6 +1000,8 @@ export const {
   usePreviewStudentOnboardingActivationQuery,
   useLazyPreviewStudentOnboardingActivationQuery,
   useActivateStudentOnboardingMutation,
+  useRetryStudentOnboardingParentSetupMutation,
+  useLinkStudentOnboardingParentMutation,
   useCancelStudentOnboardingMutation,
   useGetStudentOnboardingServiceHandoffsQuery,
   useRetryStudentOnboardingServiceHandoffMutation,

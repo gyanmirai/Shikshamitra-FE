@@ -21,6 +21,17 @@ const mocks = vi.hoisted(() => ({
   sendCredentials: vi.fn(),
   success: vi.fn(),
   events: [] as string[],
+  parentContext: undefined as
+    | {
+        loaded: boolean;
+        blockedReason?: string;
+        selection?: {
+          relationship: 'father' | 'mother';
+          expectedEmail: string;
+          expectedUserId: string;
+        };
+      }
+    | undefined,
 }));
 
 vi.mock('src/components/iconify', () => ({
@@ -98,27 +109,39 @@ vi.mock('./student-onboarding-fees', async () => {
     },
   };
 });
-vi.mock('./student-onboarding-portal-accounts', () => ({
-  default: ({
-    onBusyChange,
-    canManage,
-  }: {
-    onBusyChange: (busy: boolean) => void;
-    canManage: boolean;
-  }) => (
-    <>
-      <button type="button" disabled={!canManage} onClick={mocks.sendCredentials}>
-        Send Credentials
-      </button>
-      <button type="button" onClick={() => onBusyChange(true)}>
-        Start credential request
-      </button>
-      <button type="button" onClick={() => onBusyChange(false)}>
-        Finish credential request
-      </button>
-    </>
-  ),
-}));
+vi.mock('./student-onboarding-portal-accounts', async () => {
+  const { useEffect } = await import('react');
+  return {
+    default: function MockPortal({
+      onBusyChange,
+      onParentStateChange,
+      student,
+      canManage,
+    }: {
+      onBusyChange: (busy: boolean) => void;
+      canManage: boolean;
+      student: { id: string };
+      onParentStateChange: (state: { caseId: string; loaded: boolean }) => void;
+    }) {
+      useEffect(() => {
+        onParentStateChange({ caseId: student.id, ...(mocks.parentContext || { loaded: true }) });
+      }, [onParentStateChange, student.id]);
+      return (
+        <>
+          <button type="button" disabled={!canManage} onClick={mocks.sendCredentials}>
+            Send Credentials
+          </button>
+          <button type="button" onClick={() => onBusyChange(true)}>
+            Start credential request
+          </button>
+          <button type="button" onClick={() => onBusyChange(false)}>
+            Finish credential request
+          </button>
+        </>
+      );
+    },
+  };
+});
 vi.mock('./student-onboarding-workflow-documents', () => ({
   default: () => <p>Admission document verification</p>,
 }));
@@ -180,6 +203,7 @@ describe('single-student setup page', () => {
     mocks.academicBusy = false;
     mocks.academicDirty = true;
     mocks.events = [];
+    mocks.parentContext = undefined;
     mocks.saveAcademic.mockImplementation(async () => {
       mocks.events.push('academic');
       return makeCase({ concurrencyStamp: 'academic-stamp' });
@@ -221,6 +245,34 @@ describe('single-student setup page', () => {
     expect(screen.getByRole('button', { name: 'Back to Students' })).toBeEnabled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(container.querySelector('[aria-modal]')).toBeNull();
+    expect(mocks.sendCredentials).not.toHaveBeenCalled();
+  });
+  it('validates the parent choice before any academic or fee save and preserves manual credentials', async () => {
+    mocks.parentContext = {
+      loaded: true,
+      blockedReason: 'Choose Father or Mother in App Login before activating.',
+    };
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
+    expect(mocks.saveAcademic).not.toHaveBeenCalled();
+    expect(mocks.saveFees).not.toHaveBeenCalled();
+    expect(mocks.activate).not.toHaveBeenCalled();
+    expect(mocks.sendCredentials).not.toHaveBeenCalled();
+  });
+  it('passes the reviewed parent identity to Save & Activate without sending a credential email', async () => {
+    const selection = {
+      relationship: 'mother' as const,
+      expectedEmail: 'mother@example.com',
+      expectedUserId: 'parent-2',
+    };
+    mocks.parentContext = { loaded: true, selection };
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
+    await waitFor(() =>
+      expect(mocks.activate).toHaveBeenCalledWith(
+        expect.objectContaining({ siblingParentSelection: selection })
+      )
+    );
     expect(mocks.sendCredentials).not.toHaveBeenCalled();
   });
 

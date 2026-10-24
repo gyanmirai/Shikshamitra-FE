@@ -3,12 +3,46 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-23
+updated_on: 2026-10-24
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## App Login email add/update validation (24 October 2026)
+
+- Seven focused suites pass all 90 assertions: the new email dialog and public owner-confirmation screen, Portal Accounts, parent-sibling UI/state, credentials API and Quick Setup. Coverage includes email validation/focus, failure draft retention, unsaved cancellation, shared-parent confirmation, busy locks, pending-change cancellation, save-only cache updates, explicit confirmation/no mount-time write, and the tenant-bound token POST.
+- Full `npm run ts`, focused ESLint/Prettier, Student docs validation and diff checks pass. Evidence is in `.artifacts/onboarding-email-ui-final.log`, `onboarding-email-typescript-final.log`, `onboarding-email-eslint-final.log` and `onboarding-email-format-final.log`.
+- Authenticated localhost checks against the rebuilt Host verify the existing shared-parent dialog with two linked children, a missing Student email save, an existing Student email update and retained policy blocking. The first saved email survived a full reload. Only synthetic `.example.test` Student emails were saved; the real parent mailbox/login was not changed and no credentials were requested. Parent verification/password/link updates are covered by isolated backend tests, not a real owner action.
+- The public confirmation route remains accessible while signed in and rejects missing tokens without a write. Screenshots are `.artifacts/onboarding-email-ui/shared-parent-update.png`, `student-email-saved.png`, `student-email-updated.png` and `confirmation-invalid-link.png`. These are local checks, not staging, production, actual inbox delivery or a complete 390px/dark-theme acceptance run.
+- Existing components, dialog/form/validation/navigation patterns were reused; no Finance module source changed. Local background delivery is intentionally disabled to avoid sending unrelated queued mail.
+
+## Confirmed parent and sibling login validation (2026-10-23)
+
+Run the Admissions direct-registration, duplicate-matches, inquiry-model, inquiry-form-page and sibling-family API suites alongside the Onboarding parent-sibling state/UI, Portal Accounts, Quick Setup and credentials API suites.
+These cover explicit family confirmation, email/mobile matching, contact-edit invalidation, saved parent autofill, preservation of the other parent's authored answers, Father/Mother-only new choices, manual first send, linked-account send suppression, case-bound loading, activation identity and original-setup retry.
+The latest one-worker run passed all 135 assertions across these ten suites (26.87 seconds, zero failures/skips); this includes late-link recovery and the three display regressions added after the earlier 123/132-assertion runs.
+The isolated legacy parent-selection callback test and all five bulk-dialog assertions also passed in their prior focused gates.
+The full repository TypeScript check, changed/new TypeScript-file ESLint and Prettier checks, Student documentation validation and `git diff --check` passed.
+The follow-up enrolled-parent recovery run passed 69 assertions across Parent Sibling UI, Portal Accounts, Quick Setup and credentials API suites, including Needs attention/completed cases, explicit two-parent choice, permission/cancelled/Not needed guards, pending locks and retained selection after failure.
+The API regression records exactly one link-parent write and no activation, academic, fee or email command.
+The focused legacy drawer activation test checks that the selected parent reaches the existing callback, and the bulk dialog suite checks that the server's parent-choice reason remains visible per failed row.
+Unrelated legacy drawer, worklist and credential-email assertions that still expect former inline Retry/error controls remain unchanged; the broad legacy run is not an all-green acceptance gate.
+The authorized localhost in-app journey saved and reloaded fresh `Aarav MailQA` from Inquiry through Registration, clearly labelled QA document reviews, existing fee confirmation/Collect Later, admission finalization and Save & Activate.
+The final Student Setup page shows Class 1/A, GR-006, Roll 3, Student active, the corrected parent mailbox and an enabled manual Send Credentials action; proof is `.artifacts/sibling-parent-browser/08-aarav-mailqa-active-manual-credentials-ready.png`.
+No first identity/email intent was created automatically; backend persistence and the separate positive same-email/different-mobile PostgreSQL production-service check are recorded in the linked backend validation.
+The original superseded mailbox intent was cancelled before transport after the user corrected the address.
+After explicit fresh-recipient/access approval, one manual click created the fresh parent login and queued one credentials request; the production dispatcher recorded Sent on its first attempt, and the owner confirmed receipt (password setup pending).
+Fresh `Anaya MailQA` used explicit saved-Father selection and Add sibling confirmation, retained the same saved contact through Registration and finalized normally.
+Before activation, an existing-parent display issue left Email blank when the authoritative linking permission was unavailable.
+The focused fix separates read-only saved-parent email/setup-status display from activation authorization, keeps ambiguous parents unselected and leaves Send/Link/activation guards unchanged; the focused display/state/legacy gate passes 54/54 and the final ten-suite gate passes 135/135.
+Save & Activate correctly prevented writes while the operator lacked the established exact user-update permission.
+After explicit approval, normal Security UI saved and reloaded a single user-specific Users.Update Allow for local admin-ddvs (no role-wide grant or Finance permission change), and the existing activation flow succeeded.
+After full page reload, Anaya shows Class 1/A, GR-007, Roll 4, Student active, the saved parent email and Linked with original setup pending; no Send Credentials action is offered for the reused parent.
+The independently retained read-only before/after probe confirms the same parent identity, unchanged password/security stamp, two active child links in the same family, one first Sent email intent and zero second-child email requests.
+Actual sibling visibility in the Flutter mobile client and responsive visual acceptance remain pending; source/unit/API/local browser checks are not deployment or inbox-delivery proof.
+Use the [backend Student validation](../../../Shikshamitra-BE/docs/modules/student/testing.md) for persisted identity, tenant, permission and concurrency checks.
 
 ## Student feedback
 

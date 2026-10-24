@@ -317,12 +317,66 @@ export type StudentCredentialsRecipient = {
   canSend: boolean;
   blockedReason?: string | null;
   delivery?: StudentCredentialEmail | null;
+  canEditEmail?: boolean;
+  hasLinkedAccount?: boolean;
+  linkedStudentCount?: number;
+  pendingEmail?: string | null;
+  emailChangeStatus?: string | null;
+  emailEditBlockedReason?: string | null;
+  emailEditToken?: string;
+};
+
+export type UpdateStudentCredentialsEmail = {
+  id: string;
+  accountType: StudentCredentialsRecipient['accountType'];
+  relationship: StudentCredentialsRecipient['relationship'];
+  expectedEmail?: string | null;
+  email: string;
+  concurrencyStamp: string;
+  confirmSharedParent: boolean;
+  cancelPendingChange?: boolean;
+  emailEditToken: string;
 };
 
 export type StudentCredentialsWorkspace = {
   caseId: string;
   concurrencyStamp: string;
   recipients: StudentCredentialsRecipient[];
+  parentSibling?: StudentParentSiblingContext | null;
+};
+
+export type StudentSiblingParentSelection = {
+  relationship: 'father' | 'mother';
+  expectedEmail: string;
+  expectedUserId: string;
+};
+
+export type StudentParentSiblingContext = {
+  enabled: boolean;
+  familyConfirmed: boolean;
+  isLinked: boolean;
+  requiresSelection: boolean;
+  canLink: boolean;
+  status:
+    | 'NewParent'
+    | 'NotRequired'
+    | 'SelectParent'
+    | 'Available'
+    | 'Linked'
+    | 'SetupPending'
+    | 'SetupFailed'
+    | 'ReviewRequired';
+  linkedRelationship?: 'father' | 'mother' | null;
+  selectedRelationship?: 'father' | 'mother' | null;
+  blockedReason?: string | null;
+  canRetrySetup: boolean;
+  candidates: {
+    relationship: 'father' | 'mother';
+    name?: string | null;
+    email: string;
+    userId: string;
+    setupStatus: 'Ready' | 'Pending' | 'Failed';
+  }[];
 };
 
 export type SendStudentCredentials = {

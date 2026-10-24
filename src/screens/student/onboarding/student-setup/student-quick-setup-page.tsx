@@ -28,6 +28,7 @@ import StudentOnboardingWorkflowDocuments from './student-onboarding-workflow-do
 
 import type { StudentSetupView } from './student-setup-view';
 import type { StudentOnboardingItem } from './student-onboarding-model';
+import type { StudentParentSiblingActivationState } from './student-parent-sibling-state';
 import type {
   StudentOnboardingFeesState,
   StudentOnboardingFeesHandle,
@@ -74,6 +75,11 @@ export default function StudentQuickSetupPage({
     canSave: false,
   });
   const [credentialsBusy, setCredentialsBusy] = useState(false);
+  const [parentValidationAttempt, setParentValidationAttempt] = useState(0);
+  const [parentState, setParentState] = useState<StudentParentSiblingActivationState>({
+    caseId: student.id,
+    loaded: false,
+  });
   const [failure, setFailure] = useState<string>();
   const [failureSeverity, setFailureSeverity] = useState<'error' | 'info'>('error');
   const [activatedCase, setActivatedCase] = useState<StudentOnboardingCase>();
@@ -163,6 +169,29 @@ export default function StudentQuickSetupPage({
       enrolled
     )
       return;
+    if (
+      shouldActivate &&
+      (parentState.caseId !== student.id || !parentState.loaded || parentState.blockedReason)
+    ) {
+      setParentValidationAttempt((attempt) => attempt + 1);
+      shikshaMitraToast.error({
+        message:
+          parentState.caseId === student.id && parentState.loaded
+            ? parentState.blockedReason || 'Review App Login before activating.'
+            : 'Wait for App Login settings to load before activating.',
+      });
+      bodyRef.current
+        ?.querySelector<HTMLElement>('#quick-setup-login')
+        ?.scrollIntoView({ block: 'nearest' });
+      window.requestAnimationFrame(() =>
+        bodyRef.current
+          ?.querySelector<HTMLElement>(
+            '[data-parent-sibling-selection] [role="combobox"], [data-parent-sibling-selection] select'
+          )
+          ?.focus()
+      );
+      return;
+    }
     savingRef.current = true;
     setSaving(shouldActivate ? 'activate' : 'later');
     setFailure(undefined);
@@ -184,15 +213,14 @@ export default function StudentQuickSetupPage({
               id: student.id,
               concurrencyStamp: preview.concurrencyStamp,
               idempotencyKey,
+              siblingParentSelection: parentState.selection,
             }).unwrap(),
         },
       });
       // Enrollment is durable even if its background refresh or access preparation fails.
       if (result.studentEnrollmentId) setActivatedCase(result);
       shikshaMitraToast.success({
-        message: result.studentEnrollmentId
-          ? 'Student activated. Credentials can be sent from App Login.'
-          : 'Student setup saved.',
+        message: result.studentEnrollmentId ? 'Student activated.' : 'Student setup saved.',
       });
     } catch (error) {
       const { detail } = parseApiProblemDetail(error);
@@ -405,6 +433,8 @@ export default function StudentQuickSetupPage({
                       student={activeStudent}
                       canManage={canManage && !scopeChanged}
                       onBusyChange={setCredentialsBusy}
+                      onParentStateChange={setParentState}
+                      parentValidationAttempt={parentValidationAttempt}
                     />
                   </FormSectionCard>
                 </Box>
@@ -556,6 +586,8 @@ export default function StudentQuickSetupPage({
                   editor.loading ||
                   editor.readError ||
                   feesState.loading ||
+                  parentState.caseId !== student.id ||
+                  !parentState.loaded ||
                   scopeChanged ||
                   !current
                 }

@@ -3,10 +3,21 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-23
+updated_on: 2026-10-24
 owner: frontend-team
 audience: humans-and-agents
 ---
+
+## Add or update the app-login email
+
+Student Setup App Login keeps the saved email visible and offers a compact Add email/Update email dialog for the server-authorized selected Student, Father or Mother.
+The dialog reuses CustomDialog, Formik/Yup, ShakingTextField, FormSectionCard, FormBusyRegion and the existing unsaved-navigation guard; no separate navigation or Finance change is needed.
+Missing-email parents remain selectable even when the other parent already has an email.
+Saving an unlinked profile does not send credentials; staff still uses the existing manual Send Credentials button.
+An existing login shows the verification consequence and, for multiple linked children, requires a shared-parent confirmation checkbox.
+Until verification succeeds, the current email remains displayed alongside the pending verification state.
+The public owner page uses the existing authentication surface and requires an explicit confirmation click; it does not collect or change a password.
+Existing Not needed app-access policies still block sending; this email editor does not silently convert school or pinned case policies to Optional/Required.
 
 ## Student feedback
 
@@ -176,7 +187,7 @@ Configure the academic structure and Admission Offering before preparing student
 7. Review Class & Numbers, choose Division, and use the permitted Auto/Manual GR and Roll controls. **Save for Later** saves entered work without activating. **Save & Activate** saves academic changes and fee confirmation sequentially, obtains a fresh backend activation preview, and activates with that preview's concurrency stamp. A failed later step keeps successful saves and remaining edits available; retries do not regenerate saved identifiers. Individual Roll Auto means the next available number under the published rule, not a division-wide reorder.
    Fees selects optional heads where supported and confirms the admission snapshot without collecting money or opening a Finance assignment drawer.
 8. Activation keeps the student page open. The active enrollment is available in Student Records even if account preparation remains pending. A changed academic year blocks saving the previously opened case. The page uses the existing unsaved-navigation guard, blocks conflicting actions during saves/sends/payment collection, and retains an open case after it leaves the pending worklist.
-9. Saved account recipients and email are visible in **App Login** before activation; actual sending remains governed by server eligibility. After activation, use **Send Credentials** manually on the same page. **Save & Activate** never explicitly sends credentials or changes school delivery settings; existing saved automatic preferences retain their backend behavior. **Next Student** opens another pending case from the current worklist page when available. **Admission & Documents** is a visible section with compact document rows and icon-only actions. **Details & History** sits beside the status in the student name plate and opens a read-only drawer containing only Admission and Placement & Identifiers. It preserves the underlying setup draft; the full workflow drawer remains available to its other existing callers.
+9. Saved account recipients and email are visible in **App Login** before activation; actual sending remains governed by server eligibility. After activation, a new parent uses **Send Credentials** manually on the same page; a confirmed sibling reuses the chosen existing parent login instead, as described below. **Save & Activate** never explicitly sends credentials or changes school delivery settings; legacy delivery preferences retain their backend behavior. **Next Student** opens another pending case from the current worklist page when available. **Admission & Documents** is a visible section with compact document rows and icon-only actions. **Details & History** sits beside the status in the student name plate and opens a read-only drawer containing only Admission and Placement & Identifiers. It preserves the underlying setup draft; the full workflow drawer remains available to its other existing callers.
    An account or email failure remains pending access work on the active enrollment and can be retried by an authorized user.
    Fees places its saved status on the right and uses compact outlined chevron disclosures for Fee Details and Payments & Receipts. This is a local presentation exception to the shared accordion default; monetary behavior is unchanged.
    Admission & Documents shows approval and required progress without repeating Route or a Documents subheading. Table rows show the document name, status and icon-only actions, omitting routine required/file/date/version metadata and the read-only caption. Evidence metadata remains available in History. The eye icon opens an authorized document preview in the shared centered dialog; Download and History remain separate icons with accessible labels and tooltips. Missing files or denied file access keep View unavailable. Image previews support zoom; PDFs use the browser viewer, and unsupported files can be downloaded. Close and Escape return focus to View. Existing document status labels, genuine blockers and read-only verification-stage restrictions remain unchanged.
@@ -339,7 +350,7 @@ Saving persists a draft; publishing remains a separate form-list action.
 ## Inquiry runtime workflow
 
 1. A counselor selects board, medium, class, and an open Inquiry offering; the admission cycle follows the offering automatically. The form captures the configured applicant and guardian fields and an allowed source.
-2. The inquiry flow checks duplicate phone, email, applicant name, and date-of-birth signals in that admission cycle, plus same-mobile families visible to permitted staff from earlier cycles. Staff can open an existing inquiry, link a sibling only when the primary guardian mobile matches and the server marks the family linkable, or use the permitted separate-family override. A name/email-only match remains visible for review but cannot be linked directly.
+2. The inquiry flow checks duplicate phone, email, applicant name, and date-of-birth signals in that admission cycle, plus permitted families from earlier cycles. Staff can open an existing inquiry, confirm Add sibling for an eligible matching Father/Mother email or mobile, or use the permitted separate-family override. A name-only match remains visible for review but cannot be linked directly.
 3. The server-paged inquiry list supports search and cycle, offering, status, source, Overdue, Awaiting first contact, Awaiting qualification, and Open follow-ups filters. Filters stay in the URL for refresh and sharing, sorting stays on the server, and Export downloads the complete filtered set rather than only the visible page.
 4. Staff handle inquiries using their existing action permissions and academic scope; no counsellor assignment is required.
 5. Edit shows the attached inquiry form and filtered form history. The separate Follow-up dialog shows notes cards with status, author, and reminder, then a compact note/reminder/status form. Its atomic command validates both inquiry and management versions. Once an application starts, inquiry editing and follow-up submission become read-only.
@@ -513,6 +524,29 @@ Frontend screens own loading, empty, error, and interaction states.
 Backend services remain authoritative for duplicate detection, tenant isolation, permissions, validation, version freezing, workflow transitions, and persistence.
 Add new admission behavior only after extending and validating the owning backend contract, permission, workflow, and persistence rules.
 
+## Confirm a parent and reuse sibling login
+
+1. In staff Inquiry or Direct Registration, choose Father or Mother and enter the parent's contact details.
+2. Use the existing Submit duplicate check or Check existing families action; an eligible email or mobile match offers Add sibling.
+3. Select the saved parent and confirm the family explicitly; a same-email/different-mobile match displays that difference before confirmation.
+   Saved parent details populate only the chosen role; the other parent's answers remain unchanged.
+   A legacy generic Parent contact requires an explicit Father/Mother choice rather than an inferred role.
+4. In the child's Student Setup, App Login displays the existing parent account.
+   One eligible parent is displayed automatically; when both are eligible, choose Father or Mother before Save & Activate.
+   Missing choice validation appears beside Parent, and permission or review blocks retain their actual reason.
+5. Save & Activate waits for the current credentials workspace and validates the parent choice before academic or fee saves.
+   Successful reuse shows Linked and does not offer another Send Credentials action for that parent.
+   A pending or failed original setup remains visible; Retry is available only when the server allows recovery of the original setup.
+6. A new parent's first credentials remain a separate manual Send Credentials action after activation.
+   Student self-login and legacy saved guardian flows retain their existing behavior.
+
+If the child's enrollment already exists when the first parent's account becomes available, Refresh App Login and use **Link parent** on that same card.
+This authorized action is available for an eligible unlinked parent on Needs attention or completed cases; it requires the same explicit choice when both parents are eligible and never resaves class, identifiers or fees.
+Cancelled and Not needed cases do not expose this recovery action.
+
+The legacy single-case activation callback forwards the same parent selection; bulk activation displays the actual failed-row reason when a parent choice requires individual review.
+Backend ownership, identity safeguards and recovery rules remain in [Student product rules](../../../Shikshamitra-BE/docs/modules/student/product.md).
+
 ## Onboarding account email workflow
 
 Portal Access offers only student and parent/guardian login requirements; saved delivery and automatic/manual provisioning choices remain compatible, with credential release after activation.
@@ -523,7 +557,8 @@ One parent recipient is selected automatically; multiple legal parent recipients
 Send creates or safely reuses the account and queues the selected email through one backend command.
 Only the selected recipient's status or actionable block is displayed; verification checkboxes, separate Create/link actions and repeated Disabled policy rows are removed.
 Saved account requirements and readiness remain authoritative; an explicit manual Send requests the selected email without changing the school's automatic-email preferences.
-Missing email is corrected in Student Records rather than entered as an arbitrary delivery address.
+Missing or existing Student/Father/Mother email can be edited through the scoped App Login email dialog; it saves a profile first rather than accepting an arbitrary delivery destination.
+Historical guardian corrections and broader profile/account repairs retain their existing Student Records workflow.
 Refresh, initial loading, recoverable errors, permission blocks and failed-send retry preserve the compact form; a pending send prevents drawer dismissal or tab changes.
 Completion-timed requests remain Queued until the backend confirms onboarding completion.
 Sent means sender acceptance, not inbox delivery, and a failed request does not deactivate the enrollment.
@@ -566,10 +601,10 @@ Inline result drafts retain the reviewed attempt concurrency stamp across refres
 
 An empty fee candidate list shows the shared empty state, a short class/year explanation and Check again. The Open Finance shortcut is removed; setup remains owned by Finance and the Payment workspace preserves its existing selection and collection commands.
 
-## Correcting a guardian credential email
+## Historical guardian credential repairs
 
 Credentials uses the selected Father, Mother or Other guardian's saved profile email; the Recipient selector is shown only when a choice is needed and includes the saved email beside each parent. A single saved parent email is selected automatically, including a contact-only profile whose structured name is not captured. Form-only custom answers do not establish a credential recipient; use the corresponding Student record field binding.
-When the email is missing, authorized Records editors can open Correct saved profile email through the normal audited Records change flow.
+The App Login email-only editor above is the normal Student/Father/Mother path. Historical generic-guardian accounts and wider account-owner/contact repairs retain Correct saved profile email through the normal audited Records change flow for authorized Records editors.
 If the backend reports `Students:Records:OnboardingIncomplete`, the correction dialog explains the activation prerequisite instead of presenting a generic load error and ineffective retry. It does not bypass Records eligibility.
 If review is required, follow Review correction in Changes & Approvals and wait for a different authorized reviewer.
 Refresh after the change is applied, review the correct recipient and use Send Credentials.

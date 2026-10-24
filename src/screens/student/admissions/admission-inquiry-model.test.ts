@@ -16,6 +16,7 @@ import {
   type AdmissionInquiryFormValues,
   preserveCompatibleInquiryAnswers,
   getAdmissionInquiryAcademicOptions,
+  buildAdmissionInquiryDuplicateInput,
   getAdmissionInquiryPreferredClassError,
 } from './admission-inquiry-model';
 
@@ -79,6 +80,106 @@ const offering = {
 } as AdmissionOfferingListItem;
 
 describe('admission inquiry model', () => {
+  it('checks both saved Father and Mother form contacts without treating student email as a parent', () => {
+    const parentFields = [
+      ...fields,
+      field('DAD_EMAIL', 'Father.Email', 3),
+      field('MOM_MOBILE', 'Mother.Mobile', 4),
+      field('STUDENT_EMAIL', 'Applicant.Email', 3),
+    ];
+    const input = buildAdmissionInquiryDuplicateInput(
+      {
+        ...values,
+        fields: {
+          ...values.fields,
+          DAD_EMAIL: ' DAD@Example.COM ',
+          MOM_MOBILE: '9876543211',
+          STUDENT_EMAIL: 'student@example.com',
+        },
+      },
+      parentFields,
+      offering
+    );
+    expect(input.parentContacts).toEqual([
+      { relationship: 'father', email: 'dad@example.com', mobile: undefined },
+      { relationship: 'mother', email: undefined, mobile: '9876543211' },
+    ]);
+  });
+  it('captures an explicitly selected first parent and reuses confirmed sibling contact without mutating entered answers', () => {
+    const first = buildAdmissionInquiryPayload(
+      { ...values, parentRelationship: 'mother' },
+      fields,
+      offering
+    );
+    expect(first.parentRelationship).toBe('mother');
+    const parent = {
+      sourceApplicantId: 'existing-child',
+      relationship: 'father' as const,
+      name: 'Rahul Shah',
+      firstName: 'Rahul',
+      lastName: 'Shah',
+      email: 'dad@example.com',
+      mobile: '9876543211',
+    };
+    const sibling = buildAdmissionInquiryPayload(
+      values,
+      fields,
+      offering,
+      'family-1',
+      false,
+      undefined,
+      parent
+    );
+    expect(sibling).toMatchObject({
+      existingFamilyId: 'family-1',
+      existingParentApplicantId: 'existing-child',
+      parentRelationship: 'father',
+      guardianEmail: 'dad@example.com',
+      guardianPhone: '9876543211',
+      guardianFirstName: 'Rahul',
+    });
+    expect(values.fields.GUARDIAN_NAME).toBe('Meera');
+  });
+  it('replaces only the confirmed parent and generic contact answers, leaving the other parent untouched', () => {
+    const parentFields = [
+      ...fields,
+      field('DAD', 'Father.Email', 3),
+      field('MOM', 'Mother.Email', 3),
+      field('PARENT', 'Guardian.Email', 3),
+    ];
+    const payload = buildAdmissionInquiryPayload(
+      {
+        ...values,
+        fields: {
+          ...values.fields,
+          DAD: 'typed-dad@example.com',
+          MOM: 'mother@example.com',
+          PARENT: 'typed-parent@example.com',
+        },
+      },
+      parentFields,
+      offering,
+      'family-1',
+      false,
+      undefined,
+      {
+        sourceApplicantId: 'child-1',
+        relationship: 'father',
+        name: 'Rahul',
+        firstName: 'Rahul',
+        email: 'saved-father@example.com',
+        mobile: '9876543211',
+      }
+    );
+    expect(payload.formValues).toEqual(
+      expect.arrayContaining([
+        { fieldCode: 'DAD', valueJson: '"saved-father@example.com"' },
+        { fieldCode: 'MOM', valueJson: '"mother@example.com"' },
+        { fieldCode: 'PARENT', valueJson: '"saved-father@example.com"' },
+      ])
+    );
+    expect(payload).toMatchObject({ phone: '9876543211', email: 'saved-father@example.com' });
+  });
   it('normalizes existing mixed-case guardian and custom email answers at the save boundary', () => {
     const emailFields = [
       ...fields,
