@@ -1,4 +1,5 @@
 import React from 'react';
+import dayjs from 'dayjs';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -56,6 +57,7 @@ class DiagnosticBoundary extends React.Component<
   }
 }
 function Fixture() {
+  const longSchedule = new URLSearchParams(window.location.search).get('scroll') === 'long';
   const [open, setOpen] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [mode, setMode] = React.useState<'create' | 'edit' | 'duplicate'>('edit');
@@ -147,18 +149,40 @@ function Fixture() {
                               boardId: 'board',
                               academicYearId: 'year',
                               demandGenerationRule: 'OnDueDate',
-                              installments: [
-                                {
-                                  installmentName: 'Annual',
-                                  sequence: 1,
-                                  startDate: '2026-06-01',
-                                  endDate: '2027-05-31',
-                                  dueDate: '2027-05-31',
-                                  demandDate: '2027-05-31',
-                                  allocationPercentage: 100,
-                                  demandEnabled: true,
-                                },
-                              ],
+                              installments: longSchedule
+                                ? Array.from({ length: 12 }, (_, index) => ({
+                                    installmentName: `Installment ${index + 1}`,
+                                    sequence: index + 1,
+                                    startDate: dayjs('2026-06-01')
+                                      .add(index, 'month')
+                                      .format('YYYY-MM-DD'),
+                                    endDate: dayjs('2026-06-01')
+                                      .add(index, 'month')
+                                      .endOf('month')
+                                      .format('YYYY-MM-DD'),
+                                    dueDate: dayjs('2026-06-01')
+                                      .add(index, 'month')
+                                      .endOf('month')
+                                      .format('YYYY-MM-DD'),
+                                    demandDate: dayjs('2026-06-01')
+                                      .add(index, 'month')
+                                      .endOf('month')
+                                      .format('YYYY-MM-DD'),
+                                    allocationPercentage: index === 11 ? 8.37 : 8.33,
+                                    demandEnabled: true,
+                                  }))
+                                : [
+                                    {
+                                      installmentName: 'Annual',
+                                      sequence: 1,
+                                      startDate: '2026-06-01',
+                                      endDate: '2027-05-31',
+                                      dueDate: '2027-05-31',
+                                      demandDate: '2027-05-31',
+                                      allocationPercentage: 100,
+                                      demandEnabled: true,
+                                    },
+                                  ],
                             } as any)
                     }
                   />

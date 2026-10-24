@@ -6,7 +6,11 @@ import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-vi
 
 export default function ConcessionsCard({ concessions }: { concessions?: ConcessionDetail[] }) {
   return (
-    <DetailSection title="Concessions" icon="mdi:tag-outline">
+    <DetailSection
+      title="Concessions"
+      icon="mdi:tag-outline"
+      helpText="Approved concession amounts for this academic year, after concession reversals."
+    >
       {concessions?.length ? (
         <DetailGrid>
           {concessions.map((item, index) => (

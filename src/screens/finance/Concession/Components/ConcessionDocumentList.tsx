@@ -1,13 +1,20 @@
 import { Iconify } from 'src/components/iconify';
 import { CheckCircle } from '@mui/icons-material';
-import React, { useState, useEffect } from 'react';
+import React, { useId, useState, useEffect } from 'react';
 import UploadButton from 'src/components/upload-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetConcessionTypeByIdQuery } from 'src/redux/finance/concessionType';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { useUploadConcessionDocumentFileMutation } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
-import { Box, Alert, Stack, IconButton, Typography, CircularProgress } from '@mui/material';
+import {
+  Box,
+  Stack,
+  IconButton,
+  Typography,
+  FormHelperText,
+  CircularProgress,
+} from '@mui/material';
 
 import {
   getFileAccept,
@@ -36,6 +43,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
   canUpload = true,
   canView = false,
 }) => {
+  const helperId = useId();
   const { data: concessionData, isLoading: isLoadingDetails } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypeByIdQuery,
@@ -153,15 +161,6 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
     }
   };
 
-  const missingRequiredDocuments = documents.filter(
-    (document: any) =>
-      document.isRequired &&
-      !localDocs.some(
-        (submitted) =>
-          submitted.documentId === (document.id || document.documentId) && submitted.url
-      )
-  );
-
   return (
     <Box aria-label={`${concessionName} supporting documents`}>
       {isLoadingDetails ? (
@@ -170,17 +169,13 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
         </Box>
       ) : (
         <Stack spacing={1}>
-          {missingRequiredDocuments.length > 0 && (
-            <Alert severity="warning">
-              Required documents missing:{' '}
-              {missingRequiredDocuments.map((document: any) => document.documentName).join(', ')}.
-            </Alert>
-          )}
           {(documents || []).map((doc: any) => {
             const docId = doc.id || doc.documentId;
             const submitted = localDocs.find(
               (d: IConcessionSubmittedDocument) => d.documentId === docId
             );
+            const isMissingRequired = Boolean(doc.isRequired && !submitted?.url);
+            const errorId = `${helperId}-${docId}-error`;
             return (
               <Box
                 key={docId}
@@ -271,12 +266,24 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
                         }
                         disabled={!canUpload || isUploading}
                         aria-label={`${submitted?.url ? 'Replace' : 'Upload'} ${doc.documentName}`}
-                        fileInputProps={{ 'aria-label': `Choose ${doc.documentName} file` }}
+                        aria-describedby={isMissingRequired ? errorId : undefined}
+                        fileInputProps={{
+                          'aria-label': `Choose ${doc.documentName} file`,
+                          'aria-required': Boolean(doc.isRequired),
+                          'aria-invalid': isMissingRequired,
+                          'aria-describedby': isMissingRequired ? errorId : undefined,
+                        }}
                       >
                         {submitted?.url ? 'Replace' : 'Upload'}
                       </UploadButton>
                     </Box>
                   </Stack>
+                  {isMissingRequired && (
+                    <FormHelperText error id={errorId} sx={{ mx: 0 }}>
+                      {doc.documentName} is required.{' '}
+                      {canUpload ? 'Upload this document to continue.' : ''}
+                    </FormHelperText>
+                  )}
                 </Stack>
               </Box>
             );

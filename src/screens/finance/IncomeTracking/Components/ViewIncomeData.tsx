@@ -79,28 +79,6 @@ const ViewIncomeData = ({
                   </Stack>
                 </Grid>
 
-                {/* Budget / Tags */}
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <Stack spacing={0.5}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      fontWeight="bold"
-                      sx={{ textTransform: 'uppercase' }}
-                    >
-                      Tags
-                    </Typography>
-                    <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
-                      {Array.isArray(incomeInformation?.categoryTags)
-                        ? incomeInformation?.categoryTags.join(', ')
-                        : incomeInformation?.categoryTags ||
-                          (Array.isArray(incomeData?.categoryTags)
-                            ? incomeData?.categoryTags.join(', ')
-                            : incomeData?.categoryTags || '—')}
-                    </Typography>
-                  </Stack>
-                </Grid>
-
                 {/* Total Amount Received */}
                 <Grid size={{ xs: 12, md: 4 }}>
                   <Stack spacing={0.5}>
@@ -154,7 +132,7 @@ const ViewIncomeData = ({
                   {
                     stickyPosition: 'left',
                     id: 'incomeName',
-                    label: 'Source / Name',
+                    label: 'Name',
                     align: 'left',
                     minWidth: '220px',
                     sticky: true,

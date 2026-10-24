@@ -3,8 +3,8 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { Box, Button } from '@mui/material';
-import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import FeeStructureEditForm from './FeeStructureEditForm';
@@ -89,7 +89,7 @@ export default function FeeStructureWorkspaceDialog({
             variant="contained"
             onClick={onClose}
           >
-            Discard & leave
+            Discard & Leave
           </Button>
         }
       />

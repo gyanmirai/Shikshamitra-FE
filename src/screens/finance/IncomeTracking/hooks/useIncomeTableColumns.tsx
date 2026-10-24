@@ -34,15 +34,6 @@ export const useIncomeTableColumns = ({
         minWidth: '160px',
       },
       {
-        id: 'categoryTags',
-        label: 'Income Category Tags',
-        minWidth: 200,
-        align: 'left',
-        render(value) {
-          return Array.isArray(value) ? value.join(', ') : '-';
-        },
-      },
-      {
         id: 'amount',
         label: 'Amount',
         align: 'left',
@@ -82,7 +73,8 @@ export const useIncomeTableColumns = ({
               sticky: true,
               minWidth: 50,
               render: (_value: unknown, row: unknown) => (
-                <AdaptiveThreeDotsActions directActionLimit={3}
+                <AdaptiveThreeDotsActions
+                  directActionLimit={3}
                   actions={[
                     ...(onEdit && !(row as any).isAutomatic
                       ? [

@@ -25,12 +25,13 @@ type RangeFieldProps = {
   allowManualInput?: boolean;
   singleInput?: boolean;
   label?: string;
+  name?: string;
+  required?: boolean;
   startLabel?: string;
   endLabel?: string;
   placeholder?: string;
   readOnly?: boolean;
   disabled?: boolean;
-  required?: boolean;
   error?: boolean;
   helperText?: React.ReactNode;
   dateFormat?: string;
@@ -47,12 +48,13 @@ export function RangeField({
   allowManualInput = false,
   singleInput,
   label,
+  name,
+  required,
   startLabel = 'Start date',
   endLabel = 'End date',
   placeholder,
   readOnly,
   disabled,
-  required,
   error,
   helperText,
   dateFormat = 'MM/DD/YYYY',
@@ -109,6 +111,7 @@ export function RangeField({
         required={required}
         fullWidth
         label={label || 'Date Range'}
+        name={name}
         value={editable ? inputText : formattedRange}
         placeholder={placeholder || 'DD/MM/YYYY - DD/MM/YYYY'}
         onClick={!editable && !readOnly ? onOpen : undefined}

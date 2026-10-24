@@ -32,6 +32,9 @@ export interface IChargeBatchListItem {
   displayStatus: ChargeWorkflowStatus;
   workflowStatus: ChargeWorkflowStatus;
   studentCount: number;
+  paidStudentCount: number;
+  outstandingStudentCount: number;
+  waivedStudentCount: number;
   /** Lines no longer pending (approved + rejected) */
   processedCount: number;
   boardId?: string;

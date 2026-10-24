@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import { LoadingButton } from 'src/components/loading-button';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -9,10 +8,9 @@ import CustomDialog from 'src/components/customDialog';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
-
+import { LoadingButton } from 'src/components/loading-button';
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
 
-import PaymentInfoPreview from './PaymentInfoPreview';
 import StudentInfoPreviewCard from './StudentInfoPreviewCard';
 import AllocationPreviewTable from './AllocationPreviewTable';
 import { allocatePayment, selectedChargesInOrder } from './paymentAllocationUtils';
@@ -36,7 +34,6 @@ export interface FeeCollectionPreviewDialogProps {
   preserveAllocationOrder?: boolean;
   academicYear?: string;
   feeStructureName?: string;
-  bankAccounts?: { id: string; name: string }[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -184,10 +181,7 @@ const FeeCollectionPreviewDialog = ({
   preserveAllocationOrder,
   academicYear,
   feeStructureName,
-  bankAccounts,
 }: FeeCollectionPreviewDialogProps) => {
-  const theme = useTheme();
-
   // ── Derived values ─────────────────────────────────────────────────────────
   const paidAmount = useMemo(
     () => parsePaidAmount(formValues.payment.amount),
@@ -246,13 +240,6 @@ const FeeCollectionPreviewDialog = ({
           <AllocationPreviewTable
             allocatedRows={allocatedRows}
             preserveOrder={preserveAllocationOrder}
-          />
-
-          {/* ── Payment Method & Remarks ── */}
-          <PaymentInfoPreview
-            payment={formValues.payment}
-            remarks={formValues.remarks}
-            bankAccounts={bankAccounts}
           />
         </Stack>
       </Scrollbar>

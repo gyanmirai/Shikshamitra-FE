@@ -153,7 +153,7 @@ const FinanceIncomeCategoriesScreen = () => {
       />
 
       <CustomDialog
-        titleInfo="Maintain the category name, tags, and description used to organize Finance records."
+        titleInfo="Maintain the category name and description used to organize Finance records."
         open={addIncomeCategoryDialog.value}
         guardUnsavedChanges={false}
         handleClose={() => handleClose()}

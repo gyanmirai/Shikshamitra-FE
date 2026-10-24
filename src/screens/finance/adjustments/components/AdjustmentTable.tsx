@@ -21,6 +21,7 @@ import { useFinanceAcademicFilters } from '../../hooks/useFinanceAcademicFilters
 import FinanceClassDivisionFilter from '../../components/FinanceClassDivisionFilter';
 import { AdjustmentStatusEnum, type AdjustmentTabEnum } from '../enums/adjustment.enum';
 import FinanceAcademicContextFilter from '../../components/FinanceAcademicContextFilter';
+import FinanceListActionRow from '../../components/FinanceListActionRow';
 import {
   ADJUSTMENT_TABS,
   ADJUSTMENT_STATUS_COLORS,
@@ -37,6 +38,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   onApprove,
   onReject,
   academicFilters,
+  primaryAction,
 }) => {
   const access = useFinancePermissions(financePermissions.fees.adjustment);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -109,7 +111,8 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
       const { row } = params;
       const isPending = row.status === AdjustmentStatusEnum.Pending;
       return (
-        <AdaptiveThreeDotsActions directActionLimit={3}
+        <AdaptiveThreeDotsActions
+          directActionLimit={3}
           placement="right-top"
           actions={[
             ...(access.canAdd && isPending && onApprove
@@ -138,7 +141,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
         />
       );
     },
-    [access.canAdd, onView, onApprove, onReject]
+    [access.canAdd, onApprove, onReject]
   );
 
   return (
@@ -167,32 +170,31 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
           />
         </Box>
       </Card>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Tabs
-            value={tabs.value}
-            onChange={(_e, value) => {
-              tabs.onChange(_e, value);
-              onTabChange(value as AdjustmentTabEnum);
-            }}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
-          >
-            {ADJUSTMENT_TABS.map((tab) => (
-              <Tab
-                key={tab.value}
-                value={tab.value}
-                sx={{ fontSize: '12px' }}
-                label={
-                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                    {tab.label}
-                    <Label color={tab.color as LabelColor}>{tabCounts[tab.value] ?? 0}</Label>
-                  </Box>
-                }
-              />
-            ))}
-          </Tabs>
-        </Box>
-      </Card>
+      <FinanceListActionRow action={primaryAction}>
+        <Tabs
+          variant="scrollable"
+          value={tabs.value}
+          onChange={(_e, value) => {
+            tabs.onChange(_e, value);
+            onTabChange(value as AdjustmentTabEnum);
+          }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
+        >
+          {ADJUSTMENT_TABS.map((tab) => (
+            <Tab
+              key={tab.value}
+              value={tab.value}
+              sx={{ fontSize: '12px' }}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}
+                  <Label color={tab.color as LabelColor}>{tabCounts[tab.value] ?? 0}</Label>
+                </Box>
+              }
+            />
+          ))}
+        </Tabs>
+      </FinanceListActionRow>
 
       <CustomizableTable
         getRowAction={(row) =>
@@ -203,7 +205,8 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
                   onView(row as Parameters<typeof onView>[0]);
                 },
               }
-            : undefined}
+            : undefined
+        }
         tableId="adjustment-table"
         isLoading={isLoading || isFetching}
         noDataText={<>No adjustment records found.</>}

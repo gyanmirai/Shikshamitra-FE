@@ -5,6 +5,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Box, Button, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
+import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 
@@ -33,7 +34,7 @@ export default function FeeCollectionOutcomePanel({
       title={summary?.headline ?? 'Payment recorded'}
       icon="mdi:clipboard-check-outline"
       action={
-        collectResponse.status === 2 ? (
+        collectResponse.status === FeeCollectionStatusType.InReconciliation ? (
           <Label color="warning">Pending verification</Label>
         ) : undefined
       }
@@ -44,9 +45,18 @@ export default function FeeCollectionOutcomePanel({
           value={formatNumber(summary?.totalAmount ?? collectResponse.receivedAmount, 'INR')}
         />
         {collectResponse.receiptNumber && (
-          <DetailField label="Receipt number" value={collectResponse.receiptNumber} />
+          <DetailField label="Collection reference" value={collectResponse.receiptNumber} />
         )}
       </DetailGrid>
+      <Typography variant="body2" color="text.secondary">
+        {collectResponse.feeReceiptId && collectResponse.chargeReceiptId
+          ? 'Two receipts generated: fees and charges.'
+          : 'One receipt generated.'}
+        {collectResponse.status === FeeCollectionStatusType.InReconciliation &&
+          (collectResponse.feeReceiptId && collectResponse.chargeReceiptId
+            ? ' Reconciliation shows two entries for this payment, verified together.'
+            : ' Reconciliation shows one entry for this payment.')}
+      </Typography>
       {receiptAccessUnavailable && (
         <Typography variant="body2" color="text.secondary">
           Payment recorded. Receipt access is unavailable for your account.

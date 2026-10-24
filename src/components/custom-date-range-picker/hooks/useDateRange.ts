@@ -1,6 +1,6 @@
 import type { Dayjs } from 'dayjs';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import type { DateRange, DateRangePickerProps } from '../types';
 
@@ -64,13 +64,17 @@ export function useDateRange(props: DateRangePickerProps): UseDateRangeReturn {
 
   const [internalRange, setInternalRange] = useState<DateRange>(committedRange);
 
-  // Sync with controlled value if provided
+  // Formik can recreate the tuple on any blur/validation render. Only an actual
+  // external date change should replace an uncommitted calendar selection.
+  const controlledKey = value?.map((date) => date?.valueOf() ?? null).join('|');
+  const previousControlledKey = useRef(controlledKey);
   useEffect(() => {
-    if (value) {
+    if (value && previousControlledKey.current !== controlledKey) {
+      previousControlledKey.current = controlledKey;
       setCommittedRange(value);
       setInternalRange(value);
     }
-  }, [value]);
+  }, [value, controlledKey]);
 
   const [startDate, endDate] = internalRange;
 
@@ -150,12 +154,12 @@ export function useDateRange(props: DateRangePickerProps): UseDateRangeReturn {
           setCommittedRange(newRange);
           if (onChange) onChange(newRange);
           if (onAcceptProp) onAcceptProp(newRange);
-          onClose(); // logic inside onClose will revert if we don't update committedRange first.
-          // But we just updated it.
+          onCloseProp?.();
+          setOpenState(false);
         }
       }
     },
-    [startDate, endDate, onChange, closeOnSelect, onClose, onAcceptProp]
+    [startDate, endDate, onChange, closeOnSelect, onCloseProp, onAcceptProp]
   );
 
   const onReset = useCallback(() => {

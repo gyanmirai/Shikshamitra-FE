@@ -37,6 +37,8 @@ export interface GetReconciliationListParams {
 // ── List item ──────────────────────────────────────────────────────────────────
 
 export interface ReconciliationListItemDto {
+  receiptScope?: 'Fee' | 'Charge' | 'Combined';
+  paymentReceiptCount?: number;
   id: string;
   receiptNumber: string;
   studentId: string;
@@ -68,6 +70,7 @@ export interface ReconciliationListItemDto {
 // ── Tab counts ─────────────────────────────────────────────────────────────────
 
 export interface ReconciliationTabCountsDto {
+  cashOfficial?: number;
   totalPending: number;
   chequePending: number;
   chequeApproved: number;

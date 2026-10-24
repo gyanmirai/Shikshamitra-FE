@@ -12,6 +12,25 @@ audience: humans-and-agents
 
 Admission collection responses and Records withdrawal preview rows share the output-only `src/redux/finance/fee-proration-result.ts` type. Existing Admission collection queries read/prepare the result. Existing transition mutations invalidate affected Finance owner caches after applied withdrawal or correction. Fee ledger line types expose a separate withdrawal-credit amount/explanation. No new Student route or policy mutation is introduced.
 
+Refund eligibility and request types in `src/redux/finance/RefundManagement/feeRefundManage.ts`
+support the separate **Paid charges** group. `FeeHeadRefundTable` preserves the charge/payment/
+receipt references when selecting one row or a whole group. `buildFeeRefundApiPayload` sends
+`chargeId` for charge payments and `dueFeeId` for fee dues; both use the existing receipt selection
+restriction. Replacement hydration and the refund detail table retain charge names and amounts.
+See the [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#paid-charges-in-refund-requests).
+Focused checks: `RefundSelection.test.tsx` and `RefundForm.test.tsx` in the refund form folder.
+
+Collection Policy forms, summaries and saved details use calendar days for the grace period.
+Create/update and fee-head override requests omit `gracePeriodType`; the calculation selector has been removed.
+See the [backend policy contract](../../../Shikshamitra-BE/docs/modules/finance/api.md) for legacy snapshot compatibility.
+
+Collection Policy create/update/clone/read/version responses carry `allocationBasis`; no priority
+list is sent. `src/redux/feeCollection/feeCollection.ts` types the collect form's resolved basis,
+policy identity/version, ordered due IDs and opaque revision. Student and Admission collection
+share `automaticAllocation: { revision, dueFeeIds, chargeIds }`, including unfunded selected dues.
+The server recalculates money and rejects stale or altered allocations. See the
+[backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#automatic-collection-allocation).
+
 TL;DR: Finance clients live mostly under `src/redux/finance/**`.
 Several older fee and receipt surfaces still use shared clients outside that folder.
 
@@ -134,3 +153,9 @@ The implemented selectors, retired Account Heads route, lookup permissions, cach
 Manual requests include bankAccountId, payer/payee, paymentReference and a stable UUID idempotency key retained on retry.
 Register list/detail queries subscribe to Income, Expense, Fee Collection and Fee Refund cache tags.
 Use [the workspace contract](./references/income-expense-workspaces.md) for UI behavior and backend ownership.
+
+## Receipt lifecycle client fields
+
+The feeReceiptApi list/detail contract adds paymentMethodLabel and pdfFileName. ReceiptPreviewDialog displays the method and downloads the authenticated PDF blob using pdfFileName. Receipt kind enum values remain unchanged; display labels use Provisional Receipt / Official Receipt. The combined document label is supplied by the backend. Reconciliation approve/reject mutations invalidate receiptType.receipt. Tab counts include cashOfficial; the Cash table queries the existing reconciliation list with paymentMethod=Cash, server pagination and search.
+
+Reconciliation PDF downloads also use `/v1/fee-receipts/{id}/pdf`. The mutation returns `{ blob, fileName }`; `fileName` comes from the exposed Content-Disposition header (UTF-8 filename preferred). Approved rows select the linked official receipt ID, and their preview displays the official number.

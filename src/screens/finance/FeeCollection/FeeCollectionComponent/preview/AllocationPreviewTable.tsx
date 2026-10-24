@@ -1,16 +1,17 @@
+import type { IData, IColumn } from 'src/components/customizabaleTable/types';
+
 import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
-import type { IColumn } from 'src/components/customizabaleTable/types';
 import { Box, Stack, Divider, Collapse, IconButton, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
-  FeeCollectionStatusTypeColors,
   feeInstallmentStatusLabel,
   chargeCollectionStatusLabel,
+  FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
 
 import { selectFeeRows, selectChargeRows, groupFeeRowsByMonth } from './paymentAllocationUtils';
@@ -508,7 +509,19 @@ const AllocationPreviewTable = ({ allocatedRows, preserveOrder = false }: Props)
         minWidth: 100,
         render: (value: number) => formatNumber(value, 'INR'),
       })),
-      { id: 'statusLabel', label: 'Status', minWidth: 100 },
+      {
+        id: 'statusLabel',
+        label: 'Status',
+        minWidth: 100,
+        render: (value: string, row: IData) => (
+          <Label
+            color={FeeCollectionStatusTypeColors[row.status as FeeCollectionStatusType]}
+            variant="soft"
+          >
+            {value}
+          </Label>
+        ),
+      },
     ].map((column) => ({ ...column, isSort: false, isFilter: false }));
     const data = allocatedRows.map((row, index) => ({
       ...row,

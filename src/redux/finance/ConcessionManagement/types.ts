@@ -138,6 +138,8 @@ export interface StudentBasicDetails {
   grNumber: string;
   standardName: string;
   divisionName: string;
+  boardName?: string;
+  educationMediumName?: string;
 }
 
 export interface ApplicationconcessionBasicDetail {

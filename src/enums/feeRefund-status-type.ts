@@ -19,7 +19,7 @@ export const FeeRefundStatusOptions = [
   { label: 'Under review', value: FeeRefundStatusType.UnderReview },
   { label: 'Approved', value: FeeRefundStatusType.Approved },
   { label: 'Processing', value: FeeRefundStatusType.Processing },
-  { label: 'Processed', value: FeeRefundStatusType.Processed },
+  { label: 'Completed', value: FeeRefundStatusType.Processed },
   { label: 'Failed', value: FeeRefundStatusType.Failed },
   { label: 'Rejected', value: FeeRefundStatusType.Rejected },
   { label: 'Cancelled', value: FeeRefundStatusType.Cancelled },

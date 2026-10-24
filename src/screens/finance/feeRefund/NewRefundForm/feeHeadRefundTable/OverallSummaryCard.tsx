@@ -3,8 +3,10 @@
 import React, { useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
-import { formatCurrency } from 'src/utils/cureencyFormater';
+import { formatNumber } from 'src/utils/formate_number';
 import { Box, Chip, Stack, Typography } from '@mui/material';
+
+import { isValidRefundAmount } from '../initialValuesAndValidation';
 
 import type { RefundFormik, IFeeHeadPayment } from '../types';
 import type { IFeeHeadRefundItem } from '../initialValuesAndValidation';
@@ -23,6 +25,7 @@ interface ISummaryTotals {
   totalRefundable: number;
   totalRefundInput: number;
   totalSelectedMonths: number;
+  incompleteMonths: number;
 }
 
 const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
@@ -40,39 +43,49 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
    *   without memoization this runs on every parent render
    * - Prevents redundant iteration over all fee head payment records
    */
-  const { totalPaid, totalRefunded, totalRefundable, totalRefundInput, totalSelectedMonths } =
-    useMemo((): ISummaryTotals => {
-      let tPaid = 0;
-      let tRefunded = 0;
-      let tRefundable = 0;
-      let tInput = 0;
-      let tMonths = 0;
-      const refunds = formik.values.feeHeadRefunds as IFeeHeadRefundItem[];
-      feeHeads.forEach((fh) => {
-        const fhEntry = refunds.find((r) => r.feeHeadId === fh.feeHeadId);
-        const selectedMonthNames = (fhEntry?.months ?? []).map((m) => m.month);
-        fh.items
-          .filter((m) => (isAdj ? m.refundable > 0 || m.refunded > 0 : m.paid > 0))
-          .forEach((m) => {
-            const refundable = isAdj ? m.refundable : Math.max(0, m.paid - m.refunded);
-            tPaid += m.paid;
-            tRefunded += m.refunded;
-            tRefundable += refundable;
-            if (selectedMonthNames.includes(m.month)) {
-              tMonths += 1;
-              const entry = fhEntry?.months.find((x) => x.month === m.month);
-              tInput += Number(entry?.amount) || 0;
-            }
-          });
-      });
-      return {
-        totalPaid: tPaid,
-        totalRefunded: tRefunded,
-        totalRefundable: tRefundable,
-        totalRefundInput: tInput,
-        totalSelectedMonths: tMonths,
-      };
-    }, [feeHeads, formik.values.feeHeadRefunds, isAdj]);
+  const {
+    totalPaid,
+    totalRefunded,
+    totalRefundable,
+    totalRefundInput,
+    totalSelectedMonths,
+    incompleteMonths,
+  } = useMemo((): ISummaryTotals => {
+    let tPaid = 0;
+    let tRefunded = 0;
+    let tRefundable = 0;
+    let tInput = 0;
+    let tMonths = 0;
+    let incomplete = 0;
+    const refunds = formik.values.feeHeadRefunds as IFeeHeadRefundItem[];
+    feeHeads.forEach((fh) => {
+      const fhEntry = refunds.find((r) => r.feeHeadId === fh.feeHeadId);
+      const selectedMonthNames = (fhEntry?.months ?? []).map((m) => m.month);
+      fh.items
+        .filter((m) => (isAdj ? m.refundable > 0 || m.refunded > 0 : m.paid > 0))
+        .forEach((m) => {
+          const refundable = Math.max(0, m.refundable);
+          tPaid += m.paid;
+          tRefunded += m.refunded;
+          tRefundable += refundable;
+          if (selectedMonthNames.includes(m.month)) {
+            tMonths += 1;
+            const entry = fhEntry?.months.find((x) => x.month === m.month);
+            if (entry && isValidRefundAmount(entry.amount) && Number(entry.amount) <= refundable) {
+              tInput += Number(entry.amount);
+            } else incomplete += 1;
+          }
+        });
+    });
+    return {
+      totalPaid: tPaid,
+      totalRefunded: tRefunded,
+      totalRefundable: tRefundable,
+      totalRefundInput: tInput,
+      totalSelectedMonths: tMonths,
+      incompleteMonths: incomplete,
+    };
+  }, [feeHeads, formik.values.feeHeadRefunds, isAdj]);
 
   // ── Stat card definitions ──────────────────────────────────────────────────
   const statCards = [
@@ -110,13 +123,15 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
       label: isAdj ? 'Adjustment Requested' : 'Refund Requested',
       value: totalRefundInput,
       icon: 'solar:money-bag-bold',
-      accent: theme.palette.primary.main,
-      accentBg: alpha(theme.palette.primary.main, 0.07),
-      accentBorder: alpha(theme.palette.primary.main, 0.2),
+      accent: theme.palette.info.main,
+      accentBg: alpha(theme.palette.info.main, 0.07),
+      accentBorder: alpha(theme.palette.info.main, 0.2),
       sub:
-        totalSelectedMonths > 0
-          ? `${totalSelectedMonths} month${totalSelectedMonths !== 1 ? 's' : ''} selected`
-          : 'Select months',
+        incompleteMonths > 0
+          ? `${incompleteMonths} selected installment${incompleteMonths !== 1 ? 's' : ''} incomplete`
+          : totalSelectedMonths > 0
+            ? `${totalSelectedMonths} month${totalSelectedMonths !== 1 ? 's' : ''} selected`
+            : 'Select months',
       highlight: true,
     },
   ];
@@ -141,7 +156,7 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
           <Chip
             size="small"
             label={`${totalSelectedMonths} month${totalSelectedMonths !== 1 ? 's' : ''} selected`}
-            color="primary"
+            color={incompleteMonths > 0 ? 'warning' : 'info'}
             variant="soft"
             sx={{ height: 20, fontSize: 10, fontWeight: 700 }}
           />
@@ -229,7 +244,7 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
-              {formatCurrency(card.value)}
+              {formatNumber(card.value, 'INR')}
             </Typography>
 
             {/* Sub-label */}

@@ -8,7 +8,6 @@ import {
   List,
   Stack,
   Paper,
-  Button,
   Checkbox,
   ListItem,
   Skeleton,
@@ -18,6 +17,7 @@ import {
   ListItemText,
   ListItemButton,
   TablePagination,
+  FormControlLabel,
 } from '@mui/material';
 
 interface IStudentOption {
@@ -109,6 +109,10 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
     [filteredStudents, selectedStudentIds]
   );
 
+  const selectAllIndeterminate =
+    !selectAllChecked &&
+    filteredStudents.some((student) => selectedStudentIds.includes(student.id));
+
   const currentPage = Math.min(page, Math.max(0, Math.ceil(filteredStudents.length / 25) - 1));
 
   return (
@@ -124,34 +128,37 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
         }}
       >
         <Stack spacing={1.5}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <TextField
-              size="small"
-              fullWidth
-              label="Search students"
-              placeholder="Name, admission #, or roll #"
-              value={localSearchQuery}
-              disabled={disabled}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              InputProps={{
-                startAdornment: <Iconify icon="solar:magnifer-linear" sx={{ mr: 1 }} />,
-              }}
-            />
-            <Button
-              size="small"
-              variant={selectAllChecked ? 'contained' : 'outlined'}
-              onClick={handleSelectAllToggle}
-              disabled={disabled || filteredStudents.length === 0}
-              sx={{ whiteSpace: 'nowrap', minWidth: 96 }}
-            >
-              {selectAllChecked ? 'Deselect results' : 'Select all results'}
-            </Button>
-          </Stack>
+          <TextField
+            size="small"
+            fullWidth
+            label="Search students"
+            placeholder="Name, admission #, or roll #"
+            value={localSearchQuery}
+            disabled={disabled}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            InputProps={{
+              startAdornment: <Iconify icon="solar:magnifer-linear" sx={{ mr: 1 }} />,
+            }}
+          />
           <Typography variant="caption" color="text.secondary">
             {selectedStudentIds.length} of {totalCount} students selected ·{' '}
             {filteredStudents.length} matching results
           </Typography>
         </Stack>
+
+        <FormControlLabel
+          sx={{ m: 0, px: 1, width: 1 }}
+          label="Select all results"
+          control={
+            <Checkbox
+              size="small"
+              checked={selectAllChecked}
+              indeterminate={selectAllIndeterminate}
+              onChange={handleSelectAllToggle}
+              disabled={disabled || isLoading || filteredStudents.length === 0}
+            />
+          }
+        />
 
         {/* Student List */}
         <Box sx={{ flex: 1, overflow: 'auto' }}>

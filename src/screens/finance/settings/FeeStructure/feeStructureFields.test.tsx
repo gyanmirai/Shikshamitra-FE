@@ -128,7 +128,7 @@ beforeEach(() => {
 });
 
 async function addHead() {
-  fireEvent.click(screen.getByRole('button', { name: 'Add fee head' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Fee Head' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: /Fee head/ }));
   fireEvent.click(await screen.findByRole('option', { name: 'Tuition' }));
   expect(screen.queryByRole('button', { name: 'Add Head' })).toBeNull();
@@ -153,7 +153,9 @@ it('saves admission-only heads without a payment frequency and explains the excl
   expect(within(dialog).getByText(/Excluded from Fee Collection and income/)).toBeVisible();
   const info = within(dialog).getByRole('button', { name: 'About collect at admission' });
   act(() => info.focus());
-  expect(await screen.findByRole('tooltip', {}, { timeout: 4000 })).toHaveTextContent('does not collect money');
+  expect(await screen.findByRole('tooltip', {}, { timeout: 4000 })).toHaveTextContent(
+    'does not collect money'
+  );
   act(() => info.blur());
   fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
   await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add Fee Head' })).toBeNull());
@@ -166,8 +168,8 @@ it('blocks Next and direct Review when collection is missing while allowing inco
   render(ui());
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   expect(screen.getByText('Collection Policy is required')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Review & continue' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Save draft' })).not.toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Save Draft' })).not.toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
   expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
     'aria-current',
@@ -195,12 +197,12 @@ it('validates clearing collection immediately and keeps refund optional', async 
   expect(state.policyToast).toHaveBeenCalledWith({
     message: 'Collection Policy added to this draft.',
   });
-  expect(screen.getByRole('button', { name: 'Review & continue' })).not.toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Review & Continue' })).not.toBeDisabled();
   expect(screen.queryByText('Collection Policy is required')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Change Collection Policy' }));
   fireEvent.click(screen.getByRole('button', { name: 'Remove Collection Policy' }));
   expect(screen.getByText('Collection Policy is required')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Review & continue' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
 });
 
 it('resumes a saved structure at its scoped saved navigation step', () => {
@@ -261,7 +263,7 @@ it('ignores an outstanding preview when a newer saved structure arrives', async 
     resolvePreview({ isReady: true, errors: [], warnings: [], coverage: [], schedules: [] });
   });
   expect(screen.queryByRole('heading', { name: 'Policy Coverage' })).toBeNull();
-  expect(screen.getByRole('button', { name: 'Publish structure' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Publish Structure' })).toBeDisabled();
 });
 
 it('keeps the current step and entered name when Save & next fails', async () => {
@@ -273,7 +275,7 @@ it('keeps the current step and entered name when Save & next fails', async () =>
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Annual fees' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save & continue' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Continue' }));
   await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
   expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue('Annual fees');
   expect(screen.getByRole('button', { name: /^Step 1: Fee heads & terms$/i })).toHaveAttribute(
@@ -299,7 +301,7 @@ it('advances after a successful save and restores the canonical name when naviga
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Annual fees' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save & continue' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Continue' }));
   await screen.findByRole('button', { name: 'Select Collection Policy' });
   expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
     'aria-current',
@@ -364,13 +366,13 @@ it('saves the selected collection policy before allowing review and publication 
   };
   render(ui(record));
   const publishButton = () =>
-    screen.getByRole('button', { name: 'Publish structure' }) as HTMLButtonElement;
-  expect(screen.queryByRole('button', { name: 'Publish structure' })).toBeNull();
+    screen.getByRole('button', { name: 'Publish Structure' }) as HTMLButtonElement;
+  expect(screen.queryByRole('button', { name: 'Publish Structure' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   await chooseCollection('collection prerna policy');
-  expect(screen.queryByRole('button', { name: 'Publish structure' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Publish Structure' })).toBeNull();
   // Reviewing unsaved input must not permit publishing the older server record.
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(ready) });
   fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
@@ -378,21 +380,21 @@ it('saves the selected collection policy before allowing review and publication 
   expect(screen.queryByText('All configuration checks passed.')).toBeNull();
   expect(publishButton().disabled).toBe(true);
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(saved) });
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
-  await waitFor(() => expect(screen.queryByRole('button', { name: 'Save draft' })).toBeNull());
+  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Save Draft' })).toBeNull());
   expect(state.mutate.mock.calls[1][0].changes).toEqual({
     policies: { collection: { policyId: policy.id, policyVersionId: policy.versionId } },
   });
   expect(publishButton().disabled).toBe(true);
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(ready) });
-  fireEvent.click(screen.getByRole('button', { name: 'Check readiness' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Check Readiness' }));
   await waitFor(() => expect(publishButton().disabled).toBe(false));
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve({ ...saved, status: 0 }) });
   fireEvent.click(publishButton());
   fireEvent.click(
     await screen
       .findByRole('dialog')
-      .then((dialog) => within(dialog).getByRole('button', { name: 'Publish structure' }))
+      .then((dialog) => within(dialog).getByRole('button', { name: 'Publish Structure' }))
   );
   await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(4));
   expect(state.mutate.mock.calls[3][0]).toEqual({
@@ -429,7 +431,7 @@ it('offers only structure policies and preserves a legacy concession attachment 
     unwrap: () => Promise.resolve({ ...record, name: 'Renamed fees' }),
   });
   render(ui(record));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Renamed fees' },
   });
@@ -440,7 +442,7 @@ it('offers only structure policies and preserves a legacy concession attachment 
   expect(
     screen.queryByText(/Concession Policy|Concession eligibility|Concession Fee Heads/)
   ).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
   await waitFor(() => expect(state.mutate).toHaveBeenCalled());
   expect(state.mutate.mock.calls[0][0].changes).toEqual({ name: 'Renamed fees' });
   expect(state.mutate.mock.calls[0][0].standardFeeStructures.concessionPolicyVersionId).toBe(
@@ -539,8 +541,8 @@ it('shows field-specific row errors after validation and carries them into Edit 
   const transportFrequency = screen.getByRole('group', { name: 'Payment frequency for Transport' });
   expect(amount).toHaveAttribute('data-invalid', 'false');
   expect(frequency).toHaveAttribute('data-invalid', 'false');
-  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Save & continue' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Continue' }));
   await waitFor(() => expect(amount).toHaveAttribute('data-invalid', 'true'));
   expect(amount).toHaveAccessibleDescription('Enter the total fee for this Fee Head.');
   expect(frequency).toHaveAccessibleDescription(
@@ -576,8 +578,8 @@ it('shows field-specific row errors after validation and carries them into Edit 
 it('keeps labelled row errors visible under the fee-head name on mobile', async () => {
   state.mobile = true;
   render(ui(savedRecord(savedHead({ paymentTermId: null, paymentTermVersionId: null }))));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
   const errors = await screen.findByRole('group', { name: 'Errors for Tuition' });
   expect(
     within(errors).getByText(
@@ -590,8 +592,8 @@ it('keeps labelled row errors visible under the fee-head name on mobile', async 
 
 it('shows the structure name error alongside row errors without sending an invalid draft', async () => {
   render(ui({ ...savedRecord(savedHead({ paymentTermId: null })), name: '' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
   expect(await screen.findByText('Enter a name for this Fee Structure.')).toBeTruthy();
   expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveAttribute(
     'aria-invalid',
@@ -607,7 +609,7 @@ it('shows the structure name error alongside row errors without sending an inval
 it('edits a retained payment-term pin and permits cached terms after refresh failure', async () => {
   state.lookups.terms = { ...catalog, error: true, ready: false };
   render(ui(savedRecord()));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: 'Edit Tuition' }));
   const select = screen.getByRole('combobox', { name: /Payment frequency/ });
   expect(select.textContent).toContain('Old monthly');
@@ -632,7 +634,7 @@ it('saves variable pricing with null amount while retaining frequency and option
   state.mutate.mockReturnValue({
     unwrap: () => Promise.resolve({ id: 'saved', name: 'Variable fees', status: 1, feeHeads: [] }),
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
   await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
   expect(state.mutate.mock.calls[0][0].standardFeeStructures.feeHeads[0]).toMatchObject({
     isVariable: true,
@@ -673,7 +675,7 @@ it.each(['0', '12.25'])(
       unwrap: () =>
         Promise.resolve({ ...structureCandidate(), id: 'saved', name: 'Annual fees', status: 1 }),
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
     expect(state.mutate.mock.calls[0][0].standardFeeStructures.feeHeads[0].amount).toBe(
       Number(amount)
@@ -683,8 +685,8 @@ it.each(['0', '12.25'])(
 
 it('excludes fee heads already configured from the Add dropdown', async () => {
   render(ui(savedRecord()));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Add fee head' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Fee Head' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: /Fee head/ }));
   expect(screen.queryByRole('option', { name: 'Tuition' })).toBeNull();
   expect(await screen.findByText('All available fee heads have been added.')).toBeTruthy();
@@ -692,14 +694,14 @@ it('excludes fee heads already configured from the Add dropdown', async () => {
 
 it('cancels an edited row without modifying the parent draft and confirms deletion', async () => {
   render(ui(savedRecord()));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: 'Edit Tuition' }));
   fireEvent.change(screen.getByRole('textbox', { name: /Annual amount/ }), {
     target: { value: '999' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   const discard = await screen.findByRole('dialog', { name: 'Discard unsaved changes?' });
-  fireEvent.click(within(discard).getByRole('button', { name: 'Keep editing' }));
+  fireEvent.click(within(discard).getByRole('button', { name: 'Keep Editing' }));
   expect(screen.getByRole('textbox', { name: /Annual amount/ }).getAttribute('value')).not.toBe(
     '100'
   );
@@ -707,7 +709,7 @@ it('cancels an edited row without modifying the parent draft and confirms deleti
   fireEvent.click(
     within(await screen.findByRole('dialog', { name: 'Discard unsaved changes?' })).getByRole(
       'button',
-      { name: 'Discard changes' }
+      { name: 'Discard Changes' }
     )
   );
   await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Edit Fee Head' })).toBeNull());
@@ -716,7 +718,7 @@ it('cancels an edited row without modifying the parent draft and confirms deleti
   expect(screen.getByRole('button', { name: 'Edit Tuition', hidden: true })).toBeTruthy();
   fireEvent.click(
     within(await screen.findByRole('dialog', { name: 'Delete Fee Head?' })).getByRole('button', {
-      name: 'Delete fee head',
+      name: 'Delete Fee Head',
     })
   );
   expect(screen.queryByRole('button', { name: 'Edit Tuition' })).toBeNull();
@@ -731,14 +733,14 @@ it('confirms replacing customized installments only when a new payment frequency
       )
     )
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: 'Edit Tuition' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: /Payment frequency/ }));
   fireEvent.click(await screen.findByRole('option', { name: 'Monthly · v1 · Default' }));
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   const replace = await screen.findByRole('dialog', { name: 'Replace Customized Schedule?' });
   expect(screen.getByText('Edit Fee Head', { exact: true })).toBeTruthy();
-  fireEvent.click(within(replace).getByRole('button', { name: 'Replace schedule' }));
+  fireEvent.click(within(replace).getByRole('button', { name: 'Replace Schedule' }));
   await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Edit Fee Head' })).toBeNull());
   expect(screen.queryByText('Version 1 · Customized installments')).toBeNull();
 });
@@ -972,7 +974,7 @@ it('preserves authorized policy removal without permission to browse replacement
   const record = checklistSetup();
   state.lookups.settings.permissions.collectionRead = false;
   render(ui(record));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   expect(screen.getByRole('button', { name: 'Change Collection Policy' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Remove Collection Policy' }));

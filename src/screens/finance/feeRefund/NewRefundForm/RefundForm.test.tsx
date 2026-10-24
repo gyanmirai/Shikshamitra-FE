@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { financePermissions } from 'src/constants/finance-menu';
 
 import RefundForm from './RefundForm';
 
@@ -8,19 +9,33 @@ const mocks = vi.hoisted(() => ({
   detail: {} as any,
   eligibility: vi.fn(),
   mutation: vi.fn(),
+  preview: vi.fn(),
+  createEligibility: {} as any,
+  session: null as any,
+  permissions: [] as any[],
 }));
 vi.mock('react-redux', () => ({
   useSelector: (select: any) =>
-    select({ globalState: { currentYear: mocks.year }, auth: { permissions: [] } }),
+    select({ globalState: { currentYear: mocks.year }, auth: { permissions: mocks.permissions } }),
 }));
-vi.mock('next-auth/react', () => ({ useSession: () => ({ data: null, status: 'authenticated' }) }));
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: mocks.session, status: 'authenticated' }),
+}));
 vi.mock('framer-motion', () => ({
   motion: { form: ({ children, onSubmit }: any) => <form onSubmit={onSubmit}>{children}</form> },
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/scrollbar', () => ({ Scrollbar: ({ children }: any) => children }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { error: vi.fn() } }));
-vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
+vi.mock('src/components/customDialog', () => ({
+  default: ({ open, title, children }: any) =>
+    open ? (
+      <div role="dialog" aria-label={title}>
+        {children}
+      </div>
+    ) : null,
+  DialogScrollContent: ({ children }: any) => children,
+}));
 vi.mock('src/components/form-busy-region', () => ({
   FormBusyRegion: ({ children }: any) => children,
 }));
@@ -33,18 +48,64 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 vi.mock('src/redux/finance/RefundManagement/feeRefundManage', () => ({
   useGetFeeRefundByIdQuery: () => mocks.detail,
   useLazyGetRefundEligibilityQuery: () => [mocks.eligibility, {}],
-  useGetRefundEligibilityQuery: () => ({}),
+  useGetRefundEligibilityQuery: () => mocks.createEligibility,
   useCreateFeeRefundMutation: () => [mocks.mutation, {}],
   useUpdateFeeRefundMutation: () => [mocks.mutation, {}],
   useSubmitFeeRefundMutation: () => [mocks.mutation, {}],
-  usePreviewFeeRefundMutation: () => [mocks.mutation, {}],
+  usePreviewFeeRefundMutation: () => [mocks.preview, {}],
 }));
 vi.mock('./RefundGeneralInfoCard', () => ({ default: () => <span>Student form ready</span> }));
 vi.mock('./FeeRefundDetailForm', () => ({
   default: ({ formik }: any) => (
-    <span>
+    <div>
       Loaded allocations: {formik.values.feeHeadRefunds.flatMap((head: any) => head.months).length}
-    </span>
+      {[false, true].map((complete) => (
+        <button
+          key={String(complete)}
+          type="button"
+          onClick={() =>
+            formik.setValues({
+              ...formik.values,
+              boardId: 'board',
+              mediumId: 'medium',
+              standardId: 'class',
+              divisionId: 'division',
+              studentId: 'student',
+              refundMethod: 'Cash',
+              paymentDetails: { receivedBy: 'Parent' },
+              feeHeadRefunds: [
+                {
+                  feeHeadId: 'FH1',
+                  months: [
+                    {
+                      month: 'June',
+                      dueFeeId: 'due-1',
+                      sourceAllocationId: 'allocation-1',
+                      sourceReceiptId: 'receipt',
+                      amount: 500,
+                    },
+                  ],
+                },
+                {
+                  feeHeadId: 'FH2',
+                  months: [
+                    {
+                      month: 'June',
+                      dueFeeId: 'due-2',
+                      sourceAllocationId: 'allocation-2',
+                      sourceReceiptId: 'receipt',
+                      amount: complete ? 200 : '',
+                    },
+                  ],
+                },
+              ],
+            })
+          }
+        >
+          {complete ? 'Complete selected amounts' : 'Select incomplete amounts'}
+        </button>
+      ))}
+    </div>
   ),
 }));
 
@@ -77,6 +138,9 @@ describe('refund edit loading', () => {
     vi.clearAllMocks();
     mocks.detail = { currentData: undefined, isLoading: true, isFetching: true, refetch: vi.fn() };
     mocks.eligibility.mockReturnValue({ unwrap: () => Promise.resolve(eligibility) });
+    mocks.session = null;
+    mocks.permissions = [];
+    mocks.createEligibility = {};
   });
 
   it('shows all section skeletons until saved allocations have loaded', async () => {
@@ -124,5 +188,45 @@ describe('refund edit loading', () => {
     expect(screen.queryByText('Student form ready')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     await waitFor(() => expect(screen.getByText('Loaded allocations: 1')).toBeVisible());
+  });
+
+  it('blocks confirmation and even direct form submission until every selected installment is complete', async () => {
+    mocks.detail = { isLoading: false, isFetching: false };
+    mocks.session = { profile: { role: ['admin'] } };
+    mocks.permissions = [{ name: financePermissions.fees.refundActions.approve, isGranted: true }];
+    mocks.createEligibility = {
+      currentData: {
+        totalRefundable: 1000,
+        allowedPayoutMethods: ['Cash'],
+        feeHeads: [{ months: [{ refundable: 1000 }] }],
+      },
+    };
+    mocks.preview.mockReturnValue({
+      unwrap: () => Promise.resolve({ isAllowed: true, maximumAllowedAmount: 700 }),
+    });
+    render(<RefundForm />);
+    fireEvent.click(screen.getByRole('button', { name: 'Select incomplete amounts' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        '1 selected installment needs a refund amount'
+      )
+    );
+    const submit = screen.getByRole('button', { name: 'Submit' });
+    expect(submit).toBeDisabled();
+    await act(async () => {
+      fireEvent.submit(submit.closest('form')!);
+    });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled());
+    await waitFor(() => expect(mocks.preview).not.toHaveBeenCalled());
+    expect(mocks.mutation).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Complete selected amounts' }));
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    await waitFor(() =>
+      expect(screen.getByRole('dialog', { name: 'Submit and Approve Refund?' })).toBeVisible()
+    );
+    expect(mocks.preview).toHaveBeenCalledOnce();
+    expect(mocks.mutation).not.toHaveBeenCalled();
   });
 });

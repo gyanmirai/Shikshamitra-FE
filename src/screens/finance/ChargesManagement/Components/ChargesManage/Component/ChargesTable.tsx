@@ -17,6 +17,7 @@ import { ChargeWorkflowStatus, ChargeWorkflowStatusOptions } from 'src/enums/fee
 import { useChargePermissions } from 'src/screens/finance/ChargesManagement/useChargePermissions';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
+import FinanceListActionRow from 'src/screens/finance/components/FinanceListActionRow';
 import {
   useFinanceAcademicFilters,
   type UseFinanceAcademicFiltersResult,
@@ -40,6 +41,7 @@ const ChargesTable = ({
   selectedTab,
   setSelectedTab,
   refetchTrigger,
+  primaryAction,
 }: {
   onView: (data: IChargeData) => void;
   onEdit: (data: IChargeData) => void;
@@ -52,6 +54,7 @@ const ChargesTable = ({
   selectedTab: string | number;
   setSelectedTab: (value: string | number) => void;
   refetchTrigger?: number;
+  primaryAction?: React.ReactNode;
 }) => {
   const localFilters = useFinanceAcademicFilters();
   const filters = academicFilters || localFilters;
@@ -200,9 +203,9 @@ const ChargesTable = ({
           />
         </Box>
       </Card>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+      <FinanceListActionRow action={primaryAction}>
           <Tabs
+            variant="scrollable"
             value={tabs.value}
             onChange={(event, value) => {
               tabs.onChange(event, value);
@@ -231,8 +234,7 @@ const ChargesTable = ({
               />
             ))}
           </Tabs>
-        </Box>
-      </Card>
+      </FinanceListActionRow>
 
       <CustomizableTable
         getRowAction={(row) =>
@@ -295,7 +297,7 @@ const ChargesTable = ({
             align: 'left',
             filterType: 'number',
             isFilter: true,
-            isSort: false,
+            isSort: true,
             minWidth: 120,
             maxWidth: 180,
             render: (_value, row: any) => {
@@ -303,13 +305,41 @@ const ChargesTable = ({
               const processed: number = row.processedCount ?? 0;
               return (
                 <Box>
-                  <Typography variant="body2">{total}</Typography>
+                  <Typography variant="body2">{total} assigned</Typography>
                   <Typography variant="caption" color="text.secondary">
                     {processed} reviewed
                   </Typography>
                 </Box>
               );
             },
+          },
+          {
+            id: 'paidStudentCount',
+            label: 'Student Payment Status',
+            align: 'left',
+            // The combined progress display has no scalar column-filter contract.
+            isFilter: false,
+            filterType: 'number',
+            isSort: true,
+            minWidth: 230,
+            exportValue: (_value, row) =>
+              row.paidStudentCount == null || row.outstandingStudentCount == null || row.waivedStudentCount == null
+                ? 'Payment progress unavailable'
+                : `${row.paidStudentCount} paid · ${row.outstandingStudentCount} outstanding · ${row.waivedStudentCount} with waiver`,
+            render: (_value, row) => row.paidStudentCount == null || row.outstandingStudentCount == null || row.waivedStudentCount == null
+              ? <Typography variant="body2" color="text.secondary">Payment progress unavailable</Typography>
+              : (
+              <Box>
+                <Typography variant="body2">
+                  {row.paidStudentCount} paid · {row.outstandingStudentCount} outstanding
+                </Typography>
+                {!!row.waivedStudentCount && (
+                  <Typography variant="caption" color="text.secondary">
+                    {row.waivedStudentCount} with waiver
+                  </Typography>
+                )}
+              </Box>
+            ),
           },
           {
             id: 'categoryName',
@@ -402,6 +432,10 @@ const ChargesTable = ({
               const canApprove = isPending && permissions.canApprove && actions.includes('Approve');
               const canReject = isPending && permissions.canReject && actions.includes('Reject');
               const canVoid = permissions.canVoid && actions.includes('Void');
+              const showCancel = permissions.canVoid &&
+                (canVoid || row.workflowStatus === ChargeWorkflowStatus.InProcess ||
+                  row.workflowStatus === ChargeWorkflowStatus.Completed ||
+                  row.paidStudentCount > 0 || row.outstandingStudentCount > 0 || row.waivedStudentCount > 0);
               const name = row.chargeName || 'charge';
               return (
                 <AdaptiveThreeDotsActions directActionLimit={3}
@@ -452,11 +486,14 @@ const ChargesTable = ({
                         },
                       ]
                       : []),
-                    ...(canVoid
+                    ...(showCancel
                       ? [
                         {
                           id: 'void',
-                          label: `Void uncollected ${name}`,
+                          label: 'Cancel Charge',
+                          disabled: !canVoid,
+                          tooltip: canVoid ? `Cancel ${name}` :
+                            'Collected charges cannot be cancelled. Reverse the collection through reconciliation or use the refund workflow.',
                           icon: 'mdi:cancel-circle-outline',
                           color: 'warning.main',
                           onClick: () => onVoid(row as IChargeData),

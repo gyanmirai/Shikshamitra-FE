@@ -10,19 +10,29 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
+import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FeeMonth } from 'src/enums/fee-collection-type';
-import { formatNumber } from 'src/utils/formate_number';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
-import { Box, Chip, Alert, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Alert,
+  Stack,
+  Button,
+  Divider,
+  Skeleton,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import {
   useGetFeeRefundByIdQuery,
   type FeeRefundRequestDto,
@@ -36,11 +46,12 @@ import {
   useLazyGetRefundEligibilityQuery,
 } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
+import RefundFormSkeleton from './RefundFormSkeleton';
 import FeeRefundDetailsForm from './FeeRefundDetailForm';
 import RefundGeneralInfoCard from './RefundGeneralInfoCard';
-import RefundFormSkeleton from './RefundFormSkeleton';
 import { normalizeRefundMethod, isAllowedRefundMethod } from './refundPayoutMethods';
 import {
+  isValidRefundAmount,
   refundAllocationLabel,
   buildRefundInitialValues,
   buildFeeRefundApiPayload,
@@ -170,7 +181,7 @@ const FeeRefundFormComponent = ({
       const detail = editRefundDetail as FeeRefundRequestDto;
       const lineAmountByAllocationId = new Map<string, number>(
         (detail.lines || []).map((line) => [
-          line.sourceAllocationId || line.dueFeeId,
+          line.sourceAllocationId || line.dueFeeId || line.chargeId || '',
           Number(line.amount) || 0,
         ])
       );
@@ -186,26 +197,29 @@ const FeeRefundFormComponent = ({
             const months = (feeHead.months || [])
               .filter((m) => lineAmountByAllocationId.has(m.sourceAllocationId))
               .map((m) => ({
-                dueFeeId: m.dueFeeId,
+                dueFeeId: m.dueFeeId ?? '',
+                chargeId: m.chargeId ?? undefined,
                 sourceAllocationId: m.sourceAllocationId,
                 sourceReceiptId: m.sourceReceiptId,
-                month: refundAllocationLabel(
-                  FeeMonth[m.month] ?? `Month ${m.month}`,
-                  m.year,
-                  m.receiptNumber,
-                  m.sourceAllocationId,
-                  feeHead.months.filter(
-                    (other) =>
-                      other.month === m.month &&
-                      other.year === m.year &&
-                      other.receiptNumber === m.receiptNumber
-                  ).length > 1
-                ),
+                month: m.chargeName
+                  ? `${m.chargeName} · ${m.receiptNumber}${feeHead.months.filter((other) => other.month === m.month && other.year === m.year && other.receiptNumber === m.receiptNumber).length > 1 ? ` · allocation ${m.sourceAllocationId.slice(0, 8)}` : ''}`
+                  : refundAllocationLabel(
+                      FeeMonth[m.month] ?? `Month ${m.month}`,
+                      m.year,
+                      m.receiptNumber,
+                      m.sourceAllocationId,
+                      feeHead.months.filter(
+                        (other) =>
+                          other.month === m.month &&
+                          other.year === m.year &&
+                          other.receiptNumber === m.receiptNumber
+                      ).length > 1
+                    ),
                 amount: lineAmountByAllocationId.get(m.sourceAllocationId) ?? 0,
               }));
 
             return {
-              feeHeadId: feeHead.feeHeadId,
+              feeHeadId: feeHead.feeHeadId ?? 'paid-charges',
               months,
             };
           })
@@ -219,15 +233,19 @@ const FeeRefundFormComponent = ({
           const byHead = new Map<string, IFeeHeadRefundItem>();
           detail.lines.forEach((line) => {
             if (!line.sourceAllocationId || !line.sourceReceiptId) return;
-            const item = byHead.get(line.feeHeadId) ?? { feeHeadId: line.feeHeadId, months: [] };
+            const item = byHead.get(line.feeHeadId ?? 'paid-charges') ?? {
+              feeHeadId: line.feeHeadId ?? 'paid-charges',
+              months: [],
+            };
             item.months.push({
-              dueFeeId: line.dueFeeId,
+              dueFeeId: line.dueFeeId ?? '',
+              chargeId: line.chargeId ?? undefined,
               sourceAllocationId: line.sourceAllocationId,
               sourceReceiptId: line.sourceReceiptId,
               month: line.installmentLabel || line.feeHeadName || 'Paid fee',
               amount: line.approvedAmount,
             });
-            byHead.set(line.feeHeadId, item);
+            byHead.set(line.feeHeadId ?? 'paid-charges', item);
           });
           setPrefilledFeeHeadRefunds(Array.from(byHead.values()));
         } else {
@@ -473,17 +491,23 @@ const FeeRefundFormComponent = ({
   const currentPreview =
     reviewedPreview?.fingerprint === currentFingerprint ? reviewedPreview.result : null;
   // ── Derived totals for sticky footer ────────────────────────────────────────
-  const { totalSelectedMonths, totalRefundRequested } = useMemo(() => {
+  const { totalSelectedMonths, totalRefundRequested, incompleteRefundMonths } = useMemo(() => {
     const refunds = formik.values.feeHeadRefunds as IFeeHeadRefundItem[];
     let months = 0;
     let total = 0;
+    let incomplete = 0;
     refunds.forEach((fh) => {
       fh.months.forEach((m) => {
         months += 1;
-        total += Number(m.amount) || 0;
+        if (isValidRefundAmount(m.amount)) total += Number(m.amount);
+        else incomplete += 1;
       });
     });
-    return { totalSelectedMonths: months, totalRefundRequested: total };
+    return {
+      totalSelectedMonths: months,
+      totalRefundRequested: total,
+      incompleteRefundMonths: incomplete,
+    };
   }, [formik.values.feeHeadRefunds]);
 
   const editLoadError = hasSourceRefund && (editError || editEligibilityError);
@@ -606,10 +630,16 @@ const FeeRefundFormComponent = ({
                 <Chip
                   size="small"
                   label={`${totalSelectedMonths} month${totalSelectedMonths !== 1 ? 's' : ''} selected`}
-                  color="primary"
+                  color={incompleteRefundMonths > 0 ? 'warning' : 'info'}
                   variant="soft"
                   icon={<Iconify icon="solar:calendar-bold" width={14} />}
                 />
+                {incompleteRefundMonths > 0 && (
+                  <Typography variant="caption" color="error.main" role="status">
+                    {incompleteRefundMonths} selected installment
+                    {incompleteRefundMonths !== 1 ? 's need' : ' needs'} a refund amount.
+                  </Typography>
+                )}
                 {totalRefundRequested > 0 && (
                   <Box display="flex" alignItems="center" gap={1}>
                     <Typography variant="caption" color="text.secondary">
@@ -654,6 +684,9 @@ const FeeRefundFormComponent = ({
                 showSkeleton ||
                 editLoadError ||
                 sessionStatus === 'loading' ||
+                !formik.isValid ||
+                totalSelectedMonths === 0 ||
+                incompleteRefundMonths > 0 ||
                 (!hasSourceRefund && !refundCanSubmit)
               }
               loading={
@@ -673,36 +706,53 @@ const FeeRefundFormComponent = ({
           </Box>
         </Box>
       </Box>
-      <ConfirmDialog
+      <CustomDialog
         open={adminConfirmation !== null}
-        icon="warning"
-        title="Submit and approve refund?"
-        disableBackdropClick
-        cancelText="Keep editing"
-        onClose={() => setAdminConfirmation(null)}
-        content={
-          <Stack spacing={1}>
-            <Typography>
+        title="Submit and Approve Refund?"
+        maxWidth="xs"
+        hasForm={false}
+        guardUnsavedChanges={false}
+        disableClose={busy}
+        handleClose={() => setAdminConfirmation(null)}
+      >
+        <DialogScrollContent>
+          <Stack spacing={1} sx={{ typography: 'body2' }}>
+            <Typography variant="body2">
               {adminConfirmation?.studentName || 'Selected student'} · {currentYear?.name}
             </Typography>
-            <Typography>
+            <Typography variant="body2">
               Refund: {formatNumber(adminConfirmation?.amount ?? 0, 'INR')} via{' '}
               {adminConfirmation?.method}
             </Typography>
             {adminConfirmation?.receiptNumber && (
-              <Typography>Receipt: {adminConfirmation.receiptNumber}</Typography>
+              <Typography variant="body2">Receipt: {adminConfirmation.receiptNumber}</Typography>
             )}
-            <Typography>This request will be approved automatically when you confirm.</Typography>
-            <Typography>
+            <Typography variant="body2">
+              This request will be approved automatically when you confirm.
+            </Typography>
+            <Typography variant="body2">
               Approval does not send the payout; payout is recorded separately.
             </Typography>
           </Stack>
-        }
-        action={
+        </DialogScrollContent>
+        <DialogActions>
+          <Button
+            type="button"
+            variant="outlined"
+            color="inherit"
+            size="small"
+            disabled={busy}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => setAdminConfirmation(null)}
+          >
+            Keep editing
+          </Button>
           <LoadingButton
             startIcon={<Iconify icon="mdi:check-circle-outline" />}
             type="button"
             variant="contained"
+            size="small"
+            disabled={busy || !formik.isValid || incompleteRefundMonths > 0}
             loading={isSubmitting || isUpdating || isSubmittingDraft || isPreviewing}
             onClick={() => {
               confirmedAdminFingerprint.current = adminConfirmation?.fingerprint ?? null;
@@ -712,8 +762,8 @@ const FeeRefundFormComponent = ({
           >
             Submit and approve
           </LoadingButton>
-        }
-      />
+        </DialogActions>
+      </CustomDialog>
     </Box>
   );
 };

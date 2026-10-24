@@ -99,7 +99,7 @@ it('preserves the current class when a dirty switch is cancelled and guards dial
   fireEvent.click(screen.getByRole('button', { name: 'close' }));
   const confirm = screen.getByRole('dialog', { name: 'Discard unsaved changes?' });
   expect(onClose).not.toHaveBeenCalled();
-  fireEvent.click(within(confirm).getByRole('button', { name: 'Discard & leave' }));
+  fireEvent.click(within(confirm).getByRole('button', { name: 'Discard & Leave' }));
   expect(onClose).toHaveBeenCalledTimes(1);
 });
 

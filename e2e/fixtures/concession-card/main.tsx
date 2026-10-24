@@ -3,7 +3,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider, useColorScheme } from '@mui/material/styles';
 import { Box, Button, Stack, Typography, CssBaseline } from '@mui/material';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
@@ -11,9 +11,18 @@ import { financePermissions } from 'src/constants/finance-menu';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ConcessionItemCard from 'src/screens/finance/ConcessionAdmin/ConcessionItemCard';
+import StudentInformationAccordion from 'src/screens/finance/ConcessionAdmin/StucentConcessionCard';
 import 'simplebar-react/dist/simplebar.min.css';
 
 const actions = financePermissions.fees.concessionActions;
+function ThemeToggle() {
+  const { mode, setMode } = useColorScheme();
+  return (
+    <Button onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}>
+      Toggle preview theme
+    </Button>
+  );
+}
 const store = configureStore({
   reducer: {
     confirmPopup,
@@ -73,8 +82,20 @@ function Fixture() {
         <CssBaseline />
         <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'background.default', minHeight: '100dvh' }}>
           <Typography variant="body2" color="text.secondary" mb={1.5}>
-            Individual request card · synthetic verification
+            Student concession view · synthetic verification
           </Typography>
+          <ThemeToggle />
+          <StudentInformationAccordion
+            student={{
+              name: 'Aanya Example',
+              grNumber: '10260',
+              rollNo: '2',
+              standardName: 'Class 1',
+              divisionName: 'A',
+              boardName: 'CBSE',
+              educationMediumName: 'English',
+            }}
+          />
           <ConcessionItemCard
             item={item}
             onEdit={() => setLastAction('Edit delegated')}

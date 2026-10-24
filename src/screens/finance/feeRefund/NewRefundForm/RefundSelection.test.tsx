@@ -1,7 +1,7 @@
 import { useFormik } from 'formik';
 import { FeeMonth } from 'src/enums/fee-collection-type';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
 import { buildRefundInitialValues, buildFeeRefundApiPayload } from './initialValuesAndValidation';
@@ -17,9 +17,18 @@ vi.mock('src/redux/finance/adjustments/adjustmentApi', () => ({
   useGetAdjustmentEligibilityQuery: () => mocks.eligibility,
 }));
 
-function Request({ mode = 'refund' }: { mode?: 'refund' | 'adjustment' }) {
+function Request({
+  mode = 'refund',
+  partial = false,
+}: {
+  mode?: 'refund' | 'adjustment';
+  partial?: boolean;
+}) {
   const formik = useFormik({
-    initialValues: buildRefundInitialValues({ studentId: 'student' }),
+    initialValues: {
+      ...buildRefundInitialValues({ studentId: 'student' }),
+      refundType: partial ? 'partial' : 'full',
+    },
     onSubmit: () => {},
   });
   const months = formik.values.feeHeadRefunds.flatMap((head) => head.months);
@@ -89,6 +98,80 @@ describe('refund receipt selection', () => {
     expect(screen.queryByText(/This request is locked/)).not.toBeInTheDocument();
   });
 
+  it('selects paid charges with fees and submits their charge payment reference', async () => {
+    const data = mocks.eligibility.currentData;
+    data.totalPaid = 650;
+    data.totalRefundable = 650;
+    data.feeHeads.push({
+      feeHeadId: null,
+      feeHeadName: 'Paid charges',
+      months: [
+        {
+          chargeId: 'charge-1',
+          chargeName: 'Exam materials',
+          dueFeeId: null,
+          sourceAllocationId: 'charge-payment-1',
+          sourceReceiptId: 'receipt-0',
+          receiptNumber: 'FIN-0',
+          month: FeeMonth.December,
+          year: 2026,
+          total: 250,
+          paid: 250,
+          refunded: 0,
+          refundable: 250,
+        },
+      ],
+    });
+    render(<Request />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Exam materials · FIN-0' }));
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 450')
+    );
+    const payload = JSON.parse(screen.getByLabelText('Request payload').textContent!);
+    expect(payload.originalReceiptId).toBe('receipt-0');
+    expect(payload.lines).toEqual([
+      { dueFeeId: 'due-0', sourceAllocationId: 'allocation-0', amount: 200 },
+      { chargeId: 'charge-1', sourceAllocationId: 'charge-payment-1', amount: 250 },
+    ]);
+    expect(screen.getByRole('checkbox', { name: 'Select June 2026 · FIN-1' })).toBeDisabled();
+  });
+
+  it('bulk selects charge payments from one receipt', async () => {
+    mocks.eligibility.currentData.feeHeads = [
+      {
+        feeHeadId: null,
+        feeHeadName: 'Paid charges',
+        months: [0, 1].map((index) => ({
+          chargeId: `charge-${index}`,
+          chargeName: `Materials ${index}`,
+          dueFeeId: null,
+          sourceAllocationId: `charge-payment-${index}`,
+          sourceReceiptId: `receipt-${index}`,
+          receiptNumber: `FIN-${index}`,
+          month: FeeMonth.December,
+          year: 2026,
+          total: 200,
+          paid: 200,
+          refunded: 0,
+          refundable: 200,
+        })),
+      },
+    ];
+    render(<Request />);
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Select refundable installments for Paid charges' })
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 200')
+    );
+    const payload = JSON.parse(screen.getByLabelText('Request payload').textContent!);
+    expect(payload.lines).toEqual([
+      { chargeId: 'charge-0', sourceAllocationId: 'charge-payment-0', amount: 200 },
+    ]);
+    expect(screen.getByRole('checkbox', { name: 'Select Materials 1 · FIN-1' })).toBeDisabled();
+  });
+
   it('unlocks the other receipt when the selection is cleared', async () => {
     render(<Request />);
     const first = screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' });
@@ -106,7 +189,7 @@ describe('refund receipt selection', () => {
   });
 
   it('allows all installments from the same receipt and clears them together', async () => {
-    const months = mocks.eligibility.currentData.feeHeads[0].months;
+    const { months } = mocks.eligibility.currentData.feeHeads[0];
     months[1].sourceReceiptId = 'receipt-0';
     render(<Request />);
     const group = screen.getByRole('checkbox', {
@@ -129,5 +212,42 @@ describe('refund receipt selection', () => {
     await waitFor(() =>
       expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 400')
     );
+  });
+
+  it('applies repeatedly without clearing and uses the latest bulk amount with each line cap', async () => {
+    const { months } = mocks.eligibility.currentData.feeHeads[0];
+    months[1].sourceReceiptId = 'receipt-0';
+    months[1].refundable = 75;
+    render(<Request partial />);
+    fireEvent.click(
+      screen.getByRole('checkbox', {
+        name: 'Select refundable installments for Examination fee',
+      })
+    );
+    const amount = screen.getByRole('textbox', {
+      name: 'Amount for selected installments in Examination fee',
+    });
+    const apply = screen.getByRole('button', { name: 'Apply' });
+    expect(apply).toBeDisabled();
+    fireEvent.change(amount, { target: { value: '100.25' } });
+    fireEvent.click(apply);
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 175.25')
+    );
+    fireEvent.click(apply);
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 175.25')
+    );
+    expect(screen.queryByText('Required')).not.toBeInTheDocument();
+    fireEvent.change(amount, { target: { value: '25.50' } });
+    fireEvent.click(apply);
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 51')
+    );
+    fireEvent.click(apply);
+    expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 51');
+    fireEvent.change(amount, { target: { value: '0' } });
+    expect(apply).toBeDisabled();
+    expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 51');
   });
 });

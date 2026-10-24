@@ -14,8 +14,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Chip, Grid, Alert, Button, TextField, DialogActions } from '@mui/material';
-import { mergeCategoryTags } from 'src/screens/finance/settings/components/category-tags';
+import { Grid, Alert, Button, TextField, DialogActions } from '@mui/material';
 import { getAccountSettingSaveError } from 'src/screens/finance/settings/components/account-setting-save-error';
 import {
   useGetExpenseCategoryQuery,
@@ -49,8 +48,6 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
     [expenseCategoryData]
   );
 
-  const [tag, setTag] = useState('');
-
   // POST mutation for creating
   const [addExpenseCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -78,7 +75,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
       const payload = {
         name: values.name.trim(),
         description: values.description || '',
-        tags: mergeCategoryTags(values.tags || [], tag),
+        tags: editData?.tags || [],
         concurrencyStamp: editData ? values.concurrencyStamp : null,
       };
 
@@ -114,29 +111,8 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
     }
   };
 
-  const handleKeyDown = (e: any) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const trimmed = tag.trim();
-      if (trimmed && !formik.values.tags.includes(trimmed)) {
-        formik.setFieldValue('tags', [...formik.values.tags, trimmed]);
-        setTag('');
-      }
-    }
-  };
-
-  const handleDelete = (deleteTag: any) => {
-    formik.setFieldValue(
-      'tags',
-      formik.values.tags.filter((t: string) => t !== deleteTag)
-    );
-  };
-
   return (
-    <BackPopUpChecked
-      initialValues={{ ...formik.initialValues, draftTag: '' }}
-      currentValues={{ ...formik.values, draftTag: tag }}
-    >
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         {saveError && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -144,7 +120,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
           </Alert>
         )}
         <FormSectionCard
-          descriptionTooltip="Name this category and add tags to organize your expense records."
+          descriptionTooltip="Name and describe this category to organize your expense records."
           icon="solar:wallet-money-bold-duotone"
           title="Expense category details"
         >
@@ -171,60 +147,6 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
               </ShakingTextField>
             </Grid>
 
-            {/* Tags */}
-            <Grid size={12}>
-              <ShakingTextField error={!!(formik.touched.tags && formik.errors.tags) || false}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Tags (optional)"
-                  value={tag}
-                  onChange={(e) => setTag(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  InputProps={{
-                    startAdornment: (
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          gap: 0.5,
-                          alignItems: 'center',
-                          maxWidth: '100%',
-                        }}
-                      >
-                        {formik.values.tags.map((t: string, index: number) => (
-                          <Chip
-                            key={index}
-                            label={t}
-                            onDelete={() => handleDelete(t)}
-                            size="small"
-                            sx={{ mt: 1 }}
-                          />
-                        ))}
-                      </Box>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiInputBase-root': {
-                      flexWrap: 'wrap',
-                      alignItems: 'flex-start',
-                      minHeight: 'auto',
-                    },
-                    '& .MuiInputBase-input': {
-                      flexGrow: 1,
-                      minWidth: '80px',
-                    },
-                  }}
-                  error={formik.touched.tags && Boolean(formik.errors.tags)}
-                  helperText={
-                    (formik.touched.tags && typeof formik.errors.tags === 'string'
-                      ? formik.errors.tags
-                      : 'Press Enter to add a tag. Remaining text is included on submit.') ||
-                    undefined
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
             {/* Description */}
             <Grid size={12}>
               <TextField

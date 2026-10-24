@@ -1,6 +1,5 @@
 'use client';
 
-
 import type { RootState } from 'src/redux/store';
 import type {
   ChargeDetail,
@@ -18,6 +17,7 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomDialog from 'src/components/customDialog';
@@ -126,6 +126,7 @@ const ONLINE_PAYMENT_METHOD_KEYS = new Set([
 type GeneratedReceipt = {
   id: string;
   receiptNumber?: string;
+  pdfFileName?: string;
 };
 
 type ReceiptPreviewState = {
@@ -221,7 +222,6 @@ const FeeCollectComponentForm = ({
   onDirtyChange?: (dirty: boolean) => void;
 }) => {
   const theme = useTheme();
-  const [cashReceived, setCashReceived] = useState<string | null>(null);
   const { currentYear: selectedAcademicYear } = useSelector(
     (state: RootState) => state.globalState
   );
@@ -366,7 +366,26 @@ const FeeCollectComponentForm = ({
           studentId: lastCollectResponse.studentId ?? '',
           studentName: resolvedStudentName,
           academicYearId: lastCollectResponse.academicYearId,
-          totalAmount: lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0),
+          totalAmount:
+            lastCollectResponse.receiptGrouping === 'Combined' &&
+            !!lastCollectResponse.paidCharges?.length
+              ? lastCollectResponse.receivedAmount
+              : lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0) +
+                (lastCollectResponse.paidLateFees ?? []).reduce(
+                  (sum, line) => sum + line.amountPaid,
+                  0
+                ),
+          lateFeeAmount: (lastCollectResponse.paidLateFees ?? []).reduce(
+            (sum, line) => sum + line.amountPaid,
+            0
+          ),
+          combined:
+            lastCollectResponse.receiptGrouping === 'Combined' &&
+            !!lastCollectResponse.paidCharges?.length,
+          paidCharges:
+            lastCollectResponse.receiptGrouping === 'Combined'
+              ? lastCollectResponse.paidCharges
+              : [],
           collectedAt: lastCollectResponse.collectedAt,
           collectedBy: lastCollectResponse.collectedBy,
           paidFeeHeads: lastCollectResponse.paidFeeHeads,
@@ -791,7 +810,6 @@ const FeeCollectComponentForm = ({
       return errors;
     },
     onReset: () => {
-      setCashReceived(null);
       selectionOwnership.current = createSelectionOwnership();
       setFilters((previous) => ({
         ...previous,
@@ -800,33 +818,6 @@ const FeeCollectComponentForm = ({
     },
     onSubmit: () => {
       if (adaptedOutcomeUnresolved || collectLoading || collectionReadBlocked) return;
-      if (
-        formik.values.payment.paymentMethod === 'Cash' &&
-        cashReceived !== null &&
-        toPaise(Number(cashReceived)) < toPaise(Number(formik.values.payment.amount))
-      )
-        return;
-      if (formik.values.payment.paymentMethod !== 'Cash') {
-        const allocation = allocatePayment(
-          orderedSelectedItems,
-          selectedChargesInOrder(chargesData, formik.values.charges),
-          feeHeadMap,
-          Number(String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, ''))
-        );
-        const hasFeeReceipt = allocation.allocatedRows.some(
-          (row) => row.paidAmount > 0 && (row.type === 'fee' || row.sourceType === 'LateFee')
-        );
-        const hasChargeReceipt = allocation.allocatedRows.some(
-          (row) => row.paidAmount > 0 && row.type === 'charge' && row.sourceType === 'Charge'
-        );
-        if (hasFeeReceipt && hasChargeReceipt) {
-          const message =
-            'Non-cash payments require separate fee and charge receipts for finance verification. Collect fees and charges separately.';
-          setCollectionError(message);
-          shikshaMitraToast.error({ message });
-          return;
-        }
-      }
       setPreviewOpen(true);
     },
   });
@@ -838,7 +829,6 @@ const FeeCollectComponentForm = ({
       previousContextKey.current = contextKey;
       selectionOwnership.current = createSelectionOwnership();
       submissionRef.current = null;
-      setCashReceived(null);
       setFilters(FEE_LEDGER_INITIAL_FILTERS);
       setCollectionError(null);
       setCollectionOutcomeUncertain(false);
@@ -1216,7 +1206,6 @@ const FeeCollectComponentForm = ({
   const handleRemoveAll = () => {
     if (adaptedOutcomeUnresolved) return;
     submissionRef.current = null;
-    setCashReceived(null);
     selectionOwnership.current = createSelectionOwnership();
     setFilters((previous) => ({
       ...previous,
@@ -1397,6 +1386,18 @@ const FeeCollectComponentForm = ({
       .map((row) => [row.dueFeeId, row])
   );
 
+  // Highlight the funded rows without narrowing the automatic allocation candidate set.
+  const ledgerSelectedItems = isAmountOnly
+    ? orderedSelectedItems.filter(
+        (item) => (feeAllocationById.get(item.dueFeeId)?.paidAmount ?? 0) > 0
+      )
+    : formik.values.selectedItems;
+  const handleLedgerSelectionChange = (items: SelectedItem[]) => {
+    handleSelectionChange(items);
+    // Removing the last automatic highlight must not immediately allocate it again.
+    if (isAmountOnly && !items.length) updatePayment('amount', '');
+  };
+
   useEffect(
     () => () => {
       if (feeReceiptBlobUrl) URL.revokeObjectURL(feeReceiptBlobUrl);
@@ -1462,12 +1463,14 @@ const FeeCollectComponentForm = ({
         ? {
             id: collectResponse.feeReceiptId!,
             receiptNumber: collectResponse.feeReceiptNumber,
+            pdfFileName: collectResponse.feeReceiptPdfFileName,
           }
         : null,
       chargeReceipt: hasChargeReceipt
         ? {
             id: collectResponse.chargeReceiptId!,
             receiptNumber: collectResponse.chargeReceiptNumber,
+            pdfFileName: collectResponse.chargeReceiptPdfFileName,
           }
         : null,
     });
@@ -1496,7 +1499,7 @@ const FeeCollectComponentForm = ({
     if (!receipt || !blobUrl) return;
     const anchor = document.createElement('a');
     anchor.href = blobUrl;
-    anchor.download = `receipt-${receipt.receiptNumber ?? receipt.id}.pdf`;
+    anchor.download = receipt.pdfFileName || `Receipt-${receipt.receiptNumber ?? receipt.id}.pdf`;
     anchor.target = '_blank';
     document.body.appendChild(anchor);
     anchor.click();
@@ -1817,7 +1820,7 @@ const FeeCollectComponentForm = ({
                         month: `${Number(periodMonth) - 1}-${periodYear}`,
                       });
                     }}
-                    selectedItems={formik.values.selectedItems}
+                    selectedItems={ledgerSelectedItems}
                     charges={formik.values.charges}
                     chargesData={filteredChargesData}
                     hasActiveFilters={
@@ -1825,7 +1828,7 @@ const FeeCollectComponentForm = ({
                       filters.month !== 'All' ||
                       filters.feeHead !== 'All'
                     }
-                    onSelectionChange={handleSelectionChange}
+                    onSelectionChange={handleLedgerSelectionChange}
                     onChargesChange={handleChargesChange}
                     year={currentYear?.year ?? new Date().getFullYear()}
                   />
@@ -1885,22 +1888,6 @@ const FeeCollectComponentForm = ({
                 }}
               >
                 <Divider sx={{ flexShrink: 0 }} />
-                {usesAutomaticAllocation && (
-                  <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
-                    {formData?.collectionPolicyName} · v{formData?.collectionPolicyVersion} ·{' '}
-                    Automatic priority:{' '}
-                    {allocationBasis === 'FeeHead'
-                      ? 'Fee head first (A–Z)'
-                      : 'Installment first (earliest due)'}
-                  </Typography>
-                )}
-                {usesAutomaticAllocation && (
-                  <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
-                    {isAmountOnly
-                      ? 'Enter an amount to allocate across outstanding fees automatically. Select specific fees or charges to limit the payment. Filters and grouping only change the ledger view.'
-                      : 'Payment is limited to your selected items, with fees paid in policy order.'}
-                  </Typography>
-                )}
                 <Scrollbar
                   role="region"
                   aria-label="Payment details"
@@ -2086,33 +2073,6 @@ const FeeCollectComponentForm = ({
                           />
                         </ShakingTextField>
                       </Box>
-                      {formik.values.payment.paymentMethod === 'Cash' && (
-                        <NumericFormatCustom
-                          label="Cash Received"
-                          InputLabelProps={{ shrink: true }}
-                          name="cashReceived"
-                          size="small"
-                          fullWidth
-                          value={cashReceived ?? formik.values.payment.amount ?? ''}
-                          roundToWholeRupees={false}
-                          decimalScale={2}
-                          onValueChange={(values, source) => {
-                            if (source.source === 'event') setCashReceived(values.value);
-                          }}
-                          error={
-                            cashReceived !== null &&
-                            toPaise(Number(cashReceived)) <
-                              toPaise(Number(formik.values.payment.amount))
-                          }
-                          helperText={
-                            (cashReceived !== null &&
-                            toPaise(Number(cashReceived)) <
-                              toPaise(Number(formik.values.payment.amount))
-                              ? 'Cash received must cover the amount to collect.'
-                              : undefined) || undefined
-                          }
-                        />
-                      )}
                       {formik.values.payment.paymentMethod !== 'Cash' && (
                         <CustomSelect
                           fullWidth
@@ -2360,115 +2320,82 @@ const FeeCollectComponentForm = ({
                           })}
                       </Box>
                     )}
-                    {formik.values.payment.paymentMethod === 'Cash' && (
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        spacing={1}
-                        sx={{
-                          p: 1.5,
-                          borderRadius: 1,
-                          bgcolor: (t) => alpha(t.palette.success.main, 0.1),
-                          color: 'success.main',
-                        }}
-                        aria-live="polite"
-                      >
-                        <Iconify icon="solar:coins-linear" width={24} />
-                        <Typography variant="subtitle2" sx={{ flex: 1 }}>
-                          Change to return
-                        </Typography>
-                        <Typography variant="h6">
-                          {formatNumber(
-                            Math.max(
-                              0,
-                              (toPaise(Number(cashReceived ?? formik.values.payment.amount)) -
-                                toPaise(Number(formik.values.payment.amount))) /
-                                100
-                            ),
-                            'INR'
-                          )}
-                        </Typography>
-                      </Stack>
-                    )}
                   </Stack>
                 </Scrollbar>
-                <DialogActions
-                  sx={{
-                    px: 0,
-                    mt: 0,
-                    borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
-                    flexShrink: 0,
-                  }}
-                >
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    justifyContent="flex-end"
-                    alignItems="center"
-                    useFlexGap
-                    flexWrap="wrap"
-                    width="100%"
-                  >
-                    {showOverAllocationWarning && (
-                      <Box sx={{ width: 1 }}>
-                        <Typography variant="caption" color="error" textAlign="center">
-                          Total allocated <strong>(₹ {formatNumber(totalAllocated)})</strong>{' '}
-                          exceeds the payable amount <strong>(₹{formatNumber(finalAmount)})</strong>
-                          . Please reduce payment amounts.
-                        </Typography>
-                      </Box>
-                    )}
-
-                    <Box aria-live="polite" sx={{ mr: 'auto', minWidth: 0 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        Collecting now
-                      </Typography>
-                      <Typography variant="subtitle1" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {formatNumber(Number(formik.values.payment.amount || 0), 'INR')}
-                      </Typography>
-                    </Box>
-                    <Button
-                      type="button"
-                      variant="outlined"
-                      color="inherit"
-                      onClick={() => onCancel?.(null, false)}
-                      disabled={collectLoading || adaptedOutcomeUnresolved}
-                      size="small"
-                      startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
-                    >
-                      Cancel
-                    </Button>
-                    <LoadingButton
-                      aria-label="Collect Payment"
-                      disabled={
-                        collectLoading ||
-                        (formik.values.payment.paymentMethod === 'Cash' &&
-                          cashReceived !== null &&
-                          toPaise(Number(cashReceived)) <
-                            toPaise(Number(formik.values.payment.amount))) ||
-                        adaptedOutcomeUnresolved ||
-                        collectionReadBlocked ||
-                        finalAmount <= 0 ||
-                        Number(formik.values.payment.amount) <= 0
-                      }
-                      type="button"
-                      color="inherit"
-                      variant="contained"
-                      size="small"
-                      loading={collectLoading && !finalReviewOpen}
-                      loadingPosition="start"
-                      onClick={(e: any) => formik.handleSubmit(e)}
-                      startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
-                    >
-                      Collect {formatNumber(Number(formik.values.payment.amount || 0), 'INR')}
-                    </LoadingButton>
-                  </Stack>
-                </DialogActions>
               </FormSectionCard>
             </Box>
           </Box>
         </Stack>
       </BackPopUpChecked>
+      <DialogActions
+        aria-label="Collection actions"
+        sx={{
+          p: 2,
+          bgcolor: 'background.paper',
+          borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
+          flexShrink: 0,
+        }}
+      >
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="flex-end"
+          alignItems="center"
+          useFlexGap
+          flexWrap="wrap"
+          width="100%"
+        >
+          {showOverAllocationWarning && (
+            <Box sx={{ width: 1 }}>
+              <Typography variant="caption" color="error" textAlign="center">
+                Total allocated <strong>(₹ {formatNumber(totalAllocated)})</strong> exceeds the
+                payable amount <strong>(₹{formatNumber(finalAmount)})</strong>. Please reduce
+                payment amounts.
+              </Typography>
+            </Box>
+          )}
+
+          <Box aria-live="polite" sx={{ mr: 'auto', minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary">
+              Collecting now
+            </Typography>
+            <Typography variant="subtitle1" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+              {formatNumber(Number(formik.values.payment.amount || 0), 'INR')}
+            </Typography>
+          </Box>
+          <Button
+            type="button"
+            variant="outlined"
+            color="inherit"
+            onClick={() => onCancel?.(null, false)}
+            disabled={collectLoading || adaptedOutcomeUnresolved}
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            aria-label="Collect Payment"
+            disabled={
+              collectLoading ||
+              adaptedOutcomeUnresolved ||
+              collectionReadBlocked ||
+              finalAmount <= 0 ||
+              Number(formik.values.payment.amount) <= 0
+            }
+            type="button"
+            color="inherit"
+            variant="contained"
+            size="small"
+            loading={collectLoading && !finalReviewOpen}
+            loadingPosition="start"
+            onClick={(e: any) => formik.handleSubmit(e)}
+            startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
+          >
+            Collect {formatNumber(Number(formik.values.payment.amount || 0), 'INR')}
+          </LoadingButton>
+        </Stack>
+      </DialogActions>
       {collectLoading && !finalReviewOpen && (
         <Box
           role="status"
@@ -2514,8 +2441,22 @@ const FeeCollectComponentForm = ({
                 <DetailGrid>
                   <DetailField label="Student" value={resolvedStudentName} />
                   <DetailField
+                    label={
+                      lastCollectResponse.feeReceiptNumber &&
+                      lastCollectResponse.chargeReceiptNumber
+                        ? 'Receipt numbers'
+                        : 'Receipt number'
+                    }
+                    value={[
+                      lastCollectResponse.feeReceiptNumber,
+                      lastCollectResponse.chargeReceiptNumber,
+                    ]
+                      .filter(Boolean)
+                      .join('\n')}
+                  />
+                  <DetailField
                     label="Collected at"
-                    value={new Date(lastCollectResponse.collectedAt).toLocaleString('en-IN')}
+                    value={fDateTime(lastCollectResponse.collectedAt, 'DD MMM YYYY h:mm:ss a')}
                   />
                   <DetailField
                     label="Total received"
@@ -2542,14 +2483,6 @@ const FeeCollectComponentForm = ({
                 handleDownloadReceipt(receiptPreviewState.chargeReceipt, chargeReceiptBlobUrl)
               }
             />
-
-            {/* Outcome Panel (if available) */}
-            {lastCollectResponse?.auditSummary && (
-              <FeeCollectionOutcomePanel
-                collectResponse={lastCollectResponse}
-                showAuditTrail={!collectionAdapter}
-              />
-            )}
           </Box>
         </Scrollbar>
         <DialogActions sx={{ borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.45)}` }}>
@@ -2606,7 +2539,6 @@ const FeeCollectComponentForm = ({
         academicYear={
           currentYear?.name || (currentYear?.year ? String(currentYear.year) : undefined)
         }
-        bankAccounts={bankAccountOptions}
       />
 
       {/* ── Final Payment Review Dialog ── */}

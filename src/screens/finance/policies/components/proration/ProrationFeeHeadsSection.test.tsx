@@ -92,6 +92,35 @@ beforeEach(() => {
 });
 
 describe('proration fee-head interactions', () => {
+  it('keeps controls outside the keyboard-scrollable list and preserves expanded rows on scroll', async () => {
+    render(
+      <Harness
+        rules={[
+          rule(),
+          ...Array.from({ length: 20 }, (_, index) =>
+            rule({ feeHeadId: `head-${index}`, feeHeadName: `Recurring fee ${index + 1}` })
+          ),
+        ]}
+      />
+    );
+    const list = screen.getByRole('region', { name: 'Configured fee heads' });
+    expect(list).toHaveAttribute('tabindex', '0');
+    expect(within(list).queryByRole('textbox', { name: 'Search fee heads' })).toBeNull();
+    expect(within(list).queryByRole('group', { name: 'Admission presets' })).toBeNull();
+    expect(
+      within(list).getByRole('button', { name: 'Configure Recurring fee 20' })
+    ).toBeInTheDocument();
+    await expand();
+    fireEvent.scroll(list, { target: { scrollTop: 1200 } });
+    expect(screen.getByRole('button', { name: 'Collapse Tuition fee' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    expect(admission().getByRole('spinbutton')).toHaveValue(15);
+    expect(screen.getByRole('textbox', { name: 'Search fee heads' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'All Daily' })).toBeEnabled();
+  });
+
   it('searches by name without changing row identity or losing edits', async () => {
     const saved = vi.fn();
     render(

@@ -78,20 +78,6 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         ),
       },
       {
-        id: 'tags',
-        isFilter: true,
-        label: 'Tags',
-        filterType: 'string' as const,
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {Array.isArray(value) && value.length > 0
-              ? value.map((tag) => `${tag}`).join(', ')
-              : '-'}
-          </Typography>
-        ),
-      },
-      {
         id: 'description',
         isFilter: true,
         label: 'Description',
@@ -328,6 +314,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         }
       />
       <AccountSettingVersionDialog
+        hiddenFields={['tags']}
         open={Boolean(historyItem)}
         title={historyItem?.name || 'Income category'}
         recordType="Income category"

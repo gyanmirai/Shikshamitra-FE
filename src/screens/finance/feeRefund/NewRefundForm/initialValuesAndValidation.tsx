@@ -5,9 +5,9 @@ import * as Yup from 'yup';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import {
+  isRefundRequestField,
   refundPaymentMethodsConfig,
   getInitialRefundPaymentDetails,
-  isRefundRequestField,
 } from './refundPaymentDetailsConfig';
 
 import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
@@ -43,6 +43,7 @@ export interface IFeeHeadMonthRefund {
   month: string;
   /** Stable DueFee row ID — sent to the create-refund API. */
   dueFeeId: string;
+  chargeId?: string;
   sourceAllocationId?: string;
   sourceReceiptId?: string;
   receiptNumber?: string;
@@ -65,6 +66,9 @@ export interface IFeeHeadRefundItem {
   months: IFeeHeadMonthRefund[];
 }
 
+export const isValidRefundAmount = (amount: number | string): boolean =>
+  String(amount).trim() !== '' && Number.isFinite(Number(amount)) && Number(amount) > 0;
+
 /** Shape sent to POST /api/fee-refunds and PUT /api/fee-refunds/{id} */
 export interface IFeeRefundApiPayload {
   idempotencyKey?: string;
@@ -72,7 +76,7 @@ export interface IFeeRefundApiPayload {
   studentId: string;
   academicYearId: string;
   originalReceiptId: string;
-  lines: { dueFeeId: string; sourceAllocationId: string; amount: number }[];
+  lines: { dueFeeId?: string; chargeId?: string; sourceAllocationId: string; amount: number }[];
   refundMethod: string;
   reason: string;
   paymentDetails?: Record<string, unknown>;
@@ -109,7 +113,9 @@ export const buildFeeRefundApiPayload = (
   academicYearId: string
 ): IFeeRefundApiPayload => {
   const selected = (values.feeHeadRefunds || []).flatMap((fh) =>
-    fh.months.filter((m) => Number(m.amount) > 0 && m.dueFeeId && m.sourceAllocationId)
+    fh.months.filter(
+      (m) => Number(m.amount) > 0 && (m.dueFeeId || m.chargeId) && m.sourceAllocationId
+    )
   );
   return {
     studentId: values.studentId,
@@ -124,7 +130,7 @@ export const buildFeeRefundApiPayload = (
       ])
     ),
     lines: selected.map((m) => ({
-      dueFeeId: m.dueFeeId,
+      ...(m.chargeId ? { chargeId: m.chargeId } : { dueFeeId: m.dueFeeId }),
       sourceAllocationId: m.sourceAllocationId || '',
       amount: Number(m.amount),
     })),
@@ -194,6 +200,15 @@ export const buildRefundValidationSchema = (currentYear: ICurrentYear) =>
         const refunds = value as IFeeHeadRefundItem[];
         return refunds.some((fh) => fh.months.some((m) => Number(m.amount) > 0));
       })
+      .test(
+        'all-selected-amounts',
+        'Enter a refund amount greater than zero for every selected installment',
+        (value) =>
+          Array.isArray(value) &&
+          (value as IFeeHeadRefundItem[]).every((head) =>
+            head.months.every((month) => isValidRefundAmount(month.amount))
+          )
+      )
       .test('single-receipt', 'Select refund lines from one original receipt only', (value) => {
         if (!Array.isArray(value)) return false;
         const ids = new Set(

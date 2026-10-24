@@ -20,6 +20,7 @@ import {
   useVoidChargeMutation,
 } from 'src/redux/finance/ChargeManagement/chargeApi';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import ChargesTable from './Component/ChargesTable';
 import { UpdateChargeForm } from '../UpdateChargeForm';
@@ -29,7 +30,6 @@ import ChargeReasonApprovalForm from './Component/ChargeApproveRejectForm';
 
 import type { IChargeData } from './Component/type';
 import { useChargePermissions } from '../../useChargePermissions';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const ChargesManagement = () => {
   // State to store the currently selected charge data
@@ -275,19 +275,6 @@ const ChargesManagement = () => {
             { name: 'Fees', href: '/finance/charge-management' },
             { name: 'Charges', href: '/finance/charge-management' },
           ]}
-          action={
-            permissions.canAdd ? (
-              <Button
-                startIcon={<Add />}
-                variant="contained"
-                onClick={addChargeDialog.onTrue}
-                size="small"
-                sx={{ px: '32px' }}
-              >
-                Charge
-              </Button>
-            ) : undefined
-          }
         />
       )}
       {!addChargeDialog.value &&
@@ -295,6 +282,13 @@ const ChargesManagement = () => {
         !editChargeDialog.value &&
         !approvalReviewDialog.value && (
           <ChargesTable
+            primaryAction={
+              permissions.canAdd ? (
+                <Button startIcon={<Add />} variant="contained" onClick={addChargeDialog.onTrue} size="small" sx={{ px: 4 }}>
+                  Add Charge
+                </Button>
+              ) : undefined
+            }
             academicFilters={academicFilters}
             onView={(data) => {
               viewChargeDetailsDialog.onTrue();
@@ -314,6 +308,7 @@ const ChargesManagement = () => {
               openApprovalReview(data, 'Reject');
             }}
             onVoid={(data) => {
+              if (!data.availableActions?.includes('Void')) return;
               setSelectedChargeData(data);
               setVoidReason('');
               voidChargeDialog.onTrue();
@@ -501,16 +496,17 @@ const ChargesManagement = () => {
       <ConfirmDialog
         open={voidChargeDialog.value}
         onClose={() => {
+          if (isVoiding) return;
           voidChargeDialog.onFalse();
           setSelectedChargeData(null);
           setVoidReason('');
         }}
-        title="Void charge"
+        title="Cancel Charge"
         content={
           <Stack spacing={2}>
             <Typography variant="body2">
-              This removes only approved, uncollected charge lines. Collected lines must first be
-              reversed through the payment reconciliation/refund flow.
+              This cancels the approved, uncollected charge lines. Charges with a collection cannot
+              be cancelled. Reverse the collection through reconciliation or use the refund workflow.
             </Typography>
             <TextField
               autoFocus
@@ -521,6 +517,7 @@ const ChargesManagement = () => {
               value={voidReason}
               onChange={(event) => setVoidReason(event.target.value)}
               error={voidReason.length > 0 && voidReason.trim().length < 10}
+              helperText="Enter a cancellation reason with at least 10 characters."
             />
           </Stack>
         }
@@ -529,9 +526,10 @@ const ChargesManagement = () => {
             startIcon={<Iconify icon="mdi:cancel" />}
             variant="contained"
             color="warning"
-            disabled={isVoiding || voidReason.trim().length < 10}
+            disabled={isVoiding || voidReason.trim().length < 10 ||
+              !selectedChargeData?.availableActions?.includes('Void')}
             onClick={async () => {
-              if (!selectedChargeData) return;
+              if (!selectedChargeData?.availableActions?.includes('Void') || isVoiding) return;
               try {
                 await voidCharge({
                   id: selectedChargeData.chargeId,
@@ -541,19 +539,19 @@ const ChargesManagement = () => {
                     reason: voidReason.trim(),
                   },
                 }).unwrap();
-                shikshaMitraToast.success({ message: 'Charge voided successfully.' });
+                shikshaMitraToast.success({ message: 'Charge cancelled successfully.' });
                 voidChargeDialog.onFalse();
                 setSelectedChargeData(null);
                 setVoidReason('');
                 setRefetchTrigger((prev) => prev + 1);
               } catch (error: any) {
                 shikshaMitraToast.error({
-                  message: error?.data?.error?.message || 'Charge could not be voided.',
+                  message: error?.data?.error?.message || 'Charge could not be cancelled.',
                 });
               }
             }}
           >
-            Void charge
+            Cancel Charge
           </Button>
         }
       />

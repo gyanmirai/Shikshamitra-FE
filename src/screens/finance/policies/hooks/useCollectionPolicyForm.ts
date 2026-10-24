@@ -55,6 +55,7 @@ const getInitialValues = (
     policyType: 'collection',
     changeReason: '',
 
+    receiptGrouping: data?.receiptGrouping ?? 'Separate',
     allocationBasis: data?.allocationBasis ?? (data?.id ? 'Legacy' : 'Installment'),
 
     enableLateFee: data?.enableLateFee ?? false,
@@ -109,6 +110,9 @@ const boundedNumber = (kind: 'days' | 'amount' | 'percentage', minimum: number) 
 
 // Validation schema
 const validationSchema = Yup.object().shape({
+  receiptGrouping: Yup.string()
+    .oneOf(['Separate', 'Combined'])
+    .required('Choose how to generate receipts'),
   allocationBasis: Yup.string()
     .oneOf(['Legacy', 'Installment', 'FeeHead'])
     .required('Choose an allocation basis'),

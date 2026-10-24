@@ -90,6 +90,7 @@ export interface IConcessionFormValues {
 export interface IConcessionFormProps {
   open: boolean;
   onClose: (data?: any, refresh?: boolean) => void;
+  onBusyChange?: (busy: boolean) => void;
   student: IStudentInfo;
   editData?: IConcession;
   defaultBoardId?: string;

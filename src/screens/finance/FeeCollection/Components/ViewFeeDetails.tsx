@@ -95,6 +95,11 @@ const ViewFeeDetails = ({
             pending={overview?.pendingFee ?? 0}
             overdue={overview?.overdueFee ?? 0}
             concession={overview?.concessionAmount ?? 0}
+            netFee={overview?.netFee}
+            grossPaid={overview?.grossPaidAmount}
+            refunded={overview?.refundedAmount}
+            overpayment={overview?.overpaymentAmount}
+            adjustment={overview?.adjustmentCreditAmount}
           />
           <ConsolidatedFeeDetails feeHeads={feeDetails.feeHeads} charges={feeDetails.charges} />
           <ConcessionsCard concessions={feeDetails.concessions} />

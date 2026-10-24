@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import {
@@ -37,23 +37,6 @@ const ExpenseFormFields = ({
   expandedPanels,
   onAccordionToggle,
 }: ExpenseFormFieldsProps) => {
-  const [tags, setTags] = useState<{ name: string; id: string }[]>([]);
-  // Update tags when categoryId changes or initially if editData is present
-  useEffect(() => {
-    if (formik.values.categoryId) {
-      const selectedCategory = categoryOptions.find(
-        (option) => option.id === formik.values.categoryId
-      );
-      if (selectedCategory && selectedCategory.tags) {
-        setTags(selectedCategory.tags.map((tag: any) => ({ name: tag, id: tag })));
-      } else {
-        setTags([]);
-      }
-    } else {
-      setTags([]);
-    }
-  }, [formik.values.categoryId, categoryOptions]);
-
   return (
     <>
       {/* Section: Expense Details */}
@@ -89,42 +72,12 @@ const ExpenseFormFields = ({
                   valueKey="id"
                   onChange={(val: any) => {
                     formik.setFieldValue('categoryId', val);
-                    formik.setFieldValue('categoryTags', []); // Reset tags on category change
+                    formik.setFieldValue('categoryTags', []);
                     formik.setFieldTouched('categoryId', false);
-                    const selectedItems = categoryOptions?.filter((item: any) =>
-                      val.includes(item.id)
-                    );
-
-                    const formatted = selectedItems?.map((item: any) => ({
-                      id: item.id,
-                      name: item.name,
-                    }));
-                    setTags(formatted || []);
                   }}
                   error={!!(formik.touched.categoryId && formik.errors.categoryId)}
                   helperText={(formik.touched.categoryId && formik.errors.categoryId) as string}
                   formControlProps={{ fullWidth: true }}
-                />
-              </ShakingTextField>
-            </Grid>
-
-            {/* Expense Category Tags */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField
-                error={!!(formik.touched.categoryTags && formik.errors.categoryTags)}
-              >
-                <CustomSelect
-                  label="Expense Category Tags (optional)"
-                  options={tags}
-                  labelKey="name"
-                  valueKey="id"
-                  value={formik.values.categoryTags || []}
-                  onChange={(val: any) => formik.setFieldValue('categoryTags', val)}
-                  disabled={!formik.values.categoryId}
-                  error={!!(formik.touched.categoryTags && formik.errors.categoryTags)}
-                  helperText={(formik.touched.categoryTags && formik.errors.categoryTags) as string}
-                  formControlProps={{ fullWidth: true }}
-                  multiple
                 />
               </ShakingTextField>
             </Grid>

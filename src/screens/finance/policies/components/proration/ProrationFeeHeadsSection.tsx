@@ -3,9 +3,10 @@
 import type { FormikProps } from 'formik';
 
 import { getIn } from 'formik';
-import { GlobalIcons } from 'src/utils/icons';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -482,7 +483,21 @@ export default function ProrationFeeHeadsSection({ formik }: { formik: PolicyFor
           </Button>
         </Stack>
       ) : (
-        <Stack sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}>
+        <Scrollbar
+          autoHide={false}
+          ariaLabel="Configured fee heads"
+          slotProps={{
+            contentWrapper: { overscrollBehaviorY: 'contain', overflowX: 'hidden' },
+          }}
+          sx={{
+            // Bound repeated rows independently so the section controls stay accessible.
+            maxHeight: { xs: '35dvh', sm: '45dvh' },
+            flexGrow: 0,
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1.5,
+          }}
+        >
           {filteredRules.map(({ rule, index }) => {
             const oneTime = rule.feeType === 'OneTime';
             const expanded = expandedRows.has(rule.feeHeadId);
@@ -581,7 +596,7 @@ export default function ProrationFeeHeadsSection({ formik }: { formik: PolicyFor
               </Box>
             );
           })}
-        </Stack>
+        </Scrollbar>
       )}
     </SectionCard>
   );

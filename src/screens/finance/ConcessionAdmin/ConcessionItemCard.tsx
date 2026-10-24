@@ -329,15 +329,17 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
             gap={1}
           >
             {canEdit && isDraft && serverAllows('edit') && (
-              <LoadingButton
-                size="small"
-                variant="outlined"
-                color="inherit"
-                startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
-                onClick={() => onEdit(item)}
-              >
-                Edit
-              </LoadingButton>
+              <Tooltip title="Edit concession request">
+                <IconButton
+                  size="small"
+                  color="inherit"
+                  aria-label="Edit concession request"
+                  sx={{ width: 44, height: 44 }}
+                  onClick={() => onEdit(item)}
+                >
+                  <Iconify icon={GlobalIcons.edit} width={18} />
+                </IconButton>
+              </Tooltip>
             )}
             {canApprove && serverAllows('approve') && (
               <Tooltip

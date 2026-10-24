@@ -11,7 +11,7 @@ const getColumns = (mode: RefundMode) =>
     ...(mode === 'adjustment'
       ? [{ key: 'ADJUSTABLE', width: 90 }]
       : [{ key: 'REFUNDABLE', width: 90 }]),
-    { key: mode === 'adjustment' ? 'ADJUSTMENT AMOUNT' : 'REFUND AMOUNT', width: 124 },
+    { key: mode === 'adjustment' ? 'ADJUSTMENT AMOUNT' : 'REFUND AMOUNT', width: 148 },
     { key: 'STATUS', width: 76 },
   ] as const;
 
@@ -22,7 +22,7 @@ const RefundColHeader = ({ mode = 'refund' }: { mode?: RefundMode }): React.Reac
     <Box
       display="flex"
       alignItems="center"
-      pl={1}
+      pl={1.5}
       gap={1}
       pr={1.5}
       py={0.75}

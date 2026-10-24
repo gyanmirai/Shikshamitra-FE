@@ -14,8 +14,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Chip, Grid, Alert, Button, TextField, DialogActions } from '@mui/material';
-import { mergeCategoryTags } from 'src/screens/finance/settings/components/category-tags';
+import { Grid, Alert, Button, TextField, DialogActions } from '@mui/material';
 import { getAccountSettingSaveError } from 'src/screens/finance/settings/components/account-setting-save-error';
 import {
   useGetIncomeCategoriesQuery,
@@ -49,9 +48,6 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
     [incomeCategoryData]
   );
 
-  const [tag, setTag] = useState('');
-  const [tagError, setTagError] = useState('');
-
   // POST mutation for creating
   const [addIncomeCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -79,7 +75,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
       const payload = {
         name: values.name.trim(),
         description: values.description || '',
-        tags: mergeCategoryTags(values.tags || [], tag),
+        tags: editData?.tags || [],
         concurrencyStamp: editData ? values.concurrencyStamp : null,
       };
 
@@ -115,32 +111,8 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
     }
   };
 
-  const handleKeyDown = (e: any) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const trimmed = tag.trim();
-      if (!trimmed) return;
-      if (formik.values.tags.some((t: string) => t.toLowerCase() === trimmed.toLowerCase())) {
-        setTagError(`Tag "${trimmed}" already exists`);
-        return;
-      }
-      formik.setFieldValue('tags', [...formik.values.tags, trimmed]);
-      setTag('');
-      setTagError('');
-    }
-  };
-
-  const handleDelete = (deleteTag: any) => {
-    formik.setFieldValue(
-      'tags',
-      formik.values.tags.filter((t: string) => t !== deleteTag)
-    );
-  };
   return (
-    <BackPopUpChecked
-      initialValues={{ ...formik.initialValues, draftTag: '' }}
-      currentValues={{ ...formik.values, draftTag: tag }}
-    >
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         {saveError && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -148,7 +120,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
           </Alert>
         )}
         <FormSectionCard
-          descriptionTooltip="Name this category and add tags to organize your income records."
+          descriptionTooltip="Name and describe this category to organize your income records."
           icon="solar:wallet-money-bold-duotone"
           title="Income category details"
         >
@@ -174,64 +146,6 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
               </ShakingTextField>
             </Grid>
 
-            {/* Tags */}
-            <Grid size={12}>
-              <ShakingTextField error={!!(formik.touched.tags && formik.errors.tags) || false}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Tags (optional)"
-                  value={tag}
-                  onChange={(e) => {
-                    setTag(e.target.value);
-                    if (tagError) setTagError('');
-                  }}
-                  onKeyDown={handleKeyDown}
-                  InputProps={{
-                    startAdornment: (
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          gap: 0.5,
-                          alignItems: 'center',
-                          maxWidth: '100%',
-                        }}
-                      >
-                        {formik.values.tags.map((t: string, index: number) => (
-                          <Chip
-                            key={index}
-                            label={t}
-                            onDelete={() => handleDelete(t)}
-                            size="small"
-                            sx={{ mt: 1 }}
-                          />
-                        ))}
-                      </Box>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiInputBase-root': {
-                      flexWrap: 'wrap',
-                      alignItems: 'flex-start',
-                      minHeight: 'auto',
-                    },
-                    '& .MuiInputBase-input': {
-                      flexGrow: 1,
-                      minWidth: '80px',
-                    },
-                  }}
-                  error={(formik.touched.tags && Boolean(formik.errors.tags)) || Boolean(tagError)}
-                  helperText={
-                    tagError ||
-                    (formik.touched.tags && typeof formik.errors.tags === 'string'
-                      ? formik.errors.tags
-                      : `Press Enter to add a tag. Remaining text is included on submit.`) ||
-                    undefined
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
             {/* Description */}
             <Grid size={12}>
               <TextField

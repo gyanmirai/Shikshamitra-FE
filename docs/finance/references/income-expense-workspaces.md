@@ -3,7 +3,7 @@ module: finance
 domain: accounts-workspaces
 content_type: Reference
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-24
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -19,19 +19,21 @@ Backend ownership and acceptance rules are in [the backend workspace contract](.
 | Surface                | Contract                                                                                                                                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Income                 | Reuse `/finance/income-tracking`; show confirmed collections and manual income                                                                                                                                            |
-| Expenses               | Reuse `/finance/expenseTracking`; show manual expenses, approved refunds awaiting payout, confirmed payouts and linked corrections                                                                                        |
+| Expenses               | Reuse `/finance/expenseTracking`; show paid manual expenses, completed refunds and linked returned-payment corrections                                                                                        |
 | Combined legacy routes | Redirect `/finance/income-and-expense` and `/finance/accounts/activity` to an authorized separate workspace                                                                                                               |
-| Header                 | Common breadcrumb with Add income / Add expense on the right; compact Month, Source and Category selectors in a shared surface before the full-height table                                                               |
+| Header                 | Common breadcrumb with + Income / + Expense on the right; compact Month and Category selectors in a shared surface before the full-height table                                                               |
 | Month                  | All months plus calendar months intersecting the selected academic year's actual dates; include the calendar year in each label                                                                                           |
 | Initial month          | Current month if inside the selected year; otherwise the first academic-year month                                                                                                                                        |
-| Context change         | Year/source/category/month/search changes reset pagination; year changes reset dependent month/category selections                                                                                                        |
-| Table                  | Shared CustomizableTable; server paging/search/column filters/sort; reference, Student (GR No.), Class/Division, separate Payer/Payee, source, category, masked bank, amount, Transaction Date, sticky Status and Actions |
+| Context change         | Year/category/month/search changes reset pagination; year changes reset dependent month/category selections                                                                                                        |
+| Table                  | Shared CustomizableTable; server paging/search/column filters/sort; reference, Student (GR No.), Class/Division, separate Payer/Payee, category, masked bank, amount, Transaction Date, sticky Status and Actions |
 | Row actions            | View only; no edit/delete or generic links to source lists                                                                                                                                                                |
 | Export                 | Label Export current page accurately; exclude Actions                                                                                                                                                                     |
 
 Student identity uses the same **Student (GR No.)** and **Class/Division** headings as Fee Collections. Manual counterparties belong in **Payer** (Income) or **Payee** (Expenses), with a neutral dash in student-only cells. Reference and category headings name the owning Income/Expense direction, and **Bank Account** replaces the ambiguous school-bank heading.
 
-Each data column has a server filter: names use text operators, Source/Status use the direction's labelled choices, Amount uses raw numeric comparisons/ranges, and Transaction Date uses calendar-day comparisons. Filters apply before server counts and paging; changes return to page one. Counterparty and Source sorting is unavailable rather than sorting a different value. Column filters remain visible, and View keeps its selected-record context.
+Each data column has a server filter: names use text operators, Status uses the direction's labelled choices, Amount uses raw numeric comparisons/ranges, and Transaction Date uses calendar-day comparisons. Filters apply before server counts and paging; changes return to page one. Counterparty sorting is unavailable rather than sorting a different value. Column filters remain visible, and View keeps its selected-record context.
+
+Source is not shown as a selector, table/export column, or detail field. Internal transaction provenance remains available to the client for scoped detail requests. Income and expense category tags are absent from category forms, tables, version history, and transaction forms/details/exports. Editing a category preserves existing stored tags for API compatibility. Creation buttons keep their plus icons and use Income / Expense labels with action-specific accessible names.
 
 ## Record details
 
@@ -56,10 +58,10 @@ Student payments and refunds must never be recreated using these manual forms.
 
 ## Refund visibility
 
-Approval retains the existing expense category, payout method, paying account and policy-snapshot rules.
-An approved/processing refund is projected as Awaiting payout without creating a monetary expense.
-Payout confirmation replaces that projection with the canonical paid expense; retries must not duplicate it.
-Awaiting amounts are labelled separately and excluded from paid totals.
+Approval reserves the refund amount; expense category and paying account are selected in Record Payment using policy defaults as initial values.
+Approved/processing refunds remain in Refunds and do not appear in Expenses.
+Recording payment completes the refund and adds the canonical Paid expense in one transaction; retries must not duplicate it. See the [refund payment workspace](./fee-refund-payout-workflow.md).
+Expense status filters offer Paid and Returned; unpaid refund requests are excluded from register rows and counts.
 Returned payouts retain their linked signed correction.
 
 ## Acceptance checks
@@ -67,10 +69,10 @@ Returned payouts retain their linked signed correction.
 Check academic years crossing calendar years, partial/extended years, All months, year switching and out-of-range rejection.
 Check both manual creates, cash/non-cash requirements, decimal values, failed lookup/save and double submit.
 Check View on automatic/manual/historical rows, exact permission denials and student-scope isolation.
-Check refund approval -> awaiting -> paid -> returned, refresh/cache invalidation and no duplicate expense.
+Check that approved/processing refunds are absent, recording payment adds one Paid row, and linked returns remain Returned; verify refresh/cache invalidation and no duplicate expense.
 Run focused frontend tests, type/lint checks, docs validation and a final Codex in-app browser smoke test.
 
-Awaiting refunds use their request date until payout confirmation; this is labelled Request date in detail because historical requests have no dedicated approval timestamp.
+Refund expenses use the recorded payment/posting date. Historical direct-detail reads remain compatible with older clients.
 
 Verify pending receipts now uses the same academic-month option utility, with a single required month and no All months option.
 Its month resets immediately when the global academic year changes.

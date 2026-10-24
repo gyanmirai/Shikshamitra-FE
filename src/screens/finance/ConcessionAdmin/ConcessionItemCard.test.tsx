@@ -121,7 +121,9 @@ describe('individual concession request card', () => {
   });
   it('delegates Edit, See All and Delete to the existing owning workflow', () => {
     show();
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    const edit = screen.getByRole('button', { name: 'Edit concession request' });
+    expect(edit).toBeEmptyDOMElement();
+    fireEvent.click(edit);
     fireEvent.click(screen.getByRole('button', { name: 'See All' }));
     fireEvent.click(screen.getByRole('button', { name: 'Delete concession request' }));
     expect(handlers.onEdit).toHaveBeenCalledWith(item);
@@ -131,17 +133,23 @@ describe('individual concession request card', () => {
   });
   it('retains grant and server-action checks and disables deletion outside Draft', () => {
     const { unmount } = show(item, []);
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Edit concession request' })
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Delete concession request' })
     ).not.toBeInTheDocument();
     unmount();
     const pending = show({ ...item, status: ConcessionStatusType.Pending });
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Edit concession request' })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Delete concession request' })).toBeDisabled();
     pending.unmount();
     show({ ...item, availableActions: ['upload-document'] });
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Edit concession request' })
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Delete concession request' })
     ).not.toBeInTheDocument();

@@ -15,6 +15,9 @@ export interface IChargeData {
   purposeDescription: string;
   additionalNotes?: string;
   studentCount?: number;
+  paidStudentCount?: number;
+  outstandingStudentCount?: number;
+  waivedStudentCount?: number;
   pendingCount?: number;
   approvedCount?: number;
   rejectedCount?: number;

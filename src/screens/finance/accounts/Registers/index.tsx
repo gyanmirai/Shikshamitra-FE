@@ -15,21 +15,17 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Card, Stack, Alert, Button } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import { useGetAccountsActivityQuery } from 'src/redux/finance/accountsActivityApi';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+import FinanceListActionRow from 'src/screens/finance/components/FinanceListActionRow';
 
 import ManualEntryForm from './ManualEntryForm';
 import AccountEntryDetails from './AccountEntryDetails';
 import { academicMonthOptions, defaultAcademicMonth } from './academicMonths';
-import {
-  toRegisterTableRow,
-  registerSourceOptions,
-  registerStatusOptions,
-} from './registerTablePresentation';
+import { toRegisterTableRow, registerStatusOptions } from './registerTablePresentation';
 
 import type { AcademicPeriod } from './academicMonths';
 
@@ -50,7 +46,7 @@ export default function AccountsRegister({ direction }: { direction: 'income' | 
           description={
             direction === 'income'
               ? 'View received student payments and other school income.'
-              : 'View school expenses and automatically linked student refunds. Awaiting payouts are excluded from paid expenses.'
+              : 'View paid school expenses, completed student refunds, and returned payments.'
           }
           heading={heading}
 
@@ -88,7 +84,6 @@ function RegisterContent({
   const income = direction === 'income';
   const months = academicMonthOptions(period);
   const [month, setMonth] = useState(() => defaultAcademicMonth(months));
-  const [source, setSource] = useState('all');
   const [category, setCategory] = useState('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -108,7 +103,6 @@ function RegisterContent({
       direction,
       month: month === 'all' ? undefined : Number(month.slice(5)),
       year: month === 'all' ? undefined : Number(month.slice(0, 4)),
-      source: source === 'all' ? undefined : source,
       categoryId: category === 'all' ? undefined : category,
       search: search || undefined,
       filters: serializeFinanceTableFilters(columnFilters),
@@ -149,15 +143,6 @@ function RegisterContent({
         filterType: 'string',
         minWidth: 180,
         render: (value: string) => value || '—',
-      },
-      {
-        id: 'source',
-        label: 'Source',
-        minWidth: 170,
-        filterType: 'enum',
-        enumOptions: registerSourceOptions(income),
-        render: (value: string) =>
-          registerSourceOptions(income).find((option) => option.value === value)?.label ?? '—',
       },
       {
         id: 'categoryName',
@@ -226,8 +211,7 @@ function RegisterContent({
       'sourceStatus',
     ].includes(column.id),
   }));
-  const filtered =
-    month !== 'all' || source !== 'all' || category !== 'all' || columnFilters.length > 0;
+  const filtered = month !== 'all' || category !== 'all' || columnFilters.length > 0;
   const categories = query.data?.categories ?? [];
   const noData = (
     <Stack alignItems="center" justifyContent="center" spacing={1} sx={{ minHeight: 220 }}>
@@ -255,7 +239,6 @@ function RegisterContent({
         <Button
           onClick={() => {
             setMonth('all');
-            setSource('all');
             setCategory('all');
             setColumnFilters([]);
             setPage(1);
@@ -264,7 +247,15 @@ function RegisterContent({
           Clear filters
         </Button>
       ) : (
-        canAdd && <Button onClick={add.onTrue}>Add {income ? 'income' : 'expense'}</Button>
+        canAdd && (
+          <Button
+            aria-label={income ? 'Add Income' : 'Add Expense'}
+            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+            onClick={add.onTrue}
+          >
+            {income ? 'Add Income' : 'Add Expense'}
+          </Button>
+        )
       )}
     </Stack>
   );
@@ -283,7 +274,7 @@ function RegisterContent({
           description={
             income
               ? 'View received student payments and other school income.'
-              : 'View school expenses and linked student refunds. Awaiting payouts are excluded from paid expenses.'
+              : 'View paid school expenses, completed student refunds, and returned payments.'
           }
           heading={income ? 'Income' : 'Expenses'}
 
@@ -292,21 +283,6 @@ function RegisterContent({
             { name: 'Accounts' },
             { name: income ? 'Income' : 'Expenses' },
           ]}
-          action={
-            canAdd ? (
-              <Button
-                ref={addButton}
-                variant="contained"
-                size="small"
-                disabled={months.length === 0}
-                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-                onClick={add.onTrue}
-                sx={{ px: 4 }}
-              >
-                Add {income ? 'income' : 'expense'}
-              </Button>
-            ) : undefined
-          }
         />
         {months.length === 0 && (
           <Alert severity="error">
@@ -337,29 +313,6 @@ function RegisterContent({
               }}
             />
           </Box>
-          <Box sx={{ width: { xs: '100%', sm: 190 } }}>
-            <CustomSelect
-              label="Source"
-              value={source}
-              options={[
-                { value: 'all', label: 'All sources' },
-                ...(income
-                  ? [
-                      { value: 'collection', label: 'Student payments' },
-                      { value: 'income', label: 'Other income' },
-                    ]
-                  : [
-                      { value: 'expense', label: 'School expenses' },
-                      { value: 'refund', label: 'Student refunds' },
-                    ]),
-              ]}
-              onChange={(value) => {
-                setSource(String(value));
-                setCategory('all');
-                setPage(1);
-              }}
-            />
-          </Box>
           <Box sx={{ width: { xs: '100%', sm: 210 } }}>
             <CustomSelect
               label="Category"
@@ -375,6 +328,24 @@ function RegisterContent({
             />
           </Box>
         </Card>
+        <FinanceListActionRow
+          action={
+            canAdd ? (
+              <Button
+                aria-label={income ? 'Add Income' : 'Add Expense'}
+                ref={addButton}
+                variant="contained"
+                size="small"
+                disabled={months.length === 0}
+                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                onClick={add.onTrue}
+                sx={{ px: 4 }}
+              >
+                {income ? 'Add Income' : 'Add Expense'}
+              </Button>
+            ) : undefined
+          }
+        />
         <Box
           sx={{
             display: 'flex',

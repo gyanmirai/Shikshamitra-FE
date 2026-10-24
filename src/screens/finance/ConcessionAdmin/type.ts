@@ -88,6 +88,8 @@ export interface IStudentConcessionDetailsResponse {
     grNumber: string;
     standardName: string;
     divisionName: string;
+    boardName?: string;
+    educationMediumName?: string;
   };
   concessionBasicDetail: IConcessionBasicDetail;
   totalCount: number;

@@ -34,7 +34,7 @@ export default function AccountEntryDetails({
   const data = query.currentData;
   return (
     <CustomDialog
-      titleInfo="Review this entry and its available source, payment and allocation details."
+      titleInfo="Review this entry and its available payment and allocation details."
       open
       title={
         <Stack
@@ -81,17 +81,6 @@ export default function AccountEntryDetails({
           <Stack spacing={1.5}>
             <DetailSection icon="mdi:receipt-text-outline" title="Transaction details">
               <DetailGrid>
-                <DetailField
-                  label="Source"
-                  value={
-                    {
-                      Collection: 'Student payment',
-                      Income: 'Other income',
-                      Expense: 'School expense',
-                      Refund: 'Student refund',
-                    }[data.source]
-                  }
-                />
                 <DetailField
                   label="Amount for this entry"
                   value={formatNumber(data.amount, 'INR')}

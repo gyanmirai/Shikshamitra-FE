@@ -23,12 +23,13 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
-import { ConcessionStatusType, ConcessionStatusTypeColors } from 'src/enums/concession-status-type';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
+import FinanceListActionRow from 'src/screens/finance/components/FinanceListActionRow';
 import {
   Box,
   Tab,
@@ -56,9 +57,12 @@ import {
 
 import { canDecideConcession } from '../concessionDecisionEligibility';
 import {
+  concessionStatusTab,
   toConcessionTableRow,
   concessionStatusLabel,
+  concessionStatusColor,
   concessionStatusOptions,
+  expandConcessionStatusFilters,
 } from './concessionTablePresentation';
 
 import type { IStudentInfo } from '../type';
@@ -73,6 +77,7 @@ interface ICombinedProps {
 }
 
 interface StudentConcessionTableProps extends ICombinedProps {
+  primaryAction?: React.ReactNode;
   academicFilters?: UseFinanceAcademicFiltersResult;
 }
 
@@ -84,6 +89,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
   onEditConcession,
   onViewAllConcession,
   academicFilters,
+  primaryAction,
 }) => {
   const localFilters = useFinanceAcademicFilters();
   const filters = academicFilters || localFilters;
@@ -283,7 +289,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
       page: page + 1,
       pageSize: tableQuery.rowsPerPage,
       search: tableQuery.search || undefined,
-      filters: serializeFinanceTableFilters(tableQuery.filters),
+      filters: serializeFinanceTableFilters(expandConcessionStatusFilters(tableQuery.filters)),
       sortBy: tableQuery.sorts[0]?.column,
       sortOrder: tableQuery.sorts[0]?.direction,
     },
@@ -359,40 +365,39 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
           />
         </Box>
       </Card>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Tabs
-            value={tabs.value}
-            onChange={(event, value) => {
-              tabs.onChange(event, value);
-              setTableQuery((previous) => ({
-                ...previous,
-                page: 0,
-                filters: previous.filters.filter((filter) => filter.column !== 'status'),
-              }));
-            }}
-            sx={{
-              '& .MuiTabs-flexContainer': { gap: 2 },
-              flexGrow: 1,
-              px: 1,
-            }}
-          >
-            {TABS.map((tab) => (
-              <Tab
-                key={String(tab.value)}
-                value={tab.value}
-                sx={{ fontSize: '12px' }}
-                label={
-                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                    {tab.label}
-                    <Label color={tab.color as LabelColor}>{tab.count}</Label>
-                  </Box>
-                }
-              />
-            ))}
-          </Tabs>
-        </Box>
-      </Card>
+      <FinanceListActionRow action={primaryAction}>
+        <Tabs
+          variant="scrollable"
+          value={tabs.value}
+          onChange={(event, value) => {
+            tabs.onChange(event, value);
+            setTableQuery((previous) => ({
+              ...previous,
+              page: 0,
+              filters: previous.filters.filter((filter) => filter.column !== 'status'),
+            }));
+          }}
+          sx={{
+            '& .MuiTabs-flexContainer': { gap: 2 },
+            flexGrow: 1,
+            px: 1,
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              key={String(tab.value)}
+              value={tab.value}
+              sx={{ fontSize: '12px' }}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}
+                  <Label color={tab.color as LabelColor}>{tab.count}</Label>
+                </Box>
+              }
+            />
+          ))}
+        </Tabs>
+      </FinanceListActionRow>
       <CustomizableTable
         getRowAction={(row) =>
           onViewConcession
@@ -402,7 +407,8 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                   onViewConcession?.(row as IStudentInfo);
                 },
               }
-            : undefined}
+            : undefined
+        }
         tableId="student-concession-table"
         tableTitle="Concessions"
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
@@ -423,9 +429,16 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
           setTableQuery((previous) => ({ ...previous, page: nextPage - 1, rowsPerPage, scopeKey }))
         }
         onServerSearch={(search) => setTableQuery((previous) => ({ ...previous, page: 0, search }))}
-        onServerFilter={(columnFilters) =>
-          setTableQuery((previous) => ({ ...previous, page: 0, filters: columnFilters }))
-        }
+        onServerFilter={(columnFilters) => {
+          const statusFilters = columnFilters.filter((filter) => filter.column === 'status');
+          const statusFilter = statusFilters[statusFilters.length - 1];
+          const nextTab = statusFilter && concessionStatusTab(Number(statusFilter.value));
+          if (nextTab) tabs.setValue(nextTab);
+          const nextFilters = statusFilter
+            ? [...columnFilters.filter((filter) => filter.column !== 'status'), statusFilter]
+            : columnFilters;
+          setTableQuery((previous) => ({ ...previous, page: 0, filters: nextFilters }));
+        }}
         onServerSort={(_column, sorts) =>
           setTableQuery((previous) => ({ ...previous, page: 0, sorts }))
         }
@@ -529,7 +542,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             id: 'status',
             label: 'Status',
             filterType: 'enum',
-            enumOptions: concessionStatusOptions(String(tabs.value)),
+            enumOptions: concessionStatusOptions(),
             isFilter: true,
             isSort: false,
             sticky: true,
@@ -537,9 +550,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             minWidth: 140,
             width: 140,
             render: (value) => (
-              <Label color={ConcessionStatusTypeColors[value as ConcessionStatusType]}>
-                {concessionStatusLabel(value)}
-              </Label>
+              <Label color={concessionStatusColor(value)}>{concessionStatusLabel(value)}</Label>
             ),
           },
           {
@@ -689,7 +700,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             No concessions in this tab{' '}
             {canAdd && (
               <Button size="small" onClick={onAddConcession}>
-                Request Concession
+                Concession Request
               </Button>
             )}
           </>
@@ -758,8 +769,8 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
         disableBackdropClick
         content={
           <>
-            Delete the concession draft for{' '}
-            <strong>{selectedConcession?.studentName}</strong>? This removes the draft request.
+            Delete the concession draft for <strong>{selectedConcession?.studentName}</strong>? This
+            removes the draft request.
           </>
         }
         action={

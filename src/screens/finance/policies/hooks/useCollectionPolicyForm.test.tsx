@@ -49,12 +49,80 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 
 describe('useCollectionPolicyForm submission validation', () => {
+  it.each(['Combined', 'Separate'] as const)(
+    'saves and restores the %s receipt option',
+    async (receiptGrouping) => {
+      const { result } = renderHook(() =>
+        useCollectionPolicyForm({
+          open: true,
+          onClose: vi.fn(),
+          academicYearId: 'year',
+          editData: {
+            id: 'policy',
+            policyName: 'Receipt policy',
+            status: 'Draft',
+            receiptGrouping,
+          } as never,
+        })
+      );
+      expect(result.current.formik.values.receiptGrouping).toBe(receiptGrouping);
+      await act(async () => {
+        await result.current.handleCustomSubmit('Draft');
+      });
+      expect(mocks.updatePolicy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({ receiptGrouping }),
+        })
+      );
+    }
+  );
+
+  it('keeps separate receipts for a historical policy without a receipt option', () => {
+    const { result } = renderHook(() =>
+      useCollectionPolicyForm({
+        open: true,
+        onClose: vi.fn(),
+        editData: { id: 'historical', policyName: 'Historical policy', status: 'Draft' } as never,
+      })
+    );
+    expect(result.current.formik.values.receiptGrouping).toBe('Separate');
+  });
+
+  it('blocks an invalid receipt option before saving', async () => {
+    const { result } = renderHook(() =>
+      useCollectionPolicyForm({ open: true, onClose: vi.fn(), academicYearId: 'year' })
+    );
+    await act(async () => {
+      await result.current.formik.setFieldValue('policyName', 'Receipt policy');
+      await result.current.formik.setFieldValue('receiptGrouping', 'Unknown');
+    });
+    await act(async () => {
+      await result.current.handleCustomSubmit('Draft');
+    });
+    expect(mocks.createPolicy).not.toHaveBeenCalled();
+    expect(result.current.formik.errors.receiptGrouping).toBeTruthy();
+  });
+
   it('defaults new policies to installments and retains historical selection order on edit', () => {
-    const created = renderHook(() => useCollectionPolicyForm({ open: true, onClose: vi.fn(), academicYearId: 'year' }));
+    const created = renderHook(() =>
+      useCollectionPolicyForm({ open: true, onClose: vi.fn(), academicYearId: 'year' })
+    );
     expect(created.result.current.formik.values.allocationBasis).toBe('Installment');
-    const legacy = renderHook(() => useCollectionPolicyForm({ open: true, onClose: vi.fn(), editData: { id: 'old-policy' } as never }));
+    const legacy = renderHook(() =>
+      useCollectionPolicyForm({
+        open: true,
+        onClose: vi.fn(),
+        editData: { id: 'old-policy' } as never,
+      })
+    );
     expect(legacy.result.current.formik.values.allocationBasis).toBe('Legacy');
-    const configured = renderHook(() => useCollectionPolicyForm({ open: true, onClose: vi.fn(), editData: { id: 'saved-policy', allocationBasis: 'FeeHead' } as never }));
+    const configured = renderHook(() =>
+      useCollectionPolicyForm({
+        open: true,
+        onClose: vi.fn(),
+        editData: { id: 'saved-policy', allocationBasis: 'FeeHead' } as never,
+      })
+    );
     expect(configured.result.current.formik.values.allocationBasis).toBe('FeeHead');
   });
   beforeEach(() => {

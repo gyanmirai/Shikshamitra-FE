@@ -1,19 +1,18 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { useMemo, useState } from 'react';
-import { LoadingButton } from 'src/components/loading-button';
+import { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
-
-import { Box, Stack, Tooltip, Divider, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { LoadingButton } from 'src/components/loading-button';
+import { Box, Stack, Divider, Typography } from '@mui/material';
 
 import type { IStudentFee, FeeCollectionFormValues } from '../../Components/type';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -83,15 +82,12 @@ const FinalPaymentReviewDialog = ({
   bankAccounts,
 }: FinalPaymentReviewDialogProps) => {
   const theme = useTheme();
-  const [activeAction, setActiveAction] = useState<'accept' | 'pending'>('accept');
   const handleAccept = () => {
     if (loading) return;
-    setActiveAction('accept');
     onConfirmCollect();
   };
   const handlePending = () => {
     if (loading) return;
-    setActiveAction('pending');
     onSavePending();
   };
 
@@ -128,7 +124,7 @@ const FinalPaymentReviewDialog = ({
             arrow
             placement="right"
             sx={{ textAlign: 'justify' }}
-            title={isCash ? 'Collect cash and generate a final receipt' : 'Record payment with a provisional receipt pending finance verification'}
+            title={isCash ? 'Collect cash and generate an official receipt' : 'Record payment with a provisional receipt pending finance verification'}
           >
             <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
           </CustomTooltip>
@@ -181,7 +177,7 @@ const FinalPaymentReviewDialog = ({
                   Amount
                 </Typography>
                 <Typography variant="h5" fontWeight={800} color="primary.main">
-                  ₹{formatNumber(paidAmount)}
+                  {formatNumber(paidAmount, 'INR')}
                 </Typography>
               </Box>
 
@@ -282,8 +278,8 @@ const FinalPaymentReviewDialog = ({
                   </Typography>
                   <Typography variant="caption" color="text.secondary" lineHeight={1.6}>
                     {isChequeOrDemandDraft(paymentMethod)
-                      ? 'This payment will be moved to reconciliation. The finance team will verify and generate the receipt once the cheque/demand draft is cleared.'
-                      : 'Both actions create a provisional receipt in Verify pending receipts. Accept & Confirm acknowledges receipt of the payment; the finance team must still verify it before settlement.'}
+                      ? 'A provisional receipt is generated immediately and appears in Receipts. The finance team issues a linked official receipt after clearance and approval in reconciliation.'
+                      : 'A provisional receipt is generated immediately and appears in Receipts. Approval in reconciliation issues a linked official receipt.'}
                   </Typography>
                 </Box>
               </Stack>
@@ -303,84 +299,20 @@ const FinalPaymentReviewDialog = ({
           backdropFilter: 'blur(8px)',
         }}
       >
-        {isCash ? (
-          /* ── CASH: Single action ── */
-          <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
-            <Tooltip describeChild title="Collect cash payment and generate receipt immediately">
-              <LoadingButton
-                variant="contained"
-                color="success"
-                loading={loading}
-                loadingPosition="start"
-                onClick={handleAccept}
-                startIcon={<Iconify icon="solar:bill-check-bold" />}
-                size="small"
-                sx={{ fontWeight: 700 }}
-              >
-                Final Submit &amp; Generate Receipt
-              </LoadingButton>
-            </Tooltip>
-          </Stack>
-        ) : isChequeOrDemandDraft(paymentMethod) ? (
-          /* ── CHEQUE/DEMAND DRAFT: Single action for reconciliation ── */
-          <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
-            <Tooltip
-              describeChild
-              title="Move payment to reconciliation - receipt will be generated after verification by finance team"
-            >
-              <LoadingButton
-                variant="contained"
-                color="warning"
-                loading={loading}
-                loadingPosition="start"
-                onClick={handlePending}
-                startIcon={<Iconify icon="ic:round-arrow-forward" />}
-                size="small"
-                sx={{ fontWeight: 600 }}
-              >
-                Move to Reconciliation
-              </LoadingButton>
-            </Tooltip>
-          </Stack>
-        ) : (
-          /* ── OTHER NON-CASH: Two actions ── */
-          <Stack direction="row" justifyContent="flex-end" spacing={1.5} flexWrap="wrap">
-            <Tooltip
-              describeChild
-              title="Save payment as pending - receipt will be generated after verification by finance team"
-            >
-              <LoadingButton
-                variant="contained"
-                color="warning"
-                loading={loading && activeAction === 'pending'}
-                disabled={loading}
-                loadingPosition="start"
-                onClick={handlePending}
-                startIcon={<Iconify icon="ic:round-arrow-forward" />}
-                size="small"
-                sx={{ fontWeight: 600 }}
-              >
-                Move to Reconciliation
-              </LoadingButton>
-            </Tooltip>
-
-            <Tooltip describeChild title="Accept payment and create a provisional receipt pending finance verification">
-              <LoadingButton
-                variant="contained"
-                color="success"
-                loading={loading && activeAction === 'accept'}
-                disabled={loading}
-                loadingPosition="start"
-                onClick={handleAccept}
-                startIcon={<Iconify icon="solar:check-circle-bold" />}
-                size="small"
-                sx={{ fontWeight: 700 }}
-              >
-                Accept &amp; Confirm
-              </LoadingButton>
-            </Tooltip>
-          </Stack>
-        )}
+        <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
+          <LoadingButton
+            variant="contained"
+            color={isCash ? 'success' : 'warning'}
+            loading={loading}
+            disabled={loading}
+            loadingPosition="start"
+            onClick={isCash ? handleAccept : handlePending}
+            startIcon={<Iconify icon="solar:bill-check-bold" />}
+            size="small"
+          >
+            {isCash ? 'Collect & Issue Official Receipt' : 'Record & Issue Provisional Receipt'}
+          </LoadingButton>
+        </Stack>
       </Box>
     </CustomDialog>
   );

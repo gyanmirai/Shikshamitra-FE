@@ -17,6 +17,7 @@ import CollectionFooterActions from './collection/CollectionFooterActions';
 import CollectionGeneralSection from './collection/CollectionGeneralSection';
 import CollectionLateFeeSection from './collection/CollectionLateFeeSection';
 import CollectionAllocationSection from './collection/CollectionAllocationSection';
+import CollectionReceiptSection from './collection/CollectionReceiptSection';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -119,7 +120,7 @@ function CollectionPolicyDrawerSession({
         }}
       >
         <FinancePolicyDrawerHeader
-          description={`Configure grace periods and late fees · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}`}
+          description={`Configure payment priority, receipts, and late fees · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}`}
           title={editData ? 'Edit Collection Policy' : 'Create Collection Policy'}
           titleId="collection-policy-title"
 
@@ -160,6 +161,7 @@ function CollectionPolicyDrawerSession({
                   activeEdit={isAlreadyActive}
                 />
                 <CollectionAllocationSection formik={formik} />
+                <CollectionReceiptSection formik={formik} />
                 <CollectionLateFeeSection
                   formik={formik}
                   feeHeads={feeHeads}

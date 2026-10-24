@@ -8,7 +8,8 @@ import type {
 } from 'src/types/finance/reconciliation';
 
 import { api } from 'src/redux/service';
-import { financeModuleType, reconciliationType } from 'src/redux/tagTypes';
+import { getDownloadFileName } from 'src/utils/get-download-file-name';
+import { receiptType, financeModuleType, reconciliationType } from 'src/redux/tagTypes';
 
 export const ReconciliationApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -46,6 +47,7 @@ export const ReconciliationApi = api.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        receiptType.receipt,
         reconciliationType.reconciliation,
         financeModuleType.charges,
         financeModuleType.incomeTracking,
@@ -65,6 +67,7 @@ export const ReconciliationApi = api.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        receiptType.receipt,
         reconciliationType.reconciliation,
         financeModuleType.charges,
         financeModuleType.incomeTracking,
@@ -74,11 +77,15 @@ export const ReconciliationApi = api.injectEndpoints({
     }),
 
     /** Download receipt PDF for reconciliation item */
-    downloadReconciliationReceiptPdf: builder.mutation<Blob, { receiptId: string }>({
+    downloadReconciliationReceiptPdf: builder.mutation<{ blob: Blob; fileName: string }, { receiptId: string }>({
       query: ({ receiptId }) => ({
-        url: `/v1/finance/receipts/${receiptId}/pdf`,
+        url: `/v1/fee-receipts/${receiptId}/pdf`,
         method: 'GET',
         responseHandler: (response) => response.blob(),
+      }),
+      transformResponse: (blob: Blob, meta) => ({
+        blob,
+        fileName: getDownloadFileName(meta?.response?.headers.get('content-disposition') ?? null) ?? 'Receipt.pdf',
       }),
     }),
   }),

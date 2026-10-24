@@ -861,6 +861,12 @@ There is currently no shared `FilterPanel` component.
 When a screen needs filters above a table, implement the pattern locally with the existing MUI layout primitives and the appropriate shared field components.
 The reference pattern is used in the employee workflow at `src/screens/hr/i-card/index.tsx` immediately before `CustomizableTable`.
 
+Finance list actions use `src/screens/finance/components/FinanceListActionRow.tsx` below the
+domain filters. Pass lifecycle tabs as `children` and the permission-controlled creation button
+as `action`. Tabs shrink and scroll within their region; below `md`, the action wraps to its own
+right-aligned row. Adjustments, Concessions, Refunds, Charges, Income and Expenses use this
+placement instead of a breadcrumb action. Keep Search, Columns and Export in `CustomizableTable`.
+
 **Configuration**
 
 | Concern            | Required configuration                                                                                                                                              |

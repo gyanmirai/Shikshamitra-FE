@@ -13,4 +13,10 @@ after saving to verify edit hydration. Queries and mutations are served by `mock
 in memory. Reloading clears saved fixture policies. The component preview below the launcher
 also includes a one-time fee head to verify its read-only restriction.
 
+Use `/?scroll=long` with **Open create drawer** for 36 fee heads and the internal-scroll
+regression. The payment-term fixture on port 4185 accepts the same query with **Open copied
+draft** for 12 monthly installments. Both retain their original short-list data without the query.
+Run both fixtures and the desktop/mobile scroll checks with
+`npx playwright test --config e2e/finance/configuration-section-scroll.config.ts`.
+
 Check independent admission/withdrawal switches, all four models, both monthly strategies, invalid cutoff/minimum values, shared rounding, disabled one-time heads, saved fields, and light/dark/mobile layout. Student assignment inheritance is covered by the backend integration tests and the assignment workflow component tests.

@@ -37,6 +37,31 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+it('preserves navigation behavior with feature-specific confirmation labels', () => {
+  const proceed = vi.fn();
+  function LabelFixture() {
+    const { requestNavigation, confirmation } = useUnsavedNavigation(true, {
+      keepEditingLabel: 'Keep Editing',
+      discardLabel: 'Discard Changes',
+    });
+    return (
+      <>
+        <button type="button" onClick={() => requestNavigation(proceed)}>
+          Leave
+        </button>
+        {confirmation}
+      </>
+    );
+  }
+  render(<LabelFixture />);
+  fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));
+  expect(proceed).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
+  expect(proceed).toHaveBeenCalledOnce();
+});
+
 describe('shared unsaved navigation', () => {
   it('guards browser history traversal until unsaved changes are discarded', () => {
     const navigation = new EventTarget() as EventTarget & {
@@ -52,7 +77,9 @@ describe('shared unsaved navigation', () => {
         navigationType: 'traverse',
         destination: { key: 'previous-entry', url: `${window.location.origin}/previous` },
       });
-      act(() => { navigation.dispatchEvent(event); });
+      act(() => {
+        navigation.dispatchEvent(event);
+      });
       return event;
     };
 

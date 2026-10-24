@@ -19,6 +19,8 @@ const refund = {
   _approvedAmount: 200,
   _refundMethod: 'Cash',
   _allowedPayoutMethods: ['Cash', 'BankTransfer'],
+  _defaultExpenseCategoryId: 'category-1',
+  _defaultPayingBankAccountId: 'bank-1',
 } as IStudentFeeData;
 
 function setup(overrides: Partial<IStudentFeeData> = {}, onSubmit = vi.fn(async () => {})) {
@@ -29,6 +31,7 @@ function setup(overrides: Partial<IStudentFeeData> = {}, onSubmit = vi.fn(async 
         <RefundPaymentDialog
           refund={{ ...refund, ...overrides }}
           bankAccounts={[{ id: 'bank-1', label: 'School Bank' }]}
+          expenseCategories={[{ id: 'category-1', label: 'Fee refunds' }]}
           bankAccountsLoading={false}
           loading={false}
           onClose={onClose}
@@ -40,36 +43,41 @@ function setup(overrides: Partial<IStudentFeeData> = {}, onSubmit = vi.fn(async 
   return { onClose, onSubmit };
 }
 
-it('groups payment details, formats the approved amount, and validates cash evidence', async () => {
-  const { onSubmit } = setup();
+it('requires expense routing for cash and submits without a handover or verification field', async () => {
+  const { onSubmit } = setup({ _defaultExpenseCategoryId: '', _defaultPayingBankAccountId: '' });
   expect(screen.getByRole('dialog', { name: 'Record Refund Payment' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Payment Details information' })).toBeTruthy();
   expect(screen.getByText('Test Student')).toBeTruthy();
   expect(screen.getByText('₹ 200')).toBeTruthy();
   expect(screen.getByRole('textbox', { name: 'Payout method' })).toBeDisabled();
-  expect(screen.queryByLabelText(/Source school bank account/)).toBeNull();
+  expect(screen.queryByRole('textbox', { name: /handover|evidence/i })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
-  const evidence = screen.getByRole('textbox', { name: /Signed handover receipt/ });
-  await waitFor(() => expect(evidence).toHaveFocus());
-  expect(screen.getByText('Payment evidence reference is required')).toBeTruthy();
+  await screen.findByText('Expense category is required');
+  expect(screen.getByText('Source school bank account is required')).toBeTruthy();
   expect(onSubmit).not.toHaveBeenCalled();
-  fireEvent.change(evidence, { target: { value: ' receipt-123 ' } });
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Source school bank account' }));
+  fireEvent.click(screen.getByRole('option', { name: 'School Bank' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Expense category' }));
+  fireEvent.click(screen.getByRole('option', { name: 'Fee refunds' }));
   fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
   await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
   expect(onSubmit).toHaveBeenCalledWith({
     method: 'Cash',
-    bankAccountId: '',
+    bankAccountId: 'bank-1',
     externalReference: '',
-    evidenceReference: ' receipt-123 ',
+    expenseCategoryId: 'category-1',
   });
 });
 
-it('requires transaction evidence for non-cash payments and keeps the approved bank fixed', async () => {
-  const { onSubmit } = setup({ _refundMethod: 'BankTransfer', _payingBankAccountId: 'bank-1' });
+it('requires a bank reference for a new non-cash payment', async () => {
+  const { onSubmit } = setup({
+    _refundMethod: 'BankTransfer',
+    _payingBankAccountId: 'bank-1',
+  });
   expect(screen.getByRole('textbox', { name: 'Payout method' })).toHaveValue(
     'Bank Transfer (NEFT/RTGS/IMPS)'
   );
-  expect(screen.getByRole('combobox', { name: 'Source school bank account' })).toHaveAttribute(
+  expect(screen.getByRole('combobox', { name: 'Source school bank account' })).not.toHaveAttribute(
     'aria-disabled',
     'true'
   );
@@ -79,16 +87,36 @@ it('requires transaction evidence for non-cash payments and keeps the approved b
   fireEvent.change(screen.getByRole('textbox', { name: 'Bank UTR / transaction reference' }), {
     target: { value: 'UTR-123' },
   });
-  fireEvent.change(screen.getByRole('textbox', { name: 'Payment evidence reference' }), {
-    target: { value: 'bank-proof' },
-  });
   fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
   await waitFor(() =>
     expect(onSubmit).toHaveBeenCalledWith({
       method: 'Bank Transfer (NEFT/RTGS/IMPS)',
       bankAccountId: 'bank-1',
       externalReference: 'UTR-123',
-      evidenceReference: 'bank-proof',
+      expenseCategoryId: 'category-1',
+    })
+  );
+});
+
+it('preserves the reference and bank of an existing pending payment', async () => {
+  const { onSubmit } = setup({
+    _refundMethod: 'BankTransfer',
+    _payingBankAccountId: 'bank-1',
+    _payoutPending: true,
+    _payoutReference: 'ORIGINAL-UTR',
+  });
+  expect(screen.getByRole('textbox', { name: 'Bank UTR / transaction reference' })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: 'Source school bank account' })).toHaveAttribute(
+    'aria-disabled',
+    'true'
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
+  await waitFor(() =>
+    expect(onSubmit).toHaveBeenCalledWith({
+      method: 'Bank Transfer (NEFT/RTGS/IMPS)',
+      bankAccountId: 'bank-1',
+      externalReference: 'ORIGINAL-UTR',
+      expenseCategoryId: 'category-1',
     })
   );
 });
@@ -102,41 +130,39 @@ it('locks fields, submission, and dismissal while a payment is being recorded', 
       })
   );
   const { onClose } = setup({}, onSubmit);
-  const evidence = screen.getByRole('textbox', { name: /Signed handover receipt/ });
-  fireEvent.change(evidence, { target: { value: 'receipt-123' } });
+  const evidence = screen.getByRole('combobox', { name: 'Expense category' });
   fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
   await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
-  expect(evidence).toBeDisabled();
+  expect(evidence).toHaveAttribute('aria-disabled', 'true');
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   expect(screen.getByRole('status', { name: 'Recording payment…' })).toBeTruthy();
   fireEvent.submit(evidence.closest('form')!);
   fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape', code: 'Escape' });
   await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
-  expect(evidence).toBeDisabled();
+  expect(evidence).toHaveAttribute('aria-disabled', 'true');
   expect(onClose).not.toHaveBeenCalled();
   resolve();
-  await waitFor(() => expect(evidence).not.toBeDisabled());
+  await waitFor(() => expect(evidence).not.toHaveAttribute('aria-disabled', 'true'));
 });
 
-it('retains entered evidence after a failed request', async () => {
+it('retains selected expense routing after a failed request', async () => {
   setup(
     {},
     vi.fn(async () => {
       throw new Error('Payment could not be recorded.');
     })
   );
-  const evidence = screen.getByRole('textbox', { name: /Signed handover receipt/ });
-  fireEvent.change(evidence, { target: { value: 'receipt-123' } });
+  const evidence = screen.getByRole('combobox', { name: 'Expense category' });
   fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Payment could not be recorded.');
-  expect(evidence).toHaveValue('receipt-123');
-  expect(evidence).not.toBeDisabled();
+  expect(evidence).toHaveTextContent('Fee refunds');
+  expect(evidence).not.toHaveAttribute('aria-disabled', 'true');
 });
 
-it('requires explicit discard before closing edited payment evidence', async () => {
-  const { onClose, onSubmit } = setup();
-  const evidence = screen.getByRole('textbox', { name: /Signed handover receipt/ });
-  fireEvent.change(evidence, { target: { value: 'receipt-123' } });
+it('requires explicit discard before closing edited payment details', async () => {
+  const { onClose, onSubmit } = setup({ _refundMethod: 'BankTransfer' });
+  const evidence = screen.getByRole('textbox', { name: 'Bank UTR / transaction reference' });
+  fireEvent.change(evidence, { target: { value: 'UTR-123' } });
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(onClose).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));

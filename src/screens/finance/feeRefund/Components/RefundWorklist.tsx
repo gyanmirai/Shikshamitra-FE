@@ -17,6 +17,7 @@ import { useGetFeeRefundsQuery } from 'src/redux/finance/RefundManagement/feeRef
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
+import FinanceListActionRow from 'src/screens/finance/components/FinanceListActionRow';
 
 import { serializeRefundWorklistFilters } from './refundWorklistFilters';
 
@@ -25,10 +26,9 @@ import type { IStudentFeeData } from '../type';
 const STATUSES = [
   { value: FeeRefundStatusType.Pending, label: 'Pending', color: 'warning' },
   { value: FeeRefundStatusType.Approved, label: 'Approved', color: 'info' },
-  { value: FeeRefundStatusType.Processed, label: 'Processed', color: 'success' },
+  { value: FeeRefundStatusType.Processed, label: 'Completed', color: 'success' },
   { value: FeeRefundStatusType.Rejected, label: 'Rejected', color: 'error' },
   { value: FeeRefundStatusType.Failed, label: 'Failed', color: 'error' },
-  { value: -1, label: 'History', color: 'default' },
 ] as const;
 
 const historicalLabels: Record<number, string> = {
@@ -39,18 +39,18 @@ const historicalLabels: Record<number, string> = {
   4: 'Cancelled',
   5: 'Draft',
   6: 'Processing',
-  7: 'Processed',
+  7: 'Completed',
   8: 'Failed',
   9: 'Reversed',
 };
 
 type WorklistProps = {
+  primaryAction?: React.ReactNode;
   filters: ReturnType<typeof useFinanceAcademicFilters>;
   onView: (row: IStudentFeeData) => void;
   onApprove: (row: IStudentFeeData) => void;
   onReject: (row: IStudentFeeData) => void;
   onRecord: (row: IStudentFeeData) => void;
-  onVerify: (row: IStudentFeeData) => void;
   onReplace: (row: IStudentFeeData) => void;
   onReturn: (row: IStudentFeeData) => void;
 };
@@ -87,21 +87,23 @@ function toRow(item: FeeRefundRequestDto, index: number): IStudentFeeData {
     _voucherNumber: item.voucherNumber,
     _receiptNumber: item.originalReceiptNumber ?? '',
     _payoutPending: payout?.status === 0,
+    _payoutReference: payout?.externalReference,
+    _paymentDate: payout?.settlementDate,
     _workflowVersion: item.workflowVersion,
   };
 }
 
 export default function RefundWorklist({
+  primaryAction,
   filters,
   onView,
   onApprove,
   onReject,
   onRecord,
-  onVerify,
   onReplace,
   onReturn,
 }: WorklistProps) {
-  const [status, setStatus] = useState<FeeRefundStatusType | -1>(FeeRefundStatusType.Pending);
+  const [status, setStatus] = useState<FeeRefundStatusType>(FeeRefundStatusType.Pending);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [search, setSearch] = useState('');
@@ -130,9 +132,9 @@ export default function RefundWorklist({
       academicMediumId: filters.filterPayload?.educationMediumId,
       standardId: filters.filterPayload?.standardId,
       divisionId: filters.filterPayload?.divisionId,
-      status: status === -1 ? undefined : status,
-      legacyHistory: status === -1,
-      workflowVersion: status === -1 ? 0 : 1,
+      status,
+      legacyHistory: false,
+      workflowVersion: 1,
       search,
       filters: serializedFilters,
       skipCount: page * pageSize,
@@ -147,9 +149,9 @@ export default function RefundWorklist({
       academicMediumId: filters.filterPayload?.educationMediumId,
       standardId: filters.filterPayload?.standardId,
       divisionId: filters.filterPayload?.divisionId,
-      status: entry.value === -1 ? undefined : entry.value,
-      legacyHistory: entry.value === -1,
-      workflowVersion: entry.value === -1 ? 0 : 1,
+      status: entry.value,
+      legacyHistory: false,
+      workflowVersion: 1,
       search,
       filters: serializedFilters,
       skipCount: 0,
@@ -171,16 +173,12 @@ export default function RefundWorklist({
   const failed = useGetFeeRefundsQuery(counts[4].args, {
     skip: !filters.isReady || !currentYear?.id,
   });
-  const history = useGetFeeRefundsQuery(counts[5].args, {
-    skip: !filters.isReady || !currentYear?.id,
-  });
   const tabCounts = [
     pending.data?.totalCount,
     approved.data?.totalCount,
     processed.data?.totalCount,
     rejected.data?.totalCount,
     failed.data?.totalCount,
-    history.data?.totalCount,
   ];
   const rows = useMemo(() => (data?.items ?? []).map(toRow), [data?.items]);
   const action = (
@@ -214,7 +212,7 @@ export default function RefundWorklist({
           selectSx={{ maxWidth: '248px', width: '100%' }}
         />
       </Card>
-      <Card sx={{ px: 1 }}>
+      <FinanceListActionRow action={primaryAction}>
         <Tabs
           value={status}
           onChange={(_, value) => {
@@ -226,7 +224,7 @@ export default function RefundWorklist({
           sx={{
             '& .MuiTabs-flexContainer': { gap: 2 },
             flexGrow: 1,
-            px: 1
+            px: 1,
           }}
         >
           {STATUSES.map((entry, index) => (
@@ -242,7 +240,7 @@ export default function RefundWorklist({
             />
           ))}
         </Tabs>
-      </Card>
+      </FinanceListActionRow>
       <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
           getRowAction={(row) => ({
@@ -325,16 +323,7 @@ export default function RefundWorklist({
               filterType: 'enum',
               isFilter: true,
               isSort: false,
-              enumOptions:
-                status === -1
-                  ? Object.entries(historicalLabels).map(([value, label]) => ({
-                    value: Number(value),
-                    label,
-                  }))
-                  : STATUSES.filter((entry) => entry.value !== -1).map(({ value, label }) => ({
-                    value,
-                    label,
-                  })),
+              enumOptions: STATUSES.map(({ value, label }) => ({ value, label })),
               render: (value, row) => {
                 const entry = STATUSES.find((item) => item.value === value);
                 return (
@@ -346,11 +335,6 @@ export default function RefundWorklist({
                         ? (historicalLabels[Number(value)] ?? 'Historical')
                         : (entry?.label ?? 'Historical')}
                     </Label>
-                    {row._payoutPending && (
-                      <Typography variant="caption" display="block">
-                        Awaiting verification
-                      </Typography>
-                    )}
                   </Box>
                 );
               },
@@ -369,7 +353,8 @@ export default function RefundWorklist({
                 const actions: string[] = row._availableActions ?? [];
                 const refund = row as IStudentFeeData;
                 return (
-                  <AdaptiveThreeDotsActions directActionLimit={3}
+                  <AdaptiveThreeDotsActions
+                    directActionLimit={3}
                     moreLabel={`More refund actions for ${row.name}`}
                     placement="right-top"
                     actions={[
@@ -381,9 +366,6 @@ export default function RefundWorklist({
                         : []),
                       ...(actions.includes('recordPayout')
                         ? [action(refund, 'Record payment', 'mdi:bank-transfer-out', onRecord)]
-                        : []),
-                      ...(actions.includes('confirmPayout')
-                        ? [action(refund, 'Confirm outcome', 'mdi:check-circle-outline', onVerify)]
                         : []),
                       ...(actions.includes('createReplacement')
                         ? [action(refund, 'Create linked request', 'mdi:content-copy', onReplace)]

@@ -178,6 +178,7 @@ export interface FeeCollectFormDto {
   /** Resolved from the student's Collection Policy — true (default) when no policy resolves. */
   allowOnlineCollection: boolean;
   allocationBasis?: CollectionAllocationBasis;
+  receiptGrouping?: 'Separate' | 'Combined';
   collectionPolicyId?: string | null;
   collectionPolicyName?: string | null;
   collectionPolicyVersion?: number | null;
@@ -200,6 +201,11 @@ export interface StudentSummary {
 }
 
 export interface FeeOverview {
+  netFee: number;
+  grossPaidAmount: number;
+  refundedAmount: number;
+  overpaymentAmount: number;
+  adjustmentCreditAmount: number;
   totalFee: number;
   paidFee: number;
   pendingFee: number;
@@ -209,6 +215,12 @@ export interface FeeOverview {
 }
 
 export interface FeeHeadSummary {
+  netFee: number;
+  concessionAmount: number;
+  grossPaidAmount: number;
+  refundedAmount: number;
+  overpaymentAmount: number;
+  adjustmentCreditAmount: number;
   feeHeadId: string;
   feeHeadName: string;
   amount: number;
@@ -237,8 +249,17 @@ export interface PaymentHistoryItem {
   receiptNumber: string;
   date: string;
   amount: number;
-  paymentMethods: string[];
+  paymentMethods: number[];
+  status: FeeCollectionStatusType;
+  receipts?: PaymentHistoryReceipt[];
   receiptUrl?: string;
+}
+
+export interface PaymentHistoryReceipt {
+  receiptId: string;
+  receiptNumber: string;
+  scope: 'Fee' | 'Charge' | 'Combined';
+  hasPdf: boolean;
 }
 
 export interface ConcessionDetail {
@@ -319,9 +340,12 @@ export interface FinanceAuditSummary {
 }
 
 export interface CollectFeeOutput {
+  receiptGrouping?: 'Separate' | 'Combined';
   id: string;
   receiptNumber: string;
   feeReceiptNumber?: string;
+  feeReceiptPdfFileName?: string;
+  chargeReceiptPdfFileName?: string;
   feeReceiptId?: string;
   chargeReceiptNumber?: string;
   chargeReceiptId?: string;
@@ -370,6 +394,9 @@ export interface FeeWaiverResult {
 // ─── Receipt Detail Types ────────────────────────────────────────────────────
 
 export interface FeeReceiptDetail {
+  combined?: boolean;
+  lateFeeAmount?: number;
+  paidCharges?: { chargeId: string; chargeName: string; amountPaid: number }[];
   id: string;
   receiptNumber: string;
   studentId: string;

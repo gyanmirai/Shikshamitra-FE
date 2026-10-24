@@ -154,7 +154,7 @@ export default function FeeStructureReviewStep({
             disabled={busy}
             onClick={onReview}
           >
-            {locked ? 'View saved checks' : 'Check readiness'}
+            {locked ? 'View Saved Checks' : 'Check Readiness'}
           </LoadingButton>
         }
       >
@@ -194,15 +194,15 @@ export default function FeeStructureReviewStep({
                           }
                         >
                           {/policy|collection|refund/i.test(message)
-                            ? 'Review policies'
-                            : 'Review fee heads'}
+                            ? 'Review Policies'
+                            : 'Review Fee Heads'}
                         </Button>
                         {/refund/i.test(message) && onRemoveRefund && (
-                          <CustomTooltip title="Remove refund policy">
+                          <CustomTooltip title="Remove Refund Policy">
                             <IconButton
                               size="small"
                               color="error"
-                              aria-label="Remove refund policy"
+                              aria-label="Remove Refund Policy"
                               disabled={busy}
                               onClick={onRemoveRefund}
                             >
@@ -260,7 +260,7 @@ export default function FeeStructureReviewStep({
                 disabled={busy}
                 onClick={() => onNavigate(1)}
               >
-                {writable ? 'Edit policies' : 'View policies'}
+                {writable ? 'Edit Policies' : 'View Policies'}
               </Button>
             }
           >
@@ -317,11 +317,11 @@ export default function FeeStructureReviewStep({
           <DetailSection
             icon={GlobalIcons.calendar}
             title="Payment Schedules"
-            helpText="Expand a fee head to review its payment term version, service periods, due dates, and installment amounts. Show details adds demand dates and allocation percentages."
+            helpText="Expand a fee head to review its payment term version, service periods, due dates, and installment amounts. Show Details adds demand dates and allocation percentages."
             action={
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                 <Button size="small" onClick={() => setDetails(!details)} aria-pressed={details}>
-                  {details ? 'Hide details' : 'Show details'}
+                  {details ? 'Hide Details' : 'Show Details'}
                 </Button>
                 <Button
                   size="small"
@@ -329,7 +329,7 @@ export default function FeeStructureReviewStep({
                   disabled={busy}
                   onClick={() => onNavigate(0)}
                 >
-                  {writable ? 'Edit fee heads' : 'View fee heads'}
+                  {writable ? 'Edit Fee Heads' : 'View Fee Heads'}
                 </Button>
               </Stack>
             }

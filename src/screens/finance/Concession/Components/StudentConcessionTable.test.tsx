@@ -1,8 +1,8 @@
 import React from 'react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { financePermissions } from 'src/constants/finance-menu';
-import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { ConcessionStatusType } from 'src/enums/concession-status-type';
 
 import StudentConcessionTable from './StudentConcessionTable';
 
@@ -135,6 +135,12 @@ vi.mock('src/components/customizabaleTable', () => ({
         <button type="button" onClick={() => props.onServerFilter([])}>
           Clear filters
         </button>
+        <button type="button" onClick={() => props.onServerFilter([
+          ...props.filters,
+          { column: 'status', type: 'equals', value: 1, valueType: 'enum' },
+        ])}>
+          Filter approved
+        </button>
         <div>{row.classDivision}</div>
         {rowAction && (
           <button type="button" disabled={rowAction.disabled} onClick={rowAction.onClick}>
@@ -175,6 +181,7 @@ describe('Concessions table query and actions', () => {
     expect(state.params.page).toBe(1);
     expect(JSON.parse(state.params.filters)).toEqual([
       { column: 'classDivision', type: 'contains', value: 'B' },
+      { column: 'status', type: 'equals', value: 6 },
       { column: 'status', type: 'equals', value: 0 },
     ]);
     fireEvent.click(screen.getByText('Sort rows'));
@@ -197,7 +204,28 @@ describe('Concessions table query and actions', () => {
       state.table.columns
         .find((column: any) => column.id === 'status')
         .enumOptions.map((option: any) => option.label)
-    ).toEqual(['Approved', 'Partially Reversed', 'Reversed']);
+    ).toEqual(['Pending', 'Approved', 'Rejected']);
+  });
+  it('switches to the selected status group and replaces a conflicting status filter', () => {
+    state.draft = true;
+    setup();
+    const statusColumn = state.table.columns.find((column: any) => column.id === 'status');
+    expect(statusColumn.enumOptions.map((option: any) => option.label)).toEqual([
+      'Pending', 'Approved', 'Rejected',
+    ]);
+    render(statusColumn.render(ConcessionStatusType.Draft));
+    expect(screen.getByText('Pending', { selector: 'span' })).toBeVisible();
+    expect(screen.queryByText('Draft')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Filter rows'));
+    fireEvent.click(screen.getByText('Filter approved'));
+    expect(state.params).toMatchObject({ tab: 'approved', page: 1 });
+    expect(JSON.parse(state.params.filters)).toEqual([
+      { column: 'classDivision', type: 'contains', value: 'B' },
+      { column: 'status', type: 'equals', value: 1 },
+      { column: 'status', type: 'equals', value: 4 },
+      { column: 'status', type: 'equals', value: 5 },
+    ]);
+    expect(state.table.filters.filter((filter: any) => filter.column === 'status')).toHaveLength(1);
   });
   it('filters the displayed class/division and keeps status/actions at the right', () => {
     setup();

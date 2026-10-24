@@ -2,9 +2,8 @@ import type { Theme } from '@mui/material';
 
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
 import { alpha, useTheme } from '@mui/material/styles';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 interface CustomAccordionProps {
@@ -43,13 +42,7 @@ const CustomAccordion: React.FC<CustomAccordionProps> = ({
     >
       {summary ?? (
         <AccordionSummary
-          expandIcon={
-            expanded ? (
-              <RemoveIcon sx={{ fontSize: '18px' }} />
-            ) : (
-              <AddIcon sx={{ fontSize: '18px' }} />
-            )
-          }
+          expandIcon={<ExpandMoreIcon sx={{ fontSize: '18px' }} />}
           sx={{
             borderBottom: `1px solid ${palette.divider}`,
             borderLeft: isActive

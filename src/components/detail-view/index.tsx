@@ -46,7 +46,13 @@ export function DetailSection({
 }
 
 /** Columns respond to the actual section width, including in narrow dialogs and drawers. */
-export function DetailGrid({ children }: { children: ReactNode }) {
+export function DetailGrid({
+  children,
+  desktopColumns = 3,
+}: {
+  children: ReactNode;
+  desktopColumns?: number;
+}) {
   return (
     <Box
       sx={{
@@ -55,6 +61,9 @@ export function DetailGrid({ children }: { children: ReactNode }) {
         gap: 2,
         '@container (min-width: 440px)': { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
         '@container (min-width: 680px)': { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
+        '@container (min-width: 960px)': {
+          gridTemplateColumns: `repeat(${desktopColumns}, minmax(0, 1fr))`,
+        },
       }}
     >
       {children}
