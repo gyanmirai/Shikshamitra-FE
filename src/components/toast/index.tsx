@@ -2,6 +2,8 @@ import type { AlertProps } from '@mui/material';
 
 import { toast } from 'sonner';
 import { Alert, AlertTitle } from '@mui/material';
+import { safeHrText } from 'src/screens/hr/recovery/hr-failure';
+import { isHrRecoveryVisible } from 'src/screens/hr/recovery/hr-recovery-events';
 import {
   formatPermissionDenied,
   isPermissionDeniedMessage,
@@ -17,43 +19,59 @@ export const shikshaMitraToast = {
     message: React.ReactNode;
     alertProps?: AlertProps | ((t: string | number) => AlertProps);
   }) => {
+    // HR mutation failures already own persistent, accessible feedback. Do not announce
+    // the same request again through legacy catch/helper toasts while that dialog is open.
+    if (isHrRecoveryVisible()) return 'hr-recovery-dialog';
+    if (
+      typeof window !== 'undefined' &&
+      window.location.pathname.startsWith('/hr/') &&
+      typeof message === 'string'
+    ) {
+      message =
+        safeHrText(message) ?? 'The request could not be completed. Review the form and try again.';
+    }
     const resolvedMessage =
       typeof message === 'string' && isGenericPermissionMessage(message)
         ? formatPermissionDenied()
         : message;
     const permissionDenied =
       typeof resolvedMessage === 'string' && isPermissionDeniedMessage(resolvedMessage);
-    return toast.custom((t) => {
-      if (typeof alertProps === 'function') {
-        alertProps = alertProps(t);
-      }
-      return (
-        <Alert
-          severity={permissionDenied ? 'warning' : 'error'}
-          variant={permissionDenied ? 'standard' : 'filled'}
-          onClose={() => {
-            toast.dismiss(t);
-          }}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '100%',
-            '& .MuiAlert-message': { minWidth: 0, overflowWrap: 'anywhere' },
-            '& .MuiAlert-action': {
+    return toast.custom(
+      (t) => {
+        if (typeof alertProps === 'function') {
+          alertProps = alertProps(t);
+        }
+        return (
+          <Alert
+            severity={permissionDenied ? 'warning' : 'error'}
+            variant={permissionDenied ? 'standard' : 'filled'}
+            onClose={() => {
+              toast.dismiss(t);
+            }}
+            sx={{
+              display: 'flex',
               alignItems: 'center',
-              ...(permissionDenied && {
-                '& button': { minWidth: 44, minHeight: 44 },
-              }),
-            },
-          }}
-          {...alertProps}
-        >
-          {permissionDenied && <AlertTitle>Access required</AlertTitle>}
-          {resolvedMessage}
-        </Alert>
-      );
-    }, permissionDenied ? { id: `permission:${String(resolvedMessage)}`, duration: 10000 } : undefined);
+              justifyContent: 'space-between',
+              width: '100%',
+              '& .MuiAlert-message': { minWidth: 0, overflowWrap: 'anywhere' },
+              '& .MuiAlert-action': {
+                alignItems: 'center',
+                ...(permissionDenied && {
+                  '& button': { minWidth: 44, minHeight: 44 },
+                }),
+              },
+            }}
+            {...alertProps}
+          >
+            {permissionDenied && <AlertTitle>Access required</AlertTitle>}
+            {resolvedMessage}
+          </Alert>
+        );
+      },
+      permissionDenied
+        ? { id: `permission:${String(resolvedMessage)}`, duration: 10000 }
+        : undefined
+    );
   },
   success: ({
     message,

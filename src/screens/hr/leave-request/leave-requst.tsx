@@ -23,6 +23,7 @@ import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetPolicyAssignmentPreviewQuery } from 'src/redux/hr/hr-policy-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { HrSetupLink, HrSetupRefresh } from 'src/screens/hr/recovery/hr-setup-controls';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
   Grid,
@@ -419,6 +420,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     data: effectivePolicyPreview,
     isFetching: isEffectivePolicyFetching,
     error: effectivePolicyError,
+    refetch: refetchEffectivePolicy,
   } = useGetPolicyAssignmentPreviewQuery(
     {
       academicYearId: catalogAcademicYearId,
@@ -488,9 +490,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     if (editData) return;
     if (!values.paidType) return;
     if (isEffectivePreviewEmployeeResolutionBlocked || isEffectivePolicyFetching) return;
+    if (effectivePolicyError) return;
     const existsInPolicy = visiblePaidTypeOptions.some((item: any) => item?.id === values.paidType);
     if (!existsInPolicy) {
-      setFieldValue('paidType', '');
       setFieldError(
         'paidType',
         'Selected paid type is no longer available. Please choose another paid type.'
@@ -504,6 +506,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     setFieldValue,
     values.paidType,
     visiblePaidTypeOptions,
+    effectivePolicyError,
   ]);
 
   useEffect(() => {
@@ -627,19 +630,34 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   ) : null}
                   {hasBlockingEffectivePolicyState ? (
                     <Alert severity="warning">
-                      No effective leave policy is assigned to this staff member for the selected date.
+                      No effective leave policy is assigned to this staff member for the selected
+                      date.
+                      <HrSetupLink setup="assignments" disabled={isSubmitting} />
+                      <HrSetupRefresh
+                        refresh={() => refetchEffectivePolicy().unwrap()}
+                        disabled={isSubmitting}
+                      />
                     </Alert>
                   ) : null}
                   {effectivePolicyError ? (
                     <Alert severity="warning">
-                      Could not resolve the staff leave policy. Resolve the effective leave
-                      policy before submitting.
+                      Could not resolve the staff leave policy. Resolve the effective leave policy
+                      before submitting.
+                      <HrSetupRefresh
+                        refresh={() => refetchEffectivePolicy().unwrap()}
+                        disabled={isSubmitting}
+                      />
                     </Alert>
                   ) : null}
                   {hasNoAllowedPaidTypes ? (
                     <Alert severity="warning">
                       The effective leave policy has no active paid or unpaid buckets for the
                       selected date.
+                      <HrSetupLink setup="leave" disabled={isSubmitting} />
+                      <HrSetupRefresh
+                        refresh={() => refetchEffectivePolicy().unwrap()}
+                        disabled={isSubmitting}
+                      />
                     </Alert>
                   ) : null}
                 </Stack>
@@ -652,7 +670,24 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   isLoading={
                     isEffectivePreviewEmployeeResolutionBlocked || isEffectivePolicyFetching
                   }
-                  options={visiblePaidTypeOptions}
+                  options={
+                    values.paidType &&
+                    !isSelectedPaidTypeVisible(values.paidType, visiblePaidTypeOptions)
+                      ? [
+                          ...visiblePaidTypeOptions,
+                          {
+                            id: values.paidType,
+                            name: 'Previously selected leave type (unavailable)',
+                          },
+                        ]
+                      : visiblePaidTypeOptions
+                  }
+                  disabledValues={
+                    values.paidType &&
+                    !isSelectedPaidTypeVisible(values.paidType, visiblePaidTypeOptions)
+                      ? [values.paidType]
+                      : []
+                  }
                   label="Paid Type *"
                   value={values.paidType}
                   name="paidType"

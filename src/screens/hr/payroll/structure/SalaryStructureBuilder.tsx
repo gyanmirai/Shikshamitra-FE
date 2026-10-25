@@ -26,6 +26,7 @@ import { useId, useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
+import { HrSetupLink, HrSetupRefresh } from 'src/screens/hr/recovery/hr-setup-controls';
 import {
   effectiveEsiPolicyVersion,
   useGetEsiPolicyOptionsQuery,
@@ -118,7 +119,7 @@ export function SalaryStructureBuilder({
     isError: templatesError,
     refetch: refetchTemplates,
   } = useGetActiveSalaryTemplatesQuery(undefined, { refetchOnMountOrArgChange: 30 });
-  const { data: pfData, isError: pfRulesError } = useGetPFQuery({});
+  const { data: pfData, isError: pfRulesError, refetch: refetchPfRules } = useGetPFQuery({});
   const {
     data: revisionData,
     isLoading: revisionsLoading,
@@ -171,6 +172,7 @@ export function SalaryStructureBuilder({
   const [operationError, setOperationError] = useState('');
   const [hasConflict, setHasConflict] = useState(false);
   const [localBusy, setLocalBusy] = useState(false);
+  const [setupRefreshing, setSetupRefreshing] = useState(false);
   const [operation, setOperation] = useState<'calculate' | 'save' | null>(null);
   const [amountTouched, setAmountTouched] = useState(false);
   const [reasonTouched, setReasonTouched] = useState(false);
@@ -186,8 +188,9 @@ export function SalaryStructureBuilder({
 
   const templates = templateData?.items || [];
   const defaultTemplate = templates.find((template) => template.isDefault) || templates[0];
-  const selectedTemplate =
-    templates.find((template) => template.id === selectedTemplateId) || defaultTemplate;
+  const selectedTemplate = selectedTemplateId
+    ? templates.find((template) => template.id === selectedTemplateId)
+    : defaultTemplate;
   const selectedVersion = selectedTemplate?.editableVersion;
   const pfRules = (pfData?.items || []).filter((rule: any) => rule.isActive);
   const pfNotApplicable = calculation?.pfEligibility?.status === 'NOT_APPLICABLE';
@@ -323,7 +326,11 @@ export function SalaryStructureBuilder({
     customizationReason: customizing ? customizationReason.trim() : '',
   });
   const busy =
-    localBusy || calculationState.isLoading || saveState.isLoading || activationState.isLoading;
+    localBusy ||
+    setupRefreshing ||
+    calculationState.isLoading ||
+    saveState.isLoading ||
+    activationState.isLoading;
   useEffect(() => {
     if (
       initialized &&
@@ -349,6 +356,24 @@ export function SalaryStructureBuilder({
     });
   }, [baseline, signature, busy, esiEditorState.dirty, esiEditorState.busy, onEditorStateChange]);
   const { data: esiPolicies, refetch: refetchEsiPolicies } = useGetEsiPolicyOptionsQuery();
+  const refreshSetup = async () => {
+    if (operationPending.current) throw new Error('A salary operation is already in progress.');
+    operationPending.current = true;
+    setSetupRefreshing(true);
+    // Refetch options only: never reset salary/statutory drafts or advance a saved revision.
+    setCalculation(null);
+    setCalculatedSignature('');
+    try {
+      await Promise.all([
+        refetchTemplates().unwrap(),
+        refetchPfRules().unwrap(),
+        refetchEsiPolicies().unwrap(),
+      ]);
+    } finally {
+      operationPending.current = false;
+      setSetupRefreshing(false);
+    }
+  };
   const effectiveEsiVersion = effectiveEsiPolicyVersion(
     esiPolicies?.find((policy) => policy.id === esiPolicyId),
     effectiveMonth
@@ -626,6 +651,11 @@ export function SalaryStructureBuilder({
     return (
       <Alert severity="warning">
         Create an active salary template before setting up staff salary.
+        <HrSetupLink setup="templates" disabled={busy} />
+        <HrSetupRefresh refresh={refreshSetup} disabled={busy} />
+        <Typography variant="body2">
+          Keep this tab open. Return here after setup and refresh the choices.
+        </Typography>
       </Alert>
     );
   }
@@ -786,6 +816,16 @@ export function SalaryStructureBuilder({
           sx={{ border: 0 }}
           contentSpacing={3}
         >
+          {!selectedVersion && (
+            <Alert severity="warning">
+              The selected salary template is no longer available. Choose an active template before
+              previewing or saving.
+            </Alert>
+          )}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <HrSetupLink setup="templates" disabled={busy} />
+            <HrSetupRefresh refresh={refreshSetup} disabled={busy} />
+          </Stack>
           {templateChangeRequired && (
             <Alert
               severity="warning"
@@ -954,6 +994,14 @@ export function SalaryStructureBuilder({
                 draftMode
                 pfSettings={
                   <Stack spacing={1.5}>
+                    {(pfRulesError || (pfApplicable && !pfRules.length)) && (
+                      <Alert severity="warning">
+                        {pfRulesError
+                          ? 'PF rules could not be loaded. Refresh setup and retry.'
+                          : 'An active PF rule is required for the selected PF enrollment.'}
+                        <HrSetupLink setup="pf" disabled={busy} />
+                      </Alert>
+                    )}
                     <FormControl
                       fullWidth
                       size="small"

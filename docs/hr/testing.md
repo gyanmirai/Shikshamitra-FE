@@ -807,3 +807,15 @@ Verify the embedded calendar has a Back to Requests action in the same tab actio
 Run `esi-statutory-settings.test.tsx`, `esi-configuration-form.test.ts`, and `earning-esi-treatment-dialog.test.tsx`.
 Cover automatic statutory bases, removed rate inputs, optional registration details, help disclosure, per-component classification, scheduled school settings, restricted editing, stale versions and retry idempotency.
 Browser checks should verify the compact school settings and Earning Component treatment action at desktop and narrow widths.
+
+## Validation recovery checks
+
+Run `hr-failure.test.ts`, `hr-recovery-middleware.test.ts`, `hr-recovery-provider.test.tsx`, `SalaryStructureBuilder.test.tsx`, `salary-editor-screen.test.tsx`, `leave-request.utils.test.ts` and `use-unsaved-navigation.test.tsx`. Run scoped ESLint, `npm run ts`, both docs validators and an isolated production build.
+
+The isolated harness uses production recovery components and actual RTK mutation lifecycle actions with synthetic responses, no authentication and no backend writes:
+
+```sh
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin/vite.js --config tests/browser/hr-recovery-fixture/vite.config.mjs --configLoader runner
+```
+
+Open `http://127.0.0.1:4196/hr/employee` in the desktop Codex in-app browser. Enter a synthetic note, submit prerequisite/field/network/forbidden failures, inspect the persistent summary, open setup in the separate tab, return and refresh, exercise refresh failure/retry and discard/keep-editing, then confirm successful save clears old feedback. Check keyboard focus and narrow layouts. The harness proves the shared recovery contract; it does not prove authenticated salary/finalize or every HR route. See [the route/form coverage matrix and lifecycle limits](references/validation-recovery.md).
