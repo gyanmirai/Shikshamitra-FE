@@ -284,6 +284,7 @@ The previously documented authenticated-browser restriction and baseline lint er
 ## 25 October capability re-audit
 
 Rechecked from current main `1a5072472`, after merged PR #1422 (`03303b224`).
+Refreshed against main `f6043929a` after the separately owned payroll-settings rename and optional-photo changes merged during validation; those changes are not part of this PR's diff.
 The checker still finds 61 routes, 74 HR-owned table/adaptor instances, two raw editable grids and five unreachable demo raw tables.
 The route checklist above remains the ownership inventory, not a claim that every operation is available.
 Run `node scripts/hr/check-ui-consistency.mjs --capabilities` for a per-instance operation matrix, or `--json` for source props and import closures.
@@ -364,6 +365,7 @@ Authenticated production-tenant coverage remains unverified; synthetic evidence 
 The broad HR/shared-table run exercised 143 files and 972 tests: 968 passed and four payroll cases timed out under concurrent validation.
 All four timed-out cases passed unchanged in a single-worker rerun of seven files / 80 tests.
 The final focused run, including the added action-permission regressions, passed 16 files / 80 tests.
+After the main refresh, the shared-table/HR regressions plus the payroll settings route-constant check passed 17 files / 81 tests; the refreshed production build and scoped lint also passed.
 The three responsive browser scenarios passed, and their light/dark and editable-grid screenshots were inspected.
 TypeScript, scoped TypeScript/TSX ESLint, the final production webpack build, HR documentation validation, checker syntax and normal Git whitespace validation passed.
 The repository ESLint configuration cannot lint the `.mjs` checker with its TypeScript-only parser-services rule; its syntax and runtime inventory checks are verified separately.
