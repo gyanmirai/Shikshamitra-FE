@@ -18,6 +18,7 @@ interface Props {
   policy?: ConcessionPolicyOption;
   preview?: ConcessionRequestPreview;
   showPolicyFixedDetails?: boolean;
+  compact?: boolean;
 }
 
 const ValueEntryStep: React.FC<Props> = ({
@@ -26,7 +27,8 @@ const ValueEntryStep: React.FC<Props> = ({
   requestContext,
   policy,
   preview,
-  showPolicyFixedDetails = true,
+  compact = false,
+  showPolicyFixedDetails = !compact,
 }) => {
   const { values, setFieldValue } = formik;
   const selectedTypes = useMemo(

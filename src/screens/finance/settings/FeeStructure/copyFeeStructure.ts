@@ -1,12 +1,35 @@
-import type { StructureRecord, StructureCandidate } from 'src/redux/finance/feeStructureWorkspace';
+import type {
+  StructureRecord,
+  StructureCandidate,
+  StructureCopyPolicy,
+} from 'src/redux/finance/feeStructureWorkspace';
 
 import { structureCandidate } from './feeStructureModel';
 
-/** New identities belong to the server; preserve monetary values, pinned versions and overrides. */
-export function copyStructureCandidate(source: StructureRecord, name: string): StructureCandidate {
+/** Preserve schedules and money; a new copy explicitly selects each master's current policy snapshot. */
+export function copyStructureCandidate(
+  source: StructureRecord,
+  name: string,
+  policies: StructureCopyPolicy[]
+): StructureCandidate {
   const { concurrencyStamp, ...candidate } = structureCandidate(source);
+  (['collection', 'refund'] as const).forEach((family) => {
+    const id = candidate[`${family}PolicyId`];
+    if (!id) return;
+    const policy = policies.find((item) => item.family === family && item.policyId === id);
+    if (!policy?.currentVersionId || policy.error)
+      throw new Error(
+        `${family[0].toUpperCase()}${family.slice(1)} Policy: refresh and select an active current version before copying.`
+      );
+    candidate[`${family}PolicyVersionId`] = policy.currentVersionId;
+  });
   return {
     ...candidate,
+    // Structure-level concession attachments are retired; requests select their own policy.
+    concessionPolicyId: null,
+    concessionPolicyVersionId: null,
+    concessionFeeHeadScope: 'EntireFeeStructure',
+    concessionApplicableFeeHeadIds: [],
     name: name.trim(),
     feeHeads: candidate.feeHeads.map(({ id, ...line }) => line),
   };

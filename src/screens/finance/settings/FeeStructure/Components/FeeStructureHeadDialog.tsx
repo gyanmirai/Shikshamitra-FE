@@ -7,7 +7,6 @@ import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
@@ -16,13 +15,10 @@ import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
-  Stack,
   Alert,
   Button,
   Switch,
   Checkbox,
-  IconButton,
-  Typography,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -75,7 +71,6 @@ export default function FeeStructureHeadDialog({
         : (defaultTerm?.versionId ?? ''),
       isVariable: line?.isVariable ?? false,
       isOptional: line?.isOptional ?? false,
-      collectAtAdmission: line?.collectAtAdmission ?? false,
     },
     validateOnMount: revealErrors,
     validationSchema: Yup.object({
@@ -102,22 +97,17 @@ export default function FeeStructureHeadDialog({
             return error ? context.createError({ message: error }) : true;
           }),
       }),
-      paymentTermVersionId: Yup.string().when('collectAtAdmission', {
-        is: false,
-        then: (schema) =>
-          schema
-            .required('Select a published payment frequency.')
-            .test(
-              'published',
-              'Select a published payment frequency.',
-              (id) =>
-                (id === line?.paymentTermVersionId && !!line?.paymentTermId) ||
-                settings.terms.some((term) => term.versionId === id)
-            ),
-      }),
+      paymentTermVersionId: Yup.string()
+        .required('Select a published payment frequency.')
+        .test(
+          'published',
+          'Select a published payment frequency.',
+          (id) =>
+            (id === line?.paymentTermVersionId && !!line?.paymentTermId) ||
+            settings.terms.some((term) => term.versionId === id)
+        ),
       isVariable: Yup.boolean(),
       isOptional: Yup.boolean(),
-      collectAtAdmission: Yup.boolean(),
     }),
     onSubmit: (values, helpers) => {
       if (busy) {
@@ -138,21 +128,18 @@ export default function FeeStructureHeadDialog({
         amount: values.isVariable ? null : Number(values.amount),
         isVariable: values.isVariable,
         isOptional: values.isOptional,
-        collectAtAdmission: values.collectAtAdmission,
         isOneTime: line?.isOneTime ?? false,
         payableMonth: line?.payableMonth ?? 0,
         payableYear: line?.payableYear ?? 0,
-        paymentTermId: values.collectAtAdmission ? null : sameTerm ? line!.paymentTermId : term!.id,
-        paymentTermVersionId: values.collectAtAdmission ? null : values.paymentTermVersionId,
+        paymentTermId: sameTerm ? line!.paymentTermId : term!.id,
+        paymentTermVersionId: values.paymentTermVersionId,
         paymentTermName: sameTerm ? line?.paymentTermName : term?.name,
         paymentTermVersionNumber: sameTerm ? line?.paymentTermVersionNumber : term?.versionNumber,
-        scheduleMode: !values.collectAtAdmission && sameTerm ? line!.scheduleMode : 'Inherited',
-        installmentOverrides:
-          !values.collectAtAdmission && sameTerm ? line!.installmentOverrides : [],
+        scheduleMode: sameTerm ? line!.scheduleMode : 'Inherited',
+        installmentOverrides: sameTerm ? line!.installmentOverrides : [],
       };
       helpers.setSubmitting(false);
-      if (!values.collectAtAdmission && !sameTerm && line?.scheduleMode === 'Customized')
-        setReplacement(next);
+      if (!sameTerm && line?.scheduleMode === 'Customized') setReplacement(next);
       else onSave(next);
     },
   });
@@ -285,74 +272,41 @@ export default function FeeStructureHeadDialog({
                   />
                 </ShakingTextField>
               )}
-              <Stack spacing={0.5}>
-                <Stack direction="row" alignItems="center">
-                  <FormControlLabel
-                    label="Collect at admission"
-                    control={
-                      <Switch
-                        name="collectAtAdmission"
-                        size="small"
-                        checked={formik.values.collectAtAdmission}
-                        disabled={busy}
-                        onChange={(_event, checked) =>
-                          formik.setFieldValue('collectAtAdmission', checked)
-                        }
-                      />
-                    }
-                  />
-                  <CustomTooltip
-                    placement="right"
-                    title="When enabled, this head creates no regular fee dues, does not appear in Fee Collection, and is not counted as income. This option does not collect money or mark a payment as received during admission. Save the structure draft to retain this choice."
-                  >
-                    <IconButton size="small" aria-label="About collect at admission" color="info">
-                      <Iconify icon="mdi:information-outline" width={18} />
-                    </IconButton>
-                  </CustomTooltip>
-                </Stack>
-                {formik.values.collectAtAdmission && (
-                  <Typography variant="caption" color="text.secondary">
-                    Excluded from Fee Collection and income. No admission payment is recorded.
-                  </Typography>
-                )}
-              </Stack>
-              {!formik.values.collectAtAdmission && (
-                <ShakingTextField error={!!errorFor('paymentTermVersionId')}>
-                  <CustomSelect
-                    name="paymentTermVersionId"
-                    label="Payment frequency"
-                    size="small"
-                    required
-                    isSearch
-                    value={formik.values.paymentTermVersionId}
-                    options={terms}
-                    labelKey="label"
-                    valueKey="value"
-                    disabled={
-                      busy || (termsLoading && !terms.length) || !settings.permissions.termsRead
-                    }
-                    isLoading={termsLoading}
-                    onChange={(value) => {
-                      termChoiceMade.current = true;
-                      formik.setFieldTouched('paymentTermVersionId', true, false);
-                      formik.setFieldValue('paymentTermVersionId', String(value ?? ''));
-                    }}
-                    onBlur={() => formik.setFieldTouched('paymentTermVersionId', true)}
-                    error={!!errorFor('paymentTermVersionId')}
-                    helperText={
-                      errorFor('paymentTermVersionId') ||
-                      (!settings.permissions.termsRead
-                        ? 'You do not have permission to browse payment terms.'
-                        : !terms.length && !termsLoading
-                          ? 'Publish a payment term for this academic year and board, then retry terms.'
-                          : undefined) ||
-                      undefined
-                    }
-                    formControlProps={{ fullWidth: true, required: true }}
-                  />
-                </ShakingTextField>
-              )}
-              {!formik.values.collectAtAdmission && termsError && (
+              <ShakingTextField error={!!errorFor('paymentTermVersionId')}>
+                <CustomSelect
+                  name="paymentTermVersionId"
+                  label="Payment frequency"
+                  size="small"
+                  required
+                  isSearch
+                  value={formik.values.paymentTermVersionId}
+                  options={terms}
+                  labelKey="label"
+                  valueKey="value"
+                  disabled={
+                    busy || (termsLoading && !terms.length) || !settings.permissions.termsRead
+                  }
+                  isLoading={termsLoading}
+                  onChange={(value) => {
+                    termChoiceMade.current = true;
+                    formik.setFieldTouched('paymentTermVersionId', true, false);
+                    formik.setFieldValue('paymentTermVersionId', String(value ?? ''));
+                  }}
+                  onBlur={() => formik.setFieldTouched('paymentTermVersionId', true)}
+                  error={!!errorFor('paymentTermVersionId')}
+                  helperText={
+                    errorFor('paymentTermVersionId') ||
+                    (!settings.permissions.termsRead
+                      ? 'You do not have permission to browse payment terms.'
+                      : !terms.length && !termsLoading
+                        ? 'Publish a payment term for this academic year and board, then retry terms.'
+                        : undefined) ||
+                    undefined
+                  }
+                  formControlProps={{ fullWidth: true, required: true }}
+                />
+              </ShakingTextField>
+              {termsError && (
                 <Alert severity="error">
                   Payment frequencies could not be loaded. Close and retry terms; your saved
                   attachment is preserved.

@@ -3,12 +3,19 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-23
+updated_on: 2026-10-24
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Finance frontend clients
+
+`feeStructureWorkspace.ts` exposes `useGetStructureCopyPoliciesQuery` for the scoped
+`GET /fee-structures/{sourceId}/copy-policies` preflight. The copy form sends returned
+current snapshot IDs through the existing draft-create mutation, which revalidates them.
+See the [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#fee-structure-copy-policy-preflight).
+Reconciliation rows expose nullable `paymentDate`; the DD table prefers the saved instrument
+payment date and uses the recorded collection date for legacy instruments.
 
 Admission collection responses and Records withdrawal preview rows share the output-only `src/redux/finance/fee-proration-result.ts` type. Existing Admission collection queries read/prepare the result. Existing transition mutations invalidate affected Finance owner caches after applied withdrawal or correction. Fee ledger line types expose a separate withdrawal-credit amount/explanation. No new Student route or policy mutation is introduced.
 

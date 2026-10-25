@@ -5,13 +5,15 @@ import type {
   ConcessionRequestPreview,
 } from 'src/redux/finance/ConcessionManagement/types';
 
+import { useId, useState } from 'react';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { useId, useRef, useState } from 'react';
-import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
-import { FormSectionHeader } from 'src/components/form-section-card';
-import { Box, Stack, Paper, Alert, Divider, Skeleton, Typography } from '@mui/material';
+import CustomAccordion from 'src/components/custom-accordian';
+import { Box, Stack, Divider, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 
+import ConcessionImpactSummary from './ConcessionImpactSummary';
 import { concessionInstallmentLabel } from './concessionInstallmentLabel';
 import ConcessionFeeHeadSelection, {
   type ConcessionSelectableFeeHead,
@@ -29,7 +31,6 @@ type Props = {
   feeSelectionMessage?: ReactNode;
   valueFields?: ReactNode;
   documents?: ReactNode;
-  remarks?: ReactNode;
   missingDocumentNames?: string[];
 };
 
@@ -45,21 +46,11 @@ export default function ConcessionRequestWorkspace({
   feeSelectionMessage,
   valueFields,
   documents,
-  remarks,
   missingDocumentNames = [],
 }: Props) {
   const detailsId = useId();
-  const detailsRef = useRef<HTMLElement>(null);
   const [inspectedId, setInspectedId] = useState('');
-  const inspectFee = (id: string) => {
-    setInspectedId(id);
-    const panel = detailsRef.current;
-    const grid = panel?.parentElement;
-    if (panel && grid && panel.getBoundingClientRect().top > grid.getBoundingClientRect().top + 1) {
-      panel.scrollIntoView?.({ block: 'start' });
-      panel.focus({ preventScroll: true });
-    }
-  };
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const activeHead =
     feeHeads.find((head) => head.feeHeadId === inspectedId) ??
     feeHeads.find((head) => selectedIds.includes(head.feeHeadId)) ??
@@ -79,168 +70,122 @@ export default function ConcessionRequestWorkspace({
         : 'Full waiver';
 
   return (
-    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden', minWidth: 0 }}>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr)',
-          '@container (min-width: 850px)': {
-            gridTemplateColumns: 'minmax(0, 1.3fr) minmax(0, 1fr)',
-          },
-        }}
+    <Box
+      sx={{
+        display: 'grid',
+        alignItems: 'start',
+        gap: 1.5,
+        minWidth: 0,
+        gridTemplateColumns: 'minmax(0, 1fr)',
+        '@container (min-width: 850px)': {
+          gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, 1fr)',
+        },
+      }}
+    >
+      <FormSectionCard
+        title="Concession Details"
+        titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+        icon={GlobalIcons.receiptIcon}
+        iconContainerSize={28}
+        contentSpacing={1.25}
+        descriptionTooltip="Select a policy, concession type and eligible fees. Enter installment values when the policy allows them."
+        action={
+          <Label color="default">
+            {selectedIds.length} selected fee{selectedIds.length === 1 ? '' : 's'}
+          </Label>
+        }
+        sx={{ p: 1.5, minWidth: 0, containerType: 'inline-size', bgcolor: 'background.paper' }}
       >
-        <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
-          <FormSectionHeader
-            icon={GlobalIcons.receiptIcon}
-            title="Policy & Fees"
-            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-            descriptionTooltip="Choose a policy and concession type, select eligible fees, and inspect each fee in the detail panel."
-          />
-          {policyFields}
-          {isAutomatic && (
-            <Stack direction="row" gap={1} alignItems="flex-start" sx={{ color: 'primary.main' }}>
-              <Iconify icon="solar:check-read-linear" width={20} sx={{ flexShrink: 0 }} />
-              <Typography variant="body2">
-                {automaticValue} applied automatically to selected fees
-              </Typography>
-            </Stack>
-          )}
-          <Box>
-            {feeSelectionMessage || (
-              <ConcessionFeeHeadSelection
-                feeHeads={feeHeads}
-                installments={installments}
-                selectedIds={selectedIds}
-                activeId={activeHead?.feeHeadId}
-                detailsId={detailsId}
-                onInspect={inspectFee}
-                onToggle={(id) => {
-                  setInspectedId(id);
-                  onToggle(id);
-                }}
-              />
-            )}
-          </Box>
-          {valueFields}
-          {documents && (
-            <Stack spacing={2}>
-              <FormSectionHeader
-                icon={GlobalIcons.doc}
-                title="Required Documents"
-                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-                descriptionTooltip="Attach supporting documents for the selected concession type. Required evidence must be uploaded before submission."
-              />
-              {documents}
-            </Stack>
-          )}
-          {remarks}
-        </Stack>
-        <Box
-          component="aside"
-          ref={detailsRef}
-          tabIndex={-1}
-          id={detailsId}
-          aria-label="Fee details and request summary"
-          sx={{
-            minWidth: 0,
-            bgcolor: 'background.neutral',
-            borderTop: 1,
-            borderColor: 'divider',
-            '@container (min-width: 850px)': {
-              borderTop: 0,
-              borderLeft: 1,
-              borderColor: 'divider',
-            },
-          }}
-        >
-          <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 } }}>
-            <FormSectionHeader
-              icon={GlobalIcons.receiptIcon}
-              title="Fee Details"
-              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-              descriptionTooltip="Inspect the original, paid, and eligible amounts for one fee. Opening details does not change your selection."
+        {policyFields}
+        <Box>
+          {feeSelectionMessage || (
+            <ConcessionFeeHeadSelection
+              feeHeads={feeHeads}
+              installments={installments}
+              selectedIds={selectedIds}
+              activeId={activeHead?.feeHeadId}
+              detailsId={detailsId}
+              detailsExpanded={detailsOpen}
+              onInspect={(id) => {
+                setInspectedId(id);
+                setDetailsOpen(true);
+              }}
+              onToggle={(id) => {
+                setInspectedId(id);
+                onToggle(id);
+              }}
             />
-            {activeHead && !feeSelectionMessage ? (
-              <Stack spacing={2.5}>
-                <Box>
-                  <Typography component="h3" variant="h6" sx={{ overflowWrap: 'anywhere' }}>
-                    {activeHead.feeHeadName}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" mt={0.5}>
-                    Original{' '}
-                    {lines.length
-                      ? formatNumber(
-                          lines.reduce((total, line) => total + line.originalAmount, 0),
-                          'INR'
-                        )
-                      : '—'}
-                    {' · '}Paid{' '}
-                    {lines.length
-                      ? formatNumber(
-                          lines.reduce((total, line) => total + line.paidAmount, 0),
-                          'INR'
-                        )
-                      : '—'}
-                  </Typography>
-                </Box>
+          )}
+        </Box>
+        {isAutomatic && (
+          <Typography variant="body2" color="text.secondary">
+            {automaticValue} applied automatically to selected fees
+          </Typography>
+        )}
+        {valueFields}
+        {activeHead && !feeSelectionMessage && (
+          <CustomAccordion
+            title="Fee Breakdown"
+            expanded={detailsOpen}
+            onChange={() => setDetailsOpen((value) => !value)}
+            content={
+              <Stack id={detailsId} component="section" aria-label="Fee details" spacing={1}>
+                <Typography component="h3" variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                  {activeHead.feeHeadName}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Original{' '}
+                  {lines.length
+                    ? formatNumber(
+                        lines.reduce((total, line) => total + line.originalAmount, 0),
+                        'INR'
+                      )
+                    : '—'}
+                  {' · '}Paid{' '}
+                  {lines.length
+                    ? formatNumber(
+                        lines.reduce((total, line) => total + line.paidAmount, 0),
+                        'INR'
+                      )
+                    : '—'}
+                </Typography>
                 {lines.length > 0 && (
                   <Stack
                     component="ul"
                     aria-label={`${activeHead.feeHeadName} installments`}
-                    spacing={1.5}
-                    sx={{
-                      m: 0,
-                      py: 1,
-                      pl: 2,
-                      listStyle: 'none',
-                      borderLeft: 2,
-                      borderColor: 'divider',
-                    }}
+                    spacing={1}
+                    sx={{ m: 0, p: 0, listStyle: 'none' }}
                   >
                     {lines.map((line) => (
                       <Stack
                         component="li"
                         direction="row"
                         justifyContent="space-between"
-                        gap={2}
+                        gap={1}
                         key={line.dueFeeId}
                       >
                         <Typography variant="body2" color="text.secondary">
                           {concessionInstallmentLabel(line.installmentLabel, line.year)}
                         </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
-                        >
+                        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
                           {formatNumber(line.eligibleConcessionAmount, 'INR')}
                         </Typography>
                       </Stack>
                     ))}
                   </Stack>
                 )}
-                <Stack direction="row" justifyContent="space-between" gap={2}>
+                <Divider />
+                <Stack direction="row" justifyContent="space-between" gap={1}>
                   <Typography variant="body2" color="text.secondary">
                     Eligible amount
                   </Typography>
-                  <Typography variant="subtitle2">
-                    {formatNumber(activeHead.amount, 'INR')}
-                  </Typography>
+                  <Typography variant="body2">{formatNumber(activeHead.amount, 'INR')}</Typography>
                 </Stack>
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  gap={2}
-                  sx={{ color: included ? 'primary.main' : 'text.secondary' }}
-                  aria-busy={loading}
-                >
-                  <Typography variant="body2">
+                <Stack direction="row" justifyContent="space-between" gap={1} aria-busy={loading}>
+                  <Typography variant="body2" color="text.secondary">
                     Concession
-                    {isAutomatic && policy?.calculationMethod === 'Percentage'
-                      ? ` · ${policy.percentageValue}%`
-                      : ''}
                   </Typography>
-                  <Typography variant="subtitle2">
+                  <Typography variant="body2">
                     {result ? `−${formatNumber(result.discountAmount, 'INR')}` : '—'}
                   </Typography>
                 </Stack>
@@ -250,75 +195,38 @@ export default function ConcessionRequestWorkspace({
                   </Typography>
                 )}
               </Stack>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                Choose a policy and concession type to inspect eligible fees.
-              </Typography>
-            )}
-            <Divider />
-            <Stack spacing={2} aria-busy={loading}>
-              <FormSectionHeader
-                icon={GlobalIcons.usage}
-                title="Entire Request"
-                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-                descriptionTooltip="Totals for all selected fees come from the server calculation. Net payable is the selected eligible amount after concession."
-              />
-              <Stack spacing={1}>
-                {[
-                  { label: 'Selected eligible amount', amount: preview?.totalEligibleBase },
-                  { label: 'Concession reduction', amount: preview?.totalConcessionAmount },
-                ].map(({ label, amount }) => (
-                  <Stack direction="row" justifyContent="space-between" gap={2} key={label}>
-                    <Typography variant="body2" color="text.secondary">
-                      {label}
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {amount == null ? '—' : formatNumber(amount, 'INR')}
-                    </Typography>
-                  </Stack>
-                ))}
-              </Stack>
-              <Divider />
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Net payable · selected fees
-                </Typography>
-                {loading ? (
-                  <Skeleton width="70%" height={52} />
-                ) : (
-                  <Typography
-                    variant="h3"
-                    component="p"
-                    sx={{
-                      mt: 1,
-                      mb: 0.5,
-                      fontVariantNumeric: 'tabular-nums',
-                      overflowWrap: 'anywhere',
-                    }}
-                  >
-                    {preview ? formatNumber(preview.netPayable, 'INR') : '—'}
-                  </Typography>
-                )}
-                <Typography variant="caption" color="text.secondary">
-                  {selectedIds.length} fee categor{selectedIds.length === 1 ? 'y' : 'ies'} included
-                </Typography>
-              </Box>
-              <Typography variant="caption" color="text.secondary" role="status">
-                {loading
-                  ? 'Calculating fee impact…'
-                  : !preview
-                    ? 'Select fees and complete concession values to calculate the request.'
-                    : 'Calculated for all selected fees.'}
-              </Typography>
-              {missingDocumentNames.length > 0 && (
-                <Alert severity="warning">
-                  Attach {missingDocumentNames.join(', ')} to enable submission.
-                </Alert>
-              )}
-            </Stack>
-          </Stack>
-        </Box>
-      </Box>
-    </Paper>
+            }
+          />
+        )}
+      </FormSectionCard>
+      <Stack
+        component="aside"
+        aria-label="Concession impact and supporting documents"
+        spacing={1.5}
+        sx={{ minWidth: 0 }}
+      >
+        <ConcessionImpactSummary
+          preview={preview}
+          selectedFeeHeadCount={selectedIds.length}
+          loading={loading}
+        />
+        {documents && (
+          <FormSectionCard
+            title="Supporting Documents"
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+            icon={GlobalIcons.doc}
+            iconContainerSize={28}
+            contentSpacing={1}
+            sx={{ p: 1.5, bgcolor: 'background.paper' }}
+            descriptionTooltip="Upload the evidence required by the selected concession type. File restrictions and any missing requirements appear beside each document."
+            action={
+              missingDocumentNames.length > 0 ? <Label color="warning">Required</Label> : undefined
+            }
+          >
+            {documents}
+          </FormSectionCard>
+        )}
+      </Stack>
+    </Box>
   );
 }

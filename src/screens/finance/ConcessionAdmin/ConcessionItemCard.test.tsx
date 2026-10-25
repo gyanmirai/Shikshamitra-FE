@@ -4,9 +4,9 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { financePermissions } from 'src/constants/finance-menu';
-import { render, screen, fireEvent } from '@testing-library/react';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import ConcessionItemCard from './ConcessionItemCard';
 
@@ -58,7 +58,7 @@ const item: IConcessionRequestItem = {
     url: `/files/certificate-${n}.pdf`,
   })),
   submittedDocuments: [],
-  availableActions: ['edit', 'delete', 'upload-document'],
+  availableActions: ['view', 'edit', 'delete', 'upload-document'],
   timeline: [
     { action: 'created', status: ConcessionStatusType.Draft, occurredAt: '2026-10-15T11:13:33Z' },
   ],
@@ -74,15 +74,17 @@ const handlers = {
 };
 function show(
   record = item,
-  grants: string[] = [actions.edit, actions.delete, actions.viewDocument],
-  user = 'checker'
+  grants: string[] = [actions.view, actions.edit, actions.delete, actions.viewDocument],
+  user = 'checker',
+  role = 'staff'
 ) {
   const store = configureStore({
     reducer: {
       auth: () => ({
         permissions: grants.map((name) => ({ name, isGranted: true })),
-        user: { sub: user },
+        user: { sub: user, role },
       }),
+      confirmPopup: () => ({ isChanges: false }),
     },
   });
   return render(
@@ -96,6 +98,62 @@ function show(
 beforeEach(() => vi.clearAllMocks());
 
 describe('individual concession request card', () => {
+  it.each(['admin', 'super-admin'])(
+    'allows %s to decide their own request with action grants and server eligibility',
+    (role) => {
+      const own = { ...item, availableActions: ['edit', 'approve', 'reject', 'delete'] };
+      const card = show(own, [actions.approve, actions.reject], 'maker', role);
+      expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Reject' })).toBeEnabled();
+      expect(
+        screen.queryByText('You cannot approve or reject your own request')
+      ).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
+      expect(handlers.onApprove).toHaveBeenCalledWith(own);
+      expect(handlers.onReject).toHaveBeenCalledWith(own);
+      card.unmount();
+      show(own, [], 'maker', role);
+      expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument();
+    }
+  );
+
+  it('keeps administrator decisions disabled when the server withholds them', () => {
+    show(
+      { ...item, availableActions: ['edit'] },
+      [actions.approve, actions.reject],
+      'maker',
+      'admin'
+    );
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reject' })).toBeDisabled();
+  });
+  it('uses named icon-only controls for every card action', () => {
+    show(
+      item,
+      [
+        actions.view,
+        actions.edit,
+        actions.submit,
+        actions.delete,
+        actions.approve,
+        actions.reject,
+        actions.viewDocument,
+      ],
+      'maker'
+    );
+    ['Edit concession request', 'Approve', 'Reject', 'Delete concession request'].forEach(
+      (name) => {
+        expect(screen.getByRole('button', { name })).toBeEmptyDOMElement();
+      }
+    );
+    expect(screen.getByRole('button', { name: 'See all supporting documents' })).toHaveTextContent(
+      'See all'
+    );
+    expect(screen.queryByRole('button', { name: 'View request details' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Review and submit' })).not.toBeInTheDocument();
+  });
   it('shows the header, full requested amount and every uploaded document', () => {
     show();
     expect(
@@ -107,7 +165,13 @@ describe('individual concession request card', () => {
     expect(screen.getByText('2/2')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'View Certificate 1' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'View Certificate 2' })).toBeInTheDocument();
-    expect(screen.getByText('Activity')).toBeInTheDocument();
+    const header = screen.getByRole('article').querySelector('header')!;
+    expect(
+      within(header).getByRole('heading', { name: 'Sibling tuition concession' })
+    ).toBeInTheDocument();
+    expect(within(header).getByText(/Requested on/)).toBeInTheDocument();
+    expect(screen.queryByText('Concession Request')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Activity' })).not.toBeInTheDocument();
   });
   it('passes the selected document to the existing direct preview and can close it', () => {
     show();
@@ -124,7 +188,7 @@ describe('individual concession request card', () => {
     const edit = screen.getByRole('button', { name: 'Edit concession request' });
     expect(edit).toBeEmptyDOMElement();
     fireEvent.click(edit);
-    fireEvent.click(screen.getByRole('button', { name: 'See All' }));
+    fireEvent.click(screen.getByRole('button', { name: 'See all supporting documents' }));
     fireEvent.click(screen.getByRole('button', { name: 'Delete concession request' }));
     expect(handlers.onEdit).toHaveBeenCalledWith(item);
     expect(handlers.onOpenDocs).toHaveBeenCalledWith(item);
@@ -154,26 +218,115 @@ describe('individual concession request card', () => {
       screen.queryByRole('button', { name: 'Delete concession request' })
     ).not.toBeInTheDocument();
   });
-  it('retains the maker-checker restriction and mandatory-document approval block', () => {
+  it.each([ConcessionStatusType.Draft, ConcessionStatusType.Pending])(
+    'retains independent review and mandatory-document checks for status %s',
+    (status) => {
+      const pending = {
+        ...item,
+        status,
+        availableActions: ['approve', 'reject'],
+      };
+      const maker = show(pending, [actions.approve, actions.reject], 'maker');
+      expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Reject' })).toBeDisabled();
+      maker.unmount();
+      show(
+        {
+          ...pending,
+          requiredDocuments: [{ ...item.requiredDocuments![0], isUploaded: false, url: null }],
+        },
+        [actions.approve, actions.reject]
+      );
+      expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Reject' })).toBeEnabled();
+    }
+  );
+  it('keeps creator decisions disabled while offering Edit without an extra submission message', () => {
+    show(item, [actions.edit, actions.submit, actions.approve, actions.reject], 'maker');
+    expect(screen.getByText('Pending')).toBeInTheDocument();
+    expect(screen.queryByText('Draft')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/This pending request has not been submitted/)
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reject' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit concession request' }));
+    expect(handlers.onEdit).toHaveBeenCalledWith(item);
+    expect(handlers.onApprove).not.toHaveBeenCalled();
+    expect(handlers.onReject).not.toHaveBeenCalled();
+  });
+  it.each([
+    { grants: [actions.edit, actions.submit], user: 'checker', availableActions: ['edit'] },
+    { grants: [actions.edit], user: 'maker', availableActions: ['edit'] },
+    { grants: [actions.submit], user: 'maker', availableActions: ['edit'] },
+    { grants: [actions.edit, actions.submit], user: 'maker', availableActions: [] },
+  ])(
+    'does not offer submission without ownership, grants and server eligibility: %j',
+    ({ grants, user, availableActions }) => {
+      show({ ...item, availableActions }, grants, user);
+      expect(screen.queryByRole('button', { name: 'Review and submit' })).not.toBeInTheDocument();
+    }
+  );
+  it('offers enabled decisions for an independently submitted request', () => {
     const pending = {
       ...item,
       status: ConcessionStatusType.Pending,
       availableActions: ['approve', 'reject'],
     };
-    const maker = show(pending, [actions.approve, actions.reject], 'maker');
-    expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Reject' })).toBeDisabled();
-    maker.unmount();
-    show(
-      {
-        ...pending,
-        requiredDocuments: [{ ...item.requiredDocuments![0], isUploaded: false, url: null }],
-      },
-      [actions.approve, actions.reject]
-    );
+    show(pending, [actions.approve, actions.reject]);
+    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
+    expect(handlers.onApprove).toHaveBeenCalledWith(pending);
+    expect(handlers.onReject).toHaveBeenCalledWith(pending);
+    expect(screen.queryByRole('button', { name: 'Review and submit' })).not.toBeInTheDocument();
+  });
+  it('allows an independent checker to decide a saved pending card without submission', () => {
+    const saved = { ...item, availableActions: ['approve', 'reject'] };
+    show(saved, [actions.approve, actions.reject]);
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Reject' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
+    expect(handlers.onApprove).toHaveBeenCalledWith(saved);
+    expect(handlers.onReject).toHaveBeenCalledWith(saved);
+  });
+  it('allows rejection of an incomplete saved request while approval requires an amount', () => {
+    const incomplete = {
+      ...item,
+      totalRequestedAmount: 0,
+      totalAmount: 0,
+      requiredDocuments: [],
+      availableActions: ['approve', 'reject'],
+    };
+    show(incomplete, [actions.approve, actions.reject]);
     expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reject' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
+    expect(handlers.onReject).toHaveBeenCalledWith(incomplete);
   });
+  it('shows unavailable decisions without bypassing server actions or absent grants', () => {
+    const denied = show({ ...item, status: ConcessionStatusType.Pending, availableActions: [] }, [
+      actions.approve,
+      actions.reject,
+    ]);
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reject' })).toBeDisabled();
+    denied.unmount();
+    show(
+      { ...item, status: ConcessionStatusType.Pending, availableActions: ['approve', 'reject'] },
+      []
+    );
+    expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument();
+  });
+  it.each([ConcessionStatusType.Approved, ConcessionStatusType.Rejected])(
+    'does not offer decisions on a final request (%s)',
+    (status) => {
+      show({ ...item, status, availableActions: undefined }, [actions.approve, actions.reject]);
+      expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument();
+    }
+  );
   it('renders all legacy submitted documents and the empty state', () => {
     const legacy = show({
       ...item,

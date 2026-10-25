@@ -171,10 +171,7 @@ export default function FeeStructureHeadsStep({
         )}
         <CustomizableTable
           getRowAction={(row) =>
-            !busy &&
-            !row.collectAtAdmission &&
-            row.paymentTermVersionId &&
-            settings.permissions.termsRead
+            !busy && row.paymentTermVersionId && settings.permissions.termsRead
               ? {
                   label: `Open ${row.feeHeadName} schedule`,
                   onClick: () => {
@@ -209,13 +206,7 @@ export default function FeeStructureHeadsStep({
                     {row.feeHeadName}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {[
-                      row.categoryName,
-                      row.isOptional ? 'Optional' : 'Required',
-                      row.collectAtAdmission
-                        ? 'Admission only · Excluded from collection and income'
-                        : 'Regular collection',
-                    ]
+                    {[row.categoryName, row.isOptional ? 'Optional' : 'Required']
                       .filter(Boolean)
                       .join(' · ')}
                   </Typography>
@@ -306,13 +297,11 @@ export default function FeeStructureHeadsStep({
                     color={row.termError ? 'error.main' : 'text.primary'}
                     sx={{ overflowWrap: 'anywhere' }}
                   >
-                    {row.collectAtAdmission
-                      ? 'Not applicable · Admission only'
-                      : row.paymentTermId && row.paymentTermVersionId
-                        ? row.paymentTermName || 'Attached payment frequency'
-                        : 'Not selected'}
+                    {row.paymentTermId && row.paymentTermVersionId
+                      ? row.paymentTermName || 'Attached payment frequency'
+                      : 'Not selected'}
                   </Typography>
-                  {!row.collectAtAdmission && row.paymentTermVersionId && (
+                  {row.paymentTermVersionId && (
                     <Typography variant="caption" color="text.secondary">
                       Version {row.paymentTermVersionNumber ?? '?'}
                       {row.scheduleMode === 'Customized' ? ' · Customized installments' : ''}

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
 import { canDecideConcession } from './concessionDecisionEligibility';
 
@@ -13,5 +13,12 @@ describe('concession decision eligibility', () => {
     expect(canDecideConcession('MAKER', 'maker')).toBe(false);
     expect(canDecideConcession('submitter', 'maker', 'submitter')).toBe(false);
     expect(canDecideConcession('checker', 'maker', 'submitter')).toBe(true);
+  });
+
+  it('permits administrator creator and submitter decisions without permitting missing identities', () => {
+    expect(canDecideConcession('MAKER', 'maker', 'maker', true)).toBe(true);
+    expect(canDecideConcession('submitter', 'maker', 'submitter', true)).toBe(true);
+    expect(canDecideConcession(undefined, 'maker', 'maker', true)).toBe(false);
+    expect(canDecideConcession('admin', undefined, undefined, true)).toBe(false);
   });
 });

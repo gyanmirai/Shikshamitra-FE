@@ -14,8 +14,8 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
-
 import { Cancel, CheckCircle } from '@mui/icons-material';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
@@ -23,6 +23,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import {
   Box,
@@ -64,7 +65,6 @@ import type {
   IConcessionRequestItem,
   IViewConcessionRequestProps,
 } from './type';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 // ─── Reject Reason Dialog ─────────────────────────────────────────────────────
 
@@ -225,15 +225,29 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
 
-  // Local docs state - initialised from requiredDocuments
+  const originalDocs = React.useMemo<IRequiredDocument[]>(
+    () =>
+      item.requiredDocuments?.length
+        ? item.requiredDocuments
+        : (item.submittedDocuments || []).map((document) => ({
+            documentId: document.documentId,
+            documentName: document.documentName,
+            url: document.url,
+            isUploaded: Boolean(document.url),
+            isRequired: false,
+            maxFileSizeBytes: 0,
+            acceptedFormats: [],
+          })),
+    [item.requiredDocuments, item.submittedDocuments]
+  );
   const [localDocs, setLocalDocs] = useState<IRequiredDocument[]>([]);
   const commandKey = useRef('');
 
   React.useEffect(() => {
     if (open) {
-      setLocalDocs(item.requiredDocuments || []);
+      setLocalDocs(originalDocs);
     }
-  }, [open, item.requiredDocuments]);
+  }, [open, originalDocs]);
 
   const [uploadFile, { isLoading: isUploading }] = useQueryAndMutation({
     type: 'mutation',
@@ -248,7 +262,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
   // true when file upload is in progress (save only happens on Submit)
   const isBusy = isUploading || isSaving;
   // track if any local doc was modified vs original (enables Submit)
-  const hasChanges = JSON.stringify(localDocs) !== JSON.stringify(item.requiredDocuments || []);
+  const hasChanges = JSON.stringify(localDocs) !== JSON.stringify(originalDocs);
 
   const handleUploadClick = (docId: string) => {
     setUploadingDocId(docId);
@@ -345,8 +359,8 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
             localDocs.find((document) => document.documentId === uploadingDocId)
           )}
         />
-        <Box sx={{ p: 2, minHeight: 150 }}>
-          <Stack spacing={1.5}>
+        <DialogScrollContent>
+          <Stack spacing={1}>
             {localDocs.length === 0 && (
               <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
                 No documents required for this concession.
@@ -435,7 +449,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
               </Box>
             ))}
           </Stack>
-        </Box>
+        </DialogScrollContent>
         <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
           {isBusy && (
             <Box display="flex" alignItems="center" gap={1} mr="auto">
@@ -493,9 +507,9 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const currentUserId = useSelector(
-    (state: RootState) => state.auth.user?.sub as string | undefined
-  );
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const currentUserId = currentUser?.sub as string | undefined;
+  const isAdministrator = isFinanceAdministratorSession({ profile: currentUser });
   const canUploadDocuments = hasGrantedPermission(
     permissions,
     financePermissions.fees.concessionActions.uploadDocument
@@ -548,18 +562,16 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
   );
 
   const handleApproveClick = (item: IConcessionRequestItem) => {
-    if (!canDecideConcession(currentUserId, item.requesterId, item.submittedById)) return;
+    if (!canDecideConcession(currentUserId, item.requesterId, item.submittedById, isAdministrator))
+      return;
     setApprovalView({ item, mode: 'Approve' });
   };
 
   const handleRejectClick = (item: IConcessionRequestItem) => {
-    if (!canDecideConcession(currentUserId, item.requesterId, item.submittedById)) return;
+    if (!canDecideConcession(currentUserId, item.requesterId, item.submittedById, isAdministrator))
+      return;
     setSelectedItem(item);
     rejectDialog.onTrue();
-  };
-
-  const handleCancelClick = (item: IConcessionRequestItem) => {
-    setApprovalView({ item, mode: 'Reverse' });
   };
 
   const handleOpenDocs = (item: IConcessionRequestItem) => {
@@ -586,7 +598,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Scrollbar sx={{ flex: 1, minHeight: 0, p: 2 }}>
+      <Scrollbar sx={{ flex: 1, minHeight: 0, p: 1.5, containerType: 'inline-size' }}>
         {/* ── Stats Row ─────────────────────────────────────────────── */}
         {isFetchingConcessionData || isLoadingConcessionData ? (
           <Paper
@@ -594,7 +606,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
             sx={{
               borderRadius: 2,
               p: 2,
-              mb: 2,
+              mb: 0.75,
               border: (t) => `1px solid ${t.palette.divider}`,
             }}
           >
@@ -634,11 +646,20 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
           ) : (
             <Tabs
               value={activeTab}
+              aria-label="Concession request statuses"
+              variant="scrollable"
+              scrollButtons="auto"
               onChange={(_e, v) => setActiveTab(v)}
               sx={{
-                '& .MuiTabs-flexContainer': { gap: 2 },
+                minHeight: 36,
+                '& .MuiTabs-flexContainer': { gap: 1.5 },
+                '& .MuiTab-root': { minHeight: 36, py: 0.5 },
+                '@media (pointer: coarse)': {
+                  minHeight: 44,
+                  '& .MuiTab-root': { minHeight: 44 },
+                },
                 flexGrow: 1,
-                pl: 1,
+                pl: 0.5,
               }}
             >
               {[
@@ -664,7 +685,6 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
                 <Tab
                   key={String(tab.value)}
                   value={tab.value}
-                  sx={{ fontSize: '12px' }}
                   label={
                     <Box display="flex" justifyContent="center" gap={1} alignItems="center">
                       {tab.label}
@@ -679,9 +699,13 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
 
         {/* ── Cards Grid ────────────────────────────────────────────── */}
         {isFetchingConcessionData || isLoadingConcessionData ? (
-          <Grid container spacing={2}>
+          <Grid container spacing={1.5}>
             {[...Array(3)].map((_, i) => (
-              <Grid key={i} size={{ xs: 12 }}>
+              <Grid
+                key={i}
+                size={12}
+                sx={{ '@container (min-width: 760px)': { width: 'calc((100% - 12px) / 2)' } }}
+              >
                 <Card variant="outlined" sx={{ borderRadius: 2, height: 320, p: 1 }}>
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Box display="flex" gap={1} alignItems="center">
@@ -742,15 +766,18 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
             </Typography>
           </Box>
         ) : (
-          <Grid container spacing={2} pb={1}>
+          <Grid container spacing={1.5} pb={0.5}>
             {filteredItems.map((item) => (
-              <Grid key={item.studentConcessionTypeRequestId} size={{ xs: 12 }}>
+              <Grid
+                key={item.studentConcessionTypeRequestId}
+                size={12}
+                sx={{ '@container (min-width: 760px)': { width: 'calc((100% - 12px) / 2)' } }}
+              >
                 <ConcessionItemCard
                   item={item}
-                  onEdit={() => onEdit?.()}
+                  onEdit={(request) => onEdit?.(request)}
                   onApprove={handleApproveClick}
                   onReject={handleRejectClick}
-                  onCancel={handleCancelClick}
                   onOpenDocs={handleOpenDocs}
                   onDelete={handleDelete}
                 />
@@ -858,7 +885,11 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
           open={docDialog.value}
           item={selectedItem}
           studentConcessionTypeRequestId={selectedItem.studentConcessionTypeRequestId}
-          canUpload={canUploadDocuments && selectedItem.status === ConcessionStatusType.Draft}
+          canUpload={
+            canUploadDocuments &&
+            selectedItem.status === ConcessionStatusType.Draft &&
+            Boolean(selectedItem.requiredDocuments?.length)
+          }
           onClose={() => {
             docDialog.onFalse();
             setSelectedItem(null);
