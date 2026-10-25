@@ -1,6 +1,7 @@
 'use client';
 
 import type { SelectChangeEvent } from '@mui/material/Select';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -525,6 +526,7 @@ export function SectionTable({
   tableId,
   tableTitle = 'Policy details',
   columnIds,
+  columnDefinitions,
   ...tableProps
 }: {
   children: React.ReactNode;
@@ -532,6 +534,7 @@ export function SectionTable({
   tableId?: string;
   tableTitle?: string;
   columnIds?: string[];
+  columnDefinitions?: Partial<IColumn>[];
 } & Partial<Omit<React.ComponentProps<typeof CustomizableTable>, 'columns' | 'data' | 'tableId'>>) {
   const instance = React.useId();
   const rows = React.Children.toArray(children).flatMap((child, index) => {
@@ -567,7 +570,7 @@ export function SectionTable({
       showExport
       showFullScreen
       exportScope="all"
-      isSearch={false}
+      isSearch
       isFilter={false}
       isPagination={rows.length > 10}
       data={rows}
@@ -577,16 +580,20 @@ export function SectionTable({
         id: columnIds?.[index] || `column${index}`,
         label,
         minWidth: 130,
-        isSort: false,
-        isFilter: false,
+        filterType: 'string',
+        isSort: label !== 'Actions',
+        isFilter: label !== 'Actions',
         excludeFromExport: label === 'Actions',
         sticky: label === 'Actions',
         stickyPosition: label === 'Actions' ? ('right' as const) : undefined,
         render: (value: React.ReactNode) => value,
+        sortValue: (value: unknown) =>
+          typeof value === 'number' ? value : extractTextFromReactNode(value).toLowerCase(),
         exportValue: (value: unknown) =>
           typeof value === 'number' ? value : extractTextFromReactNode(value),
+        ...columnDefinitions?.[index],
       }))}
-      noDataText="No records available."
+      noDataText={tableProps.noDataText ?? 'No records available.'}
     />
   );
 }

@@ -95,6 +95,7 @@ export const LeaveBalanceLedger = ({
         id: 'remaining',
         label: 'Available',
         filterValue: (value, row) => (row.isUnlimited ? null : value),
+        sortValue: (value, row) => (row.isUnlimited ? Infinity : Number(value)),
         valueType: 'number',
         align: 'right',
         exportValue: (value, row) => (row.isUnlimited ? 'Unlimited' : Number(value)),
@@ -123,7 +124,7 @@ export const LeaveBalanceLedger = ({
       },
       {
         filterType: 'number',
-        id: 'pending',
+        id: 'pendingDays',
         label: 'Pending',
         valueType: 'number',
         align: 'right',
@@ -132,6 +133,9 @@ export const LeaveBalanceLedger = ({
       {
         id: 'usage',
         label: 'Utilization',
+        filterType: 'number',
+        filterValue: (value, row) => (row.isUnlimited ? null : value),
+        sortValue: (value, row) => (row.isUnlimited ? null : Number(value)),
         align: 'right',
         exportValue: (value, row) => (row.isUnlimited ? 'Unlimited' : `${String(value)}%`),
         render: (value, row) => (row.isUnlimited ? '-' : `${String(value)}%`),

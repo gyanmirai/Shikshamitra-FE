@@ -21,6 +21,8 @@ export interface IColumn {
   filterType?: 'string' | 'number' | 'date' | 'dateTime' | 'enum' | 'formattedNumber';
   /** Override filter data for computed cells; null excludes a value from numeric/date predicates. */
   filterValue?: (value: unknown, row: IData) => unknown;
+  /** Explicit domain ordering for computed cells, independent of their display/export value. */
+  sortValue?: (value: unknown, row: IData) => string | number | null;
   /** Numeric filters accept decimals unless a column explicitly requires an integer or other step. */
   filterStep?: number | 'any';
   isFilter?: boolean;

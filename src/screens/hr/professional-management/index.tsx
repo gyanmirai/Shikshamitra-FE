@@ -855,15 +855,31 @@ function GuidedSetupTab() {
             columns={[
               {
                 id: 'domain',
+                filterType: 'enum',
+                enumOptions: Object.entries(sqaaDomainLabels).map(([value, label]) => ({
+                  value: Number(value),
+                  label,
+                })),
                 label: 'Domain',
                 minWidth: '240px',
                 render: (value) => sqaaDomainLabels[Number(value)] || '-',
               },
-              { id: 'mappedCriteria', label: 'Criteria', minWidth: '100px' },
-              { id: 'evidenceRequiredCriteria', label: 'Required', minWidth: '110px' },
-              { id: 'evidenceSubmitted', label: 'Evidence', minWidth: '110px' },
+              { id: 'mappedCriteria', filterType: 'number', label: 'Criteria', minWidth: '100px' },
+              {
+                id: 'evidenceRequiredCriteria',
+                filterType: 'number',
+                label: 'Required',
+                minWidth: '110px',
+              },
+              {
+                id: 'evidenceSubmitted',
+                filterType: 'number',
+                label: 'Evidence',
+                minWidth: '110px',
+              },
               {
                 id: 'missingEvidence',
+                filterType: 'number',
                 label: 'Missing',
                 minWidth: '110px',
                 render: (value) => (
@@ -1318,12 +1334,22 @@ function TemplatesTab() {
           { id: 'name', label: 'Template', minWidth: '220px' },
           {
             id: 'boardType',
+            filterType: 'enum',
+            enumOptions: Object.entries(boardTypeLabels).map(([value, label]) => ({
+              value: Number(value),
+              label,
+            })),
             label: 'Board',
             minWidth: '120px',
             render: (value) => boardTypeLabels[Number(value ?? 0)] || '-',
           },
           {
             id: 'staffCategory',
+            filterType: 'enum',
+            enumOptions: Object.entries(staffCategoryLabels).map(([value, label]) => ({
+              value: Number(value),
+              label,
+            })),
             label: 'Category',
             minWidth: '150px',
             render: (value) => staffCategoryLabels[Number(value)] || '-',
@@ -1882,6 +1908,11 @@ function CyclesTab() {
           },
           {
             id: 'status',
+            filterType: 'enum',
+            enumOptions: Object.entries(cycleStatusLabels).map(([value, label]) => ({
+              value: Number(value),
+              label,
+            })),
             label: 'Status',
             minWidth: '120px',
             render: (value) => (
@@ -1895,8 +1926,8 @@ function CyclesTab() {
             filterType: 'date',
             render: (value) => dayjs(value).format('DD MMM YYYY'),
           },
-          { id: 'assignedCount', label: 'Assigned', minWidth: '110px' },
-          { id: 'finalizedCount', label: 'Finalized', minWidth: '110px' },
+          { id: 'assignedCount', filterType: 'number', label: 'Assigned', minWidth: '110px' },
+          { id: 'finalizedCount', filterType: 'number', label: 'Finalized', minWidth: '110px' },
           {
             excludeFromExport: true,
             id: 'actions',
@@ -2248,12 +2279,18 @@ function DevelopmentPlansTab() {
           { id: 'actionPlan', label: 'Action Plan', minWidth: '260px' },
           {
             id: 'targetDate',
+            filterType: 'date',
             label: 'Target',
             minWidth: '140px',
             render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : '-'),
           },
           {
             id: 'status',
+            filterType: 'enum',
+            enumOptions: ['Open', 'In Progress', 'Completed', 'Deferred'].map((label, value) => ({
+              label,
+              value,
+            })),
             label: 'Status',
             minWidth: '130px',
             render: (value) => (
@@ -2356,16 +2393,32 @@ function ReportsTab() {
             columns={[
               {
                 id: 'domain',
+                filterType: 'enum',
+                enumOptions: Object.entries(sqaaDomainLabels).map(([value, label]) => ({
+                  value: Number(value),
+                  label,
+                })),
                 label: 'SQAAF Domain',
                 minWidth: '260px',
                 render: (value) => sqaaDomainLabels[Number(value)] || '-',
               },
-              { id: 'templateCount', label: 'Templates', minWidth: '110px' },
-              { id: 'assignedReviewCount', label: 'Reviews', minWidth: '110px' },
-              { id: 'mappedCriteria', label: 'Criteria', minWidth: '110px' },
-              { id: 'evidenceSubmitted', label: 'Evidence', minWidth: '110px' },
+              { id: 'templateCount', filterType: 'number', label: 'Templates', minWidth: '110px' },
+              {
+                id: 'assignedReviewCount',
+                filterType: 'number',
+                label: 'Reviews',
+                minWidth: '110px',
+              },
+              { id: 'mappedCriteria', filterType: 'number', label: 'Criteria', minWidth: '110px' },
+              {
+                id: 'evidenceSubmitted',
+                filterType: 'number',
+                label: 'Evidence',
+                minWidth: '110px',
+              },
               {
                 id: 'missingEvidence',
+                filterType: 'number',
                 label: 'Missing',
                 minWidth: '110px',
                 render: (value) => (
@@ -2394,6 +2447,7 @@ function ReportsTab() {
               { id: 'action', label: 'Action', excludeFromExport: false, minWidth: '220px' },
               {
                 id: 'dueDate',
+                filterType: 'date',
                 label: 'Due Date',
                 minWidth: '140px',
                 render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : '-'),
@@ -2578,12 +2632,18 @@ function SqaaAuditPackSection() {
           columns={[
             {
               id: 'domain',
+              filterType: 'enum',
+              enumOptions: Object.entries(sqaaDomainLabels).map(([value, label]) => ({
+                value: Number(value),
+                label,
+              })),
               label: 'SQAAF Domain',
               minWidth: '260px',
               render: (value) => sqaaDomainLabels[Number(value)] || '-',
             },
             {
               id: 'readinessPercentage',
+              filterType: 'number',
               label: 'Ready',
               minWidth: '120px',
               render: (value) => (
@@ -2596,13 +2656,29 @@ function SqaaAuditPackSection() {
                 />
               ),
             },
-            { id: 'templateCount', label: 'Templates', minWidth: '110px' },
-            { id: 'assignedReviewCount', label: 'Reviews', minWidth: '110px' },
-            { id: 'mappedCriteria', label: 'Criteria', minWidth: '110px' },
-            { id: 'evidenceRequiredCriteria', label: 'Required', minWidth: '110px' },
-            { id: 'evidenceSubmitted', label: 'Submitted', minWidth: '110px' },
+            { id: 'templateCount', filterType: 'number', label: 'Templates', minWidth: '110px' },
+            {
+              id: 'assignedReviewCount',
+              filterType: 'number',
+              label: 'Reviews',
+              minWidth: '110px',
+            },
+            { id: 'mappedCriteria', filterType: 'number', label: 'Criteria', minWidth: '110px' },
+            {
+              id: 'evidenceRequiredCriteria',
+              filterType: 'number',
+              label: 'Required',
+              minWidth: '110px',
+            },
+            {
+              id: 'evidenceSubmitted',
+              filterType: 'number',
+              label: 'Submitted',
+              minWidth: '110px',
+            },
             {
               id: 'missingEvidence',
+              filterType: 'number',
               label: 'Missing',
               minWidth: '110px',
               render: (value) => (
@@ -2628,6 +2704,11 @@ function SqaaAuditPackSection() {
           columns={[
             {
               id: 'domain',
+              filterType: 'enum',
+              enumOptions: Object.entries(sqaaDomainLabels).map(([value, label]) => ({
+                value: Number(value),
+                label,
+              })),
               label: 'Domain',
               minWidth: '230px',
               render: (value) => sqaaDomainLabels[Number(value)] || '-',
@@ -2698,12 +2779,18 @@ function ReviewTable({
         { id: 'templateName', label: 'Template', minWidth: '190px' },
         {
           id: 'finalScore',
+          filterType: 'number',
           label: 'Score',
           minWidth: '100px',
           render: (value) => formatPerformanceScore(value),
         },
         {
           id: 'status',
+          filterType: 'enum',
+          enumOptions: Object.entries(reviewStatusLabels).map(([value, label]) => ({
+            value: Number(value),
+            label,
+          })),
           label: 'Status',
           minWidth: '120px',
           render: (value) => (

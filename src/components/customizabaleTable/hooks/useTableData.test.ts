@@ -113,3 +113,57 @@ describe('server search ownership', () => {
     expect(result.current.filteredData).toEqual([rows[0]]);
   });
 });
+
+it('retains local search when the server owns column filters', () => {
+  const { result } = renderHook(() =>
+    useTableData({
+      data: [
+        { status: 1, name: 'Alpha' },
+        { status: 1, name: 'Zulu' },
+      ],
+      columns: [{ id: 'name', label: 'Staff' }],
+      config: { ...createConfig(1), searchTerm: 'alpha', columnVisibility: { name: true } },
+      serverSideFilter: true,
+    })
+  );
+  expect(result.current.filteredData.map((row) => row.name)).toEqual(['Alpha']);
+});
+
+it('sorts unlimited domain values independently of stored zeros and keeps stable secondary sorts', () => {
+  const data = [
+    { id: 'unlimited', available: 0, unlimited: true },
+    { id: 'finite-b', available: 2 },
+    { id: 'finite-a', available: 2 },
+    { id: 'empty', available: 0 },
+  ];
+  const { result } = renderHook(() =>
+    useTableData({
+      data,
+      columns: [
+        {
+          id: 'available',
+          label: 'Available',
+          filterType: 'number',
+          sortValue: (value, row) => (row.unlimited ? Infinity : Number(value)),
+        },
+        { id: 'id', label: 'Staff' },
+      ],
+      config: {
+        ...createConfig(1),
+        filters: [],
+        columnVisibility: { available: true, id: true },
+        sorts: [
+          { column: 'available', direction: 'asc' },
+          { column: 'id', direction: 'asc' },
+        ],
+      },
+    })
+  );
+  expect(result.current.sortedData.map((row) => row.id)).toEqual([
+    'empty',
+    'finite-a',
+    'finite-b',
+    'unlimited',
+  ]);
+  expect(data[0].available).toBe(0);
+});

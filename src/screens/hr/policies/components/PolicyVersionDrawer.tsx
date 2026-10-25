@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Iconify } from 'src/components/iconify';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { cleanVersionDisplayValue } from 'src/screens/hr/policies/hr-policy-ui-utils';
 import {
@@ -15,12 +15,10 @@ import {
   Dialog,
   Select,
   Divider,
-  Tooltip,
   MenuItem,
   TableRow,
   TableCell,
   TextField,
-  IconButton,
   Typography,
   InputLabel,
   FormControl,
@@ -127,6 +125,7 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             tableId="hr-policy-versions"
             tableTitle={`${versionTarget?.policyName || 'Policy'} versions`}
             isPagination
+            isLoading={versionHistoryLoading}
             serverSidePagination
             isSearch
             serverSideSearch
@@ -167,47 +166,48 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
                   </TableCell>
                   <TableCell>{version.changeReason || version.summary || '-'}</TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Compare from this version">
-                      <IconButton
-                        size="small"
-                        onClick={() =>
-                          setCompareVersionIds((current) => ({ ...current, from: version.id }))
-                        }
-                      >
-                        <Iconify icon="mdi:compare-horizontal" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Compare to this version">
-                      <IconButton
-                        size="small"
-                        onClick={() =>
-                          setCompareVersionIds((current) => ({ ...current, to: version.id }))
-                        }
-                      >
-                        <Iconify icon="mdi:compare" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Restore as draft">
-                      <span>
-                        <IconButton
-                          size="small"
-                          disabled={
-                            !canClonePolicy ||
-                            restoreVersionState.isLoading ||
-                            isPolicyOperationActive
-                          }
-                          onClick={() =>
-                            setRestoreVersion({
-                              version,
-                              name: `${version.name} v${version.versionNumber} Restore Draft`,
-                              reason: '',
-                            })
-                          }
-                        >
-                          <Iconify icon="mdi:file-restore-outline" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
+                    <AdaptiveThreeDotsActions
+                      directActionLimit={2}
+                      collapseOnOverflow={false}
+                      moreLabel={`More actions for version ${version.versionNumber}`}
+                      sx={{ justifyContent: 'flex-end' }}
+                      actions={[
+                        {
+                          id: 'compare-from',
+                          label: `Compare from version ${version.versionNumber}`,
+                          icon: 'mdi:compare-horizontal',
+                          onClick: () =>
+                            setCompareVersionIds((current) => ({ ...current, from: version.id })),
+                        },
+                        {
+                          id: 'compare-to',
+                          label: `Compare to version ${version.versionNumber}`,
+                          icon: 'mdi:compare',
+                          onClick: () =>
+                            setCompareVersionIds((current) => ({ ...current, to: version.id })),
+                        },
+                        ...(canClonePolicy
+                          ? [
+                              {
+                                id: 'restore',
+                                label: 'Restore as draft',
+                                icon: 'mdi:file-restore-outline',
+                                disabled: restoreVersionState.isLoading || isPolicyOperationActive,
+                                tooltip:
+                                  restoreVersionState.isLoading || isPolicyOperationActive
+                                    ? 'Wait for the current policy operation to finish.'
+                                    : `Restore version ${version.versionNumber} as draft`,
+                                onClick: () =>
+                                  setRestoreVersion({
+                                    version,
+                                    name: `${version.name} v${version.versionNumber} Restore Draft`,
+                                    reason: '',
+                                  }),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))

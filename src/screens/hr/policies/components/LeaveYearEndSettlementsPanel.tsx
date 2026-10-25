@@ -270,6 +270,10 @@ export function LeaveYearEndSettlementsPanel() {
                       {
                         id: 'status',
                         label: 'Status',
+                        filterType: 'enum',
+                        enumOptions: [...new Set(items.map((item) => item.status))].map(
+                          (value) => ({ value, label: value })
+                        ),
                         sticky: true,
                         stickyPosition: 'right',
                         render: (value) => <Label color={statusColor(value) as any}>{value}</Label>,
@@ -285,6 +289,7 @@ export function LeaveYearEndSettlementsPanel() {
                       ].map(([id, label]) => ({
                         id,
                         label,
+                        filterType: 'number' as const,
                         valueType: 'number' as const,
                         align: 'right' as const,
                         render: formatDays,
@@ -300,6 +305,8 @@ export function LeaveYearEndSettlementsPanel() {
                       {
                         id: 'issues',
                         label: 'Issues',
+                        sortValue: (_value, row) =>
+                          getIssueLabels(row as LeaveYearEndSettlementItem).join(', ') || 'Clear',
                         minWidth: 170,
                         render: (_value, row) =>
                           getIssueLabels(row as LeaveYearEndSettlementItem).join(', ') || 'Clear',

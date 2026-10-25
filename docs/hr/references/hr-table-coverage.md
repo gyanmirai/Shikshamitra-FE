@@ -3,7 +3,7 @@ module: hr
 domain: reference
 content_type: Reference
 status: active
-updated_on: 2026-10-23
+updated_on: 2026-10-25
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -280,3 +280,91 @@ Final validation also passed TypeScript, the production webpack build, all chang
 The eight synthetic responsive/state scenarios passed again on the final code, producing 24 screenshots across light/dark 390, 768 and 1440-pixel viewports.
 Representative final desktop and mobile screenshots were visually inspected.
 The previously documented authenticated-browser restriction and baseline lint errors remain verification limits.
+
+## 25 October capability re-audit
+
+Rechecked from current main `1a5072472`, after merged PR #1422 (`03303b224`).
+The checker still finds 61 routes, 74 HR-owned table/adaptor instances, two raw editable grids and five unreachable demo raw tables.
+The route checklist above remains the ownership inventory, not a claim that every operation is available.
+Run `node scripts/hr/check-ui-consistency.mjs --capabilities` for a per-instance operation matrix, or `--json` for source props and import closures.
+The matrix labels forwarded adapter behavior explicitly; static callback presence cannot establish backend correctness.
+The JSON additionally records four imported screen-table instances outside HR (quick substitution, access control, lecture slots and weekly lectures).
+These are an import-closure upper bound, not four additional HR list pages. The staff timetable remains its specialized academic timetable view.
+
+### Verified frontend gaps corrected
+
+| Surface | Correction |
+| --- | --- |
+| Policy read-only section adapter | Restore text search, rich-cell text ordering and column filters; allow explicit numeric/date definitions; preserve rendered cells, selections, actions and caller empty copy. Server-paged version history retains server ownership rather than sorting/filtering a fetched page |
+| Assignment resolution / affected staff / holiday impact | Stable table identities and meaningful export titles; numeric priority and chronological holiday criteria; holiday request loading/error occupies the table state |
+| Leave ledger | Pending reads `pendingDays`, including fractional days. Available orders Unlimited independently of stored zero. Utilization uses numeric criteria and excludes Unlimited from finite comparisons. No stored balance/calculation changes |
+| Salary template list | Active versions sort/filter numerically; last-updated criteria use the original timestamp rather than formatted date text |
+| Performance reports | Count, percentage and score fields use numeric criteria; target/due dates use date criteria; known domain/category/status choices use their existing enum labels |
+| Attendance import / history / notification tables | Date and row-number metadata; named attendance status options; notification read error/retry and explicitly loaded-row export scope |
+| Employee library | Date criteria and an explicit demonstration-data notice/export context. Existing `/mockIssuedBooks`, `/mockReservedBooks` and `/mockFinesCharges` readers remain a backend integration dependency; they are not employee-scoped production records |
+| Legacy event request page | HR/Staff header hierarchy, clear demonstration-data notice/export context, and disabled placeholder approval/rejection controls; no invented mutation |
+| Policy version row actions | Existing compare operations remain direct; permitted Restore moves to the shared overflow composition after two actions, retaining operation locks |
+| Shared table data processing | An explicit optional `sortValue` handles domain ordering without changing display/export values. Server-owned column filters no longer suppress independently local search |
+
+### Remaining server operation dependencies
+
+Thirty instances declare server pagination. Two explicitly wire server sort, and two reporting adapters forward typed sort/filter criteria through `useReportTableState`.
+The remaining twenty-six lack a full-result sort integration, and twenty-eight lack a generic column-filter integration.
+These are unavailable frontend operations under the current endpoint contracts, not proof of twenty-six/twenty-eight backend implementation defects.
+The following list records the actual unavailable integrations after inspecting the owning frontend query contracts.
+All listed paged tables already use full-result export callbacks. No browser page collection or unbounded All request is added.
+
+| Table / family | Remaining unavailable integration | Existing supported scope |
+| --- | --- | --- |
+| Staff shifts | Sort, column filters, search | Paged list and complete export |
+| Attendance register | Sort and column filters | Search/domain filters and complete export; register redesign/advanced filters are owned by the separate Attendance Register task |
+| Attendance import history / import rows | Sort and column filters; import rows also have no search | Paged history/rows and complete export; editable/unlocked preview export visibility is preserved |
+| Manual attendance | Sort and column filters | Server search/domain selectors; editing locks and page changes preserved |
+| Staff directory / onboarding | Sort and column filters | Server search and existing domain selectors; no invented generic filter payload |
+| Employee documents | Sort and column filters | Search, pagination and complete export |
+| Leave history / apply-leave history / approvals | Sort and column filters | Server search and existing dates/status/staff criteria |
+| I-card templates | Sort and column filters | Server search and complete template-list export; staff selection exports remain deliberately unavailable |
+| Payroll report preview | Column filters | Existing server sort and complete report export; available fields depend on report definition |
+| Payroll monthly workbench / registration readiness | Sort and column filters; readiness has no search | Existing server workbench search/domain scope and complete exports |
+| Earning / deduction component settings | Sort and column filters | Search, pagination and complete export |
+| PF / professional-tax settings | Sort and column filters; professional tax has no search | Existing scope, PF search, pagination and complete export |
+| ESIC employee impact | Column filters | Allowlisted server sort/search and complete scoped export |
+| Calendar / payroll / attendance / leave policies | Sort and column filters | Existing search, archive/year scope and complete export |
+| Policy assignments / versions | Sort and column filters | Existing server search/domain criteria and complete export |
+| Performance templates / cycles | Sort and column filters | Existing server search/domain scope and complete export |
+| Staff document types | Sort, column filters, search | Paged list and complete export |
+
+Adding these operations requires an explicit endpoint contract: supported fields/operators, typed values, stable ordering before pagination and filtered totals; export jobs must accept the identical criteria.
+Current backend-main evidence confirms fixed name ordering in [WorkCalendarPolicyReader](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/src/ShikshaMitra.Application/HR/Policies/WorkCalendarPolicyReader.cs) and fixed `PolicyName ASC` in the year-scoped [LeavePolicyReadService](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/src/ShikshaMitra.Application/HR/AttendanceAndLeaves/Settings/LeavePolicyReadService.cs).
+An inherited Sorting DTO property or the separate legacy generic leave reader does not establish sorting support in those page endpoints.
+The frontend cannot truthfully enable arbitrary column controls using only an existing free-text search or domain selector.
+Generated report history/results already use typed POST query criteria and matching captured exports; those integrations are preserved.
+Notification history exposes no pagination request contract in its reader; export says **Export loaded rows** rather than claiming a complete dataset.
+
+### Behavior-specific exceptions and coordinated scope
+
+The calendar holiday inclusion editor and monthly payroll-basis editor remain raw editable configuration grids.
+They preserve original row identities, inclusion/removal, month order, field validation and manual-day calculations; list sorting or filtered draft export would misrepresent their editing context.
+The staff payroll component editor mixes amounts and percentages with editable fields, so draft export stays disabled; I-card selection similarly exports no selection grid.
+Compact ledger/comparison tables retain their bounded embedded geometry and may omit global search while retaining appropriate column criteria and utilities.
+
+This task changes no Attendance Register source, photo onboarding behavior, reporting-manager logic, keyboard handlers or focus logic.
+Common overlap is limited to `src/components/customizabaleTable/types.ts`, `hooks/useTableData.ts` and their tests.
+HR's `SectionTable` adapter is also changed; keyboard accessibility owns interaction/focus changes.
+No backend, permission identifier, CI trigger, merge or deployment is included.
+
+### Current validation evidence
+
+The standalone synthetic browser fixture mounts the real shared table, policy adapter, calendar holiday editor and payroll-basis editor.
+Its API alias supplies only local calendar reads; no real staff data, credentials or backend mutations are used.
+It verifies numeric sorting/filtering, filtered Excel contents with Actions excluded, error/retry, loading export lock, empty content, 390/768/1440-pixel containment and both themes.
+Artifacts and workbook downloads stay in ignored test output.
+Authenticated production-tenant coverage remains unverified; synthetic evidence is not a permission or backend acceptance claim.
+
+The broad HR/shared-table run exercised 143 files and 972 tests: 968 passed and four payroll cases timed out under concurrent validation.
+All four timed-out cases passed unchanged in a single-worker rerun of seven files / 80 tests.
+The final focused run, including the added action-permission regressions, passed 16 files / 80 tests.
+The three responsive browser scenarios passed, and their light/dark and editable-grid screenshots were inspected.
+TypeScript, scoped TypeScript/TSX ESLint, the final production webpack build, HR documentation validation, checker syntax and normal Git whitespace validation passed.
+The repository ESLint configuration cannot lint the `.mjs` checker with its TypeScript-only parser-services rule; its syntax and runtime inventory checks are verified separately.
+Final Codex in-app review verified the populated shared table, numeric ordering/filtering, export menu, error/retry and both editable grid surfaces.

@@ -8,6 +8,7 @@ const defaultHrPermissionName = 'HR.';
 
 export const hrPaths = {
   dashboard: '/hr/dashboard',
+  eventsHolidays: '/hr/events-holidays',
   policies: {
     root: '/hr/policies',
     calendars: '/hr/calendars',
