@@ -59,6 +59,120 @@ function completedPreview(id = 'run-1') {
 }
 
 describe('background payroll preview', () => {
+  it('prioritizes a current polling access failure over a cached FAILED job setup action', () => {
+    completedPreview();
+    Object.assign(mocks.status.currentData, { status: 'FAILED', errorCode: 'HR:Payroll:030039' });
+    Object.assign(mocks.status, {
+      isError: true,
+      error: { status: 403, data: { detail: 'private diagnostics' } },
+    });
+    const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+    expect(result.current.error).toMatchObject({
+      title: 'Access Required',
+      message: 'You do not have access to complete this action.',
+    });
+    expect(result.current.error?.setup).toBeUndefined();
+    expect(mocks.start).not.toHaveBeenCalled();
+  });
+
+  it('retains the FAILED job reason and known setup without automatically starting another job', () => {
+    completedPreview();
+    Object.assign(mocks.status.currentData, {
+      status: 'FAILED',
+      isCurrent: false,
+      errorCode: 'HR:Payroll:030039',
+      errorMessage: 'Record the establishment registration before calculating payroll.',
+    });
+    const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+    expect(result.current.error).toMatchObject({
+      message: 'Record the establishment registration before calculating payroll.',
+      setup: 'statutory',
+      errorCode: 'HR:Payroll:030039',
+    });
+    expect(result.current.isCurrent).toBe(false);
+    expect(mocks.start).not.toHaveBeenCalled();
+  });
+
+  it('explains a known business code when the status API returns its generic job failure message', () => {
+    completedPreview();
+    Object.assign(mocks.status.currentData, {
+      status: 'FAILED',
+      errorCode: 'HR:Payroll:030039',
+      errorMessage:
+        'Payroll calculation could not finish. Retry the calculation or contact support with the run reference.',
+    });
+    const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+    expect(result.current.error).toMatchObject({
+      message: 'The statutory establishment setup is not ready.',
+      setup: 'statutory',
+    });
+  });
+
+  it.each(['status', 'page'])('preserves safe %s query reasons and known setup codes', (source) => {
+    completedPreview();
+    const query = source === 'status' ? mocks.status : mocks.page;
+    query.isError = true;
+    query.error = {
+      status: 400,
+      data: {
+        error: {
+          code: 'HR:Payroll:030039',
+          data: { Reason: 'Complete the establishment registration.' },
+        },
+      },
+    };
+    const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+    expect(result.current.error).toMatchObject({
+      message: 'Complete the establishment registration.',
+      setup: 'statutory',
+    });
+    expect(result.current.isPreparing).toBe(false);
+    expect(result.current.isCurrent).toBe(false);
+    expect(mocks.start).not.toHaveBeenCalled();
+  });
+
+  it.each(['FAILED', 'status', 'page'])(
+    'filters unsafe %s diagnostics and still offers only the known setup',
+    (source) => {
+      completedPreview();
+      const diagnostic =
+        'System.InvalidOperationException: password=private at C:\\server\\payroll.cs';
+      if (source === 'FAILED')
+        Object.assign(mocks.status.currentData, {
+          status: 'FAILED',
+          errorMessage: diagnostic,
+          errorCode: 'HR:Payroll:030039',
+        });
+      else
+        Object.assign(source === 'status' ? mocks.status : mocks.page, {
+          isError: true,
+          error: { status: 400, data: { detail: diagnostic, errorCode: 'HR:Payroll:030039' } },
+        });
+      const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+      expect(result.current.error).toMatchObject({
+        message: 'The statutory establishment setup is not ready.',
+        setup: 'statutory',
+      });
+      expect(JSON.stringify(result.current.error)).not.toContain('private');
+      expect(mocks.start).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each([403, 500, 'FETCH_ERROR'])(
+    'does not suggest setup or leak diagnostics after a %s polling failure',
+    (status) => {
+      completedPreview();
+      Object.assign(mocks.status, {
+        isError: true,
+        error: { status, data: { detail: 'password=private', errorCode: 'HR:Payroll:030039' } },
+      });
+      const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+      expect(result.current.error?.setup).toBeUndefined();
+      expect(JSON.stringify(result.current.error)).not.toContain('private');
+      expect(mocks.start).not.toHaveBeenCalled();
+    }
+  );
+
   it('merges a refresh result with a search while router updates are still pending', async () => {
     mocks.params = new URLSearchParams('month=2026-08&previewRunId=old');
     const { result, rerender } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));

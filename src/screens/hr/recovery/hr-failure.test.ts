@@ -118,6 +118,54 @@ describe('HR failure contract', () => {
 });
 
 describe('authorized fixed setup destinations', () => {
+  it('requires staff edit and every directory ancestor, and encodes only the selected staff context', () => {
+    const grants = [
+      hrPermissions.root,
+      hrPermissions.employee.root,
+      `${hrPermissions.employee.list}.View`,
+      `${hrPermissions.employee.list}.Edit`,
+      hrPermissions.payroll.settings.statutorySchemes,
+    ].map((name) => ({ name, isGranted: true }));
+    const action = hrSetupAction('staffPayroll', grants, true, 'staff/1?draft=private');
+    const url = new URL(action!.href, 'https://example.test');
+    expect(url.pathname).toBe(hrPaths.employee.list);
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      mode: 'form',
+      editEmployee: 'staff/1?draft=private',
+      step: 'payroll',
+    });
+    grants.forEach((grant) =>
+      expect(
+        hrSetupAction(
+          'staffPayroll',
+          grants.filter((p) => p !== grant),
+          true,
+          'staff-1'
+        )
+      ).toBeNull()
+    );
+    expect(hrSetupAction('staffPayroll', grants)).toBeNull();
+    expect(hrSetupAction('staffPayroll', grants, false, 'staff-1')).toBeNull();
+  });
+
+  it('requires the attendance route action and ancestors for the attendance prerequisite', () => {
+    const grants = [
+      hrPermissions.root,
+      hrPermissions.attendance.root,
+      `${hrPermissions.attendance.markAttendance}.View`,
+    ].map((name) => ({ name, isGranted: true }));
+    expect(hrSetupAction('attendance', grants)?.href).toBe(hrPaths.attendance.markAttendance);
+    grants.forEach((grant) =>
+      expect(
+        hrSetupAction(
+          'attendance',
+          grants.filter((p) => p !== grant)
+        )
+      ).toBeNull()
+    );
+    expect(hrSetupAction('attendance', grants, false)).toBeNull();
+  });
+
   const permissions = [
     hrPermissions.root,
     hrPermissions.payroll.root,

@@ -3,7 +3,9 @@ import type { ReactNode } from 'react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { hrPermissions } from 'src/constants/hr-menus';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { normalizeHrFailure } from 'src/screens/hr/recovery/hr-failure';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { act, screen, render, within, waitFor, fireEvent } from '@testing-library/react';
 
@@ -13,7 +15,11 @@ const mocks = vi.hoisted(() => ({
   preview: {} as any,
   query: 'month=2026-08',
   state: {
-    auth: { permissions: [] },
+    auth: {
+      permissions: [] as { name: string; isGranted: boolean }[],
+      loading: false,
+      permissionsInitialized: true,
+    },
     globalState: { currentYear: { id: 'year-1', name: '2026-27' } },
   },
   load: vi.fn(),
@@ -34,7 +40,6 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/hr/payroll/run-payroll',
   useSearchParams: () => new URLSearchParams(mocks.query),
 }));
-vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => true }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: mocks.success, error: mocks.error },
 }));
@@ -123,6 +128,24 @@ const view = () => (
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.query = 'month=2026-08';
+  mocks.state.auth = {
+    loading: false,
+    permissionsInitialized: true,
+    permissions: [
+      hrPermissions.root,
+      hrPermissions.payroll.root,
+      hrPermissions.payroll.runPayrollLock,
+      hrPermissions.payroll.runPayrollAdjustments,
+      hrPermissions.payroll.runPayrollViewAudit,
+      hrPermissions.payroll.settings.root,
+      hrPermissions.payroll.settings.statutorySchemes,
+      hrPermissions.employee.root,
+      `${hrPermissions.employee.list}.View`,
+      `${hrPermissions.employee.list}.Edit`,
+      hrPermissions.attendance.root,
+      `${hrPermissions.attendance.markAttendance}.View`,
+    ].map((name) => ({ name, isGranted: true })),
+  };
   mocks.state.globalState.currentYear = { id: 'year-1', name: '2026-27' };
   mocks.load.mockResolvedValue({ id: 'run-2', status: 'QUEUED' });
   mocks.preview = {
@@ -173,6 +196,107 @@ beforeEach(() => {
 });
 
 describe('Run Payroll preview feedback', () => {
+  it('uses the safe failure reason for explicit feedback and a permission-gated setup action', async () => {
+    const ui = render(view());
+    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    const reason = 'Complete the establishment registration.';
+    mocks.preview = {
+      ...mocks.preview,
+      requestedRunId: 'run-2',
+      isCurrent: false,
+      error: normalizeHrFailure({ message: reason, errorCode: 'HR:Payroll:030039' }),
+    };
+    ui.rerender(view());
+    expect(mocks.error).toHaveBeenCalledExactlyOnceWith({ message: reason });
+    expect(screen.getByRole('alert')).toHaveTextContent(reason);
+    const setup = screen.getByRole('link', { name: /Review statutory setup/ });
+    expect(setup).toHaveAttribute('target', '_blank');
+    expect(setup).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(setup).toHaveAttribute('href', '/hr/payroll/setting/statutory-schemes');
+    setup.addEventListener('click', (event) => event.preventDefault(), { once: true });
+    fireEvent.click(setup);
+    expect(mocks.load).toHaveBeenCalledTimes(1);
+    expect(mocks.adjustment).not.toHaveBeenCalled();
+    mocks.state.auth.permissions = [];
+    ui.rerender(view());
+    expect(screen.queryByRole('link', { name: /Review statutory setup/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/Ask your HR administrator/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled();
+    expect(mocks.load).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a safe fallback without a fabricated setup action for unknown diagnostic failures', () => {
+    mocks.preview.error = normalizeHrFailure({
+      message: 'System.Exception: password=private',
+      errorCode: 'UNKNOWN',
+    });
+    render(view());
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'The server did not provide a specific reason'
+    );
+    expect(screen.queryByText(/private/)).not.toBeInTheDocument();
+    expect(within(screen.getByRole('alert')).queryByRole('link')).not.toBeInTheDocument();
+    expect(mocks.load).not.toHaveBeenCalled();
+  });
+
+  it('keeps staff context, selection and every unsaved adjustment value when opening registration setup', async () => {
+    mocks.preview.data.items[0].issueCodes = ['PF_NUMBER_MISSING'];
+    render(view());
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'View employee' }));
+    await userEvent.type(screen.getByLabelText('Name'), 'Synthetic arrears');
+    await userEvent.type(screen.getByLabelText('Amount'), '123.45');
+    await userEvent.type(screen.getByLabelText('Reason'), 'Synthetic unsaved correction');
+    await userEvent.click(screen.getByRole('combobox', { name: 'Type' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Deduction' }));
+    const link = screen.getByRole('link', { name: /Review statutory registration/ });
+    expect(link).toHaveAttribute(
+      'href',
+      '/hr/employee?mode=form&editEmployee=employee-1&step=payroll'
+    );
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    link.addEventListener('click', (event) => event.preventDefault(), { once: true });
+    fireEvent.click(link);
+    expect(screen.getByLabelText('Name')).toHaveValue('Synthetic arrears');
+    expect(screen.getByLabelText('Amount')).toHaveValue(123.45);
+    expect(screen.getByLabelText('Reason')).toHaveValue('Synthetic unsaved correction');
+    expect(screen.getByRole('combobox', { name: 'Type' })).toHaveTextContent('Deduction');
+    expect(screen.getByText(/1 selected/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add adjustment' })).toBeEnabled();
+    expect(mocks.replace).not.toHaveBeenCalled();
+    expect(mocks.load).not.toHaveBeenCalled();
+    expect(mocks.adjustment).not.toHaveBeenCalled();
+  });
+
+  it('keeps the registration prerequisite unavailable without staff edit access', async () => {
+    mocks.preview.data.items[0].issueCodes = ['PF_NUMBER_MISSING'];
+    mocks.state.auth.permissions = mocks.state.auth.permissions.filter(
+      (p) => p.name !== `${hrPermissions.employee.list}.Edit`
+    );
+    render(view());
+    await userEvent.click(screen.getByRole('button', { name: 'View employee' }));
+    expect(
+      screen.queryByRole('link', { name: /Review statutory registration/ })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/Ask your HR administrator/)).toBeVisible();
+  });
+
+  it.each(['loading', 'permissionsInitialized'])(
+    'does not expose registration setup while permissions are unresolved: %s',
+    async (state) => {
+      mocks.preview.data.items[0].issueCodes = ['PF_NUMBER_MISSING'];
+      if (state === 'loading') mocks.state.auth.loading = true;
+      else mocks.state.auth.permissionsInitialized = false;
+      render(view());
+      await userEvent.click(screen.getByRole('button', { name: 'View employee' }));
+      expect(
+        screen.queryByRole('link', { name: /Review statutory registration/ })
+      ).not.toBeInTheDocument();
+      expect(mocks.adjustment).not.toHaveBeenCalled();
+    }
+  );
+
   it('keeps pending identifiers as warnings and still blocks genuine payroll setup issues', async () => {
     const pending = ['PF_NUMBER_MISSING', 'ESI_NUMBER_MISSING', 'ESI_INSURANCE_NUMBER_REQUIRED'];
     mocks.preview.data.items[0].issueCodes = pending;
@@ -230,7 +354,7 @@ describe('Run Payroll preview feedback', () => {
     );
     expect(
       within(screen.getByRole('region', { name: 'Readiness checks' })).getByRole('link', {
-        name: 'Open attendance',
+        name: 'Open attendance (opens in a new tab)',
       })
     ).toHaveAttribute('href', '/hr/manual-attendance');
     expect(screen.queryByRole('button', { name: 'Move to Attendance' })).not.toBeInTheDocument();
@@ -513,9 +637,7 @@ describe('Run Payroll preview feedback', () => {
     };
     ui.rerender(view());
     expect(mocks.error).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Payroll preview could not be prepared. Please retry.'
-    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Request failed');
     expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled();
     ui.rerender(view());
     expect(mocks.error).toHaveBeenCalledTimes(1);

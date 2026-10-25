@@ -32,6 +32,10 @@ Salary refreshes templates, PF rules and ESIC policy options and clears its old 
 
 Leave refreshes the effective policy for current staff/date/year. Missing assignment points to Policy Assignments; unavailable policy buckets point to Leave Policies. A removed selected leave type remains in form state with an error and cannot be submitted; other reason/date/attachment values remain mounted.
 
+Run Payroll also normalizes FAILED preview-job messages and status/result-query failures through the same safe HR contract. The persistent alert and an explicitly requested preview's failure toast show the safe reason. Known codes offer the existing authorized setup action; unknown, forbidden and unconfirmed failures never invent a setup destination. The status API's generic job message falls back to the known business-code explanation when available. Existing context, freshness, request locks and explicit retry behavior are retained; setup links never start a calculation or submit an adjustment.
+
+The staff drawer's registration action and the registration-review table open the selected staff member's payroll step in a new tab. They require the directory ancestors, directory View/Edit access and a PF/ESIC read or manage grant; server scheme and staff-scope checks remain authoritative. The readiness drawer's attendance prerequisite also opens in a new tab with its existing route/View access. These links preserve the mounted payroll screen, selection and unsaved adjustment fields without copying draft values into storage or navigation.
+
 ## Lifetime and return behavior
 
 No HR draft is written to localStorage, sessionStorage, IndexedDB, cookies, URLs or a server draft endpoint. Files and form values are not copied to a recovery cache. Existing form state is isolated by tab/record; HR layout remounts on actor/tenant/session-initialization identity changes. Recovery notices clear on route/scope changes. Success/reset, cancel/discard and existing unsaved-navigation guards remain owned by each form.
@@ -49,8 +53,9 @@ Return means returning to the original tab. Back/Forward in setup does not navig
 | Apply leave, leave requests/center, approvals | Shared mutation failures; request form adds policy/assignment links and effective policy refresh | Leave utilities and shared recovery controls tested. Authenticated policy detour/leave application unverified. |
 | Attendance, imports, shifts, calendars/events | All shared `api` mutation rejections initiated under HR receive durable feedback, including console-only catches | Source audit and shared middleware test. Individual import/file/attendance workflows unverified. |
 | HR policies/assignments, statutory/payroll settings | Shared mutation feedback with exact permission gates; owning inline validation and impact/conflict reviews retained | Permission matrix and middleware tests. Individual authenticated configuration lifecycles unverified. |
-| Run payroll, salary documents, professional management, reports and notifications | Shared mutation failures; unconfirmed results never auto-replayed; existing state-machine guards retained | Shared boundary tests. Domain-specific jobs, row-level errors and full server transitions unverified. |
-| Query failures, HTTP-200 per-row/job errors, direct non-RTK requests and self-service outside `/hr/` | Existing owning-region error handling retained; outside mutation interception | Explicitly unverified; do not claim every possible HR failure is newly covered. |
+| Run payroll | Shared mutation failures plus safe FAILED preview-job and status/result-query feedback; authorized new-tab prerequisites retain adjustments | Focused hook/screen/recovery tests cover reasons, diagnostics, permissions and mounted draft values. Authenticated setup and payroll transitions remain unverified. |
+| Salary documents, professional management, reports and notifications | Shared mutation failures; unconfirmed results never auto-replayed; existing state-machine guards retained | Shared boundary tests. Domain-specific jobs, row-level errors and full server transitions unverified. |
+| Other query failures, HTTP-200 per-row/job errors, direct non-RTK requests and self-service outside `/hr/` | Existing owning-region error handling retained; outside mutation interception | Explicitly unverified; do not claim every possible HR failure is newly covered. |
 
 ## Verification and integration
 

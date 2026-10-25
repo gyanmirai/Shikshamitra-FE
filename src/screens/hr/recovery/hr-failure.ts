@@ -1,6 +1,14 @@
 /** User-facing HR recovery contract. Never keep request bodies, files or raw exceptions here. */
 export type HrSetup =
-  'salary' | 'templates' | 'leave' | 'assignments' | 'statutory' | 'pf' | 'components';
+  | 'salary'
+  | 'templates'
+  | 'leave'
+  | 'assignments'
+  | 'statutory'
+  | 'pf'
+  | 'components'
+  | 'staffPayroll'
+  | 'attendance';
 export type HrFailure = {
   title: string;
   message: string;

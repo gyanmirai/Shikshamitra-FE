@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { RouterLink } from 'src/routes/components';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { HrSetupLink } from 'src/screens/hr/recovery/hr-setup-controls';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useGetPayrollRegistrationReadinessQuery } from 'src/redux/hr/statutory-profile-api';
 import {
@@ -16,8 +16,6 @@ import {
   AccordionDetails,
   AccordionSummary,
 } from '@mui/material';
-
-import { staffPayrollEditHref } from '../../employee/payroll-profile-utils';
 
 export function PayrollRegistrationReadiness({ month }: { month: string | null }) {
   const [open, setOpen] = useState(false);
@@ -98,13 +96,7 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
                 id: 'action',
                 label: '',
                 render: (_, row) => (
-                  <Button
-                    component={RouterLink}
-                    href={staffPayrollEditHref(row.employeeId)}
-                    size="small"
-                  >
-                    Review staff
-                  </Button>
+                  <HrSetupLink setup="staffPayroll" employeeId={row.employeeId} />
                 ),
               },
             ]}

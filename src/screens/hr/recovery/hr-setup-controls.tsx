@@ -13,12 +13,25 @@ import type { HrSetup } from './hr-failure';
 export const RecoveryContext = createContext({ beginSetup: () => {} });
 
 /** Keep the source form mounted. No draft copies, storage, opener access or automatic resubmission. */
-export function HrSetupLink({ setup, disabled = false }: { setup: HrSetup; disabled?: boolean }) {
+export function HrSetupLink({
+  setup,
+  employeeId,
+  disabled = false,
+}: {
+  setup: HrSetup;
+  employeeId?: string;
+  disabled?: boolean;
+}) {
   const { permissions, loading, permissionsInitialized } = useSelector(
     (state: RootState) => state.auth
   );
   const { beginSetup } = useContext(RecoveryContext);
-  const action = hrSetupAction(setup, permissions, Boolean(!loading && permissionsInitialized));
+  const action = hrSetupAction(
+    setup,
+    permissions,
+    Boolean(!loading && permissionsInitialized),
+    employeeId
+  );
   return action ? (
     <Button
       size="small"

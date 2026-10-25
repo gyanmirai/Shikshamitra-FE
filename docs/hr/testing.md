@@ -812,6 +812,8 @@ Browser checks should verify the compact school settings and Earning Component t
 
 Run `hr-failure.test.ts`, `hr-recovery-middleware.test.ts`, `hr-recovery-provider.test.tsx`, `SalaryStructureBuilder.test.tsx`, `salary-editor-screen.test.tsx`, `leave-request.utils.test.ts` and `use-unsaved-navigation.test.tsx`. Run scoped ESLint, `npm run ts`, both docs validators and an isolated production build.
 
+For Run Payroll recovery, run `src/screens/hr/payroll/run-payroll` and `src/screens/hr/recovery` with `hr-recovery-middleware.test.ts`, using one Vitest worker. The hook cases cover FAILED jobs, safe polling/result-query reasons, unsafe diagnostics, forbidden/unconfirmed errors, known-code setup and explicit retries. Screen cases cover consistent toast/alert reasons, denied setup access and retained adjustment name/amount/reason while the selected staff setup link opens in a new tab. Setup contract tests deny each missing ancestor/action and unresolved permissions. Browser acceptance must additionally exercise the actual new tab and return without submitting real staff data.
+
 The isolated harness uses production recovery components and actual RTK mutation lifecycle actions with synthetic responses, no authentication and no backend writes:
 
 ```sh
