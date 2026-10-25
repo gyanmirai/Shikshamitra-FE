@@ -46,7 +46,7 @@ export const hrPaths = {
       statutorySchemes: '/hr/payroll/setting/statutory-schemes',
       esiPolicies: '/hr/payroll/setting/statutory-schemes?view=policies',
       salaryTemplates: '/hr/payroll/setting/salary-templates',
-      payrollDocuments: '/hr/payroll/setting/payroll-documents',
+      payrollDocuments: '/hr/payroll/setting/payslip-statement-settings',
       salaryTemplateCreate: '/hr/payroll/setting/salary-templates/new',
       salaryTemplateEditor: (templateId: string) =>
         `/hr/payroll/setting/salary-templates/${templateId}`,
@@ -393,7 +393,7 @@ const hrModule = (isDdvs: boolean) => ({
               children: [
                 ...payrollSettingsMenuItems,
                 {
-                  title: 'Payroll documents',
+                  title: 'Payslip & statement settings',
                   path: hrPaths.payroll.settings.payrollDocuments,
                   _action: 'payroll-setting-documents',
                   permissionName: hrPermissions.payroll.settings.payrollDocuments,

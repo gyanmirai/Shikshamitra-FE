@@ -127,7 +127,7 @@ function SettingsForm({
         ignoredReadRequestId.current = latestReadRequestId.current;
         helpers.resetForm({ values: saved });
         request.current = null;
-        shikshaMitraToast.success({ message: 'Payroll document settings saved.' });
+        shikshaMitraToast.success({ message: 'Payslip and statement settings saved.' });
       } catch (failure) {
         setError(payslipActionError(failure, 'Settings could not be saved. Try again.'));
       }
