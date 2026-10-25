@@ -102,7 +102,8 @@ describe('assignment review evidence', () => {
   it('shows canonical totals, skipped heads and every installment without hidden paging', () => {
     mount();
     expect(screen.getByText('Total to assign').nextElementSibling).toHaveTextContent('₹ 1,000');
-    expect(screen.getByText('Service reduction').nextElementSibling).toHaveTextContent('₹ 200');
+    expect(screen.queryByText('Before service adjustment')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service reduction')).not.toBeInTheDocument();
     const heads = within(
       screen.getByRole('table', { name: 'Assignment fee-head breakdown table' })
     );

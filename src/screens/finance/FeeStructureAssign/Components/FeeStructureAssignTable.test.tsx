@@ -1,12 +1,13 @@
 import React from 'react';
-import { it, vi, expect, describe } from 'vitest';
-import { act, render } from '@testing-library/react';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { act, render, fireEvent } from '@testing-library/react';
 
 import FeeStructureAssignTable from './FeeStructureAssignTable';
 
 const state = vi.hoisted(() => ({
   query: {} as any,
   table: {} as any,
+  items: [] as any[],
   context: {
     selectedStandardId: 'all-classes',
     selectedDivisionId: 'all-divisions',
@@ -32,17 +33,85 @@ vi.mock('src/components/three-dots-actions', () => ({ default: () => null }));
 vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   useAssignmentStudentsQuery: (params: any) => {
     state.query = params;
-    return { currentData: { items: [], totalCount: 45 }, isFetching: false };
+    return { currentData: { items: state.items, totalCount: 45 }, isFetching: false };
   },
 }));
 vi.mock('src/components/customizabaleTable', () => ({
   default: (props: any) => {
     state.table = props;
-    return null;
+    const selection = props.columns.find((column: any) => column.id === 'select');
+    return (
+      <>
+        {selection?.renderColumn()}
+        {props.data.map((row: any) => (
+          <React.Fragment key={row.id}>{selection?.render(undefined, row)}</React.Fragment>
+        ))}
+      </>
+    );
   },
 }));
 
 describe('Fee assignment student table', () => {
+  beforeEach(() => {
+    state.items = [];
+    state.context = {
+      ...state.context,
+      selectedStandardId: 'all-classes',
+      selectedDivisionId: 'all-divisions',
+    };
+  });
+
+  it.each(['all-classes', ''])('disables row and bulk selection for class %s', (classId) => {
+    state.context.selectedStandardId = classId;
+    state.items = [
+      { enrollmentId: 'enrollment', studentId: 'student', studentName: 'Student', isActive: true },
+    ];
+    const view = render(<FeeStructureAssignTable onAssignStructure={vi.fn()} />);
+
+    expect(view.getByRole('checkbox', { name: 'Select Student' })).toBeDisabled();
+    expect(
+      view.getByRole('checkbox', { name: 'Select eligible students on this page' })
+    ).toBeDisabled();
+    expect(view.queryByRole('button', { name: 'Assign structure' })).not.toBeInTheDocument();
+  });
+
+  it('enables eligible selection for a specific class and clears it when the class changes', () => {
+    state.context.selectedStandardId = 'class-a';
+    state.items = [
+      { enrollmentId: 'e1', studentId: 's1', studentName: 'Eligible', isActive: true },
+      { enrollmentId: 'e2', studentId: 's2', studentName: 'Inactive', isActive: false },
+      {
+        enrollmentId: 'e3',
+        studentId: 's3',
+        studentName: 'Assigned',
+        isActive: true,
+        isFeeStructureAssigned: true,
+      },
+    ];
+    const onBulkAssign = vi.fn();
+    const view = render(
+      <FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={onBulkAssign} />
+    );
+    expect(view.getByRole('checkbox', { name: 'Select Eligible' })).toBeEnabled();
+    expect(view.getByRole('checkbox', { name: 'Select Inactive' })).toBeDisabled();
+    expect(view.getByRole('checkbox', { name: 'Select Assigned' })).toBeDisabled();
+    fireEvent.click(view.getByRole('checkbox', { name: 'Select eligible students on this page' }));
+    expect(view.getByRole('checkbox', { name: 'Select Eligible' })).toBeChecked();
+    fireEvent.click(view.getByRole('button', { name: 'Assign structure' }));
+    expect(onBulkAssign).toHaveBeenCalledWith([expect.objectContaining({ studentId: 's1' })], 'class-a');
+
+    state.context.selectedStandardId = 'all-classes';
+    view.rerender(<FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={onBulkAssign} />);
+    expect(view.getByRole('checkbox', { name: 'Select Eligible' })).toBeDisabled();
+    expect(view.getByRole('checkbox', { name: 'Select Eligible' })).not.toBeChecked();
+    expect(view.queryByRole('button', { name: 'Assign structure' })).not.toBeInTheDocument();
+
+    state.context.selectedStandardId = 'class-b';
+    view.rerender(<FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={onBulkAssign} />);
+    expect(view.getByRole('checkbox', { name: 'Select Eligible' })).toBeEnabled();
+    expect(view.getByRole('checkbox', { name: 'Select Eligible' })).not.toBeChecked();
+  });
+
   it('sends filters and sorting across pages, resets offsets immediately, and preserves scope', () => {
     const view = render(<FeeStructureAssignTable onAssignStructure={vi.fn()} />);
     act(() => state.table.onServerPagination(3, 10));

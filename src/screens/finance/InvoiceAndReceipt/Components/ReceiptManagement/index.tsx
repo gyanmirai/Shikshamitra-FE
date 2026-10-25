@@ -182,14 +182,12 @@ const ReceiptManagement = () => {
         render: (value, row) => (row.grNo ? `${value} (${row.grNo})` : value),
       },
       {
-        stickyPosition: 'left',
         id: 'receiptKind',
         label: 'Receipt Type',
         align: 'left',
         width: 140,
         minWidth: 140,
         maxWidth: 200,
-        sticky: true,
         render: (value, row) => row.receiptKindLabel || FEE_RECEIPT_KIND_LABELS[value as FeeReceiptKind] || '—',
       },
       {

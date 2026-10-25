@@ -56,6 +56,7 @@ const UpiTable = ({
     type: 'query',
     currentQueryAndMutation: useGetReconciliationListQuery,
     params: queryParams,
+    options: { skip: !queryParams?.academicYearId },
   });
 
   const [downloadReceiptPdf] = useQueryAndMutation({

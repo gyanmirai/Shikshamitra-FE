@@ -611,6 +611,10 @@ mounts the actual components with synthetic data for responsive and lifecycle ch
 
 ## Student fee assignment
 
+Student row checkboxes and select-all require a specific Class selection. They stay disabled
+for All Classes or an empty selection. Changing class clears selected students; inactive and
+already assigned students remain ineligible.
+
 The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).
 
 ## Income, expense, and bank routing
@@ -677,7 +681,7 @@ unique within the academic year; changing Board alone does not resolve a code co
 1. In Fee Collection, cash offers one action to collect and issue an Official Receipt. All non-cash methods offer one action to record and issue a Provisional Receipt.
 2. Receipts lists fee, charge, and combined document types using the server label. Payment method and verification/link status are visible. The Official Receipt (Charge) option is included in the receipt-type filter.
 3. Open a receipt to see the recorded payment method, provisional/official cross-reference, and PDF. Download PDF uses the server-provided filename.
-4. In Reconciliation, Cash shows official counter receipts in a read-only, paginated table. Other method tabs retain the existing approval/rejection workflow.
+4. Reconciliation shows only non-cash payment method tabs, starting with Cheque, with the existing approval/rejection workflow. Saved Cash-tab links fall back to Cheque. Cash official receipts remain available in Receipts.
 5. Approval/rejection invalidates receipt list/detail cache tags as well as reconciliation and collection data, so reopening Receipts shows the updated linkage.
 
 Backend rules and PDF contract: [Provisional and official receipts](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md). Bank-statement import and automatic matching are outside this delivery.

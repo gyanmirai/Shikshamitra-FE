@@ -10,6 +10,12 @@ audience: humans-and-agents
 
 # Validate Finance frontend changes
 
+Reconciliation initial loading: run `ReconciliationQuery.test.tsx` under
+`src/screens/finance/Finance-reconciliation/Component`. It covers all payment tables waiting
+for academic-year context, querying once available, changing year/month and pausing again
+when context clears. In the browser, reload Reconciliation and switch payment tabs; verify
+there is no empty academic-year request or invalid-value toast.
+
 `ConcessionItemCard.test.tsx` covers decisions directly from saved Pending cards, independent reviewers, positive approval amounts, required documents and server action/grant checks. Browser checks retain icon-only card controls with Leave Center decision glyphs and no leading card-header icon.
 
 Minimal concession request forms: run `ConcessionFeeHeadSelection.test.tsx`,
@@ -447,7 +453,7 @@ Run the focused `useCollectionPolicyForm`, `CollectionPolicyDrawer`, `FeeCollect
 
 Run the focused FinalPaymentReviewDialog.test.tsx and paymentReceiptSummary.test.ts tests, npm run ts, and npm run docs:check.
 
-Browser acceptance: collect cash fees and charges → Official Receipt in Receipts and read-only Cash reconciliation tab; record each non-cash method → Provisional Receipt; approve → linked Official Receipt; reject → rejected history without an official document. Check fee-only, charge-only, combined, PDF download filename, payment method, long student names and narrow screens. Old cashier confirmation flags must never finalize a new non-cash payment. Mixed non-cash instruments must fail validation. Backend behavior and test suites: [Receipt lifecycle](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md).
+Browser acceptance: collect cash fees and charges → Official Receipt in Receipts; Reconciliation shows six non-cash tabs with Cheque selected by default, and saved Cash-tab links fall back to Cheque. Record each non-cash method → Provisional Receipt; approve → linked Official Receipt; reject → rejected history without an official document. Check fee-only, charge-only, combined, PDF download filename, payment method, long student names and narrow screens. Old cashier confirmation flags must never finalize a new non-cash payment. Mixed non-cash instruments must fail validation. Backend behavior and test suites: [Receipt lifecycle](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md).
 
 ### Local verification evidence (23 October 2026)
 

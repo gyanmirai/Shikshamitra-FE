@@ -266,7 +266,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
           </Stack>
         )}
       </DialogScrollContent>
-      <DialogActions sx={{ px: 2, py: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+      <DialogActions sx={{ px: 2, py: 1.5, gap: 1, borderTop: '1px solid', borderColor: 'divider' }}>
         <Button
           component="a"
           href={receiptBlobUrl || undefined}

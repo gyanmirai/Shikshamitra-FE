@@ -151,7 +151,7 @@ export default function FeeStructureAssignTable({
           />
         </Stack>
       </Paper>
-      {selected.length > 0 && canAssign && (
+      {selected.length > 0 && canAssign && standardId && (
         <Stack
           direction="row"
           spacing={1.5}
@@ -240,7 +240,7 @@ export default function FeeStructureAssignTable({
                       }}
                       checked={eligible.length > 0 && selected.length === eligible.length}
                       indeterminate={selected.length > 0 && selected.length < eligible.length}
-                      disabled={query.isFetching || eligible.length === 0}
+                      disabled={!standardId || query.isFetching || eligible.length === 0}
                       onChange={(_, checked) => setSelected(checked ? eligible : [])}
                     />
                   ),
@@ -250,7 +250,9 @@ export default function FeeStructureAssignTable({
                       <Checkbox
                         inputProps={{ 'aria-label': `Select ${row.studentName}` }}
                         checked={selected.some((s) => s.studentId === row.studentId)}
-                        disabled={query.isFetching || !row.isActive || row.isFeeStructureAssigned}
+                        disabled={
+                          !standardId || query.isFetching || !row.isActive || row.isFeeStructureAssigned
+                        }
                         onChange={(_, checked) =>
                           setSelected((previous) =>
                             checked
