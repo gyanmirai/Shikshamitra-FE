@@ -5,6 +5,10 @@ import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { EmployeeApplication } from 'src/redux/hr/employeeOnboardingApi';
+import type {
+  SaveEmployeeCompensation,
+  EmployeeActivationReadiness,
+} from 'src/redux/hr/compensation-revision-api';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -28,13 +32,14 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ShakingTextField from 'src/components/shaking-text-field';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { emptyStatutoryProfile } from 'src/redux/hr/statutory-profile-api';
 import CityComponent from 'src/components/stardard-address/city-component';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
@@ -51,6 +56,17 @@ import {
   getEmployeeAssignableRoles,
   shouldClearEmployeeRoleSelection,
 } from 'src/screens/hr/employee/employee-role-options';
+import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
 import {
   Box,
   Card,
@@ -83,24 +99,12 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
 
 import { getOnboardingErrorMessage } from './error-message';
+import { statutoryProfileSchema } from '../employee/statutory-profile-fields';
+import { SalaryStructureBuilder } from '../payroll/structure/SalaryStructureBuilder';
+import { getLocalMonthKey } from '../payroll/structure/salary-structure-builder-utils';
 import { resolveCurrentEmployeeApplication } from './employee-application-query-state';
-import {
-  StatutoryProfileFields,
-  statutoryProfileSchema,
-} from '../employee/statutory-profile-fields';
 import {
   finalizeEmployeeFieldsSchema,
   applyFinalizeEmployeeValidation,
@@ -144,6 +148,7 @@ type EmployeeOnboardingListParams = {
 type FinalizedEmployeeResult = {
   id: string;
   name: string;
+  activationReadiness?: EmployeeActivationReadiness;
 };
 
 const defaultInviteForm: InviteFormState = {
@@ -1081,7 +1086,7 @@ function EmployeeOnboardingDetailView({
   );
 }
 
-function FinalizeDialog({
+export function FinalizeDialog({
   application,
   open,
   onClose,
@@ -1097,6 +1102,9 @@ function FinalizeDialog({
   const [maxStepVisited, setMaxStepVisited] = useState(0);
   const [academicTouched, setAcademicTouched] = useState(false);
   const [finalizeSaving, setFinalizeSaving] = useState(false);
+  const [salary, setSalary] = useState<SaveEmployeeCompensation | null>(null);
+  const [salaryEditor, setSalaryEditor] = useState({ dirty: false, busy: false });
+  const finalizationPending = useRef(false);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: rolesData, isLoading: rolesLoading } = useGetRolesQuery(undefined);
   const { data: shiftsData, isLoading: shiftsLoading } = useGetShiftsQuery(undefined);
@@ -1134,6 +1142,16 @@ function FinalizeDialog({
     onSubmit: () => {},
   });
 
+  const navigation = useUnsavedNavigation(
+    open && (formik.dirty || statutoryForm.dirty || salaryEditor.dirty),
+    {
+      blockNavigation: finalizeSaving || isLoading || salaryEditor.busy,
+      description:
+        'The onboarding changes and salary preview have not been saved. Discarding or reloading requires entering them again. Finalize saves the staff and salary together.',
+    }
+  );
+  const salaryMonth = [getLocalMonthKey(), formik.values.doj?.slice(0, 7) || ''].sort().at(-1)!;
+
   // convenience alias
   const form = formik.values;
   const selectedEmployeeGroup = form.isTeaching ? 0 : 1;
@@ -1163,11 +1181,13 @@ function FinalizeDialog({
       setMaxStepVisited(0);
       setAcademicTouched(false);
       setFinalizeSaving(false);
+      setSalary(null);
+      setSalaryEditor({ dirty: false, busy: false });
       statutoryForm.resetForm();
       formik.resetForm({ values: buildFinalizeInitialValues(application) });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [application, open]);
+  }, [application?.id, open]);
 
   useEffect(() => {
     if (step > maxStepVisited) {
@@ -1232,6 +1252,7 @@ function FinalizeDialog({
 
   const isStepClickable = (index: number) => index <= maxStepVisited;
   const handleStepClick = async (index: number) => {
+    if (finalizationPending.current || salaryEditor.busy) return;
     if (index > step && index > 1 && !(await validateEmployeeFields())) {
       return;
     }
@@ -1246,9 +1267,14 @@ function FinalizeDialog({
   };
 
   const canSubmit =
-    finalizeEmployeeFieldsSchema.isValidSync(form, { abortEarly: false }) && isStep2Valid;
+    finalizeEmployeeFieldsSchema.isValidSync(form, { abortEarly: false }) &&
+    isStep2Valid &&
+    canManageStatutory &&
+    Boolean(salary) &&
+    !salaryEditor.busy;
 
   const handleFinalize = async () => {
+    if (finalizationPending.current || salaryEditor.busy) return;
     if (!(await validateEmployeeFields())) {
       return;
     }
@@ -1274,6 +1300,15 @@ function FinalizeDialog({
       });
       return;
     }
+    if (!canManageStatutory || !salary || salary.effectiveMonth.slice(0, 7) !== salaryMonth) {
+      setStep(3);
+      shikshaMitraToast.warning({
+        message: 'Preview a valid salary in the final step before finalizing.',
+      });
+      return;
+    }
+    if (finalizationPending.current) return;
+    finalizationPending.current = true;
     setFinalizeSaving(true);
     try {
       const result = await finalizeApplication({
@@ -1320,7 +1355,8 @@ function FinalizeDialog({
                 academicScopes: academicPermissionScopeRows.scopeRows,
               }
             : {}),
-          ...(canManageStatutory ? { statutoryProfile: statutoryForm.values } : {}),
+          salary,
+          statutoryProfile: statutoryForm.values,
           familyInfo: application.familyInfo || null,
           additionalInfo: application.additionalInfo || null,
           workExperiences: application.workExperiences || [],
@@ -1333,31 +1369,39 @@ function FinalizeDialog({
       if (!employeeId) {
         throw new Error('The staff was created, but the staff id was not returned.');
       }
+      if (!result.activationReadiness?.compensationRevisionId) {
+        throw new Error(
+          'Staff was created, but salary persistence could not be verified. Review the staff payroll before continuing.'
+        );
+      }
 
-      shikshaMitraToast.success({ message: 'Staff created as inactive' });
+      shikshaMitraToast.success({ message: 'Staff and salary saved. Staff remains inactive.' });
       onFinalized({
         id: employeeId,
         name: String(result.employee.fullName || application.fullName || 'Employee'),
+        activationReadiness: result.activationReadiness,
       });
     } catch (error) {
       shikshaMitraToast.error({
         message: getOnboardingErrorMessage(error, 'Could not finalize onboarding'),
       });
     } finally {
+      finalizationPending.current = false;
       setFinalizeSaving(false);
     }
   };
 
-  const steps = ['Review', 'Staff fields', 'Academic Permission', 'Confirm'];
+  const steps = ['Review', 'Staff fields', 'Academic Permission', 'Salary and confirm'];
 
   return (
     <CustomDialog
       open={open}
-      handleClose={onClose}
-      disableClose={finalizeSaving || isLoading}
+      handleClose={() => navigation.requestNavigation(onClose)}
+      disableClose={finalizeSaving || isLoading || salaryEditor.busy}
       maxWidth="lg"
       data-testid="employee-onboarding-finalize-dialog"
       hasForm={false}
+      guardUnsavedChanges={false}
       paperProps={{
         sx: {
           height: '85vh',
@@ -1384,6 +1428,7 @@ function FinalizeDialog({
         </Box>
       }
     >
+      {navigation.confirmation}
       <DialogContent
         sx={{
           overflow: 'visible',
@@ -1402,6 +1447,7 @@ function FinalizeDialog({
           steps={steps}
           activeStep={step}
           handleBack={() => {
+            if (finalizationPending.current || salaryEditor.busy) return;
             setAcademicTouched(false);
             formik.setTouched({});
             setStep((current) => current - 1);
@@ -2658,23 +2704,46 @@ function FinalizeDialog({
                       label="Attach submitted resume to staff documents"
                     />
                   </Stack>
-                  {canManageStatutory && (
-                    <SectionCard title="PF and ESIC registration">
-                      <StatutoryProfileFields
-                        form={statutoryForm}
-                        disabled={finalizeSaving || isLoading}
-                      />
-                    </SectionCard>
+                  <Alert severity="info">
+                    Finalize saves the staff and salary together. The staff remains Inactive until
+                    an authorized HR user activates them. Logging in does not activate staff.
+                  </Alert>
+                  {!canManageStatutory && (
+                    <Alert severity="warning">
+                      Salary management and statutory enrollment permissions are required to
+                      finalize onboarding.
+                    </Alert>
                   )}
                   {!canSubmit && (
                     <Typography variant="body2" color="error">
                       {form.isTeaching
-                        ? 'Complete required staff fields and Academic Permission before finalizing.'
-                        : 'Complete required staff fields before finalizing.'}
+                        ? 'Complete required staff fields, Academic Permission, and a valid salary preview before finalizing.'
+                        : 'Complete required staff fields and a valid salary preview before finalizing.'}
                     </Typography>
                   )}
                 </Stack>
               )}
+              <Box
+                component="fieldset"
+                disabled={finalizeSaving || isLoading}
+                sx={{
+                  display: currentStep === 3 ? 'block' : 'none',
+                  mt: 2,
+                  border: 0,
+                  p: 0,
+                  minWidth: 0,
+                }}
+              >
+                {canManageStatutory && (
+                  <SalaryStructureBuilder
+                    formik={formik}
+                    dateOfJoining={form.doj}
+                    initialMonth={salaryMonth}
+                    onboarding={{ statutoryForm, onSalaryChange: setSalary }}
+                    onEditorStateChange={setSalaryEditor}
+                  />
+                )}
+              </Box>
             </Box>
           )}
         />
@@ -2832,11 +2901,18 @@ export default function EmployeeOnboardingScreen() {
       <DialogContent>
         <Stack spacing={2}>
           <Alert severity="warning">
-            <Typography variant="subtitle2">Payroll setup required</Typography>
+            <Typography variant="subtitle2">HR setup saved - staff inactive</Typography>
             <Typography variant="body2">
-              {finalizedEmployee?.name || 'The staff'} is inactive. Set up a valid salary, then
-              activate the staff as a separate action.
+              {finalizedEmployee?.name || 'The staff'} and their salary have been saved. An
+              authorized HR user must activate the staff separately. Logging in does not activate
+              staff.
             </Typography>
+            {finalizedEmployee?.activationReadiness?.canActivate === false && (
+              <Typography variant="body2">
+                Payroll activation checks still need attention. Review the staff profile before
+                activation.
+              </Typography>
+            )}
           </Alert>
         </Stack>
       </DialogContent>
@@ -2850,17 +2926,6 @@ export default function EmployeeOnboardingScreen() {
           }
         >
           View staff
-        </Button>
-        <Button
-          size="small"
-          href={
-            finalizedEmployee
-              ? `${hrPaths.payroll.structure}?employeeId=${finalizedEmployee.id}&setup=salary`
-              : undefined
-          }
-          variant="contained"
-        >
-          Set up salary
         </Button>
       </DialogActions>
     </CustomDialog>
