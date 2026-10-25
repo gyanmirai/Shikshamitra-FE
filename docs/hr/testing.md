@@ -818,3 +818,6 @@ Use `node node_modules/@playwright/test/cli.js test --config tests/browser/hr-ta
 It checks filtered Excel data and excluded Actions, numeric criteria, sorting, theme changes, loading/empty/error/retry and draft editing without backend writes.
 Run the existing numeric-menu fixture separately with `--config tests/browser/hr-table-filter.config.ts`.
 Finish with Codex in-app browser inspection of the local fixture; signed-in tenant/backend acceptance must be reported separately.
+
+The endpoint follow-up also checks `server-column-filters.test.ts`, shift and leave API contract tests, and manual-attendance `table-filters.test.tsx`. The latter verifies group/department page reset, identical export predicates, and scope/export locks while a draft is dirty.
+The browser fixture uses the actual complete-export hook with local synthetic paged readers; it verifies status zero, filtered totals, a 15-row filtered workbook from a 10-row page, synchronized name search and clearing; unit regressions also cover scalar replacement.

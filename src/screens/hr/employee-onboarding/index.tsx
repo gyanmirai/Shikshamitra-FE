@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
@@ -3205,7 +3206,27 @@ export default function EmployeeOnboardingScreen() {
           onExport={exportTable}
           error={tableError}
           onRetry={retryTable}
-          columns={columns}
+          {...serverColumnFilters(
+            columns,
+            [
+              {
+                column: 'status',
+                query: 'status',
+                emptyValue: 'All',
+                options: EMPLOYEE_APPLICATION_STATUSES.map((value) => ({
+                  value,
+                  label: getEmployeeApplicationStatusLabel(value),
+                })),
+              },
+            ],
+            employeeParams,
+            ({ status }) =>
+              setEmployeeParams((current) => ({
+                ...current,
+                page: 1,
+                status: status as EmployeeOnboardingListParams['status'],
+              }))
+          )}
           data={applications}
           isLoading={isFetching}
           serverSidePagination
@@ -3215,7 +3236,9 @@ export default function EmployeeOnboardingScreen() {
           onServerPagination={handleServerPagination}
           serverSideSearch
           onServerSearch={handleServerSearch}
-          defaultSearchTerm={employeeParams.search}
+          searchTerm={employeeParams.search}
+          page={employeeParams.page - 1}
+          rowsPerPage={employeeParams.pageSize}
           noDataText="No applications found."
           rowProps={(row) =>
             ({

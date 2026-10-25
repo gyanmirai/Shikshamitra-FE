@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RouterLink } from 'src/routes/components';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -21,12 +21,18 @@ import { staffPayrollEditHref } from '../../employee/payroll-profile-utils';
 
 export function PayrollRegistrationReadiness({ month }: { month: string | null }) {
   const [open, setOpen] = useState(false);
-  const [page, setPage] = useState({ number: 1, size: 25 });
+  const [page, setPage] = useState({ number: 1, size: 25, search: '' });
+  useEffect(() => {
+    setPage((current) => ({ ...current, number: 1 }));
+  }, [month]);
   const query = useGetPayrollRegistrationReadinessQuery(
-    { month: month ?? '', page: page.number, pageSize: page.size },
+    { month: month ?? '', page: page.number, pageSize: page.size, search: page.search },
     { skip: !open || !month }
   );
-  const exportTable = useHrTableExport('hr-payroll-registration-readiness', { month });
+  const exportTable = useHrTableExport('hr-payroll-registration-readiness', {
+    month,
+    search: page.search,
+  });
   const status = (apply: boolean, registered: boolean) => (
     <Chip
       size="small"
@@ -111,10 +117,16 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
             serverSidePagination
             totalCount={query.currentData?.totalCount ?? 0}
             isLoading={query.isFetching}
-            isSearch={false}
+            serverSideSearch
+            searchTerm={page.search}
+            page={page.number - 1}
+            rowsPerPage={page.size}
+            onServerSearch={(search) => setPage((current) => ({ ...current, number: 1, search }))}
             isFilter={false}
             noDataText="No editable staff payroll matches this month."
-            onServerPagination={(number, size) => setPage({ number, size })}
+            onServerPagination={(number, size) =>
+              setPage((current) => ({ ...current, number, size }))
+            }
             tableContainerProps={{ sx: { maxHeight: 400, overflow: 'auto' } }}
           />
         </Stack>

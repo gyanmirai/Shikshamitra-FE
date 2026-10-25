@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -595,7 +596,52 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         searchTerm={assignmentFilters.search}
         onServerSearch={(search) => setAssignmentFilters((current) => ({ ...current, search }))}
         searchFieldProps={{ placeholder: 'Search targets and reasons' }}
-        columns={assignmentColumns}
+        {...serverColumnFilters(
+          assignmentColumns,
+          [
+            {
+              column: 'sourceType',
+              query: 'targetType',
+              emptyValue: 'all',
+              options: [
+                { label: 'Staff', value: 'employee' },
+                { label: 'Group', value: 'group' },
+              ],
+            },
+            {
+              column: 'status',
+              query: 'status',
+              emptyValue: 'all',
+              options: [
+                { label: 'Active', value: 'active' },
+                { label: 'Inactive', value: 'inactive' },
+              ],
+            },
+            {
+              column: 'payrollPolicyName',
+              query: 'payrollPolicyId',
+              emptyValue: '',
+              options: payroll.map((p) => ({ value: p.id, label: p.name })),
+            },
+            {
+              column: 'attendancePolicyName',
+              query: 'attendancePolicyId',
+              emptyValue: '',
+              options: attendance.map((p) => ({ value: p.id, label: p.name })),
+            },
+            {
+              column: 'leavePolicyName',
+              query: 'leavePolicyId',
+              emptyValue: '',
+              options: leavePolicies.map((p) => ({ value: p.id, label: getLeavePolicyName(p) })),
+            },
+          ],
+          assignmentFilters,
+          (patch) => {
+            setAssignmentFilters((current) => ({ ...current, ...patch }) as AssignmentFilters);
+            setAssignmentPage((current) => ({ ...current, number: 1 }));
+          }
+        )}
         data={assignmentRows}
         error={assignmentsError}
         onRetry={refetchAssignments}

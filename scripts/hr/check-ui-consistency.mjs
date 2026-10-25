@@ -75,6 +75,16 @@ function inspect(file) {
               attribute.initializer?.getText(ast) || 'true',
             ])
         );
+        const spreads = node.attributes.properties
+          .filter(ts.isJsxSpreadAttribute)
+          .map((attribute) => attribute.expression.getText(ast));
+        const scalarFilter = spreads.some(
+          (expression) =>
+            expression.startsWith('serverColumnFilters(') ||
+            (['tableCriteria', 'versionTableFilters'].includes(expression) &&
+              source.includes('serverColumnFilters('))
+        );
+        if (scalarFilter) props.onServerFilter = 'endpoint scalar predicate adapter';
         tables.push({
           file: normalize(file),
           line: ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1,
@@ -186,14 +196,14 @@ const capabilities = reachable.map(({ file, line, tag, props, forwarded }) => {
     sort: paged
       ? props.onServerSort || props.onSortChange
         ? 'server callback'
-        : forwarded
+        : forwarded && !props.onServerFilter
           ? 'forwarded'
           : 'unavailable: endpoint integration required'
       : 'local per-column / adapter',
     filter: paged
       ? props.onServerFilter || props.onFiltersChange
         ? 'server callback'
-        : forwarded
+        : forwarded && !props.onServerFilter
           ? 'forwarded'
           : 'unavailable: endpoint integration required'
       : 'local per-column / adapter',

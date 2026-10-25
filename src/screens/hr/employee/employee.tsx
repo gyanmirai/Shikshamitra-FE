@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -32,7 +33,11 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { RoleColorIndicator } from 'src/components/role-color/RoleColorIndicator';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
-import { useGetEmployeeQuery, useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
+import {
+  useGetEmployeeQuery,
+  useGetEmployeeByIdQuery,
+  normalizeIsTeachingFilter,
+} from 'src/redux/hr/employeeApi';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   EmployeeStatusType,
@@ -184,7 +189,7 @@ const HrEmployee = () => {
       pageSize: employeeParams.pageSize,
       search: employeeParams.search,
       mediumStageId: employeeParams.mediumStageId === 'All' ? '' : employeeParams.mediumStageId,
-      isTeaching: employeeParams.isTeaching === 'All' ? '' : employeeParams.isTeaching,
+      isTeaching: normalizeIsTeachingFilter(employeeParams.isTeaching),
       status: employeeParams.status === 'All' ? '' : employeeParams.status,
       reportingManagerStatus: employeeParams.reportingManagerStatus,
     }),
@@ -644,7 +649,41 @@ const HrEmployee = () => {
             onServerPagination={handleServerPagination}
             serverSideSearch
             onServerSearch={handleServerSearch}
-            columns={columns}
+            {...serverColumnFilters(
+              columns,
+              [
+                {
+                  column: 'isTeaching',
+                  query: 'isTeaching',
+                  options: EmployeeGroupTypeFilter,
+                  emptyValue: 'All',
+                },
+                {
+                  column: 'statusValue',
+                  query: 'status',
+                  options: EmployeeStatusTypeOptions,
+                  emptyValue: 'All',
+                },
+                {
+                  column: 'organization',
+                  query: 'mediumStageId',
+                  options: organizationOptions.map(({ id, label }) => ({ value: id, label })),
+                  emptyValue: 'All',
+                },
+              ],
+              employeeParams,
+              (patch) =>
+                setEmployeeParams((current) => ({
+                  ...current,
+                  page: 1,
+                  isTeaching: String(patch.isTeaching),
+                  status: String(patch.status),
+                  mediumStageId: String(patch.mediumStageId),
+                }))
+            )}
+            searchTerm={employeeParams.search}
+            page={employeeParams.page - 1}
+            rowsPerPage={employeeParams.pageSize}
             data={tableData || []}
             defaultSearchTerm={employeeParams.search}
           />

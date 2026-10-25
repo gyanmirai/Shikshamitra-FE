@@ -19,6 +19,8 @@ export interface IColumn {
   id: string;
   label: React.ReactNode; // allow rich header content
   filterType?: 'string' | 'number' | 'date' | 'dateTime' | 'enum' | 'formattedNumber';
+  /** Restrict operators to predicates supported by the owning server endpoint. */
+  filterOperators?: string[];
   /** Override filter data for computed cells; null excludes a value from numeric/date predicates. */
   filterValue?: (value: unknown, row: IData) => unknown;
   /** Explicit domain ordering for computed cells, independent of their display/export value. */

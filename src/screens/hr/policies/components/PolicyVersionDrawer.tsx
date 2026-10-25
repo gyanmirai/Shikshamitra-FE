@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import React from 'react';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
@@ -65,7 +66,38 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
     action: versionFilters.action,
   });
 
-  const actions = Array.from(new Set(versions.map((v) => v.changeAction))).filter(Boolean);
+  const actions = Array.from(
+    new Set([
+      'created',
+      'edited',
+      'cloned',
+      'archived',
+      'unarchived',
+      'set-default',
+      'set-default-cleared',
+      'restore-draft',
+      ...versions.map((version) => version.changeAction),
+    ])
+  ).filter(Boolean);
+  const { columns: versionColumnDefinitions, ...versionTableFilters } = serverColumnFilters(
+    ['versionNumber', 'changeAction', 'creationTime', 'changeReason', 'actions'].map((id) => ({
+      id,
+      label: id === 'changeAction' ? 'Action' : id,
+    })),
+    [
+      {
+        column: 'changeAction',
+        query: 'action',
+        emptyValue: 'all',
+        options: actions.map((value) => ({ value, label: toLabel(value) })),
+      },
+    ],
+    versionFilters,
+    ({ action }) => {
+      setVersionFilters((current) => ({ ...current, action: String(action ?? 'all') }));
+      setVersionPage((current) => ({ ...current, number: 1 }));
+    }
+  );
 
   const groupedDifferences = (versionCompare?.differences || []).reduce(
     (groups, diff) => {
@@ -123,6 +155,10 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             columns={['Version', 'Action', 'Created', 'Reason', 'Actions']}
             columnIds={['versionNumber', 'changeAction', 'creationTime', 'changeReason', 'actions']}
             tableId="hr-policy-versions"
+            columnDefinitions={versionColumnDefinitions.map(
+              ({ label, ...definition }) => definition
+            )}
+            {...versionTableFilters}
             tableTitle={`${versionTarget?.policyName || 'Policy'} versions`}
             isPagination
             isLoading={versionHistoryLoading}
