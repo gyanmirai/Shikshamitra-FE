@@ -6,23 +6,23 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useSearchParams } from 'next/navigation';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { isRegisterMissingPunch } from 'src/screens/hr/attendance-tracking/status-mapper';
@@ -43,15 +43,11 @@ import {
   Checkbox,
   MenuItem,
   TextField,
-  Accordion,
   IconButton,
   InputLabel,
   Typography,
   FormControl,
-  Autocomplete,
   DialogActions,
-  AccordionSummary,
-  AccordionDetails,
 } from '@mui/material';
 
 type RegisterStatus =
@@ -213,11 +209,10 @@ const toWireTime = (time?: string) => {
 const getDefaultFilters = () => ({
   startDate: dayjs().startOf('month') as Dayjs | null,
   endDate: dayjs() as Dayjs | null,
-  educationMediumStageId: 'all',
+  educationMediumStageIds: [] as string[],
   employeeId: '',
   employeeGroup: 'all',
   department: '',
-  isTeaching: '',
   status: 'all',
   payrollState: 'All' as PayrollState,
   exceptionFilter: 'All' as ExceptionFilter,
@@ -271,7 +266,6 @@ const validateAttendanceDraft = (draft: AttendanceDraft): AttendanceDraftErrors 
 
 const AttendanceTrackingScreen = () => {
   const dashboardParams = useSearchParams();
-  const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [filters, setFilters] = useState(getDefaultFilters);
   useEffect(() => {
@@ -295,14 +289,13 @@ const AttendanceTrackingScreen = () => {
       }));
     }
   }, [dashboardParams]);
-  const [employeeSearch, setEmployeeSearch] = useState('');
   const [selectedEmployeeOption, setSelectedEmployeeOption] = useState<any | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editRow, setEditRow] = useState<AttendanceRegisterRow | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [sorting, setSorting] = useState('');
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [draft, setDraft] = useState<AttendanceDraft>({
     status: 'Present' as RegisterStatus,
@@ -314,45 +307,41 @@ const AttendanceTrackingScreen = () => {
   const [draftErrors, setDraftErrors] = useState<AttendanceDraftErrors>({});
   // A dashboard link carries an explicit date; let the register resolve that date's calendar.
   const academicYearId =
-    dashboardParams.get('employeeId') && dashboardParams.get('startDate')
+    filters.employeeId &&
+    filters.employeeId === dashboardParams.get('employeeId') &&
+    dashboardParams.get('startDate')
       ? undefined
       : currentYear?.id;
-  const { options: stages } = useAcademicOrganizationOptions(academicYearId);
-  const employeeLookupSearch =
-    selectedEmployeeOption && employeeSearch === getEmployeeOptionLabel(selectedEmployeeOption)
-      ? getEmployeeCode(selectedEmployeeOption) || getEmployeeName(selectedEmployeeOption)
-      : employeeSearch || filters.search;
-
-  const { data: employeeOptions } = useGetEmployeeQuery({
-    page: 1,
-    pageSize: 50,
-    search: employeeLookupSearch,
-  });
-
+  const { options: stages, isLoading: stagesLoading } =
+    useAcademicOrganizationOptions(academicYearId);
+  const [findEmployees] = useLazyGetEmployeeQuery();
+  const fetchStaffOptions = useCallback(
+    async (search: string, nextPage: number) => {
+      const result = await findEmployees({ page: nextPage, pageSize: 50, search }).unwrap();
+      return { data: result.items || [], hasMore: nextPage * 50 < result.totalCount };
+    },
+    [findEmployees]
+  );
+  const previousYear = React.useRef(academicYearId);
   useEffect(() => {
-    if (
-      filters.educationMediumStageId !== 'all' &&
-      stages.length > 0 &&
-      !stages.some((stage) => stage.id === filters.educationMediumStageId)
-    ) {
-      setFilters((prev) => ({ ...prev, educationMediumStageId: 'all' }));
-      setPage(1);
-      setSelectedIds([]);
-    }
-  }, [filters.educationMediumStageId, stages]);
+    if (previousYear.current === academicYearId) return;
+    previousYear.current = academicYearId;
+    setFilters((prev) => ({ ...prev, educationMediumStageIds: [] }));
+    setPage(1);
+    setSelectedIds([]);
+  }, [academicYearId]);
 
   const queryParams = useMemo(
     () => ({
       startDate: filters.startDate ? filters.startDate.format('YYYY-MM-DD') : '',
       endDate: filters.endDate ? filters.endDate.format('YYYY-MM-DD') : '',
       academicYearId,
-      educationMediumStageId:
-        filters.educationMediumStageId === 'all' ? undefined : filters.educationMediumStageId,
+      educationMediumStageIds: filters.educationMediumStageIds,
+      sorting,
       employeeId: filters.employeeId,
       employeeGroup:
         filters.employeeGroup === 'all' ? undefined : filters.employeeGroup || undefined,
       department: filters.department,
-      isTeaching: filters.isTeaching === '' ? undefined : filters.isTeaching === 'true',
       status: filters.status === 'all' ? undefined : filters.status,
       payrollState: filters.payrollState,
       exceptionFilter: filters.exceptionFilter,
@@ -360,12 +349,12 @@ const AttendanceTrackingScreen = () => {
       skipCount: (page - 1) * pageSize,
       maxResultCount: pageSize,
     }),
-    [academicYearId, filters, page, pageSize]
+    [academicYearId, filters, page, pageSize, sorting]
   );
 
   const exportTable = useHrTableExport('hr-attendance-register', queryParams);
   const {
-    data,
+    currentData: data,
     isLoading,
     isFetching,
     error: tableError,
@@ -400,7 +389,6 @@ const AttendanceTrackingScreen = () => {
       employeeCode: row.employeeCode,
     };
     setSelectedEmployeeOption(option);
-    setEmployeeSearch(getEmployeeOptionLabel(option));
   }, [rows, filters.employeeId, selectedEmployeeOption?.id]);
   const allDayRows = useMemo(() => rows.flatMap((row) => row.days || []), [rows]);
   const getDayIdentifier = useCallback(
@@ -431,52 +419,6 @@ const AttendanceTrackingScreen = () => {
         })),
     [selectedRows]
   );
-  const summary = data?.summary || {};
-  const summaryMetrics = [
-    {
-      label: 'Staff',
-      value: summary.staffCount || 0,
-      icon: 'solar:users-group-rounded-bold',
-      color: 'text.primary',
-      bg: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
-    },
-    {
-      label: 'Present',
-      value: summary.present || 0,
-      icon: 'solar:check-circle-bold',
-      color: 'success.main',
-      bg: varAlpha(theme.vars.palette.success.mainChannel, 0.12),
-    },
-    {
-      label: 'Needs attention',
-      value:
-        (summary.absent || 0) +
-        (summary.halfDay || 0) +
-        (summary.missingPunch || 0) +
-        (summary.notMarked || 0),
-      icon: 'solar:danger-triangle-bold',
-      color: 'warning.main',
-      bg: varAlpha(theme.vars.palette.warning.mainChannel, 0.12),
-    },
-    {
-      label: 'Editable',
-      value: summary.editable || 0,
-      icon: 'solar:pen-new-square-bold',
-      color: 'info.main',
-      bg: varAlpha(theme.vars.palette.info.mainChannel, 0.12),
-    },
-  ];
-  const secondarySummary = [
-    { label: 'Half day', value: summary.halfDay || 0, color: 'warning' },
-    { label: 'Absent', value: summary.absent || 0, color: 'error' },
-    { label: 'Missing punch', value: summary.missingPunch || 0, color: 'warning' },
-    { label: 'Not marked', value: summary.notMarked || 0, color: 'default' },
-    { label: 'Locked', value: summary.locked || 0, color: 'error' },
-  ] as const;
-  const dateRangeLabel =
-    filters.startDate && filters.endDate
-      ? `${filters.startDate.format('DD MMM YYYY')} - ${filters.endDate.format('DD MMM YYYY')}`
-      : 'Select a date range';
 
   const resetPaging = () => {
     setPage(1);
@@ -487,6 +429,61 @@ const AttendanceTrackingScreen = () => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     resetPaging();
   };
+
+  const resetFilters = () => {
+    setFilters(getDefaultFilters());
+    setSelectedEmployeeOption(null);
+    resetPaging();
+  };
+  const shiftMonth = (offset: number) => {
+    if (!filters.startDate) return;
+    const month = filters.startDate.add(offset, 'month');
+    setFilters((prev) => ({
+      ...prev,
+      startDate: month.startOf('month'),
+      endDate: month.endOf('month'),
+    }));
+    resetPaging();
+  };
+  const appliedFilters = [
+    ...filters.educationMediumStageIds.map((id) => ({
+      key: id,
+      label: `Division: ${stages.find((stage) => stage.id === id)?.label || id}`,
+      clear: () =>
+        setFilter(
+          'educationMediumStageIds',
+          filters.educationMediumStageIds.filter((value) => value !== id)
+        ),
+    })),
+    ...(filters.employeeId
+      ? [
+          {
+            key: 'employeeId',
+            label: `Staff: ${selectedEmployeeOption ? getEmployeeOptionLabel(selectedEmployeeOption) : filters.employeeId}`,
+            clear: () => {
+              setSelectedEmployeeOption(null);
+              setFilter('employeeId', '');
+            },
+          },
+        ]
+      : []),
+    ...(
+      [
+        'employeeGroup',
+        'department',
+        'status',
+        'payrollState',
+        'exceptionFilter',
+        'search',
+      ] as const
+    )
+      .filter((key) => filters[key] && !['all', 'All'].includes(filters[key]))
+      .map((key) => ({
+        key,
+        label: `${{ employeeGroup: 'Group', department: 'Department contains', status: 'Attendance status', payrollState: 'Payroll state', exceptionFilter: 'Exceptions', search: 'Search' }[key]}: ${key === 'status' ? statusMeta(filters[key]).label : key === 'exceptionFilter' ? EXCEPTION_FILTERS.find((option) => option.value === filters[key])?.label : key === 'employeeGroup' && filters[key] === 'NonTeaching' ? 'Non teaching' : filters[key]}`,
+        clear: () => setFilter(key, getDefaultFilters()[key]),
+      })),
+  ];
 
   const openEdit = (row: AttendanceRegisterRow) => {
     if (!row.canEdit) return;
@@ -872,10 +869,12 @@ const AttendanceTrackingScreen = () => {
   const columns: IColumn[] = [
     {
       id: 'select',
+      excludeFromExport: true,
       sticky: true,
       label: (
         <Checkbox
           size="small"
+          inputProps={{ 'aria-label': 'Select editable attendance on this page' }}
           checked={
             selectableDayRows.length > 0 &&
             selectableDayRows.every((row) => selectedIds.includes(getDayIdentifier(row)))
@@ -906,6 +905,7 @@ const AttendanceTrackingScreen = () => {
         <Checkbox
           size="small"
           disabled={getEditableDayIds(row).length === 0}
+          inputProps={{ 'aria-label': `Select editable attendance for ${row.employeeName}` }}
           checked={isGroupSelected(row)}
           indeterminate={isGroupIndeterminate(row)}
           onChange={(event) => toggleGroupSelection(row, event.target.checked)}
@@ -1276,6 +1276,22 @@ const AttendanceTrackingScreen = () => {
       }}
     >
       <CustomBreadcrumbs
+        layout="inline"
+        action={
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Iconify icon="solar:pen-2-bold" />}
+            disabled={!editableSelectedIds.length && !editableSelectedEmployeeDates.length}
+            onClick={() => {
+              setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });
+              setDraftErrors({});
+              setBulkOpen(true);
+            }}
+          >
+            Bulk adjust{selectedRows.length ? ` (${selectedRows.length})` : ''}
+          </Button>
+        }
         heading="Attendance Register"
         description="Review staff attendance and resolve exceptions for the selected period."
         links={[
@@ -1285,336 +1301,205 @@ const AttendanceTrackingScreen = () => {
         ]}
       />
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: 'repeat(2, minmax(0, 1fr))',
-            md: 'repeat(4, minmax(0, 1fr))',
-          },
-          gap: 1,
-          px: 1,
-          pb: 1,
-        }}
-      >
-        {summaryMetrics.map((metric) => (
-          <Box
-            key={metric.label}
-            sx={{
-              minHeight: 76,
-              borderRadius: 1,
-              border: `1px solid ${theme.vars.palette.divider}`,
-              bgcolor: 'background.paper',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.25,
-              px: 1.5,
+      <Stack spacing={1} sx={{ px: 1, pb: 1, flexShrink: 0 }}>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+          <CustomTooltip title="Previous month">
+            <IconButton
+              size="small"
+              aria-label="Previous month"
+              disabled={!filters.startDate}
+              onClick={() => shiftMonth(-1)}
+            >
+              <Iconify icon="solar:alt-arrow-left-linear" />
+            </IconButton>
+          </CustomTooltip>
+          <Box sx={{ width: { xs: 'calc(100% - 80px)', sm: 290 }, minWidth: 0 }}>
+            <CustomDateRangePicker
+              label="Register period"
+              value={[filters.startDate, filters.endDate]}
+              dateFormat="DD/MM/YYYY"
+              onChange={(value) => {
+                setFilters((prev) => ({ ...prev, startDate: value[0], endDate: value[1] }));
+                resetPaging();
+              }}
+            />
+          </Box>
+          <CustomTooltip title="Next month">
+            <IconButton
+              size="small"
+              aria-label="Next month"
+              disabled={!filters.startDate}
+              onClick={() => shiftMonth(1)}
+            >
+              <Iconify icon="solar:alt-arrow-right-linear" />
+            </IconButton>
+          </CustomTooltip>
+          <Button
+            size="small"
+            color="inherit"
+            onClick={() => {
+              const defaults = getDefaultFilters();
+              setFilters((prev) => ({
+                ...prev,
+                startDate: defaults.startDate,
+                endDate: defaults.endDate,
+              }));
+              resetPaging();
             }}
           >
-            <Box
-              sx={{
-                width: 38,
-                height: 38,
-                borderRadius: 1,
-                display: 'grid',
-                placeItems: 'center',
-                color: metric.color,
-                bgcolor: metric.bg,
-                flexShrink: 0,
-              }}
-            >
-              <Iconify icon={metric.icon} width={20} />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6" sx={{ lineHeight: 1.1 }}>
-                {metric.value}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {metric.label}
-              </Typography>
-            </Box>
-          </Box>
-        ))}
-      </Box>
-
-      <Accordion
-        expanded={filtersOpen}
-        onChange={(_, expanded) => setFiltersOpen(expanded)}
-        sx={{
-          bgcolor: 'background.paper',
-          borderRadius: 1,
-          boxShadow: 'none',
-          border: `1px solid ${theme.vars.palette.divider}`,
-          '&:before': { display: 'none' },
-          mx: 1,
-          mb: 1,
-          '&.Mui-expanded': { mx: 1, mb: 1 },
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <AccordionSummary
-          component="div"
-          expandIcon={<Iconify icon="solar:alt-arrow-down-linear" />}
-          sx={{
-            px: 1.5,
-            minHeight: 64,
-            m: 0,
-            '& .MuiAccordionSummary-content': { m: 0 },
-          }}
-        >
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={{ xs: 1, md: 1.5 }}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', md: 'center' }}
-            sx={{ width: '100%', pr: 1 }}
+            This month
+          </Button>
+          <Button
+            size="small"
+            color="inherit"
+            variant={advancedFiltersOpen ? 'soft' : 'outlined'}
+            startIcon={<Iconify icon="solar:filter-linear" />}
+            aria-expanded={advancedFiltersOpen}
+            aria-controls="attendance-register-filters"
+            onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
           >
-            <Stack spacing={0.35} sx={{ minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  Register view
-                </Typography>
-                <Label color="default" variant="soft">
-                  {dateRangeLabel}
-                </Label>
-              </Stack>
-              <Typography variant="caption" color="text.secondary">
-                {data?.totalCount || 0} staff found
-                {editableSelectedIds.length
-                  ? ` / ${editableSelectedIds.length} editable selected`
-                  : ''}
-              </Typography>
-            </Stack>
-            <Stack direction="row" spacing={1} flexShrink={0} onClick={(e) => e.stopPropagation()}>
-              <Button
-                variant="outlined"
-                startIcon={<Iconify icon="solar:restart-bold" />}
-                size="small"
-                onClick={() => {
-                  setFilters(getDefaultFilters());
-                  setEmployeeSearch('');
-                  setSelectedEmployeeOption(null);
-                  resetPaging();
-                }}
-              >
-                Reset
-              </Button>
-              <Button
-                variant="soft"
-                color="inherit"
-                size="small"
-                startIcon={
-                  <Iconify icon={filtersOpen ? 'solar:filter-bold' : 'solar:filter-linear'} />
-                }
-                onClick={() => setFiltersOpen((prev) => !prev)}
-              >
-                {filtersOpen ? 'Hide filters' : 'Show filters'}
-              </Button>
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="solar:pen-2-bold" />}
-                disabled={!editableSelectedIds.length && !editableSelectedEmployeeDates.length}
-                onClick={() => {
-                  setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });
-                  setDraftErrors({});
-                  setBulkOpen(true);
-                }}
-              >
-                {editableSelectedIds.length + editableSelectedEmployeeDates.length
-                  ? `Bulk adjust (${editableSelectedIds.length + editableSelectedEmployeeDates.length})`
-                  : 'Bulk adjust'}
-              </Button>
-            </Stack>
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails sx={{ px: 1.5, pb: 1.5, pt: 0, mt: 0 }}>
-          <Stack spacing={1.5}>
-            {/* Row 1: Search, Date Range, Organization, Employee */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, 1fr)',
-                  md: 'repeat(4, 1fr)',
-                },
-                gap: 1.5,
+            Filters{appliedFilters.length ? ` (${appliedFilters.length})` : ''}
+          </Button>
+          <Button size="small" color="inherit" onClick={resetFilters}>
+            Reset
+          </Button>
+          <Typography
+            variant="caption"
+            role="status"
+            aria-live="polite"
+            sx={{ ml: { sm: 'auto' } }}
+          >
+            {isFetching
+              ? 'Updating staff…'
+              : data
+                ? `${data.totalCount} staff found`
+                : 'Select a register period'}
+          </Typography>
+        </Stack>
+        <Collapse in={advancedFiltersOpen} timeout="auto" unmountOnExit>
+          <Box
+            id="attendance-register-filters"
+            role="region"
+            aria-label="Attendance register filters"
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                lg: 'repeat(4, minmax(0, 1fr))',
+              },
+              gap: 1.5,
+              py: 0.5,
+            }}
+          >
+            <CustomSelect
+              multiple
+              isSearch
+              size="small"
+              fullWidth
+              label="Divisions"
+              isLoading={stagesLoading}
+              value={filters.educationMediumStageIds}
+              options={stages.map((stage) => ({ value: stage.id, label: stage.label }))}
+              onChange={(value) => setFilter('educationMediumStageIds', value)}
+              renderValue={(value) => (value.length ? `${value.length} selected` : 'All divisions')}
+              helperText="All divisions, or any selected academic organization assignment."
+            />
+            <PaginatedSearchSelect
+              size="small"
+              fullWidth
+              label="Staff"
+              value={selectedEmployeeOption}
+              fetchOptions={fetchStaffOptions}
+              getOptionLabel={getEmployeeOptionLabel}
+              getOptionKey={(option: any) => option.id}
+              isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+              filterOptions={(options) => options}
+              onChange={(_event, value: any) => {
+                setSelectedEmployeeOption(value);
+                setFilter('employeeId', value?.id || '');
               }}
-            >
-              <CustomDateRangePicker
-                label="Start Date - End Date"
-                value={[filters.startDate, filters.endDate]}
-                dateFormat="DD/MM/YYYY"
-                onChange={(value) => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    startDate: value[0],
-                    endDate: value[1] ? value[1].endOf('day') : null,
-                  }));
-                  resetPaging();
-                }}
-              />
-              <FormControl size="small" fullWidth>
-                <InputLabel>Organization</InputLabel>
-                <Select
-                  label="Organization"
-                  value={filters.educationMediumStageId}
-                  onChange={(event) => setFilter('educationMediumStageId', event.target.value)}
-                >
-                  <MenuItem value="all">All organizations</MenuItem>
-                  {stages.map((stage) => (
-                    <MenuItem key={stage.id} value={stage.id}>
-                      {stage.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Autocomplete
-                size="small"
-                fullWidth
-                options={employeeOptions?.items || []}
-                value={selectedEmployeeOption}
-                inputValue={employeeSearch}
-                filterOptions={(options) => options}
-                getOptionLabel={getEmployeeOptionLabel}
-                isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                onInputChange={(_event, value, reason) => {
-                  setEmployeeSearch(value);
+            />
 
-                  if (reason === 'clear') {
-                    setSelectedEmployeeOption(null);
-                    setFilter('employeeId', '');
-                    return;
-                  }
-
-                  if (
-                    reason === 'input' &&
-                    selectedEmployeeOption &&
-                    value !== getEmployeeOptionLabel(selectedEmployeeOption)
-                  ) {
-                    setSelectedEmployeeOption(null);
-                    setFilter('employeeId', '');
-                  }
-                }}
-                onChange={(_event, value: any) => {
-                  setSelectedEmployeeOption(value || null);
-                  setEmployeeSearch(value ? getEmployeeOptionLabel(value) : '');
-                  setFilter('employeeId', value?.id || '');
-                }}
-                renderInput={(params) => <TextField {...params} label="Staff" />}
-              />
-            </Box>
-
-            {/* Advanced: Group, Status, Payroll State */}
-            <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
-              <Typography variant="caption" color="text.secondary">
-                Attention view
-              </Typography>
-              <Button
-                size="small"
-                color="inherit"
-                variant="text"
-                endIcon={
-                  <Iconify
-                    icon={
-                      advancedFiltersOpen
-                        ? 'solar:alt-arrow-up-linear'
-                        : 'solar:alt-arrow-down-linear'
-                    }
-                    width={16}
-                  />
-                }
-                onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
+            <FormControl size="small" fullWidth>
+              <InputLabel id="register-group-label">Staff group</InputLabel>
+              <Select
+                label="Staff group"
+                labelId="register-group-label"
+                value={filters.employeeGroup}
+                onChange={(event) => setFilter('employeeGroup', event.target.value)}
               >
-                Advanced filters
-              </Button>
-            </Stack>
-
-            <Collapse in={advancedFiltersOpen} timeout="auto" unmountOnExit>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'repeat(2, 1fr)',
-                    md: 'repeat(3, 1fr)',
-                  },
-                  gap: 1.5,
-                }}
+                <MenuItem value="all">All groups</MenuItem>
+                <MenuItem value="Teaching">Teaching</MenuItem>
+                <MenuItem value="NonTeaching">Non teaching</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl size="small" fullWidth>
+              <InputLabel id="register-status-label">Attendance status</InputLabel>
+              <Select
+                label="Attendance status"
+                labelId="register-status-label"
+                value={filters.status}
+                onChange={(event) => setFilter('status', event.target.value)}
               >
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Group</InputLabel>
-                  <Select
-                    label="Group"
-                    value={filters.employeeGroup}
-                    onChange={(event) => setFilter('employeeGroup', event.target.value)}
-                  >
-                    <MenuItem value="all">All groups</MenuItem>
-                    <MenuItem value="Teaching">Teaching</MenuItem>
-                    <MenuItem value="NonTeaching">Non teaching</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    label="Status"
-                    value={filters.status}
-                    onChange={(event) => setFilter('status', event.target.value)}
-                  >
-                    <MenuItem value="all">All Status</MenuItem>
-                    {STATUS_OPTIONS.map((item) => (
-                      <MenuItem key={item.value} value={item.value}>
-                        {item.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Payroll state</InputLabel>
-                  <Select
-                    label="Payroll state"
-                    value={filters.payrollState}
-                    onChange={(event) => setFilter('payrollState', event.target.value)}
-                  >
-                    {PAYROLL_STATES.map((item) => (
-                      <MenuItem key={item.value} value={item.value}>
-                        {item.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-            </Collapse>
-
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              {EXCEPTION_FILTERS.map((item) => (
-                <Chip
-                  key={item.value}
-                  size="small"
-                  label={item.label}
-                  color={filters.exceptionFilter === item.value ? 'primary' : 'default'}
-                  variant={filters.exceptionFilter === item.value ? 'soft' : 'outlined'}
-                  onClick={() => setFilter('exceptionFilter', item.value)}
-                  sx={{
-                    borderRadius: 1,
-                    fontWeight: filters.exceptionFilter === item.value ? 700 : 600,
-                  }}
-                />
-              ))}
-            </Stack>
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              {secondarySummary.map((item) => (
-                <Label key={item.label} color={item.color as any} variant="soft">
-                  {item.label} {item.value}
-                </Label>
-              ))}
-            </Stack>
+                <MenuItem value="all">All statuses</MenuItem>
+                {STATUS_OPTIONS.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small" fullWidth>
+              <InputLabel id="register-payroll-label">Payroll state</InputLabel>
+              <Select
+                label="Payroll state"
+                labelId="register-payroll-label"
+                value={filters.payrollState}
+                onChange={(event) => setFilter('payrollState', event.target.value)}
+              >
+                {PAYROLL_STATES.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              size="small"
+              label="Department contains"
+              value={filters.department}
+              onChange={(event) => setFilter('department', event.target.value)}
+            />
+            <CustomSelect
+              size="small"
+              fullWidth
+              label="Staff with exceptions"
+              value={filters.exceptionFilter}
+              options={EXCEPTION_FILTERS}
+              onChange={(value) => setFilter('exceptionFilter', value)}
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            Criteria combine with search across all pages. Attendance status and payroll state
+            narrow the days and totals shown; exceptions match staff within those days. Export
+            includes all matching staff.
+          </Typography>
+        </Collapse>
+        {appliedFilters.length > 0 && (
+          <Stack
+            direction="row"
+            gap={0.75}
+            flexWrap="wrap"
+            useFlexGap
+            aria-label="Applied register filters"
+          >
+            {appliedFilters.map((filter) => (
+              <Chip key={filter.key} size="small" label={filter.label} onDelete={filter.clear} />
+            ))}
           </Stack>
-        </AccordionDetails>
-      </Accordion>
+        )}
+      </Stack>
 
       <Divider />
 
@@ -1630,12 +1515,19 @@ const AttendanceTrackingScreen = () => {
         onRetry={retryTable}
         columns={columns}
         data={rows}
-        isLoading={isLoading || isFetching}
+        isLoading={isLoading || (isFetching && !data)}
+        isRefreshing={isFetching && !!data}
+        serverSideSort
+        serverSideSortMode="single"
+        onServerSort={(_column, sorts) => {
+          setSorting(sorts.map((sort) => `${sort.column} ${sort.direction}`).join(','));
+          resetPaging();
+        }}
         serverSide
         serverSidePagination
         totalCount={data?.totalCount || 0}
         serverSideSearch
-        defaultSearchTerm={filters.search}
+        searchTerm={filters.search}
         onServerSearch={(search) => setFilter('search', search)}
         page={page - 1}
         rowsPerPage={pageSize}
@@ -1643,6 +1535,7 @@ const AttendanceTrackingScreen = () => {
         onServerPagination={(nextPage, nextPageSize) => {
           setPage(nextPage);
           setPageSize(nextPageSize);
+          setSelectedIds([]);
         }}
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{
@@ -1684,7 +1577,14 @@ const AttendanceTrackingScreen = () => {
             },
           },
         }}
-        noDataText="No staff attendance found for the selected filters."
+        noDataText={
+          <Stack spacing={1} alignItems="center">
+            <Typography>No staff attendance matches this period and filters.</Typography>
+            <Button size="small" onClick={resetFilters}>
+              Reset filters
+            </Button>
+          </Stack>
+        }
       />
 
       {renderAdjustmentDialog(false)}
