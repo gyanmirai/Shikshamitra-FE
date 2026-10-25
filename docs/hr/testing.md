@@ -8,7 +8,7 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
-## Payroll document settings regression
+## Payslip & statement settings regression
 
 `e2e/hr/payroll-document-settings.guest.spec.ts` verifies the settings link, removal of the embedded form, save/reload, view-only controls and contained widths at 390, 768 and 1440 pixels.
 The settings component suites cover draft preservation, optimistic concurrency, interrupted responses, request ordering and deliberate navigation discard.

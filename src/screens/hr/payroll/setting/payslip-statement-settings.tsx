@@ -10,7 +10,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import PayslipSettingsForm from '../salarySlip-generate/payslip-settings-form';
 
-export default function PayrollDocumentsSettings() {
+export default function PayslipStatementSettings() {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(
     permissions,
@@ -24,13 +24,17 @@ export default function PayrollDocumentsSettings() {
   return (
     <Stack spacing={2} sx={{ height: '100%', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
       <CustomBreadcrumbs
-        heading="Payroll documents"
+        heading="Payslip & statement settings"
         description="Set payslip appearance, statement columns and delivery defaults for new documents."
+        sx={{
+          '& .MuiBreadcrumbs-root': { minWidth: 0 },
+          '& .MuiBreadcrumbs-li': { flexShrink: 0, whiteSpace: 'nowrap' },
+        }}
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Settings', href: hrPaths.payroll.settings.root },
-          { name: 'Payroll documents' },
+          { name: 'Payslip & statement settings' },
         ]}
       />
       {canView ? (
@@ -46,7 +50,7 @@ export default function PayrollDocumentsSettings() {
         >
           {!canEdit && (
             <Alert severity="info" sx={{ mb: 2 }}>
-              You can view these settings. Editing requires payroll document access.
+              You can view these settings. Editing requires payslip and statement settings access.
             </Alert>
           )}
           <Box
@@ -56,7 +60,7 @@ export default function PayrollDocumentsSettings() {
           </Box>
         </Card>
       ) : (
-        <Alert severity="info">You do not have access to payroll document settings.</Alert>
+        <Alert severity="info">You do not have access to payslip and statement settings.</Alert>
       )}
     </Stack>
   );

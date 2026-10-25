@@ -513,8 +513,8 @@ Previews debounce, cancel obsolete requests and reject stale responses.
 PDF/Excel use existing export jobs, ownership checks, status, download and expiry.
 Salary documents use the shared soft status chips and download actions in the compact toolbar, with one standard success toast when an active export completes.
 The report-notes information control beside Preview exposes all coverage and truncation notes in the shared popover; failures retain an announced error and a relevant recovery action.
-Payroll Management > Settings > Payroll documents owns Compact/Detailed layouts, optional fields, saved column presets and automatic email.
-The Payslips workspace retains a Document settings link and no longer embeds the settings form below its preview.
+Payroll Management > Settings > Payslip & statement settings owns Compact/Detailed layouts, optional fields, saved column presets and automatic email.
+The Payslips workspace retains a Payslip & statement settings link and no longer embeds the settings form below its preview.
 School name, address and logo use Institute Setup; the settings page displays the returned name and address without editable duplicates.
 The existing save, retry, concurrency and dirty-navigation safeguards remain in the dedicated settings form.
 Preview loading is labelled and compact rather than reserving a 560-pixel grey block.
