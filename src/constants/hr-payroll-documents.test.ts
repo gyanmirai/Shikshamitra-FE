@@ -3,7 +3,7 @@ import { getNodeActionPermissionNames } from 'src/screens/security/role/account-
 
 import hrModule, { hrPaths, hrPermissions } from './hr-menus';
 
-it('exposes Payroll documents in Settings while keeping existing payslip grants in their original editor group', () => {
+it('exposes Payslip & statement settings in Settings while keeping existing payslip grants in their original editor group', () => {
   const payroll = Object.values(hrModule(false))[0][0].items.find(
     (item) => item.title === 'Payroll Management'
   )!;
@@ -12,7 +12,7 @@ it('exposes Payroll documents in Settings while keeping existing payslip grants 
   if (!('children' in settings)) {
     throw new Error('Expected payroll settings navigation children');
   }
-  const documents = settings.children!.find((item) => item.title === 'Payroll documents')!;
+  const documents = settings.children!.find((item) => item.title === 'Payslip & statement settings')!;
   const catalogue = ['View', 'Add'].map((action) => ({
     name: `${hrPermissions.payroll.generateSalarySlip}.${action}`,
     isGranted: true,

@@ -253,6 +253,21 @@ describe('employee application validation schema', () => {
     });
   });
 
+  it('rejects onboarding without a photo even when the resume is valid', () => {
+    const resume = new File(['synthetic resume'], 'resume.pdf', { type: 'application/pdf' });
+    expect(
+      resolveEmployeeApplicationUploadErrors({ resume: null, photo: null }, resume, null)
+    ).toEqual({ resume: null, photo: 'Upload your photo before submitting.' });
+  });
+
+  it('accepts onboarding with a valid photo and resume', () => {
+    const resume = new File(['synthetic resume'], 'resume.pdf', { type: 'application/pdf' });
+    const photo = new File(['synthetic image'], 'photo.png', { type: 'image/png' });
+    expect(
+      resolveEmployeeApplicationUploadErrors({ resume: null, photo: null }, resume, photo)
+    ).toEqual({ resume: null, photo: null });
+  });
+
   it('formats Dayjs objects and valid date strings to YYYY-MM-DD for submission payloads', () => {
     expect(formatDatePayload(dayjs('2002-12-31'))).toBe('2002-12-31');
     expect(formatDatePayload('2002-12-31')).toBe('2002-12-31');

@@ -45,7 +45,7 @@ export default function SalaryDocumentCenter() {
             href={hrPaths.payroll.settings.payrollDocuments}
             size="small"
           >
-            Document settings
+            Payslip &amp; statement settings
           </Button>
         </Box>
       )}

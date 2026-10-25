@@ -57,7 +57,7 @@ Runtime checks and their limits are recorded separately; source coverage is not 
 | `/hr/payroll/setting/deduction-component` | Shared table import closure; 1 table/adaptor instances | Source checked |
 | `/hr/payroll/setting/earning-component` | Shared table import closure; 1 table/adaptor instances | Source checked |
 | `/hr/payroll/setting` | Redirect; retains existing destination | Source checked |
-| `/hr/payroll/setting/payroll-documents` | Dashboard, form, calendar, settings, or partial page; no record table | Source checked |
+| `/hr/payroll/setting/payslip-statement-settings` | Dashboard, form, calendar, settings, or partial page; no record table | Source checked |
 | `/hr/payroll/setting/pf` | Shared table import closure; 1 table/adaptor instances | Source checked |
 | `/hr/payroll/setting/professional-tax` | Shared table import closure; 1 table/adaptor instances | Source checked |
 | `/hr/payroll/setting/salary-templates/[templateId]` | Dashboard, form, calendar, settings, or partial page; no record table | Source checked |

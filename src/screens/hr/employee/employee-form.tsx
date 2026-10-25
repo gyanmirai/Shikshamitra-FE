@@ -466,7 +466,8 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
   const employeeValidations = useMemo(
     () => [
       getPersonalInformationValidationSchema({
-        requirePhoto: !(editData?.id || initialValues.employeeId),
+        // Staff Directory accepts an optional photo; onboarding owns its separate upload guard.
+        requirePhoto: false,
         requireIdentity: !(editData?.id || initialValues.employeeId),
       }),
       ...validations.slice(1, 6),

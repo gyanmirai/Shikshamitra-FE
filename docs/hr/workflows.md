@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-22
+updated_on: 2026-10-25
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -54,6 +54,7 @@ The staff-profile leave tab retains its existing employee-specific history.
 ## Employee onboarding behavior
 
 Staff Directory's Add Staff form opens Personal Information without fetching policy lists or requiring policy-management grants.
+Its profile photo is optional; a selected photo retains the 3MB form limit and is sent as the `ProfilePicture` multipart part.
 Saving a basic profile omits `policyOverride`; it uses backend effective-policy inheritance rather than creating an employee-specific assignment.
 Missing policy setup does not block profile entry. Payroll/activation readiness and explicit assignment remain separate authorized workflows.
 Creation failures keep entered details and allow retry on the same step.
@@ -68,7 +69,8 @@ Finalization validates the complete employee record, including Category and Fami
 The finalization wizard blocks step changes, its close control, backdrop handling, and Escape while saving, and it focuses the first invalid field when validation fails.
 The public application requires a name for entered family details and organization, designation, and start date for entered work details.
 Public date checks use the Asia/Kolkata institution date, and untouched work rows are omitted from the payload.
-Resume and photo selections are optional, and selected files are validated against the backend size, extension, MIME, safe-filename, and signature rules.
+The public onboarding form requires both a resume and a photo before submission; Staff Directory's optional-photo rule does not apply to this flow.
+Selected files retain their upload validation, and backend file rules remain owned by the HR API contract.
 Employee role selectors fail closed unless the backend marks the role with Employee `roleAudience` and `employeeOnboardingAssignable: true`, and Admin, Super Admin, Student, and Parent remain excluded.
 Missing employee-group metadata remains compatible with both employee groups only after the role passes that explicit onboarding approval.
 Changing Employee Group clears an already selected role when its explicit Teaching or Non Teaching classification is no longer compatible.
@@ -513,8 +515,8 @@ Previews debounce, cancel obsolete requests and reject stale responses.
 PDF/Excel use existing export jobs, ownership checks, status, download and expiry.
 Salary documents use the shared soft status chips and download actions in the compact toolbar, with one standard success toast when an active export completes.
 The report-notes information control beside Preview exposes all coverage and truncation notes in the shared popover; failures retain an announced error and a relevant recovery action.
-Payroll Management > Settings > Payroll documents owns Compact/Detailed layouts, optional fields, saved column presets and automatic email.
-The Payslips workspace retains a Document settings link and no longer embeds the settings form below its preview.
+Payroll Management > Settings > Payslip & statement settings owns Compact/Detailed layouts, optional fields, saved column presets and automatic email.
+The Payslips workspace retains a Payslip & statement settings link and no longer embeds the settings form below its preview.
 School name, address and logo use Institute Setup; the settings page displays the returned name and address without editable duplicates.
 The existing save, retry, concurrency and dirty-navigation safeguards remain in the dedicated settings form.
 Preview loading is labelled and compact rather than reserving a 560-pixel grey block.
