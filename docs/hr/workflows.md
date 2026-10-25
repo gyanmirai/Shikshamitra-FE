@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-22
+updated_on: 2026-10-25
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -54,6 +54,7 @@ The staff-profile leave tab retains its existing employee-specific history.
 ## Employee onboarding behavior
 
 Staff Directory's Add Staff form opens Personal Information without fetching policy lists or requiring policy-management grants.
+Its profile photo is optional; a selected photo retains the 3MB form limit and is sent as the `ProfilePicture` multipart part.
 Saving a basic profile omits `policyOverride`; it uses backend effective-policy inheritance rather than creating an employee-specific assignment.
 Missing policy setup does not block profile entry. Payroll/activation readiness and explicit assignment remain separate authorized workflows.
 Creation failures keep entered details and allow retry on the same step.
@@ -68,7 +69,8 @@ Finalization validates the complete employee record, including Category and Fami
 The finalization wizard blocks step changes, its close control, backdrop handling, and Escape while saving, and it focuses the first invalid field when validation fails.
 The public application requires a name for entered family details and organization, designation, and start date for entered work details.
 Public date checks use the Asia/Kolkata institution date, and untouched work rows are omitted from the payload.
-Resume and photo selections are optional, and selected files are validated against the backend size, extension, MIME, safe-filename, and signature rules.
+The public onboarding form requires both a resume and a photo before submission; Staff Directory's optional-photo rule does not apply to this flow.
+Selected files retain their upload validation, and backend file rules remain owned by the HR API contract.
 Employee role selectors fail closed unless the backend marks the role with Employee `roleAudience` and `employeeOnboardingAssignable: true`, and Admin, Super Admin, Student, and Parent remain excluded.
 Missing employee-group metadata remains compatible with both employee groups only after the role passes that explicit onboarding approval.
 Changing Employee Group clears an already selected role when its explicit Teaching or Non Teaching classification is no longer compatible.

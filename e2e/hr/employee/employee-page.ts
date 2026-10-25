@@ -261,10 +261,14 @@ export async function dismissNotifications(page: Page) {
   );
 }
 
-export async function fillRequiredPersonalInformation(page: Page, employee: EmployeeFixture) {
+export async function fillRequiredPersonalInformation(
+  page: Page,
+  employee: EmployeeFixture,
+  { withPhoto = true } = {}
+) {
   const form = page.getByTestId(testIds.employeeForm);
 
-  await uploadProfilePhoto(page);
+  if (withPhoto) await uploadProfilePhoto(page);
   await fillTextByLabel(form, 'Last Name', employee.lastName);
   await fillTextByLabel(form, 'First Name', employee.firstName);
   await fillTextByLabel(form, 'Middle Name', employee.middleName);

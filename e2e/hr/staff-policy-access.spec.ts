@@ -58,6 +58,7 @@ test('Staff Add alone saves without a policy override and returning to step one 
   await page.route('**/api/employees/personal-info', async (route) => {
     submissions += 1;
     const data = route.request().postData() || '';
+    expect(data).toContain('name="ProfilePicture"');
     expect(data).not.toContain('policyOverride');
     expect(data).not.toContain('confirmationToken');
     await route.fulfill({
@@ -77,6 +78,28 @@ test('Staff Add alone saves without a policy override and returning to step one 
   await expect(page.getByText('System Policies', { exact: true })).toHaveCount(0);
   expect(submissions).toBe(1);
   expect(requests).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('Staff Directory creates without a photo and omits the upload part', async ({ page }) => {
+  let submissions = 0;
+  await page.route('**/api/employees/personal-info', async (route) => {
+    submissions += 1;
+    const data = route.request().postData() || '';
+    expect(data).toContain('name="Data"');
+    expect(data).not.toContain('name="ProfilePicture"');
+    await route.fulfill({
+      status: 201,
+      json: { id: 'synthetic-employee', userId: 'synthetic-created-user' },
+    });
+  });
+  const { errors } = await openScenario(page, 'ready');
+  await fillRequiredPersonalInformation(page, createEmployeeFixture('Synthetic No Photo'), {
+    withPhoto: false,
+  });
+  await saveAndNext(page);
+  await expect(page.getByLabel('First Name *', { exact: true })).toHaveCount(0);
+  expect(submissions).toBe(1);
   expect(errors).toEqual([]);
 });
 
