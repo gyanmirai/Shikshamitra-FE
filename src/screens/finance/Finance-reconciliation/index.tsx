@@ -21,7 +21,6 @@ import { useGetReconciliationTabCountsQuery } from 'src/redux/finance/reconcilia
 import UpiTable from './Component/UpiTable';
 import DebitCardTable from './Component/DebitCardTable';
 import CreditCardTable from './Component/CreditCardTable';
-import CashReceiptTable from './Component/CashReceiptTable';
 import DemandDraftTable from './Component/DemandDraftTable';
 import BankTransferTable from './Component/BankTransferTable';
 import ChequeDetailsForm from './Component/ChequeDetailsTable';
@@ -29,12 +28,6 @@ import { academicMonthOptions, defaultAcademicMonth } from '../accounts/Register
 
 // Map enum to label and component
 const reconciliationTabConfig = [
-  {
-    label: 'Cash',
-    value: ReconciliationStatusType.Cash,
-    color: 'success' as LabelColor,
-    component: (props: any) => <CashReceiptTable key={`${props.queryParams?.academicYearId}-${props.queryParams?.year}-${props.queryParams?.month}`} {...props} />,
-  },
   {
     label: 'Cheque',
     value: ReconciliationStatusType.Cheque,
@@ -103,9 +96,12 @@ const FinanceReconciliation = () => {
 
   // Sync activeTab with URL params on initial load and when searchParams change
   React.useEffect(() => {
-    if (searchParams?.tab) {
-      setActiveTab(Number(searchParams.tab));
-    }
+    const requestedTab = Number(searchParams?.tab);
+    setActiveTab(
+      reconciliationTabConfig.some((tab) => tab.value === requestedTab)
+        ? requestedTab
+        : ReconciliationStatusType.Cheque
+    );
   }, [searchParams?.tab]);
 
   // Dialogs
@@ -131,11 +127,6 @@ const FinanceReconciliation = () => {
   const tabStats = useMemo(
     () =>
       ({
-        [ReconciliationStatusType.Cash]: {
-          pending: 0,
-          approved: tabCounts?.cashOfficial ?? 0,
-          rejected: 0,
-        },
         [ReconciliationStatusType.Cheque]: {
           pending: tabCounts?.chequePending ?? 0,
           approved: tabCounts?.chequeApproved ?? 0,

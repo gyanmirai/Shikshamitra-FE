@@ -156,6 +156,8 @@ Use [the workspace contract](./references/income-expense-workspaces.md) for UI b
 
 ## Receipt lifecycle client fields
 
-The feeReceiptApi list/detail contract adds paymentMethodLabel and pdfFileName. ReceiptPreviewDialog displays the method and downloads the authenticated PDF blob using pdfFileName. Receipt kind enum values remain unchanged; display labels use Provisional Receipt / Official Receipt. The combined document label is supplied by the backend. Reconciliation approve/reject mutations invalidate receiptType.receipt. Tab counts include cashOfficial; the Cash table queries the existing reconciliation list with paymentMethod=Cash, server pagination and search.
+Reconciliation list queries for every payment method wait until `queryParams.academicYearId` is available, matching the tab-count query guard. Initial academic-year hydration must not send an empty GUID to the API; selecting another year or month resumes querying with that scope.
+
+The feeReceiptApi list/detail contract adds paymentMethodLabel and pdfFileName. ReceiptPreviewDialog displays the method and downloads the authenticated PDF blob using pdfFileName. Receipt kind enum values remain unchanged; display labels use Provisional Receipt / Official Receipt. The combined document label is supplied by the backend. Reconciliation approve/reject mutations invalidate receiptType.receipt. Tab counts still include cashOfficial in the API contract; the Reconciliation screen renders only non-cash tabs and falls back to Cheque for unsupported tab parameters.
 
 Reconciliation PDF downloads also use `/v1/fee-receipts/{id}/pdf`. The mutation returns `{ blob, fileName }`; `fileName` comes from the exposed Content-Disposition header (UTF-8 filename preferred). Approved rows select the linked official receipt ID, and their preview displays the official number.

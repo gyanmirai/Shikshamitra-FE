@@ -42,36 +42,29 @@ export default function AssignmentReview({
   const money = (value: number) => formatNumber(value, data.currency);
   const summary = (
     <DetailSection
-      helpText="Totals are calculated by the server. Service reduction is the difference between the full scheduled amount and the amount assigned for the selected service dates."
+      helpText="The total amount is calculated by the server for the selected fees and service dates."
       icon="mdi:cash-multiple"
       title="Assignment Total"
     >
-      <DetailField
-        label="Fee Structure"
-        value={`${data.structureName} · ${data.revisionNumber ? `r${data.revisionNumber}` : 'Historical'}`}
-      />
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
+          gridTemplateColumns: 'minmax(0, 1fr)',
+          '@container (min-width: 440px)': { gridTemplateColumns: 'minmax(0, 1fr) auto' },
           gap: 1.5,
-          bgcolor: 'background.neutral',
-          p: 1.5,
-          borderRadius: 1,
-          '& .MuiTypography-root': { fontVariantNumeric: 'tabular-nums' },
+          alignItems: 'start',
         }}
       >
-        {[
-          { label: committed ? 'Assigned amount' : 'Total to assign', value: data.proratedTotal },
-          ...(!legacy
-            ? [
-                { label: 'Before service adjustment', value: data.scheduledTotal },
-                { label: 'Service reduction', value: data.reductionTotal },
-              ]
-            : []),
-        ].map((metric) => (
-          <DetailField key={metric.label} label={metric.label} value={money(metric.value)} />
-        ))}
+        <DetailField
+          label="Fee Structure"
+          value={`${data.structureName} · ${data.revisionNumber ? `r${data.revisionNumber}` : 'Historical'}`}
+        />
+        <Box sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+          <DetailField
+            label={committed ? 'Assigned amount' : 'Total to assign'}
+            value={money(data.proratedTotal)}
+          />
+        </Box>
       </Box>
 
       {data.overrideReason && (
