@@ -13,7 +13,7 @@ for (const width of [390, 768, 1440]) {
     await page.getByRole('button', { name: /next page/i }).click();
     await expect(page.locator('tbody tr').first()).toContainText('Synthetic staff 10');
     await page.getByRole('button', { name: 'Filter Status', exact: true }).click();
-    await page.getByRole('combobox').filter({ visible: true }).last().click();
+    await page.getByRole('combobox', { name: 'Status *', exact: true }).click();
     await page.getByRole('option', { name: 'Pending', exact: true }).click();
     const request = page.waitForRequest(
       (r) =>
