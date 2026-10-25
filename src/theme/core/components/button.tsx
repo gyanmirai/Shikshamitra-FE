@@ -38,6 +38,10 @@ const MuiButtonBase: Components<Theme>['MuiButtonBase'] = {
   styleOverrides: {
     root: ({ theme }) => ({
       fontFamily: theme.typography.fontFamily,
+      '&.Mui-focusVisible, &:focus-visible': {
+        outline: `2px solid ${theme.palette.primary.main}`,
+        outlineOffset: 2,
+      },
       '&.Mui-disabled': {
         cursor: 'no-drop',
       },

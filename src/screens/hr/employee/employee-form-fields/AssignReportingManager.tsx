@@ -8,6 +8,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
 import { useGetEmployeeQuery, useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType, EmployeeStatusTypeColor } from 'src/enums/employee-status-type';
 import {
@@ -333,6 +334,7 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
     if (Object.keys(validation).length > 0) {
+      focusFirstFormikError(validation);
       formik.setFieldTouched('reportingManager', true, false);
       return false;
     }
@@ -431,6 +433,8 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
+                        name="reportingManager"
+                        label="Reporting manager"
                         placeholder="Search and select a manager"
                         size="small"
                         fullWidth

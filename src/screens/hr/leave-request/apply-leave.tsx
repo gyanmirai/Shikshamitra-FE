@@ -565,6 +565,7 @@ const ApplyLeave = ({
 
       <CustomDialog
         open={addLeaveRequestDialog?.value}
+        hasForm={false}
         maxWidth="sm"
         handleClose={() => {
           addLeaveRequestDialog?.onFalse?.();

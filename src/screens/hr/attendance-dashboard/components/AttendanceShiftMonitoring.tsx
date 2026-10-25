@@ -403,12 +403,24 @@ const AttendanceShiftMonitoring = () => {
           {SHIFT_DATA.map((s, i) => (
             <Stack
               key={s.id}
+              component="button"
+              type="button"
+              aria-pressed={selectedIdx === i}
               direction="row"
               alignItems="center"
               spacing={0.75}
               onClick={() => handleSliceClick(i)}
               sx={{
                 cursor: 'pointer',
+                border: 0,
+                p: 0.5,
+                bgcolor: 'transparent',
+                font: 'inherit',
+                '&:focus-visible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: 2,
+                },
                 opacity: selectedIdx !== null && selectedIdx !== i ? 0.45 : 1,
                 transition: 'opacity 0.2s',
               }}

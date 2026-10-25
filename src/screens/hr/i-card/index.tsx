@@ -1355,10 +1355,15 @@ const EmployeeICardBuilder = ({
                       {presets.map((preset) => (
                         <Grid key={preset.key} size={{ xs: 12, sm: 6 }}>
                           <Paper
+                            component={ButtonBase}
+                            type="button"
+                            aria-pressed={state.presetKey === preset.key}
                             variant="outlined"
                             onClick={() => applyPreset(preset)}
                             sx={{
                               p: 1.5,
+                              width: '100%',
+                              textAlign: 'left',
                               cursor: 'pointer',
                               borderColor:
                                 state.presetKey === preset.key ? `${preset.color}88` : 'divider',
@@ -2127,6 +2132,48 @@ const DesignerCanvas = ({
                 }
                 label="Visible"
               />
+              <Stack direction="row" spacing={1}>
+                <TextField
+                  label="X position"
+                  type="number"
+                  size="small"
+                  value={selected.x}
+                  disabled={selected.locked}
+                  inputProps={{ min: 0, max: Math.max(0, state.layout.width - selected.w) }}
+                  onChange={(event) => {
+                    const coordinate = Number(event.target.value);
+                    if (Number.isFinite(coordinate))
+                      onMove(
+                        selected.id,
+                        Math.max(
+                          0,
+                          Math.min(Math.max(0, state.layout.width - selected.w), coordinate)
+                        ),
+                        selected.y
+                      );
+                  }}
+                />
+                <TextField
+                  label="Y position"
+                  type="number"
+                  size="small"
+                  value={selected.y}
+                  disabled={selected.locked}
+                  inputProps={{ min: 0, max: Math.max(0, state.layout.height - selected.h) }}
+                  onChange={(event) => {
+                    const coordinate = Number(event.target.value);
+                    if (Number.isFinite(coordinate))
+                      onMove(
+                        selected.id,
+                        selected.x,
+                        Math.max(
+                          0,
+                          Math.min(Math.max(0, state.layout.height - selected.h), coordinate)
+                        )
+                      );
+                  }}
+                />
+              </Stack>
               <Stack direction="row" spacing={1}>
                 <TextField
                   label="W"

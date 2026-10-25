@@ -20,11 +20,13 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
+import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetPolicyAssignmentPreviewQuery } from 'src/redux/hr/hr-policy-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
+  Box,
   Grid,
   Chip,
   Stack,
@@ -159,6 +161,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     handleSubmit,
     resetForm,
     isSubmitting,
+    isValidating,
+    submitCount,
     setFieldError,
   } = useFormik({
     enableReinitialize: true,
@@ -528,6 +532,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       ? null
       : getLeaveRequestBalanceWarning(selectedLeaveBalanceData, values.paidType, requestedUnits);
   const isLeaveRequestSubmitting = isSubmitting || isLoading || isApproveLoading || isRejectLoading;
+  useFormikErrorFocus({ errors, submitCount, isSubmitting, isValidating });
   const enforceLeaveNoticePeriod = shouldEnforceLeaveNoticePeriod(
     mode,
     isAdminUser,
@@ -537,7 +542,21 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     !editData && enforceLeaveNoticePeriod && !isLeaveNoticePeriodSatisfied(values.startDate);
 
   return (
-    <>
+    <Box
+      component="form"
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (
+          !editData &&
+          !isLeaveRequestSubmitting &&
+          !hasLeaveNoticePeriodError &&
+          !leaveBalanceWarning
+        )
+          handleSubmit(event);
+      }}
+      sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}
+    >
       <Backdrop
         open={isLeaveRequestSubmitting}
         sx={{
@@ -627,13 +646,14 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   ) : null}
                   {hasBlockingEffectivePolicyState ? (
                     <Alert severity="warning">
-                      No effective leave policy is assigned to this staff member for the selected date.
+                      No effective leave policy is assigned to this staff member for the selected
+                      date.
                     </Alert>
                   ) : null}
                   {effectivePolicyError ? (
                     <Alert severity="warning">
-                      Could not resolve the staff leave policy. Resolve the effective leave
-                      policy before submitting.
+                      Could not resolve the staff leave policy. Resolve the effective leave policy
+                      before submitting.
                     </Alert>
                   ) : null}
                   {hasNoAllowedPaidTypes ? (
@@ -937,9 +957,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             disabled={
               isLeaveRequestSubmitting || hasLeaveNoticePeriodError || Boolean(leaveBalanceWarning)
             }
-            onClick={(e: any) => {
-              handleSubmit(e);
-            }}
             type="submit"
             size="small"
             variant="contained"
@@ -962,7 +979,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           </LoadingButton>
         )}
       </DialogActions>
-    </>
+    </Box>
   );
 };
 

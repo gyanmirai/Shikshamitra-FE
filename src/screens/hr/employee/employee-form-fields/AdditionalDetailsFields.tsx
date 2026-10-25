@@ -1,6 +1,7 @@
 import { setNestedObjectValues } from 'formik';
 import { useBoolean } from 'src/hooks/use-boolean';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
 import {
   Box,
   Grid,
@@ -24,6 +25,7 @@ const AdditionalDetailsAllFields = ({ formik, isMainForm }: any) => {
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
     if (Object.keys(validation).length > 0) {
+      focusFirstFormikError(validation);
       formik.setTouched(setNestedObjectValues(validation, true));
       return false;
     }

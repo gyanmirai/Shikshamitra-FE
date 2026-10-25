@@ -328,16 +328,7 @@ export function EsiStatutoryEmployees({
           });
         }}
         handleRowClick={(row) => onOpenEmployee(row as EsiEmployeeImpact)}
-        rowProps={(row) => ({
-          tabIndex: 0,
-          onKeyDown: (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              onOpenEmployee(row as EsiEmployeeImpact);
-            }
-          },
-          sx: { cursor: 'pointer' },
-        })}
+        rowProps={() => ({ sx: { cursor: 'pointer' } })}
         tableContainerProps={{ sx: { maxWidth: '100%', overflowX: 'auto' } }}
         wrapperProps={{ sx: { minWidth: 0, maxWidth: '100%' } }}
         noDataText="No staff match these filters"

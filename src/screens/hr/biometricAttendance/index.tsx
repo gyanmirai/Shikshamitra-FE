@@ -94,6 +94,10 @@ import {
 
 // ─── Inner-table (row-level) attendance status ─────────────────────────────────
 const segmentBtnBase = {
+  border: 0,
+  padding: 0,
+  font: 'inherit',
+  '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
   flex: 1,
   display: 'flex',
   alignItems: 'center',
@@ -1238,6 +1242,11 @@ const ImportDetailDialog = ({
           >
             <CustomTooltip title="Present" arrow placement="top">
               <Box
+                component="button"
+                type="button"
+                disabled={!isRowEditable}
+                aria-label={`Mark Present for ${row.employeeName || row.employeeCode || row.id}`}
+                aria-pressed={value === IMPORT_ROW_STATUS.Present}
                 onClick={() => {
                   if (!isRowEditable) return;
                   updateRow(row.id, { attendanceStatus: IMPORT_ROW_STATUS.Present });
@@ -1268,6 +1277,11 @@ const ImportDetailDialog = ({
 
             <CustomTooltip title="Half Day" arrow placement="top">
               <Box
+                component="button"
+                type="button"
+                disabled={!isRowEditable}
+                aria-label={`Mark HalfDay for ${row.employeeName || row.employeeCode || row.id}`}
+                aria-pressed={value === IMPORT_ROW_STATUS.HalfDay}
                 onClick={() => {
                   if (!isRowEditable) return;
                   updateRow(row.id, { attendanceStatus: IMPORT_ROW_STATUS.HalfDay });
@@ -1298,6 +1312,11 @@ const ImportDetailDialog = ({
 
             <CustomTooltip title="Pending" arrow placement="top">
               <Box
+                component="button"
+                type="button"
+                disabled={!isRowEditable}
+                aria-label={`Mark Pending for ${row.employeeName || row.employeeCode || row.id}`}
+                aria-pressed={value === IMPORT_ROW_STATUS.Pending}
                 onClick={() => {
                   if (!isRowEditable) return;
                   updateRow(row.id, { attendanceStatus: IMPORT_ROW_STATUS.Pending });
@@ -1328,6 +1347,11 @@ const ImportDetailDialog = ({
 
             <CustomTooltip title="Absent" arrow placement="top">
               <Box
+                component="button"
+                type="button"
+                disabled={!isRowEditable}
+                aria-label={`Mark Absent for ${row.employeeName || row.employeeCode || row.id}`}
+                aria-pressed={value === IMPORT_ROW_STATUS.Absent}
                 onClick={() => {
                   if (!isRowEditable) return;
                   updateRow(row.id, { attendanceStatus: IMPORT_ROW_STATUS.Absent });
@@ -1500,8 +1524,21 @@ const ImportDetailDialog = ({
             }}
           >
             <Box
+              component="button"
+              type="button"
+              aria-expanded={summaryOpen.value}
+              aria-label="Import summary"
               onClick={summaryOpen.onToggle}
               sx={{
+                width: '100%',
+                border: 0,
+                textAlign: 'left',
+                font: 'inherit',
+                '&:focus-visible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: -2,
+                },
                 p: 1.5,
                 borderBottom: summaryOpen.value ? '1px dashed' : 'none',
                 borderColor: 'divider',
@@ -1521,12 +1558,12 @@ const ImportDetailDialog = ({
                   Details of this attendance import
                 </Typography>
               </Box>
-              <IconButton size="small" sx={{ pointerEvents: 'none' }}>
+              <Box component="span" sx={{ display: 'flex' }}>
                 <Iconify
                   icon={summaryOpen.value ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'}
                   width={20}
                 />
-              </IconButton>
+              </Box>
             </Box>
 
             <Collapse in={summaryOpen.value} unmountOnExit>

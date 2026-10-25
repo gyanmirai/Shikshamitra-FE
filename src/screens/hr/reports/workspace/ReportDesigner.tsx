@@ -16,6 +16,7 @@ import { hrReportPaths } from 'src/constants/hr-report-paths';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
 import { Box, Tab, Stack, Alert, Button, MenuItem, TextField, Typography } from '@mui/material';
 import {
   useSaveReportingTemplateMutation,
@@ -115,6 +116,7 @@ export function ReportDesigner({
     const errors = await form.validateForm();
     if (Object.keys(errors).length) {
       await form.setTouched({ name: true, description: true });
+      focusFirstFormikError(errors);
       setError(errors.name || 'Complete the required template settings.');
       return;
     }

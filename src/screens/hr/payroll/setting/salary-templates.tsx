@@ -1,7 +1,7 @@
 'use client';
 
+import type { MouseEvent } from 'react';
 import type { RootState } from 'src/redux/store';
-import type { MouseEvent, KeyboardEvent } from 'react';
 import type { SalaryTemplate } from 'src/redux/hr/salary-template-api';
 import type {
   IData,
@@ -154,15 +154,7 @@ export default function SalaryTemplateSettings() {
     (row: IData): CustomizableTableRowProps => {
       const template = row as SalaryTemplateRow;
       return {
-        role: 'link',
-        tabIndex: 0,
-        'aria-label': `${template.status === 'ARCHIVED' || !canEdit ? 'View' : 'Edit'} ${template.name}`,
         onClick: () => openTemplate(template),
-        onKeyDown: (event: KeyboardEvent<HTMLTableRowElement>) => {
-          if (event.key !== 'Enter') return;
-          event.preventDefault();
-          openTemplate(template);
-        },
         sx: {
           cursor: 'pointer',
           '&:focus-visible': {
@@ -173,7 +165,7 @@ export default function SalaryTemplateSettings() {
         },
       };
     },
-    [canEdit, openTemplate]
+    [openTemplate]
   );
 
   const columns = useMemo<IColumn[]>(

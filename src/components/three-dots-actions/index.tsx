@@ -168,6 +168,17 @@ const ThreeDotsActions = ({
         anchorEl={popover.anchorEl}
         onClick={(event) => event.stopPropagation()}
         onMouseDown={(event) => event.stopPropagation()}
+        onKeyDown={(event) => {
+          if (
+            event.key === 'Tab' &&
+            event.target instanceof Element &&
+            event.target.closest('[role="menu"]')
+          ) {
+            event.preventDefault();
+            popover.onClose();
+            onClosePopover?.();
+          }
+        }}
         onClose={() => {
           popover.onClose();
           onClosePopover?.();

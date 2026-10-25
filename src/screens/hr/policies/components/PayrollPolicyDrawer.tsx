@@ -10,6 +10,7 @@ import {
   Chip,
   Alert,
   Paper,
+  Radio,
   Stack,
   Table,
   Button,
@@ -20,6 +21,7 @@ import {
   TableBody,
   TableCell,
   TextField,
+  RadioGroup,
   Typography,
   TableContainer,
 } from '@mui/material';
@@ -234,66 +236,68 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
         description="Choose the salary proration basis for preview, lock, and slips."
       >
         <Stack spacing={1.75}>
-          <DrawerFormGrid columns={3}>
-            {PAYROLL_DAY_CALCULATION_OPTIONS.map((option) => {
-              const selected = payrollPreviewMode === option.value;
-              return (
-                <Box key={option.value}>
-                  <Paper
-                    variant="outlined"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => selectPayrollDayCalculationType(option.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        selectPayrollDayCalculationType(option.value);
-                      }
-                    }}
-                    sx={{
-                      p: 1.25,
-                      height: 1,
-                      minHeight: 84,
-                      cursor: 'pointer',
-                      borderColor: selected ? 'primary.main' : 'divider',
-                      bgcolor: (theme) =>
-                        selected
-                          ? theme.palette.mode === 'dark'
-                            ? 'rgba(0, 167, 111, 0.1)'
-                            : 'rgba(0, 167, 111, 0.06)'
-                          : 'background.paper',
-                      transition: (theme) =>
-                        theme.transitions.create(['background-color', 'border-color'], {
-                          duration: theme.transitions.duration.shortest,
-                        }),
-                      '&:hover': {
-                        borderColor: selected ? 'primary.main' : 'text.secondary',
-                        bgcolor: selected ? undefined : 'action.hover',
-                      },
-                    }}
-                  >
-                    <Stack direction="row" spacing={1} alignItems="flex-start">
-                      <Iconify
-                        icon={selected ? 'mdi:radiobox-marked' : 'mdi:radiobox-blank'}
-                        color={selected ? 'primary.main' : 'text.secondary'}
-                        width={19}
-                      />
-                      <Stack spacing={0.35}>
-                        <Typography variant="subtitle2">{option.label}</Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ lineHeight: 1.35 }}
-                        >
-                          {option.description}
-                        </Typography>
+          <RadioGroup
+            aria-label="Payroll day calculation"
+            name="payrollDayCalculationType"
+            value={payrollPreviewMode}
+          >
+            <DrawerFormGrid columns={3}>
+              {PAYROLL_DAY_CALCULATION_OPTIONS.map((option) => {
+                const selected = payrollPreviewMode === option.value;
+                return (
+                  <Box key={option.value}>
+                    <Paper
+                      component="label"
+                      variant="outlined"
+                      sx={{
+                        p: 1.25,
+                        height: 1,
+                        minHeight: 84,
+                        cursor: 'pointer',
+                        borderColor: selected ? 'primary.main' : 'divider',
+                        bgcolor: (theme) =>
+                          selected
+                            ? theme.palette.mode === 'dark'
+                              ? 'rgba(0, 167, 111, 0.1)'
+                              : 'rgba(0, 167, 111, 0.06)'
+                            : 'background.paper',
+                        transition: (theme) =>
+                          theme.transitions.create(['background-color', 'border-color'], {
+                            duration: theme.transitions.duration.shortest,
+                          }),
+                        '&:hover': {
+                          borderColor: selected ? 'primary.main' : 'text.secondary',
+                          bgcolor: selected ? undefined : 'action.hover',
+                        },
+                      }}
+                    >
+                      <Stack direction="row" spacing={1} alignItems="flex-start">
+                        <Radio
+                          value={option.value}
+                          checked={selected}
+                          disabled={Boolean(activePolicyOperation)}
+                          onChange={() => selectPayrollDayCalculationType(option.value)}
+                          inputProps={{ 'aria-label': option.label }}
+                          size="small"
+                          sx={{ p: 0 }}
+                        />
+                        <Stack spacing={0.35}>
+                          <Typography variant="subtitle2">{option.label}</Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ lineHeight: 1.35 }}
+                          >
+                            {option.description}
+                          </Typography>
+                        </Stack>
                       </Stack>
-                    </Stack>
-                  </Paper>
-                </Box>
-              );
-            })}
-          </DrawerFormGrid>
+                    </Paper>
+                  </Box>
+                );
+              })}
+            </DrawerFormGrid>
+          </RadioGroup>
           <Paper variant="outlined" sx={{ px: 1.25, py: 1, bgcolor: 'background.default' }}>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
