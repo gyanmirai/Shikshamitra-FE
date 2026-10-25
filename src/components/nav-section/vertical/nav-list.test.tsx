@@ -60,7 +60,7 @@ function Navigation({ data = fees }: { data?: NavItemBaseProps }) {
 afterEach(cleanup);
 
 describe('active navigation ancestors', () => {
-  it.each(['/hr/payroll/payslip-generation', '/hr/payroll/setting/payroll-documents'])(
+  it.each(['/hr/payroll/payslip-generation', '/hr/payroll/setting/payslip-statement-settings'])(
     'keeps Overview unselected on %s while revealing the payroll ancestry',
     (pathname) => {
       route.pathname = pathname;
@@ -77,7 +77,7 @@ describe('active navigation ancestors', () => {
                 title: 'Settings',
                 path: '/hr/payroll/setting',
                 children: [
-                  { title: 'Payroll documents', path: '/hr/payroll/setting/payroll-documents' },
+                  { title: 'Payslip & statement settings', path: '/hr/payroll/setting/payslip-statement-settings' },
                 ],
               },
             ],
@@ -90,7 +90,7 @@ describe('active navigation ancestors', () => {
       );
       expect(
         screen.getByRole('button', {
-          name: pathname.includes('/setting/') ? 'Payroll documents' : 'Payslips',
+          name: pathname.includes('/setting/') ? 'Payslip & statement settings' : 'Payslips',
         })
       ).toHaveAttribute('data-active', 'true');
     }

@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, no-restricted-syntax */
 import { test, expect, type Page } from '@playwright/test';
 
-const settingsPath = '/hr/payroll/setting/payroll-documents';
+const settingsPath = '/hr/payroll/setting/payslip-statement-settings';
 const payslipsPath = '/hr/payroll/payslip-generation';
 const emailLabel = 'Email each employee after payroll finalization';
 
@@ -54,7 +54,7 @@ async function mockPayrollDocuments(page: Page, canEdit = true) {
       body = {
         groups: [
           {
-            name: 'Payroll documents test',
+            name: 'Payslip & statement settings test',
             permissions: [
               'ShikshaMitra.Module.HR',
               'ShikshaMitra.Module.HR.Payroll',
@@ -97,7 +97,7 @@ for (const viewport of [
     await page.setViewportSize(viewport);
     const writes = await mockPayrollDocuments(page);
     await page.goto(payslipsPath);
-    const settingsLink = page.getByRole('link', { name: 'Document settings', exact: true });
+    const settingsLink = page.getByRole('link', { name: 'Payslip & statement settings', exact: true });
     await expect(settingsLink).toHaveAttribute('href', settingsPath);
     await expect(page.getByRole('button', { name: 'Payslip settings', exact: true })).toHaveCount(
       0
@@ -113,7 +113,7 @@ for (const viewport of [
     }
     await settingsLink.click();
     await expect(
-      page.getByRole('heading', { name: 'Payroll documents', exact: true })
+      page.getByRole('heading', { name: 'Payslip & statement settings', exact: true })
     ).toBeVisible();
     await expect(page.getByText('Institute Setup School', { exact: true })).toBeVisible();
     await expect(page.getByLabel('School name', { exact: true })).toHaveCount(0);
