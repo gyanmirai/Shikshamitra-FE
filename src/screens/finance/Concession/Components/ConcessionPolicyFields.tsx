@@ -42,7 +42,7 @@ export default function ConcessionPolicyFields({
   const policyHelperId = `${fieldId}-policy-help`;
   const typeHelperId = `${fieldId}-type-help`;
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1.5}>
       <ShakingTextField error={policyError}>
         <CustomSelect
           required

@@ -1,15 +1,71 @@
 // Browser fixture only. These responses never enter the Next.js application.
-import type { StructureRecord } from 'src/redux/finance/feeStructureWorkspace';
+import type { StructureRecord, StructureCopyPolicy } from 'src/redux/finance/feeStructureWorkspace';
 
 import { useState } from 'react';
 
 export const useGetStructureContextQuery = 'context';
 export const usePreviewStructureMutation = 'preview';
+export const copyMode = new URLSearchParams(window.location.search).get('copyPolicy') ?? 'current';
+let copyCurrentVersion = ['stale', 'race'].includes(copyMode) ? 2 : 1;
+export const copyFixtureStatus = { attempts: 0, created: 0 };
+export function useGetStructureCopyPoliciesQuery({ sourceId }: any) {
+  const [version, setVersion] = useState(copyCurrentVersion);
+  const source = Object.values(fixtureClassRecords)
+    .flat()
+    .find((item) => item.id === sourceId);
+  const currentData: StructureCopyPolicy[] | undefined = source
+    ? (['collection', 'concession', 'refund'] as const).flatMap((family) => {
+        if (!source[`${family}PolicyId`]) return [];
+        const number = family === 'refund' ? version : 1;
+        const unavailable = family === 'refund' && copyMode === 'unavailable';
+        return [
+          {
+            family,
+            policyId: source[`${family}PolicyId`],
+            policyName: `School ${family[0].toUpperCase()}${family.slice(1)}`,
+            sourceVersionId: source[`${family}PolicyVersionId`],
+            sourceVersionNumber: 1,
+            currentVersionId: unavailable ? null : `${family}-v${number}`,
+            currentVersionNumber: unavailable ? null : number,
+            error: unavailable
+              ? 'This policy is inactive. Activate it before copying this structure.'
+              : null,
+          },
+        ];
+      })
+    : undefined;
+  return {
+    currentData,
+    isFetching: false,
+    isError: false,
+    refetch: () => setVersion(copyCurrentVersion),
+  };
+}
 export function useSaveStructureDraftMutation() {
   return [
     (args: any) => ({
       unwrap: async () => {
         await new Promise((resolve) => setTimeout(resolve, 300));
+        copyFixtureStatus.attempts++;
+        if (copyMode === 'race' && copyFixtureStatus.attempts === 1) copyCurrentVersion = 3;
+        if (args.standardFeeStructures.refundPolicyVersionId !== `refund-v${copyCurrentVersion}`) {
+          window.dispatchEvent(new Event('copy-fixture-state'));
+          throw {
+            data: {
+              error: {
+                data: {
+                  Errors: [
+                    `Refund Policy "School Refund": selected snapshot v${args.standardFeeStructures.refundPolicyVersionId?.split('v').at(-1)}; current active version v${copyCurrentVersion}. Refresh and select the current policy version before copying or attaching it.`,
+                  ],
+                },
+              },
+            },
+          };
+        }
+        const existing = Object.values(fixtureClassRecords)
+          .flat()
+          .find((item) => item.id === args.requestId);
+        if (existing) return existing;
         const record = {
           ...structuredClone(args.standardFeeStructures),
           id: args.requestId,
@@ -21,6 +77,8 @@ export function useSaveStructureDraftMutation() {
         };
         fixtureClassRecords[args.standardId] ??= [];
         fixtureClassRecords[args.standardId].push(record);
+        copyFixtureStatus.created++;
+        window.dispatchEvent(new Event('copy-fixture-state'));
         return record;
       },
     }),

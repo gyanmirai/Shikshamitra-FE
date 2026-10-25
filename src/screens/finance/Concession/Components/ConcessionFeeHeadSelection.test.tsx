@@ -42,19 +42,24 @@ describe('fee-head installment selection', () => {
   it('inspects a fee without changing selected fees or the server request totals', () => {
     render(<Workspace />);
     expect(screen.getByRole('checkbox', { name: 'School tuition' })).toBeChecked();
-    const details = screen.getByRole('complementary', { name: 'Fee details and request summary' });
-    expect(
-      within(details).getByRole('list', { name: 'School tuition installments' })
-    ).toBeVisible();
-    expect(within(details).getByText(/4,600/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Fee Breakdown' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    const summary = screen.getByRole('complementary', {
+      name: 'Concession impact and supporting documents',
+    });
+    expect(within(summary).getByText(/4,600/)).toBeVisible();
     const inspect = screen.getByRole('button', { name: 'Inspect General school fees' });
     fireEvent.click(inspect);
     expect(inspect).toHaveAttribute('aria-pressed', 'true');
+    expect(inspect).toHaveAttribute('aria-expanded', 'true');
+    const details = screen.getByRole('region', { name: 'Fee details' });
     expect(details.id).toBe(inspect.getAttribute('aria-controls'));
     expect(within(details).getByRole('heading', { name: 'General school fees' })).toBeVisible();
     expect(screen.getByRole('checkbox', { name: 'General school fees' })).not.toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'School tuition' })).toBeChecked();
-    expect(within(details).getByText(/4,600/)).toBeVisible();
+    expect(within(summary).getByText(/4,600/)).toBeVisible();
     expect(
       within(details).getByText('Select this fee to include it in the request.')
     ).toBeVisible();
@@ -64,16 +69,15 @@ describe('fee-head installment selection', () => {
     render(<Workspace />);
     fireEvent.click(screen.getByRole('checkbox', { name: 'School tuition' }));
     expect(screen.getByRole('checkbox', { name: 'School tuition' })).not.toBeChecked();
-    expect(screen.getByText('0 fee categories included')).toBeVisible();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Attach Income proof to enable submission.'
-    );
+    expect(screen.getByText('0 selected fees')).toBeVisible();
+    expect(screen.getByText('Required')).toBeVisible();
+    expect(screen.getByText('Upload supporting evidence')).toBeVisible();
     expect(screen.getByText('8% reduction applied automatically to selected fees')).toBeVisible();
   });
 
   it('keeps the panel present while calculating and does not invent preview totals', () => {
     render(<Workspace loading unavailable />);
-    expect(screen.getByRole('heading', { name: 'Entire Request' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Concession Impact' })).toBeVisible();
     expect(screen.getByRole('status')).toHaveTextContent('Calculating fee impact…');
     expect(screen.queryByText(/4,600/)).not.toBeInTheDocument();
   });
@@ -82,7 +86,7 @@ describe('fee-head installment selection', () => {
     render(<Workspace empty unavailable />);
     expect(screen.getByText('No eligible fees')).toBeVisible();
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Entire Request' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Concession Impact' })).toBeVisible();
   });
   it.each([
     ['Jun 2026', 2026, 'Jun 2026'],

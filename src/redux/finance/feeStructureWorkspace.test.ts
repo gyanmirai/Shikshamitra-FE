@@ -18,6 +18,18 @@ vi.mock('./financeModuleApi', () => ({
 }));
 
 describe('Fee Structure workspace API', () => {
+  it('checks only the selected source policies within the current metadata and target class', () => {
+    expect(
+      endpoints.getStructureCopyPolicies.query({
+        sourceId: 'source',
+        feeStructureMetadataId: 'metadata',
+        standardId: 'class',
+      })
+    ).toEqual({
+      url: '/fee-structures/source/copy-policies',
+      params: { feeStructureMetadataId: 'metadata', standardId: 'class' },
+    });
+  });
   it('loads copy sources only from the metadata-scoped classes and groups every saved structure', async () => {
     const baseQuery = vi.fn(async ({ params }) => ({
       data: { standardFeeStructures: [{ id: `${params.standardId}-structure`, name: 'Annual' }] },

@@ -6,6 +6,7 @@ import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { formatNumber } from 'src/utils/formate_number';
 import { DetailField, DetailSection } from 'src/components/detail-view';
 import {
   Box,
@@ -808,9 +809,9 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Calculation & Ceilings */}
                         <DetailSection
-                          helpText="How the refund amount is calculated and the caps applied per request or student."
+                          helpText="How the refund amount is calculated before deductions and settlement caps are applied."
                           sx={{ mb: 2 }}
-                          title="Refund Calculation & Ceilings"
+                          title="Refund Calculation"
 
                           icon="solar:calculator-minimalistic-bold-duotone"
                         >
@@ -839,27 +840,6 @@ export default function FinancePolicyDetailsDrawer({
                                       ? `₹${policyDetails.fixedAmount ?? 0}`
                                       : '100% Eligible Balance'
                                 }
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Maximum Cap per Single Request"
-                                value={
-                                  policyDetails.maximumPerRequest != null
-                                    ? `₹${policyDetails.maximumPerRequest.toLocaleString('en-IN')}`
-                                    : 'No per-request cap'
-                                }
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Maximum Cap per Student / Year"
-                                value={
-                                  policyDetails.maximumPerStudentYear != null
-                                    ? `₹${policyDetails.maximumPerStudentYear.toLocaleString('en-IN')}`
-                                    : 'No cumulative student cap'
-                                }
-                                secondary="Enforced across all processed and reserved refunds"
                               />
                             </Grid>
                           </Grid>
@@ -982,35 +962,42 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Guarantees & Settlement Callout */}
                         <DetailSection
-                          helpText="Refund eligibility is limited to settled payments after prior refunds and reservations."
+                          helpText="Saved refund limits per request and student academic year. The eligible settled balance, after prior refunds and reservations, is always the upper limit."
                           sx={{ mb: 2 }}
                           title="Settlement Guarantees & Constraints"
 
                           icon="solar:shield-check-bold"
                         >
-                          <Grid container spacing={1.5}>
-                            <Grid size={{ xs: 12 }}>
-                              <Paper
-                                variant="outlined"
-                                sx={{
-                                  p: 1.5,
-                                  bgcolor: (theme) => alpha(theme.palette.info.main, 0.04),
-                                  borderColor: (theme) => alpha(theme.palette.info.main, 0.2),
-                                  borderRadius: 1.25,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 1.25,
-                                }}
-                              >
-                                <Iconify
-                                  icon="solar:shield-check-bold"
-                                  width={20}
-                                  height={20}
-                                  sx={{ color: 'info.main', flexShrink: 0 }}
+                          {policyDetails.maximumPerRequest != null ||
+                          policyDetails.maximumPerStudentYear != null ? (
+                            <Grid container spacing={1.5}>
+                              <Grid size={{ xs: 12, sm: 6 }}>
+                                <DetailField
+                                  label="Maximum cap per single request"
+                                  value={
+                                    policyDetails.maximumPerRequest != null
+                                      ? formatNumber(policyDetails.maximumPerRequest, 'INR')
+                                      : 'No per-request cap'
+                                  }
                                 />
-                              </Paper>
+                              </Grid>
+                              <Grid size={{ xs: 12, sm: 6 }}>
+                                <DetailField
+                                  label="Maximum cap per student / year"
+                                  value={
+                                    policyDetails.maximumPerStudentYear != null
+                                      ? formatNumber(policyDetails.maximumPerStudentYear, 'INR')
+                                      : 'No cumulative student cap'
+                                  }
+                                  secondary="Enforced across all processed and reserved refunds"
+                                />
+                              </Grid>
                             </Grid>
-                          </Grid>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No settlement guarantees or constraints configured.
+                            </Typography>
+                          )}
                         </DetailSection>
 
                         {/* Audit Metadata */}

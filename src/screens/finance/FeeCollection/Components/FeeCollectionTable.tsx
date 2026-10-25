@@ -155,7 +155,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   return (
     <>
       <Card sx={{ p: 1, mb: 1, overflow: 'visible' }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
           <FinanceAcademicContextFilter
             boards={boards}
             mediums={mediums}
@@ -183,11 +183,11 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           getRowAction={(row) =>
             access.canView && row.studentId
               ? {
-                  label: `Open ${row.name || 'record'}`,
-                  onClick: () => {
-                    onView(row as IFeeData);
-                  },
-                }
+                label: `Open ${row.name || 'record'}`,
+                onClick: () => {
+                  onView(row as IFeeData);
+                },
+              }
               : undefined}
           tableId="fee-collection-table"
           tableTitle="Collections"

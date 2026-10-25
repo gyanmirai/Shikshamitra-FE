@@ -3,12 +3,50 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-23
+updated_on: 2026-10-24
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Finance frontend changes
+
+`ConcessionItemCard.test.tsx` covers decisions directly from saved Pending cards, independent reviewers, positive approval amounts, required documents and server action/grant checks. Browser checks retain icon-only card controls with Leave Center decision glyphs and no leading card-header icon.
+
+Minimal concession request forms: run `ConcessionFeeHeadSelection.test.tsx`,
+`ConcessionSteps/ValueEntryStep.test.tsx`, `ConcessionDocumentList.test.tsx` and
+`ConcessionPolicyFields.test.tsx`. Verify common cards, independent fee inspection/selection,
+server-only summary values, recalculation/empty states, and compact
+installment fields retaining raw values, whole-rupee validation and policy limits. In the local
+browser check create/update, required selectors and documents, fee breakdown, absence of remarks,
+the existing fixed footer, narrow layouts and both themes without submitting financial changes.
+
+Copy, refund details and DD dates: run `copyFeeStructure.test.ts`,
+`Components/CopyFeeStructureDialog.test.tsx`, `feeStructureWorkspace.test.ts`,
+`FinancePolicyDetailsDrawer.test.tsx`, `custom-tooltip/info-tooltip-icon.test.tsx`, and
+`DemandDraftTable.test.tsx` in their owning source folders. Local production-component
+fixtures are `e2e/fixtures/fee-structure/copy.html?copyPolicy=current|stale|unavailable|race`,
+`e2e/fixtures/refund-policy-details` (`?empty=1`, `?dark=1`), and
+`e2e/fixtures/dd-reconciliation`. Check current/stale selection, named version-race recovery,
+zero copies on failure, one copy on retry, unchanged source snapshots, populated/empty
+settlement limits, keyboard/Escape/touch help, panel bounds, distinct DD dates and missing
+values. Fixtures use synthetic data; persisted backend tests separately establish integrity.
+
+Concession view decisions: run `ConcessionItemCard.test.tsx`, `StucentConcessionCard.test.tsx` and
+`concessionDecisionEligibility.test.ts`. Cover icon-only actions, read-only request details and
+full activity, view grants, unsubmitted Pending cards, exact-request review
+callbacks, missing Edit/Submit/decision grants, ownership, explicit empty server actions,
+independent submitted decisions, mandatory documents and final states. In the local browser,
+open a student with multiple requests and confirm Review and submit opens the clicked card's
+policy, values and documents without submitting or deciding it. Check two-column/stacked cards,
+Policy-style student details, document preview, keyboard tooltips, light/dark themes, overflow
+and modal close/focus restoration at desktop, tablet and phone sizes.
+
+Bank-account effective dates: run `BankManageForm.dates.test.tsx` under
+`src/screens/finance/settings/BankAccManagement/Components`. It exercises the real
+pickers and Formik validation for incomplete/invalid entry, leap days, dependent
+date ordering, same-day ranges, optional end dates, and UTC payload boundaries.
+Browser checks cover Add/Edit, keyboard entry, disabled earlier end dates, inline
+errors, and responsive picker display.
 
 Charge Category deletion: run `ChargeCategory.deletion.test.tsx`, `ChargeCategory.test.tsx`,
 and `src/redux/finance/chargeCategory.test.ts`. Browser checks cover the in-use dependency
@@ -69,6 +107,14 @@ npm run docs:check
 ```
 
 ## Focused frontend checks
+
+### Fee-head usage disclosure
+
+Run `FeeCategoryForm.ui.test.tsx` to verify editing shows no inline usage warning or View usage
+control while preserving the removal guard. Serve `e2e/fixtures/fee-category-readonly/` and open it
+with the `?dependencies` query to check the editor in light/dark themes and narrow layouts.
+Dependency warnings and their View/Hide usage controls remain in the affected action dialogs.
+This fixture uses synthetic data and performs no backend writes.
 
 ### Concession status groups
 

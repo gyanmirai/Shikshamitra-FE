@@ -2,11 +2,12 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { ThemeProvider } from '@mui/material/styles';
-import { Box, CssBaseline, Typography } from '@mui/material';
+import { ThemeProvider, useColorScheme } from '@mui/material/styles';
+import { Box, Button, CssBaseline, Typography } from '@mui/material';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { financePermissions } from 'src/constants/finance-menu';
+import { useBoolean } from 'src/hooks/use-boolean';
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
 import FeeCategoryTable from 'src/screens/finance/settings/FeeCategory/Components/FeeCategoryTable';
 import FeeCategoryForm from 'src/screens/finance/settings/FeeCategory/Components/FeeCategoryForm';
@@ -30,7 +31,21 @@ const store = configureStore({
     confirmPopup: confirmPopupReducer,
   },
 });
+function ThemeControls() {
+  const { setMode } = useColorScheme();
+  return (
+    <Box sx={{ display: 'flex', gap: 1 }}>
+      <Button size="small" onClick={() => setMode('light')}>
+        Light theme
+      </Button>
+      <Button size="small" onClick={() => setMode('dark')}>
+        Dark theme
+      </Button>
+    </Box>
+  );
+}
 function Fixture() {
+  const editor = useBoolean();
   const [count, setCount] = React.useState(0);
   const [editData, setEditData] = React.useState<any>(null);
   React.useEffect(() => {
@@ -52,9 +67,10 @@ function Fixture() {
           <Typography>
             Fixture status mutations: {count} · Synthetic data, no backend writes
           </Typography>
+          <ThemeControls />
           <FeeCategoryTable
             archived={!dependencyMode}
-            onAddFeeCategory={() => {}}
+            onAddFeeCategory={editor}
             setEditData={setEditData}
           />
           {editData && (

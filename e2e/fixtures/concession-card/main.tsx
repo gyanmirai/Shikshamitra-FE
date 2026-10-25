@@ -15,6 +15,9 @@ import StudentInformationAccordion from 'src/screens/finance/ConcessionAdmin/Stu
 import 'simplebar-react/dist/simplebar.min.css';
 
 const actions = financePermissions.fees.concessionActions;
+const previewParams = new URLSearchParams(window.location.search);
+const ownRequest = previewParams.get('own') === 'true';
+const previewRole = previewParams.get('role') || 'staff';
 function ThemeToggle() {
   const { mode, setMode } = useColorScheme();
   return (
@@ -27,8 +30,14 @@ const store = configureStore({
   reducer: {
     confirmPopup,
     auth: () => ({
-      user: { sub: 'checker' },
-      permissions: [actions.edit, actions.delete, actions.viewDocument].map((name) => ({
+      user: { sub: ownRequest ? 'maker' : 'checker', role: previewRole },
+      permissions: [
+        actions.edit,
+        actions.approve,
+        actions.reject,
+        actions.delete,
+        actions.viewDocument,
+      ].map((name) => ({
         name,
         isGranted: true,
       })),
@@ -54,7 +63,10 @@ const item: IConcessionRequestItem = {
   approvedAt: '',
   concurrencyStamp: 'synthetic-stamp',
   submittedDocuments: [],
-  availableActions: ['edit', 'delete'],
+  availableActions:
+    ownRequest && previewRole === 'admin'
+      ? ['edit', 'delete', 'approve', 'reject']
+      : ['edit', 'delete'],
   requiredDocuments: [
     'Sibling Enrollment Certificate',
     'Additional Supporting Document With A Long Name To Verify Wrapping',
@@ -96,15 +108,46 @@ function Fixture() {
               educationMediumName: 'English',
             }}
           />
-          <ConcessionItemCard
-            item={item}
-            onEdit={() => setLastAction('Edit delegated')}
-            onDelete={() => setDeleteOpen(true)}
-            onOpenDocs={() => setLastAction('Document manager delegated')}
-            onApprove={() => undefined}
-            onReject={() => undefined}
-            onCancel={() => undefined}
-          />
+          <Box
+            sx={{
+              display: 'grid',
+              gap: 1.5,
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+            }}
+          >
+            <ConcessionItemCard
+              item={item}
+              onEdit={() => setLastAction('Edit delegated')}
+              onDelete={() => setDeleteOpen(true)}
+              onOpenDocs={() => setLastAction('Document manager delegated')}
+              onApprove={() =>
+                setLastAction('Approval review opened for the administrator’s own request')
+              }
+              onReject={() =>
+                setLastAction('Rejection review opened for the administrator’s own request')
+              }
+            />
+            <ConcessionItemCard
+              item={{
+                ...item,
+                studentConcessionTypeRequestId: 'synthetic-many',
+                requiredDocuments: Array.from({ length: 8 }, (_, index) => ({
+                  ...item.requiredDocuments![0],
+                  documentId: `many-${index}`,
+                  documentName: `Supporting certificate ${index + 1}`,
+                })),
+              }}
+              onEdit={() => setLastAction('Edit delegated')}
+              onDelete={() => setDeleteOpen(true)}
+              onOpenDocs={() => setLastAction('Document manager delegated')}
+              onApprove={() =>
+                setLastAction('Approval review opened for the administrator’s own request')
+              }
+              onReject={() =>
+                setLastAction('Rejection review opened for the administrator’s own request')
+              }
+            />
+          </Box>
           <Typography role="status" sx={{ mt: 1 }}>
             {lastAction}
           </Typography>

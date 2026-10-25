@@ -20,6 +20,7 @@ export default function ConcessionFeeHeadSelection({
   onToggle,
   onInspect,
   detailsId,
+  detailsExpanded = true,
 }: {
   feeHeads: ConcessionSelectableFeeHead[];
   installments: ConcessionEligibleDueFee[];
@@ -28,9 +29,25 @@ export default function ConcessionFeeHeadSelection({
   onToggle: (id: string) => void;
   onInspect: (id: string) => void;
   detailsId: string;
+  detailsExpanded?: boolean;
 }) {
   return (
     <Stack component="ul" aria-label="Eligible fee heads" sx={{ m: 0, p: 0, listStyle: 'none' }}>
+      <Stack
+        component="li"
+        aria-hidden="true"
+        direction="row"
+        justifyContent="space-between"
+        gap={1}
+        sx={{ pb: 0.5 }}
+      >
+        <Typography variant="caption" color="text.secondary">
+          Fee
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Eligible
+        </Typography>
+      </Stack>
       {feeHeads.map((head) => {
         const count = installments.filter((line) => line.feeHeadId === head.feeHeadId).length;
         const active = activeId === head.feeHeadId;
@@ -40,7 +57,7 @@ export default function ConcessionFeeHeadSelection({
             direction="row"
             key={head.feeHeadId}
             alignItems="flex-start"
-            sx={{ py: 2, borderBottom: 1, borderColor: 'divider', minWidth: 0 }}
+            sx={{ py: 0.75, borderBottom: 1, borderColor: 'divider', minWidth: 0 }}
           >
             <Checkbox
               size="small"
@@ -54,6 +71,7 @@ export default function ConcessionFeeHeadSelection({
               aria-label={`Inspect ${head.feeHeadName}`}
               aria-pressed={active}
               aria-controls={detailsId}
+              aria-expanded={active && detailsExpanded}
               sx={{
                 flex: 1,
                 minWidth: 0,
@@ -69,28 +87,17 @@ export default function ConcessionFeeHeadSelection({
                 </Typography>
                 <Iconify icon="solar:arrow-right-linear" width={18} sx={{ flexShrink: 0 }} />
               </Stack>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                component="span"
-                display="block"
-                mt={0.5}
-              >
-                {formatNumber(head.amount, 'INR')} eligible · {count} installment
+              <Typography variant="caption" color="text.secondary" component="span" display="block">
+                {count} installment
                 {count === 1 ? '' : 's'}
               </Typography>
-              {active && (
-                <Typography
-                  variant="caption"
-                  color="primary.main"
-                  component="span"
-                  display="block"
-                  mt={0.5}
-                >
-                  Viewing in detail panel
-                </Typography>
-              )}
             </ButtonBase>
+            <Typography
+              variant="body2"
+              sx={{ ml: 1, pt: 0.5, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+            >
+              {formatNumber(head.amount, 'INR')}
+            </Typography>
           </Stack>
         );
       })}

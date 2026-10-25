@@ -3,10 +3,10 @@ import type {
   ConcessionRequestContext,
 } from 'src/redux/finance/ConcessionManagement/types';
 
-import { Box, Stack, Alert, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { concessionInstallmentLabel } from '../concessionInstallmentLabel';
 import { validateConcessionInstallments } from '../concessionValueValidation';
@@ -32,71 +32,46 @@ export default function RequestEnteredInstallments({
     requestContext,
     policy
   );
-  const hasInvalidValues = Object.keys(validationErrors).length > 0;
   const enteredTotal = lines.reduce((sum, line) => sum + Number(entries[line.dueFeeId] || 0), 0);
   const percentage = policy.calculationMethod === 'Percentage';
   const maximum = percentage
     ? Math.min(100, policy.maximumPercentage ?? 100)
     : (policy.maximumFixedAmount ?? Number.POSITIVE_INFINITY);
   const money = (amount: number) => formatNumber(amount, 'INR');
-  const remaining = Math.max(0, Number((maximum - enteredTotal).toFixed(2)));
-  const hasRequestLimit = !percentage && Number.isFinite(maximum);
-  const columns = {
-    xs: 'minmax(0, 1fr) minmax(0, 1fr)',
-    md: 'minmax(100px, 0.8fr) minmax(140px, 1fr) minmax(100px, 0.7fr) minmax(180px, 1fr) minmax(130px, 0.8fr)',
-  };
+  // Respond to the editor's width, rather than the viewport: a wide screen can
+  // still have a narrow editor beside the impact panel.
+  const columns = 'minmax(0, 1.25fr) minmax(0, 0.8fr) minmax(0, 1.3fr) minmax(0, 0.9fr)';
 
   return (
-    <Stack spacing={1.5}>
-      {hasRequestLimit ? (
-        <Box>
-          <Typography variant="body2" fontWeight={600}>
-            Maximum concession for this request: {money(maximum)}
-          </Typography>
-          <Typography
-            variant="body2"
-            role="status"
-            aria-label="Concession request allowance"
-            sx={{ fontVariantNumeric: 'tabular-nums' }}
-          >
-            {hasInvalidValues
-              ? 'Correct the invalid installment amounts to calculate the remaining allowance.'
-              : `Entered: ${money(enteredTotal)} | Remaining: ${money(remaining)}`}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            This allowance is shared across all selected installments.
-          </Typography>
-        </Box>
-      ) : percentage ? (
-        <Typography variant="body2" color="text.secondary">
-          Maximum concession per installment: {maximum}% of its eligible amount.
-        </Typography>
-      ) : null}
-      {hasRequestLimit && remaining === 0 && (
-        <Alert severity="info">
-          The policy limit has been reached. Reduce another concession value before entering an
-          amount here.
-        </Alert>
-      )}
-      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}>
+    <Box sx={{ minWidth: 0, containerType: 'inline-size' }}>
+      <Box
+        component="section"
+        aria-label="Installment concessions"
+        sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}
+      >
         <Box
           sx={{
-            display: { xs: 'none', md: 'grid' },
+            display: 'none',
             gridTemplateColumns: columns,
-            gap: 1.5,
-            px: 1.5,
-            py: 1,
+            '@container (min-width: 540px)': { display: 'grid' },
+            gap: 1,
+            px: 1.25,
+            py: 0.75,
             bgcolor: 'background.neutral',
           }}
         >
           {[
-            'Installment',
-            'Fee head',
-            'Eligible amount',
-            percentage ? 'Concession % (editable)' : 'Concession amount (editable)',
-            'Estimated reduction',
-          ].map((heading) => (
-            <Typography key={heading} variant="caption" color="text.secondary">
+            'Installment / fee',
+            'Eligible',
+            percentage ? 'Concession %' : 'Concession amount',
+            'Reduction',
+          ].map((heading, index) => (
+            <Typography
+              key={heading}
+              variant="caption"
+              color="text.secondary"
+              sx={{ textAlign: index === 3 ? 'right' : 'left', overflowWrap: 'anywhere' }}
+            >
               {heading}
             </Typography>
           ))}
@@ -126,32 +101,40 @@ export default function RequestEnteredInstallments({
               key={line.dueFeeId}
               sx={{
                 display: 'grid',
-                gridTemplateColumns: columns,
-                gap: 1.5,
-                alignItems: 'start',
-                px: 1.5,
-                py: 1.25,
+                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+                '@container (min-width: 540px)': { gridTemplateColumns: columns },
+                gap: 1,
+                alignItems: 'center',
+                px: 1.25,
+                py: 1,
                 borderTop: 1,
                 borderColor: 'divider',
               }}
             >
-              <Typography variant="body2" sx={{ pt: { md: 1 } }}>
-                {concessionInstallmentLabel(line.installmentLabel, line.year)}
-              </Typography>
-              <Typography variant="body2" fontWeight={600} sx={{ pt: { md: 1 } }}>
-                {line.feeHeadName}
-              </Typography>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="body2">
+                  {concessionInstallmentLabel(line.installmentLabel, line.year)}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ overflowWrap: 'anywhere' }}
+                >
+                  {line.feeHeadName}
+                </Typography>
+              </Box>
               <Box
                 sx={{
-                  pt: { md: 1 },
+                  minWidth: 0,
                   fontVariantNumeric: 'tabular-nums',
-                  gridColumn: { xs: '1 / -1', md: 'auto' },
+                  textAlign: 'right',
+                  '@container (min-width: 540px)': { textAlign: 'left' },
                 }}
               >
                 <Typography
                   variant="caption"
                   color="text.secondary"
-                  sx={{ display: { md: 'none' } }}
+                  sx={{ display: 'block', '@container (min-width: 540px)': { display: 'none' } }}
                 >
                   Eligible amount:{' '}
                 </Typography>
@@ -162,6 +145,7 @@ export default function RequestEnteredInstallments({
               <NumericFormatCustom
                 fullWidth
                 size="small"
+                sx={{ minWidth: 0, '& input': { px: 1 } }}
                 name={`dueFeeEntries.${line.dueFeeId}`}
                 label={percentage ? 'Concession %' : 'Concession amount'}
                 value={entries[line.dueFeeId] ?? ''}
@@ -184,23 +168,19 @@ export default function RequestEnteredInstallments({
                 }}
                 onBlur={formik.handleBlur}
                 error={Boolean(error)}
-                helperText={
-                  error ||
-                  (percentage
-                    ? `Up to ${maximum}%`
-                    : `Available: ${money(available)}${value > 0 && hasRequestLimit ? ' (includes this value)' : ''}`)
-                }
-                FormHelperTextProps={{ sx: { mt: 0.75, mx: 0, minHeight: '1.5em' } }}
+                helperText={error || undefined}
+                FormHelperTextProps={{ sx: { mt: 0.5, mx: 0 } }}
               />
-              <Box sx={{ pt: 1, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Estimated reduction
+              <Box sx={{ minWidth: 0, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: 'block', '@container (min-width: 540px)': { display: 'none' } }}
+                >
+                  Reduction
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
                   {error ? '—' : `−${money(estimate)}`}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Calculated
                 </Typography>
               </Box>
             </Box>
@@ -212,6 +192,6 @@ export default function RequestEnteredInstallments({
           </Typography>
         )}
       </Box>
-    </Stack>
+    </Box>
   );
 }

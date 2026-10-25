@@ -788,6 +788,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 <FeeHeadDependencies
                   key={head.id}
                   name={head.name}
+                  showName
                   feeHeadId={head.id}
                   dependencies={head.dependencies}
                 />

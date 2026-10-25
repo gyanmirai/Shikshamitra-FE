@@ -229,8 +229,14 @@ const Concession = () => {
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <ViewConcessionRequest
             student={selectedConcessionForView}
-            onEdit={() => {
-              setSelectedConcession(selectedConcessionForView);
+            onEdit={(request) => {
+              if (!selectedConcessionForView) return;
+              setSelectedConcession({
+                ...selectedConcessionForView,
+                ...request,
+                id: request.studentConcessionTypeRequestId,
+                concessionRequestId: request.studentConcessionTypeRequestId,
+              });
               viewConcessionRequest.onFalse();
               addConcessionRequest.onTrue();
             }}

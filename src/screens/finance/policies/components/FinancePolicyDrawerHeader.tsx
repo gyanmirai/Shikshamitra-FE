@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 
 import { Iconify } from 'src/components/iconify';
 import { Box, Stack, Typography, IconButton } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 
 export default function FinancePolicyDrawerHeader({
   title,
@@ -38,11 +38,11 @@ export default function FinancePolicyDrawerHeader({
             {title}
           </Typography>
           {(descriptionDisplay === 'tooltip' || helpText) && (
-            <CustomTooltip arrow placement="right" title={helpText || description}>
-              <IconButton size="small" aria-label={`${title} information`} disabled={disabled}>
-                <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
-              </IconButton>
-            </CustomTooltip>
+            <InfoTooltipIcon
+              title={helpText || description}
+              label={`${title} information`}
+              disabled={disabled}
+            />
           )}
         </Stack>
       </Box>

@@ -65,7 +65,7 @@ export default function FeeStructureReviewStep({
   return (
     <Stack spacing={2}>
       <DetailSection
-        helpText="Fixed fee total includes optional and admission-only heads. Admission-only heads are excluded from regular dues, Fee Collection and income. Variable amounts are set during student assignment; this is not a student's amount due."
+        helpText="Fixed fee total includes optional heads. All assigned heads are available in Fee Collection. Variable amounts are set during student assignment; this is not a student's amount due."
         icon={GlobalIcons.notebook}
         title="Structure Summary"
 
@@ -86,10 +86,6 @@ export default function FeeStructureReviewStep({
               ),
             },
             { label: 'Fee heads', value: candidate.feeHeads.length },
-            {
-              label: 'Admission-only heads',
-              value: candidate.feeHeads.filter((line) => line.collectAtAdmission).length,
-            },
             {
               label: 'Optional fee heads',
               value: candidate.feeHeads.filter((line) => line.isOptional).length,

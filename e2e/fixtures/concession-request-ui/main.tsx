@@ -1,22 +1,21 @@
 import React from 'react';
 import { useFormik } from 'formik';
 import { createRoot } from 'react-dom/client';
-import { ThemeProvider, useColorScheme } from '@mui/material/styles';
-import { Box, Stack, Button, TextField, CssBaseline, Typography } from '@mui/material';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { createTheme } from 'src/theme/create-theme';
-import { defaultSettings } from 'src/components/settings/config-settings';
-
-import ValueEntryStep from 'src/screens/finance/Concession/Components/ConcessionSteps/ValueEntryStep';
-import ConcessionRequestWorkspace from 'src/screens/finance/Concession/Components/ConcessionRequestWorkspace';
-import ConcessionPolicyFields from 'src/screens/finance/Concession/Components/ConcessionPolicyFields';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { ThemeProvider, useColorScheme } from '@mui/material/styles';
+import { defaultSettings } from 'src/components/settings/config-settings';
+import { Box, Stack, Button, Typography, CssBaseline } from '@mui/material';
+import ValueEntryStep from 'src/screens/finance/Concession/Components/ConcessionSteps/ValueEntryStep';
+import ConcessionPolicyFields from 'src/screens/finance/Concession/Components/ConcessionPolicyFields';
+import ConcessionDocumentList from 'src/screens/finance/Concession/Components/ConcessionDocumentList';
+import ConcessionRequestWorkspace from 'src/screens/finance/Concession/Components/ConcessionRequestWorkspace';
+import ReadOnlyConcessionApprovalView from 'src/screens/finance/ConcessionAdmin/ReadOnlyConcessionApprovalView';
 import { validateConcessionInstallments } from 'src/screens/finance/Concession/Components/concessionValueValidation';
 
-import ConcessionDocumentList from 'src/screens/finance/Concession/Components/ConcessionDocumentList';
-import ReadOnlyConcessionApprovalView from 'src/screens/finance/ConcessionAdmin/ReadOnlyConcessionApprovalView';
-import { context, policy, preview } from './data';
+import { policy, context, preview } from './data';
 
 function ThemeToggle() {
   const { mode, setMode } = useColorScheme();
@@ -71,7 +70,7 @@ function Fixture() {
     eligibleDueFees: [
       ...context.eligibleDueFees.map((line, index) => ({
         ...line,
-        dueFeeId: 'school-' + index,
+        dueFeeId: `school-${  index}`,
         feeHeadId: 'school',
         feeHeadName: 'General School Fees',
         originalAmount: 15000,
@@ -238,6 +237,7 @@ function Fixture() {
                   valueFields={
                     selected.length > 0 ? (
                       <ValueEntryStep
+                        compact
                         formik={formik}
                         showPolicyFixedDetails={false}
                         concessionTypes={[{ id: 'sibling', name: 'General School Nikhil' }]}
@@ -269,15 +269,6 @@ function Fixture() {
                           maxFileSizeBytes: 2 * 1024 * 1024,
                         },
                       ]}
-                    />
-                  }
-                  remarks={
-                    <TextField
-                      fullWidth
-                      size="small"
-                      multiline
-                      rows={2}
-                      label="Remarks (optional)"
                     />
                   }
                 />

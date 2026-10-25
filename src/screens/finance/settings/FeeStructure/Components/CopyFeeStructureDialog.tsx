@@ -17,6 +17,7 @@ import { Box, Alert, Stack, Button, TextField, Typography, DialogActions } from 
 import {
   useSaveStructureDraftMutation,
   useGetStructureCopySourcesQuery,
+  useGetStructureCopyPoliciesQuery,
 } from 'src/redux/finance/feeStructureWorkspace';
 
 import { structureError } from '../feeStructureModel';
@@ -71,7 +72,7 @@ export default function CopyFeeStructureDialog({
         .max(256, 'Use at most 256 characters.'),
     }),
     onSubmit: async (values, helpers) => {
-      if (submitting.current || sources.isFetching || sources.isError) return;
+      if (submitting.current || sources.isFetching || sources.isError || !policiesReady) return;
       const source = sources.currentData?.find((item) => item.structure.id === values.sourceId);
       if (!source) return;
       submitting.current = true;
@@ -81,7 +82,11 @@ export default function CopyFeeStructureDialog({
         const body = {
           feeStructureMetadataId,
           standardId,
-          standardFeeStructures: copyStructureCandidate(source.structure, values.name),
+          standardFeeStructures: copyStructureCandidate(
+            source.structure,
+            values.name,
+            policies.currentData ?? []
+          ),
         };
         const fingerprint = JSON.stringify(body);
         if (request.current?.fingerprint !== fingerprint)
@@ -98,6 +103,32 @@ export default function CopyFeeStructureDialog({
       }
     },
   });
+  const policies = useGetStructureCopyPoliciesQuery(
+    { sourceId: formik.values.sourceId, feeStructureMetadataId, standardId },
+    { skip: !formik.values.sourceId, refetchOnMountOrArgChange: true }
+  );
+  const selectedSource = sources.currentData?.find(
+    (item) => item.structure.id === formik.values.sourceId
+  );
+  const missingPolicies = (['collection', 'refund'] as const).filter(
+    (family) =>
+      selectedSource?.structure[`${family}PolicyId`] &&
+      !policies.currentData?.some(
+        (policy) =>
+          policy.family === family &&
+          policy.policyId === selectedSource.structure[`${family}PolicyId`]
+      )
+  );
+  const policiesReady = Boolean(
+    selectedSource &&
+    policies.currentData &&
+    !policies.isFetching &&
+    !policies.isError &&
+    !policies.currentData.some(
+      (policy) => policy.family !== 'concession' && (policy.error || !policy.currentVersionId)
+    ) &&
+    !missingPolicies.length
+  );
   const busy = formik.isSubmitting;
   const { requestNavigation, confirmation } = useUnsavedNavigation(formik.dirty, {
     keepEditingLabel: 'Keep Editing',
@@ -126,14 +157,28 @@ export default function CopyFeeStructureDialog({
         guardUnsavedChanges={false}
         disableClose={busy}
         handleClose={requestClose}
+        paperProps={{
+          sx: {
+            height: formik.values.sourceId ? 'min(760px, calc(100dvh - 64px))' : undefined,
+            '& > #dialog-form': { overflow: 'hidden' },
+            '& > #dialog-form > :first-child': { flexShrink: 0 },
+          },
+        }}
       >
         <Box
           component="form"
           id="copy-fee-structure-form"
           noValidate
           onSubmit={formik.handleSubmit}
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: '1 1 auto',
+            minHeight: 0,
+            overflow: 'hidden',
+          }}
         >
-          <DialogScrollContent>
+          <DialogScrollContent scrollBarProps={{ sx: { flex: '1 1 auto', minHeight: 0 } }}>
             <FormBusyRegion busy={busy} label="Copying fee structure…">
               <Stack spacing={2}>
                 <Typography variant="body2">
@@ -214,10 +259,90 @@ export default function CopyFeeStructureDialog({
                     />
                   </ShakingTextField>
                 </FormSectionCard>
+                {formik.values.sourceId && (
+                  <FormSectionCard
+                    title="Linked Policies"
+                    icon={GlobalIcons.info}
+                    descriptionTooltip="The copy selects the current active version of each linked policy. The source structure keeps its saved snapshots."
+                  >
+                    {policies.isFetching && (
+                      <Typography variant="body2" role="status">
+                        Checking linked policy versions…
+                      </Typography>
+                    )}
+                    {policies.isError && (
+                      <Alert severity="error">
+                        Linked policies could not be checked. Refresh and select current versions
+                        before copying.
+                      </Alert>
+                    )}
+                    {!policies.isFetching && !policies.isError && missingPolicies.length > 0 && (
+                      <Alert severity="error">
+                        {missingPolicies
+                          .map((family) => `${family[0].toUpperCase()}${family.slice(1)} Policy`)
+                          .join(', ')}
+                        : the linked policy could not be resolved. Refresh and select current
+                        versions before copying.
+                      </Alert>
+                    )}
+                    {!policies.isFetching &&
+                      !policies.isError &&
+                      !missingPolicies.length &&
+                      policies.currentData?.length === 0 && (
+                        <Typography variant="body2">No policies attached.</Typography>
+                      )}
+                    {policies.currentData?.map((policy) => (
+                      <Alert
+                        key={policy.family}
+                        severity={
+                          policy.family === 'concession'
+                            ? 'info'
+                            : policy.error
+                              ? 'error'
+                              : policy.sourceVersionId !== policy.currentVersionId
+                                ? 'info'
+                                : 'success'
+                        }
+                      >
+                        <Typography variant="subtitle2">
+                          {policy.family[0].toUpperCase()}
+                          {policy.family.slice(1)} Policy: {policy.policyName}
+                        </Typography>
+                        <Typography variant="body2">
+                          Source snapshot:{' '}
+                          {policy.sourceVersionNumber == null
+                            ? 'Unavailable'
+                            : `v${policy.sourceVersionNumber}`}{' '}
+                          · Current version:{' '}
+                          {policy.currentVersionNumber == null
+                            ? 'Unavailable'
+                            : `v${policy.currentVersionNumber}`}
+                        </Typography>
+                        <Typography variant="body2">
+                          {policy.family === 'concession'
+                            ? 'Legacy attachment; new structures use concession request policies. This attachment is not copied.'
+                            : policy.error || `Selected for copy: v${policy.currentVersionNumber}`}
+                        </Typography>
+                      </Alert>
+                    ))}
+                    <Button
+                      type="button"
+                      size="small"
+                      variant="outlined"
+                      disabled={busy || policies.isFetching}
+                      onClick={() => {
+                        setError('');
+                        policies.refetch();
+                      }}
+                    >
+                      Refresh and select current versions
+                    </Button>
+                  </FormSectionCard>
+                )}
               </Stack>
             </FormBusyRegion>
           </DialogScrollContent>
-          <DialogActions>
+          <DialogActions sx={{ flexShrink: 0 }}>
             <Button
               type="button"
               size="small"
@@ -231,7 +356,12 @@ export default function CopyFeeStructureDialog({
             </Button>
             <SubmitButton
               loading={busy}
-              disabled={sources.isFetching || sources.isError || !options.length}
+              disabled={
+                sources.isFetching ||
+                sources.isError ||
+                !options.length ||
+                Boolean(formik.values.sourceId && !policiesReady)
+              }
             />
           </DialogActions>
         </Box>

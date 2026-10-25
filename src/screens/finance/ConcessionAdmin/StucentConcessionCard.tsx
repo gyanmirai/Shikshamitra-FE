@@ -1,5 +1,4 @@
-import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailGrid, DetailField } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 
 type StudentInformation = {
   name?: string;
@@ -31,33 +30,25 @@ export default function StudentInformationAccordion({
     { label: 'Board / medium', value: boardMedium },
   ];
   return (
-    <FormSectionCard
+    <DetailSection
       title="Student Information"
       icon="mdi:account-school-outline"
-      iconSize={16}
-      iconContainerSize={28}
-      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-      descriptionTooltip="Student identity and academic placement, including the assigned board and education medium."
+      helpText="Student identity and academic placement, including the assigned board and education medium."
       sx={{
-        mb: 2,
-        containerType: 'inline-size',
-        minWidth: 0,
-        boxShadow: 'none',
-        bgcolor: 'background.paper',
+        mb: 0.75,
+        p: 1.5,
+        '& .MuiIconButton-root': {
+          width: 28,
+          height: 28,
+          '@media (pointer: coarse)': { width: 44, height: 44 },
+        },
       }}
     >
       <DetailGrid desktopColumns={6}>
         {fields.map((field) => (
-          <DetailField
-            key={field.label}
-            {...field}
-            labelTypographyProps={{
-              color: 'text.secondary',
-              sx: { fontWeight: 400, letterSpacing: 'normal', textTransform: 'none' },
-            }}
-          />
+          <DetailField key={field.label} {...field} />
         ))}
       </DetailGrid>
-    </FormSectionCard>
+    </DetailSection>
   );
 }

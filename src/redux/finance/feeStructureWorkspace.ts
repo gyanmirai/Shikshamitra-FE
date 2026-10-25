@@ -23,7 +23,6 @@ export interface StructureLine {
   isVariable?: boolean;
   isOneTime: boolean;
   isOptional: boolean;
-  collectAtAdmission?: boolean;
   payableMonth: number;
   payableYear: number;
   paymentTermId: string | null;
@@ -138,6 +137,17 @@ export interface StructureCopySource {
   structure: StructureRecord;
 }
 
+export interface StructureCopyPolicy {
+  family: PolicyFamily;
+  policyId: string;
+  policyName: string;
+  sourceVersionId: string | null;
+  sourceVersionNumber: number | null;
+  currentVersionId: string | null;
+  currentVersionNumber: number | null;
+  error: string | null;
+}
+
 const classTags = (_r: unknown, error: unknown, arg: { standardId: string }) =>
   error
     ? []
@@ -147,6 +157,15 @@ const classTags = (_r: unknown, error: unknown, arg: { standardId: string }) =>
       ];
 export const feeStructureWorkspaceApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getStructureCopyPolicies: builder.query<
+      StructureCopyPolicy[],
+      { sourceId: string; feeStructureMetadataId: string; standardId: string }
+    >({
+      query: ({ sourceId, ...params }) => ({
+        url: `/fee-structures/${sourceId}/copy-policies`,
+        params,
+      }),
+    }),
     getStructureCopySources: builder.query<
       StructureCopySource[],
       { feeStructureMetadataId: string; classes: { id: string; name: string }[] }
@@ -256,6 +275,7 @@ export const feeStructureWorkspaceApi = financeModuleApi.injectEndpoints({
   }),
 });
 export const {
+  useGetStructureCopyPoliciesQuery,
   useGetStructureCopySourcesQuery,
   useGetStructureContextQuery,
   usePreviewStructureMutation,

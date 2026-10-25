@@ -3,7 +3,7 @@ module: finance
 domain: fee-structure
 content_type: Reference
 status: canonical
-updated_on: 2026-10-23
+updated_on: 2026-10-24
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,15 +12,15 @@ audience: humans-and-agents
 
 The active screen at `/finance/settings/create-fee-structure` uses one class workspace for viewing and editing draft/published structures. Saving configuration creates no monetary transaction. Per-head collection eligibility is enforced by the backend during assignment/due generation.
 
-## Collect at admission
+## Fee heads and collection
 
-The Add/Edit Fee Head dialog includes a **Collect at admission** switch, defaulting to off for existing and new heads. Its adjacent keyboard-focusable information icon explains that enabling it excludes the head from regular dues, Fee Collection and income, and records no admission payment. The enabled state also shows this consequence as visible helper text. There is no new admission payment screen or action.
+Every fee head uses a published payment frequency. The Add/Edit Fee Head dialog always shows and validates that field; there is no admission collection switch or collection-exclusion label. Optional heads remain selectable during student assignment, and variable heads receive their amount there.
 
-The row's choice stays local until it is saved and the owning structure draft is saved. The typed `StructureLine.collectAtAdmission` field round-trips through create/PATCH/read/revision; `buildStructureChanges` sends a changed boolean explicitly, including `false`. Admission-only heads do not require or automatically receive a payment frequency. Switching the option off restores normal payment-frequency validation. The existing read-only/published/busy states protect the choice with the rest of the form.
+The client omits the retired field from candidates and create/PATCH payloads, including when reading an older server response. All assigned heads generate obligations and appear in Fee Collection under the normal backend rules. The summary shows the attached payment frequency and supports opening its schedule. Review counts fixed, optional and variable heads.
 
-The fee-head summary identifies **Admission only · Excluded from collection and income**, displays no applicable payment frequency, and disables schedule opening. Review counts admission-only heads and explains that its configured fixed-fee total includes reference amounts and is not a student's collectible balance. Publication coverage comes from the server and identifies the exclusion. Backend eligibility, migration and history rules are owned by the [backend workspace contract](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md#admission-only-fee-heads).
+Backend contracts, migration and historical-data handling are owned by the [backend workspace contract](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md#fee-head-collection).
 
-Verify the switch with no published terms, help on keyboard focus, row edit/reopen, save/reload, revision, both themes and a narrow viewport. `feeStructureModel.test.ts` covers defaults, explicit boolean PATCH, clone retention and payment-term rules; `feeStructureFields.test.tsx` exercises the actual dialog and visible help.
+`feeStructureModel.test.ts` verifies legacy-field removal and mandatory payment-term validation. `feeStructureFields.test.tsx` verifies the absent switch, visible payment frequency and rejection of a head without a published frequency. Browser checks cover add/edit, both themes and narrow viewports.
 
 The workspace uses a visible structure list beside the three-step editor. Add and Copy share one row above the structure search. At narrower widths the same list opens in a drawer, with paired creation actions also available in the workspace toolbar. Structure navigation preserves each mounted editor's unsaved values and saved step. The earlier [UI and language proposal](fee-structure-ui-redesign.md) supplies background; the active layout is described here.
 

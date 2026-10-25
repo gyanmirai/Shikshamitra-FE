@@ -58,7 +58,7 @@ const renderForm = () =>
   render(<FeeCategoryForm open={{ value: true } as never} onClose={vi.fn()} editData={null} />);
 
 describe('Fee category editor', () => {
-  it('blocks removal of an assigned fee head and explains the exact dependencies', () => {
+  it('blocks removal of an assigned fee head without showing a usage warning while editing', () => {
     const head = {
       id: 'assigned-head',
       name: 'FH3',
@@ -97,13 +97,9 @@ describe('Fee category editor', () => {
     );
     expect(screen.getByRole('button', { name: 'Remove FH3' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Remove Unused' })).toBeEnabled();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'FH3 is used by 1 student, 1 assignment, 1 fee structure, and 1 payment term'
-    );
-    expect(screen.getByRole('link', { name: 'Review Fee Assignments' })).toHaveAttribute(
-      'href',
-      '/finance/fee-structure-assign?feeHeadId=assigned-head'
-    );
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Usage of FH3' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'View usage' })).toBeNull();
   });
 
   it('groups category fields and keeps both descriptions visible', () => {

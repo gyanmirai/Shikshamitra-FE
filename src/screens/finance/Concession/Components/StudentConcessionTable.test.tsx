@@ -10,6 +10,7 @@ const state = vi.hoisted(() => ({
   params: {} as any,
   table: {} as any,
   userId: 'checker',
+  role: 'staff',
   error: false,
   draft: false,
   confirmWithUndo: vi.fn(),
@@ -20,7 +21,7 @@ vi.mock('react-redux', () => ({
   useSelector: (select: any) =>
     select({
       auth: {
-        user: { sub: state.userId },
+        user: { sub: state.userId, role: state.role },
         permissions: Object.values(financePermissions.fees.concessionActions).map((name) => ({
           name,
           isGranted: true,
@@ -41,9 +42,16 @@ vi.mock('src/screens/finance/components/FinanceClassDivisionFilter', () => ({
   default: () => null,
 }));
 vi.mock('src/components/confirm-dialog', () => ({
-  ConfirmDialog: ({ open, title, content, action, onClose }: any) => open ? (
-    <div role="dialog" aria-label={title}>{content}<button type="button" onClick={onClose}>Cancel deletion</button>{action}</div>
-  ) : null,
+  ConfirmDialog: ({ open, title, content, action, onClose }: any) =>
+    open ? (
+      <div role="dialog" aria-label={title}>
+        {content}
+        <button type="button" onClick={onClose}>
+          Cancel deletion
+        </button>
+        {action}
+      </div>
+    ) : null,
 }));
 vi.mock('src/components/customDialog', () => ({
   default: () => null,
@@ -135,10 +143,15 @@ vi.mock('src/components/customizabaleTable', () => ({
         <button type="button" onClick={() => props.onServerFilter([])}>
           Clear filters
         </button>
-        <button type="button" onClick={() => props.onServerFilter([
-          ...props.filters,
-          { column: 'status', type: 'equals', value: 1, valueType: 'enum' },
-        ])}>
+        <button
+          type="button"
+          onClick={() =>
+            props.onServerFilter([
+              ...props.filters,
+              { column: 'status', type: 'equals', value: 1, valueType: 'enum' },
+            ])
+          }
+        >
           Filter approved
         </button>
         <div>{row.classDivision}</div>
@@ -167,6 +180,7 @@ function setup() {
 describe('Concessions table query and actions', () => {
   beforeEach(() => {
     state.userId = 'checker';
+    state.role = 'staff';
     state.error = false;
     state.draft = false;
     state.confirmWithUndo.mockClear();
@@ -211,7 +225,9 @@ describe('Concessions table query and actions', () => {
     setup();
     const statusColumn = state.table.columns.find((column: any) => column.id === 'status');
     expect(statusColumn.enumOptions.map((option: any) => option.label)).toEqual([
-      'Pending', 'Approved', 'Rejected',
+      'Pending',
+      'Approved',
+      'Rejected',
     ]);
     render(statusColumn.render(ConcessionStatusType.Draft));
     expect(screen.getByText('Pending', { selector: 'span' })).toBeVisible();
@@ -258,6 +274,13 @@ describe('Concessions table query and actions', () => {
       expect.objectContaining({ id: 'request', requesterId: 'maker' })
     );
   });
+  it('allows administrator creator decisions in the register', () => {
+    state.userId = 'maker';
+    state.role = 'admin';
+    setup();
+    expect(screen.getByRole('button', { name: /Approve Asha Patel/ })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Reject Asha Patel/ })).toBeEnabled();
+  });
   it('offers decisions to an independent checker with the exact grants and server actions', () => {
     setup();
     expect(screen.getByRole('button', { name: 'Approve Asha Patel (1001)' })).toBeEnabled();
@@ -273,7 +296,9 @@ describe('Concessions table query and actions', () => {
     state.draft = true;
     setup();
     fireEvent.click(screen.getByRole('button', { name: 'Delete Asha Patel (1001)' }));
-    expect(screen.getByRole('dialog', { name: 'Delete Concession Draft?' })).toHaveTextContent('Asha Patel');
+    expect(screen.getByRole('dialog', { name: 'Delete Concession Draft?' })).toHaveTextContent(
+      'Asha Patel'
+    );
     expect(state.confirmWithUndo).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel deletion' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
