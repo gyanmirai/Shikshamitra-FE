@@ -165,6 +165,17 @@ const unusedRaw = files
   );
 const enabled = (value) => value !== undefined && value !== 'false' && value !== '{false}';
 const capabilities = reachable.map(({ file, line, tag, props, forwarded }) => {
+  if (rawTags.has(tag))
+    return {
+      file,
+      line,
+      table: `${tag}: ${exceptions[file] || file}`,
+      pagination: 'not applicable',
+      sort: 'unavailable: editable configuration',
+      filter: 'feature-owned editing controls',
+      search: 'feature-owned',
+      export: 'unavailable: draft editing context',
+    };
   const paged = enabled(props.serverSidePagination);
   const adapter = tag !== 'CustomizableTable' || forwarded;
   return {
