@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
     assignments: vi.fn(),
     operational: vi.fn(),
     mutations: vi.fn(),
+    resolution: vi.fn(),
   };
 });
 
@@ -40,6 +41,8 @@ vi.mock('src/redux/hr/hr-policy-api', async (importOriginal) => {
         name,
         (args: unknown, options: unknown) => {
           if (name === 'useGetHrPolicyAssignmentsQuery') mocks.assignments(args, options);
+          if (name === 'useGetPolicyAssignmentResolutionPreviewQuery')
+            mocks.resolution(args, options);
           return mocks.result;
         },
       ];
@@ -61,7 +64,7 @@ vi.mock('src/redux/hr/hrOperationalTableApi', () => ({
   },
 }));
 
-function setup(year: string | undefined = 'year-1') {
+function setup(year: string | undefined = 'year-1', previewGrant = false) {
   const store = configureStore({
     reducer: {
       globalState: (state: { currentYear?: { id: string } } | undefined, action) =>
@@ -69,7 +72,10 @@ function setup(year: string | undefined = 'year-1') {
           ? { currentYear: { id: String(action.payload) } }
           : (state ?? { currentYear: year ? { id: year } : undefined }),
       auth: () => ({
-        permissions: Object.values(hrPermissions.policies).map((name) => ({
+        permissions: [
+          ...Object.values(hrPermissions.policies),
+          ...(previewGrant ? [hrPermissions.policyActions.previewImpact] : []),
+        ].map((name) => ({
           name,
           isGranted: true,
         })),
@@ -93,6 +99,43 @@ function setup(year: string | undefined = 'year-1') {
 beforeEach(() => vi.clearAllMocks());
 
 describe('Policy Assignment query after advanced filter removal', () => {
+  it('requires the exact preview grant and sends the scoped draft separately from persisted state', () => {
+    const { result } = setup('year-1', true);
+    expect(mocks.resolution.mock.lastCall?.[1]).toEqual({ skip: true });
+    act(() => {
+      result.current.openAssignmentDrawer();
+      result.current.setAssignmentForm({
+        targetType: 'group',
+        targetKey: 'group-1',
+        targetDisplayName: 'Synthetic group',
+        payrollPolicyId: 'payroll-1',
+        attendancePolicyId: 'attendance-1',
+        leavePolicyId: 'leave-1',
+        effectiveFrom: '2026-04-01',
+        effectiveTo: '',
+        priority: '100',
+        assignmentReason: '',
+        isActive: true,
+      });
+      result.current.setAssignmentSampleEmployeeId('staff-1');
+    });
+    expect(mocks.resolution.mock.lastCall).toEqual([
+      expect.objectContaining({
+        date: '2026-04-01',
+        sampleEmployeeId: 'staff-1',
+        assignment: expect.objectContaining({
+          academicYearId: 'year-1',
+          targetType: 'group',
+          targetKey: 'group-1',
+          priority: 100,
+          effectiveTo: null,
+        }),
+      }),
+      { skip: false },
+    ]);
+    act(() => result.current.setAssignmentForm((form) => ({ ...form, effectiveTo: '2026-03-31' })));
+    expect(mocks.resolution.mock.lastCall?.[1]).toEqual({ skip: true });
+  });
   it('saves the same custom attendance payload when advanced rules are hidden', async () => {
     const { result } = setup();
     act(() => {

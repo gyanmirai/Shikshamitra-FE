@@ -158,8 +158,9 @@ Changing the selected work calendar preserves the explicit default-policy choice
 Dirty policy drawers and the leave editor use Keep editing / Discard changes for local dismissal while retaining existing navigation guards and save locks.
 Saved leave rules open separately from the qualitative impact checklist, whose affected-record measures remain Not calculated until an authoritative server assessment exists.
 Leave create/duplicate, edit, set-default and archive/restore controls use their exact existing action grants.
-Assignment previews distinguish server-resolved current policies from selected proposed values; the proposed winner is not calculated in this panel.
+Assignment previews show current policies, the server-resolved proposed winner and the selected form values separately. Group previews cover only the selected group unless accessible sample staff are selected; a staff sample includes matching groups and staff override precedence. Loading, denied access and unresolved new-assignment ID ties never borrow selected form values as a winner.
 Blocking impact warnings and all returned assignment conflicts open immediately, with exact returned payroll and attendance-evaluation periods available for review.
+Impact review compares current and proposed rules using readable field values and operational holiday/weekly-off details. Permission-gated links open exact payroll months or attendance-register date ranges in a new tab, preserving the policy draft. Unavailable rule comparison is stated explicitly; these disclosures do not simulate salary or recalculate payroll.
 Policy tables query current and archived records independently with server-side search, count, and pagination.
 The leave-policy workspace can restore an archived policy as a draft, while employee and assignment selectors continue to request active policies only.
 Policy audit entries omit unchanged values and missing editor metadata, render weekly-off numbers as weekday names, and show semantic holiday changes and real holiday-summary counts.

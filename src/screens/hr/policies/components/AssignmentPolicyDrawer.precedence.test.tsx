@@ -247,7 +247,7 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
       />
     );
 
-    await user.click(screen.getByRole('combobox'));
+    await user.click(screen.getByPlaceholderText('Select group...'));
 
     expect(await screen.findByText('Teaching Staff')).toBeInTheDocument();
     expect(screen.getByText('2 members')).toBeInTheDocument();

@@ -81,6 +81,7 @@ import {
   useDeleteAttendancePolicyWithTokenMutation,
   useUpdateAttendancePolicyWithTokenMutation,
   useSetDefaultPayrollPolicyWithTokenMutation,
+  useGetPolicyAssignmentResolutionPreviewQuery,
   useCreateHrPolicyAssignmentWithTokenMutation,
   useDeleteHrPolicyAssignmentWithTokenMutation,
   useDeleteWorkCalendarPolicyWithTokenMutation,
@@ -255,6 +256,7 @@ export function useHRPolicyWorkspace({
     defaultAssignmentForm(currentYear?.startDate)
   );
   const [assignmentSearch, setAssignmentSearch] = useState('');
+  const [assignmentSampleEmployeeId, setAssignmentSampleEmployeeId] = useState('');
   const [assignmentDateError, setAssignmentDateError] = useState('');
   const [assignmentConflict, setAssignmentConflict] = useState<HrPolicyAssignmentConflict | null>(
     null
@@ -491,6 +493,39 @@ export function useHRPolicyWorkspace({
   );
 
   // --- API Mutations --------------------------------------------------------
+
+  const {
+    currentData: assignmentResolutionPreview,
+    isFetching: assignmentResolutionLoading,
+    error: assignmentResolutionError,
+  } = useGetPolicyAssignmentResolutionPreviewQuery(
+    {
+      assignmentId: drawer?.kind === 'assignment' && drawer.item ? drawer.item.id : undefined,
+      date: assignmentForm.effectiveFrom,
+      sampleEmployeeId:
+        assignmentForm.targetType === 'group' ? assignmentSampleEmployeeId || undefined : undefined,
+      assignment: {
+        academicYearId,
+        ...assignmentForm,
+        targetKey: assignmentForm.targetKey.trim(),
+        effectiveTo: assignmentForm.effectiveTo || null,
+        priority: Number(assignmentForm.priority || 0),
+      },
+    },
+    {
+      skip:
+        !drawer ||
+        drawer.kind !== 'assignment' ||
+        !academicYearId ||
+        !hasGrantedPermission(permissions, hrPermissions.policyActions.previewImpact) ||
+        !assignmentForm.targetKey ||
+        !assignmentForm.payrollPolicyId ||
+        !assignmentForm.attendancePolicyId ||
+        !assignmentForm.leavePolicyId ||
+        Boolean(getAssignmentFormValidationError(assignmentForm)) ||
+        !assignmentForm.effectiveFrom,
+    }
+  );
   const [createWorkCalendarPolicy, createCalendarState] = useCreateWorkCalendarPolicyMutation();
   const [updateWorkCalendarPolicyWithToken, updateCalendarState] =
     useUpdateWorkCalendarPolicyWithTokenMutation();
@@ -708,6 +743,14 @@ export function useHRPolicyWorkspace({
   const canPreviewImpact = hasGrantedPermission(
     permissions,
     hrPermissions.policyActions.previewImpact
+  );
+  const canOpenPayrollWorkbench = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.payroll.runPayroll}.View`
+  );
+  const canOpenAttendanceRegister = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.attendance.attendanceTracking}.View`
   );
   const canViewAudit = hasGrantedPermission(permissions, hrPermissions.policyActions.viewAudit);
 
@@ -992,6 +1035,7 @@ export function useHRPolicyWorkspace({
 
   const openAssignmentDrawer = useCallback(
     (item?: HrPolicyAssignment, mode: 'edit' | 'view' = 'edit') => {
+      setAssignmentSampleEmployeeId('');
       setFormError('');
       setAssignmentDateError('');
       setAssignmentConflict(null);
@@ -2232,6 +2276,8 @@ export function useHRPolicyWorkspace({
     canAssignPolicy,
     canClonePolicy,
     canPreviewImpact,
+    canOpenPayrollWorkbench,
+    canOpenAttendanceRegister,
     canViewAudit,
 
     // Loading states
@@ -2323,6 +2369,11 @@ export function useHRPolicyWorkspace({
     assignmentPreview,
     assignmentPreviewLoading,
     assignmentPreviewError,
+    assignmentResolutionPreview: canPreviewImpact ? assignmentResolutionPreview : undefined,
+    assignmentResolutionLoading: canPreviewImpact && assignmentResolutionLoading,
+    assignmentResolutionError: canPreviewImpact ? assignmentResolutionError : undefined,
+    assignmentSampleEmployeeId,
+    setAssignmentSampleEmployeeId,
     createAssignmentState,
     updateAssignmentState,
     deleteAssignmentState,

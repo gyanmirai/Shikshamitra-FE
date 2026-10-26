@@ -60,13 +60,32 @@ function getLeavePolicyName(item: any): string {
 export function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
     assignmentForm,
-    assignmentPreview,
-    assignmentPreviewLoading,
-    assignmentPreviewError,
+    assignmentPreview: legacyPreview,
+    assignmentPreviewLoading: legacyPreviewLoading,
+    assignmentPreviewError: legacyPreviewError,
+    assignmentResolutionPreview,
+    assignmentResolutionLoading,
+    assignmentResolutionError,
+    assignmentSampleEmployeeId,
+    setAssignmentSampleEmployeeId,
+    employeeOptions = [],
     payroll = [],
     attendance = [],
     leavePolicies = [],
   } = ctx;
+  const sampleId = React.useId();
+  const usesSample = assignmentForm.targetType === 'group' && Boolean(assignmentSampleEmployeeId);
+  const assignmentPreview =
+    assignmentResolutionPreview?.current || (usesSample ? undefined : legacyPreview);
+  const assignmentPreviewLoading =
+    legacyPreviewLoading || (usesSample && assignmentResolutionLoading);
+  const assignmentPreviewError = legacyPreviewError || (usesSample && assignmentResolutionError);
+  const proposed =
+    !assignmentResolutionLoading &&
+    !assignmentResolutionError &&
+    assignmentResolutionPreview?.isComplete
+      ? assignmentResolutionPreview.proposed
+      : null;
 
   return (
     <Paper
@@ -103,10 +122,70 @@ export function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext 
           </Typography>
         </Box>
         <Typography variant="subtitle2">After this assignment (proposal)</Typography>
+        {assignmentForm.targetType === 'group' && ctx.canPreviewImpact ? (
+          <DrawerField
+            label="Sample staff (optional)"
+            inputId={sampleId}
+            helperText="Select staff to include their other groups and staff override. Without a sample, this preview covers only the selected group."
+          >
+            <Autocomplete
+              id={sampleId}
+              options={employeeOptions}
+              value={employeeOptions.find((item) => item.id === assignmentSampleEmployeeId) || null}
+              getOptionLabel={optionLabel}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              onChange={(_, value) => setAssignmentSampleEmployeeId(value?.id || '')}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  size="small"
+                  placeholder="Select sample staff"
+                  inputProps={{
+                    ...params.inputProps,
+                    'aria-labelledby': `${sampleId}-label`,
+                    'aria-describedby': `${sampleId}-description`,
+                  }}
+                />
+              )}
+            />
+          </DrawerField>
+        ) : null}
+        {assignmentResolutionLoading ? (
+          <Typography role="status">Resolving proposed policies...</Typography>
+        ) : assignmentResolutionError ? (
+          <Alert severity="warning">
+            Proposed policies unavailable.{' '}
+            {getErrorMessage(assignmentResolutionError, 'Refresh and try again.')}
+          </Alert>
+        ) : proposed ? (
+          <Box>
+            <Typography>Payroll: {proposed.payrollPolicy?.name || 'Unknown'}</Typography>
+            <Typography>Attendance: {proposed.attendancePolicy?.name || 'Unknown'}</Typography>
+            <Typography>
+              Leave: {proposed.leavePolicy ? getLeavePolicyName(proposed.leavePolicy) : 'Unknown'}
+            </Typography>
+            <Typography>
+              Source: {toLabel(proposed.policySource)} —{' '}
+              {proposed.matchedTargetDisplayName ||
+                proposed.matchedTargetKey ||
+                'Default policy fallback'}
+              {proposed.matchedPriority != null ? ` — Priority ${proposed.matchedPriority}` : ''}
+            </Typography>
+            <Typography variant="caption">
+              {assignmentResolutionPreview?.scope === 'selected_group_only'
+                ? 'Selected group only; individual staff and other matching groups may override this result.'
+                : 'Selected staff, including matching groups and staff precedence.'}
+            </Typography>
+          </Box>
+        ) : (
+          <Typography>
+            {assignmentResolutionPreview?.unavailableReason || 'Proposed policies not resolved.'}
+          </Typography>
+        )}
+        <Typography variant="subtitle2">Selected assignment values</Typography>
         <Typography variant="body2" color="text.secondary">
           Selected {toLabel(assignmentForm.targetType)} assignment, priority{' '}
-          {assignmentForm.priority || '0'}. The effective winner after saving is not calculated
-          here. Use Preview impact to review conflicts.
+          {assignmentForm.priority || '0'}. Use Preview impact to review conflicts and write safety.
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap">
           <Chip

@@ -246,6 +246,21 @@ export type EffectivePolicyResolutionStep = {
   leavePolicyId?: string | null;
 };
 
+export type PolicyAssignmentResolutionPreview = {
+  current: EffectiveEmployeePolicies;
+  proposed?: EffectiveEmployeePolicies | null;
+  isComplete: boolean;
+  scope: 'selected_staff' | 'selected_group_only';
+  unavailableReason?: string | null;
+};
+
+export type PolicyAssignmentResolutionPreviewArgs = {
+  assignmentId?: string;
+  assignment: CreateUpdateHrPolicyAssignment;
+  date: string;
+  sampleEmployeeId?: string;
+};
+
 export type PolicyHolidayImpactPreview = {
   academicYearId: string;
   workCalendarPolicyId?: string | null;
@@ -331,6 +346,8 @@ export type HrPolicyImpactPreview = {
   confirmationToken?: string | null;
   expiresAt?: string | null;
   blockingWarnings?: HrPolicyImpactWarning[];
+  ruleDifferencesStatus?: 'calculated' | 'new_policy' | 'not_calculated';
+  ruleDifferences?: HrPolicyVersionCompare['differences'];
   resolutionSummary?: string | null;
   riskSummary?: string | null;
   recommendedAction?: string | null;
@@ -1088,6 +1105,13 @@ export const hrPolicyApi = api.injectEndpoints({
       }),
       providesTags: policyTags,
     }),
+    getPolicyAssignmentResolutionPreview: builder.query<
+      PolicyAssignmentResolutionPreview,
+      PolicyAssignmentResolutionPreviewArgs
+    >({
+      query: (body) => ({ url: '/hr/policy-assignments/resolution-preview', method: 'POST', body }),
+      providesTags: policyTags,
+    }),
     getPolicyHolidayImpactPreview: builder.query<
       PolicyHolidayImpactPreview,
       PolicyHolidayImpactPreviewArgs
@@ -1156,5 +1180,6 @@ export const {
   useDeleteHrPolicyAssignmentMutation,
   useDeleteHrPolicyAssignmentWithTokenMutation,
   useGetPolicyAssignmentPreviewQuery,
+  useGetPolicyAssignmentResolutionPreviewQuery,
   useGetPolicyHolidayImpactPreviewQuery,
 } = hrPolicyApi;

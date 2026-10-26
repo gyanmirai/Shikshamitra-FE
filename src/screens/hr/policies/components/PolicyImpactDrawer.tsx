@@ -3,7 +3,9 @@
 import type { HrPolicyAssignmentConflict } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
+import dayjs from 'dayjs';
 import { GlobalIcons } from 'src/utils/icons';
+import { hrPaths } from 'src/constants/hr-menus';
 import { Iconify } from 'src/components/iconify';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
@@ -27,6 +29,7 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
+import { cleanVersionDisplayValue } from '../hr-policy-ui-utils';
 import { EmptyRows, DrawerHeader, SectionTable } from './HRPolicySharedUI';
 import { toLabel, formatDate, formatNumber } from '../hr-policy-workspace-utils';
 
@@ -320,6 +323,40 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           <>
             <Divider />
             <Box sx={{ flex: 1, overflow: 'auto', px: 2.5, py: 2 }}>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2">Current versus proposed rules</Typography>
+                {impactPreview.ruleDifferencesStatus === 'calculated' ? (
+                  impactPreview.ruleDifferences?.length ? (
+                    <SectionTable columns={['Rule', 'Current', 'Proposed']}>
+                      {impactPreview.ruleDifferences.map((difference) => (
+                        <TableRow key={difference.fieldKey || difference.field}>
+                          <TableCell>
+                            {difference.fieldLabel || toLabel(difference.field)}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                            {cleanVersionDisplayValue(
+                              difference.fromDisplayValue ?? difference.fromValue
+                            )}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                            {cleanVersionDisplayValue(
+                              difference.toDisplayValue ?? difference.toValue
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </SectionTable>
+                  ) : (
+                    <Typography variant="body2">No rule changes in the compared fields.</Typography>
+                  )
+                ) : (
+                  <Typography variant="body2">
+                    {impactPreview.ruleDifferencesStatus === 'new_policy'
+                      ? 'New policy: there is no saved configuration to compare.'
+                      : 'Rule comparison not calculated for this action.'}
+                  </Typography>
+                )}
+              </Box>
               <Stack spacing={1.5} sx={{ mb: 2 }}>
                 {[
                   [
@@ -344,16 +381,41 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                       {String(description)}
                     </Typography>
                     {Array.isArray(periods) && periods.length ? (
-                      periods.map((period) => (
-                        <Typography
-                          variant="body2"
-                          key={`${period.year}-${period.month}-${period.status}`}
-                        >
-                          {period.label ||
-                            `${period.year}-${String(period.month).padStart(2, '0')}`}{' '}
-                          — {period.status || 'Status unavailable'} ({period.count} records)
-                        </Typography>
-                      ))
+                      periods.map((period) => {
+                        const month = `${period.year}-${String(period.month).padStart(2, '0')}`;
+                        const attendancePeriod = title === 'Attendance Evaluation Periods';
+                        const canOpen = attendancePeriod
+                          ? ctx.canOpenAttendanceRegister
+                          : ctx.canOpenPayrollWorkbench;
+                        const href = attendancePeriod
+                          ? `${hrPaths.attendance.attendanceTracking}?startDate=${month}-01&endDate=${dayjs(`${month}-01`).endOf('month').format('YYYY-MM-DD')}`
+                          : `${hrPaths.payroll.runPayroll}?month=${month}`;
+                        return (
+                          <Stack
+                            key={`${period.year}-${period.month}-${period.status}`}
+                            spacing={0.5}
+                          >
+                            <Typography variant="body2">
+                              {period.label ||
+                                `${period.year}-${String(period.month).padStart(2, '0')}`}{' '}
+                              — {period.status || 'Status unavailable'} ({period.count} records)
+                            </Typography>
+                            {canOpen ? (
+                              <Button
+                                component="a"
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                size="small"
+                                sx={{ alignSelf: 'flex-start' }}
+                              >
+                                Open {attendancePeriod ? 'attendance register' : 'payroll'} for{' '}
+                                {period.label || month} (new tab)
+                              </Button>
+                            ) : null}
+                          </Stack>
+                        );
+                      })
                     ) : (
                       <Typography variant="body2">None reported by this preview.</Typography>
                     )}

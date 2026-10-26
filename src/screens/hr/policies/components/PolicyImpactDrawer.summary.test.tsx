@@ -38,6 +38,79 @@ vi.mock('./HRPolicySharedUI', () => ({
 }));
 
 describe('PolicyImpactDrawer summary rendering', () => {
+  it('shows exact rule values and permission-gated period links without mutating the preview', () => {
+    const ctx = {
+      impactDrawerOpen: true,
+      drawerTransitionDuration: 0,
+      previewPolicyImpactState: {},
+      previewPolicyAssignmentImpactState: {},
+      canOpenPayrollWorkbench: true,
+      canOpenAttendanceRegister: true,
+      impactPreview: {
+        policyType: 'attendance',
+        action: 'update',
+        affectedEmployeeCount: 0,
+        affectedAssignmentCount: 0,
+        affectedEmployees: [],
+        warnings: [],
+        ruleDifferencesStatus: 'calculated',
+        ruleDifferences: [
+          {
+            field: 'graceTime',
+            fieldLabel: 'Grace time',
+            fromDisplayValue: '0 minutes',
+            toDisplayValue: '7 minutes',
+          },
+        ],
+        affectedPayrollMonths: [
+          { year: 2026, month: 10, label: 'October 2026', count: 1, status: 'recompute_needed' },
+        ],
+        lockedPayrollMonths: [],
+        affectedAttendanceEvaluationMonths: [
+          { year: 2026, month: 2, label: 'February 2026', count: 2, status: 'stale' },
+        ],
+      },
+    } as any;
+    const { rerender } = renderWithProviders(<PolicyImpactDrawer ctx={ctx} />);
+    expect(screen.getByText('Grace time')).toBeInTheDocument();
+    expect(screen.getByText('0 minutes')).toBeInTheDocument();
+    expect(screen.getByText('7 minutes')).toBeInTheDocument();
+    const payroll = screen.getByRole('link', { name: 'Open payroll for October 2026 (new tab)' });
+    expect(payroll).toHaveAttribute('href', '/hr/payroll/run-payroll?month=2026-10');
+    expect(payroll).toHaveAttribute('target', '_blank');
+    expect(
+      screen.getByRole('link', { name: 'Open attendance register for February 2026 (new tab)' })
+    ).toHaveAttribute('href', '/hr/attendance-tracking?startDate=2026-02-01&endDate=2026-02-28');
+    rerender(
+      <PolicyImpactDrawer
+        ctx={{ ...ctx, canOpenPayrollWorkbench: false, canOpenAttendanceRegister: false }}
+      />
+    );
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getByText('Grace time')).toBeInTheDocument();
+  });
+
+  it('does not turn an unavailable rule comparison into a no-change claim', () => {
+    renderWithProviders(
+      <PolicyImpactDrawer
+        ctx={
+          {
+            impactDrawerOpen: true,
+            previewPolicyImpactState: {},
+            previewPolicyAssignmentImpactState: {},
+            impactPreview: {
+              policyType: 'attendance',
+              action: 'update',
+              affectedEmployees: [],
+              warnings: [],
+            },
+          } as any
+        }
+      />
+    );
+    expect(screen.getByText('Rule comparison not calculated for this action.')).toBeInTheDocument();
+    expect(screen.queryByText('No rule changes in the compared fields.')).not.toBeInTheDocument();
+  });
   it('uses one request status and leaves the idle state out of loading', () => {
     const ctx = {
       impactDrawerOpen: true,
