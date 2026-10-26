@@ -7,9 +7,9 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useRef, useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -230,9 +230,11 @@ const toRulePayload = (rule: LeavePolicyRuleFormValue) => {
 export function LeavePolicyForm({
   handleClose,
   editData,
+  onCloseStateChange,
 }: {
   handleClose: (e?: unknown, isSubmit?: boolean) => void;
   editData?: ILeavePolicy | null;
+  onCloseStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 }) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -353,6 +355,13 @@ export function LeavePolicyForm({
   ) => {
     formik.setFieldValue(bucket, { ...formik.values[bucket], [key]: value });
   };
+
+  useEffect(() => {
+    onCloseStateChange?.({
+      dirty: formik.dirty,
+      busy: isCreateLoading || isUpdateLoading || formik.isSubmitting,
+    });
+  }, [formik.dirty, formik.isSubmitting, isCreateLoading, isUpdateLoading, onCloseStateChange]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

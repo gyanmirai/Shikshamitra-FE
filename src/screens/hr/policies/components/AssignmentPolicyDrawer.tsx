@@ -57,7 +57,7 @@ function getLeavePolicyName(item: any): string {
 
 // --- AssignmentPreviewPanel ----------------------------------------------------
 
-function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
+export function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
     assignmentForm,
     assignmentPreview,
@@ -102,6 +102,12 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             {formatRange(assignmentForm.effectiveFrom, assignmentForm.effectiveTo)}
           </Typography>
         </Box>
+        <Typography variant="subtitle2">After this assignment (proposal)</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Selected {toLabel(assignmentForm.targetType)} assignment, priority{' '}
+          {assignmentForm.priority || '0'}. The effective winner after saving is not calculated
+          here. Use Preview impact to review conflicts.
+        </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap">
           <Chip
             size="small"
@@ -132,27 +138,47 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         </Stack>
         <Box>
           <Typography variant="caption" color="text.secondary">
-            Current effective policy
+            Currently effective on {assignmentForm.effectiveFrom || 'selected date'}
           </Typography>
-          <Typography variant="body2" fontWeight={700}>
-            {assignmentPreview?.policySource
-              ? `${toLabel(assignmentPreview.policySource)} scope`
-              : `${toLabel(assignmentForm.targetType)} scope`}
-            {assignmentPreview?.matchedPriority != null
-              ? ` - Priority ${assignmentPreview.matchedPriority}`
-              : assignmentForm.priority
-                ? ` - Priority ${assignmentForm.priority}`
-                : ''}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {assignmentPreview?.matchedTargetDisplayName ||
-              assignmentPreview?.matchedTargetKey ||
-              assignmentForm.targetDisplayName ||
-              assignmentForm.targetKey ||
-              'No matching scope selected yet'}
-          </Typography>
+          {assignmentPreviewLoading ? (
+            <Typography variant="body2">Resolving current policies...</Typography>
+          ) : assignmentPreviewError ? (
+            <Typography variant="body2">Current policies unavailable.</Typography>
+          ) : !assignmentPreview ? (
+            <Typography variant="body2">Current policies not resolved.</Typography>
+          ) : (
+            <>
+              <Typography variant="body2">
+                Payroll: {assignmentPreview.payrollPolicy?.name || 'Unknown'}
+              </Typography>
+              <Typography variant="body2">
+                Attendance: {assignmentPreview.attendancePolicy?.name || 'Unknown'}
+              </Typography>
+              <Typography variant="body2">
+                Leave:{' '}
+                {assignmentPreview.leavePolicy
+                  ? getLeavePolicyName(assignmentPreview.leavePolicy)
+                  : 'Unknown'}
+              </Typography>
+              <Typography variant="body2" fontWeight={700}>
+                {assignmentPreview?.policySource
+                  ? `${toLabel(assignmentPreview.policySource)} scope`
+                  : 'Unknown source'}
+                {assignmentPreview?.matchedPriority != null
+                  ? ` - Priority ${assignmentPreview.matchedPriority}`
+                  : ''}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {assignmentPreview?.matchedTargetDisplayName ||
+                  assignmentPreview?.matchedTargetKey ||
+                  'Default policy fallback'}
+              </Typography>
+            </>
+          )}
         </Box>
-        {assignmentPreview?.resolutionSteps?.length ? (
+        {!assignmentPreviewLoading &&
+        !assignmentPreviewError &&
+        assignmentPreview?.resolutionSteps?.length ? (
           <Box>
             <SectionTable
               tableId="hr-assignment-resolution"
@@ -182,6 +208,11 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         <Divider />
         <Typography variant="caption" color="text.secondary">
           Precedence: Staff &gt; Group &gt; Default
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Priority applies within the same scope: higher numbers win, then the later effective start
+          date. A staff assignment takes precedence over group assignments regardless of their
+          priority.
         </Typography>
       </Stack>
     </Paper>

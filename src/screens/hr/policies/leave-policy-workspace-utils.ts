@@ -9,11 +9,11 @@ export type LeavePolicyImpactReview = {
   policyName: string;
   action: 'archive' | 'update' | 'default-change' | 'effective-date-change';
   bucketSummary: string;
-  affectedEmployeeCount: number;
-  affectedRequestCount: number;
-  balanceImpactCount: number;
-  payrollMonthRiskCount: number;
-  assignmentConflictCount: number;
+  affectedEmployeeCount: null;
+  affectedRequestCount: null;
+  balanceImpactCount: null;
+  payrollMonthRiskCount: null;
+  assignmentConflictCount: null;
   risks: Array<{
     severity: LeavePolicyRiskSeverity;
     label: string;
@@ -156,11 +156,12 @@ export function buildLeavePolicyImpactReview(
     policyName,
     action,
     bucketSummary,
-    affectedEmployeeCount: leaveCount > 0 ? 1 : 0,
-    affectedRequestCount: action === 'archive' ? 1 : 0,
-    balanceImpactCount: leaveCount > 0 ? 1 : 0,
-    payrollMonthRiskCount: encashmentAllowed ? 1 : 0,
-    assignmentConflictCount: 0,
+    // Policy configuration is not an affected-population query.
+    affectedEmployeeCount: null,
+    affectedRequestCount: null,
+    balanceImpactCount: null,
+    payrollMonthRiskCount: null,
+    assignmentConflictCount: null,
     risks,
     requiresConfirmation: risks.some((risk) => risk.severity !== 'info'),
   };

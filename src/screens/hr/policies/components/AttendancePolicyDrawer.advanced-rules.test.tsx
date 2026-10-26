@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { it, vi, expect, describe } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from 'src/test/test-utils';
 import { screen, fireEvent } from '@testing-library/react';
 
@@ -47,19 +48,23 @@ function AttendancePolicyDrawerHarness({
   initialForm?: AttendanceForm;
 }) {
   const [attendanceForm, setAttendanceForm] = useState(initialForm);
+  const [attendanceAdvancedMode, setAttendanceAdvancedMode] = useState(true);
 
   const ctx = {
     drawer: { kind: 'attendance', mode: 'edit', item: { id: 'attendance-1' } },
     formError: '',
     attendanceForm,
     setAttendanceForm,
-    attendanceAdvancedMode: true,
-    setAttendanceAdvancedMode: vi.fn(),
+    attendanceAdvancedMode,
+    setAttendanceAdvancedMode,
     currentAttendanceUnchanged: false,
     createAttendanceState: { isLoading: false },
     updateAttendanceState: { isLoading: false },
     activePolicyOperation: null,
-    activeCalendars: [{ id: 'calendar-1', name: 'Main Calendar' }],
+    activeCalendars: [
+      { id: 'calendar-1', name: 'Main Calendar' },
+      { id: 'calendar-2', name: 'Other Calendar' },
+    ],
     canEditPolicy: true,
     canCreatePolicy: true,
     closeDrawer: vi.fn(),
@@ -88,10 +93,49 @@ function AttendancePolicyDrawerHarness({
     },
   } as unknown as HRPolicyWorkspaceContext;
 
-  return <AttendancePolicyDrawer ctx={ctx} />;
+  return (
+    <>
+      <AttendancePolicyDrawer ctx={ctx} />
+      <output data-testid="draft">{JSON.stringify(attendanceForm)}</output>
+    </>
+  );
 }
 
 describe('AttendancePolicyDrawer advanced rules', () => {
+  it('preserves custom rules through repeated disclosure and only resets after explicit confirmation', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<AttendancePolicyDrawerHarness />);
+    const draft = () => JSON.parse(screen.getByTestId('draft').textContent || '{}');
+    for (let index = 0; index < 3; index += 1) {
+      // Disclosure/reopen steps must remain sequential to exercise retained state.
+      // eslint-disable-next-line no-await-in-loop
+      await user.click(screen.getByRole('switch', { name: /Advanced settings/ }));
+      expect(screen.getByText('Custom rules active')).toBeInTheDocument();
+      expect(draft().graceTime).toBe('5');
+      // eslint-disable-next-line no-await-in-loop
+      await user.click(screen.getByRole('switch', { name: /Advanced settings/ }));
+      expect(draft().graceTime).toBe('5');
+    }
+    await user.click(screen.getByRole('button', { name: 'Reset advanced rules' }));
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(draft().graceTime).toBe('5');
+    await user.click(await screen.findByRole('button', { name: 'Reset advanced rules' }));
+    await user.click(screen.getByRole('button', { name: 'Reset rules' }));
+    expect(draft().graceTime).toBe('0');
+    expect(draft().workCalendarPolicyId).toBe('calendar-1');
+    expect(draft().isDefault).toBe(true);
+  });
+
+  it('changing the calendar keeps an active non-default policy non-default', () => {
+    renderWithProviders(
+      <AttendancePolicyDrawerHarness initialForm={{ ...baseAttendanceForm, isDefault: false }} />
+    );
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Work Calendar *' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Other Calendar' }));
+    const draft = JSON.parse(screen.getByTestId('draft').textContent || '{}');
+    expect(draft.workCalendarPolicyId).toBe('calendar-2');
+    expect(draft.isDefault).toBe(false);
+  });
   it('renders grouped advanced cards and hides irrelevant fields by default', () => {
     renderWithProviders(<AttendancePolicyDrawerHarness />);
 
@@ -142,7 +186,9 @@ describe('AttendancePolicyDrawer advanced rules', () => {
 
     expect(screen.getByText('Deduction Amount')).toBeInTheDocument();
     expect(screen.getByDisplayValue('250')).toBeInTheDocument();
-    expect(screen.getByText(/Salary Deduction applies after 3 violations at INR 250 each/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Salary Deduction applies after 3 violations at INR 250 each/i)
+    ).toBeInTheDocument();
   });
 
   it('updates the summary from form state', () => {
@@ -213,7 +259,9 @@ describe('AttendancePolicyDrawer advanced rules', () => {
       />
     );
 
-    expect(screen.getByText(/Must be greater than half day threshold \(50%\)/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Must be greater than half day threshold \(50%\)/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/Must be less than full day threshold \(10%\)/i)).toBeInTheDocument();
   });
 });

@@ -7,6 +7,7 @@ import { act, renderHook } from '@testing-library/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 
 import { useHRPolicyWorkspace } from './useHRPolicyWorkspace';
+import { defaultAttendanceForm } from '../hr-policy-workspace.constants';
 
 const mocks = vi.hoisted(() => {
   const page = { items: [], totalCount: 0 };
@@ -14,6 +15,7 @@ const mocks = vi.hoisted(() => {
     result: { currentData: page, data: page, isFetching: false, refetch: vi.fn() },
     assignments: vi.fn(),
     operational: vi.fn(),
+    mutations: vi.fn(),
   };
 });
 
@@ -24,7 +26,16 @@ vi.mock('src/redux/hr/hr-policy-api', async (importOriginal) => {
     Object.entries(original).map(([name, value]) => {
       if (!name.startsWith('use')) return [name, value];
       if (name.includes('Mutation') || name.startsWith('useLazy'))
-        return [name, () => [vi.fn(), { isLoading: false }]];
+        return [
+          name,
+          () => [
+            vi.fn((args) => {
+              mocks.mutations(name, args);
+              return { unwrap: async () => ({ id: 'created' }) };
+            }),
+            { isLoading: false },
+          ],
+        ];
       return [
         name,
         (args: unknown, options: unknown) => {
@@ -82,6 +93,44 @@ function setup(year: string | undefined = 'year-1') {
 beforeEach(() => vi.clearAllMocks());
 
 describe('Policy Assignment query after advanced filter removal', () => {
+  it('saves the same custom attendance payload when advanced rules are hidden', async () => {
+    const { result } = setup();
+    act(() => {
+      result.current.openAttendanceDrawer();
+      result.current.setAttendanceForm({
+        ...defaultAttendanceForm('calendar'),
+        name: 'Synthetic custom rules',
+        status: 'draft',
+        graceTime: '7',
+        maxLateAllowedPerMonth: '4',
+        earlyExitEnabled: true,
+        earlyExitGraceTime: '8',
+        overtimeEnabled: true,
+        overtimeRate: '1.5x',
+        minOvertimeMinutes: '30',
+        holidayWorkBehavior: 'both',
+        payrollPreviewEnabled: false,
+      });
+      result.current.setAttendanceAdvancedMode(false);
+    });
+    await act(async () => {
+      await result.current.saveAttendance();
+    });
+    expect(mocks.mutations).toHaveBeenCalledWith(
+      'useCreateAttendancePolicyMutation',
+      expect.objectContaining({
+        graceTime: 7,
+        maxLateAllowedPerMonth: 4,
+        earlyExitEnabled: true,
+        earlyExitGraceTime: 8,
+        overtimeEnabled: true,
+        overtimeRate: '1.5x',
+        minOvertimeMinutes: 30,
+        holidayWorkBehavior: 'both',
+        payrollPreviewEnabled: false,
+      })
+    );
+  });
   it('requests only academic scope, paging and normal search, including after paging and clearing search', () => {
     const { result } = setup();
     const expected = { academicYearId: 'year-1', maxResultCount: 20, skipCount: 0, search: '' };

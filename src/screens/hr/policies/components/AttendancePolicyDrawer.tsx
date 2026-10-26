@@ -2,10 +2,12 @@
 
 import type { EditablePolicyStatus } from 'src/redux/hr/hr-policy-api';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
-import { Box, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
+import { Box, Chip, Paper, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 
+import { defaultAttendanceForm, ATTENDANCE_ADVANCED_KEYS } from '../hr-policy-workspace.constants';
 import {
   DrawerField,
   PolicySection,
@@ -92,30 +94,10 @@ function buildAttendanceSummary(form: HRPolicyWorkspaceContext['attendanceForm']
   return summary;
 }
 
-function applyAttendanceAdvancedDefaults(
-  form: HRPolicyWorkspaceContext['attendanceForm'],
-  defaults: HRPolicyWorkspaceContext['attendanceForm']
-): HRPolicyWorkspaceContext['attendanceForm'] {
-  const ADVANCED_KEYS: Array<keyof HRPolicyWorkspaceContext['attendanceForm']> = [
-    'graceTime',
-    'maxLateAllowedPerMonth',
-    'penaltyType',
-    'penaltyCountThreshold',
-    'penaltyDeductionAmount',
-    'earlyExitEnabled',
-    'earlyExitGraceTime',
-    'overtimeEnabled',
-    'overtimeRate',
-    'minOvertimeMinutes',
-    'holidayWorkBehavior',
-    'payrollPreviewEnabled',
-  ];
-  return ADVANCED_KEYS.reduce((current, key) => ({ ...current, [key]: defaults[key] }), form);
-}
-
 // --- AttendancePolicyDrawer ----------------------------------------------------
 
 export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
+  const [resetOpen, setResetOpen] = useState(false);
   const {
     drawer,
     formError,
@@ -143,6 +125,11 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     activePolicyOperation?.key === 'save-payroll' ||
     activePolicyOperation?.key === 'save-assignment';
   const isManualStatusMode = attendanceForm.captureMode === 'manual_status';
+  const defaults = defaultAttendanceForm(attendanceForm.workCalendarPolicyId);
+  const changedAdvancedKeys = ATTENDANCE_ADVANCED_KEYS.filter(
+    (key) => attendanceForm[key] !== defaults[key]
+  );
+  const resetBusy = Boolean(activePolicyOperation);
 
   return (
     <PolicyDrawerLayout
@@ -196,8 +183,6 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                 setAttendanceForm((current) => ({
                   ...current,
                   workCalendarPolicyId: event.target.value,
-                  isDefault:
-                    event.target.value && current.status === 'active' ? true : current.isDefault,
                 }))
               }
             >
@@ -211,6 +196,7 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
           <DrawerSwitchField
             compact
             label="Default policy"
+            help="Applies to staff without an explicit staff or group assignment. Changing the calendar keeps this choice."
             checked={attendanceForm.isDefault}
             disabled={attendanceForm.status !== 'active'}
             onChange={(checked) =>
@@ -236,6 +222,61 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
           </DrawerSelectField>
         </DrawerFormGrid>
       </PolicySection>
+      {!isManualStatusMode && changedAdvancedKeys.length > 0 ? (
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+          {!attendanceAdvancedMode ? <Chip size="small" label="Custom rules active" /> : null}
+          <Button size="small" disabled={resetBusy} onClick={() => setResetOpen(true)}>
+            Reset advanced rules
+          </Button>
+        </Stack>
+      ) : null}
+      <ConfirmDialog
+        open={resetOpen}
+        title="Reset Advanced Rules?"
+        icon="warning"
+        cancelText="Keep editing"
+        disableBackdropClick
+        disableCancel={resetBusy}
+        disableEscapeKeyDown={resetBusy}
+        onClose={() => {
+          if (!resetBusy) setResetOpen(false);
+        }}
+        content={
+          <Stack spacing={1}>
+            <Typography variant="body2">
+              These draft values will reset to the existing form defaults. Submit still requires the
+              normal policy review.
+            </Typography>
+            {changedAdvancedKeys.map((key) => (
+              <Typography variant="body2" key={key}>
+                {key.replace(/([A-Z])/g, ' $1')}:{' '}
+                {attendanceForm[key] === '' ? 'empty' : String(attendanceForm[key])} →{' '}
+                {defaults[key] === '' ? 'empty' : String(defaults[key])}
+              </Typography>
+            ))}
+          </Stack>
+        }
+        action={
+          <Button
+            size="small"
+            color="warning"
+            variant="contained"
+            disabled={resetBusy}
+            onClick={() => {
+              if (resetBusy) return;
+              setAttendanceForm((current) =>
+                ATTENDANCE_ADVANCED_KEYS.reduce(
+                  (next, key) => ({ ...next, [key]: defaults[key] }),
+                  current
+                )
+              );
+              setResetOpen(false);
+            }}
+          >
+            Reset rules
+          </Button>
+        }
+      />
       {!isManualStatusMode && (
         <PolicySection
           title="Attendance Thresholds"
@@ -259,8 +300,8 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
       )}
       {!isManualStatusMode && (
         <HrNotice severity="info" sx={{ mb: 2 }}>
-          Standard setup uses 75% for full day, 50% for half day, missing punches require review,
-          manual correction is allowed, and payroll impact remains visible.
+          Showing or hiding rules keeps their current values. Review the policy summary and use the
+          separate reset action only when you intend to replace custom advanced rules.
         </HrNotice>
       )}
       <PolicySection title="Exceptions">
@@ -297,31 +338,9 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
             <DrawerSwitchField
               compact
               label="Advanced settings"
-              help="Show detailed attendance, penalty, overtime, holiday, and payroll integration rules. Turning this off uses the default rules."
+              help="Show or hide detailed attendance, penalty, overtime, holiday, and payroll integration rules. Hiding them keeps their current values."
               checked={attendanceAdvancedMode}
-              onChange={(checked) => {
-                setAttendanceAdvancedMode(checked);
-                if (!checked) {
-                  // Revert advanced fields to defaults when toggling off
-                  setAttendanceForm((current) =>
-                    applyAttendanceAdvancedDefaults(current, {
-                      ...current,
-                      graceTime: '0',
-                      maxLateAllowedPerMonth: '0',
-                      penaltyType: 'none',
-                      penaltyCountThreshold: '0',
-                      penaltyDeductionAmount: '',
-                      earlyExitEnabled: false,
-                      earlyExitGraceTime: '0',
-                      overtimeEnabled: false,
-                      overtimeRate: '',
-                      minOvertimeMinutes: '',
-                      holidayWorkBehavior: 'comp_off',
-                      payrollPreviewEnabled: true,
-                    })
-                  );
-                }
-              }}
+              onChange={setAttendanceAdvancedMode}
             />
           )}
         </DrawerFormGrid>
