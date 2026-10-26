@@ -199,6 +199,7 @@ const FeeRefundFormComponent = ({
               .map((m) => ({
                 dueFeeId: m.dueFeeId ?? '',
                 chargeId: m.chargeId ?? undefined,
+                lateFeeDueFeeId: m.lateFeeDueFeeId ?? undefined,
                 sourceAllocationId: m.sourceAllocationId,
                 sourceReceiptId: m.sourceReceiptId,
                 month: m.chargeName
@@ -219,7 +220,9 @@ const FeeRefundFormComponent = ({
               }));
 
             return {
-              feeHeadId: feeHead.feeHeadId ?? 'paid-charges',
+              feeHeadId:
+                feeHead.feeHeadId ??
+                (feeHead.months.some((m) => m.lateFeeDueFeeId) ? 'paid-late-fees' : 'paid-charges'),
               months,
             };
           })
@@ -233,19 +236,26 @@ const FeeRefundFormComponent = ({
           const byHead = new Map<string, IFeeHeadRefundItem>();
           detail.lines.forEach((line) => {
             if (!line.sourceAllocationId || !line.sourceReceiptId) return;
-            const item = byHead.get(line.feeHeadId ?? 'paid-charges') ?? {
-              feeHeadId: line.feeHeadId ?? 'paid-charges',
+            const item = byHead.get(
+              line.feeHeadId ?? (line.lateFeeDueFeeId ? 'paid-late-fees' : 'paid-charges')
+            ) ?? {
+              feeHeadId:
+                line.feeHeadId ?? (line.lateFeeDueFeeId ? 'paid-late-fees' : 'paid-charges'),
               months: [],
             };
             item.months.push({
               dueFeeId: line.dueFeeId ?? '',
               chargeId: line.chargeId ?? undefined,
+              lateFeeDueFeeId: line.lateFeeDueFeeId ?? undefined,
               sourceAllocationId: line.sourceAllocationId,
               sourceReceiptId: line.sourceReceiptId,
               month: line.installmentLabel || line.feeHeadName || 'Paid fee',
               amount: line.approvedAmount,
             });
-            byHead.set(line.feeHeadId ?? 'paid-charges', item);
+            byHead.set(
+              line.feeHeadId ?? (line.lateFeeDueFeeId ? 'paid-late-fees' : 'paid-charges'),
+              item
+            );
           });
           setPrefilledFeeHeadRefunds(Array.from(byHead.values()));
         } else {

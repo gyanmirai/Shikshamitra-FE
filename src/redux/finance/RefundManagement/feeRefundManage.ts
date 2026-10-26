@@ -10,6 +10,7 @@ export interface FeeRefundLineDto {
   id: string;
   dueFeeId: string | null;
   chargeId?: string | null;
+  lateFeeDueFeeId?: string | null;
   amount: number;
   calculatedAmount: number;
   sourceAllocationId?: string;
@@ -120,6 +121,7 @@ export interface RefundEligibilityMonthDto {
   chargeName?: string | null;
   dueFeeId: string | null;
   chargeId?: string | null;
+  lateFeeDueFeeId?: string | null;
   sourceAllocationId: string;
   sourceReceiptId: string;
   receiptNumber: string;

@@ -13,6 +13,7 @@ export interface IMonthItem {
   /** Stable DueFee row ID — used as the line key in the create-refund API request. */
   dueFeeId: string;
   chargeId?: string;
+  lateFeeDueFeeId?: string;
   sourceAllocationId?: string;
   sourceReceiptId?: string;
   receiptNumber?: string;

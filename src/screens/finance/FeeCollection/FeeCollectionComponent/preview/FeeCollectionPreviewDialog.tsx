@@ -12,6 +12,7 @@ import { LoadingButton } from 'src/components/loading-button';
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
 
 import StudentInfoPreviewCard from './StudentInfoPreviewCard';
+import PaymentInfoPreview from './PaymentInfoPreview';
 import AllocationPreviewTable from './AllocationPreviewTable';
 import { allocatePayment, selectedChargesInOrder } from './paymentAllocationUtils';
 
@@ -34,6 +35,7 @@ export interface FeeCollectionPreviewDialogProps {
   preserveAllocationOrder?: boolean;
   academicYear?: string;
   feeStructureName?: string;
+  bankAccounts?: { id: string; name: string }[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -181,6 +183,7 @@ const FeeCollectionPreviewDialog = ({
   preserveAllocationOrder,
   academicYear,
   feeStructureName,
+  bankAccounts,
 }: FeeCollectionPreviewDialogProps) => {
   // ── Derived values ─────────────────────────────────────────────────────────
   const paidAmount = useMemo(
@@ -234,6 +237,12 @@ const FeeCollectionPreviewDialog = ({
             student={student}
             academicYear={academicYear}
             feeStructureName={feeStructureName}
+          />
+
+          <PaymentInfoPreview
+            payment={formValues.payment}
+            remarks={formValues.remarks}
+            bankAccounts={bankAccounts}
           />
 
           {/* ── Allocation Breakdown ── */}

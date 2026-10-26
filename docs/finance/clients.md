@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-24
+updated_on: 2026-10-26
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,13 +17,22 @@ See the [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#
 Reconciliation rows expose nullable `paymentDate`; the DD table prefers the saved instrument
 payment date and uses the recorded collection date for legacy instruments.
 
+Bank Transfer reconciliation reads the stored `transactionReferenceNumber`, `transferDate`
+and `accountHolderName` from `instrumentDetails` and the masked `bankLabel` snapshot.
+It does not substitute receipt creation time for a missing transfer date.
+Collection retains the form's `transactionId` key, accepted by the backend compatibility mapper.
+Receipt details expose `paymentInstruments`; receipt previews use the server-generated PDF.
+See [bank transfer evidence](../../../Shikshamitra-BE/docs/modules/finance/api.md#bank-transfer-evidence).
+
 Admission collection responses and Records withdrawal preview rows share the output-only `src/redux/finance/fee-proration-result.ts` type. Existing Admission collection queries read/prepare the result. Existing transition mutations invalidate affected Finance owner caches after applied withdrawal or correction. Fee ledger line types expose a separate withdrawal-credit amount/explanation. No new Student route or policy mutation is introduced.
 
 Refund eligibility and request types in `src/redux/finance/RefundManagement/feeRefundManage.ts`
-support the separate **Paid charges** group. `FeeHeadRefundTable` preserves the charge/payment/
+support the separate **Paid charges** and **Paid late fees** groups with distinct selection keys. `FeeHeadRefundTable` preserves the charge/payment/
 receipt references when selecting one row or a whole group. `buildFeeRefundApiPayload` sends
-`chargeId` for charge payments and `dueFeeId` for fee dues; both use the existing receipt selection
+`chargeId` for charge payments, `lateFeeDueFeeId` for late-fee payments, and `dueFeeId` for fee dues; all use the existing receipt selection
 restriction. Replacement hydration and the refund detail table retain charge names and amounts.
+When the policy requires the whole receipt, the client preserves all selected source amounts
+and lets the server apportion any policy cap, including sources whose payout share rounds to zero.
 See the [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#paid-charges-in-refund-requests).
 Focused checks: `RefundSelection.test.tsx` and `RefundForm.test.tsx` in the refund form folder.
 

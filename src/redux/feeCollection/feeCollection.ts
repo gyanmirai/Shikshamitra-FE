@@ -393,7 +393,17 @@ export interface FeeWaiverResult {
 
 // ─── Receipt Detail Types ────────────────────────────────────────────────────
 
+export interface FeeReceiptPaymentInstrument {
+  paymentMethod: number;
+  amount: number;
+  paymentDate: string;
+  bankAccountId: string | null;
+  bankLabel: string | null;
+  instrumentDetails: Record<string, string | null>;
+}
+
 export interface FeeReceiptDetail {
+  paymentInstruments?: FeeReceiptPaymentInstrument[];
   combined?: boolean;
   lateFeeAmount?: number;
   paidCharges?: { chargeId: string; chargeName: string; amountPaid: number }[];

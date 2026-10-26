@@ -44,6 +44,7 @@ export interface IFeeHeadMonthRefund {
   /** Stable DueFee row ID — sent to the create-refund API. */
   dueFeeId: string;
   chargeId?: string;
+  lateFeeDueFeeId?: string;
   sourceAllocationId?: string;
   sourceReceiptId?: string;
   receiptNumber?: string;
@@ -76,7 +77,13 @@ export interface IFeeRefundApiPayload {
   studentId: string;
   academicYearId: string;
   originalReceiptId: string;
-  lines: { dueFeeId?: string; chargeId?: string; sourceAllocationId: string; amount: number }[];
+  lines: {
+    dueFeeId?: string;
+    chargeId?: string;
+    lateFeeDueFeeId?: string;
+    sourceAllocationId: string;
+    amount: number;
+  }[];
   refundMethod: string;
   reason: string;
   paymentDetails?: Record<string, unknown>;
@@ -114,7 +121,10 @@ export const buildFeeRefundApiPayload = (
 ): IFeeRefundApiPayload => {
   const selected = (values.feeHeadRefunds || []).flatMap((fh) =>
     fh.months.filter(
-      (m) => Number(m.amount) > 0 && (m.dueFeeId || m.chargeId) && m.sourceAllocationId
+      (m) =>
+        Number(m.amount) > 0 &&
+        (m.dueFeeId || m.chargeId || m.lateFeeDueFeeId) &&
+        m.sourceAllocationId
     )
   );
   return {
@@ -130,7 +140,11 @@ export const buildFeeRefundApiPayload = (
       ])
     ),
     lines: selected.map((m) => ({
-      ...(m.chargeId ? { chargeId: m.chargeId } : { dueFeeId: m.dueFeeId }),
+      ...(m.lateFeeDueFeeId
+        ? { lateFeeDueFeeId: m.lateFeeDueFeeId }
+        : m.chargeId
+          ? { chargeId: m.chargeId }
+          : { dueFeeId: m.dueFeeId }),
       sourceAllocationId: m.sourceAllocationId || '',
       amount: Number(m.amount),
     })),

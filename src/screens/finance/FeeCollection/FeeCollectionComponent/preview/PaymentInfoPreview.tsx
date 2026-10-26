@@ -165,7 +165,7 @@ const PaymentInfoPreview = ({ payment, remarks, bankAccounts }: Props) => {
             AMOUNT
           </Typography>
           <Typography variant="subtitle1" fontWeight={800} color="primary.main">
-            ₹{formatNumber(amount)}
+            {formatNumber(amount, 'INR')}
           </Typography>
         </Box>
       </Box>

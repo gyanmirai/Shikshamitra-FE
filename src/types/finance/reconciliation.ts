@@ -53,6 +53,9 @@ export interface ReconciliationListItemDto {
   paymentMethod: number;
   paymentMethodLabel: string;
   amount: number;
+  /** Validated receiving school bank and its masked label recorded at collection. */
+  bankAccountId?: string | null;
+  bankLabel?: string | null;
   /** Instrument-specific fields: chequeNumber, bankName, transactionId, etc. */
   instrumentDetails: Record<string, string | null>;
   /** 0=Pending, 1=Approved, 2=Rejected */

@@ -172,6 +172,117 @@ describe('refund receipt selection', () => {
     expect(screen.getByRole('checkbox', { name: 'Select Materials 1 · FIN-1' })).toBeDisabled();
   });
 
+  it('keeps paid charges and paid late fees separate and submits the late fee source', async () => {
+    mocks.eligibility.currentData.feeHeads = [
+      {
+        feeHeadId: null,
+        feeHeadName: 'Paid charges',
+        months: [
+          {
+            month: 6,
+            year: 2026,
+            chargeId: 'charge',
+            chargeName: 'Materials',
+            sourceAllocationId: 'charge-payment',
+            sourceReceiptId: 'receipt',
+            receiptNumber: 'FIN-1',
+            total: 100,
+            paid: 100,
+            refunded: 0,
+            refundable: 100,
+          },
+        ],
+      },
+      {
+        feeHeadId: null,
+        feeHeadName: 'Paid late fees',
+        months: [
+          {
+            month: 6,
+            year: 2026,
+            lateFeeDueFeeId: 'late-due',
+            chargeName: 'Late Fee - Tuition',
+            sourceAllocationId: 'late-payment',
+            sourceReceiptId: 'receipt',
+            receiptNumber: 'FIN-1',
+            total: 250,
+            paid: 250,
+            refunded: 0,
+            refundable: 250,
+          },
+        ],
+      },
+    ];
+    render(<Request />);
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Select refundable installments for Paid late fees' })
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 250')
+    );
+    expect(screen.getByRole('checkbox', { name: 'Select Materials · FIN-1' })).not.toBeChecked();
+    expect(JSON.parse(screen.getByLabelText('Request payload').textContent!).lines).toEqual([
+      { lateFeeDueFeeId: 'late-due', sourceAllocationId: 'late-payment', amount: 250 },
+    ]);
+  });
+
+  it('preserves every source for a capped whole-receipt refund so the server can allocate the cap', async () => {
+    mocks.eligibility.currentData.allowPartialRefund = false;
+    mocks.eligibility.currentData.totalRefundable = 1000;
+    mocks.eligibility.currentData.feeHeads = [
+      {
+        feeHeadId: 'tuition',
+        feeHeadName: 'Tuition',
+        months: [
+          {
+            month: 6,
+            year: 2026,
+            dueFeeId: 'principal',
+            sourceAllocationId: 'principal-payment',
+            sourceReceiptId: 'receipt',
+            receiptNumber: 'FIN-1',
+            total: 1000,
+            paid: 1000,
+            refunded: 0,
+            refundable: 1000,
+          },
+        ],
+      },
+      {
+        feeHeadId: null,
+        feeHeadName: 'Paid late fees',
+        months: [
+          {
+            month: 6,
+            year: 2026,
+            lateFeeDueFeeId: 'principal',
+            chargeName: 'Late Fee - Tuition',
+            sourceAllocationId: 'late-payment',
+            sourceReceiptId: 'receipt',
+            receiptNumber: 'FIN-1',
+            total: 250,
+            paid: 250,
+            refunded: 0,
+            refundable: 250,
+          },
+        ],
+      },
+    ];
+    render(<Request />);
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Select refundable installments for Tuition' })
+    );
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Select refundable installments for Paid late fees' })
+    );
+    await waitFor(() =>
+      expect(JSON.parse(screen.getByLabelText('Request payload').textContent!).lines).toEqual([
+        { dueFeeId: 'principal', sourceAllocationId: 'principal-payment', amount: 1000 },
+        { lateFeeDueFeeId: 'principal', sourceAllocationId: 'late-payment', amount: 250 },
+      ])
+    );
+  });
+
   it('unlocks the other receipt when the selection is cleared', async () => {
     render(<Request />);
     const first = screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' });

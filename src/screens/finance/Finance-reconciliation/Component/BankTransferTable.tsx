@@ -76,7 +76,7 @@ const BankTransferTable = ({
         standardName: item.class,
         divisionName: item.division,
         transactionId: item.instrumentDetails?.transactionReferenceNumber,
-        transferDate: item.instrumentDetails?.transferDate || item.receiptDate,
+        transferDate: item.instrumentDetails?.transferDate,
         accountHolderName: item.instrumentDetails?.accountHolderName,
       })),
     [listResponse?.items]
@@ -178,7 +178,7 @@ const BankTransferTable = ({
         filterType: 'date',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
-            {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+            {value && dayjs(value).isValid() ? dayjs(value).format('DD-MM-YYYY') : '-'}
           </Typography>
         ),
       },
@@ -191,6 +191,17 @@ const BankTransferTable = ({
         align: 'left',
         isFilter: true,
         filterType: 'string',
+      },
+      {
+        id: 'bankLabel',
+        label: 'Target Bank Account',
+        width: 240,
+        minWidth: 200,
+        maxWidth: 300,
+        align: 'left',
+        isFilter: true,
+        filterType: 'string',
+        render: (value) => value || '-',
       },
       {
         id: 'remarks',
