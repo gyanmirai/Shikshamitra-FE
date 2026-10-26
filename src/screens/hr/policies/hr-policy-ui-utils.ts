@@ -1,6 +1,6 @@
 import type { HrPolicyVersion } from 'src/redux/hr/hr-policy-api';
 
-import { formatHrAuditValue } from 'src/utils/hr-audit-format';
+import { formatHrAuditValue, getHrAuditValueText } from 'src/utils/hr-audit-format';
 
 export type AttendanceNumericField =
   | 'fullDayThresholdPercentage'
@@ -118,7 +118,7 @@ export function versionMatchesHistorySearch(version: HrPolicyVersion, rawSearch:
   ].some((value) => value.toLowerCase().replace(/[_-]/g, ' ').includes(search));
 }
 
-export function cleanVersionDisplayValue(value?: string | null) {
+export function cleanVersionDisplayValue(value?: string | null, options?: { full?: boolean }) {
   if (!value || value === 'null' || value === 'undefined') return 'Not set';
-  return formatHrAuditValue(value);
+  return options?.full ? getHrAuditValueText(value) : formatHrAuditValue(value);
 }

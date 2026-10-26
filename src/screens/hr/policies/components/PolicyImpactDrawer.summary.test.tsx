@@ -38,6 +38,21 @@ vi.mock('./HRPolicySharedUI', () => ({
 }));
 
 describe('PolicyImpactDrawer summary rendering', () => {
+  it('keeps changed collection entries beyond 120 characters fully inspectable and references redacted', () => {
+    const prefix = 'Earlier unchanged holiday remains included. '.repeat(8);
+    const reference = '297f91e4-1d0c-4c6e-b823-7df6f0c8f9a7';
+    renderWithProviders(<PolicyImpactDrawer ctx={{ impactDrawerOpen: true, previewPolicyImpactState: {}, previewPolicyAssignmentImpactState: {},
+      impactPreview: { policyType: 'work_calendar', action: 'update', warnings: [], affectedEmployees: [],
+        ruleDifferencesStatus: 'calculated', ruleDifferences: [{ field: 'holidays', fieldLabel: 'Holidays',
+          fromDisplayValue: `${prefix}\nLate holiday: Included; source ${reference}`,
+          toDisplayValue: `${prefix}\nLate holiday: Excluded; source ${reference}`,
+        }],
+      },
+    } as any} />);
+    expect(screen.getByText(/Late holiday: Included/)).toHaveTextContent('Late holiday: Included');
+    expect(screen.getByText(/Late holiday: Excluded/)).toHaveTextContent('Late holiday: Excluded');
+    expect(screen.queryByText(new RegExp(reference))).not.toBeInTheDocument();
+  });
   it('shows exact rule values and permission-gated period links without mutating the preview', () => {
     const ctx = {
       impactDrawerOpen: true,

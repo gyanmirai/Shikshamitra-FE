@@ -23,6 +23,29 @@ const ctx = {
 };
 
 describe('assignment current and proposal identity', () => {
+  it.each(['employee', 'group'])('never labels a cached %s current winner as fresh after a resolution error', (targetType) => {
+    render(<AssignmentPreviewPanel ctx={{ ...ctx, assignmentForm: { ...ctx.assignmentForm, targetType },
+      assignmentPreview: { policySource: targetType, payrollPolicy: { name: 'Fresh authorized payroll' }, attendancePolicy: {} },
+      assignmentResolutionError: { status: 403 }, assignmentResolutionPreview: {
+        current: { policySource: targetType, payrollPolicy: { name: 'Old cached payroll' }, attendancePolicy: {} },
+      },
+    } as any} />);
+    const current = screen.getByText('Currently effective on 2026-10-01').parentElement!;
+    expect(within(current).queryByText('Payroll: Old cached payroll')).not.toBeInTheDocument();
+    expect(within(current).getByText('Current policies unavailable.')).toBeInTheDocument();
+  });
+
+  it.each(['employee', 'group'])('hides a cached %s current winner while the resolution is refreshing', (targetType) => {
+    render(<AssignmentPreviewPanel ctx={{ ...ctx, assignmentForm: { ...ctx.assignmentForm, targetType },
+      assignmentPreview: { policySource: targetType, payrollPolicy: { name: 'Fresh authorized payroll' }, attendancePolicy: {} },
+      assignmentResolutionLoading: true, assignmentResolutionPreview: {
+        current: { policySource: targetType, payrollPolicy: { name: 'Old cached payroll' }, attendancePolicy: {} },
+      },
+    } as any} />);
+    const current = screen.getByText('Currently effective on 2026-10-01').parentElement!;
+    expect(within(current).queryByText('Payroll: Old cached payroll')).not.toBeInTheDocument();
+    expect(within(current).getByText('Resolving current policies...')).toBeInTheDocument();
+  });
   it.each([
     [true, null, 'Resolving current policies...'],
     [false, { message: 'Synthetic failure' }, 'Current policies unavailable.'],

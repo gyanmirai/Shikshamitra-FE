@@ -335,12 +335,12 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                           </TableCell>
                           <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {cleanVersionDisplayValue(
-                              difference.fromDisplayValue ?? difference.fromValue
+                              difference.fromDisplayValue ?? difference.fromValue, { full: true }
                             )}
                           </TableCell>
                           <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {cleanVersionDisplayValue(
-                              difference.toDisplayValue ?? difference.toValue
+                              difference.toDisplayValue ?? difference.toValue, { full: true }
                             )}
                           </TableCell>
                         </TableRow>

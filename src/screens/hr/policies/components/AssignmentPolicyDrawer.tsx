@@ -75,11 +75,13 @@ export function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext 
   } = ctx;
   const sampleId = React.useId();
   const usesSample = assignmentForm.targetType === 'group' && Boolean(assignmentSampleEmployeeId);
-  const assignmentPreview =
-    assignmentResolutionPreview?.current || (usesSample ? undefined : legacyPreview);
-  const assignmentPreviewLoading =
-    legacyPreviewLoading || (usesSample && assignmentResolutionLoading);
-  const assignmentPreviewError = legacyPreviewError || (usesSample && assignmentResolutionError);
+  const resolvedCurrent = !assignmentResolutionLoading && !assignmentResolutionError
+    ? assignmentResolutionPreview?.current : undefined;
+  const assignmentPreview = resolvedCurrent || (usesSample ? undefined : legacyPreview);
+  const assignmentPreviewLoading = !resolvedCurrent &&
+    (assignmentResolutionLoading || (!usesSample && legacyPreviewLoading));
+  const assignmentPreviewError = !resolvedCurrent &&
+    (assignmentResolutionError || (!usesSample && legacyPreviewError));
   const proposed =
     !assignmentResolutionLoading &&
     !assignmentResolutionError &&
