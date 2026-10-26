@@ -6,7 +6,6 @@ import type {
   AttendanceForm,
   AssignmentForm,
   WorkCalendarForm,
-  AssignmentFilters,
   AttendanceAdvancedKey,
 } from './types/hr-policy-workspace.types';
 // Tab configuration
@@ -160,16 +159,4 @@ export const defaultAssignmentForm = (start?: string | null): AssignmentForm => 
   priority: '0',
   assignmentReason: '',
   isActive: true,
-});
-
-export const defaultAssignmentFilters = (): AssignmentFilters => ({
-  search: '',
-  targetType: 'all',
-  status: 'all',
-  payrollPolicyId: '',
-  attendancePolicyId: '',
-  leavePolicyId: '',
-  activeOnDate: '',
-  effectiveFrom: '',
-  effectiveTo: '',
 });

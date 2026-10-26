@@ -7,10 +7,6 @@ import { renderWithProviders } from 'src/test/test-utils';
 
 import { AssignmentsTab } from './AssignmentsTab';
 
-vi.mock('@mui/x-date-pickers', () => ({
-  DatePicker: () => <input aria-label="date" readOnly />,
-}));
-
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
 }));
@@ -56,7 +52,7 @@ vi.mock('src/components/customizabaleTable', () => ({
 }));
 
 describe('AssignmentsTab actions', () => {
-  it('opens assignment view mode from the eye action', async () => {
+  it('keeps new, view and edit actions without the advanced filter UI', async () => {
     const user = userEvent.setup();
     const assignment = {
       id: 'assignment-1',
@@ -99,34 +95,13 @@ describe('AssignmentsTab actions', () => {
             assignmentPage: { number: 1, size: 20 },
             setAssignmentPage: vi.fn(),
             assignmentTotal: 1,
-            assignmentFilters: {
-              search: '',
-              targetType: 'all',
-              status: 'all',
-              payrollPolicyId: '',
-              attendancePolicyId: '',
-              activeOnDate: '',
-              effectiveFrom: '',
-              effectiveTo: '',
-            },
-            setAssignmentFilters: vi.fn(),
-            assignmentFilterAnchorEl: null,
-            setAssignmentFilterAnchorEl: vi.fn(),
-            draftAssignmentFilters: {
-              search: '',
-              targetType: 'all',
-              status: 'all',
-              payrollPolicyId: '',
-              attendancePolicyId: '',
-              activeOnDate: '',
-              effectiveFrom: '',
-              effectiveTo: '',
-            },
-            setDraftAssignmentFilters: vi.fn(),
+            assignmentSearch: '',
+            setAssignmentSearch: vi.fn(),
             assignmentsLoading: false,
             assignmentsError: null,
             activePayroll: [{ id: 'payroll-1', name: 'Teacher Payroll' }],
             activeAttendance: [{ id: 'attendance-1', name: 'Teacher Attendance' }],
+            activeLeavePolicies: [{ id: 'leave-1', name: 'Teacher Leave' }],
             payroll: [{ id: 'payroll-1', name: 'Teacher Payroll' }],
             attendance: [{ id: 'attendance-1', name: 'Teacher Attendance' }],
             canAssignPolicy: true,
@@ -140,10 +115,39 @@ describe('AssignmentsTab actions', () => {
       />
     );
 
+    expect(screen.queryByText(/advanced filters/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Active Filters:')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('table-action-view'));
 
     expect(openAssignmentDrawer).toHaveBeenCalledWith(assignment, 'view');
     expect(previewAssignment).not.toHaveBeenCalled();
+    await user.click(screen.getByTestId('table-action-edit'));
+    expect(openAssignmentDrawer).toHaveBeenLastCalledWith(assignment);
+    await user.click(screen.getByRole('button', { name: 'New Assignment' }));
+    expect(openAssignmentDrawer).toHaveBeenLastCalledWith();
+  });
+
+  it('retains view access but prevents new and edit actions without assignment permission', () => {
+    renderWithProviders(
+      <AssignmentsTab
+        ctx={
+          {
+            academicYearId: 'ay-2026',
+            assignmentRows: [{ id: 'assignment-1', assignment: { id: 'assignment-1' } }],
+            assignmentPage: { number: 1, size: 20 },
+            assignmentSearch: '',
+            activePayroll: [{ id: 'payroll-1' }],
+            activeAttendance: [{ id: 'attendance-1' }],
+            activeLeavePolicies: [{ id: 'leave-1' }],
+            canAssignPolicy: false,
+            openAssignmentDrawer: vi.fn(),
+          } as any
+        }
+      />
+    );
+    expect(screen.getByRole('button', { name: 'New Assignment' })).toBeDisabled();
+    expect(screen.getByTestId('table-action-view')).toBeVisible();
+    expect(screen.queryByTestId('table-action-edit')).not.toBeInTheDocument();
   });
 });
 
