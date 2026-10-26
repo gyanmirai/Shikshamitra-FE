@@ -15,6 +15,8 @@ Backend workflow rules are canonical in `https://github.com/gyanmirai/Shikshamit
 
 ## Core workflows
 
+For register layout, filter composition and synthetic browser checks, see [Attendance register workspace](references/attendance-register-workspace.md).
+
 Use this map to find the first screen and client:
 
 | Workflow                   | Screen entry                                                                | Main client                                  |
@@ -242,7 +244,14 @@ Payslips show earned gross, employee deductions, and net pay.
 Employer contributions remain in school cost reporting and audit evidence.
 Off mode omits ESI amounts and presentation, including empty ESI payslip rows.
 Users select a template, choose Monthly salary or Monthly cost to school (CTC), select the effective month, enter the quoted monthly amount, select PF applicability and rule, preview, and review earnings, employee deductions, employer contributions, ESI, target variance, and the formula trace.
-New employees remain Inactive after direct creation or application finalization and show Payroll setup required.
+Application finalization includes salary template, monthly amount, preview, and PF/ESIC registration in the final Salary and confirm step.
+Finalize sends the salary and statutory profile together, and reports success only when the backend returns a persisted compensation revision.
+Salary controls stay mounted across back/forward step navigation; failed finalization keeps entered values available for retry.
+Cancel and browser reload warn about unsaved changes; discarding or completing a reload clears the unsaved draft and requires re-entry.
+Successful finalization leaves the staff Inactive with salary saved, and shows any remaining activation blockers.
+Login does not activate staff; an authorized HR user must use the existing activation action.
+Direct employee creation retains its separate salary setup flow.
+Deploy the backend salary finalization contract before this frontend flow.
 Salary setup preselects the school default template, the template salary basis, the joining month, and the template PF defaults.
 Users preview and save salary directly as an effective immutable revision without a draft or approval queue.
 A later save creates another revision, supersedes the previous effective revision for the same month, and keeps future-effective revisions scheduled.

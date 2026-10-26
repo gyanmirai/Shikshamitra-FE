@@ -1,5 +1,7 @@
 'use client';
 
+import { leaveRequestColumnBindings } from 'src/screens/hr/leave-request/leave-table-filters';
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -74,12 +76,18 @@ const ApplyLeave = ({
   const [isLeaveRequestsLoading, setIsLeaveRequestsLoading] = useState(false);
   const [selfLeaveAccessError, setSelfLeaveAccessError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
+  const [tableQuery, setTableQuery] = useState({
+    page: 1,
+    pageSize: 20,
+    search: '',
+    status: '',
+    paidType: '',
+  });
   const [totalCount, setTotalCount] = useState(0);
   const [tableError, setTableError] = useState<unknown>();
   const exportTable = useHrTableExport(isSelfMode ? 'hr-self-leave-history' : 'hr-leave-requests', {
     academicYearId: currentYear?.id,
-    search: tableQuery.search,
+    ...tableQuery,
   });
   const [triggerLeaveRequests] = useLazyGetLeaveRequestsQuery();
   const [triggerMyLeaveRequests] = useLazyGetMyLeaveRequestsQuery();
@@ -512,7 +520,19 @@ const ApplyLeave = ({
                   isLoading={isLeaveRequestsLoading}
                   tableId="apply-leave-table"
                   data={tableData}
-                  columns={columns}
+                  searchTerm={tableQuery.search}
+                  {...serverColumnFilters(
+                    columns,
+                    leaveRequestColumnBindings,
+                    tableQuery,
+                    (patch) =>
+                      setTableQuery((current) => ({
+                        ...current,
+                        page: 1,
+                        status: String(patch.status ?? ''),
+                        paidType: String(patch.paidType ?? ''),
+                      }))
+                  )}
                 />
               </Box>
             </>

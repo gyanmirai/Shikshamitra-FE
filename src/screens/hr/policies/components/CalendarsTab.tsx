@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters, nameContains } from 'src/screens/hr/utils/server-column-filters';
 import type { LabelColor } from 'src/components/label';
 import type { WorkCalendarPolicy } from 'src/redux/hr/hr-policy-api';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -312,7 +313,9 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         tableId="hr-work-calendars"
         tableTitle="Work calendars"
         onExport={exportTable}
-        columns={calendarColumns}
+        {...serverColumnFilters(calendarColumns, [nameContains('name')], tableQuery, ({ search }) =>
+          setTableQuery((current) => ({ ...current, page: 1, search: String(search ?? '') }))
+        )}
         data={calendarRows}
         error={calendarsError}
         onRetry={refetch}

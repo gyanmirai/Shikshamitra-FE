@@ -325,6 +325,9 @@ const getResolvedEmployeeIdentity = (values: any, editData?: any) => ({
 export const assignReportingManagerInitialValues = (editData?: IReportingInformationResponse) => ({
   reportingManager: editData?.reportingManager?.id ?? '',
   reportingManagerName: editData?.reportingManager?.fullName ?? '',
+  reportingManagerKind: editData?.reportingManager?.kind ?? 'Employee',
+  reportingManagerStatus: editData?.reportingManager?.status ?? null,
+  reportingManagerEmail: editData?.reportingManager?.email ?? '',
 });
 
 export const academicPermissionInitialValues = (editData?: any) => ({
@@ -655,6 +658,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
         id: employeeId,
         body: {
           reportingManagerId: values?.reportingManager,
+          reportingManagerKind: values?.reportingManagerKind ?? 'Employee',
         },
       }).unwrap();
       return res;

@@ -206,7 +206,14 @@ export default function SalaryTemplateSettings() {
         render: (value) =>
           value === 'School default' ? <Label color="primary">School default</Label> : 'No',
       },
-      { id: 'activeVersionLabel', label: 'Active version', filterType: 'string', minWidth: 140 },
+      {
+        id: 'activeVersion',
+        label: 'Active version',
+        filterType: 'number',
+        minWidth: 140,
+        render: (_value, row) => row.activeVersionLabel,
+        exportValue: (_value, row) => String(row.activeVersionLabel),
+      },
       {
         id: 'componentCount',
         label: 'Components',
@@ -214,7 +221,13 @@ export default function SalaryTemplateSettings() {
         align: 'right',
         minWidth: 120,
       },
-      { id: 'updatedLabel', label: 'Last updated', filterType: 'string', minWidth: 150 },
+      {
+        id: 'updatedAt',
+        label: 'Last updated',
+        filterType: 'date',
+        minWidth: 150,
+        render: (_value, row) => row.updatedLabel,
+      },
       {
         id: 'status',
         label: 'Status',

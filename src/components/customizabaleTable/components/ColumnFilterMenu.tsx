@@ -116,7 +116,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
     },
   });
 
-  const getFilterOptions = () => {
+  const getAllFilterOptions = () => {
     if (!anchorEl) return [];
 
     switch (anchorEl.column.filterType) {
@@ -160,6 +160,12 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
         ];
     }
   };
+
+  const getFilterOptions = () =>
+    getAllFilterOptions().filter(
+      ({ value }) =>
+        !anchorEl?.column.filterOperators || anchorEl.column.filterOperators.includes(value)
+    );
 
   const handleApply = () => {
     if (!anchorEl) return;

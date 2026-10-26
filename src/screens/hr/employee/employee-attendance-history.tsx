@@ -16,7 +16,10 @@ import {
   useGetEmployeeWiseAttendanceQuery,
 } from 'src/redux/attendanceTracking/attendanceTrackingApi';
 
-import { getAttendanceTrackingStatusLabel } from '../attendance-tracking/status-mapper';
+import {
+  ATTENDANCE_TRACKING_STATUS,
+  getAttendanceTrackingStatusLabel,
+} from '../attendance-tracking/status-mapper';
 
 type EmployeeAttendanceHistoryProps = {
   employeeId?: string;
@@ -99,6 +102,11 @@ const EmployeeAttendanceHistory = ({ employeeId }: EmployeeAttendanceHistoryProp
       {
         id: 'status',
         label: 'Status',
+        filterType: 'enum',
+        enumOptions: Object.values(ATTENDANCE_TRACKING_STATUS).map((value) => ({
+          value,
+          label: getAttendanceTrackingStatusLabel(value),
+        })),
         render(value: number | string) {
           return (
             <Label variant="soft" color={getStatusColor(value)}>

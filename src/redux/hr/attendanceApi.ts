@@ -51,6 +51,8 @@ export interface GetAttendanceRegisterParams {
   endDate: string;
   academicYearId?: string;
   educationMediumStageId?: string;
+  educationMediumStageIds?: string[];
+  sorting?: string;
   employeeId?: string;
   employeeGroup?: 'Teaching' | 'NonTeaching';
   department?: string;
@@ -73,6 +75,22 @@ const compactParams = (params: Record<string, unknown>) =>
       ([, value]) => value !== undefined && value !== null && value !== ''
     )
   );
+
+// ASP.NET binds indexed query keys; URLSearchParams would serialize an array as one comma string.
+export const buildAttendanceRegisterParams = (params: GetAttendanceRegisterParams) => {
+  const { educationMediumStageIds = [], ...rest } = params;
+  return compactParams({
+    ...rest,
+    ...Object.fromEntries(
+      [...new Set(educationMediumStageIds)].map((id, index) => [
+        `educationMediumStageIds[${index}]`,
+        id,
+      ])
+    ),
+    skipCount: params.skipCount ?? 0,
+    maxResultCount: params.maxResultCount ?? 50,
+  });
+};
 
 export const attendancePayrollInvalidationTags = [
   employeeType.attendance,
@@ -222,11 +240,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
       query: (params: GetAttendanceRegisterParams) => ({
         url: '/hr/attendance/register',
         method: 'GET',
-        params: compactParams({
-          ...params,
-          skipCount: params.skipCount ?? 0,
-          maxResultCount: params.maxResultCount ?? 50,
-        }),
+        params: buildAttendanceRegisterParams(params),
       }),
       providesTags: [employeeType.attendance],
     }),
@@ -234,11 +248,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
       query: (params: GetGroupedAttendanceRegisterParams) => ({
         url: '/hr/attendance/register/grouped',
         method: 'GET',
-        params: compactParams({
-          ...params,
-          skipCount: params.skipCount ?? 0,
-          maxResultCount: params.maxResultCount ?? 50,
-        }),
+        params: buildAttendanceRegisterParams(params),
       }),
       providesTags: [employeeType.attendance],
     }),

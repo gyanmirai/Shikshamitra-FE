@@ -1,4 +1,8 @@
 import type React from 'react';
+import userEvent from '@testing-library/user-event';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { screen } from '@testing-library/react';
 import { vi, it, expect, describe } from 'vitest';
@@ -271,3 +275,59 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
 });
 
 vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));
+
+it.each([true, false])(
+  'keeps two compare actions direct and gates restore overflow, permission=%s',
+  async (canClonePolicy) => {
+    const setRestoreVersion = vi.fn();
+    const version = {
+      id: 'version-3',
+      versionNumber: 3,
+      name: 'Synthetic policy',
+      status: 'active',
+      creationTime: '2026-10-01',
+      changeAction: 'published',
+    };
+    renderWithProviders(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <PolicyVersionDrawer
+          ctx={
+            {
+              versionTarget: {
+                policyType: 'payroll',
+                policyId: 'synthetic',
+                policyName: 'Synthetic policy',
+              },
+              versionHistory: { items: [version] },
+              versionPage: { number: 1, size: 20 },
+              versionFilters: { action: 'all', search: '' },
+              compareVersionIds: { from: null, to: null },
+              canClonePolicy,
+              isPolicyOperationActive: false,
+              restoreVersionState: { isLoading: false },
+              setVersionPage: vi.fn(),
+              setVersionFilters: vi.fn(),
+              setVersionTarget: vi.fn(),
+              setCompareVersionIds: vi.fn(),
+              setRestoreVersion,
+            } as any
+          }
+        />
+      </ThemeProvider>
+    );
+    expect(screen.getByRole('button', { name: 'Compare from version 3' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Compare to version 3' })).toBeVisible();
+    if (canClonePolicy) {
+      await userEvent.click(screen.getByRole('button', { name: 'More actions for version 3' }));
+      await userEvent.click(screen.getByRole('menuitem', { name: 'Restore as draft' }));
+      expect(setRestoreVersion).toHaveBeenCalledWith({
+        version,
+        name: 'Synthetic policy v3 Restore Draft',
+        reason: '',
+      });
+    } else
+      expect(
+        screen.queryByRole('button', { name: 'More actions for version 3' })
+      ).not.toBeInTheDocument();
+  }
+);

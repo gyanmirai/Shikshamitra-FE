@@ -206,7 +206,13 @@ const HrEventsAndHolidaysScreen = () => {
               minWidth: '9vw',
             },
             { id: 'eDate', label: 'End Date', filterType: 'date', align: 'left', minWidth: '9vw' },
-            { id: 'totalDays', label: 'Total Days', align: 'left', minWidth: '8vw' },
+            {
+              id: 'totalDays',
+              filterType: 'number',
+              label: 'Total Days',
+              align: 'left',
+              minWidth: '8vw',
+            },
             {
               id: 'reason',
               label: 'Description',

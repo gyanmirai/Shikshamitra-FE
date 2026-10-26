@@ -7,6 +7,7 @@ import type {
   EsiEmployeeImpact,
 } from 'src/redux/hr/statutory-scheme-api';
 
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { Visibility } from '@mui/icons-material';
@@ -206,7 +207,36 @@ export function EsiStatutoryEmployees({
     [canApproveOverride, canManageEnrollment, onOpenEmployee]
   );
 
-  const tableFilters: IParams['filters'] = [];
+  const tableCriteria = serverColumnFilters(
+    columns,
+    [
+      {
+        column: 'coverageDecisionLabel',
+        query: 'coverage',
+        emptyValue: 'all',
+        options: [
+          { label: 'Covered decisions', value: 'covered' },
+          { label: 'Not covered decisions', value: 'notCovered' },
+        ],
+      },
+      {
+        column: 'readiness',
+        query: 'readiness',
+        emptyValue: 'all',
+        options: [
+          { label: 'Ready', value: 'ready' },
+          { label: 'Needs attention', value: 'needsAttention' },
+        ],
+      },
+    ],
+    { coverage: query.coverage, readiness: query.readiness },
+    (patch) =>
+      onQueryChange({
+        coverage: String(patch.coverage),
+        readiness: String(patch.readiness),
+        page: 0,
+      })
+  );
   const tableSorts: IParams['sorts'] = [{ column: query.sortBy, direction: query.sortDirection }];
 
   return (
@@ -298,7 +328,7 @@ export function EsiStatutoryEmployees({
         tableId="esi-employee-impact"
         onExport={exportTable}
         tableTitle="ESI staff impact"
-        columns={columns}
+        {...tableCriteria}
         data={(preview?.items || []).map((item) => ({ ...item, id: item.employeeId }))}
         totalCount={preview?.totalCount || 0}
         isLoading={isLoading}
@@ -312,7 +342,6 @@ export function EsiStatutoryEmployees({
         rowsPerPage={query.pageSize}
         rowsPerPageOptions={[10, 25, 50]}
         searchTerm={query.search}
-        filters={tableFilters}
         sorts={tableSorts}
         searchFieldProps={{ placeholder: 'Search staff name or code' }}
         onServerSearch={(search) => onQueryChange({ search: search.trim() || null, page: 0 })}

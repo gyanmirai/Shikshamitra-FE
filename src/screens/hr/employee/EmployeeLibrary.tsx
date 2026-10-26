@@ -3,7 +3,8 @@ import type { LabelColor } from 'src/components/label';
 import React from 'react';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
-import { Box, Tab, Card } from '@mui/material';
+import { formatNumber } from 'src/utils/formate_number';
+import { Box, Tab, Card, Alert } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -103,6 +104,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
               exportScope="all"
               tableId="employee-borrowed-books-table"
               tableTitle="Borrowed books"
+              exportContext={['Demonstration library records; not staff records.']}
               noDataText="No Borrowed Books Data Found"
               isLoading={borrowedLoading}
               error={borrowedError}
@@ -111,8 +113,8 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
                 { id: 'bookTitle', label: 'Book Title', align: 'left' },
                 { id: 'bookId', label: 'Book Category', align: 'left' },
                 { id: 'accessionNo', label: 'Accession No.', align: 'left' },
-                { id: 'issueDate', label: 'Issued on', align: 'left' },
-                { id: 'dueDate', label: 'Due on', align: 'left' },
+                { id: 'issueDate', filterType: 'date', label: 'Issued on', align: 'left' },
+                { id: 'dueDate', filterType: 'date', label: 'Due on', align: 'left' },
               ]}
               data={borrowedBooks || []}
             />
@@ -129,6 +131,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
               exportScope="all"
               tableId="employee-reserved-books-table"
               tableTitle="Reserved books"
+              exportContext={['Demonstration library records; not staff records.']}
               noDataText="No Reserved Books Data Found"
               isLoading={reservedLoading}
               error={reservedError}
@@ -136,7 +139,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
               columns={[
                 { id: 'bookTitle', label: 'Book Title', align: 'left' },
                 { id: 'bookCategory', label: 'Book Category', align: 'left' },
-                { id: 'reservationDate', label: 'Reserved on', align: 'left' },
+                { id: 'reservationDate', filterType: 'date', label: 'Reserved on', align: 'left' },
                 { id: 'author', label: 'Author', align: 'left' },
               ]}
               data={reservedBooks || []}
@@ -154,6 +157,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
               exportScope="all"
               tableId="employee-fines-charges-table"
               tableTitle="Library charges"
+              exportContext={['Demonstration library records; not staff records.']}
               noDataText="No Fines or Charges Data Found"
               isLoading={finesChargesLoading}
               error={chargesError}
@@ -173,16 +177,12 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
                   label: 'Amount',
                   align: 'left',
                   filterType: 'number',
+                  valueType: 'money',
                   render(value) {
-                    return new Intl.NumberFormat('en-IN', {
-                      style: 'currency',
-                      currency: 'INR',
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format(Math.ceil(value));
+                    return value == null ? '-' : formatNumber(value, 'INR');
                   },
                 },
-                { id: 'dateIssued', label: 'Date', align: 'left' },
+                { id: 'dateIssued', filterType: 'date', label: 'Date', align: 'left' },
                 { id: 'chargeType', minWidth: '180px', label: 'Charge Type', align: 'left' },
                 { id: 'reason', minWidth: '300px', label: 'Reason', align: 'left' },
                 {
@@ -217,6 +217,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
               exportScope="all"
               tableId="employee-issued-books-table"
               tableTitle="Borrowing history"
+              exportContext={['Demonstration library records; not staff records.']}
               noDataText="No Borrowed History Data Found"
               isLoading={borrowHistoryLoading}
               error={historyError}
@@ -225,8 +226,8 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
                 { id: 'bookTitle', label: 'Book Title', align: 'left' },
                 { id: 'bookId', label: 'Book Category', align: 'left' },
                 { id: 'accessionNo', label: 'Accession No.', align: 'left' },
-                { id: 'issueDate', label: 'Issued on', align: 'left' },
-                { id: 'dueDate', label: 'Due on', align: 'left' },
+                { id: 'issueDate', filterType: 'date', label: 'Issued on', align: 'left' },
+                { id: 'dueDate', filterType: 'date', label: 'Due on', align: 'left' },
               ]}
               data={borrowHistoryBooks || []}
             />
@@ -248,6 +249,9 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
       }}
     >
       {/* Tabs */}
+      <Alert severity="info">
+        Staff library records are not connected yet. These are demonstration records.
+      </Alert>
       <Card
         sx={{
           flexShrink: 0,

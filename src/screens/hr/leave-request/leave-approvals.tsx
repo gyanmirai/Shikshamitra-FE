@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -43,6 +44,7 @@ import {
   useRejectLeaveRequestMutation,
   useApproveLeaveRequestMutation,
 } from 'src/redux/hr/leaveApi';
+import { leaveRequestColumnBindings } from './leave-table-filters';
 
 import { LeaveRequestForm } from './leave-calender';
 import { formatLeaveCalendarDateForDisplay } from './leave-request.utils';
@@ -87,7 +89,7 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
     EmployeeLeaveStatusType.Pending
   );
 
-  const [page, setPage] = useState({ number: 1, size: 20, search: '' });
+  const [page, setPage] = useState({ number: 1, size: 20, search: '', paidType: '' });
   const monthAnchor = date?.format('YYYY-MM-01');
   useEffect(() => {
     setPage((current) => ({ ...current, number: 1 }));
@@ -97,6 +99,7 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
     monthYearAnchor: date?.format('YYYY-MM-01'),
     status: statusFilter === '' ? undefined : statusFilter,
     search: page.search,
+    paidType: page.paidType,
   });
 
   const {
@@ -114,6 +117,7 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
       page: page.number,
       pageSize: page.size,
       search: page.search,
+      paidType: page.paidType,
       status: statusFilter === '' ? undefined : statusFilter,
     },
   });
@@ -372,7 +376,23 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
         tableId="leave-approvals-table"
         tableTitle="Leave approvals"
         data={tableData}
-        columns={columns}
+        {...serverColumnFilters(
+          columns,
+          leaveRequestColumnBindings,
+          { status: statusFilter, paidType: page.paidType },
+          (patch) => {
+            setStatusFilter(
+              patch.status === undefined || patch.status === ''
+                ? ''
+                : (Number(patch.status) as EmployeeLeaveStatusType)
+            );
+            setPage((current) => ({
+              ...current,
+              number: 1,
+              paidType: String(patch.paidType ?? ''),
+            }));
+          }
+        )}
       />
 
       {/* View Dialog */}

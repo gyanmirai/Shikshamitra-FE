@@ -219,7 +219,11 @@ export const employeeOnboardingApi = api.injectEndpoints({
       invalidatesTags: [employeeType.employeeApplication],
     }),
     finalizeEmployeeApplication: builder.mutation<
-      { application: EmployeeApplication; employee: Record<string, unknown> },
+      {
+        application: EmployeeApplication;
+        employee: Record<string, unknown>;
+        activationReadiness?: import('./compensation-revision-api').EmployeeActivationReadiness;
+      },
       { id: string; body: Record<string, unknown> }
     >({
       query: ({ id, body }) => ({

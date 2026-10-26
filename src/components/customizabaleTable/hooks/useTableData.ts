@@ -32,7 +32,6 @@ export const useTableData = ({
 
   // Keep expensive row matching stable while unrelated table controls update.
   const filteredData = useMemo(() => {
-    if (serverSideFilter) return data;
     const lowerSearchTerm = searchTerm.toLowerCase();
     return data.filter(
       (row) =>
@@ -44,7 +43,7 @@ export const useTableData = ({
             lowerSearchTerm,
             searchableFields
           )) &&
-        matchesTableRowFilters(row, filters, columns)
+        (serverSideFilter || matchesTableRowFilters(row, filters, columns))
     );
   }, [
     serverSideFilter,
@@ -66,6 +65,7 @@ export const useTableData = ({
       sorts.map((sort) => (row) => {
         const column = columns.find((col) => col.id === sort.column);
         const value = _.get(row, sort.column);
+        if (column?.sortValue) return column.sortValue(value, row);
 
         switch (column?.filterType) {
           case 'number':

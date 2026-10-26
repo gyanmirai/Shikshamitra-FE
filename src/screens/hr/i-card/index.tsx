@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters, nameContains } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 import type { EmployeeICardTemplate } from 'src/redux/hr/employee-icard-template-api';
 import type { AcademicOrganizationSelectOption } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
@@ -455,13 +456,18 @@ const EmployeeIcardScreen = () => {
   const { options: organizationOptions, byId: organizationById } =
     useAcademicOrganizationOptions(academicYearId);
 
-  const [templatePage, setTemplatePage] = useState({ page: 1, pageSize: 20, search: '' });
+  const [templatePage, setTemplatePage] = useState({
+    page: 1,
+    pageSize: 20,
+    search: '',
+    mediumStageId: '',
+  });
   const exportTemplates = useHrTableExport('hr-icard-templates', {
     academicYearId,
     ...templatePage,
   });
   useEffect(() => {
-    setTemplatePage((current) => ({ ...current, page: 1 }));
+    setTemplatePage((current) => ({ ...current, page: 1, mediumStageId: '' }));
   }, [academicYearId]);
   const {
     currentData: data,
@@ -586,77 +592,99 @@ const EmployeeIcardScreen = () => {
               setTemplatePage((current) => ({ ...current, page: 1, search }))
             }
             isLoading={isLoading}
-            columns={[
-              {
-                label: 'Template',
-                id: 'name',
-                align: 'left',
-                sticky: true,
-                width: 260,
-                minWidth: 220,
-              },
-              {
-                label: 'Organization',
-                id: 'organization',
-                align: 'left',
-                width: 220,
-                minWidth: 180,
-                maxWidth: 260,
-                cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-              },
-              {
-                label: 'Orientation',
-                id: 'orientation',
-                align: 'left',
-                width: 132,
-                minWidth: 120,
-              },
-              {
-                label: 'Status',
-                id: 'status',
-                filterType: 'enum',
-                enumOptions: EmployeeICardStatusTypeOptions,
-                align: 'left',
-                sticky: true,
-                stickyPosition: 'right' as const,
-                width: 108,
-                minWidth: 100,
-                render(value) {
-                  const status = value as EmployeeICardStatusType;
-                  return (
-                    <Label color={EmployeeICardStatusTypeColor[status]}>
-                      {EmployeeICardStatusTypeLabel[status]}
-                    </Label>
-                  );
+            searchTerm={templatePage.search}
+            {...serverColumnFilters(
+              [
+                {
+                  label: 'Template',
+                  id: 'name',
+                  align: 'left',
+                  sticky: true,
+                  width: 260,
+                  minWidth: 220,
                 },
-              },
-              {
-                label: 'Action',
-                id: 'action',
-                sticky: true,
-                stickyPosition: 'right' as const,
-                isSort: false,
-                isFilter: false,
-                width: 108,
-                minWidth: 96,
-                align: 'left',
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      showViewIcon
-                      showEditIcon={canEdit}
-                      showDeleteIcon={canDelete}
-                      showThreeDots={false}
-                      handleEditClick={() => handleEdit(row as unknown as EmployeeICardTemplate)}
-                      handleViewClick={() => handlePreview(row as unknown as EmployeeICardTemplate)}
-                      handleDeleteClick={() =>
-                        handleDelete(row as unknown as EmployeeICardTemplate)
-                      }
-                    />
-                  );
+                {
+                  label: 'Organization',
+                  id: 'organization',
+                  align: 'left',
+                  width: 220,
+                  minWidth: 180,
+                  maxWidth: 260,
+                  cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
                 },
-              },
-            ]}
+                {
+                  label: 'Orientation',
+                  id: 'orientation',
+                  align: 'left',
+                  width: 132,
+                  minWidth: 120,
+                },
+                {
+                  label: 'Status',
+                  id: 'status',
+                  filterType: 'enum',
+                  enumOptions: EmployeeICardStatusTypeOptions,
+                  align: 'left',
+                  sticky: true,
+                  stickyPosition: 'right' as const,
+                  width: 108,
+                  minWidth: 100,
+                  render(value) {
+                    const status = value as EmployeeICardStatusType;
+                    return (
+                      <Label color={EmployeeICardStatusTypeColor[status]}>
+                        {EmployeeICardStatusTypeLabel[status]}
+                      </Label>
+                    );
+                  },
+                },
+                {
+                  label: 'Action',
+                  id: 'action',
+                  sticky: true,
+                  stickyPosition: 'right' as const,
+                  isSort: false,
+                  isFilter: false,
+                  width: 108,
+                  minWidth: 96,
+                  align: 'left',
+                  render(value, row) {
+                    return (
+                      <ThreeDotsActions
+                        showViewIcon
+                        showEditIcon={canEdit}
+                        showDeleteIcon={canDelete}
+                        showThreeDots={false}
+                        handleEditClick={() => handleEdit(row as unknown as EmployeeICardTemplate)}
+                        handleViewClick={() =>
+                          handlePreview(row as unknown as EmployeeICardTemplate)
+                        }
+                        handleDeleteClick={() =>
+                          handleDelete(row as unknown as EmployeeICardTemplate)
+                        }
+                      />
+                    );
+                  },
+                },
+              ],
+              [
+                nameContains('name'),
+                {
+                  column: 'organization',
+                  query: 'mediumStageId',
+                  emptyValue: '',
+                  options: organizationOptions.map(({ id, label }) => ({ value: id, label })),
+                },
+              ],
+              templatePage,
+              ({ search, mediumStageId }) =>
+                setTemplatePage((current) => ({
+                  ...current,
+                  page: 1,
+                  search: String(search ?? ''),
+                  mediumStageId: String(mediumStageId ?? ''),
+                }))
+            )}
             data={rows}
             noDataText="No Staff I-card templates found."
           />
