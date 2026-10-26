@@ -24,6 +24,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
+import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -151,9 +152,7 @@ const DeductionComponent = () => {
         heading="Deduction Component"
         description="Manage the various deduction components that are subtracted from staff salaries, including fixed and variable deductions."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
-          { name: 'Settings', href: hrPaths.payroll.settings.deductionComponents },
+          { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Deduction Component' },
         ]}
         action={
@@ -179,7 +178,7 @@ const DeductionComponent = () => {
         <DialogTitle>Delete Deduction Component</DialogTitle>
         <DialogContent>
           {deleteImpactPreviewLoading ? (
-            <Alert severity="info">Loading payroll impact...</Alert>
+            <HrLoadingNotice>Loading payroll impact...</HrLoadingNotice>
           ) : deleteImpactPreviewError ? (
             <Alert
               severity="error"
@@ -206,9 +205,9 @@ const DeductionComponent = () => {
                   gap: 1.5,
                 }}
               >
-                <Alert severity="info">
+                <HrNotice severity="info">
                   Synced staff: {deleteImpactPreview?.syncedEmployeeCount ?? 0}
-                </Alert>
+                </HrNotice>
                 <Alert severity="warning">
                   Manual overrides: {deleteImpactPreview?.manualOverrideEmployeeCount ?? 0}
                 </Alert>
@@ -221,7 +220,7 @@ const DeductionComponent = () => {
               </Box>
             </>
           ) : (
-            <Alert severity="info">Payroll impact is not loaded yet.</Alert>
+            <HrNotice severity="info">Payroll impact is not loaded yet.</HrNotice>
           )}
           {!!deleteImpactPreview?.previewHash && !!deleteImpactPreview?.syncedEmployees?.length && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
@@ -1003,7 +1002,7 @@ const DeductionComponentForm = ({
                 transition: 'opacity 0.2s ease',
               }}
             >
-              <Alert icon={<Iconify icon="lucide:info" />} severity="info" variant="outlined">
+              <HrNotice icon={<Iconify icon="lucide:info" />} severity="info" variant="outlined">
                 <Typography variant="body2">
                   {/* 🔹 Main calculation explanation */}
                   {formik.values.calculationType === 'Percentage' ? (
@@ -1047,7 +1046,7 @@ const DeductionComponentForm = ({
                 >
                   ⚠️ This deduction will <strong>not</strong> appear on staff payslips.
                 </Typography>
-              </Alert>
+              </HrNotice>
             </Box>
           </Grid>
         </DialogScrollContent>
@@ -1093,7 +1092,7 @@ const DeductionComponentForm = ({
               my: 1,
             }}
           >
-            <Alert severity="info">Synced staff: {impactPreview?.syncedEmployeeCount ?? 0}</Alert>
+            <HrNotice severity="info">Synced staff: {impactPreview?.syncedEmployeeCount ?? 0}</HrNotice>
             <Alert severity="warning">
               Manual overrides: {impactPreview?.manualOverrideEmployeeCount ?? 0}
             </Alert>

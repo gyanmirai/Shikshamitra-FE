@@ -15,6 +15,7 @@ import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -173,7 +174,7 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
         )}
       </Stack>
       {!hasSchoolWideScope && (
-        <Alert severity="info">School-wide HR scope is required to manage ESIC policies.</Alert>
+        <HrNotice role="alert" severity="info">School-wide HR scope is required to manage ESIC policies.</HrNotice>
       )}
       {query.isError ? (
         <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>

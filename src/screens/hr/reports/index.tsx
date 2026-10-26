@@ -3,10 +3,10 @@
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'src/routes/hooks';
-import { hrPaths } from 'src/constants/hr-menus';
 import { useSearchParams } from 'next/navigation';
 import { RouterLink } from 'src/routes/components';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Alert, Stack, Button, LinearProgress } from '@mui/material';
 import {
@@ -122,7 +122,7 @@ function ReportingWorkspace({ view = 'history', templateId, runId }: ReportsScre
 
   let content;
   if (!permissions.canView) {
-    content = <Alert severity="info">Report access is required to open this workspace.</Alert>;
+    content = <HrNotice role="alert" severity="info">Report access is required to open this workspace.</HrNotice>;
   } else if (error) {
     content = (
       <Alert
@@ -198,15 +198,15 @@ function ReportingWorkspace({ view = 'history', templateId, runId }: ReportsScre
                 : 'Generate reports and reopen captured results.'
         }
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          ...(view === 'history' || view === 'templates'
+          ...(view === 'history'
             ? []
             : [
                 {
-                  name: templateArea ? 'Report templates' : 'Reports',
-                  href: templateArea ? hrReportPaths.library : hrReportPaths.history,
+                  name: 'Reports',
+                  href: hrReportPaths.history,
                 },
               ]),
+          ...(isDesign ? [{ name: 'Report templates', href: hrReportPaths.library }] : []),
           ...(view === 'generate' ? [{ name: 'Choose template', href: chooserHref }] : []),
           { name: title },
         ]}

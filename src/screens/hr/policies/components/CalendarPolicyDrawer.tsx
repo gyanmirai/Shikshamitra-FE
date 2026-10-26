@@ -7,6 +7,7 @@ import React from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { toDateOnly } from 'src/utils/date-only';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import {
   Box,
   Chip,
@@ -343,10 +344,10 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
               })}
             </Stack>
             {calendarForm.customWeeklyOffs.length >= 6 ? (
-              <Alert severity="info">
+              <HrNotice role="alert" severity="info">
                 At least one working day is required, so the remaining day cannot be selected as a
                 weekly off.
-              </Alert>
+              </HrNotice>
             ) : null}
           </Stack>
         ) : null}
@@ -392,17 +393,17 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
             </Button>
           </Stack>
           {holidayReviewError ? <Alert severity="error">{holidayReviewError}</Alert> : null}
-          {holidayReviewInfo ? <Alert severity="info">{holidayReviewInfo}</Alert> : null}
+          {holidayReviewInfo ? <HrNotice severity="info">{holidayReviewInfo}</HrNotice> : null}
           {!academicYearId ? (
             <Alert severity="warning">
               Select an academic year before importing central holidays.
             </Alert>
           ) : null}
           {academicYearId && !hasFinalizedHolidays && hasCentralPreview ? (
-            <Alert severity="info">
+            <HrNotice severity="info">
               {centralHolidayPreviewRows.length} central holidays are available. Review them, then
               add all to this work calendar.
-            </Alert>
+            </HrNotice>
           ) : null}
           <Box
             sx={{

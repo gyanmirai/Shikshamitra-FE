@@ -5,6 +5,7 @@ import { setIn, useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Alert, Stack, TextField } from '@mui/material';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
@@ -131,7 +132,7 @@ export const PayrollEditDetails = forwardRef<
   return (
     <Stack spacing={1} aria-busy={busy}>
       {!canEdit && (
-        <Alert severity="info">You do not have permission to edit payroll details.</Alert>
+        <HrNotice role="alert" severity="info">You do not have permission to edit payroll details.</HrNotice>
       )}
       <FormSectionCard icon="mdi:bank-outline" title="Bank details">
         <Box sx={grid}>

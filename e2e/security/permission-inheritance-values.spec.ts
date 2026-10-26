@@ -33,8 +33,9 @@ test('role values stay visible beside user overrides in both themes', async ({ p
     await expect(view.getByText('Allowed by role', { exact: true })).toBeVisible();
     await expect(remove.getByText('Denied by role', { exact: true })).toBeVisible();
     await remove.getByRole('radio', { name: 'Allow', exact: true }).press('Space');
-    await expect(remove.getByText('Denied by role', { exact: true })).toBeVisible();
-    await expect(remove.getByText('User override: Allowed', { exact: true })).toBeVisible();
+    await expect(remove.getByText('Allowed by user override', { exact: true })).toBeVisible();
+    await expect(remove.getByText('Role default: Denied', { exact: true })).toBeVisible();
+    await expect(remove.getByText('Denied by role', { exact: true })).toHaveCount(0);
     expect(
       (
         await new AxeBuilder({ page })
@@ -50,7 +51,7 @@ test('role values stay visible beside user overrides in both themes', async ({ p
       path: `.artifacts/role-permission-values/${page.viewportSize()!.width}-${dark ? 'dark' : 'light'}.png`,
     });
     await remove.getByRole('radio', { name: 'Follow role', exact: true }).click();
-    await expect(remove.getByText(/User override:/)).toHaveCount(0);
+    await expect(remove.getByText('Allowed by user override', { exact: true })).toHaveCount(0);
     await expect(remove.getByRole('radio', { name: 'Follow role', exact: true })).toBeChecked();
     await expect(remove.getByText('Denied by role', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Discard changes', exact: true }).click();

@@ -44,7 +44,7 @@ describe('HrDashboardPreviewShell', () => {
 
     expect(heading).toBeVisible();
     expect(shell.querySelector('[data-layout="inline"]')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'HR/Staff' })).toHaveAttribute('href', '/hr/dashboard');
+    expect(screen.queryByText('HR/Staff')).not.toBeInTheDocument();
     expect(within(breadcrumbs).getByText('HR Dashboard')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Page description' })).toBeVisible();
     expect(screen.getByLabelText('Dashboard freshness')).toHaveTextContent('Last refreshed:');

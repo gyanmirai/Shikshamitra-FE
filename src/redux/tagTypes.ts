@@ -1,5 +1,12 @@
 // ===== Academic Calendar API (reducerPath: academicApi) =====
 export const hostTenantType = { tenants: 'HostTenants' } as const;
+export const instituteFieldFormattingType = {
+  instituteFieldFormatting: 'InstituteFieldFormatting',
+} as const;
+
+export const academicFieldFormattingType = {
+  academicFieldFormatting: 'AcademicFieldFormatting',
+} as const;
 export const academicCalendarType = {
   calendar: 'AcademicCalendar',
   calendarDay: 'AcademicCalendarDay',
@@ -428,6 +435,7 @@ export const memberManagementType = {
 export const organizationType = {
   organization: 'Organization',
   academicOrganizationOptions: 'AcademicOrganizationOptions',
+  academicHierarchyOptions: 'AcademicHierarchyOptions',
 } as const;
 
 // ===== Organization Unit API (reducerPath: organizationUnitApi) =====
@@ -684,7 +692,7 @@ export const permissionType = {
 } as const;
 
 export const allTagTypes = {
-	userScope: 'UserScope',
+  userScope: 'UserScope',
   ...academicCalendarType,
   ...academicType,
   ...quizManagementType,
@@ -767,6 +775,8 @@ export const allTagTypes = {
   ...bulkStudentType,
   ...tenantType,
   ...hostTenantType,
+  ...academicFieldFormattingType,
+  ...instituteFieldFormattingType,
   ...transportType,
   ...yearType,
   ...permissionType,

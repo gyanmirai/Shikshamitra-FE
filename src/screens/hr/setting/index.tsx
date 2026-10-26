@@ -9,7 +9,6 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -222,12 +221,7 @@ const HrSetting = () => {
           moreLink: {},
           breadcrumbs: {},
         }}
-        links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Staff', href: hrPaths.employee.list },
-          { name: 'Settings', href: hrPaths.employee.setting.documentTypes },
-          { name: 'Document Types' },
-        ]}
+        links={[{ name: 'Document Types' }]}
         sx={{ px: 1 }}
         description="Add, update or delete documents associated with a staff member."
         action={

@@ -18,6 +18,7 @@ import { hrPaths } from 'src/constants/hr-menus';
 import { Chart, useChart } from 'src/components/chart';
 import { shikshaMitraToast } from 'src/components/toast';
 import { fNumber, fPercent } from 'src/utils/format-number';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import {
   useRejectLeaveRequestMutation,
   useApproveLeaveRequestMutation,
@@ -27,7 +28,6 @@ import {
   Card,
   Chip,
   Grid,
-  Alert,
   Stack,
   Button,
   Avatar,
@@ -404,12 +404,12 @@ const LeaveRequestRows = ({
         <DialogContent>
           <Stack spacing={1.5} sx={{ pt: 1 }}>
             {reviewAction ? (
-              <Alert severity={reviewAction.action === 'reject' ? 'warning' : 'info'}>
+              <HrNotice severity={reviewAction.action === 'reject' ? 'warning' : 'info'}>
                 {reviewAction.request.employeeName} ·{' '}
                 {reviewAction.request.paidType ?? reviewAction.request.leaveType} ·{' '}
                 {fDate(reviewAction.request.startDate, 'DD MMM')} -{' '}
                 {fDate(reviewAction.request.endDate, 'DD MMM')}
-              </Alert>
+              </HrNotice>
             ) : null}
             <TextField
               fullWidth
@@ -702,7 +702,7 @@ const AttendanceOverview = ({ data, permissions }: Props) => {
             />
           </Box>
         ) : (
-          <Alert severity="info">No attendance trend data is available for this range.</Alert>
+          <HrNotice severity="info">No attendance trend data is available for this range.</HrNotice>
         )}
         <Typography variant="body2" color="text.secondary">
           {trendSummary}
@@ -1045,7 +1045,7 @@ const NewJoinersDialog = ({
           ))}
         </Stack>
       ) : (
-        <Alert severity="info">No staff joined during the selected month.</Alert>
+        <HrNotice severity="info">No staff joined during the selected month.</HrNotice>
       )}
     </DialogContent>
     <DialogActions>
@@ -1091,7 +1091,7 @@ const CelebrationsDialog = ({
           ))}
         </Stack>
       ) : (
-        <Alert severity="info">No celebrations in the next 30 days.</Alert>
+        <HrNotice severity="info">No celebrations in the next 30 days.</HrNotice>
       )}
     </DialogContent>
     <DialogActions>

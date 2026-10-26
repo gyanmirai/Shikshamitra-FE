@@ -7,7 +7,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 
@@ -624,24 +624,25 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     });
     renderBuilder();
     const amount = screen.getByLabelText('Monthly cost to school (CTC)');
+    const footer = screen.getByRole('button', { name: 'Save salary' }).parentElement!;
     await user.type(amount, '12345678.25');
     expect(amount).toHaveValue('₹ 1,23,45,678.25');
     await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(mocks.calculate).toHaveBeenCalledWith(
       expect.objectContaining({ monthlyAmount: 12345678.25 })
     );
-    expect(screen.getByRole('status')).toHaveTextContent('Preview ready');
+    expect(within(footer).getByRole('status')).toHaveTextContent('Preview ready');
     expect(screen.getByText('₹1,23,45,678.25')).toBeVisible();
     expect(screen.getByText('Monthly cost to school')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
     expect(mocks.saveSalary).toHaveBeenCalledWith(
       expect.objectContaining({ body: expect.objectContaining({ monthlyAmount: 12345678.25 }) })
     );
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved'));
+    await waitFor(() => expect(within(footer).getByRole('status')).toHaveTextContent('Saved'));
     await user.clear(amount);
     await user.type(amount, '74200.50');
     expect(amount).toHaveValue('₹ 74,200.50');
-    expect(screen.getByRole('status')).toHaveTextContent('Preview needs refresh');
+    expect(within(footer).getByRole('status')).toHaveTextContent('Preview needs refresh');
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
   });
 

@@ -32,7 +32,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: [instituteSetupType.rooms],
+      invalidatesTags: [instituteSetupType.rooms, instituteSetupType.buildings],
     }),
 
     getRoomById: builder.query({
@@ -49,7 +49,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [instituteSetupType.rooms],
+      invalidatesTags: [instituteSetupType.rooms, instituteSetupType.buildings],
     }),
 
     deleteRoom: builder.mutation({
@@ -57,7 +57,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
         url: `/app/room/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [instituteSetupType.rooms],
+      invalidatesTags: [instituteSetupType.rooms, instituteSetupType.buildings],
     }),
   }),
   overrideExisting: false,

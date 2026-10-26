@@ -15,7 +15,7 @@ describe('HR production menu', () => {
     expect(hrPermissions.policyActions).toBe(hrPolicyActionPermissions);
     expect(hrPaths.policyActions).toBe(hrPolicyActionPermissions);
     expect(hrPermissions.policies.leavePolicies).toBe(hrLeavePolicyPermissions.root);
-    const navItems = Object.values(hrModule(true)).flatMap((sections) =>
+    const navItems = Object.values(hrModule()).flatMap((sections) =>
       sections.flatMap((section) => section.items)
     );
     const titles = flattenTitles(navItems);
@@ -28,6 +28,22 @@ describe('HR production menu', () => {
     expect(titles).not.toContain('Policy Impact');
     expect(titles).not.toContain('Holiday Impact');
     const items = flattenItems(navItems);
+    const staff = items.find((item) => item.title === 'Staff');
+    expect(staff.children.slice(0, 2)).toMatchObject([
+      {
+        title: 'Staff Onboarding',
+        path: hrPaths.employee.onboarding,
+        permissionName: hrPermissions.employee.onboarding,
+        shortcutKey: 'Alt+H+E+2',
+      },
+      {
+        title: 'Staff Directory',
+        path: hrPaths.employee.list,
+        exactMatch: true,
+        permissionName: hrPermissions.employee.list,
+        shortcutKey: 'Alt+H+E+1',
+      },
+    ]);
     expect(items.find((item) => item.title === 'I-card')).toMatchObject({
       path: '/hr/i-card',
       permissionName: hrPermissions.employee.iCard,
@@ -127,7 +143,7 @@ describe('HR production menu', () => {
 
 it('groups Reports and Templates under Reporting without changing grants', async () => {
   const { default: hrModule, hrPermissions } = await import('./hr-menus');
-  const items = Object.values(hrModule(true)).flatMap((sections) =>
+  const items = Object.values(hrModule()).flatMap((sections) =>
     sections.flatMap((section) => section.items)
   );
   const reporting = items.find((item) => item.title === 'Reporting');

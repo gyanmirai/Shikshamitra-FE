@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Box } from '@mui/material';
+import { hrPaths } from 'src/constants/hr-menus';
 import Tds from 'src/screens/hr/payroll/setting/tds';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -10,9 +11,7 @@ const Page = () => (
     <CustomBreadcrumbs
       heading="TDS"
       links={[
-        { name: 'HR/Staff' },
-        { name: 'Payroll Management' },
-        { name: 'Settings' },
+        { name: 'Payroll Management', href: hrPaths.payroll.root },
         { name: 'TDS' },
       ]}
     />

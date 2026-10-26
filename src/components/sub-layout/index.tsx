@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -23,8 +22,6 @@ import { navSectionClasses } from '../nav-section/classes';
 const SubLayout = ({ children }: any) => {
   const muiTheme = useTheme();
   const compactNav = useMediaQuery(muiTheme.breakpoints.down('md'));
-  const session: any = useSession();
-  const { data: user } = session;
   const pathname = usePathname();
   const removeLastSlash = pathname.replace(/\/$/, '');
   const [currentModule] = removeLastSlash.split('/').filter((x) => x);
@@ -32,8 +29,8 @@ const SubLayout = ({ children }: any) => {
   const navigationLabel = currentModule === 'academic'
     ? 'Academic navigation'
     : currentModule === 'hr' ? 'HR navigation' : 'Student navigation';
-  const moduleData: Array<any> = navSubData(user?.profile?.email === 'ddvs@gmail.com')?.[
-    `/${currentModule}` as keyof typeof navSubData
+  const moduleData: Array<any> = navSubData()?.[
+    `/${currentModule}` as keyof ReturnType<typeof navSubData>
   ];
   const currentData = currentModule === 'academic'
     ? moduleData?.map((group) => ({

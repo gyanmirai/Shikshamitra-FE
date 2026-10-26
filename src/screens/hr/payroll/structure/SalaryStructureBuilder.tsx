@@ -22,6 +22,7 @@ import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import { useId, useRef, useMemo, useState, useEffect } from 'react';
@@ -791,10 +792,10 @@ export function SalaryStructureBuilder({
   }
   if (!employeeId && !onboarding) {
     return (
-      <Alert severity="info">
+      <HrNotice role="alert" severity="info">
         Save the staff first. The staff will be created as Inactive, then salary can be set up
         separately.
-      </Alert>
+      </HrNotice>
     );
   }
 
@@ -940,7 +941,7 @@ export function SalaryStructureBuilder({
         />
       )}
       {calculation?.pfEligibility && (
-        <Alert severity={calculation.pfEligibility.canSave ? 'info' : 'warning'}>
+        <HrNotice severity={calculation.pfEligibility.canSave ? 'info' : 'warning'}>
           PF: {contractLabel(calculation.pfEligibility.status)}. Gross salary:{' '}
           {formatPayrollCurrency(calculation.pfEligibility.grossSalary ?? calculation.grossSalary)}.
           PF calculation wages: {formatPayrollCurrency(calculation.pfEligibility.wages)}. Coverage
@@ -949,7 +950,7 @@ export function SalaryStructureBuilder({
             ? ` ${contractLabel(calculation.pfEligibility.issueCode)}. Review school PF coverage in PF settings and the employee enrollment above.`
             : ''}
           {!calculation.pfEligibility.canSave && <HrSetupLink setup="pf" disabled={busy} />}
-        </Alert>
+        </HrNotice>
       )}
     </Stack>
   );
@@ -1507,7 +1508,7 @@ export function SalaryStructureBuilder({
           </Alert>
         )}
         {calculatedSignature && !calculationCurrent && (
-          <Alert severity="info">Your changes need a new preview.</Alert>
+          <HrNotice severity="info">Your changes need a new preview.</HrNotice>
         )}
         {calculation ? (
           <Box display="grid" gap={2} aria-live="polite">

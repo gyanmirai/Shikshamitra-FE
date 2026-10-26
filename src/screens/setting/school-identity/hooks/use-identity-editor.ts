@@ -60,17 +60,12 @@ export function useIdentityEditor(
       setError(identityError(failure, 'upload'));
     }
   };
-  const cancel = () => {
-    if (busy) return;
-    if (!formik.dirty || window.confirm('Are you sure you want to leave this page?')) onClose();
-  };
   return {
     formik,
     error,
     busy,
     bodyRef,
     uploadFile,
-    cancel,
     uploadedAssets,
     uploading: uploading.isLoading,
   };

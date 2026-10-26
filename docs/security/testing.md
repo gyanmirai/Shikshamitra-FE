@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-26
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -162,6 +162,9 @@ Record current results and unrelated baseline failures in ignored `.artifacts`.
 Use the authenticated Codex in-app browser for final visible confirmation after automated checks.
 
 ## Permission inheritance regression
+
+`src/screens/security/role/permission-user-result.test.tsx` checks that explicit user Allow/Deny results take precedence in the visible badge while preserving the role default caption, including visibility and partial grouped access.
+The inheritance-values browser case checks these separate results in both themes and at desktop, tablet, and phone widths.
 
 `src/screens/security/role/permission-inheritance.test.tsx` drives the real form, RTK Query client, and save verification with network fixtures.
 Its eight cases cover editable role defaults, Deny persistence, Allow removal through Follow role, separate visibility, role/provider restrictions, multiple-role union, refreshed defaults, and dependency review/discard without writes.

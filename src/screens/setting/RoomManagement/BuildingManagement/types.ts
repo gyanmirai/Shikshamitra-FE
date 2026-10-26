@@ -5,8 +5,18 @@ export interface IFloor {
   totalRoom: number | string;
 }
 
+export interface IBuildingFloorValue extends IFloor {
+  rowKey: string;
+}
+
+export interface IBuildingFormValues {
+  buildingName: string;
+  description: string;
+  floors: IBuildingFloorValue[];
+}
+
 export interface IBuilding {
-  id: number;
+  id: string | number;
   buildingName: string;
   totalFloors: number;
   description: string;
@@ -14,15 +24,7 @@ export interface IBuilding {
 }
 
 export interface IBuildingTableProps {
-  onAddBuilding: {
-    onTrue: () => void;
-    onFalse: () => void;
-    value: boolean;
-  };
-  editData: IBuilding | null;
-  open: boolean;
-  setOpenDialog: (open: boolean) => void;
-  setEditData: (data: IBuilding | null) => void;
+  onAddBuilding: () => void;
   onDelete: (data: IBuilding) => void;
   onEdit: (data: IBuilding) => void;
 }
@@ -33,6 +35,7 @@ export interface IBuildingFormProps {
     onTrue: () => void;
     onFalse: () => void;
   };
-  onClose: (e: any, isSubmit?: boolean) => void;
+  onClose: (e: unknown, isSubmit?: boolean) => void;
+  onBusyChange?: (busy: boolean) => void;
   editData: IBuilding | null;
 }

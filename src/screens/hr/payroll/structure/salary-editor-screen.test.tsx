@@ -166,6 +166,9 @@ it('retains a draft when Back is cancelled and returns to the origin only after 
 it('guards breadcrumb and payroll links and blocks Back during saving', () => {
   render(<SalaryEditorScreen employeeId="staff" />);
   fireEvent.click(screen.getByRole('button', { name: 'Change input' }));
+  fireEvent.click(screen.getByRole('link', { name: 'Payroll Management' }));
+  expect(screen.getByRole('dialog')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
   fireEvent.click(screen.getByRole('link', { name: 'Payroll Structure' }));
   expect(screen.getByRole('dialog')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));

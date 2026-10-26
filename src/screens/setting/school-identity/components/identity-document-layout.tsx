@@ -28,7 +28,7 @@ export function IdentityDocumentLayout({
   return (
     <FormSectionCard
       icon="mdi:file-eye-outline"
-      title="Document layout preview"
+      title="Document Layout Preview"
       titleTypographyProps={{ id: 'identity-layout-heading' }}
       descriptionTooltip="This sample shows where the effective logo, letterhead and signature appear. Use Preview document to check the generated PDF before printing."
       action={<IdentityPreviewButton context={context} disabled={disabled} />}

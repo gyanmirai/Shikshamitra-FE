@@ -3,12 +3,37 @@ module: institute-setup
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-10-26
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Institute Setup clients
+
+## Institute form field formatting
+
+`src/redux/InstituteSetup/institute-field-formatting-api.ts` injects per-form settings and read-only Unicode previews into the shared authenticated API. The `InstituteFieldFormatting` cache tag is keyed by form scope, so saving one form refreshes only its active previews. `src/components/institute-field-formatting/` owns the shared popover, field catalogue, permission-aware control and `useInstituteFieldPreview` helper.
+
+The six scopes are Buildings, Room Types, Rooms, Shift Management, School Identity and School Documents. Fields retain raw input; validation errors take precedence over preview helper text. Existing-record edits skip previews, except new floors, new room features and changed School Identity signature details. The [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#institute-form-field-formatting) owns field keys, authorization, persistence and normalization rules.
+
+## Academic field formatting
+
+`src/redux/InstituteSetup/academic-field-formatting-api.ts` uses the shared authenticated API for school formatting settings.
+Successful saves invalidate the formatting-settings tag so active create-form previews refresh.
+Opening the popover loads a fresh settings snapshot before mounting its Formik draft; failed writes keep that draft available for retry.
+Create forms keep their raw input and show `useAcademicNamePreview` output without transforming the outgoing name twice.
+Edit forms retain the saved input and skip the formatting-settings query.
+Transformed non-ASCII examples use the read-only backend preview so browser casing cannot disagree with the saved value; Default and ASCII previews remain local.
+The [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#academic-field-formatting) owns the modes, tenant persistence, authorization, and create-time normalization.
+
+## Academic hierarchy order
+
+`src/redux/oraganization/oraganization.ts`, `src/redux/class/classApi.ts` and `src/redux/division/divisionApi.ts` expose typed sibling-order mutations for stages, classes and divisions through the shared authenticated API.
+The class list no longer requests name sorting; hierarchy adapters preserve the order returned by the backend.
+Successful reorder writes invalidate class, division, board, stage and academic-organization lookup tags so the explorer, detail cards and dependent selectors refresh.
+The shared `AcademicHierarchyOptions` tag also refreshes active onboarding, student-record, scope and fee-metadata option queries.
+Failed writes keep the dialog draft available for retry.
+The [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#academic-hierarchy-order) owns the payload, permissions and persisted ordering rules.
 
 ## Reports client
 
@@ -27,6 +52,8 @@ Saved previews use `DocumentPreviewDialog` with `directUrl` against the owning a
 The shared preview loads the installed PDF.js renderer lazily, with bounded canvas dimensions, page navigation, fit/zoom and selectable extracted page text. It works without a browser PDF plugin. Protected preview requests reject foreign origins and discard responses when the authentication session changes.
 
 ## Room client
+
+Building options include each floor's configured `totalRoom` and server `roomCount`. `useRoomForm.ts` uses these for the full-floor warning and recognizes the server capacity conflict if another room takes the remaining space. Room create/update/delete invalidate both Rooms and Buildings tags so counts refresh. `RoomBuildingEditor.tsx` reuses the existing building editor and refreshes options after a successful save without resetting the room form. Backend contracts and errors remain owned by the [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families).
 
 `src/redux/InstituteSetup/RoomApi/RoomApi.ts` keeps room CRUD under `/app/room` and adds typed feature-catalogue GET/POST calls under `/institute-setup/rooms/features`. Catalogue writes invalidate the existing Rooms tag. `useRoomForm.ts` submits ordered `columnRows` along with the existing layout totals, and waits for `.unwrap()` before closing. Server contracts, defaults and migration requirements are owned by the [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families).
 

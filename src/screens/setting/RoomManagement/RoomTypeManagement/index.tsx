@@ -1,23 +1,22 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { Box, Stack, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { instituteSetupPaths } from 'src/constants/institute-setup';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   roomTypeApi,
   useDeleteRoomTypeMutation,
 } from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
+import { InstituteFieldFormattingPopover } from 'src/components/institute-field-formatting/institute-field-formatting-popover';
 
 import RoomTypeForm from './components/roomTypeForm';
 import RoomTypeTable from './components/roomTypeTable';
@@ -32,42 +31,14 @@ const RoomTypeManagement = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteRoomTypeMutation,
   });
-  // Get changes state from redux store
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { confirmWithUndo } = useConfirmWithUndo();
 
   // State for managing selected room type and room type data
   const [selectedRoomType, setSelectedRoomType] = useState<IRoomType | null>(null);
 
-  // Redux dispatch hook
-  const dispatch = useDispatch();
-
-  /**
-   * Handles closing of the add/edit room type dialog
-   * @param _e - Event object
-   * @param isSubmit - Boolean indicating if form was submitted
-   */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    // Helper function to reset component state
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedRoomType(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    // Close dialog if form submitted or user confirms leaving with unsaved changes
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addRoomTypeDialog.onFalse();
-      resetState();
-    }
-    // Close dialog if no unsaved changes
-    else if (!isChanges) {
-      addRoomTypeDialog.onFalse();
-      setTimeout(() => {
-        setSelectedRoomType(null);
-      }, 200);
-    }
+  const handleClose = () => {
+    addRoomTypeDialog.onFalse();
+    setSelectedRoomType(null);
   };
 
   return (
@@ -76,34 +47,31 @@ const RoomTypeManagement = () => {
         heading="Room Types"
         description="Define and organize room types to ensure effective facility management."
         links={[
-          { name: 'Institute Setup', href: '/academic/dashboard' },
-          { name: 'Rooms & Buildings', href: '/academic/curriculumSubjects' },
+          { name: 'Institute Setup', href: instituteSetupPaths.academicSetup },
+          { name: 'Rooms & Buildings', href: instituteSetupPaths.roomsManagement.building },
           { name: 'Room Types' },
         ]}
         action={
-          <Button
-            variant="contained"
-            onClick={addRoomTypeDialog.onTrue}
-            startIcon={<Add />}
-            size="small"
-            sx={{
-              width: '130px',
-            }}
-          >
-            Room Type
-          </Button>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+            <InstituteFieldFormattingPopover scope="roomTypes" />
+            <Button
+              variant="contained"
+              onClick={addRoomTypeDialog.onTrue}
+              startIcon={<Add />}
+              size="small"
+              sx={{
+                width: '130px',
+              }}
+            >
+              Room Type
+            </Button>
+          </Stack>
         }
       />
 
-      <CustomDialog
-        open={addRoomTypeDialog.value}
-        handleClose={() => {
-          addRoomTypeDialog.onFalse();
-        }}
-        title={selectedRoomType ? 'Update Room Type' : 'Add Room Type'}
-      >
+      {addRoomTypeDialog.value && (
         <RoomTypeForm open={addRoomTypeDialog} onClose={handleClose} editData={selectedRoomType} />
-      </CustomDialog>
+      )}
 
       <RoomTypeTable
         onDelete={(data) => {
@@ -123,7 +91,8 @@ const RoomTypeManagement = () => {
           deleteRoomTypeDialog.onFalse();
           setSelectedRoomType(null);
         }}
-        title="Delete"
+        title="Delete Room Type"
+        icon={<Iconify icon={GlobalIcons.delete} width={24} sx={{ color: 'error.main' }} />}
         content={
           <>
             Are you sure you want to delete{' '}
@@ -135,10 +104,12 @@ const RoomTypeManagement = () => {
         }
         action={
           <LoadingButton
+            type="button"
             loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
+            startIcon={<Iconify icon={GlobalIcons.delete} width={18} />}
             onClick={async () => {
               confirmWithUndo({
                 item: selectedRoomType,
@@ -172,7 +143,7 @@ const RoomTypeManagement = () => {
               setSelectedRoomType(null);
             }}
           >
-            Yes
+            Delete room type
           </LoadingButton>
         }
       />

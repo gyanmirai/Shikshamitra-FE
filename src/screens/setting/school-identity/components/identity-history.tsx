@@ -3,10 +3,12 @@ import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Timeline from '@mui/lab/Timeline';
 import Button from '@mui/material/Button';
+import { GlobalIcons } from 'src/utils/icons';
 import Skeleton from '@mui/material/Skeleton';
-import Typography from '@mui/material/Typography';
+import { Iconify } from 'src/components/iconify';
 import DialogActions from '@mui/material/DialogActions';
 import LinearProgress from '@mui/material/LinearProgress';
+import { EmptyContent } from 'src/components/empty-content';
 import { FormSectionCard } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetSchoolIdentityHistoryQuery } from 'src/redux/InstituteSetup/schoolIdentityApi';
@@ -39,7 +41,7 @@ export function IdentityHistory({
       <DialogScrollContent>
         <FormSectionCard
           icon="mdi:history"
-          title="Revision history"
+          title="Revision History"
           descriptionTooltip="Saved configuration snapshots, newest first. Times use your local time zone."
         >
           {query.isLoading ? (
@@ -57,12 +59,11 @@ export function IdentityHistory({
               History could not be loaded.
             </Alert>
           ) : !revisions.length ? (
-            <Stack spacing={0.5} sx={{ py: 2 }}>
-              <Typography variant="subtitle2">No saved changes yet</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Updates saved for this context will appear here.
-              </Typography>
-            </Stack>
+            <EmptyContent
+              title="No saved changes yet"
+              description="Updates saved for this context will appear here."
+              sx={{ py: 2 }}
+            />
           ) : (
             <>
               {query.isFetching && <LinearProgress aria-label="Refreshing identity history" />}
@@ -89,7 +90,11 @@ export function IdentityHistory({
         </FormSectionCard>
       </DialogScrollContent>
       <DialogActions>
-        <Button variant="outlined" onClick={onClose}>
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
           Close
         </Button>
       </DialogActions>

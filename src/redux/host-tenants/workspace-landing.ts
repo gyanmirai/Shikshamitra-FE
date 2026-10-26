@@ -36,7 +36,7 @@ export function workspaceLanding(context: HostSessionContext, permissions?: Gran
     !hasNavigationPermission(permissions, 'ShikshaMitra.Module.Dashboard') &&
     hasNavigationPermission(permissions, 'ShikshaMitra.Module.Students')
   ) {
-    const items = Object.values(studentModule(false)).flatMap((sections) =>
+    const items = Object.values(studentModule()).flatMap((sections) =>
       sections.flatMap((section) => section.items)
     );
     return firstStudentPage(items, permissions) ?? studentPaths.dashboard;

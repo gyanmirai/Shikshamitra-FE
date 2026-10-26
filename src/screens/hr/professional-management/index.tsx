@@ -193,12 +193,16 @@ const ProfessionalManagementScreen = ({
   const currentWorkspace =
     performanceWorkspaceSubmodules.find((item) => item.value === workspace) ||
     performanceWorkspaceSubmodules[0];
-  const breadcrumbLinks = [
-    { name: 'HR/Staff', href: hrPaths.dashboard },
-    { name: 'Performance Management', href: hrPaths.professionalManagement.overview },
-    ...('parentLabel' in currentWorkspace ? [{ name: currentWorkspace.parentLabel }] : []),
-    { name: currentWorkspace.label },
-  ];
+  const breadcrumbLinks =
+    currentWorkspace.value === 'overview'
+      ? [{ name: 'Performance Management' }]
+      : [
+          { name: 'Performance Management', href: hrPaths.professionalManagement.root },
+          ...('parentLabel' in currentWorkspace
+            ? [{ name: currentWorkspace.parentLabel, href: hrPaths.professionalManagement.settings.root }]
+            : []),
+          { name: currentWorkspace.label },
+        ];
 
   return (
     <Box

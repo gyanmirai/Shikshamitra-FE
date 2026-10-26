@@ -2,6 +2,7 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
 import { Box, Alert, Drawer, Button, LinearProgress } from '@mui/material';
 import { useGetTeacherAvailabilityQuery } from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
@@ -70,10 +71,10 @@ export function HrSubstitutionDrawer({ employee, date, onClose }: Props) {
             Teacher absence could not be loaded.
           </Alert>
         ) : (
-          <Alert severity="info">
+          <HrNotice role="alert" severity="info">
             No saved attendance absence was found. Save the teacher’s absence in manual attendance,
             then try again.
-          </Alert>
+          </HrNotice>
         )}
         <Button size="small" sx={{ mt: 2 }} onClick={onClose} disabled={availability.isFetching}>
           Close

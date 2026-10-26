@@ -65,7 +65,7 @@ export default function SalaryEditorScreen({ employeeId }: { employeeId: string 
         layout="inline"
         description="Set recurring salary and when it takes effect."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Payroll Structure', href: salaryStructureHref(employeeId) },
           { name: 'Edit Salary' },
         ]}

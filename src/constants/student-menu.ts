@@ -170,7 +170,7 @@ export const studentPermissions = {
   ],
 };
 
-const studentModule = (isDdvs: boolean) => ({
+const studentModule = () => ({
   [studentPath]: [
     {
       subheader: '',

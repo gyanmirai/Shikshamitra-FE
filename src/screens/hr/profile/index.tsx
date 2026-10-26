@@ -11,7 +11,7 @@ const HrProfile = () => {
   const { employee } = useSelector((store: any) => store.auth);
   return (
     <Box>
-      <CustomBreadcrumbs heading="Profile" links={[{ name: 'HR' }, { name: 'Profile' }]} />
+      <CustomBreadcrumbs heading="Profile" links={[{ name: 'Profile' }]} />
       <EmployeeCard employee={employee || {}} setSearchParams={() => {}} />
     </Box>
   );

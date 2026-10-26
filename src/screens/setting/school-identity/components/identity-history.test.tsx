@@ -70,7 +70,7 @@ describe('School Identity revision history', () => {
     expect(query.currentData[0].id).toBe('older');
     expect(screen.getAllByText('Latest')).toHaveLength(1);
     expect(within(screen.getAllByRole('listitem')[0]).getByText('Latest')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Revision history information' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Revision History information' })).toBeVisible();
   });
 
   it('uses friendly asset labels, omits redacted signatures and avoids implying a field diff', () => {

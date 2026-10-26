@@ -1,9 +1,8 @@
-import { useId } from 'react';
 import Box from '@mui/material/Box';
+import { useId, useRef } from 'react';
 import Stack from '@mui/material/Stack';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
-import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { FormSectionCard } from 'src/components/form-section-card';
 
 import { IdentityImage } from './identity-image';
@@ -11,6 +10,7 @@ import { changedSelection } from '../identity-form';
 import { IDENTITY_MINIMUMS } from '../identity-image-frame';
 import { IDENTITY_LABELS, IDENTITY_LIMITS } from '../types';
 import { IdentityImageUpload } from './identity-image-upload';
+import { IdentitySignatureFields } from './identity-signature-fields';
 
 import type {
   IdentityKind,
@@ -28,6 +28,7 @@ export function IdentityAssetField({
   disabled,
   inheritLabel = 'Use inherited asset',
   allowCustom = true,
+  enableFormatting = false,
   errors,
   onChange,
   onUpload,
@@ -40,6 +41,7 @@ export function IdentityAssetField({
   disabled: boolean;
   inheritLabel?: string;
   allowCustom?: boolean;
+  enableFormatting?: boolean;
   errors?: { assetId?: string; principalName?: string; designation?: string };
   onChange: (selection: IdentitySelection) => void;
   onUpload: (file: File) => void;
@@ -47,13 +49,20 @@ export function IdentityAssetField({
 }) {
   const label = IDENTITY_LABELS[kind];
   const fieldId = useId();
+  const initialValue = useRef(value);
   const sections = {
-    logo: { icon: 'mdi:school-outline', description: 'Set the logo used on school documents.' },
+    logo: {
+      title: 'School Logo',
+      icon: 'mdi:school-outline',
+      description: 'Set the logo used on school documents.',
+    },
     banner: {
+      title: 'School Banner / Letterhead',
       icon: 'mdi:file-document-outline',
       description: 'Set the banner or letterhead used on school documents.',
     },
     signature: {
+      title: 'Principal’s Signature',
       icon: 'mdi:draw-pen',
       description: 'Set the principal’s signature and signing details.',
     },
@@ -61,7 +70,7 @@ export function IdentityAssetField({
   return (
     <Box data-identity-kind={kind}>
       <FormSectionCard
-        title={label}
+        title={sections[kind].title}
         icon={sections[kind].icon}
         descriptionTooltip={sections[kind].description}
       >
@@ -115,37 +124,14 @@ export function IdentityAssetField({
                 error={errors?.assetId}
               />
               {kind === 'signature' && (
-                <Stack spacing={1} direction={{ xs: 'column', sm: 'row' }}>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    required
-                    label="Principal’s name"
-                    value={value.principalName ?? ''}
-                    disabled={disabled}
-                    error={Boolean(errors?.principalName)}
-                    helperText={errors?.principalName}
-                    onChange={(event) =>
-                      onChange({
-                        ...value,
-                        principalName: capitalizeFirstLetter(event.target.value),
-                      })
-                    }
-                  />
-                  <TextField
-                    size="small"
-                    fullWidth
-                    required
-                    label="Designation"
-                    value={value.designation ?? ''}
-                    disabled={disabled}
-                    error={Boolean(errors?.designation)}
-                    helperText={errors?.designation}
-                    onChange={(event) =>
-                      onChange({ ...value, designation: capitalizeFirstLetter(event.target.value) })
-                    }
-                  />
-                </Stack>
+                <IdentitySignatureFields
+                  value={value}
+                  initialValue={initialValue.current}
+                  enableFormatting={enableFormatting}
+                  disabled={disabled}
+                  errors={errors}
+                  onChange={onChange}
+                />
               )}
             </>
           )}

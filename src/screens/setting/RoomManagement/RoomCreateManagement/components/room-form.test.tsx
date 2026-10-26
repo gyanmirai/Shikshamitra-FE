@@ -42,7 +42,7 @@ it('shows required-field errors and focuses the first invalid field', async () =
   await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   expect(await screen.findByText('Room name is required')).toBeInTheDocument();
-  await waitFor(() => expect(screen.getByLabelText(/^Room Name/)).toHaveFocus());
+  await waitFor(() => expect(screen.getByLabelText(/^Room name/)).toHaveFocus());
   expect(onClose).not.toHaveBeenCalled();
 });
 
@@ -115,10 +115,33 @@ it('saves a custom feature to the catalogue and selects the returned name', asyn
   );
   render(<Harness />, createRoomTestWrapper());
   await screen.findByRole('checkbox', { name: 'Whiteboard' });
-  fireEvent.change(screen.getByLabelText('Extra feature'), { target: { value: ' Smart Board ' } });
+  fireEvent.change(screen.getByLabelText('Extra feature'), { target: { value: ' smart Board ' } });
+  expect(screen.getByLabelText('Extra feature')).toHaveValue(' smart Board ');
   fireEvent.click(screen.getByRole('button', { name: 'Add feature' }));
-  await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Smart Board' })).toBeChecked());
-  expect(savedName).toBe('Smart Board');
+  await waitFor(() => expect(screen.getByRole('checkbox', { name: 'smart Board' })).toBeChecked());
+  expect(savedName).toBe('smart Board');
+});
+
+it('uses the server-formatted feature even when the entered name matches an existing raw option', async () => {
+  const addFeature = vi.fn();
+  mswServer.use(
+    http.get('*/api/institute-setup/rooms/features', () =>
+      HttpResponse.json({ items: [{ id: 'reading', name: 'reading corner' }] })
+    ),
+    http.post('*/api/institute-setup/rooms/features', async ({ request }) => {
+      addFeature(await request.json());
+      return HttpResponse.json({ id: 'formatted-reading', name: 'ReadingCorner' });
+    })
+  );
+  render(<Harness />, createRoomTestWrapper());
+  await screen.findByRole('checkbox', { name: 'reading corner' });
+  fireEvent.change(screen.getByLabelText('Extra feature'), {
+    target: { value: ' reading corner ' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Add feature' }));
+  await waitFor(() => expect(addFeature).toHaveBeenCalledWith({ name: 'reading corner' }));
+  expect(await screen.findByRole('checkbox', { name: 'ReadingCorner' })).toBeChecked();
+  expect(screen.getByRole('checkbox', { name: 'reading corner' })).not.toBeChecked();
 });
 
 it('keeps values after failed submission, then saves the layout on retry', async () => {

@@ -21,7 +21,7 @@ export function IdentityContent({
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1.1fr) minmax(0, 1fr)' },
+        gridTemplateColumns: { xs: 'minmax(0, 1fr)', xl: 'minmax(0, 1.1fr) minmax(0, 1fr)' },
         gap: 2,
         alignItems: 'start',
         minWidth: 0,
@@ -34,7 +34,7 @@ export function IdentityContent({
         </>
       ) : (
         <>
-          <FormSectionCard icon="mdi:image-multiple-outline" title="Identity assets">
+          <FormSectionCard icon="mdi:image-multiple-outline" title="Identity Assets">
             <Box aria-busy="true">
               <Typography role="status" variant="body2">
                 Loading school identity assets…
@@ -44,7 +44,7 @@ export function IdentityContent({
               ))}
             </Box>
           </FormSectionCard>
-          <FormSectionCard icon="mdi:file-eye-outline" title="Document layout preview">
+          <FormSectionCard icon="mdi:file-eye-outline" title="Document Layout Preview">
             <Skeleton
               variant="rounded"
               sx={{

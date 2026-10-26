@@ -1,11 +1,9 @@
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import { Iconify } from 'src/components/iconify';
-import Typography from '@mui/material/Typography';
 import { RouterLink } from 'src/routes/components';
 import LinearProgress from '@mui/material/LinearProgress';
+import { EmptyContent } from 'src/components/empty-content';
 import { FormSectionCard } from 'src/components/form-section-card';
 
 import { IdentityContextFields } from './identity-context-fields';
@@ -30,7 +28,7 @@ export function IdentityContextPanel({ workspace }: { workspace: SchoolIdentityW
   return (
     <FormSectionCard
       icon="mdi:layers-outline"
-      title="Document context"
+      title="Document Context"
       titleTypographyProps={{ id: 'identity-context-heading' }}
       descriptionTooltip="Choose a year and board, then a medium and organization (academic stage) for more specific images. All mediums shows board settings; All organizations shows medium settings. Each level inherits images unless you set an override."
       actionFullWidthOnMobile
@@ -74,45 +72,31 @@ export function IdentityContextPanel({ workspace }: { workspace: SchoolIdentityW
             onChange={workspace.selectContext}
           />
           {!valid ? (
-            <Box
-              sx={{
-                mt: 2,
-                p: 2,
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 1.5,
-                bgcolor: 'background.neutral',
-                borderRadius: 1,
-              }}
-            >
-              <Iconify
-                icon="mdi:layers-outline"
-                width={24}
-                sx={{ color: 'text.secondary', flexShrink: 0, mt: 0.25 }}
-              />
-              <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-                <Typography variant="subtitle2">
-                  {hasBoards
-                    ? boardId
-                      ? 'Select a valid document context'
-                      : 'Select a board to review its images'
-                    : 'No boards in this academic year'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {hasBoards
-                    ? 'Review the inherited logo, letterhead and signature before configuring an override.'
-                    : 'Choose another academic year or review the shared school defaults.'}
-                </Typography>
+            <EmptyContent
+              title={
+                hasBoards
+                  ? boardId
+                    ? 'Select a valid document context'
+                    : 'Select a board to review its images'
+                  : 'No boards in this academic year'
+              }
+              description={
+                hasBoards
+                  ? 'Review the inherited logo, letterhead and signature before configuring an override.'
+                  : 'Choose another academic year or review the shared school defaults.'
+              }
+              action={
                 <Button
                   component={RouterLink}
                   href={workspace.tabHref(0)}
                   scroll={false}
-                  sx={{ alignSelf: 'flex-start' }}
+                  startIcon={<Iconify icon="mdi:school-outline" />}
                 >
                   View school defaults
                 </Button>
-              </Stack>
-            </Box>
+              }
+              sx={{ py: 2, mt: 2 }}
+            />
           ) : null}
         </>
       )}

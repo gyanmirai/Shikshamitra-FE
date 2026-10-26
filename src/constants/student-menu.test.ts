@@ -13,7 +13,7 @@ type NestedMenuItem = {
 
 describe('student navigation', () => {
   it('exposes four Attendance workspaces with existing URLs and permission bundles', () => {
-    const items = Object.values(studentModule(true)).flatMap((sections) =>
+    const items = Object.values(studentModule()).flatMap((sections) =>
       sections.flatMap((group) => group.items)
     );
     const attendance = items.find((item) => item.title === 'Attendance') as NestedMenuItem;
@@ -38,7 +38,7 @@ describe('student navigation', () => {
     ).toBe(studentPermissions.attendance.markAttendance);
   });
   it('exposes the five Student Records submodules and their existing routes', () => {
-    const items = Object.values(studentModule(true)).flatMap((sections) =>
+    const items = Object.values(studentModule()).flatMap((sections) =>
       sections.flatMap((group) => group.items)
     );
     const records = items.find((item) => item.title === 'Student Records') as NestedMenuItem;
@@ -59,7 +59,7 @@ describe('student navigation', () => {
     ]);
   });
   it('keeps Dashboard access separate from Dashboard visibility', () => {
-    const sections = Object.values(studentModule(true));
+    const sections = Object.values(studentModule());
     const items = sections.flatMap((section) => section.flatMap((group) => group.items));
     const dashboard = items.find((item) => item.title === 'Dashboard');
 
@@ -68,7 +68,7 @@ describe('student navigation', () => {
   });
 
   it('maps every top-level Student row to a dedicated visibility permission', () => {
-    const sections = Object.values(studentModule(true));
+    const sections = Object.values(studentModule());
     const items = sections.flatMap((section) => section.flatMap((group) => group.items));
 
     expect(
@@ -84,7 +84,7 @@ describe('student navigation', () => {
   });
 
   it('exposes the Student Onboarding setup and settings hierarchy', () => {
-    const sections = Object.values(studentModule(true));
+    const sections = Object.values(studentModule());
     const items = sections.flatMap((section) => section.flatMap((group) => group.items));
     const onboarding = items.find((item) => item.title === 'Onboarding') as
       NestedMenuItem | undefined;
@@ -114,7 +114,7 @@ describe('student navigation', () => {
   });
 
   it('exposes all notification permission groups in the permission editor', () => {
-    const sections = Object.values(studentModule(true));
+    const sections = Object.values(studentModule());
     const items = sections.flatMap((section) => section.flatMap((group) => group.items));
     const notification = items.find((item) => item.title === 'Notification') as
       NestedMenuItem | undefined;
@@ -129,7 +129,7 @@ describe('student navigation', () => {
   });
 
   it('exposes the configured Admissions hierarchy without broken child paths', () => {
-    const sections = Object.values(studentModule(true));
+    const sections = Object.values(studentModule());
     const items = sections.flatMap((section) => section.flatMap((group) => group.items));
     const admissions = items.find((item) => item.title === 'Admissions') as
       NestedMenuItem | undefined;

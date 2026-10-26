@@ -10,7 +10,7 @@ export function documentDiscardConfirmation(keepEditing: () => void, discard: ()
       title="Discard Document Changes?"
       content="Your changes have not been saved. Discard them and close the form?"
       onClose={keepEditing}
-      cancelText="Keep Editing"
+      cancelText="Keep editing"
       action={
         <Button
           type="button"
@@ -20,7 +20,7 @@ export function documentDiscardConfirmation(keepEditing: () => void, discard: ()
           startIcon={<Iconify icon={GlobalIcons.delete} />}
           onClick={discard}
         >
-          Discard Changes
+          Discard changes
         </Button>
       }
     />

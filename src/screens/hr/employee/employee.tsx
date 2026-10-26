@@ -491,13 +491,11 @@ const HrEmployee = () => {
       {open ? (
         <Box data-testid="hr-employee-form" display="flex" flexDirection="column" height="100%">
           <CustomBreadcrumbs
-            heading={`${formEmployee?.id ? 'Update' : 'Add'} Staff ${formEmployee?.fullName ? `(${formEmployee?.fullName})` : ''}`}
+            heading={`${requestedEditId || formEmployee?.id ? 'Update' : 'Add'} Staff ${formEmployee?.fullName ? `(${formEmployee?.fullName})` : ''}`.trim()}
             links={[
-              { name: 'HR/Staff', href: hrPaths.dashboard },
-              { name: 'Staff', onClick: () => handleClose() },
               { name: 'Staff Directory', onClick: () => handleClose() },
               {
-                name: `${formEmployee?.id ? 'Update' : 'Add'} Staff ${formEmployee?.fullName ? `(${formEmployee?.fullName})` : ''}`,
+                name: `${requestedEditId || formEmployee?.id ? 'Update' : 'Add'} Staff ${formEmployee?.fullName ? `(${formEmployee?.fullName})` : ''}`.trim(),
               },
             ]}
             description="Fill out the form below with personal, contact, and employment details. Required fields are marked with an asterisk (*)."
@@ -545,8 +543,6 @@ const HrEmployee = () => {
               breadcrumbs: {},
             }}
             links={[
-              { name: 'HR/Staff', href: hrPaths.dashboard },
-              { name: 'Staff' },
               { name: 'Staff Directory' },
             ]}
             action={

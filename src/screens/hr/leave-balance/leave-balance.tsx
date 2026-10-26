@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import { hrPaths } from 'src/constants/hr-menus';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
@@ -321,8 +322,7 @@ const LeaveBalance = ({
             isSelfMode
               ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave Balance' }]
               : [
-                  { name: 'HR/Staff', href: '/hr/dashboard/' },
-                  { name: 'Leave Management', href: '/hr/leave-center/' },
+                  { name: 'Leave Center', href: hrPaths.leaveManagement.leaveCenter },
                   { name: 'Leave Balance' },
                 ]
           }

@@ -267,7 +267,7 @@ const payrollSettingsMenuItems = [
   // },
 ];
 
-const hrModule = (isDdvs: boolean) => ({
+const hrModule = () => ({
   [hrPath]: [
     {
       subheader: '',
@@ -291,15 +291,6 @@ const hrModule = (isDdvs: boolean) => ({
           icon: menuIconView('mdi:account-tie-outline'),
           children: [
             {
-              title: 'Staff Directory',
-              path: hrPaths.employee.list,
-              _action: 'employee-list',
-              shortcutKey: 'Alt+H+E+1',
-              shortcutKeyName: 'Alt+H+E+1',
-              permissionName: hrPermissions.employee.list,
-              icon: menuIconView('mdi:format-list-bulleted'),
-            },
-            {
               title: 'Staff Onboarding',
               path: hrPaths.employee.onboarding,
               _action: 'employee-onboarding',
@@ -307,6 +298,16 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+H+E+2',
               permissionName: hrPermissions.employee.onboarding,
               icon: menuIconView('mdi:account-plus-outline'),
+            },
+            {
+              title: 'Staff Directory',
+              path: hrPaths.employee.list,
+              exactMatch: true,
+              _action: 'employee-list',
+              shortcutKey: 'Alt+H+E+1',
+              shortcutKeyName: 'Alt+H+E+1',
+              permissionName: hrPermissions.employee.list,
+              icon: menuIconView('mdi:format-list-bulleted'),
             },
             {
               title: 'I-card',

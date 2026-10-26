@@ -3,12 +3,29 @@ module: institute-setup
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-10-26
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Configure School Identity
+
+## Institute form field formatting
+
+Open **Field settings** in the header of Buildings, Room Types, Rooms, Shift Management, School Identity or School Documents. Choose a text field, select its case and try an example before submitting. Settings load afresh when the popover opens; failed saves keep the draft, and closing a changed draft asks whether to keep editing or discard it. The control requires the owning form's configuration permissions.
+
+New-entry fields show the expected saved value without changing the text being typed. The same settings apply to new floors added while editing a building, new room features and new or changed School Identity signature details. Existing saved entries keep their case. Numeric fields, dates, dropdown choices and uploaded files are unaffected. See [clients](./clients.md#institute-form-field-formatting) for frontend ownership and the [backend rules](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#institute-form-field-formatting) for saved behavior.
+
+## Academic field formatting
+
+Open **Field settings** in Academic Setup to configure the school's new academic names in an anchored popover.
+Select a field, choose Default, Capitalize each word, camelCase, PascalCase, or Uppercase, and review the live example before Submit.
+Uppercase changes letters to capitals without removing spaces or punctuation.
+Default starts selected and keeps entered casing; official board codes are read-only and keep their spelling.
+Changing fields preserves other draft choices, failed submissions retain the draft, and Cancel, Close, Escape, or click-away protect unsaved changes.
+New create forms show the result beside the raw name input; existing names and edit forms keep their saved format.
+The popover is available to users with Academic Setup Edit and reuses the shared popover, select, confirmation, and toast components.
+See the [backend rules](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md#academic-field-formatting) for persistence and create behavior.
 
 ## Reports
 
@@ -34,6 +51,14 @@ School Documents adds register and category-count choices with no academic prere
 Forms and views reuse CustomDialog, FormSectionCard, CustomUpload and the configured theme. Notes and filenames wrap, file actions stack at phone widths, and closing a nested preview preserves the underlying form. Expiry tracking, renewals, verification and board/medium links are outside this version.
 
 ## Academic hierarchy standard and division dialogs
+
+In Academic Setup, select a medium and choose **Reorder stages**, select a stage and choose **Reorder classes**, or select a standard and choose **Reorder divisions**.
+These actions appear for users with Academic Setup Edit when the branch has at least two items.
+Drag rows, use the labelled move up/down buttons, or focus a drag handle and press Space, arrow keys and Space again.
+**Save order** saves the complete sibling sequence and refreshes the hierarchy and selection lists.
+An unchanged sequence cannot be submitted; errors retain the draft, and an observed membership change requires reopening the list.
+Cancel, Close and Escape ask whether to keep editing or discard an unsaved change.
+The order survives reloads; [backend rules](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#academic-hierarchy-order) define persistence and access.
 
 The active stage supplies its existing standard names to `ClassForm`, including onboarding. Submitting an existing name shows a field error before confirmation. Case and surrounding spaces do not create a distinct name; editing excludes the current record. If another user creates the name after the form opens, the server conflict produces a specific toast and returns focus to an editable draft. The parser also recognizes the older shared duplicate code when its entity is explicitly `standard`.
 
@@ -66,5 +91,7 @@ Template controls use the same upload/editor rules. Existing custom values have 
 ## Room configuration
 
 At `/setting/room`, Add Room and Update Room use shared section cards for location, bench layout and features. Enter a column count to show one labelled group per column, with a row-count field, bounded plus/minus controls and a bench/student subtotal. Changing the count preserves the remaining column values. Totals are read-only and update from those rows and students per bench. Legacy partial grids open with their existing bench count distributed in row order.
+
+Selecting a full floor shows **Room Limit Reached** with the building, floor, existing room count and configured limit. **Edit building** opens that building's existing editor for users with building write access. Increase **Total rooms** for the selected floor and submit, then continue the retained room draft. The form refreshes building options and removes the warning only when space is available; cancellation, failed saves and unchanged limits retain it. A failed refresh offers Retry and keeps submission blocked. Switching to another available floor also allows the draft to continue. Editing a room already on the same full floor remains available. The [backend room rules](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families) enforce the limit at save time.
 
 Preview room opens a separate read-only dialog showing unequal columns, illustrated desks/benches, seated student figures and total capacity. Fit room shows the complete layout; zoom controls allow closer inspection in a keyboard-scrollable canvas. Student figures indicate capacity. Back to form, Close and Escape dismiss only the preview and restore the draft and trigger focus. Extra feature saves a reusable catalogue choice immediately and selects it for this room; cancelling the room does not remove that catalogue choice. Submit waits for success, locks closing while a write is pending, and retains the draft after failure.

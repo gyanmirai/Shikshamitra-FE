@@ -1295,7 +1295,6 @@ const AttendanceTrackingScreen = () => {
         heading="Attendance Register"
         description="Review staff attendance and resolve exceptions for the selected period."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
           { name: 'Attendance Register' },
         ]}

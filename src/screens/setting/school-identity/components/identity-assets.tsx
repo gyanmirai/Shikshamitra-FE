@@ -16,7 +16,7 @@ export function IdentityAssets({
   return (
     <FormSectionCard
       icon="mdi:image-multiple-outline"
-      title="Identity assets"
+      title="Identity Assets"
       titleTypographyProps={{ id: 'identity-assets-heading' }}
       descriptionTooltip="Review the effective school images, their source and file details. Open an image to inspect it at full size."
     >

@@ -10,6 +10,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { RouterLink } from 'src/routes/components';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
@@ -82,11 +83,7 @@ const PayrollHome = () => {
     <Box sx={{ minWidth: 0, pb: 2 }}>
       <CustomBreadcrumbs
         heading="Overview"
-        links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
-          { name: 'Overview' },
-        ]}
+        links={[{ name: 'Overview' }]}
         description="Check monthly payroll readiness, resolve setup issues, and open the next action."
         action={
           <Button
@@ -136,9 +133,9 @@ const PayrollHome = () => {
       </Stack>
 
       {!canLoad && (
-        <Alert severity="info" sx={{ mb: 2 }}>
+        <HrNotice severity="info" sx={{ mb: 2 }}>
           Select an academic year and a valid payroll month to check readiness.
-        </Alert>
+        </HrNotice>
       )}
       {preview.error && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -146,10 +143,10 @@ const PayrollHome = () => {
         </Alert>
       )}
       {!preview.isCurrent && data && (
-        <Alert severity="info" sx={{ mb: 2 }}>
+        <HrNotice severity="info" sx={{ mb: 2 }}>
           These are the last completed results. Calculate and review the current month before
           locking.
-        </Alert>
+        </HrNotice>
       )}
 
       <Grid container spacing={2}>

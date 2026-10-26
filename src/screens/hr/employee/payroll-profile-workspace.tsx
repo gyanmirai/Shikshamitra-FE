@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { fDate } from 'src/utils/format-time';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { useGetBankDetailsQuery } from 'src/redux/hr/employeeApi';
@@ -294,7 +295,7 @@ export function PayrollProfileWorkspace({
   };
   const effective = policies.currentData;
   if (!employeeId)
-    return <Alert severity="info">Save staff information before setting up payroll.</Alert>;
+    return <HrNotice role="alert" severity="info">Save staff information before setting up payroll.</HrNotice>;
   return (
     <Stack
       spacing={2}

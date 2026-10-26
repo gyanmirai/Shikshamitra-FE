@@ -19,11 +19,10 @@ import {
 const EventsAndHolidaysRequest = () => (
   <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
     <CustomBreadcrumbs
-      heading="Request"
+      heading="Event & Holiday Requests"
       links={[
-        { name: 'HR/Staff', href: hrPaths.dashboard },
         { name: 'Events & Holidays', href: hrPaths.eventsHolidays },
-        { name: 'Request' },
+        { name: 'Event & Holiday Requests' },
       ]}
       description="The Request Screen allows you to handle various requests. You can approve or reject requests based on the details provided."
     />

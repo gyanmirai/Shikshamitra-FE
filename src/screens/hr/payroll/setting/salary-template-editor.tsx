@@ -145,9 +145,7 @@ export default function SalaryTemplateEditor({
         isBack
         onBack={close}
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
-          { name: 'Settings', href: hrPaths.payroll.settings.root },
           { name: 'Salary Templates', href: hrPaths.payroll.settings.salaryTemplates },
           { name: isCreate ? 'Create' : readOnly ? 'View' : 'Edit' },
         ]}

@@ -3,8 +3,9 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
-import { Box, Card, Stack, Alert } from '@mui/material';
+import { Box, Card, Stack } from '@mui/material';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -31,9 +32,7 @@ export default function PayslipStatementSettings() {
           '& .MuiBreadcrumbs-li': { flexShrink: 0, whiteSpace: 'nowrap' },
         }}
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
-          { name: 'Settings', href: hrPaths.payroll.settings.root },
           { name: 'Payslip & statement settings' },
         ]}
       />
@@ -49,9 +48,9 @@ export default function PayslipStatementSettings() {
           }}
         >
           {!canEdit && (
-            <Alert severity="info" sx={{ mb: 2 }}>
+            <HrNotice role="alert" severity="info" sx={{ mb: 2 }}>
               You can view these settings. Editing requires payslip and statement settings access.
-            </Alert>
+            </HrNotice>
           )}
           <Box
             sx={{ minWidth: 0, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}
@@ -60,7 +59,7 @@ export default function PayslipStatementSettings() {
           </Box>
         </Card>
       ) : (
-        <Alert severity="info">You do not have access to payslip and statement settings.</Alert>
+        <HrNotice role="alert" severity="info">You do not have access to payslip and statement settings.</HrNotice>
       )}
     </Stack>
   );

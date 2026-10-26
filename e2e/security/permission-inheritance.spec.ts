@@ -223,6 +223,12 @@ test('deny and allow survive role updates; Follow role removes explicit override
 }) => {
   let row = await openActions(page);
   await choose(page, row, 'Add', 'Deny');
+  await expect(
+    (await editor(page, row, 'Add')).getByText('Denied by user override', { exact: true })
+  ).toBeVisible();
+  await expect(
+    (await editor(page, row, 'Add')).getByText('Role default: Allowed', { exact: true })
+  ).toBeVisible();
   await accessible(page);
   await save(page);
   row = await openActions(page, 'Role HOD');
@@ -233,7 +239,27 @@ test('deny and allow survive role updates; Follow role removes explicit override
     (await editor(page, row, 'Add')).getByRole('radio', { name: 'Deny', exact: true })
   ).toBeChecked();
   await choose(page, row, 'Add', 'Allow');
+  await expect(
+    (await editor(page, row, 'Add')).getByText('Allowed by user override', { exact: true })
+  ).toBeVisible();
+  await expect(
+    (await editor(page, row, 'Add')).getByText('Role default: Denied', { exact: true })
+  ).toBeVisible();
+  await expect(
+    (await editor(page, row, 'Add')).getByText('Denied by role', { exact: true })
+  ).toHaveCount(0);
   await save(page);
+  row = await openActions(page);
+  await expect(
+    (await editor(page, row, 'Add')).getByRole('radio', { name: 'Allow', exact: true })
+  ).toBeChecked();
+  await expect(
+    (await editor(page, row, 'Add')).getByText('Allowed by user override', { exact: true })
+  ).toBeVisible();
+  await expect(
+    (await editor(page, row, 'Add')).getByText('Role default: Denied', { exact: true })
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   row = await openActions(page, 'Role HOD');
   await choose(page, row, 'Add', 'Allow');
   await save(page);
@@ -250,6 +276,9 @@ test('deny and allow survive role updates; Follow role removes explicit override
     await expect(
       (await editor(page, row, action)).getByRole('radio', { name: 'Follow role', exact: true })
     ).toBeChecked();
+    await expect(
+      (await editor(page, row, action)).getByText('Allowed by role', { exact: true })
+    ).toBeVisible();
   }, Promise.resolve());
 });
 test('keyboard editing and visibility saves only the intended user delta', async ({

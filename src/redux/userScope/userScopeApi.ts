@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { allTagTypes } from 'src/redux/tagTypes';
+import { allTagTypes, organizationType } from 'src/redux/tagTypes';
 
 import type { UserScopeHierarchy } from './types';
 
@@ -19,7 +19,7 @@ export const userScopeApi = api.injectEndpoints({
           ...(academicYearId ? { academicYearId } : {}),
         },
       }),
-      providesTags: [allTagTypes.userScope],
+      providesTags: [allTagTypes.userScope, organizationType.academicHierarchyOptions],
       keepUnusedDataFor: 0,
     }),
   }),

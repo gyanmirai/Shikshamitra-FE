@@ -3,12 +3,12 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { HrAuditValueView } from 'src/screens/hr/components/HrAuditValueView';
 import {
   Box,
   Chip,
-  Alert,
   Paper,
   Stack,
   Button,
@@ -444,11 +444,11 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                   </Paper>
                 ))
               ) : (
-                <Alert severity="info">No detailed audit events found.</Alert>
+                <HrNotice severity="info">No detailed audit events found.</HrNotice>
               )}
             </Stack>
           ) : (
-            <Alert severity="info">No detailed audit events found.</Alert>
+            <HrNotice severity="info">No detailed audit events found.</HrNotice>
           )}
         </Stack>
       </Scrollbar>

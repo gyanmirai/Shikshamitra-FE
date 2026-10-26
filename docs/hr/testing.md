@@ -46,6 +46,21 @@ The existing deployment security-workflow assertion also fails on the baseline a
 
 # Validate HR frontend changes
 
+## Informational and loading notices
+
+Run `src/screens/hr/components/hr-notice.test.tsx` and
+`src/screens/hr/policies/components/PolicyImpactDrawer.summary.test.tsx` with the focused Vitest
+command above. These cover polite versus assertive announcements, accessible recovery/dismissal,
+preserved semantic outcomes, one loading announcement, and idle/loading/error transitions.
+The payroll overview prerequisite test expects the routine context to use `status`.
+
+For visual review, render the production Policy Impact drawer and HR notice components with
+synthetic state and the production theme. Check loading, loaded, error, blocked, and contextual
+notices at 390 x 844, 768 x 1024, and 1440 x 900 in light and dark mode. Verify neutral text and
+paper tokens in both schemes, one progress indicator, no page overflow, wrapped long references,
+reachable review/dismissal controls, contrast, and keyboard activation. Finish in the Codex in-app
+browser. Synthetic component checks do not establish authenticated backend behavior.
+
 Reporting-manager regression: run `AssignReportingManager.test.tsx`, `employee-form-validation.policy.test.ts` and `employeeApi.contract.test.ts`. Verify explicit administrator selection with no automatic default, stable identity kind on reload, no employee-detail lookup for an administrator login, clearing back to required validation, and self-exclusion. Backend clean-school API tests own tenant bootstrap, eligibility and persisted identity references; local synthetic selector checks are not authenticated deployed acceptance.
 
 TL;DR: run the docs check for HR docs changes, then choose focused unit, contract, or browser checks based on the screen or client you changed.

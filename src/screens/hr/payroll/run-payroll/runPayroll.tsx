@@ -28,6 +28,7 @@ import { HrSetupLink } from 'src/screens/hr/recovery/hr-setup-controls';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { HrAuditValueView } from 'src/screens/hr/components/HrAuditValueView';
+import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { PAYROLL_ISSUE_LABELS as ISSUE_LABELS } from 'src/constants/payroll-issues';
 import {
@@ -1062,7 +1063,6 @@ const RunPayroll = () => {
       <CustomBreadcrumbs
         heading="Run Payroll"
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Run Payroll' },
         ]}
@@ -2364,7 +2364,7 @@ const RunPayroll = () => {
                   You do not have permission to view payroll audit events.
                 </Alert>
               ) : payrollAuditLoading ? (
-                <Alert severity="info">Loading payroll audit events...</Alert>
+                <HrLoadingNotice>Loading payroll audit events...</HrLoadingNotice>
               ) : payrollAuditEvents?.items?.length ? (
                 payrollAuditEvents.items.map((event, index) => {
                   const context = parseHrAuditContext(event.contextJson);
@@ -2425,7 +2425,7 @@ const RunPayroll = () => {
                   );
                 })
               ) : (
-                <Alert severity="info">No payroll lock audit events found for this month.</Alert>
+                <HrNotice severity="info">No payroll lock audit events found for this month.</HrNotice>
               )}
             </Stack>
           </Drawer>
