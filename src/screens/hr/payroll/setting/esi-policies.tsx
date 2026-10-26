@@ -94,26 +94,34 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
     { id: 'code', label: 'Code', minWidth: 150, filterType: 'string' },
     {
       id: 'employeeRate',
+      filterType: 'number',
       label: 'Employee share',
       align: 'right',
       render: (value) => (value == null ? '-' : `${value}%`),
     },
     {
       id: 'employerRate',
+      filterType: 'number',
       label: 'School share',
       align: 'right',
       render: (value) => (value == null ? '-' : `${value}%`),
     },
     {
       id: 'ceiling',
+      filterType: 'number',
       label: 'Wage ceiling',
       align: 'right',
       render: (value) => (value == null ? '-' : formatPayrollCurrency(Number(value))),
     },
-    { id: 'effectiveFrom', label: 'Latest version from', minWidth: 150 },
+    { id: 'effectiveFrom', label: 'Latest version from', minWidth: 150, filterType: 'date' },
     {
       id: 'status',
       label: 'Status',
+      filterType: 'enum',
+      enumOptions: ['Active', 'Scheduled', 'Needs setup', 'Archived'].map((value) => ({
+        value,
+        label: value,
+      })),
       render: (value) => <Chip size="small" variant="outlined" label={value} />,
     },
     {

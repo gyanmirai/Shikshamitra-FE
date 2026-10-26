@@ -5,6 +5,7 @@ import {
   formatHrAuditText,
   formatHrAuditActor,
   formatHrAuditValue,
+  getHrAuditValueText,
   parseHrAuditContext,
   toHrAuditRenderValue,
   formatHrAuditDateTime,
@@ -12,6 +13,17 @@ import {
 } from './hr-audit-format';
 
 describe('HR audit formatting', () => {
+  it('provides full readable and redacted table accessors for computed audit values', () => {
+    expect(getHrAuditValueText([1], 'customWeeklyOffs')).toBe('Monday');
+    expect(
+      getHrAuditValueText({ sourcePolicyId: '3a216aea-8273-8586-a1a3-3bffdc298e2e', enabled: true })
+    ).toContain('Linked record');
+    expect(
+      getHrAuditValueText({ sourcePolicyId: '3a216aea-8273-8586-a1a3-3bffdc298e2e' })
+    ).not.toContain('3a216aea');
+    expect(getHrAuditValueText('2026-10-26', 'effectiveFrom')).toBe('26 Oct 2026');
+    expect(getHrAuditValueText([1, 2, 3, 4, 5, 6], 'customWeeklyOffs')).toContain('Saturday');
+  });
   it('formats timestamps with display override when supplied', () => {
     expect(formatHrAuditDateTime('2026-05-24T10:00:00Z', '24 May 2026, 03:30 PM')).toBe(
       '24 May 2026, 03:30 PM'

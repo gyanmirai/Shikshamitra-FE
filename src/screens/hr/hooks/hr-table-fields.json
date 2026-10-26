@@ -73,6 +73,7 @@
   "hr-document-settings": ["title", "documentSize", "documentTypesString"],
   "hr-employee-documents": ["title", "docType", "statusVal"],
   "hr-icard-templates": ["name", "organization", "orientation", "status"],
+  "employee-icard-selection-table": ["fullName", "designation", "readiness"],
   "hr-self-leave-history": [
     "name",
     "employeeIdentifier",

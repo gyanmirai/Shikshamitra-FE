@@ -97,11 +97,21 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
               { id: 'employeeName', label: 'Staff name' },
               {
                 id: 'applyPf',
+                filterType: 'enum',
+                enumOptions: ['Number recorded', 'Number missing', 'Turned off'].map((value) => ({
+                  value,
+                  label: value,
+                })),
                 label: 'PF',
                 render: (_, row) => status(row.applyPf, row.pfNumberPresent),
               },
               {
                 id: 'applyEsic',
+                filterType: 'enum',
+                enumOptions: ['Number recorded', 'Number missing', 'Turned off'].map((value) => ({
+                  value,
+                  label: value,
+                })),
                 label: 'ESIC',
                 render: (_, row) => status(row.applyEsic, row.esicNumberPresent),
               },

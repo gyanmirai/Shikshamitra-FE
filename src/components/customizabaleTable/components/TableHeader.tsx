@@ -3,6 +3,7 @@ import { keyframes } from '@emotion/react';
 import { useTheme } from '@mui/material/styles';
 import { Box, TableRow, TableHead, TableCell, IconButton, ButtonBase } from '@mui/material';
 import {
+  UnfoldMore as UnfoldMoreIcon,
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
 } from '@mui/icons-material';
@@ -184,13 +185,15 @@ export const TableHeader = React.memo(
                             component="span"
                             aria-hidden="true"
                             sx={{
-                              opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
+                              opacity: 1,
                               p: 0.25,
                               display: 'inline-flex',
                             }}
                           >
-                            {sorts.find((sort) => sort.column === column.id)?.direction ===
-                            'asc' ? (
+                            {!sorts.some((sort) => sort.column === column.id) ? (
+                              <UnfoldMoreIcon fontSize="inherit" />
+                            ) : sorts.find((sort) => sort.column === column.id)?.direction ===
+                              'asc' ? (
                               <ArrowUpwardIcon fontSize="inherit" />
                             ) : (
                               <ArrowDownwardIcon fontSize="inherit" />

@@ -3042,6 +3042,11 @@ export default function EmployeeOnboardingScreen() {
       },
       {
         id: 'status',
+        filterType: 'enum',
+        enumOptions: EMPLOYEE_APPLICATION_STATUSES.map((value) => ({
+          value,
+          label: getEmployeeApplicationStatusLabel(value),
+        })),
         label: 'Status',
         align: 'left',
         width: 160,

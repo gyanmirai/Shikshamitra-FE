@@ -156,14 +156,16 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             isSort: Boolean(type && onServerSort),
             isFilter: Boolean(type && canUseColumnFilters),
             filterType:
-              type === 'money' || type === 'number'
-                ? ('number' as const)
-                : type === 'date'
-                  ? ('date' as const)
-                  : type === 'datetime'
-                    ? ('dateTime' as const)
-                    : ('string' as const),
-            filterOperators: undefined,
+              col.filterType === 'enum' && col.enumOptions?.length
+                ? ('enum' as const)
+                : type === 'money' || type === 'number'
+                  ? ('number' as const)
+                  : type === 'date'
+                    ? ('date' as const)
+                    : type === 'datetime'
+                      ? ('dateTime' as const)
+                      : ('string' as const),
+            filterOperators: col.filterOperators,
           };
         return {
           ...col,

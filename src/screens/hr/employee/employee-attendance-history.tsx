@@ -10,6 +10,7 @@ import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Card, Stack, Typography } from '@mui/material';
+import { durationHours } from 'src/screens/hr/utils/table-values';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   mapEmployeeWiseAttendanceRow,
@@ -98,7 +99,13 @@ const EmployeeAttendanceHistory = ({ employeeId }: EmployeeAttendanceHistoryProp
       { id: 'day', label: 'Day' },
       { id: 'inTime', label: 'In-Time' },
       { id: 'outTime', label: 'Out-Time' },
-      { id: 'hoursWorked', label: 'Hours Worked' },
+      {
+        id: 'hoursWorked',
+        label: 'Hours Worked',
+        filterType: 'number',
+        filterValue: (value) => durationHours(value),
+        sortValue: (value) => durationHours(value),
+      },
       {
         id: 'status',
         label: 'Status',

@@ -264,6 +264,11 @@ const PF = () => {
           { id: 'employerPercentage', label: 'Employer Percentage', filterType: 'number' },
           {
             id: 'contributionBasis',
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Basic', value: 0 },
+              { label: 'Basic + DA', value: 1 },
+            ],
             label: 'Contribution basis',
             render(value) {
               return value === 1 ? 'Basic + DA' : 'Basic';
@@ -288,6 +293,11 @@ const PF = () => {
           },
           {
             id: 'isActive',
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Active', value: true },
+              { label: 'Inactive', value: false },
+            ],
             label: 'Status',
             render(value) {
               return value ? 'Active' : 'Inactive';

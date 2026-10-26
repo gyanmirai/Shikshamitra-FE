@@ -235,6 +235,8 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
       {
         label: 'Paid Type',
         id: 'paidType',
+        filterType: 'enum',
+        enumOptions: ['Paid', 'Unpaid'].map((value) => ({ label: value, value })),
         align: 'left',
         minWidth: '10vw',
       },

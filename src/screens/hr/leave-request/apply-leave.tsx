@@ -308,6 +308,8 @@ const ApplyLeave = ({
       {
         label: 'Paid Type',
         id: 'paidType',
+        filterType: 'enum',
+        enumOptions: ['Paid', 'Unpaid'].map((value) => ({ label: value, value })),
         align: 'left',
         minWidth: 100,
       },

@@ -108,6 +108,11 @@ export function toHrAuditRenderValue(value: unknown, parentKey?: string): HrAudi
   return buildAuditRenderValue(value, 0, parentKey);
 }
 
+/** Readable, redacted cell meaning shared by display, filtering, sorting and export. */
+export function getHrAuditValueText(value: unknown, field?: string): string {
+  return toHrAuditRenderValue(value, field).text;
+}
+
 export function formatHrAuditText(value?: string | null, maxLength = 180): string {
   if (!value) return '-';
   const trimmed = value.trim();

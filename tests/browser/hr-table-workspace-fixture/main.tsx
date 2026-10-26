@@ -10,6 +10,7 @@ import { ServerTable } from './server-table';
 import { EditableGrids } from './editable-grids';
 import { OperationalTable } from './operational-table';
 import { ImportDraftTable } from './import-draft-table';
+import { ColumnCapabilities } from './column-capabilities';
 
 function ThemeSwitch() {
   const { mode, setMode } = useColorScheme();
@@ -37,17 +38,33 @@ function Fixture() {
         <h1 style={{ fontSize: 18 }}>Synthetic HR policy preview</h1>
         <p>Synthetic staff only. Local fixture endpoints and shared policy tables.</p>
         <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 1 }}>
-          {['populated', 'loading', 'empty', 'error', 'server', 'operational', 'import draft'].map(
-            (value) => (
-              <Button key={value} onClick={() => setState(value)}>
-                {value}
-              </Button>
-            )
-          )}
+          {[
+            'populated',
+            'loading',
+            'empty',
+            'error',
+            'server',
+            'operational',
+            'import draft',
+            'directory',
+            'icard',
+            'register',
+            'salary',
+            'audit',
+          ].map((value) => (
+            <Button key={value} onClick={() => setState(value)}>
+              {value}
+            </Button>
+          ))}
           <ThemeSwitch />
           <EditableGrids />
         </Stack>
-        {state === 'import draft' ? (
+        {['directory', 'icard', 'register', 'salary', 'audit'].includes(state) ? (
+          <ColumnCapabilities
+            key={state}
+            kind={state as 'directory' | 'icard' | 'register' | 'salary' | 'audit'}
+          />
+        ) : state === 'import draft' ? (
           <ImportDraftTable />
         ) : state === 'operational' ? (
           <OperationalTable />

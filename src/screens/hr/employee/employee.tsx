@@ -66,6 +66,7 @@ import EmployeeProfile from './employee-profile';
 import ChangeStatusForm from './chnage-status-form';
 import { getEmployeeStatusDisplayValue } from './employee-status-display';
 import { salaryEditorHref } from '../payroll/structure/salary-editor-navigation';
+import { withStaffDirectoryCapabilities } from './staff-directory-column-capabilities';
 
 const EmployeeFrom = dynamic(() => import('./employee-form'), {
   loading: () => <LoadingScreen />,
@@ -281,206 +282,217 @@ const HrEmployee = () => {
   };
 
   const columns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'fullName',
-        label: 'Name',
-        width: 260,
-        minWidth: 240,
-        sticky: true,
-        stickyOnMobile: false,
-        align: 'left',
-        render(value, row) {
-          return (
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={1}
-              sx={{
-                cursor: 'pointer',
-                minWidth: 0,
-                maxWidth: '100%',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                '&:hover': { color: 'primary.main', textDecoration: 'underline' },
-              }}
-            >
-              <UserHoverProfile
-                user={{
-                  name: value,
-                  email: row.email,
-                  role: row.roleValue,
-                  avatarUrl: convertBase64Format(row.profilePicture),
-                  organization: row.organization,
-                  mobileNo: row.mobileNo,
-                  department: row.department,
-                  shift: row.shiftName,
-                  joinDate: row.doi,
-                  employeeId: row.employeeIdentifier,
-                }}
-                onViewProfile={() => setSearchParams('employee', row?.id)}
-                avatarComp={
-                  <Avatar
-                    alt={value}
-                    src={convertBase64Format(row.profilePicture)}
-                    sx={{
-                      height: 32,
-                      width: 32,
-                      border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
-                    }}
-                  />
-                }
-              />{' '}
-              <Button
-                type="button"
-                size="small"
-                aria-label={`View ${value} (${row.employeeIdentifier})`}
-                onClick={() => setSearchParams('employee', row?.id)}
+    () =>
+      withStaffDirectoryCapabilities([
+        {
+          id: 'fullName',
+          label: 'Name',
+          width: 260,
+          minWidth: 240,
+          sticky: true,
+          stickyOnMobile: false,
+          align: 'left',
+          render(value, row) {
+            return (
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={1}
                 sx={{
+                  cursor: 'pointer',
                   minWidth: 0,
-                  justifyContent: 'flex-start',
-                  textAlign: 'left',
+                  maxWidth: '100%',
                   overflow: 'hidden',
+                  whiteSpace: 'nowrap',
                   textOverflow: 'ellipsis',
+                  '&:hover': { color: 'primary.main', textDecoration: 'underline' },
                 }}
               >
-                {value} ({row.employeeIdentifier})
-              </Button>
-            </Box>
-          );
+                <UserHoverProfile
+                  user={{
+                    name: value,
+                    email: row.email,
+                    role: row.roleValue,
+                    avatarUrl: convertBase64Format(row.profilePicture),
+                    organization: row.organization,
+                    mobileNo: row.mobileNo,
+                    department: row.department,
+                    shift: row.shiftName,
+                    joinDate: row.doi,
+                    employeeId: row.employeeIdentifier,
+                  }}
+                  onViewProfile={() => setSearchParams('employee', row?.id)}
+                  avatarComp={
+                    <Avatar
+                      alt={value}
+                      src={convertBase64Format(row.profilePicture)}
+                      sx={{
+                        height: 32,
+                        width: 32,
+                        border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
+                      }}
+                    />
+                  }
+                />{' '}
+                <Button
+                  type="button"
+                  size="small"
+                  aria-label={`View ${value} (${row.employeeIdentifier})`}
+                  onClick={() => setSearchParams('employee', row?.id)}
+                  sx={{
+                    minWidth: 0,
+                    justifyContent: 'flex-start',
+                    textAlign: 'left',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {value} ({row.employeeIdentifier})
+                </Button>
+              </Box>
+            );
+          },
         },
-      },
-      {
-        id: 'roleValue',
-        label: 'Role',
-        align: 'left',
-        sticky: false,
-        width: 170,
-        minWidth: 140,
-        maxWidth: 180,
-        render(value, row) {
-          return (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <RoleColorIndicator color={getRoleColor(value)} />
-              <Label variant="soft">{value}</Label>
-            </Box>
-          );
+        {
+          id: 'roleValue',
+          label: 'Role',
+          align: 'left',
+          sticky: false,
+          width: 170,
+          minWidth: 140,
+          maxWidth: 180,
+          render(value, row) {
+            return (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <RoleColorIndicator color={getRoleColor(value)} />
+                <Label variant="soft">{value}</Label>
+              </Box>
+            );
+          },
         },
-      },
-      {
-        id: 'dob',
-        label: 'DOB',
-        width: 120,
-        minWidth: 110,
-        filterType: 'date',
-        align: 'left',
-      },
-      {
-        id: 'genderValue',
-        label: 'Gender',
-        align: 'left',
-        width: 96,
-        minWidth: 90,
-        filterType: 'enum',
-        enumOptions: [
-          { label: 'Male', value: 'Male' },
-          { label: 'Female', value: 'Female' },
-        ],
-      },
-      {
-        id: 'doi',
-        label: 'DOJ',
-        width: 120,
-        minWidth: 110,
-        filterType: 'date',
-        align: 'left',
-      },
-      {
-        id: 'email',
-        label: 'Email',
-        align: 'left',
-        width: 220,
-        minWidth: 180,
-        maxWidth: 260,
-        cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-      },
-      { id: 'mobileNo', label: 'Mobile', width: 128, minWidth: 120, align: 'left' },
-      {
-        id: 'isTeaching',
-        label: 'Group',
-        width: 120,
-        minWidth: 110,
-        align: 'left',
-        isFilter: false,
-        render(value, row) {
-          return EmployeeGroupType[value === true ? 0 : 1];
+        {
+          id: 'dob',
+          label: 'DOB',
+          width: 120,
+          minWidth: 110,
+          filterType: 'date',
+          align: 'left',
         },
-      },
-      {
-        id: 'shiftName',
-        label: 'Shift',
-        align: 'left',
-        width: 240,
-        minWidth: 200,
-        maxWidth: 280,
-        cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-      },
-      // { id: 'organization', label: 'Organization', align: 'left' },
-      {
-        id: 'organization',
-        label: 'Organization',
-        align: 'left',
-        width: 180,
-        minWidth: 160,
-        cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-      },
-      {
-        id: 'statusValue',
-        label: 'Status',
-        isFilter: false,
-        width: 92,
-        minWidth: 84,
-        align: 'left',
-        render(value, row) {
-          const color =
-            value === 'Upcoming'
-              ? 'info'
-              : (EmployeeStatusTypeColor[row.status as EmployeeStatusType] as LabelColor);
-          return <Label color={color}>{String(value || '-')}</Label>;
+        {
+          id: 'genderValue',
+          label: 'Gender',
+          align: 'left',
+          width: 96,
+          minWidth: 90,
+          filterType: 'enum',
+          enumOptions: [
+            { label: 'Male', value: 'Male' },
+            { label: 'Female', value: 'Female' },
+          ],
         },
-      },
-      {
-        id: 'actions',
-        label: 'Actions',
-        isSort: false,
-        sticky: true,
-        stickyPosition: 'right' as const,
-        isFilter: false,
-        width: 112,
-        minWidth: 104,
-        headerSx: { px: 1.5 },
-        cellSx: { px: 1.5 },
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              actions={(props) => actions({ ...props, row })}
-              placement="right-top"
-              showViewIcon
-              showEditIcon
-              handleViewClick={() => {
-                setSearchParams('employee', row?.id);
-              }}
-              // showThreeDots={false}
-              handleEditClick={() => {
-                setEditData(row);
-                setOpen(true);
-              }}
-            />
-          );
+        {
+          id: 'doi',
+          label: 'DOJ',
+          width: 120,
+          minWidth: 110,
+          filterType: 'date',
+          align: 'left',
         },
-      },
-    ],
+        {
+          id: 'email',
+          label: 'Email',
+          align: 'left',
+          width: 220,
+          minWidth: 180,
+          maxWidth: 260,
+          cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+        },
+        { id: 'mobileNo', label: 'Mobile', width: 128, minWidth: 120, align: 'left' },
+        {
+          id: 'isTeaching',
+          filterType: 'enum',
+          enumOptions: [
+            { label: 'Teaching', value: true },
+            { label: 'Non-teaching', value: false },
+          ],
+          label: 'Group',
+          width: 120,
+          minWidth: 110,
+          align: 'left',
+          isFilter: false,
+          render(value, row) {
+            return EmployeeGroupType[value === true ? 0 : 1];
+          },
+        },
+        {
+          id: 'shiftName',
+          label: 'Shift',
+          align: 'left',
+          width: 240,
+          minWidth: 200,
+          maxWidth: 280,
+          cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+        },
+        // { id: 'organization', label: 'Organization', align: 'left' },
+        {
+          id: 'organization',
+          label: 'Organization',
+          align: 'left',
+          width: 180,
+          minWidth: 160,
+          cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+        },
+        {
+          id: 'statusValue',
+          filterType: 'enum',
+          enumOptions: ['Active', 'Upcoming', 'Inactive', 'Left', 'Retired'].map((value) => ({
+            label: value,
+            value,
+          })),
+          label: 'Status',
+          isFilter: false,
+          width: 92,
+          minWidth: 84,
+          align: 'left',
+          render(value, row) {
+            const color =
+              value === 'Upcoming'
+                ? 'info'
+                : (EmployeeStatusTypeColor[row.status as EmployeeStatusType] as LabelColor);
+            return <Label color={color}>{String(value || '-')}</Label>;
+          },
+        },
+        {
+          id: 'actions',
+          label: 'Actions',
+          isSort: false,
+          sticky: true,
+          stickyPosition: 'right' as const,
+          isFilter: false,
+          width: 112,
+          minWidth: 104,
+          headerSx: { px: 1.5 },
+          cellSx: { px: 1.5 },
+          render(value, row) {
+            return (
+              <ThreeDotsActions
+                actions={(props) => actions({ ...props, row })}
+                placement="right-top"
+                showViewIcon
+                showEditIcon
+                handleViewClick={() => {
+                  setSearchParams('employee', row?.id);
+                }}
+                // showThreeDots={false}
+                handleEditClick={() => {
+                  setEditData(row);
+                  setOpen(true);
+                }}
+              />
+            );
+          },
+        },
+      ]),
     [actions, setOpen, setSearchParams]
   );
   return (

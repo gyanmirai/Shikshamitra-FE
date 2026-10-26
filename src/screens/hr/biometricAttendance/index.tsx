@@ -735,6 +735,11 @@ const AttendanceImportHistoryScreen = () => {
       },
       {
         id: 'isBatchLocked',
+        filterType: 'enum',
+        enumOptions: [
+          { label: 'Locked', value: true },
+          { label: 'Unlocked', value: false },
+        ],
         excludeFromExport: true,
         label: 'Lock',
         minWidth: '60px',

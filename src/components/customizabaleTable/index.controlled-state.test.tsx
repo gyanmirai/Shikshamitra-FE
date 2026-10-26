@@ -38,6 +38,47 @@ const renderTable = (table: ReactElement) =>
   renderWithProviders(<ThemeProvider theme={createTheme(defaultSettings)}>{table}</ThemeProvider>);
 
 describe('CustomizableTable controlled server state', () => {
+  it('retains categorical options and supported operators with operational field metadata', async () => {
+    const filter = vi.fn();
+    renderTable(
+      <CustomizableTable
+        tableId="hr-enum-operational"
+        data={[]}
+        columns={[
+          {
+            id: 'visibleInPayslip',
+            label: 'Visible in payslip',
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Yes', value: true },
+              { label: 'No', value: false },
+            ],
+            filterOperators: ['equals'],
+          },
+        ]}
+        serverColumnTypes={{ visibleInPayslip: 'string' }}
+        serverSidePagination
+        serverSideFilter
+        onServerFilter={filter}
+        onServerSort={vi.fn()}
+        totalCount={250}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Filter Visible in payslip' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Visible in payslip *' }));
+    fireEvent.click(screen.getByRole('option', { name: 'No' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    });
+    expect(filter).toHaveBeenCalledWith([
+      expect.objectContaining({
+        column: 'visibleInPayslip',
+        type: 'equals',
+        value: false,
+        valueType: 'enum',
+      }),
+    ]);
+  });
   it('uses explicit server field capabilities without sorting loaded rows or enabling action criteria', () => {
     const sort = vi.fn();
     renderTable(

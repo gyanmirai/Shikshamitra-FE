@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { formatHrAuditDateTime } from 'src/utils/hr-audit-format';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
@@ -18,7 +19,7 @@ import {
 } from 'src/redux/hr/hr-policy-api';
 
 import { InfoTooltipIcon } from './HRPolicySharedUI';
-import { formatDate, getErrorMessage } from '../hr-policy-workspace-utils';
+import { getErrorMessage } from '../hr-policy-workspace-utils';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
@@ -337,7 +338,9 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
           : `${item.captureMode === 'manual_with_time' ? 'Manual with time' : 'Integrated'} / ${item.fullDayThresholdPercentage}%`,
     integration: 'Per staff attendance',
     version: `v${item.version}`,
-    updatedAt: formatDate(item.lastModificationTime || item.lastUpdatedAt || item.creationTime),
+    updatedAt: formatHrAuditDateTime(
+      item.lastModificationTime || item.lastUpdatedAt || item.creationTime
+    ),
   }));
 
   const noDataMessage =

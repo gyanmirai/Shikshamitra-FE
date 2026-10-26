@@ -33,6 +33,8 @@ const tableTags = new Set([
   'HrReportPreviewTable',
   'ReportResultTable',
   'ReviewTable',
+  'SalaryDetailsTableCard',
+  'PayrollLineTable',
   'Table',
   'CommonTable',
   'DataGrid',
@@ -85,8 +87,14 @@ function inspect(file) {
               source.includes('serverColumnFilters('))
         );
         if (scalarFilter) props.onServerFilter = 'endpoint scalar predicate adapter';
-        if (spreads.some(expression => /(?:operationalTableProps|^tableProps|\.tableProps|ctx\.(?:assignment|version)TableProps)$/.test(expression)) || props.operationalProps)
-        {
+        if (
+          spreads.some((expression) =>
+            /(?:operationalTableProps|employeeTableProps|^tableProps|\.tableProps|ctx\.(?:assignment|version)TableProps)$/.test(
+              expression
+            )
+          ) ||
+          props.operationalProps
+        ) {
           props.onServerFilter = 'typed operational query adapter';
           props.onServerSort = 'typed operational query adapter';
         }
@@ -232,9 +240,12 @@ const capabilities = reachable.map(({ file, line, tag, props, forwarded }) => {
               : 'filtered loaded rows',
   };
 });
-const result = { routes, reachable, capabilities, exceptions, unusedRaw, violations };
-if (process.argv.includes('--json')) console.log(JSON.stringify(result, null, 2));
-else if (process.argv.includes('--capabilities')) {
+export const result = { routes, reachable, capabilities, exceptions, unusedRaw, violations };
+const cli =
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === path.resolve('scripts/hr/check-ui-consistency.mjs');
+if (cli && process.argv.includes('--json')) console.log(JSON.stringify(result, null, 2));
+else if (cli && process.argv.includes('--capabilities')) {
   console.log('| Table | Pagination | Sort | Filter | Search | Export |');
   console.log('| --- | --- | --- | --- | --- | --- |');
   capabilities.forEach((item) =>
@@ -242,7 +253,7 @@ else if (process.argv.includes('--capabilities')) {
       `| ${item.table.replaceAll('|', '/')} | ${item.pagination} | ${item.sort} | ${item.filter} | ${item.search} | ${item.export} |`
     )
   );
-} else {
+} else if (cli) {
   console.log(
     `HR routes: ${routes.length}; table instances including adapters: ${reachable.length}; editable raw-table exceptions: ${reachable.filter((table) => rawTags.has(table.tag)).length}; unused demo raw tables: ${unusedRaw.length}`
   );
@@ -253,4 +264,4 @@ else if (process.argv.includes('--capabilities')) {
       : 'Route coverage and shared-table ownership checks passed.'
   );
 }
-process.exitCode = violations.length ? 1 : 0;
+if (cli) process.exitCode = violations.length ? 1 : 0;

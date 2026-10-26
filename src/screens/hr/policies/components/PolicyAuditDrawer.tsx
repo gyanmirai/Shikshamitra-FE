@@ -22,9 +22,9 @@ import {
 import {
   toHrAuditLabel,
   formatHrAuditText,
-  formatHrAuditValue,
   formatHrAuditActor,
   parseHrAuditContext,
+  getHrAuditValueText,
   formatHrAuditDateTime,
 } from 'src/utils/hr-audit-format';
 
@@ -182,13 +182,22 @@ function AuditTrailEventCard({
                         label: 'Field',
                         minWidth: 130,
                         render: (value) => toHrAuditLabel(value),
+                        filterValue: (value) => toHrAuditLabel(String(value)),
+                        sortValue: (value) => toHrAuditLabel(String(value)),
+                        exportValue: (value) => toHrAuditLabel(String(value)),
                       },
                       ...['oldValue', 'newValue'].map((id) => ({
                         id,
                         label: id === 'oldValue' ? 'Before' : 'After',
                         minWidth: 180,
+                        filterValue: (value: unknown, row: any) =>
+                          getHrAuditValueText(value, row.field),
+                        searchValue: (value: unknown, row: any) =>
+                          getHrAuditValueText(value, row.field),
+                        sortValue: (value: unknown, row: any) =>
+                          getHrAuditValueText(value, row.field),
                         exportValue: (value: unknown, row: any) =>
-                          formatHrAuditValue(value, Number.MAX_SAFE_INTEGER, row.field),
+                          getHrAuditValueText(value, row.field),
                         render: (value: unknown, row: any) => (
                           <AuditTableValue value={value} field={row.field} />
                         ),

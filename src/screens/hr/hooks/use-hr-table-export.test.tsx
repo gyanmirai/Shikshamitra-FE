@@ -26,6 +26,38 @@ const completed = { id: 'export-1', status: 'Completed', rowCount: 25001 };
 const response = (value: unknown) => ({ unwrap: () => Promise.resolve(value) });
 
 describe('complete HR table exports', () => {
+  it('keeps Register domain scope and global header criteria together in the export job', async () => {
+    const domain = {
+      startDate: '2026-10-01',
+      endDate: '2026-10-31',
+      academicYearId: 'synthetic-year',
+      educationMediumStageIds: ['division-a', 'division-b'],
+      search: 'staff',
+      exceptionFilter: 'Locked',
+    };
+    const { result } = renderHook(() => useHrTableExport('hr-attendance-register', domain));
+    await act(() =>
+      result.current({
+        ...request,
+        columns: [{ id: 'exceptions', label: 'Exceptions' }],
+        searchTerm: 'staff',
+        filters: [{ column: 'exceptions', type: 'contains', value: 'Locked', valueType: 'string' }],
+        sorts: [{ column: 'employeeName', direction: 'desc' }],
+      })
+    );
+    expect(rpc.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: {
+          ...domain,
+          criteria: {
+            search: '',
+            filters: [{ column: 'exceptions', type: 'contains', value: 'Locked' }],
+            sorts: [{ column: 'employeeName', direction: 'desc' }],
+          },
+        },
+      })
+    );
+  });
   it('captures report search, filters and sorts independently of pagination and display labels', async () => {
     const { result } = renderHook(() =>
       useHrTableExport('hr-generated-report', { runId: 'run-1' })

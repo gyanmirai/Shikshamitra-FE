@@ -44,18 +44,15 @@ export function useHrTableExport(table: string, query: Record<string, unknown>) 
       if (table === 'hr-generated-report' || table === 'hr-generated-report-history')
         captured.criteria = reportTableCriteria(searchTerm, filters, sorts);
       else {
-        // Register retains its separately owned domain-filter contract.
-        if (table !== 'hr-attendance-register') {
-          const criteria = reportTableCriteria(
-            ['hr-shifts', 'hr-professional-tax', 'hr-attendance-import-rows'].includes(table)
-              ? searchTerm
-              : '',
-            filters,
-            sorts
-          );
-          if (criteria.search || criteria.filters.length || criteria.sorts.length)
-            captured.criteria = criteria;
-        }
+        const criteria = reportTableCriteria(
+          ['hr-shifts', 'hr-professional-tax', 'hr-attendance-import-rows'].includes(table)
+            ? searchTerm
+            : '',
+          filters,
+          sorts
+        );
+        if (criteria.search || criteria.filters.length || criteria.sorts.length)
+          captured.criteria = criteria;
         if (searchTerm || Object.hasOwn(captured, 'search')) captured.search = searchTerm;
       }
       let job = await create({

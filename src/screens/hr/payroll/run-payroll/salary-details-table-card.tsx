@@ -1,6 +1,7 @@
 import { Iconify } from 'src/components/iconify';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { formatPayrollCurrency } from 'src/utils/payroll-currency';
-import { Box, Card, Stack, Avatar, Divider, CardHeader, Typography } from '@mui/material';
+import { Box, Card, Stack, Avatar, CardHeader, Typography } from '@mui/material';
 
 const salaryLineTotal = (data: any[]) =>
   (data || []).reduce((sum, item) => sum + Number(item?.amount || 0), 0);
@@ -76,50 +77,30 @@ export const SalaryDetailsTableCard = ({
       />
 
       <Box sx={{ px: 1.5, pb: 1.5, flex: 1 }}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          sx={{
-            py: 0.75,
-            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-          }}
-        >
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-            {nameColumnLabel}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-            Amount
-          </Typography>
-        </Stack>
-        {data?.length ? (
-          <Stack divider={<Divider flexItem />}>
-            {data.map((item, index) => (
-              <Stack
-                key={`${item?.name || title}-${index}`}
-                direction="row"
-                justifyContent="space-between"
-                spacing={1.5}
-                sx={{ py: 0.9 }}
-              >
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
-                >
-                  {item?.name || '-'}
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
-                  {formatPayrollCurrency(item?.amount || 0)}
-                </Typography>
-              </Stack>
-            ))}
-          </Stack>
-        ) : (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-            {noDataText}
-          </Typography>
-        )}
+        <CustomizableTable
+          tableId={tableId || `salary-details-${title}`}
+          tableTitle={title}
+          variant="embedded"
+          isPagination={false}
+          isSearch={false}
+          isShowedDense={false}
+          showColumns={false}
+          showExport
+          showFullScreen={false}
+          exportScope="all"
+          data={data || []}
+          columns={[
+            { id: 'name', label: nameColumnLabel, filterType: 'string' },
+            {
+              id: 'amount',
+              label: 'Amount',
+              filterType: 'number',
+              render: (value) => formatPayrollCurrency(value || 0),
+            },
+          ]}
+          wrapperProps={{ sx: { '& .MuiTable-root': { minWidth: 'auto' } } }}
+          noDataText={noDataText}
+        />
         <Stack
           direction="row"
           justifyContent="space-between"

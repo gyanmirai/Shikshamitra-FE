@@ -32,6 +32,7 @@ export function operationalTableTags(table: string) {
     case 'esi-employee-impact':
       return [payrollStructureType.statutoryScheme];
     case 'hr-manual-attendance':
+    case 'hr-attendance-register':
       return [employeeType.attendance];
     case 'hr-salary-documents':
       return [employeeType.salarySlip, employeeType.hrReports];

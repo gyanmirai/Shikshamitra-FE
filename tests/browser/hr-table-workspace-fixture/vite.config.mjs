@@ -23,6 +23,30 @@ const operationalRows = Array.from({ length: 260 }, (_, index) => ({
   wageCeiling: index === 259 ? null : (index % 20) / 2,
   effectiveFrom: new Date(Date.UTC(2026, 9, 1 + index)).toISOString().slice(0, 10),
 }));
+const staffRows = Array.from({ length: 125 }, (_, index) => ({
+  id: `staff-${index}`,
+  fullName: `Staff ${String(index).padStart(3, '0')}`,
+  employeeIdentifier: `SYN-${String(index).padStart(4, '0')}`,
+  designation: index % 2 ? 'Clerk' : 'Teacher',
+  thumbnailPicture: 'synthetic',
+  mobileNo: '0000000000',
+  readiness: 'Ready',
+  roleValue: 'Staff',
+  dob: '1990-01-01',
+  doi: '2020-01-01',
+  genderValue: index % 2 ? 'Female' : 'Male',
+  email: `staff-${index}@example.invalid`,
+  isTeaching: index % 2 === 0,
+  shiftName: 'Morning',
+  organization: 'Synthetic school',
+  statusValue: index % 3 ? 'Active' : 'Upcoming',
+  employeeName: `Staff ${String(index).padStart(3, '0')}`,
+  present: index % 20,
+  employeeGroup: index % 2 ? 'NonTeaching' : 'Teaching',
+  department: 'Synthetic department',
+  exceptions: index % 3 === 0 ? 'Locked 1' : index % 3 === 1 ? 'Absent 1' : 'Clear',
+  editability: index % 3 === 0 ? '0 editable; 1 locked' : '1 editable',
+}));
 const imports = new Map();
 function importRows(key) {
   if (!imports.has(key))
@@ -48,16 +72,25 @@ function operationalMatches(query, criteria = {}) {
   let matches =
     query.fixtureState === 'empty'
       ? []
-      : [...(query.fixtureKind === 'import' ? importRows(query.fixtureKey) : operationalRows)];
-  if (criteria.search)
+      : [
+          ...(query.fixtureKind === 'import'
+            ? importRows(query.fixtureKey)
+            : ['directory', 'icard', 'register'].includes(query.fixtureKind)
+              ? staffRows
+              : operationalRows),
+        ];
+  if (criteria.search || query.search)
     matches = matches.filter((row) =>
-      JSON.stringify(row).toLowerCase().includes(criteria.search.toLowerCase())
+      JSON.stringify(row)
+        .toLowerCase()
+        .includes((criteria.search || query.search).toLowerCase())
     );
   for (const column of new Set((criteria.filters || []).map((filter) => filter.column))) {
     const alternatives = criteria.filters.filter((filter) => filter.column === column);
     matches = matches.filter((row) =>
       alternatives.some((filter) => {
-        const value = row[column];
+        const value =
+          column === 'fullName' ? `${row.fullName} ${row.employeeIdentifier}` : row[column];
         if (value == null) return false;
         if (filter.type === 'greaterThan') return Number(value) > Number(filter.value);
         if (filter.type === 'lessThan') return Number(value) < Number(filter.value);
@@ -138,14 +171,25 @@ export default defineConfig({
             let raw = '';
             for await (const chunk of req) raw += chunk;
             const request = JSON.parse(raw);
-            const matches =
-              request.table === 'hr-pf-rules'
-                ? operationalMatches(request.query, request.query.criteria)
-                : filtered(request.query);
+            const matches = [
+              'hr-pf-rules',
+              'employee-table',
+              'employee-icard-selection-table',
+              'hr-attendance-register',
+            ].includes(request.table)
+              ? operationalMatches(request.query, request.query.criteria)
+              : filtered(request.query);
             const book = XLSX.utils.book_new();
             const data = [
               request.columns.map((column) => column.label),
-              ...matches.map((row) => request.columns.map((column) => row[column.id])),
+              ...matches.map((row) =>
+                request.columns.map((column) =>
+                  column.id === 'fullName' &&
+                  ['employee-table', 'employee-icard-selection-table'].includes(request.table)
+                    ? `${row.fullName} ${row.employeeIdentifier}`
+                    : row[column.id]
+                )
+              ),
             ];
             XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(data), 'Data');
             jobs.set('synthetic-export', XLSX.write(book, { type: 'buffer', bookType: 'xlsx' }));

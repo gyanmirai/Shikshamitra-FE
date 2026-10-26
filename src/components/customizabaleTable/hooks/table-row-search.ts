@@ -22,7 +22,9 @@ export const matchesTableRowSearch = (
         if (!columnVisibility[column.id]) return false;
 
         const rawVal = _.get(row, column.id);
-        if (column.searchValue?.(rawVal, row).toLowerCase().includes(lowerSearchTerm)) return true;
+        // An explicit accessor defines the searchable representation (including redaction).
+        if (column.searchValue)
+          return column.searchValue(rawVal, row).toLowerCase().includes(lowerSearchTerm);
 
         // Match against the rendered cell text first (what the user actually sees),
         // then fall back to raw-value/date-formatted matching for coverage.

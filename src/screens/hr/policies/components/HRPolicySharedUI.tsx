@@ -576,23 +576,37 @@ export function SectionTable({
       data={rows}
       {...tableProps}
       rowProps={(row) => ({ selected: row.selected })}
-      columns={columns.map((label, index) => ({
-        id: columnIds?.[index] || `column${index}`,
-        label,
-        minWidth: 130,
-        filterType: 'string',
-        isSort: label !== 'Actions',
-        isFilter: label !== 'Actions',
-        excludeFromExport: label === 'Actions',
-        sticky: label === 'Actions',
-        stickyPosition: label === 'Actions' ? ('right' as const) : undefined,
-        render: (value: React.ReactNode) => value,
-        sortValue: (value: unknown) =>
-          typeof value === 'number' ? value : extractTextFromReactNode(value).toLowerCase(),
-        exportValue: (value: unknown) =>
-          typeof value === 'number' ? value : extractTextFromReactNode(value),
-        ...columnDefinitions?.[index],
-      }))}
+      columns={columns.map((label, index) => {
+        const categorical =
+          !tableProps.serverSidePagination &&
+          ['Status', 'Type', 'Scope', 'Source', 'Action'].includes(label);
+        const id = columnIds?.[index] || `column${index}`;
+        return {
+          id,
+          label,
+          minWidth: 130,
+          filterType: categorical ? ('enum' as const) : ('string' as const),
+          enumOptions: categorical
+            ? [...new Set(rows.map((row) => extractTextFromReactNode(row[id])))]
+                .filter(Boolean)
+                .map((value) => ({ value, label: value }))
+            : undefined,
+          filterValue: categorical
+            ? (value: unknown) => extractTextFromReactNode(value)
+            : undefined,
+          isSort: label !== 'Actions',
+          isFilter: label !== 'Actions',
+          excludeFromExport: label === 'Actions',
+          sticky: label === 'Actions',
+          stickyPosition: label === 'Actions' ? ('right' as const) : undefined,
+          render: (value: React.ReactNode) => value,
+          sortValue: (value: unknown) =>
+            typeof value === 'number' ? value : extractTextFromReactNode(value).toLowerCase(),
+          exportValue: (value: unknown) =>
+            typeof value === 'number' ? value : extractTextFromReactNode(value),
+          ...columnDefinitions?.[index],
+        };
+      })}
       noDataText={tableProps.noDataText ?? 'No records available.'}
     />
   );
