@@ -6,6 +6,7 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -258,7 +259,8 @@ const AssignmentTypeCreation = () => {
           setSelectedData(null);
           deleteDialog.onFalse();
         }}
-        title="Delete"
+        title="Delete Assignment Type"
+        icon={<Iconify icon={GlobalIcons.delete} sx={{ color: 'error.main' }} />}
         content={
           <>
             Are you sure you want to delete assignment type{' '}
@@ -270,6 +272,7 @@ const AssignmentTypeCreation = () => {
             loading={isDeleteLoading}
             variant="contained"
             color="error"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             size="small"
             onClick={async () => {
               try {
@@ -287,7 +290,7 @@ const AssignmentTypeCreation = () => {
               setSelectedData(null);
             }}
           >
-            Yes
+            Delete
           </LoadingButton>
         }
       />

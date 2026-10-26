@@ -5,6 +5,7 @@ import type { FetchOptionsResponse } from 'src/components/paginated-search-selec
 
 import dayjs from 'dayjs';
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { Grid, Stack, Switch, Typography, FormControlLabel } from '@mui/material';
@@ -69,53 +70,58 @@ export function TeacherFirstOriginFields({
   return (
     <>
       <Grid size={{ xs: 12, md: 6 }}>
-        <PaginatedSearchSelect<CreateTeacherOption>
-          size="small"
-          label="Unavailable Teacher *"
-          placeholder="Search teacher"
-          fetchOptions={fetchTeachers}
-          isLoading={loadingTeachers}
-          value={
-            value.teacherId || value.teacherName
-              ? {
-                  id: value.teacherId,
-                  label: value.teacherName,
-                  departmentName: value.departmentName,
-                  shiftName: value.shiftName,
-                  shiftStartTime: value.shiftStartTime,
-                  shiftEndTime: value.shiftEndTime,
-                }
-              : null
-          }
-          onChange={(_, option) => {
-            const shiftStartTime = option?.shiftStartTime || '';
-            const shiftEndTime = option?.shiftEndTime || '';
-            onChange({
-              teacherId: option?.id || '',
-              teacherName: option?.label || '',
-              departmentName: option?.departmentName || '',
-              shiftName: option?.shiftName || '',
-              shiftStartTime,
-              shiftEndTime,
-              ...(value.isFullDay ? { startTime: shiftStartTime, endTime: shiftEndTime } : {}),
-            });
-          }}
-          getOptionLabel={(option) => option.label}
-          getOptionKey={(option) => option.id}
-          isOptionEqualToValue={(option, selected) => option.id === selected.id}
-        />
+        <ShakingTextField>
+          <PaginatedSearchSelect<CreateTeacherOption>
+            size="small"
+            label="Unavailable teacher"
+            required
+            placeholder="Search teacher"
+            fetchOptions={fetchTeachers}
+            isLoading={loadingTeachers}
+            value={
+              value.teacherId || value.teacherName
+                ? {
+                    id: value.teacherId,
+                    label: value.teacherName,
+                    departmentName: value.departmentName,
+                    shiftName: value.shiftName,
+                    shiftStartTime: value.shiftStartTime,
+                    shiftEndTime: value.shiftEndTime,
+                  }
+                : null
+            }
+            onChange={(_, option) => {
+              const shiftStartTime = option?.shiftStartTime || '';
+              const shiftEndTime = option?.shiftEndTime || '';
+              onChange({
+                teacherId: option?.id || '',
+                teacherName: option?.label || '',
+                departmentName: option?.departmentName || '',
+                shiftName: option?.shiftName || '',
+                shiftStartTime,
+                shiftEndTime,
+                ...(value.isFullDay ? { startTime: shiftStartTime, endTime: shiftEndTime } : {}),
+              });
+            }}
+            getOptionLabel={(option) => option.label}
+            getOptionKey={(option) => option.id}
+            isOptionEqualToValue={(option, selected) => option.id === selected.id}
+          />
+        </ShakingTextField>
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
-        <DatePicker
-          label="Date *"
-          value={value.date}
-          format={dateFormat}
-          disablePast
-          minDate={minDate}
-          maxDate={maxDate}
-          onChange={(date) => onChange({ date })}
-          slotProps={{ textField: { size: 'small', fullWidth: true } }}
-        />
+        <ShakingTextField>
+          <DatePicker
+            label="Date"
+            value={value.date}
+            format={dateFormat}
+            disablePast
+            minDate={minDate}
+            maxDate={maxDate}
+            onChange={(date) => onChange({ date })}
+            slotProps={{ textField: { size: 'small', fullWidth: true, required: true } }}
+          />
+        </ShakingTextField>
       </Grid>
       <Grid size={{ xs: 12 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
@@ -143,34 +149,43 @@ export function TeacherFirstOriginFields({
         </Stack>
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
-        <TimePicker
-          label="Start Time *"
-          value={timeValue(value.startTime)}
-          disabled={value.isFullDay}
-          onChange={(time) => onChange({ startTime: time?.isValid() ? time.format('HH:mm') : '' })}
-          viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
-          slotProps={{ textField: { size: 'small', fullWidth: true } }}
-        />
+        <ShakingTextField>
+          <TimePicker
+            label="Start time"
+            value={timeValue(value.startTime)}
+            disabled={value.isFullDay}
+            onChange={(time) =>
+              onChange({ startTime: time?.isValid() ? time.format('HH:mm') : '' })
+            }
+            viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+            slotProps={{ textField: { size: 'small', fullWidth: true, required: true } }}
+          />
+        </ShakingTextField>
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
-        <TimePicker
-          label="End Time *"
-          value={timeValue(value.endTime)}
-          disabled={value.isFullDay}
-          onChange={(time) => onChange({ endTime: time?.isValid() ? time.format('HH:mm') : '' })}
-          viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
-          slotProps={{ textField: { size: 'small', fullWidth: true } }}
-        />
+        <ShakingTextField>
+          <TimePicker
+            label="End time"
+            value={timeValue(value.endTime)}
+            disabled={value.isFullDay}
+            onChange={(time) => onChange({ endTime: time?.isValid() ? time.format('HH:mm') : '' })}
+            viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+            slotProps={{ textField: { size: 'small', fullWidth: true, required: true } }}
+          />
+        </ShakingTextField>
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <CustomSelect
-          label="Reason *"
-          options={reasonOptions}
-          value={value.reason}
-          error={reasonError}
-          helperText={reasonHelperText}
-          onChange={(reason) => onChange({ reason: reason as string })}
-        />
+        <ShakingTextField error={reasonError}>
+          <CustomSelect
+            label="Reason"
+            required
+            options={reasonOptions}
+            value={value.reason}
+            error={reasonError}
+            helperText={reasonHelperText}
+            onChange={(reason) => onChange({ reason: reason as string })}
+          />
+        </ShakingTextField>
       </Grid>
     </>
   );

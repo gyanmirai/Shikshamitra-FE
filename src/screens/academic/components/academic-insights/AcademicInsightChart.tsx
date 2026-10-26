@@ -1,8 +1,10 @@
 'use client';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Chart, useChart } from 'src/components/chart';
 import { Box, Paper, Stack, Typography } from '@mui/material';
+import { FormSectionHeader } from 'src/components/form-section-card';
 
 import type { AcademicInsightChart as AcademicInsightChartConfig } from './types';
 
@@ -52,10 +54,13 @@ export function AcademicInsightChart({ config }: Props) {
 
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-      <Typography variant="subtitle1">{config.title}</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, mb: 1 }}>
-        {config.description}
-      </Typography>
+      <Box sx={{ mb: 2 }}>
+        <FormSectionHeader
+          icon={GlobalIcons.usage}
+          title={config.title}
+          descriptionTooltip={config.description}
+        />
+      </Box>
       <Box role="img" aria-label={`${config.title}. ${config.description}`}>
         {config.emptyMessage && config.values.every((value) => value === 0) ? (
           <Box sx={{ minHeight: 160, display: 'grid', placeItems: 'center' }}>

@@ -18,7 +18,7 @@ describe('TeachingKpiCards', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'View full insights' }));
 
-    expect(screen.getByRole('heading', { name: 'Teaching insights' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Teaching Insights' })).toBeInTheDocument();
     expect(screen.getByText('Lessons planned')).toBeInTheDocument();
     expect(screen.getByText('Pending diaries')).toBeInTheDocument();
   });

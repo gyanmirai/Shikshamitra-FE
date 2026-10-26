@@ -1,5 +1,7 @@
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import SubmitButton from 'src/components/submit-button';
+import { FormSectionCard } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Alert, Stack, Button, Divider, Typography, DialogActions } from '@mui/material';
 
@@ -25,7 +27,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
       <Typography variant="body2" color="text.secondary">
         {label}
       </Typography>
-      <Typography variant="body2" fontWeight={600} textAlign="right">
+      <Typography variant="body2" textAlign="right" sx={{ overflowWrap: 'anywhere' }}>
         {value}
       </Typography>
     </Stack>
@@ -55,33 +57,39 @@ export function SubjectCopyConfirmDialog(props: Props) {
       open={open}
       handleClose={onClose}
       maxWidth="xs"
-      title="Review and confirm"
+      title="Review Copy"
+      titleInfo="Review the source, destination and copy settings before creating draft allocations."
+      hasForm={false}
       guardUnsavedChanges={false}
+      disableClose={isLoading}
       paperProps={{ sx: { backgroundImage: 'none' } }}
     >
       <DialogScrollContent>
         <Stack spacing={2}>
-          <Typography variant="body2" color="text.secondary">
-            Check the details below before creating draft allocations in the destination class.
-          </Typography>
-
-          <PaperPath source={sourceClassName} target={targetClassName} />
-
-          <Box>
-            <SummaryRow
-              label="Subjects"
-              value={
-                selectionMode === 'ALL' ? 'All subjects' : `${selectedSubjects.length} selected`
-              }
-            />
-            <Divider />
-            <SummaryRow label="Supporting data" value={included || 'None'} />
-            <Divider />
-            <SummaryRow
-              label="Existing subjects"
-              value={conflictStrategy === 'SKIP' ? 'Keep destination settings' : 'Replace settings'}
-            />
-          </Box>
+          <FormSectionCard
+            icon={GlobalIcons.copy}
+            title="Copy Summary"
+            descriptionTooltip="Check the selected classes, subjects and supporting data. The existing-subject choice controls whether matching allocations are kept or replaced."
+          >
+            <PaperPath source={sourceClassName} target={targetClassName} />
+            <Box>
+              <SummaryRow
+                label="Subjects"
+                value={
+                  selectionMode === 'ALL' ? 'All subjects' : `${selectedSubjects.length} selected`
+                }
+              />
+              <Divider />
+              <SummaryRow label="Supporting data" value={included || 'None'} />
+              <Divider />
+              <SummaryRow
+                label="Existing subjects"
+                value={
+                  conflictStrategy === 'SKIP' ? 'Keep destination settings' : 'Replace settings'
+                }
+              />
+            </Box>
+          </FormSectionCard>
 
           <Alert severity="warning" variant="outlined">
             Copied allocations are saved as drafts so they can be reviewed before publishing.
@@ -90,13 +98,22 @@ export function SubjectCopyConfirmDialog(props: Props) {
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button variant="text" color="inherit" size="small" disabled={isLoading} onClick={onClose}>
+        <Button
+          type="button"
+          variant="outlined"
+          color="inherit"
+          size="small"
+          disabled={isLoading}
+          onClick={onClose}
+          startIcon={<Iconify icon={GlobalIcons.retrunIcon} />}
+        >
           Back
         </Button>
         <SubmitButton
           buttonText="Copy allocations"
+          type="button"
           loading={isLoading}
-          startIcon={<Iconify icon="solar:copy-outline" />}
+          startIcon={<Iconify icon={GlobalIcons.copy} />}
           onClick={onConfirm}
         />
       </DialogActions>
@@ -108,22 +125,17 @@ function PaperPath({ source, target }: { source?: string; target?: string }) {
   return (
     <Box
       sx={{
-        p: 1.5,
         display: 'grid',
         gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)',
         alignItems: 'center',
         gap: 1,
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 2,
-        bgcolor: 'background.neutral',
       }}
     >
       <Box>
         <Typography variant="caption" color="text.secondary">
           From
         </Typography>
-        <Typography variant="subtitle2" noWrap>
+        <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
           {source || '—'}
         </Typography>
       </Box>
@@ -132,7 +144,7 @@ function PaperPath({ source, target }: { source?: string; target?: string }) {
         <Typography variant="caption" color="text.secondary">
           To
         </Typography>
-        <Typography variant="subtitle2" noWrap>
+        <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
           {target || '—'}
         </Typography>
       </Box>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -22,6 +23,8 @@ const getFileNameFromUrl = (url: string): string => {
 
 const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
   const viewDialog = useBoolean();
+  const [failedThumbnailFile, setFailedThumbnailFile] = useState<File | string | null>(null);
+  const thumbnailFile = normalizeFileForThumbnail(file);
 
   const [getFile, { isLoading: isDownloading }] = useQueryAndMutation({
     type: 'mutation',
@@ -88,10 +91,15 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <FileThumbnail
-          file={normalizeFileForThumbnail(file)}
-          sx={{ height: '25px', width: '25px' }}
-        />
+        {failedThumbnailFile === thumbnailFile ? (
+          <Iconify icon={GlobalIcons.documentIcon} width={25} aria-hidden />
+        ) : (
+          <FileThumbnail
+            file={thumbnailFile}
+            sx={{ height: '25px', width: '25px' }}
+            onErrorCapture={() => setFailedThumbnailFile(thumbnailFile)}
+          />
+        )}
 
         <Box sx={{ ml: 1.5, flex: 1 }}>
           <CustomTooltip title={file.name} sx={{ textAlign: 'justify' }}>
@@ -111,7 +119,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
           </CustomTooltip>
 
           <Typography variant="caption" color="text.secondary">
-            {file.size || 'Unknown size'} • 12-02-2025
+            {file.size || 'Unknown size'}
           </Typography>
         </Box>
         <Box

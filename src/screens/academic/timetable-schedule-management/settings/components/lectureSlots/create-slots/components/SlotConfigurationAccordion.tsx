@@ -3,6 +3,7 @@ import type { FormikProps } from 'formik';
 import type { Standards } from 'src/types/school';
 
 import dayjs from 'dayjs';
+import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -10,13 +11,13 @@ import { alpha, lighten } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import {
   Box,
   Chip,
   Grid,
   Stack,
   Tooltip,
-  Divider,
   Accordion,
   Typography,
   IconButton,
@@ -93,6 +94,8 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
 
   // Class selected check for enabling slot controls
   const isClassSelected = Boolean(className);
+  const selectedClassLabel =
+    classes.find((item) => item.id === className)?.name || 'Selected class';
   const slotControlsDisabled = disabled || !isClassSelected || !canConfigureSlots;
   const lockedByEdit = disabled || (isEdit && !!hasData);
 
@@ -349,10 +352,10 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
             const totalSlotsNode = (
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                  Total Slots
+                  Total slots
                 </Typography>
                 <SlotCounterControl
-                  label={`${className || 'class'} slot group`}
+                  label={`${selectedClassLabel} slot group ${configIndex + 1}`}
                   value={Number(config.totalSlots) || 0}
                   disabled={slotControlsDisabled}
                   error={totalSlotsError}
@@ -443,39 +446,21 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
 
           {/* Slot Times Table */}
           {config.timeSlots && config.timeSlots.length > 0 && (
-            <Box sx={{ mt: 2.5 }}>
-              <Divider sx={{ mb: 1.5 }} />
-              <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-                <Box
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    bgcolor: (theme) =>
-                      alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.22 : 0.1),
-                  }}
-                >
-                  <Iconify icon="mdi:table-clock" width={16} sx={{ color: 'primary.main' }} />
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="primary.main" fontWeight={700}>
-                    Slot Times
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Start · End · Duration · Type for each slot
-                  </Typography>
-                </Box>
-                <Chip
-                  size="small"
-                  label={`${config.timeSlots.length} slot${config.timeSlots.length !== 1 ? 's' : ''}`}
-                  variant="soft"
-                  color="primary"
-                  sx={{ ml: 'auto !important', height: 22, fontSize: '0.7rem', fontWeight: 700 }}
+            <Box sx={{ mt: 2 }}>
+              <Box sx={{ mb: 2 }}>
+                <FormSectionHeader
+                  icon={GlobalIcons.clock}
+                  title="Time Slots"
+                  descriptionTooltip="Set the start and end time and lecture or break type for each slot, within the assigned shift."
+                  action={
+                    <Chip
+                      size="small"
+                      label={`${config.timeSlots.length} slot${config.timeSlots.length !== 1 ? 's' : ''}`}
+                      variant="outlined"
+                    />
+                  }
                 />
-              </Stack>
+              </Box>
 
               {perSlotMessages.length > 0 && (
                 <Box sx={{ mb: 1 }}>

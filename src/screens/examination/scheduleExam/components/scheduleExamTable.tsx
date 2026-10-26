@@ -11,6 +11,7 @@ import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
@@ -529,7 +530,15 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           handleRowClick={handlePreviewRowClick}
           rowProps={previewRowProps}
           noDataText={
-            <Stack alignItems="center" spacing={0.5}>
+            <Box
+              component="span"
+              sx={{
+                display: 'inline-flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0.5,
+              }}
+            >
               <Box component="span">
                 {activeStatus === examScheduledStatus.Ongoing
                   ? 'No exams are ongoing right now'
@@ -540,26 +549,20 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                   Published exams appear here automatically during their scheduled time.
                 </Typography>
               ) : (
-                <Box
-                  component="span"
+                <Button
+                  type="button"
+                  size="small"
+                  variant="text"
+                  startIcon={<Iconify icon={GlobalIcons.addIcon} />}
                   onClick={() => {
                     setOpenDialog?.(true);
                     setEditData?.(null);
                   }}
-                  color="primary.main"
-                  fontWeight={600}
-                  sx={{
-                    '&:hover': {
-                      cursor: 'pointer',
-                      color: 'primary.main',
-                      textDecoration: 'underline',
-                    },
-                  }}
                 >
-                  Create Exam
-                </Box>
+                  Create exam
+                </Button>
               )}
-            </Stack>
+            </Box>
           }
           columns={[
             {
@@ -755,29 +758,31 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           tableId="schedule-exam-table"
           isLoading={getExams?.isLoading || getExams?.isFetching}
           noDataText={
-            <Stack alignItems="center" spacing={0.5}>
+            <Box
+              component="span"
+              sx={{
+                display: 'inline-flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0.5,
+              }}
+            >
               <Box component="span">Exam Data Not Found</Box>
               {canAdd && (
-                <Box
-                  component="span"
+                <Button
+                  type="button"
+                  size="small"
+                  variant="text"
+                  startIcon={<Iconify icon={GlobalIcons.addIcon} />}
                   onClick={() => {
                     setOpenDialog?.(true);
                     setEditData?.(null);
                   }}
-                  color="primary.main"
-                  fontWeight={600}
-                  sx={{
-                    '&:hover': {
-                      cursor: 'pointer',
-                      color: 'primary.main',
-                      textDecoration: 'underline',
-                    },
-                  }}
                 >
-                  Create Exam
-                </Box>
+                  Create exam
+                </Button>
               )}
-            </Stack>
+            </Box>
           }
           columns={[
             { id: 'examName', label: 'Exam Name', align: 'left', sticky: true },

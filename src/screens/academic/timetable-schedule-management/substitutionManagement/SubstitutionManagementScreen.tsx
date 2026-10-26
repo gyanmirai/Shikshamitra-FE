@@ -26,9 +26,11 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
@@ -39,7 +41,6 @@ import { academicPaths, academicPermissions } from 'src/constants/academic-menu'
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Add,
   Send,
@@ -92,6 +93,7 @@ import { TeacherFirstOriginFields } from './components/TeacherFirstOriginFields'
 import { CreateSubstitutionModeTabs } from './components/CreateSubstitutionModeTabs';
 import { QuickSubstitutionDrawer } from './quick-substitution/QuickSubstitutionDrawer';
 import { SubstitutionCreationOverlay } from './components/SubstitutionCreationOverlay';
+import { SubstitutionFormSection as SectionCard } from './components/SubstitutionFormSection';
 import {
   createSubstitutionSegments,
   resolveAvailabilityTeacherSelection,
@@ -164,13 +166,6 @@ import type {
   AcknowledgementStatus,
   TeacherAvailabilityRow,
 } from './substitutionData';
-
-const cardStyle = {
-  p: 2,
-  borderRadius: 2,
-  boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
-  border: '1px solid rgba(145, 158, 171, 0.08)',
-};
 
 const priorityValueMap: Record<SubstitutionPriority, number> = {
   Low: 0,
@@ -3389,8 +3384,8 @@ const SubstitutionManagementScreen = () => {
               {createOriginMode === 'teacher' ? (
                 <SectionCard
                   title="Unavailable Teacher & Affected Lectures"
-                  paperProps={{ sx: cardStyle }}
-                  gridProps={{ spacing: 1 }}
+                  icon={GlobalIcons.assigned}
+                  description="Select the unavailable teacher and time window to find affected lectures."
                 >
                   <TeacherFirstOriginFields
                     value={createTeacherOrigin}
@@ -3433,265 +3428,282 @@ const SubstitutionManagementScreen = () => {
               ) : (
                 <SectionCard
                   title="Lecture & Timetable Details"
-                  paperProps={{ sx: cardStyle }}
-                  gridProps={{ sx: { spacing: 0 } }}
-                  headerContent={
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Select date, class, division and lecture slot for substitution.
-                    </Typography>
-                  }
+                  icon={GlobalIcons.calendar}
+                  description="Select the date, class, division and lecture slot for substitution."
                 >
                   <Grid size={{ xs: 12, md: 4 }}>
-                    <DatePicker
-                      label="Date *"
-                      value={substitutionForm.date}
-                      format={viewDateFormat}
-                      disablePast
-                      minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
-                      maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
-                      onChange={(value) => {
-                        setSubstitutionForm((current) => ({
-                          ...current,
-                          date: value,
-                          timetableId: '',
-                          timetableSlotId: '',
-                          timetableSlotSubjectId: '',
-                          period: '',
-                          startTime: '',
-                          endTime: '',
-                          subjectId: '',
-                          subjectName: '',
-                          originalTeacherId: '',
-                          originalTeacherName: '',
-                          originalRoomId: '',
-                          roomName: '',
-                          substituteTeacherId: '',
-                          substituteTeacherName: '',
-                          selectedSubstitutes: [],
-                        }));
-                        setEmployeeSearchTerm('');
-                      }}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          fullWidth: true,
-                          error: createSubmitted && !!createFieldErrors.date,
-                          helperText: createSubmitted ? createFieldErrors.date : '',
-                        },
-                      }}
-                    />
+                    <ShakingTextField error={createSubmitted && !!createFieldErrors.date}>
+                      <DatePicker
+                        label="Date"
+                        value={substitutionForm.date}
+                        format={viewDateFormat}
+                        disablePast
+                        minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
+                        maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
+                        onChange={(value) => {
+                          setSubstitutionForm((current) => ({
+                            ...current,
+                            date: value,
+                            timetableId: '',
+                            timetableSlotId: '',
+                            timetableSlotSubjectId: '',
+                            period: '',
+                            startTime: '',
+                            endTime: '',
+                            subjectId: '',
+                            subjectName: '',
+                            originalTeacherId: '',
+                            originalTeacherName: '',
+                            originalRoomId: '',
+                            roomName: '',
+                            substituteTeacherId: '',
+                            substituteTeacherName: '',
+                            selectedSubstitutes: [],
+                          }));
+                          setEmployeeSearchTerm('');
+                        }}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            error: createSubmitted && !!createFieldErrors.date,
+                            helperText: createSubmitted ? createFieldErrors.date : '',
+                            required: true,
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid size={{ xs: 12, md: 4 }}>
-                    <CustomSelect
-                      label="Class *"
-                      options={classSelectOptions}
-                      value={substitutionForm.standardId || substitutionForm.className}
-                      error={createSubmitted && !!createFieldErrors.class}
-                      helperText={createSubmitted ? createFieldErrors.class : ''}
-                      onChange={(value) => {
-                        const selected =
-                          academicStandards.find((item) => item.id === value) ||
-                          createMetadata?.standards.find((item) => item.id === value);
-                        setSubstitutionForm((current) => ({
-                          ...current,
-                          standardId: selected?.id || '',
-                          className: selected?.name || (value as string),
-                          divisionId: '',
-                          divisionName: '',
-                          timetableId: '',
-                          timetableSlotId: '',
-                          timetableSlotSubjectId: '',
-                          period: '',
-                          startTime: '',
-                          endTime: '',
-                          subjectId: '',
-                          subjectName: '',
-                          originalTeacherId: '',
-                          originalTeacherName: '',
-                          originalRoomId: '',
-                          roomName: '',
-                          substituteTeacherId: '',
-                          substituteTeacherName: '',
-                          selectedSubstitutes: [],
-                        }));
-                      }}
-                    />
+                    <ShakingTextField error={createSubmitted && !!createFieldErrors.class}>
+                      <CustomSelect
+                        label="Class"
+                        required
+                        options={classSelectOptions}
+                        value={substitutionForm.standardId || substitutionForm.className}
+                        error={createSubmitted && !!createFieldErrors.class}
+                        helperText={createSubmitted ? createFieldErrors.class : ''}
+                        onChange={(value) => {
+                          const selected =
+                            academicStandards.find((item) => item.id === value) ||
+                            createMetadata?.standards.find((item) => item.id === value);
+                          setSubstitutionForm((current) => ({
+                            ...current,
+                            standardId: selected?.id || '',
+                            className: selected?.name || (value as string),
+                            divisionId: '',
+                            divisionName: '',
+                            timetableId: '',
+                            timetableSlotId: '',
+                            timetableSlotSubjectId: '',
+                            period: '',
+                            startTime: '',
+                            endTime: '',
+                            subjectId: '',
+                            subjectName: '',
+                            originalTeacherId: '',
+                            originalTeacherName: '',
+                            originalRoomId: '',
+                            roomName: '',
+                            substituteTeacherId: '',
+                            substituteTeacherName: '',
+                            selectedSubstitutes: [],
+                          }));
+                        }}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid size={{ xs: 12, md: 4 }}>
-                    <CustomSelect
-                      label="Division *"
-                      options={divisionSelectOptions}
-                      value={substitutionForm.divisionId || substitutionForm.divisionName}
-                      error={createSubmitted && !!createFieldErrors.division}
-                      helperText={createSubmitted ? createFieldErrors.division : ''}
-                      onChange={(value) => {
-                        const selected =
-                          selectedAcademicStandard?.divisions?.find((item) => item.id === value) ||
-                          createMetadata?.divisions.find((item) => item.id === value);
-                        setSubstitutionForm((current) => ({
-                          ...current,
-                          divisionId: selected?.id || '',
-                          divisionName: selected?.name || (value as string),
-                          timetableId: '',
-                          timetableSlotId: '',
-                          timetableSlotSubjectId: '',
-                          period: '',
-                          startTime: '',
-                          endTime: '',
-                          subjectId: '',
-                          subjectName: '',
-                          originalTeacherId: '',
-                          originalTeacherName: '',
-                          originalRoomId: '',
-                          roomName: '',
-                          substituteTeacherId: '',
-                          substituteTeacherName: '',
-                          selectedSubstitutes: [],
-                        }));
-                      }}
-                      disabled={!substitutionForm.standardId}
-                      noOptionsMessage={
-                        substitutionForm.standardId ? 'No divisions found' : 'Select class first'
-                      }
-                    />
+                    <ShakingTextField error={createSubmitted && !!createFieldErrors.division}>
+                      <CustomSelect
+                        label="Division"
+                        required
+                        options={divisionSelectOptions}
+                        value={substitutionForm.divisionId || substitutionForm.divisionName}
+                        error={createSubmitted && !!createFieldErrors.division}
+                        helperText={createSubmitted ? createFieldErrors.division : ''}
+                        onChange={(value) => {
+                          const selected =
+                            selectedAcademicStandard?.divisions?.find(
+                              (item) => item.id === value
+                            ) || createMetadata?.divisions.find((item) => item.id === value);
+                          setSubstitutionForm((current) => ({
+                            ...current,
+                            divisionId: selected?.id || '',
+                            divisionName: selected?.name || (value as string),
+                            timetableId: '',
+                            timetableSlotId: '',
+                            timetableSlotSubjectId: '',
+                            period: '',
+                            startTime: '',
+                            endTime: '',
+                            subjectId: '',
+                            subjectName: '',
+                            originalTeacherId: '',
+                            originalTeacherName: '',
+                            originalRoomId: '',
+                            roomName: '',
+                            substituteTeacherId: '',
+                            substituteTeacherName: '',
+                            selectedSubstitutes: [],
+                          }));
+                        }}
+                        disabled={!substitutionForm.standardId}
+                        noOptionsMessage={
+                          substitutionForm.standardId ? 'No divisions found' : 'Select class first'
+                        }
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <CustomSelect
-                      label="Lecture Slot *"
-                      options={lectureSelectOptions}
-                      value={substitutionForm.timetableSlotSubjectId || substitutionForm.period}
-                      isLoading={isLecturesLoading || isFetchingLectures}
-                      error={createSubmitted && !!createFieldErrors.slot}
-                      helperText={createSubmitted ? createFieldErrors.slot : ''}
-                      disabled={
-                        !substitutionForm.date ||
-                        !substitutionForm.standardId ||
-                        !substitutionForm.divisionId
-                      }
-                      noOptionsMessage="No timetable or lecture slots are configured for the selected date, class and division"
-                      onChange={(value) => {
-                        const lecture = createLectureResult.find(
-                          (item) => item.slotSubjectId === value
-                        );
-                        if (!lecture) return;
+                    <ShakingTextField error={createSubmitted && !!createFieldErrors.slot}>
+                      <CustomSelect
+                        label="Lecture slot"
+                        required
+                        options={lectureSelectOptions}
+                        value={substitutionForm.timetableSlotSubjectId || substitutionForm.period}
+                        isLoading={isLecturesLoading || isFetchingLectures}
+                        error={createSubmitted && !!createFieldErrors.slot}
+                        helperText={createSubmitted ? createFieldErrors.slot : ''}
+                        disabled={
+                          !substitutionForm.date ||
+                          !substitutionForm.standardId ||
+                          !substitutionForm.divisionId
+                        }
+                        noOptionsMessage="No timetable or lecture slots are configured for the selected date, class and division"
+                        onChange={(value) => {
+                          const lecture = createLectureResult.find(
+                            (item) => item.slotSubjectId === value
+                          );
+                          if (!lecture) return;
 
-                        const assignedSubject = createMetadata?.subjects.find(
-                          (item) =>
-                            item.id === lecture.subjectId && item.standardId === lecture.standardId
-                        );
-                        setSubstitutionForm((current) => ({
-                          ...current,
-                          timetableId: lecture.timetableId,
-                          timetableSlotId: lecture.timetableSlotId,
-                          timetableSlotSubjectId: lecture.slotSubjectId,
-                          period: lecture.period,
-                          startTime: lecture.startTime,
-                          endTime: lecture.endTime,
-                          subjectId: lecture.subjectId,
-                          subjectName: lecture.subjectName,
-                          originalTeacherId:
-                            lecture.originalTeacherId ||
-                            assignedSubject?.primaryTeacherId ||
-                            current.originalTeacherId,
-                          originalTeacherName:
-                            lecture.originalTeacherName ||
-                            assignedSubject?.primaryTeacherName ||
-                            current.originalTeacherName,
-                          originalRoomId: lecture.originalRoomId || current.originalRoomId,
-                          roomName: lecture.roomName || current.roomName,
-                          assignedRoomId: lecture.originalRoomId || current.assignedRoomId,
-                          assignedRoomName: lecture.roomName || current.assignedRoomName,
-                          substituteTeacherId: '',
-                          substituteTeacherName: '',
-                          selectedSubstitutes: [],
-                          standardId: lecture.standardId,
-                          className: lecture.className,
-                          divisionId: lecture.divisionId,
-                          divisionName: lecture.divisionName,
-                        }));
-                      }}
-                    />
+                          const assignedSubject = createMetadata?.subjects.find(
+                            (item) =>
+                              item.id === lecture.subjectId &&
+                              item.standardId === lecture.standardId
+                          );
+                          setSubstitutionForm((current) => ({
+                            ...current,
+                            timetableId: lecture.timetableId,
+                            timetableSlotId: lecture.timetableSlotId,
+                            timetableSlotSubjectId: lecture.slotSubjectId,
+                            period: lecture.period,
+                            startTime: lecture.startTime,
+                            endTime: lecture.endTime,
+                            subjectId: lecture.subjectId,
+                            subjectName: lecture.subjectName,
+                            originalTeacherId:
+                              lecture.originalTeacherId ||
+                              assignedSubject?.primaryTeacherId ||
+                              current.originalTeacherId,
+                            originalTeacherName:
+                              lecture.originalTeacherName ||
+                              assignedSubject?.primaryTeacherName ||
+                              current.originalTeacherName,
+                            originalRoomId: lecture.originalRoomId || current.originalRoomId,
+                            roomName: lecture.roomName || current.roomName,
+                            assignedRoomId: lecture.originalRoomId || current.assignedRoomId,
+                            assignedRoomName: lecture.roomName || current.assignedRoomName,
+                            substituteTeacherId: '',
+                            substituteTeacherName: '',
+                            selectedSubstitutes: [],
+                            standardId: lecture.standardId,
+                            className: lecture.className,
+                            divisionId: lecture.divisionId,
+                            divisionName: lecture.divisionName,
+                          }));
+                        }}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <CustomSelect
-                      label="Subject *"
-                      options={subjectSelectOptions}
-                      value={substitutionForm.subjectId || substitutionForm.subjectName}
-                      error={createSubmitted && !!createFieldErrors.subject}
-                      helperText={createSubmitted ? createFieldErrors.subject : ''}
-                      disabled={!substitutionForm.timetableSlotSubjectId}
-                      onChange={(value) => {
-                        const selected = createMetadata?.subjects.find(
-                          (item) =>
-                            item.id === value &&
-                            (!substitutionForm.standardId ||
-                              item.standardId === substitutionForm.standardId)
-                        );
-                        setSubstitutionForm((current) => ({
-                          ...current,
-                          subjectId: selected?.id || '',
-                          subjectName: selected?.name || (value as string),
-                          originalTeacherId:
-                            selected?.primaryTeacherId || current.originalTeacherId,
-                          originalTeacherName:
-                            selected?.primaryTeacherName || current.originalTeacherName,
-                          substituteTeacherId: '',
-                          substituteTeacherName: '',
-                          selectedSubstitutes: [],
-                        }));
-                      }}
-                    />
+                    <ShakingTextField error={createSubmitted && !!createFieldErrors.subject}>
+                      <CustomSelect
+                        label="Subject"
+                        required
+                        options={subjectSelectOptions}
+                        value={substitutionForm.subjectId || substitutionForm.subjectName}
+                        error={createSubmitted && !!createFieldErrors.subject}
+                        helperText={createSubmitted ? createFieldErrors.subject : ''}
+                        disabled={!substitutionForm.timetableSlotSubjectId}
+                        onChange={(value) => {
+                          const selected = createMetadata?.subjects.find(
+                            (item) =>
+                              item.id === value &&
+                              (!substitutionForm.standardId ||
+                                item.standardId === substitutionForm.standardId)
+                          );
+                          setSubstitutionForm((current) => ({
+                            ...current,
+                            subjectId: selected?.id || '',
+                            subjectName: selected?.name || (value as string),
+                            originalTeacherId:
+                              selected?.primaryTeacherId || current.originalTeacherId,
+                            originalTeacherName:
+                              selected?.primaryTeacherName || current.originalTeacherName,
+                            substituteTeacherId: '',
+                            substituteTeacherName: '',
+                            selectedSubstitutes: [],
+                          }));
+                        }}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <CustomSelect
-                      label="Original Teacher"
-                      options={teacherSelectOptions}
-                      value={
-                        substitutionForm.originalTeacherId || substitutionForm.originalTeacherName
-                      }
+                    <ShakingTextField
                       error={createSubmitted && !!createFieldErrors.originalTeacher}
-                      helperText={createSubmitted ? createFieldErrors.originalTeacher : ''}
-                      disabled={!substitutionForm.timetableSlotSubjectId}
-                      onChange={(value) => {
-                        const selected = createMetadata?.teachers.find((item) => item.id === value);
-                        setSubstitutionForm((current) => ({
-                          ...current,
-                          originalTeacherId: selected?.id || '',
-                          originalTeacherName: selected?.name || (value as string),
-                        }));
-                      }}
-                    />
+                    >
+                      <CustomSelect
+                        label="Original teacher"
+                        required
+                        options={teacherSelectOptions}
+                        value={
+                          substitutionForm.originalTeacherId || substitutionForm.originalTeacherName
+                        }
+                        error={createSubmitted && !!createFieldErrors.originalTeacher}
+                        helperText={createSubmitted ? createFieldErrors.originalTeacher : ''}
+                        disabled={!substitutionForm.timetableSlotSubjectId}
+                        onChange={(value) => {
+                          const selected = createMetadata?.teachers.find(
+                            (item) => item.id === value
+                          );
+                          setSubstitutionForm((current) => ({
+                            ...current,
+                            originalTeacherId: selected?.id || '',
+                            originalTeacherName: selected?.name || (value as string),
+                          }));
+                        }}
+                      />
+                    </ShakingTextField>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <CustomSelect
-                      label="Original Room"
-                      options={roomSelectOptions}
-                      value={substitutionForm.originalRoomId || substitutionForm.roomName}
-                      error={createSubmitted && !!createFieldErrors.originalRoom}
-                      helperText={createSubmitted ? createFieldErrors.originalRoom : ''}
-                      disabled={!substitutionForm.timetableSlotSubjectId}
-                      onChange={(value) => {
-                        const selected = createMetadata?.rooms.find((item) => item.id === value);
-                        setSubstitutionForm((current) => ({
-                          ...current,
-                          originalRoomId: selected?.id || '',
-                          roomName: selected?.name || (value as string),
-                        }));
-                      }}
-                    />
+                    <ShakingTextField error={createSubmitted && !!createFieldErrors.originalRoom}>
+                      <CustomSelect
+                        label="Original room"
+                        required
+                        options={roomSelectOptions}
+                        value={substitutionForm.originalRoomId || substitutionForm.roomName}
+                        error={createSubmitted && !!createFieldErrors.originalRoom}
+                        helperText={createSubmitted ? createFieldErrors.originalRoom : ''}
+                        disabled={!substitutionForm.timetableSlotSubjectId}
+                        onChange={(value) => {
+                          const selected = createMetadata?.rooms.find((item) => item.id === value);
+                          setSubstitutionForm((current) => ({
+                            ...current,
+                            originalRoomId: selected?.id || '',
+                            roomName: selected?.name || (value as string),
+                          }));
+                        }}
+                      />
+                    </ShakingTextField>
                   </Grid>
                 </SectionCard>
               )}
 
               <SectionCard
                 title="Substitute Assignment"
-                paperProps={{ sx: cardStyle }}
-                gridProps={{ spacing: 1 }}
-                headerContent={
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    View free substitute teachers matching the slot criteria and assign coverage.
-                  </Typography>
-                }
+                icon={GlobalIcons.assigned}
+                description="View free substitute teachers matching the slot criteria and assign coverage."
               >
                 <Grid size={{ xs: 12 }}>
                   <Card sx={{ p: 1.5, borderRadius: 1, bgcolor: 'background.neutral' }}>
@@ -3702,7 +3714,7 @@ const SubstitutionManagementScreen = () => {
                       spacing={1.5}
                       sx={{ mb: 1.5 }}
                     >
-                      <Typography variant="subtitle2">Available Substitute Employees</Typography>
+                      <Typography variant="subtitle2">Available substitute employees</Typography>
                       <TextField
                         size="small"
                         placeholder="Search employee..."
@@ -3730,15 +3742,27 @@ const SubstitutionManagementScreen = () => {
                           </Alert>
                         )}
                         {hasCreateLectureSelection &&
+                          !isCreateSuggestedTeachersLoading &&
+                          !isFetchingSuggestedTeachers &&
                           suggestedTeacherRows.filter((teacher) =>
                             teacher.teacherName
                               .toLowerCase()
                               .includes(employeeSearchTerm.toLowerCase())
                           ).length === 0 && (
-                            <Alert severity="warning">
-                              No employee is free for the selected slot. Try split coverage or
-                              review timetable conflicts.
-                            </Alert>
+                            <EmptyContent
+                              title={
+                                employeeSearchTerm.trim()
+                                  ? 'No employees match this search'
+                                  : 'No employee is free for the selected slot'
+                              }
+                              description={
+                                employeeSearchTerm.trim()
+                                  ? 'Try a different employee name.'
+                                  : 'Try split coverage or review timetable conflicts.'
+                              }
+                              sx={{ py: 2, height: 'auto' }}
+                              slotProps={{ img: { maxWidth: 120 } }}
+                            />
                           )}
                         {suggestedTeacherRows
                           .filter((teacher) =>
@@ -3899,35 +3923,45 @@ const SubstitutionManagementScreen = () => {
                   </Card>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <CustomSelect
-                    label="Substitute Teacher *"
-                    options={availableTeacherSelectOptions}
-                    value={
-                      substitutionForm.substituteTeacherId || substitutionForm.substituteTeacherName
-                    }
+                  <ShakingTextField
                     error={
                       createSubmitted &&
                       createSubmitType === 'assign' &&
                       !!createFieldErrors.substituteTeacher
                     }
-                    helperText={
-                      createSubmitted && createSubmitType === 'assign'
-                        ? createFieldErrors.substituteTeacher
-                        : ''
-                    }
-                    disabled={!hasCreateLectureSelection}
-                    noOptionsMessage="No free employees found for this slot"
-                    onChange={(value) => {
-                      const selected = suggestedTeacherRows.find(
-                        (item) => item.teacherId === value
-                      );
-                      if (selected) addSubstituteCoverage(selected);
-                    }}
-                  />
+                  >
+                    <CustomSelect
+                      label="Substitute teacher"
+                      required
+                      options={availableTeacherSelectOptions}
+                      value={
+                        substitutionForm.substituteTeacherId ||
+                        substitutionForm.substituteTeacherName
+                      }
+                      error={
+                        createSubmitted &&
+                        createSubmitType === 'assign' &&
+                        !!createFieldErrors.substituteTeacher
+                      }
+                      helperText={
+                        createSubmitted && createSubmitType === 'assign'
+                          ? createFieldErrors.substituteTeacher
+                          : ''
+                      }
+                      disabled={!hasCreateLectureSelection}
+                      noOptionsMessage="No free employees found for this slot"
+                      onChange={(value) => {
+                        const selected = suggestedTeacherRows.find(
+                          (item) => item.teacherId === value
+                        );
+                        if (selected) addSubstituteCoverage(selected);
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <CustomSelect
-                    label="Assigned Room"
+                    label="Assigned room"
                     options={[{ value: '', label: 'Keep original room' }, ...roomSelectOptions]}
                     value={substitutionForm.assignedRoomId || ''}
                     onChange={(value) => {
@@ -4372,100 +4406,108 @@ const SubstitutionManagementScreen = () => {
             <Stack spacing={2}>
               <SectionCard
                 title="Teacher & Schedule Details"
-                paperProps={{ sx: cardStyle }}
-                gridProps={{ spacing: 1 }}
-                headerContent={
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Select teacher and date/time duration for marking unavailability.
-                  </Typography>
-                }
+                icon={GlobalIcons.calendar}
+                description="Select the teacher and unavailable date and time window."
               >
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <PaginatedSearchSelect<EmployeeOption>
-                    label="Teacher *"
-                    fetchOptions={fetchAvailabilityTeacherOptions}
-                    value={
-                      availabilityForm.teacherId
-                        ? {
-                            id: availabilityForm.teacherId,
-                            label: availabilityForm.teacherName,
-                            departmentName: availabilityForm.departmentName,
-                          }
-                        : null
-                    }
-                    onChange={(_, value) =>
-                      setAvailabilityForm((current) => ({
-                        ...current,
-                        teacherId: value?.id || '',
-                        teacherName: value?.label || '',
-                        departmentName: value?.departmentName || '',
-                        shiftStartTime: value?.shiftStartTime || '',
-                        shiftEndTime: value?.shiftEndTime || '',
-                      }))
-                    }
-                    getOptionLabel={(option) => option?.label || ''}
-                    isOptionEqualToValue={(option, value) => option?.id === value?.id}
-                    getOptionDisabled={(option) => Boolean(getTeacherAvailabilityConflict(option))}
-                    renderOption={(optionProps, option) => {
-                      const conflict = getTeacherAvailabilityConflict(option);
-                      return (
-                        <li {...optionProps}>
-                          <Stack
-                            direction="row"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            spacing={1}
-                            sx={{ width: '100%' }}
-                          >
-                            <Typography variant="body2">{option.label}</Typography>
-                            {conflict && (
-                              <Chip
-                                size="small"
-                                color="warning"
-                                variant="outlined"
-                                label={`Unavailable ${conflict.startTime}-${conflict.endTime}`}
-                              />
-                            )}
-                          </Stack>
-                        </li>
-                      );
-                    }}
-                    minChars={0}
-                    debounceMs={1500}
-                    size="small"
-                    fullWidth
+                  <ShakingTextField
                     error={availabilitySubmitted && !!availabilityFieldErrors.teacherName}
-                    helperText={
-                      availabilitySubmitted
-                        ? availabilityFieldErrors.teacherName
-                        : unavailableTeacherCount > 0
-                          ? `${unavailableTeacherCount} employee(s) already unavailable during this time. They are disabled.`
-                          : ''
-                    }
-                  />
+                  >
+                    <PaginatedSearchSelect<EmployeeOption>
+                      label="Teacher"
+                      required
+                      fetchOptions={fetchAvailabilityTeacherOptions}
+                      value={
+                        availabilityForm.teacherId
+                          ? {
+                              id: availabilityForm.teacherId,
+                              label: availabilityForm.teacherName,
+                              departmentName: availabilityForm.departmentName,
+                            }
+                          : null
+                      }
+                      onChange={(_, value) =>
+                        setAvailabilityForm((current) => ({
+                          ...current,
+                          teacherId: value?.id || '',
+                          teacherName: value?.label || '',
+                          departmentName: value?.departmentName || '',
+                          shiftStartTime: value?.shiftStartTime || '',
+                          shiftEndTime: value?.shiftEndTime || '',
+                        }))
+                      }
+                      getOptionLabel={(option) => option?.label || ''}
+                      isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                      getOptionDisabled={(option) =>
+                        Boolean(getTeacherAvailabilityConflict(option))
+                      }
+                      renderOption={(optionProps, option) => {
+                        const conflict = getTeacherAvailabilityConflict(option);
+                        return (
+                          <li {...optionProps}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              justifyContent="space-between"
+                              spacing={1}
+                              sx={{ width: '100%' }}
+                            >
+                              <Typography variant="body2">{option.label}</Typography>
+                              {conflict && (
+                                <Chip
+                                  size="small"
+                                  color="warning"
+                                  variant="outlined"
+                                  label={`Unavailable ${conflict.startTime}-${conflict.endTime}`}
+                                />
+                              )}
+                            </Stack>
+                          </li>
+                        );
+                      }}
+                      minChars={0}
+                      debounceMs={1500}
+                      size="small"
+                      fullWidth
+                      error={availabilitySubmitted && !!availabilityFieldErrors.teacherName}
+                      helperText={
+                        availabilitySubmitted
+                          ? availabilityFieldErrors.teacherName
+                          : unavailableTeacherCount > 0
+                            ? `${unavailableTeacherCount} employee(s) already unavailable during this time. They are disabled.`
+                            : ''
+                      }
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <DatePicker
-                    label="Date *"
-                    value={availabilityForm.availabilityDate}
-                    format={viewDateFormat}
-                    disablePast
-                    minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
-                    maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
-                    onChange={(value) =>
-                      setAvailabilityForm((current) => ({ ...current, availabilityDate: value }))
-                    }
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: availabilitySubmitted && !!availabilityFieldErrors.availabilityDate,
-                        helperText: availabilitySubmitted
-                          ? availabilityFieldErrors.availabilityDate
-                          : '',
-                      },
-                    }}
-                  />
+                  <ShakingTextField
+                    error={availabilitySubmitted && !!availabilityFieldErrors.availabilityDate}
+                  >
+                    <DatePicker
+                      label="Date"
+                      value={availabilityForm.availabilityDate}
+                      format={viewDateFormat}
+                      disablePast
+                      minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
+                      maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
+                      onChange={(value) =>
+                        setAvailabilityForm((current) => ({ ...current, availabilityDate: value }))
+                      }
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          error:
+                            availabilitySubmitted && !!availabilityFieldErrors.availabilityDate,
+                          required: true,
+                          helperText: availabilitySubmitted
+                            ? availabilityFieldErrors.availabilityDate
+                            : '',
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <FormControlLabel
@@ -4480,7 +4522,7 @@ const SubstitutionManagementScreen = () => {
                         }
                       />
                     }
-                    label="Full Day Unavailability"
+                    label="Full day unavailability"
                   />
                   {availabilityForm.isFullDay &&
                     availabilityForm.teacherId &&
@@ -4491,82 +4533,100 @@ const SubstitutionManagementScreen = () => {
                     )}
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <TimePicker
-                    label="Start Time *"
-                    value={
-                      availabilityForm.isFullDay
-                        ? availabilityStartTimeStr
-                          ? dayjs(`2000-01-01T${availabilityStartTimeStr}`)
-                          : null
-                        : availabilityForm.startTime
-                          ? dayjs(`2000-01-01T${availabilityForm.startTime}`)
-                          : null
+                  <ShakingTextField
+                    error={
+                      availabilitySubmitted &&
+                      !availabilityForm.isFullDay &&
+                      !!availabilityFieldErrors.time
                     }
-                    disabled={availabilityForm.isFullDay}
-                    onChange={(newValue: Dayjs | null) => {
-                      setAvailabilityForm((current) => ({
-                        ...current,
-                        startTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
-                      }));
-                    }}
-                    viewRenderers={{
-                      hours: renderTimeViewClock,
-                      minutes: renderTimeViewClock,
-                    }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error:
-                          availabilitySubmitted &&
-                          !availabilityForm.isFullDay &&
-                          !!availabilityFieldErrors.time,
-                        helperText:
-                          availabilitySubmitted && !availabilityForm.isFullDay
-                            ? availabilityFieldErrors.time
-                            : '',
-                      },
-                    }}
-                  />
+                  >
+                    <TimePicker
+                      label="Start time"
+                      value={
+                        availabilityForm.isFullDay
+                          ? availabilityStartTimeStr
+                            ? dayjs(`2000-01-01T${availabilityStartTimeStr}`)
+                            : null
+                          : availabilityForm.startTime
+                            ? dayjs(`2000-01-01T${availabilityForm.startTime}`)
+                            : null
+                      }
+                      disabled={availabilityForm.isFullDay}
+                      onChange={(newValue: Dayjs | null) => {
+                        setAvailabilityForm((current) => ({
+                          ...current,
+                          startTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                        }));
+                      }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          error:
+                            availabilitySubmitted &&
+                            !availabilityForm.isFullDay &&
+                            !!availabilityFieldErrors.time,
+                          helperText:
+                            availabilitySubmitted && !availabilityForm.isFullDay
+                              ? availabilityFieldErrors.time
+                              : '',
+                          required: true,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <TimePicker
-                    label="End Time *"
-                    value={
-                      availabilityForm.isFullDay
-                        ? availabilityEndTimeStr
-                          ? dayjs(`2000-01-01T${availabilityEndTimeStr}`)
-                          : null
-                        : availabilityForm.endTime
-                          ? dayjs(`2000-01-01T${availabilityForm.endTime}`)
-                          : null
+                  <ShakingTextField
+                    error={
+                      availabilitySubmitted &&
+                      !availabilityForm.isFullDay &&
+                      !!availabilityFieldErrors.time
                     }
-                    disabled={availabilityForm.isFullDay}
-                    onChange={(newValue: Dayjs | null) => {
-                      setAvailabilityForm((current) => ({
-                        ...current,
-                        endTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
-                      }));
-                    }}
-                    viewRenderers={{
-                      hours: renderTimeViewClock,
-                      minutes: renderTimeViewClock,
-                    }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error:
-                          availabilitySubmitted &&
-                          !availabilityForm.isFullDay &&
-                          !!availabilityFieldErrors.time,
-                        helperText:
-                          availabilitySubmitted && !availabilityForm.isFullDay
-                            ? availabilityFieldErrors.time
-                            : '',
-                      },
-                    }}
-                  />
+                  >
+                    <TimePicker
+                      label="End time"
+                      value={
+                        availabilityForm.isFullDay
+                          ? availabilityEndTimeStr
+                            ? dayjs(`2000-01-01T${availabilityEndTimeStr}`)
+                            : null
+                          : availabilityForm.endTime
+                            ? dayjs(`2000-01-01T${availabilityForm.endTime}`)
+                            : null
+                      }
+                      disabled={availabilityForm.isFullDay}
+                      onChange={(newValue: Dayjs | null) => {
+                        setAvailabilityForm((current) => ({
+                          ...current,
+                          endTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                        }));
+                      }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          error:
+                            availabilitySubmitted &&
+                            !availabilityForm.isFullDay &&
+                            !!availabilityFieldErrors.time,
+                          helperText:
+                            availabilitySubmitted && !availabilityForm.isFullDay
+                              ? availabilityFieldErrors.time
+                              : '',
+                          required: true,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
               </SectionCard>
 
@@ -4578,13 +4638,8 @@ const SubstitutionManagementScreen = () => {
                       ? 'Affected Lectures'
                       : `Affected Lectures (${affectedLectures.length})`
                 }
-                paperProps={{ sx: cardStyle }}
-                gridProps={{ spacing: 1 }}
-                headerContent={
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Lectures affected by teacher unavailability for the selected date and period.
-                  </Typography>
-                }
+                icon={GlobalIcons.notebook}
+                description="Lectures affected by teacher unavailability for the selected date and period."
               >
                 <Grid size={{ xs: 12 }}>
                   {isAffectedLecturesLoading || isAffectedLecturesFetching ? (
@@ -4626,9 +4681,11 @@ const SubstitutionManagementScreen = () => {
                       Please select a teacher to view affected lectures.
                     </Alert>
                   ) : affectedLectures.length === 0 ? (
-                    <Alert severity="info">
-                      No affected lectures found for the selected teacher and time range.
-                    </Alert>
+                    <EmptyContent
+                      title="No affected lectures found for the selected teacher and time range."
+                      sx={{ py: 2, height: 'auto' }}
+                      slotProps={{ img: { maxWidth: 120 } }}
+                    />
                   ) : (
                     <Stack spacing={1}>
                       {affectedLectures.map((lecture) => (
@@ -4727,26 +4784,24 @@ const SubstitutionManagementScreen = () => {
 
               <SectionCard
                 title="Status & Automation Settings"
-                paperProps={{ sx: cardStyle }}
-                gridProps={{ spacing: 1 }}
-                headerContent={
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Configure unavailability type and automated workflow actions.
-                  </Typography>
-                }
+                icon={GlobalIcons.clock}
+                description="Configure unavailability status, its source and notification preferences."
               >
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <CustomSelect
-                    label="Availability Status *"
-                    options={availabilityStatusOptions}
-                    value={availabilityForm.availabilityStatus}
-                    onChange={(value) =>
-                      setAvailabilityForm((current) => ({
-                        ...current,
-                        availabilityStatus: value as string,
-                      }))
-                    }
-                  />
+                  <ShakingTextField>
+                    <CustomSelect
+                      label="Availability status"
+                      required
+                      options={availabilityStatusOptions}
+                      value={availabilityForm.availabilityStatus}
+                      onChange={(value) =>
+                        setAvailabilityForm((current) => ({
+                          ...current,
+                          availabilityStatus: value as string,
+                        }))
+                      }
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <CustomSelect
@@ -4783,26 +4838,29 @@ const SubstitutionManagementScreen = () => {
 
               <SectionCard
                 title="Reason & Additional Notes"
-                paperProps={{ sx: cardStyle }}
-                gridProps={{ spacing: 1 }}
-                headerContent={
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Provide mandatory reason and any attachments or additional remarks.
-                  </Typography>
-                }
+                icon={GlobalIcons.documentIcon}
+                description="Provide the required reason and any attachment name or additional remarks."
               >
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    size="small"
-                    label="Reason *"
-                    value={availabilityForm.reason}
-                    onChange={(event) =>
-                      setAvailabilityForm((current) => ({ ...current, reason: event.target.value }))
-                    }
+                  <ShakingTextField
                     error={availabilitySubmitted && !!availabilityFieldErrors.reason}
-                    helperText={availabilitySubmitted ? availabilityFieldErrors.reason : ''}
-                    fullWidth
-                  />
+                  >
+                    <TextField
+                      size="small"
+                      label="Reason"
+                      required
+                      value={availabilityForm.reason}
+                      onChange={(event) =>
+                        setAvailabilityForm((current) => ({
+                          ...current,
+                          reason: event.target.value,
+                        }))
+                      }
+                      error={availabilitySubmitted && !!availabilityFieldErrors.reason}
+                      helperText={availabilitySubmitted ? availabilityFieldErrors.reason : ''}
+                      fullWidth
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField

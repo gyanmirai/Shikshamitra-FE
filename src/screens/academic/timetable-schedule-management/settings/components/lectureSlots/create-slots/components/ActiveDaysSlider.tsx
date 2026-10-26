@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { alpha } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import { Box, Stack, Button, ButtonBase, Typography } from '@mui/material';
 
 import { dayMarks, getActiveDaysLabel } from '../utils/dayMarks';
@@ -52,34 +53,20 @@ const ActiveDaysSlider: React.FC<IActiveDaysSliderProps> = ({
   return (
     <Box
       sx={{
-        px: 2,
-        py: 1.25,
+        p: { xs: 1.5, sm: 2 },
         borderRadius: 2,
-        backgroundColor: (theme) =>
-          theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+        bgcolor: 'background.paper',
         border: (theme) => `1px solid ${error ? theme.palette.error.main : theme.palette.divider}`,
       }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 1,
-          mb: 1,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Iconify icon="mdi:calendar-week" width={18} color="primary.main" />
-          <Typography variant="subtitle2" color="primary.main" sx={{ fontWeight: 600 }}>
-            Active Days
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-            ({getActiveDaysLabel(selectedDays) || 'None selected'})
-          </Typography>
-        </Box>
-        {rightElement && <Box sx={{ display: 'flex', alignItems: 'center' }}>{rightElement}</Box>}
+      <Box sx={{ mb: 2 }}>
+        <FormSectionHeader
+          icon={GlobalIcons.calendar}
+          title="Active Days"
+          description={getActiveDaysLabel(selectedDays) || 'None selected'}
+          descriptionTooltip="Select the weekdays that use this slot configuration. Quick selections replace the current selection."
+          action={rightElement}
+        />
       </Box>
 
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -93,7 +80,7 @@ const ActiveDaysSlider: React.FC<IActiveDaysSliderProps> = ({
               aria-pressed={isSelected}
               aria-label={`${day.label}: ${isSelected ? 'active' : 'inactive'}`}
               sx={{
-                height: 32,
+                minHeight: 44,
                 minWidth: 44,
                 px: 1.5,
                 borderRadius: '8px',
@@ -128,8 +115,15 @@ const ActiveDaysSlider: React.FC<IActiveDaysSliderProps> = ({
           {error}
         </Typography>
       ) : (
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
-          <Typography variant="caption" color="text.disabled">
+        <Stack
+          direction="row"
+          spacing={0.5}
+          alignItems="center"
+          useFlexGap
+          flexWrap="wrap"
+          sx={{ mt: 1 }}
+        >
+          <Typography variant="caption" color="text.secondary">
             Toggle individual days or quick select:
           </Typography>
           {QUICK_SELECTIONS.map((selection) => (
