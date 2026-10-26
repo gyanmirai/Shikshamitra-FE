@@ -48,6 +48,7 @@ import {
   Box,
   Card,
   Grid,
+  Alert,
   Paper,
   Stack,
   Button,
@@ -72,6 +73,7 @@ import {
   useDownloadAttendanceImportErrorReportMutation,
 } from 'src/redux/hr/attendanceImportApi';
 
+import { useAttendanceImportRowDraft } from './use-attendance-import-row-draft';
 import {
   toAttendanceImportPayrollMonth,
   getDefaultAttendanceImportMonth,
@@ -81,17 +83,16 @@ import {
   hasDuplicateAttendanceImportFileName,
 } from './attendance-import-upload-utils';
 import {
-  downloadAttendanceImportBlob,
-  buildAttendanceImportDownloadFileName,
-  buildAttendanceImportErrorReportFileName,
-} from './attendance-import-download-utils';
-import {
   IMPORT_ROW_STATUS,
   mapImportRowStatusToUi,
   type ImportRowStatusType,
   buildAttendanceImportRowsSaveEntries,
-  promotePendingImportRowToPresentWhenTimesComplete,
 } from './attendance-import-row-save-utils';
+import {
+  downloadAttendanceImportBlob,
+  buildAttendanceImportDownloadFileName,
+  buildAttendanceImportErrorReportFileName,
+} from './attendance-import-download-utils';
 
 // ─── Inner-table (row-level) attendance status ─────────────────────────────────
 const segmentBtnBase = {
@@ -280,6 +281,7 @@ const AttendanceImportHistoryScreen = () => {
   // The import ID to show in the detail dialog
   const [viewImportData, setViewImportData] = useState<AttendanceImportItem | null>(null);
   const viewImportDialog = useBoolean();
+  const detailCloseHandler = React.useRef<(() => void) | null>(null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const reprocessDialog = useBoolean();
@@ -804,10 +806,7 @@ const AttendanceImportHistoryScreen = () => {
             { name: 'Device Integration' },
           ]}
           isBack
-          onBack={() => {
-            viewImportDialog.onFalse();
-            setViewImportData(null);
-          }}
+          onBack={() => detailCloseHandler.current?.()}
         />
       ) : (
         <CustomBreadcrumbs
@@ -953,7 +952,17 @@ const AttendanceImportHistoryScreen = () => {
         </>
       ) : (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <ImportDetailDialog importData={viewImportData} onClose={() => setViewImportData(null)} />
+          <ImportDetailDialog
+            key={viewImportData?.id}
+            importData={viewImportData}
+            registerCloseHandler={(handler) => {
+              detailCloseHandler.current = handler;
+            }}
+            onClose={() => {
+              viewImportDialog.onFalse();
+              setViewImportData(null);
+            }}
+          />
         </Card>
       )}
       {/* Lock/Unlock Confirm Dialog */}
@@ -1089,24 +1098,46 @@ const ImportDetailSkeleton = () => (
   </Box>
 );
 
-type EditingCell = { rowId: string; field: 'timeIn' | 'timeOut'; value: dayjs.Dayjs | null } | null;
-
-const ImportDetailDialog = ({
+export const ImportDetailDialog = ({
   importData,
   onClose,
+  registerCloseHandler,
 }: {
   importData: AttendanceImportItem | null;
   onClose: () => void;
+  registerCloseHandler?: (handler: (() => void) | null) => void;
 }) => {
-  // Local row state for attendance status overrides
-  const [rowsData2, setRowsData2] = useState<any[]>([]);
-  const [editingCell, setEditingCell] = useState<EditingCell>(null);
+  const draft = useAttendanceImportRowDraft();
+  const {
+    rows: rowsData2,
+    editingCell,
+    setEditingCell,
+    updateRow,
+    commitTimeEdit,
+    receiveRows,
+  } = draft;
+  const [discardTarget, setDiscardTarget] = useState<'stay' | 'close' | null>(null);
   const isPayrollLocked = !!importData?.isBatchLocked;
   const [rowsPage, setRowsPage] = useState(1);
   const [rowsPageSize, setRowsPageSize] = useState(20);
   const exportRows = useHrTableExport('hr-attendance-import-rows', { importId: importData?.id });
   const summaryOpen = useBoolean(false);
-  const isSaving = useBoolean();
+
+  const requestClose = useCallback(() => {
+    if (draft.isSaving) {
+      shikshaMitraToast.error({
+        message: 'Wait for the attendance save to finish before leaving.',
+      });
+    } else if (draft.queryLocked) {
+      setDiscardTarget('close');
+    } else {
+      onClose();
+    }
+  }, [draft.isSaving, draft.queryLocked, onClose]);
+  useEffect(() => {
+    registerCloseHandler?.(requestClose);
+    return () => registerCloseHandler?.(null);
+  }, [registerCloseHandler, requestClose]);
 
   const [saveAttendanceImportRows] = useQueryAndMutation({
     type: 'mutation',
@@ -1138,6 +1169,7 @@ const ImportDetailDialog = ({
       size: rowsPageSize,
       resetPage: () => setRowsPage(1),
       skip: !importData?.id,
+      locked: draft.queryLocked,
     },
     useQueryAndMutation({
       type: 'query',
@@ -1151,52 +1183,23 @@ const ImportDetailDialog = ({
     })
   );
 
-  // Sync API rows into local state
+  // Incoming/background requests must not replace a draft or its open editor.
   React.useEffect(() => {
     if (rowsData?.items) {
-      setRowsData2(
+      receiveRows(
         rowsData.items.map((r: any) => ({
           ...r,
           id: r.id,
           attendanceStatus: mapImportRowStatusToUi(r.statusCode, r.status),
-        }))
+        })),
+        rowsData.totalCount || 0
       );
     }
-  }, [rowsData]);
-
-  const updateRow = React.useCallback((id: string, patch: any) => {
-    setRowsData2((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
-  }, []);
-
-  const applyTimeEditToRows = React.useCallback(
-    (rows: any[], cell: EditingCell) =>
-      rows.map((row) => {
-        if (!cell || row.id !== cell.rowId) return row;
-
-        const formatted = cell.value?.isValid() ? cell.value.format('HH:mm') : null;
-        return promotePendingImportRowToPresentWhenTimesComplete({
-          ...row,
-          [cell.field]: formatted,
-        });
-      }),
-    []
-  );
-
-  const commitTimeEdit = React.useCallback(
-    (cell: EditingCell) => {
-      if (!cell) return;
-      setRowsData2((prev) => applyTimeEditToRows(prev, cell));
-      setEditingCell(null);
-    },
-    [applyTimeEditToRows]
-  );
+  }, [rowsData, receiveRows]);
 
   const handleSubmitAttendance = async () => {
-    const rowsForSubmit = applyTimeEditToRows(rowsData2, editingCell);
-    if (editingCell) {
-      setRowsData2(rowsForSubmit);
-      setEditingCell(null);
-    }
+    if (draft.isSaving || rowsLoading || rowsFetching) return;
+    const rowsForSubmit = draft.prepareRows();
 
     const nonPendingRows = rowsForSubmit.filter(
       (r) => r.attendanceStatus !== IMPORT_ROW_STATUS.Pending
@@ -1217,13 +1220,23 @@ const ImportDetailDialog = ({
       return;
     }
 
-    isSaving.onTrue();
+    if (!draft.beginSave()) return;
     try {
       await saveAttendanceImportRows({
         importId: importData.id,
         entries,
       }).unwrap();
-      await refetchImportRows?.();
+      draft.markSaved(submitReadyRows);
+      const refreshed = await refetchImportRows?.();
+      if (refreshed?.data?.items) {
+        draft.receiveSavedRows(
+          refreshed.data.items.map((row: any) => ({
+            ...row,
+            attendanceStatus: mapImportRowStatusToUi(row.statusCode, row.status),
+          })),
+          refreshed.data.totalCount || 0
+        );
+      }
       const unresolvedCount = nonPendingRows.length - submitReadyRows.length;
       shikshaMitraToast.success({
         message:
@@ -1237,7 +1250,7 @@ const ImportDetailDialog = ({
         message: `Failed to save attendance: ${error?.data?.error?.message || 'Unknown error'}`,
       });
     } finally {
-      isSaving.onFalse();
+      draft.endSave();
     }
   };
 
@@ -1252,7 +1265,7 @@ const ImportDetailDialog = ({
       isSort: false,
       isFilter: false,
       render: (value: ImportRowStatusType, row: any) => {
-        const isRowEditable = !isPayrollLocked && !!row.employeeId;
+        const isRowEditable = !isPayrollLocked && !draft.isSaving && !!row.employeeId;
         return (
           <Box
             sx={{
@@ -1408,7 +1421,7 @@ const ImportDetailDialog = ({
         );
       },
     }),
-    [isPayrollLocked, updateRow]
+    [draft.isSaving, isPayrollLocked, updateRow]
   );
 
   const makeTimeColumn = useCallback(
@@ -1421,12 +1434,13 @@ const ImportDetailDialog = ({
       isFilter: false,
       render: (value: string, row: any) => {
         const isEditing = editingCell?.rowId === row.id && editingCell?.field === field;
-        const isRowEditable = !isPayrollLocked && !!row.employeeId;
+        const isRowEditable = !isPayrollLocked && !draft.isSaving && !!row.employeeId;
 
         if (isEditing) {
           return (
             <Stack direction="row" spacing={0.5} alignItems="center">
               <TimePicker
+                disabled={draft.isSaving}
                 value={editingCell.value}
                 onChange={(newVal) => setEditingCell((prev) => prev && { ...prev, value: newVal })}
                 format="HH:mm"
@@ -1447,6 +1461,7 @@ const ImportDetailDialog = ({
               <CustomTooltip title="Save" arrow placement="top">
                 <IconButton
                   size="small"
+                  disabled={draft.isSaving}
                   aria-label={`Save ${label}`}
                   color="primary"
                   onClick={() => {
@@ -1460,6 +1475,7 @@ const ImportDetailDialog = ({
               <CustomTooltip title="Cancel" arrow placement="top">
                 <IconButton
                   size="small"
+                  disabled={draft.isSaving}
                   aria-label={`Cancel ${label} edit`}
                   onClick={() => setEditingCell(null)}
                   sx={{ p: 0.4 }}
@@ -1487,6 +1503,7 @@ const ImportDetailDialog = ({
               <CustomTooltip title={`Edit ${label}`} arrow placement="top">
                 <IconButton
                   className="edit-btn"
+                  disabled={Boolean(editingCell)}
                   size="small"
                   aria-label={`Edit ${label}`}
                   onClick={() =>
@@ -1506,7 +1523,7 @@ const ImportDetailDialog = ({
         );
       },
     }),
-    [commitTimeEdit, editingCell, isPayrollLocked]
+    [commitTimeEdit, draft.isSaving, editingCell, isPayrollLocked, setEditingCell]
   );
 
   const editableTimeColumns = useMemo(
@@ -1678,10 +1695,12 @@ const ImportDetailDialog = ({
               <LoadingButton
                 variant="contained"
                 size="small"
-                loading={isSaving.value}
+                loading={draft.isSaving}
                 startIcon={<Iconify icon={GlobalIcons.submit} />}
                 disabled={
                   rowsData2.length === 0 ||
+                  rowsLoading ||
+                  rowsFetching ||
                   rowsData2.every((r) => r.attendanceStatus === IMPORT_ROW_STATUS.Pending)
                 }
                 onClick={handleSubmitAttendance}
@@ -1690,6 +1709,21 @@ const ImportDetailDialog = ({
               </LoadingButton>
             )}
           </Box>
+          {draft.queryLocked && (
+            <Alert
+              severity="info"
+              sx={{ mb: 1 }}
+              action={
+                <Button disabled={draft.isSaving} onClick={() => setDiscardTarget('stay')}>
+                  Discard changes
+                </Button>
+              }
+            >
+              {draft.isSaving
+                ? 'Saving attendance. Keep this review open until the save finishes.'
+                : 'Finish the time edit, then submit or discard changes before searching, sorting, filtering or changing pages.'}
+            </Alert>
+          )}
           <CustomizableTable
             showColumns
             showExport={isPayrollLocked}
@@ -1702,18 +1736,23 @@ const ImportDetailDialog = ({
             serverSidePagination
             page={rowsPage - 1}
             rowsPerPage={rowsPageSize}
-            totalCount={rowsData?.totalCount || 0}
+            totalCount={draft.totalCount}
+            paginationDisabled={draft.queryLocked}
+            searchFieldProps={{ disabled: draft.queryLocked }}
             onServerPagination={(page, pageSize) => {
+              if (draft.queryLocked) return;
               setRowsPage(page);
               setRowsPageSize(pageSize);
             }}
-            error={rowsError}
-            onRetry={refetchImportRows}
+            error={draft.queryLocked ? undefined : rowsError}
+            onRetry={() => {
+              if (!draft.queryLocked) refetchImportRows?.();
+            }}
             tableId="import-detail-preview-table"
             tableTitle="Attendance import review"
             columns={previewColumns}
             data={rowsData2}
-            isLoading={rowsLoading || rowsFetching}
+            isLoading={!draft.queryLocked && (rowsLoading || rowsFetching)}
             noDataText={
               <Stack alignItems="center" spacing={1} py={3}>
                 <Typography color="text.secondary" variant="body2">
@@ -1729,6 +1768,30 @@ const ImportDetailDialog = ({
           Unable to load import details.
         </Typography>
       )}
+      <ConfirmDialog
+        open={Boolean(discardTarget)}
+        onClose={() => setDiscardTarget(null)}
+        title="Discard attendance changes?"
+        content="Unsaved status and time changes will be discarded. Keep editing to preserve them."
+        cancelText="Keep editing"
+        action={
+          <Button
+            color="error"
+            variant="contained"
+            disabled={draft.isSaving}
+            onClick={() => {
+              if (draft.isSaving) return;
+              draft.discard();
+              const close = discardTarget === 'close';
+              setDiscardTarget(null);
+              if (close) onClose();
+              else refetchImportRows?.();
+            }}
+          >
+            Discard changes
+          </Button>
+        }
+      />
     </Box>
   );
 };

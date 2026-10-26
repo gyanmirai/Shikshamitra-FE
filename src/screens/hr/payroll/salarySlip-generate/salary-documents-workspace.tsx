@@ -356,7 +356,7 @@ export default function SalaryDocumentsWorkspace({
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:refresh" width={18} />}
                 disabled={!ready || loading}
-                onClick={() => setRefresh((value) => value + 1)}
+                onClick={() => previewView.refetch()}
               >
                 Refresh Preview
               </Button>
@@ -368,11 +368,7 @@ export default function SalaryDocumentsWorkspace({
         <Alert
           severity="error"
           action={
-            <Button
-              size="small"
-              disabled={!ready || loading}
-              onClick={() => setRefresh((value) => value + 1)}
-            >
+            <Button size="small" disabled={!ready || loading} onClick={() => previewView.refetch()}>
               Retry preview
             </Button>
           }

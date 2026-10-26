@@ -3,6 +3,94 @@ import * as XLSX from 'xlsx';
 import { test, expect } from '@playwright/test';
 
 for (const width of [390, 768, 1440]) {
+  test(`import row drafts survive query guards, cancel, discard and in-flight save at ${width}px`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'import draft', exact: true }).click();
+    const row = page.locator('tbody tr').filter({ hasText: 'Import staff 000' });
+    await expect(row).toContainText('09:00');
+    await row.getByRole('button', { name: 'Mark import absent for import-0', exact: true }).click();
+    await expect(row.getByLabel('Current attendance')).toHaveText('Absent');
+    await expect(page.getByRole('textbox', { name: 'Search table' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Go to next page' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Sort by Staff', exact: true })).toHaveCount(0);
+    let refreshed = page.waitForResponse((response) =>
+      response.url().endsWith('/synthetic-hr/typed-list')
+    );
+    await page.getByRole('button', { name: 'Background row refresh', exact: true }).click();
+    await refreshed;
+    await expect(row.getByLabel('Current attendance')).toHaveText('Absent');
+    await page.getByRole('button', { name: 'Discard import draft', exact: true }).click();
+    await page.getByRole('button', { name: 'Keep editing', exact: true }).click();
+    await expect(row.getByLabel('Current attendance')).toHaveText('Absent');
+    await page.getByRole('button', { name: 'Discard import draft', exact: true }).click();
+    await page.getByRole('button', { name: 'Confirm discard import', exact: true }).click();
+    await expect(row.getByLabel('Current attendance')).toHaveText('Present');
+    await row.getByRole('button', { name: 'Edit import time for import-0', exact: true }).click();
+    await page.getByLabel('Import in time', { exact: true }).fill('10:25');
+    refreshed = page.waitForResponse((response) =>
+      response.url().endsWith('/synthetic-hr/typed-list')
+    );
+    await page.getByRole('button', { name: 'Background row refresh', exact: true }).click();
+    await refreshed;
+    await expect(page.getByLabel('Import in time', { exact: true })).toHaveValue('10:25');
+    await expect(page.getByRole('textbox', { name: 'Search table' })).toBeDisabled();
+    await page.getByRole('button', { name: 'Cancel import time', exact: true }).click();
+    await expect(row).toContainText('09:00');
+    await expect(page.getByRole('textbox', { name: 'Search table' })).toBeEnabled();
+    await row.getByRole('button', { name: 'Edit import time for import-0', exact: true }).click();
+    await page.getByLabel('Import in time', { exact: true }).fill('10:25');
+    await page.getByRole('button', { name: 'Commit import time', exact: true }).click();
+    let releaseSave!: () => Promise<void>;
+    await page.route('**/synthetic-hr/save-import-rows', (route) => {
+      releaseSave = () => route.continue();
+    });
+    const saving = page.waitForRequest((request) =>
+      request.url().endsWith('/synthetic-hr/save-import-rows')
+    );
+    await page.getByRole('button', { name: 'Submit import draft', exact: true }).click();
+    const payload = (await saving).postDataJSON();
+    expect(payload.entries[0]).toMatchObject({
+      rowId: 'import-0',
+      inTime: '10:25',
+      statusWire: 'Present',
+    });
+    await expect(
+      page.getByRole('button', { name: 'Discard import draft', exact: true })
+    ).toBeDisabled();
+    await expect(
+      row.getByRole('button', { name: 'Mark import absent for import-0', exact: true })
+    ).toBeDisabled();
+    await expect(page.getByRole('textbox', { name: 'Search table' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Go to next page' })).toBeDisabled();
+    await releaseSave();
+    await expect(page.getByRole('textbox', { name: 'Search table' })).toBeEnabled();
+    const query = page.waitForRequest(
+      (request) =>
+        request.url().endsWith('/synthetic-hr/table-query') &&
+        request.postDataJSON().criteria.search === 'Import staff 000'
+    );
+    await page.getByRole('textbox', { name: 'Search table' }).fill('Import staff 000');
+    await query;
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+    const sortedResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/synthetic-hr/table-query') &&
+        response
+          .request()
+          .postDataJSON()
+          .criteria.sorts.some((sort: any) => sort.column === 'timeIn')
+    );
+    await page.getByRole('button', { name: 'Sort by In time', exact: true }).click();
+    const savedQuery = await (await sortedResponse).json();
+    expect(savedQuery.totalCount).toBe(1);
+    expect(savedQuery.items[0]).toMatchObject({ id: 'import-0', timeIn: '10:25', statusCode: 0 });
+    await expect(row).toContainText('10:25');
+    await expect(row.getByLabel('Current attendance')).toHaveText('Present');
+    await page.screenshot({ path: info.outputPath('saved-import-draft.png'), fullPage: true });
+  });
   test(`typed global criteria and complete filtered export at ${width}px`, async ({
     page,
   }, info) => {

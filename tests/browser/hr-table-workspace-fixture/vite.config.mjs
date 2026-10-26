@@ -23,8 +23,36 @@ const operationalRows = Array.from({ length: 260 }, (_, index) => ({
   wageCeiling: index === 259 ? null : (index % 20) / 2,
   effectiveFrom: new Date(Date.UTC(2026, 9, 1 + index)).toISOString().slice(0, 10),
 }));
+const imports = new Map();
+function importRows(key) {
+  if (!imports.has(key))
+    imports.set(
+      key,
+      Array.from({ length: 30 }, (_, index) => ({
+        id: `import-${index}`,
+        employeeId: `employee-${index}`,
+        employeeName: `Import staff ${String(index).padStart(3, '0')}`,
+        rowNumber: index + 1,
+        attendanceDate: '2026-10-26',
+        timeIn: '09:00',
+        timeOut: '17:00',
+        status: 'Present',
+        statusCode: 0,
+        errors: [],
+        warnings: [],
+      }))
+    );
+  return imports.get(key);
+}
 function operationalMatches(query, criteria = {}) {
-  let matches = query.fixtureState === 'empty' ? [] : [...operationalRows];
+  let matches =
+    query.fixtureState === 'empty'
+      ? []
+      : [...(query.fixtureKind === 'import' ? importRows(query.fixtureKey) : operationalRows)];
+  if (criteria.search)
+    matches = matches.filter((row) =>
+      JSON.stringify(row).toLowerCase().includes(criteria.search.toLowerCase())
+    );
   for (const column of new Set((criteria.filters || []).map((filter) => filter.column))) {
     const alternatives = criteria.filters.filter((filter) => filter.column === column);
     matches = matches.filter((row) =>
@@ -55,6 +83,23 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use('/synthetic-hr', async (req, res) => {
           const url = new URL(req.url, 'http://localhost');
+          if (url.pathname === '/save-import-rows' && req.method === 'POST') {
+            let raw = '';
+            for await (const chunk of req) raw += chunk;
+            const body = JSON.parse(raw);
+            for (const entry of body.entries) {
+              const row = importRows(body.fixtureKey).find((item) => item.id === entry.rowId);
+              Object.assign(row, {
+                timeIn: entry.inTime,
+                timeOut: entry.outTime,
+                status: entry.statusWire,
+                statusCode: { Present: 0, Absent: 1, HalfDay: 2 }[entry.statusWire],
+              });
+            }
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ upsertedCount: body.entries.length }));
+            return;
+          }
           if (['/table-query', '/typed-list'].includes(url.pathname) && req.method === 'POST') {
             let raw = '';
             for await (const chunk of req) raw += chunk;
