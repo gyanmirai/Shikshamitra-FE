@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { it, vi, expect, describe, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import hrModule from 'src/constants/hr-menus';
+import { navSubData } from 'src/layouts/config-nav-dashboard';
 
 import { NavList } from './nav-list';
 
@@ -70,8 +70,8 @@ describe('active navigation ancestors', () => {
     ['/hr/employee/onboarding?application=application-123', 'Staff Onboarding', 'Staff Directory'],
   ])('selects only the matching Staff destination on %s', (pathname, selected, other) => {
     route.pathname = pathname;
-    const staff = Object.values(hrModule(false))
-      .flatMap((groups) => groups.flatMap((group) => group.items))
+    const staff = navSubData()['/hr']
+      .flatMap((group) => group.items)
       .find((item) => item.title === 'Staff');
     render(<Navigation data={staff as NavItemBaseProps} />);
     expect(screen.getByRole('button', { name: selected })).toHaveAttribute('data-active', 'true');
