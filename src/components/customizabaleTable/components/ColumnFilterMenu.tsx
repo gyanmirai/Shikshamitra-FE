@@ -8,9 +8,9 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import {
   Box,
-  Menu,
   Select,
   Button,
+  Popover,
   MenuItem,
   TextField,
   InputLabel,
@@ -207,7 +207,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
     onClose();
   };
   return (
-    <Menu
+    <Popover
       anchorEl={anchorEl?.element}
       open={Boolean(anchorEl)}
       onClose={() => {
@@ -220,7 +220,13 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
       }}
       slotProps={{ paper: { sx: { width: '260px' } } }}
     >
-      <Box component="form" sx={{ p: 2, maxWidth: 350 }} onSubmit={formik.handleSubmit}>
+      <Box
+        component="form"
+        role="dialog"
+        aria-label={`Filter ${typeof anchorEl?.column.label === 'string' ? anchorEl.column.label : 'column'}`}
+        sx={{ p: 2, maxWidth: 350 }}
+        onSubmit={formik.handleSubmit}
+      >
         {anchorEl?.column.filterType !== 'enum' && (
           <FormControl
             fullWidth
@@ -369,6 +375,6 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
           </Button>
         </Box>
       </Box>
-    </Menu>
+    </Popover>
   );
 };

@@ -15,6 +15,7 @@ import {
   Drawer,
   Divider,
   Collapse,
+  IconButton,
   Typography,
   LinearProgress,
 } from '@mui/material';
@@ -83,7 +84,6 @@ function AuditTrailEventCard({
       {/* Event Card */}
       <Paper
         variant="outlined"
-        onClick={hasTable ? () => setExpanded(!expanded) : undefined}
         sx={{
           p: 1.5,
           mb: 1.5,
@@ -114,12 +114,21 @@ function AuditTrailEventCard({
                 {formatHrAuditDateTime(event.occurredAt, event.occurredAtDisplay)}
               </Typography>
               {hasTable ? (
-                <Iconify
-                  icon={expanded ? 'fluent:chevron-up-12-filled' : 'fluent:chevron-down-12-filled'}
-                  width={14}
-                  height={14}
-                  sx={{ color: 'text.secondary' }}
-                />
+                <IconButton
+                  size="small"
+                  aria-label={`${expanded ? 'Hide' : 'Show'} changes for ${formatHrAuditText(event.summary)}`}
+                  aria-expanded={expanded}
+                  onClick={() => setExpanded(!expanded)}
+                >
+                  <Iconify
+                    icon={
+                      expanded ? 'fluent:chevron-up-12-filled' : 'fluent:chevron-down-12-filled'
+                    }
+                    width={14}
+                    height={14}
+                    sx={{ color: 'text.secondary' }}
+                  />
+                </IconButton>
               ) : null}
             </Stack>
           </Stack>

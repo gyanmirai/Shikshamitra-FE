@@ -90,6 +90,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   );
   const generatedId = useId();
   const labelId = props.labelId ?? `${generatedId}-label`;
+  const helperId = helperTextProps?.id ?? `${generatedId}-helper`;
   const selectedOption = options.find((option) => option[valueKey] === value);
   const selectedDescription = optionDescriptionKey && selectedOption?.[optionDescriptionKey];
   const optionInfo = (description: string | number, optionLabel: string | number) => (
@@ -121,6 +122,39 @@ const CustomSelect = <T extends string, J extends boolean>({
       onChange(newValue as J extends true ? string[] | number[] : string | number);
     }
   };
+
+  const searchHeader = isSearch ? (
+    <ListSubheader>
+      <TextField
+        autoFocus
+        fullWidth
+        size="small"
+        placeholder="Search options"
+        inputProps={{ 'aria-label': `Search ${label || 'options'}` }}
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        onKeyDown={(event) => {
+          // MenuList cannot move from the nested search input to its sibling options.
+          // Keep text editing in the input, but hand arrows to enabled choices.
+          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            event.stopPropagation();
+            const choices = event.currentTarget
+              .closest('[role="listbox"]')
+              ?.querySelectorAll<HTMLElement>(
+                '[role="option"][data-value]:not([aria-disabled="true"])'
+              );
+            const choice = event.key === 'ArrowDown' ? choices?.[0] : choices?.[choices.length - 1];
+            choice?.focus();
+          } else if (event.key !== 'Escape' && event.key !== 'Tab') {
+            event.stopPropagation();
+            if (event.key === 'Enter') event.preventDefault();
+          }
+        }}
+        sx={{ my: 1 }}
+      />
+    </ListSubheader>
+  ) : undefined;
 
   return (
     <FormControl
@@ -155,9 +189,18 @@ const CustomSelect = <T extends string, J extends boolean>({
             onChange={handleChange}
             size="small"
             label={label}
+            SelectDisplayProps={{
+              ...props.SelectDisplayProps,
+              'aria-labelledby':
+                props.SelectDisplayProps?.['aria-labelledby'] ?? (label ? labelId : undefined),
+            }}
             inputProps={{
               ...inputProps,
               'aria-label': inputProps?.['aria-label'] ?? label,
+              'aria-describedby':
+                [inputProps?.['aria-describedby'], helperText && helperId]
+                  .filter(Boolean)
+                  .join(' ') || undefined,
             }}
             disabled={disabled}
             endAdornment={
@@ -199,28 +242,19 @@ const CustomSelect = <T extends string, J extends boolean>({
                 }),
             })}
             {...props}
+            MenuProps={{
+              ...props.MenuProps,
+              ...(isSearch && { autoFocus: false, disableAutoFocusItem: true }),
+              MenuListProps: {
+                ...props.MenuProps?.MenuListProps,
+                ...(isSearch && { subheader: searchHeader }),
+              },
+            }}
             onClose={(event) => {
               setSearch('');
               props.onClose?.(event);
             }}
           >
-            {isSearch && (
-              <ListSubheader>
-                <TextField
-                  autoFocus
-                  fullWidth
-                  size="small"
-                  placeholder="Search options"
-                  inputProps={{ 'aria-label': `Search ${label || 'options'}` }}
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key !== 'Escape') event.stopPropagation();
-                  }}
-                  sx={{ my: 1 }}
-                />
-              </ListSubheader>
-            )}
             {filteredOptions.length === 0 ? (
               <MenuItem
                 disabled={typeof noOptionsMessage === 'string'}
@@ -263,6 +297,8 @@ const CustomSelect = <T extends string, J extends boolean>({
                   >
                     {multiple && (
                       <Checkbox
+                        tabIndex={-1}
+                        inputProps={{ 'aria-hidden': true }}
                         checked={(value as string[])?.indexOf(option[valueKey] as string) > -1}
                         disabled={isDisabled}
                       />
@@ -280,16 +316,36 @@ const CustomSelect = <T extends string, J extends boolean>({
               })
             )}
           </Select>
-          {helperText && <FormHelperText {...helperTextProps}>{helperText}</FormHelperText>}
+          {helperText && (
+            <FormHelperText {...helperTextProps} id={helperId}>
+              {helperText}
+            </FormHelperText>
+          )}
 
           {addOtherItemText !== '' && (
             <Typography
-              component="span"
+              component="button"
+              type="button"
+              disabled={disabled || !addOtherItemOnClick}
               fontWeight={500}
               textAlign="right"
               color="primary.main"
               fontSize={12}
-              sx={{ cursor: 'pointer', position: 'absolute', bottom: '-20px', right: '0' }}
+              sx={{
+                cursor: 'pointer',
+                position: 'absolute',
+                bottom: '-20px',
+                right: '0',
+                border: 0,
+                p: 0,
+                bgcolor: 'transparent',
+                font: 'inherit',
+                '&:focus-visible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: 2,
+                },
+              }}
               onClick={addOtherItemOnClick}
             >
               {addOtherItemText}

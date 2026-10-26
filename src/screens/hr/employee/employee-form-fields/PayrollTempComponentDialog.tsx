@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
+import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -66,11 +67,19 @@ export default function PayrollTempComponentDialog({
     formik.resetForm();
     onClose();
   };
+  useFormikErrorFocus(formik);
 
   return (
     <CustomDialog
       open={open}
       handleClose={handleClose}
+      formProps={{
+        onSubmit: (event) => {
+          event.preventDefault();
+          formik.handleSubmit();
+        },
+        noValidate: true,
+      }}
       title={`Add ${type === 'earning' ? 'Earning' : 'Deduction'} Component`}
       maxWidth="sm"
     >
@@ -143,7 +152,8 @@ export default function PayrollTempComponentDialog({
         <Button
           size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          onClick={() => formik.handleSubmit()}
+          type="submit"
+          disabled={formik.isSubmitting}
           variant="contained"
         >
           Submit
