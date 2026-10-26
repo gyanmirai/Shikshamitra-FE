@@ -154,7 +154,12 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         </Box>
         {assignmentPreview?.resolutionSteps?.length ? (
           <Box>
-            <SectionTable columns={['Scope', 'Target', 'Status', 'Reason', 'Priority']}>
+            <SectionTable
+              tableId="hr-assignment-resolution"
+              tableTitle="Assignment resolution"
+              columns={['Scope', 'Target', 'Status', 'Reason', 'Priority']}
+              columnDefinitions={[{}, {}, {}, {}, { filterType: 'number' }]}
+            >
               {assignmentPreview.resolutionSteps.map((step, index) => (
                 <TableRow key={`${step.source}-${step.targetKey || index}`} hover>
                   <TableCell>{toLabel(step.targetType || step.source)}</TableCell>

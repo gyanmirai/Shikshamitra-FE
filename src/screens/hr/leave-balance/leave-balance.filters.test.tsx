@@ -74,8 +74,25 @@ describe('leave ledger finite availability filters', () => {
     expect(unlimited.remaining).toBe(0);
     expect(column.exportValue!(unlimited.remaining, unlimited)).toBe('Unlimited');
     expect(column.filterValue!(unlimited.remaining, unlimited)).toBeNull();
+    expect(column.sortValue!(unlimited.remaining, unlimited)).toBe(Infinity);
     expect(column.render!(unlimited.remaining, unlimited)).toMatchObject({
       props: { label: 'Unlimited' },
     });
+  });
+
+  it('uses the pendingDays dataset field for display, fractional filters and export', () => {
+    render(<LeaveBalanceLedger rows={rows} isLoading={false} />);
+    const { data, columns } = captured.props!;
+    const column = columns.find((item) => item.label === 'Pending')!;
+    const fractional = data[1];
+    expect(column.id).toBe('pendingDays');
+    expect(column.render!(fractional[column.id], fractional)).toBe('0.5');
+    expect(
+      matchesTableRowFilters(
+        fractional,
+        [{ column: column.id, type: 'equals', value: 0.5, valueType: 'number' }],
+        columns
+      )
+    ).toBe(true);
   });
 });

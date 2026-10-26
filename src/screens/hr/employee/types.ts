@@ -150,10 +150,13 @@ export interface IPayrollInformation {
 }
 
 export interface IReportingManager {
+  kind?: 'Employee' | 'TenantAdministrator';
   id: string;
   employeeIdentifier: string;
   fullName: string;
   designation: string;
+  status?: number;
+  email?: string;
 }
 
 export interface IReportingInformationResponse {

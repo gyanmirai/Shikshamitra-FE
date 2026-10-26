@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -512,7 +513,25 @@ export function LeavePoliciesPanel() {
         tableId="hr-leave-policies-workspace"
         tableTitle="Leave policies"
         onExport={exportTable}
-        columns={columns}
+        {...serverColumnFilters(
+          columns,
+          [
+            {
+              column: 'status',
+              query: 'archivedOnly',
+              emptyValue: false,
+              options: [
+                { value: false, label: 'Current (active or draft)' },
+                { value: true, label: 'Archived' },
+              ],
+            },
+          ],
+          { archivedOnly: archiveView === 'archived' },
+          ({ archivedOnly }) => {
+            setArchiveView(archivedOnly ? 'archived' : 'current');
+            setTableQuery((current) => ({ ...current, page: 1 }));
+          }
+        )}
         data={rows}
         error={error}
         onRetry={refetch}

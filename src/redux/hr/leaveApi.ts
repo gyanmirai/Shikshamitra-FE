@@ -8,7 +8,7 @@ type LeaveRequestQueryArgs = {
   page?: number;
   pageSize?: number;
   search?: string;
-  status?: string;
+  status?: string | number;
   leavePolicyId?: string;
   paidType?: string;
   employeeId?: string;
@@ -95,7 +95,7 @@ export const buildLeaveRequestQueryParams = ({
   page,
   pageSize,
   ...(search ? { search } : {}),
-  ...(status ? { status } : {}),
+  ...(status !== undefined && status !== '' ? { status } : {}),
   ...(leavePolicyId ? { leavePolicyId } : {}),
   ...(paidType ? { paidType } : {}),
   ...(employeeId ? { employeeId } : {}),

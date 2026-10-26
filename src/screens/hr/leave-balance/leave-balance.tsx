@@ -1,5 +1,7 @@
 'use client';
 
+import { leaveRequestColumnBindings } from 'src/screens/hr/leave-request/leave-table-filters';
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -95,6 +97,7 @@ export const LeaveBalanceLedger = ({
         id: 'remaining',
         label: 'Available',
         filterValue: (value, row) => (row.isUnlimited ? null : value),
+        sortValue: (value, row) => (row.isUnlimited ? Infinity : Number(value)),
         valueType: 'number',
         align: 'right',
         exportValue: (value, row) => (row.isUnlimited ? 'Unlimited' : Number(value)),
@@ -123,7 +126,7 @@ export const LeaveBalanceLedger = ({
       },
       {
         filterType: 'number',
-        id: 'pending',
+        id: 'pendingDays',
         label: 'Pending',
         valueType: 'number',
         align: 'right',
@@ -132,6 +135,9 @@ export const LeaveBalanceLedger = ({
       {
         id: 'usage',
         label: 'Utilization',
+        filterType: 'number',
+        filterValue: (value, row) => (row.isUnlimited ? null : value),
+        sortValue: (value, row) => (row.isUnlimited ? null : Number(value)),
         align: 'right',
         exportValue: (value, row) => (row.isUnlimited ? 'Unlimited' : `${String(value)}%`),
         render: (value, row) => (row.isUnlimited ? '-' : `${String(value)}%`),
@@ -170,7 +176,13 @@ const LeaveBalance = ({
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const actor = useSelector((state: RootState) => state.auth.employee);
   const scopedEmployeeId = employeeId || actor?.id;
-  const [historyPage, setHistoryPage] = useState({ page: 1, pageSize: 20, search: '' });
+  const [historyPage, setHistoryPage] = useState({
+    page: 1,
+    pageSize: 20,
+    search: '',
+    status: '',
+    paidType: '',
+  });
   useEffect(() => {
     setHistoryPage((current) => ({ ...current, page: 1 }));
   }, [currentYear?.id, scopedEmployeeId, mode]);
@@ -375,6 +387,7 @@ const LeaveBalance = ({
               serverSideSearch
               page={historyPage.page - 1}
               rowsPerPage={historyPage.pageSize}
+              searchTerm={historyPage.search}
               totalCount={historyData?.totalCount || 0}
               onServerPagination={(page, pageSize) =>
                 setHistoryPage((current) => ({ ...current, page, pageSize }))
@@ -382,7 +395,18 @@ const LeaveBalance = ({
               onServerSearch={(search) =>
                 setHistoryPage((current) => ({ ...current, page: 1, search }))
               }
-              columns={historyColumns}
+              {...serverColumnFilters(
+                historyColumns,
+                leaveRequestColumnBindings,
+                historyPage,
+                (patch) =>
+                  setHistoryPage((current) => ({
+                    ...current,
+                    page: 1,
+                    status: String(patch.status ?? ''),
+                    paidType: String(patch.paidType ?? ''),
+                  }))
+              )}
               data={historyRows}
               isLoading={isLoadingHistory}
               tableTitle="Leave History"

@@ -5,7 +5,8 @@ import type { LabelColor } from 'src/components/label';
 import React from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, MenuItem, MenuList } from '@mui/material';
+import { Box, Alert, MenuItem, MenuList } from '@mui/material';
+import { hrPaths } from 'src/constants/hr-menus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -16,14 +17,23 @@ import {
 } from 'src/enums/employee-leave-status';
 
 const EventsAndHolidaysRequest = () => (
-  <Box>
+  <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
     <CustomBreadcrumbs
       heading="Request"
-      links={[{ name: 'HR' }, { name: 'Events & Holidays' }, { name: 'Request' }]}
+      links={[
+        { name: 'HR/Staff', href: hrPaths.dashboard },
+        { name: 'Events & Holidays', href: hrPaths.eventsHolidays },
+        { name: 'Request' },
+      ]}
       description="The Request Screen allows you to handle various requests. You can approve or reject requests based on the details provided."
     />
+    <Alert severity="info" sx={{ mb: 1 }}>
+      This legacy page contains demonstration requests. Approval and rejection are unavailable until
+      a staff request API is connected.
+    </Alert>
     <CustomizableTable
-      noDataText={<>No Leave Requet Found </>}
+      noDataText="No event or holiday requests found."
+      exportContext={['Demonstration requests only; not staff records.']}
       tableId="event-holiday-request"
       tableTitle="Event and holiday requests"
       columns={[
@@ -50,6 +60,7 @@ const EventsAndHolidaysRequest = () => (
           label: 'Actions',
           isSort: false,
           isFilter: false,
+          excludeFromExport: true,
           minWidth: 50,
           sticky: true,
           render(value, row) {
@@ -58,11 +69,11 @@ const EventsAndHolidaysRequest = () => (
                 placement="right-top"
                 actions={() => (
                   <MenuList>
-                    <MenuItem onClick={() => {}}>
+                    <MenuItem disabled>
                       <Iconify icon="mdi:approve" sx={{ color: 'success.main' }} />
                       Approve
                     </MenuItem>
-                    <MenuItem onClick={() => {}}>
+                    <MenuItem disabled>
                       <Iconify icon="entypo:cross" sx={{ color: 'error.main' }} />
                       Reject
                     </MenuItem>

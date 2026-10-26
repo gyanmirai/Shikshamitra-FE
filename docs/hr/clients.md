@@ -33,6 +33,8 @@ Directory refreshes keep matching cached rows visible with a labelled progress b
 
 ## Client map
 
+The reporting-manager field uses `employeeApi.getReportingManagerOptions` at `/employees/reporting-manager/options`, with server search and the existing employee cache tag. It retains the selected `kind` (`Employee` or `TenantAdministrator`) in Formik, includes `reportingManagerKind` on both onboarding and profile updates, and restores it from the reporting-manager response. Administrator login IDs are never sent to employee-detail reads. Deploy the [backend reporting-manager contract and migration](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md) before this selector.
+
 Use this table before searching `src/redux`:
 
 | Client                             | Endpoint families                                                                             | Backend owner                   |

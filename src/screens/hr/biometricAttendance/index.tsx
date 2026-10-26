@@ -153,6 +153,7 @@ const PREVIEW_COLUMNS: import('src/components/customizabaleTable/types').IColumn
   },
   {
     id: 'attendanceDate',
+    filterType: 'date',
     label: 'Date',
     minWidth: '8vw',
     align: 'left',

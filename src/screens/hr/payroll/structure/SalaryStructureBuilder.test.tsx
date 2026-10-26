@@ -1,5 +1,7 @@
 import type { FormikProps } from 'formik';
+import type { StaffStatutoryProfile } from 'src/redux/hr/statutory-profile-api';
 
+import { useFormik } from 'formik';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
@@ -201,6 +203,29 @@ const renderBuilder = (props: Partial<React.ComponentProps<typeof SalaryStructur
     </ThemeProvider>
   );
 
+function OnboardingBuilder({ onSalaryChange }: { onSalaryChange: (value: any) => void }) {
+  const statutoryForm = useFormik<StaffStatutoryProfile>({
+    initialValues: {
+      applyPf: true,
+      applyEsic: true,
+      pfNumber: '',
+      uanNumber: '',
+      esicInsuranceNumber: '',
+      pfDisabledReason: '',
+      esicDisabledReason: '',
+    },
+    onSubmit: () => {},
+  });
+  return (
+    <SalaryStructureBuilder
+      formik={formik}
+      dateOfJoining="2026-11-18"
+      initialMonth="2026-11"
+      onboarding={{ statutoryForm, onSalaryChange }}
+    />
+  );
+}
+
 describe('SalaryStructureBuilder initialization and activation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -231,6 +256,97 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     mocks.canViewEsi = true;
     mocks.canManageEsi = true;
     mocks.updateEnrollment.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });
+  });
+
+  it('prepares onboarding salary before an employee exists without saving or activating', async () => {
+    const onSalaryChange = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder onSalaryChange={onSalaryChange} />
+      </ThemeProvider>
+    );
+    await waitFor(() => expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11'));
+    expect(screen.getByLabelText('Effective month')).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Save salary' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Monthly cost to school (CTC)'), {
+      target: { value: '18000' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await waitFor(() =>
+      expect(onSalaryChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          monthlyAmount: 18000,
+          templateVersionId: 'version-default',
+          effectiveMonth: '2026-11-01T00:00:00.000Z',
+        })
+      )
+    );
+    expect(mocks.calculate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        employeeId: null,
+        statutoryProfileOverride: expect.objectContaining({ applyPf: true, applyEsic: true }),
+      })
+    );
+    expect(mocks.saveSalary).not.toHaveBeenCalled();
+    expect(mocks.activate).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText('Monthly cost to school (CTC)'), {
+      target: { value: '0' },
+    });
+    await waitFor(() => expect(onSalaryChange).toHaveBeenLastCalledWith(null));
+    expect(screen.getByRole('button', { name: /preview/i })).toBeDisabled();
+  });
+
+  it('requires the existing explicit PF enrollment choice for onboarding above the threshold', async () => {
+    const onSalaryChange = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder onSalaryChange={onSalaryChange} />
+      </ThemeProvider>
+    );
+    await waitFor(() => expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11'));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Amount basis' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    fireEvent.change(screen.getByLabelText('Monthly salary'), { target: { value: '50000' } });
+    await waitFor(() =>
+      expect(screen.getByRole('radio', { name: 'Opt in to PF' })).toBeInTheDocument()
+    );
+    expect(onSalaryChange).toHaveBeenLastCalledWith(null);
+    expect(screen.getByRole('button', { name: 'Preview salary' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('radio', { name: 'Opt in to PF' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await waitFor(() =>
+      expect(onSalaryChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ monthlyAmount: 50000 })
+      )
+    );
+  });
+
+  it('keeps onboarding input after a preview failure and permits retry', async () => {
+    const onSalaryChange = vi.fn();
+    mocks.calculate.mockReturnValueOnce({
+      unwrap: vi
+        .fn()
+        .mockRejectedValue({ status: 500, data: { detail: 'Synthetic preview failure' } }),
+    });
+    render(
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder onSalaryChange={onSalaryChange} />
+      </ThemeProvider>
+    );
+    await waitFor(() => expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11'));
+    fireEvent.change(screen.getByLabelText('Monthly cost to school (CTC)'), {
+      target: { value: '18000' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await waitFor(() => expect(screen.getByText('Synthetic preview failure')).toBeInTheDocument());
+    expect(onSalaryChange).toHaveBeenLastCalledWith(null);
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 18,000');
+    fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await waitFor(() =>
+      expect(onSalaryChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ monthlyAmount: 18000 })
+      )
+    );
   });
 
   it('preselects the school default template and joining month for a new salary setup', async () => {

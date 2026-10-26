@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters, nameContains } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -297,131 +298,138 @@ const EarningComponent = () => {
         }
         onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
         isLoading={getEarningComponentsLoading || tableFetching}
-        columns={[
-          {
-            id: 'earningComponentName',
-            label: 'Name',
-            align: 'left',
-            minWidth: '20vw',
-            sticky: true,
-          },
-          {
-            id: 'earningType',
-            label: 'Earning Type',
-            align: 'left',
-            minWidth: '10vw',
-            filterType: 'enum',
-            enumOptions: [
-              { label: 'Fixed', value: 'Fixed' },
-              { label: 'Variable', value: 'Variable' },
-            ],
-            render(value: string | boolean) {
-              if (typeof value === 'boolean') {
-                return value ? 'Fixed' : 'Variable';
-              }
-              return value || 'Fixed';
+        searchTerm={tableQuery.search}
+        {...serverColumnFilters(
+          [
+            {
+              id: 'earningComponentName',
+              label: 'Name',
+              align: 'left',
+              minWidth: '20vw',
+              sticky: true,
             },
-          },
-          {
-            id: 'calculationType',
-            label: 'Calculation Type',
-            align: 'left',
-            minWidth: '10vw',
-            filterType: 'enum',
-            enumOptions: [
-              { label: 'Amount Based', value: 'Amount' },
-              { label: 'Percentage Based', value: 'Percentage' },
-            ],
-          },
-          {
-            id: 'amount',
-            label: 'Amount / Percentage',
-            align: 'right',
-            minWidth: '10vw',
-            filterType: 'number',
-            render(value, row) {
-              if (row.calculationType === 'PERCENTAGE') {
+            {
+              id: 'earningType',
+              label: 'Earning Type',
+              align: 'left',
+              minWidth: '10vw',
+              filterType: 'enum',
+              enumOptions: [
+                { label: 'Fixed', value: 'Fixed' },
+                { label: 'Variable', value: 'Variable' },
+              ],
+              render(value: string | boolean) {
+                if (typeof value === 'boolean') {
+                  return value ? 'Fixed' : 'Variable';
+                }
+                return value || 'Fixed';
+              },
+            },
+            {
+              id: 'calculationType',
+              label: 'Calculation Type',
+              align: 'left',
+              minWidth: '10vw',
+              filterType: 'enum',
+              enumOptions: [
+                { label: 'Amount Based', value: 'Amount' },
+                { label: 'Percentage Based', value: 'Percentage' },
+              ],
+            },
+            {
+              id: 'amount',
+              label: 'Amount / Percentage',
+              align: 'right',
+              minWidth: '10vw',
+              filterType: 'number',
+              render(value, row) {
+                if (row.calculationType === 'PERCENTAGE') {
+                  return (
+                    <Typography variant="caption" fontSize="13px">
+                      {row.percentage}%
+                    </Typography>
+                  );
+                }
                 return (
                   <Typography variant="caption" fontSize="13px">
-                    {row.percentage}%
+                    {formatNumber(value, 'INR')}
                   </Typography>
                 );
-              }
-              return (
-                <Typography variant="caption" fontSize="13px">
-                  {formatNumber(value, 'INR')}
-                </Typography>
-              );
+              },
             },
-          },
-          {
-            id: 'customComponent.componentName',
-            label: 'Calculation base',
-            align: 'left',
-            minWidth: '10vw',
-            render(value: string, row: any) {
-              return row?.calculationBase === 'GROSS' ? 'Gross Salary' : value || '-';
+            {
+              id: 'customComponent.componentName',
+              label: 'Calculation base',
+              align: 'left',
+              minWidth: '10vw',
+              render(value: string, row: any) {
+                return row?.calculationBase === 'GROSS' ? 'Gross Salary' : value || '-';
+              },
             },
-          },
-          { id: 'description', label: 'Description', align: 'left', minWidth: '20vw' },
-          {
-            id: 'visibleInPayslip',
-            label: 'Visible In Payslip',
-            align: 'left',
-            minWidth: '10vw',
-            filterType: 'enum',
-            enumOptions: [
-              { value: true, label: 'Yes' },
-              { value: false, label: 'No' },
-            ],
-            render(value: boolean) {
-              return value ? 'Yes' : 'No';
+            { id: 'description', label: 'Description', align: 'left', minWidth: '20vw' },
+            {
+              id: 'visibleInPayslip',
+              label: 'Visible In Payslip',
+              align: 'left',
+              minWidth: '10vw',
+              filterType: 'enum',
+              enumOptions: [
+                { value: true, label: 'Yes' },
+                { value: false, label: 'No' },
+              ],
+              render(value: boolean) {
+                return value ? 'Yes' : 'No';
+              },
             },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            minWidth: '4vw',
-            align: 'left',
-            sticky: true,
-            stickyPosition: 'right' as const,
-            isSort: false,
-            isFilter: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showThreeDots={canViewEsi}
-                  moreLabel={`More actions for ${row.earningComponentName}`}
-                  actions={({ popover }) => (
-                    <MenuList dense>
-                      <MenuItem
-                        onClick={() => {
-                          popover.onClose();
-                          setEsiComponent({
-                            id: row.id,
-                            name: row.earningComponentName || row.componentName || 'Earning',
-                          });
-                        }}
-                      >
-                        ESIC treatment
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                  showEditIcon
-                  showDeleteIcon
-                  handleEditClick={() => {
-                    setEditData(row);
-                    isEarningComponentOpen.onTrue();
-                  }}
-                  handleDeleteClick={() => {
-                    setDeleteInformation(row as PayElement);
-                    confirm.onTrue();
-                  }}
-                />
-              );
+            {
+              id: 'action',
+              label: 'Action',
+              minWidth: '4vw',
+              align: 'left',
+              sticky: true,
+              stickyPosition: 'right' as const,
+              isSort: false,
+              isFilter: false,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    showThreeDots={canViewEsi}
+                    moreLabel={`More actions for ${row.earningComponentName}`}
+                    actions={({ popover }) => (
+                      <MenuList dense>
+                        <MenuItem
+                          onClick={() => {
+                            popover.onClose();
+                            setEsiComponent({
+                              id: row.id,
+                              name: row.earningComponentName || row.componentName || 'Earning',
+                            });
+                          }}
+                        >
+                          ESIC treatment
+                        </MenuItem>
+                      </MenuList>
+                    )}
+                    showEditIcon
+                    showDeleteIcon
+                    handleEditClick={() => {
+                      setEditData(row);
+                      isEarningComponentOpen.onTrue();
+                    }}
+                    handleDeleteClick={() => {
+                      setDeleteInformation(row as PayElement);
+                      confirm.onTrue();
+                    }}
+                  />
+                );
+              },
             },
-          },
-        ]}
+          ],
+          [nameContains('earningComponentName')],
+          tableQuery,
+          ({ search }) =>
+            setTableQuery((current) => ({ ...current, page: 1, search: String(search ?? '') }))
+        )}
         data={getEarningComponentsData?.items || []}
       />
       {esiComponent && (

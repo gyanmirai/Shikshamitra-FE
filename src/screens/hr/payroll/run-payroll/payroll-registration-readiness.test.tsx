@@ -1,65 +1,48 @@
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import { it, vi, expect, describe } from 'vitest';
-import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PayrollRegistrationReadiness } from './payroll-registration-readiness';
 
+const captured = vi.hoisted(() => ({ table: {} as any, query: {} as any, exportQuery: {} as any }));
 vi.mock('src/redux/hr/statutory-profile-api', () => ({
-  useGetPayrollRegistrationReadinessQuery: () => ({
-    currentData: { items: [{ employeeId: 'synthetic-staff', applyPf: true, applyEsic: true }] },
-  }),
+  useGetPayrollRegistrationReadinessQuery: (query: any) => {
+    captured.query = query;
+    return { currentData: { items: [], totalCount: 50 }, isFetching: false, refetch: vi.fn() };
+  },
 }));
-vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));
+vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({
+  useHrTableExport: (_: string, query: any) => {
+    captured.exportQuery = query;
+    return vi.fn();
+  },
+}));
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ columns, data }: any) =>
-    columns.find((column: any) => column.id === 'action').render(null, data[0]),
+  default: (props: any) => {
+    captured.table = props;
+    return null;
+  },
 }));
 
-function mount(authorized: boolean) {
-  const store = configureStore({
-    reducer: {
-      auth: () => ({
-        loading: false,
-        permissionsInitialized: true,
-        permissions: authorized
-          ? [
-              hrPermissions.root,
-              hrPermissions.employee.root,
-              `${hrPermissions.employee.list}.View`,
-              `${hrPermissions.employee.list}.Edit`,
-              hrPermissions.payroll.settings.statutorySchemes,
-            ].map((name) => ({ name, isGranted: true }))
-          : [],
-      }),
-    },
+describe('payroll readiness server search', () => {
+  it('resets the page and captures the same search for complete export', () => {
+    render(<PayrollRegistrationReadiness month="2026-10" />);
+    act(() => captured.table.onServerPagination(4, 10));
+    expect(captured.query.page).toBe(4);
+    act(() => captured.table.onServerSearch('Synthetic'));
+    expect(captured.query).toEqual({
+      month: '2026-10',
+      page: 1,
+      pageSize: 10,
+      search: 'Synthetic',
+    });
+    expect(captured.exportQuery).toEqual({ month: '2026-10', search: 'Synthetic' });
+    expect(captured.table.searchTerm).toBe('Synthetic');
   });
-  render(
-    <Provider store={store}>
-      <PayrollRegistrationReadiness month="2026-08" />
-    </Provider>
-  );
-  fireEvent.click(
-    screen.getByRole('button', { name: 'Registration review before payroll refresh' })
-  );
-}
-
-describe('registration readiness setup detour', () => {
-  it('opens the selected staff payroll step with noopener in a separate tab', () => {
-    mount(true);
-    const link = screen.getByRole('link', { name: /Review statutory registration/ });
-    expect(link).toHaveAttribute(
-      'href',
-      `${hrPaths.employee.list}?mode=form&editEmployee=synthetic-staff&step=payroll`
-    );
-    expect(link).toHaveAttribute('target', '_blank');
-    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-  });
-
-  it('offers administrator guidance rather than an inaccessible staff edit link', () => {
-    mount(false);
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
-    expect(screen.getByText(/Ask your HR administrator/)).toBeVisible();
+  it('resets pagination when the owning payroll month changes', () => {
+    const view = render(<PayrollRegistrationReadiness month="2026-10" />);
+    act(() => captured.table.onServerPagination(4, 10));
+    view.rerender(<PayrollRegistrationReadiness month="2026-11" />);
+    expect(captured.query).toMatchObject({ month: '2026-11', page: 1 });
+    expect(captured.exportQuery.month).toBe('2026-11');
   });
 });

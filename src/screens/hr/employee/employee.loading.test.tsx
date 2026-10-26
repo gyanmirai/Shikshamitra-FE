@@ -26,7 +26,8 @@ vi.mock('src/screens/hr/hooks/useAcademicOrganizationOptions', () => ({
   useAcademicOrganizationOptions: () => ({ options: [], isLoading: false }),
 }));
 vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));
-vi.mock('src/redux/hr/employeeApi', () => ({
+vi.mock('src/redux/hr/employeeApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('src/redux/hr/employeeApi')>()),
   useGetEmployeeQuery: vi.fn(),
   useGetEmployeeByIdQuery: () => ({}),
 }));
