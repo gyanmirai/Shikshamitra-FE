@@ -70,10 +70,25 @@ vi.mock('src/utils/permissions', () => ({
     [...mocks.permissions].some((action) => permission.endsWith(`.${action}`)),
 }));
 vi.mock('src/components/three-dots-actions', () => ({
-  default: ({ showViewIcon, showEditIcon, viewLabel, editLabel, handleViewClick, handleEditClick }: any) => (
+  default: ({
+    showViewIcon,
+    showEditIcon,
+    viewLabel,
+    editLabel,
+    handleViewClick,
+    handleEditClick,
+  }: any) => (
     <div>
-      {showViewIcon ? <button type="button" aria-label={viewLabel} onClick={handleViewClick}>View</button> : null}
-      {showEditIcon ? <button type="button" aria-label={editLabel} onClick={handleEditClick}>Edit</button> : null}
+      {showViewIcon ? (
+        <button type="button" aria-label={viewLabel} onClick={handleViewClick}>
+          View
+        </button>
+      ) : null}
+      {showEditIcon ? (
+        <button type="button" aria-label={editLabel} onClick={handleEditClick}>
+          Edit
+        </button>
+      ) : null}
     </div>
   ),
 }));
@@ -81,7 +96,9 @@ vi.mock('src/components/customizabaleTable', () => ({
   default: ({ tableId, tableTitle, columns, data, rowProps, isLoading }: any) => (
     <section data-testid={tableId} aria-label={tableTitle} data-loading={String(isLoading)}>
       <div data-testid="salary-template-columns">
-        {columns.map((column: any) => <span key={column.id}>{column.label}</span>)}
+        {columns.map((column: any) => (
+          <span key={column.id}>{column.label}</span>
+        ))}
       </div>
       {data.map((row: SalaryTemplate, index: number) => {
         const configuredRowProps = rowProps?.(row, index) || {};
@@ -89,7 +106,9 @@ vi.mock('src/components/customizabaleTable', () => ({
           <div key={row.id} data-testid={`salary-template-row-${row.id}`} {...configuredRowProps}>
             {columns.map((column: any) => (
               <div key={column.id}>
-                {column.render ? column.render((row as any)[column.id], row) : (row as any)[column.id]}
+                {column.render
+                  ? column.render((row as any)[column.id], row)
+                  : (row as any)[column.id]}
               </div>
             ))}
           </div>
@@ -102,9 +121,15 @@ vi.mock('./salary-template-editor', () => ({
   default: ({ templateId, mode, onDirtyChange, onSaved, onClose }: any) => (
     <div data-testid="salary-template-editor">
       {templateId || 'new'}:{mode}
-      <button type="button" onClick={() => onDirtyChange(true)}>Mark editor dirty</button>
-      <button type="button" onClick={onSaved}>Complete save</button>
-      <button type="button" onClick={onClose}>Close editor</button>
+      <button type="button" onClick={() => onDirtyChange(true)}>
+        Mark editor dirty
+      </button>
+      <button type="button" onClick={onSaved}>
+        Complete save
+      </button>
+      <button type="button" onClick={onClose}>
+        Close editor
+      </button>
     </div>
   ),
 }));
@@ -147,7 +172,10 @@ describe('SalaryTemplateSettings', () => {
     expect(screen.getByText('Active')).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Salary Templates' })).toBeVisible();
     expect(screen.getByRole('link', { name: 'HR/Staff' })).toHaveAttribute('href', '/hr/dashboard');
-    expect(screen.getByRole('link', { name: 'Payroll Management' })).toHaveAttribute('href', '/hr/payroll');
+    expect(screen.getByRole('link', { name: 'Payroll Management' })).toHaveAttribute(
+      'href',
+      '/hr/payroll'
+    );
     expect(screen.queryByText(/^Templates are reusable defaults/)).not.toBeInTheDocument();
   });
 
@@ -159,10 +187,11 @@ describe('SalaryTemplateSettings', () => {
     expect(mocks.push).toHaveBeenLastCalledWith(editorPath());
 
     mocks.push.mockClear();
-    screen.getByTestId('salary-template-row-template-1').focus();
-    await user.keyboard('{Enter}');
-    expect(mocks.push).toHaveBeenCalledTimes(1);
-    expect(mocks.push).toHaveBeenCalledWith(editorPath());
+    expect(screen.getByTestId('salary-template-row-template-1')).not.toHaveAttribute('tabindex');
+    const templateLink = screen.getByRole('link', { name: 'Flexible Salary' });
+    expect(templateLink).toHaveAttribute('href', editorPath());
+    templateLink.focus();
+    expect(templateLink).toHaveFocus();
 
     mocks.push.mockClear();
     await user.click(screen.getByRole('button', { name: 'Edit Flexible Salary' }));

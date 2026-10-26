@@ -16,18 +16,31 @@ const DIRECT_ACTION_LIMIT = 3;
 type OverflowActionMenuItemProps = {
   action: AdaptiveThreeDotsAction;
   onSelect: () => void;
+  autoFocus?: boolean;
+  tabIndex?: number;
+  disabled?: boolean;
 };
 
-function OverflowActionMenuItem({ action, onSelect }: OverflowActionMenuItemProps) {
+function OverflowActionMenuItem({
+  action,
+  onSelect,
+  autoFocus,
+  tabIndex,
+}: OverflowActionMenuItemProps) {
   const menuItem = (
     <MenuItem
+      autoFocus={autoFocus}
+      tabIndex={tabIndex}
+      {...(action.disabled && action.tooltip ? { component: 'div' } : {})}
       {...(action.href && !action.disabled && !action.loading
         ? { component: RouterLink, href: action.href }
         : {})}
       disabled={action.disabled || action.loading}
       aria-busy={action.loading || undefined}
       data-testid={`menu-action-${action.id}`}
-      onClick={onSelect}
+      onClick={() => {
+        if (!action.disabled && !action.loading) onSelect();
+      }}
       sx={{ color: action.disabled ? 'text.disabled' : action.color }}
     >
       {action.loading ? (
@@ -45,7 +58,7 @@ function OverflowActionMenuItem({ action, onSelect }: OverflowActionMenuItemProp
 
   return (
     <CustomTooltip title={action.tooltip} arrow placement="left">
-      <Box component="span" sx={{ display: 'block' }}>
+      <Box component="li" role="none" sx={{ display: 'block' }}>
         {menuItem}
       </Box>
     </CustomTooltip>
@@ -90,6 +103,7 @@ const AdaptiveThreeDotsActions = ({
                   <OverflowActionMenuItem
                     key={action.id}
                     action={action}
+                    disabled={action.disabled || action.loading}
                     onSelect={() => {
                       popover.onClose();
                       onClosePopover?.();

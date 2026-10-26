@@ -4,6 +4,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetEarningComponentsQuery,
@@ -13,7 +14,6 @@ import {
   Box,
   Chip,
   Button,
-  Divider,
   Checkbox,
   TextField,
   Typography,
@@ -85,11 +85,19 @@ export default function PayrollComponentDialog({
     formik.resetForm();
     onClose();
   };
+  useFormikErrorFocus(formik);
 
   return (
     <CustomDialog
       open={open}
       handleClose={handleClose}
+      formProps={{
+        onSubmit: (event) => {
+          event.preventDefault();
+          formik.handleSubmit();
+        },
+        noValidate: true,
+      }}
       title={
         <Box display="flex" flexDirection="row" gap={1} alignItems="center">
           <Typography variant="h5">
@@ -133,7 +141,7 @@ export default function PayrollComponentDialog({
           options={autocompleteOptions}
           getOptionLabel={(option: any) =>
             (option as any).__selectAll
-              ? ''
+              ? 'Select all components'
               : option?.earningComponentName || option?.deductionComponentName || ''
           }
           isOptionEqualToValue={(option: any, value: any) =>
@@ -149,56 +157,51 @@ export default function PayrollComponentDialog({
           renderOption={(props, option, { selected }) => {
             if ((option as any).__selectAll) {
               const allSelected = syncedValue.length === options.length;
+              const { key, ...optionProps } = props;
               return (
-                <li key="__selectAll" style={{ padding: 0, listStyle: 'none' }}>
-                  <Box
-                    component="button"
-                    type="button"
-                    display="flex"
-                    alignItems="center"
-                    px={1}
-                    py={0.75}
-                    onClick={(e: any) => {
-                      e.stopPropagation();
-                      formik.setFieldValue('selectedComponents', allSelected ? [] : options);
-                    }}
-                    onKeyDown={(e: any) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.stopPropagation();
-                        formik.setFieldValue('selectedComponents', allSelected ? [] : options);
-                      }
-                    }}
-                    sx={{
-                      width: '100%',
-                      cursor: 'pointer',
-                      border: 'none',
-                      background: 'none',
-                      textAlign: 'left',
-                      '&:hover': { bgcolor: 'action.hover' },
-                    }}
-                  >
-                    <Checkbox checked={allSelected} size="small" sx={{ mr: 1, p: 0.5 }} />
-                    <Typography variant="body2" fontWeight={600}>
-                      {allSelected ? 'Deselect All' : 'Select All'}
-                    </Typography>
-                  </Box>
-                  <Divider />
+                <li key={key} {...optionProps} role="option" aria-selected={allSelected}>
+                  <Checkbox
+                    checked={allSelected}
+                    tabIndex={-1}
+                    inputProps={{ 'aria-hidden': true }}
+                    size="small"
+                    sx={{ mr: 1, p: 0.5 }}
+                  />
+                  <Typography variant="body2" fontWeight={600}>
+                    {allSelected ? 'Deselect All' : 'Select All'}
+                  </Typography>
                 </li>
               );
             }
             const { key, ...restProps } = props as any;
             return (
               <li key={key} {...restProps}>
-                <Checkbox checked={selected} size="small" sx={{ mr: 1, p: 0.5 }} />
+                <Checkbox
+                  checked={selected}
+                  tabIndex={-1}
+                  inputProps={{ 'aria-hidden': true }}
+                  size="small"
+                  sx={{ mr: 1, p: 0.5 }}
+                />
                 {option?.earningComponentName || option?.deductionComponentName || ''}
               </li>
             );
           }}
           value={syncedValue}
-          onChange={(e, newValue) => formik.setFieldValue('selectedComponents', newValue)}
+          onChange={(_event, newValue) =>
+            formik.setFieldValue(
+              'selectedComponents',
+              newValue.some((option) => option.__selectAll)
+                ? syncedValue.length === options.length
+                  ? []
+                  : options
+                : newValue
+            )
+          }
           renderInput={(params) => (
             <TextField
               {...params}
+              name="selectedComponents"
               label="Components *"
               error={formik.touched.selectedComponents && Boolean(formik.errors.selectedComponents)}
               helperText={
@@ -221,7 +224,8 @@ export default function PayrollComponentDialog({
         <Button
           size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          onClick={() => formik.handleSubmit()}
+          type="submit"
+          disabled={isLoading || formik.isSubmitting}
           variant="contained"
         >
           Submit

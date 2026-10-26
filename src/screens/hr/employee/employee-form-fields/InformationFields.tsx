@@ -25,6 +25,7 @@ import CountryComponent from 'src/components/stardard-address/country-component'
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
+import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
 import {
   Box,
   Grid,
@@ -361,6 +362,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
     if (Object.keys(validation).length > 0) {
+      focusFirstFormikError(validation);
       formik.setTouched(setNestedObjectValues(validation, true));
       return false;
     }
@@ -1142,11 +1144,6 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 if (value.length <= 6) {
                   formik.setFieldValue('pincode', value);
                   formik.validateField('pincode');
-                }
-              }}
-              onKeyDown={(e) => {
-                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                  e.preventDefault();
                 }
               }}
             />

@@ -6,6 +6,7 @@ import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
+import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
 
 import { CardActions, SectionCard } from './InformationFields';
 
@@ -185,11 +186,7 @@ function FatherAddressComponent(props: any) {
             onChange={(e) => {
               setPincodeFieldValue(formik, 'fatherPinCode', e.target.value);
             }}
-            onKeyDown={(e) => {
-              if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                e.preventDefault();
-              }
-            }}
+
             error={formik.touched.fatherPinCode && Boolean(formik.errors.fatherPinCode)}
             helperText={formik.touched.fatherPinCode && formik.errors.fatherPinCode}
             fullWidth
@@ -570,6 +567,7 @@ const FamilyMemberSection = ({
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
     if (Object.keys(validation).length > 0) {
+      focusFirstFormikError(validation);
       formik.setTouched(setNestedObjectValues(validation, true));
       return false;
     }

@@ -85,6 +85,7 @@ export function ReportParameters({ design, value, onChange, disabled = false, fi
           size="small"
           select
           label="Reporting period"
+          name="period"
           value={value.period}
           disabled={disabled}
           onChange={(e) => update({ period: e.target.value })}

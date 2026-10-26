@@ -7,6 +7,7 @@ import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 import { Chip, Alert, Stack, Button, Typography } from '@mui/material';
 import { useCreateReportingRunMutation } from 'src/redux/hr/hrReportingWorkspaceApi';
 
@@ -46,9 +47,16 @@ export function ReportGenerate({
       }
     },
   });
+  useFormikErrorFocus(form);
   const busy = isLoading || form.isSubmitting;
   return (
-    <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 1 }}>
+    <Stack
+      component="form"
+      noValidate
+      onSubmit={form.handleSubmit}
+      spacing={2}
+      sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 1 }}
+    >
       <Stack spacing={1}>
         <Typography variant="h6">{template.name}</Typography>
         <Typography variant="body2" color="text.secondary">
@@ -95,9 +103,7 @@ export function ReportGenerate({
           variant="contained"
           size="small"
           disabled={busy || template.publishedRevision === 0}
-          onClick={() => {
-            form.submitForm();
-          }}
+          type="submit"
         >
           {isLoading ? 'Generating…' : 'Generate report'}
         </Button>

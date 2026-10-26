@@ -285,7 +285,6 @@ const HrEmployee = () => {
               display="flex"
               alignItems="center"
               gap={1}
-              onClick={() => setSearchParams('employee', row?.id)}
               sx={{
                 cursor: 'pointer',
                 minWidth: 0,
@@ -322,7 +321,21 @@ const HrEmployee = () => {
                   />
                 }
               />{' '}
-              {value} ({row.employeeIdentifier})
+              <Button
+                type="button"
+                size="small"
+                aria-label={`View ${value} (${row.employeeIdentifier})`}
+                onClick={() => setSearchParams('employee', row?.id)}
+                sx={{
+                  minWidth: 0,
+                  justifyContent: 'flex-start',
+                  textAlign: 'left',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {value} ({row.employeeIdentifier})
+              </Button>
             </Box>
           );
         },

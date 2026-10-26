@@ -85,12 +85,23 @@ const LateArrivalPolicy = () => {
           <>
             No Leave Rule Found{' '}
             <Box
+              component="button"
+              type="button"
               onClick={() => {
                 leaveRuleDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
               sx={{
+                border: 0,
+                p: 0,
+                bgcolor: 'transparent',
+                font: 'inherit',
+                '&:focus-visible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: 2,
+                },
                 '&:hover': {
                   cursor: 'pointer',
                   color: 'primary.main',
