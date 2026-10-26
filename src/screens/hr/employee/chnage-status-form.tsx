@@ -296,7 +296,11 @@ const ChangeStatusForm = ({
                     <Box key={code}>
                       <Typography variant="body2">{activationBlockerMessage(code)}</Typography>
                       <HrSetupLink
-                        setup={code.startsWith('ESI_') ? 'staffPayroll' : 'salary'}
+                        setup={
+                          code.startsWith('ESI_') && code !== 'ESI_POLICY_REQUIRED'
+                            ? 'staffPayroll'
+                            : 'salary'
+                        }
                         employeeId={employeeId}
                       />
                     </Box>
@@ -373,6 +377,8 @@ const ChangeStatusForm = ({
 export default ChangeStatusForm;
 
 export function activationBlockerMessage(code: string) {
+  if (code === 'ESI_POLICY_REQUIRED')
+    return 'Choose an ESIC policy or external management in this staff member’s salary setup.';
   if (code === 'PAYROLL_SETUP_REQUIRED')
     return 'Salary structure is not configured for the required activation month. Complete salary setup, including PF membership review.';
   if (/^ESI_[A-Z0-9_]+$/.test(code))

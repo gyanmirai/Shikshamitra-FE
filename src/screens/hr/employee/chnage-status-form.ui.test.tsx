@@ -116,11 +116,11 @@ describe('ChangeStatusForm manager deactivation warning', () => {
     await user.click(screen.getByRole('combobox', { name: 'Select Status' }));
     await user.click(screen.getByRole('option', { name: /^Active/ }));
     expect(screen.getByText(/Salary structure is not configured/)).toBeVisible();
-    expect(screen.getByText(/ESIC setup needs attention/)).toBeVisible();
-    expect(screen.getByRole('link', { name: /Review staff salary setup/ })).toHaveAttribute(
-      'href',
-      staffSalaryEditorHref('manager-1')
-    );
+    expect(screen.getByText(/Choose an ESIC policy/)).toBeVisible();
+    screen
+      .getAllByRole('link', { name: /Review staff salary setup/ })
+      .forEach((link) => expect(link).toHaveAttribute('href', staffSalaryEditorHref('manager-1')));
+    expect(screen.getAllByRole('link', { name: /Review staff salary setup/ })).toHaveLength(2);
     expect(screen.getByTestId('hr-employee-status-update-button')).toBeDisabled();
     expect(mocks.updateStatus).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Recheck activation requirements' }));
@@ -130,6 +130,51 @@ describe('ChangeStatusForm manager deactivation warning', () => {
     expect(screen.getByTestId('hr-employee-status-update-button')).toBeEnabled();
     await user.click(screen.getByTestId('hr-employee-status-update-button'));
     expect(mocks.updateStatus).toHaveBeenCalledOnce();
+  });
+
+  it('handles the status service business-error envelope without a synthetic Reason field', async () => {
+    const user = userEvent.setup();
+    mocks.permissions = [
+      hrPermissions.root,
+      hrPermissions.employee.root,
+      hrPermissions.payroll.root,
+      `${hrPermissions.employee.list}.Edit`,
+      hrPermissions.payroll.compensationRevisionActions.view,
+    ].map((name) => ({ name, isGranted: true }));
+    mocks.updateStatus.mockReturnValue({
+      unwrap: async () => {
+        mocks.readiness.currentData = {
+          canActivate: false,
+          requiredMonth: '2026-10-01',
+          compensationRevisionId: null,
+          blockerCodes: ['PAYROLL_SETUP_REQUIRED', 'ESI_POLICY_REQUIRED'],
+        };
+        throw Object.assign(new Error('Employee Payroll Structure Required'), {
+          data: {
+            error: {
+              code: 'HR:Employee:010201',
+              message: 'Employee Payroll Structure Required',
+              data: {
+                employeeId: 'manager-1',
+                requiredMonth: '2026-10',
+                blockerCodes: ['PAYROLL_SETUP_REQUIRED', 'ESI_POLICY_REQUIRED'],
+              },
+            },
+          },
+        });
+      },
+    });
+    renderForm(EmployeeStatusType.Inactive);
+    await user.click(screen.getByRole('combobox', { name: 'Select Status' }));
+    await user.click(screen.getByRole('option', { name: /^Active/ }));
+    await user.type(screen.getByRole('textbox', { name: 'Remarks' }), 'Keep this draft');
+    await user.click(screen.getByTestId('hr-employee-status-update-button'));
+    expect(await screen.findByText(/Choose an ESIC policy/)).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Remarks' })).toHaveValue('Keep this draft');
+    screen
+      .getAllByRole('link', { name: /Review staff salary setup/ })
+      .forEach((link) => expect(link).toHaveAttribute('href', staffSalaryEditorHref('manager-1')));
+    expect(mocks.readiness.refetch).toHaveBeenCalledOnce();
   });
 
   it.each(['fetching', 'failed', 'missing'])(
