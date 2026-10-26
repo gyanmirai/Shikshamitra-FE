@@ -43,7 +43,8 @@ const FormFooter: React.FC<IFormFooterProps> = ({
     }}
   >
     <Button
-      variant="text"
+      variant="outlined"
+      color="inherit"
       size="small"
       startIcon={<Iconify icon={GlobalIcons.cancel} />}
       onClick={onCancel}
@@ -51,14 +52,15 @@ const FormFooter: React.FC<IFormFooterProps> = ({
       Cancel
     </Button>
     <LoadingButton
+      aria-label={isEdit ? 'Submit lecture slot changes' : 'Submit lecture slots'}
       variant="contained"
       size="small"
       disabled={disabled}
       loading={loading}
-      startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+      startIcon={<Iconify icon={GlobalIcons.submit} />}
       onClick={onSubmit}
     >
-      {isEdit ? 'Update' : 'Submit'}
+      Submit
     </LoadingButton>
   </Box>
 );

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
+import { EmptyContent } from 'src/components/empty-content';
 import { Box, Card, Stack, Typography, CircularProgress } from '@mui/material';
 
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
 import MiddlePanel from './MiddlePanel';
+import { MobileReportPicker } from './MobileReportPicker';
 
 import type { ReportCategory, ReportSubCategory } from './types';
 
@@ -46,13 +48,7 @@ export default function CommonReport({
   }
 
   if (categories.length === 0) {
-    return (
-      <Box sx={{ height: '100%', display: 'grid', placeItems: 'center', minHeight: 320 }}>
-        <Typography variant="body2" color="text.secondary">
-          {emptyText}
-        </Typography>
-      </Box>
-    );
+    return <EmptyContent title={emptyText} />;
   }
 
   return (
@@ -60,16 +56,40 @@ export default function CommonReport({
       <Card
         sx={{
           flexGrow: 1,
+          minHeight: 0,
           display: 'flex',
           overflow: 'hidden',
           borderRadius: 2,
           boxShadow: theme.shadows[3],
         }}
       >
-        <Box sx={{ display: 'flex', width: '100%', height: '100%', minWidth: 0 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', lg: 'row' },
+            width: '100%',
+            height: '100%',
+            minWidth: 0,
+            minHeight: 0,
+          }}
+        >
+          <Box sx={{ display: { xs: 'block', lg: 'none' }, flexShrink: 0 }}>
+            <MobileReportPicker
+              categories={categories}
+              reports={subCategories}
+              selectedCategory={selectedCategory}
+              selectedReport={selectedReport}
+              onSelectCategory={(id) => {
+                setSelectedCategory(id);
+                setSelectedReport(null);
+              }}
+              onSelectReport={setSelectedReport}
+            />
+          </Box>
           <Box
             sx={{
-              width: { xs: 220, lg: 260 },
+              display: { xs: 'none', lg: 'block' },
+              width: 260,
               flexShrink: 0,
               height: '100%',
               borderRight: '1px solid',
@@ -87,7 +107,8 @@ export default function CommonReport({
           </Box>
           <Box
             sx={{
-              width: { xs: 280, lg: 320 },
+              display: { xs: 'none', lg: 'block' },
+              width: 320,
               flexShrink: 0,
               height: '100%',
               borderRight: '1px solid',
@@ -101,7 +122,7 @@ export default function CommonReport({
               subCategories={subCategories}
             />
           </Box>
-          <Box sx={{ flexGrow: 1, height: '100%', minWidth: 0 }}>
+          <Box sx={{ flex: 1, height: { xs: 'auto', lg: '100%' }, minWidth: 0, minHeight: 0 }}>
             <RightPanel selectedReport={selectedReport} />
           </Box>
         </Box>

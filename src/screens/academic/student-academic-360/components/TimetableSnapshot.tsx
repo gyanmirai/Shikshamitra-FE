@@ -1,12 +1,15 @@
 'use client';
 
+import type { Subject, TimeSlot, DayOfWeek } from 'src/components/timetable/types';
+
 import React, { useMemo } from 'react';
-import { Box, Card, Chip, Stack, Typography, CircularProgress } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
 import TimetableBoard from 'src/components/timetable/TimetableBoard';
+import { Box, Card, Chip, Stack, CircularProgress } from '@mui/material';
 
 import { Academic360EmptyState } from './Academic360EmptyState';
+import { Academic360SectionHeader } from './Academic360SectionHeader';
 
-import type { Subject, TimeSlot, DayOfWeek } from 'src/components/timetable/types';
 import type { Academic360StudentRow } from '../types';
 
 export type TimetableSummaryItem = {
@@ -369,7 +372,7 @@ export function TimetableSnapshot({ timetable, isLoading, student }: TimetableSn
   const divisionName = student?.division || student?.divisionName || '';
 
   return (
-    <Card variant="outlined" sx={{ p: 2, height: '100%', borderRadius: 2 }}>
+    <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, height: '100%', borderRadius: 2 }}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         alignItems={{ xs: 'flex-start', sm: 'center' }}
@@ -377,11 +380,12 @@ export function TimetableSnapshot({ timetable, isLoading, student }: TimetableSn
         spacing={1.5}
         sx={{ mb: 2 }}
       >
-        <Box>
-          <Typography variant="subtitle1">Timetable</Typography>
-          <Typography variant="caption" color="text.secondary">
-            Class and division weekly timetable schedule
-          </Typography>
+        <Box sx={{ width: 1 }}>
+          <Academic360SectionHeader
+            icon={GlobalIcons.calendar}
+            title="Timetable"
+            description="Weekly timetable for the student's class and division."
+          />
         </Box>
 
         {hasSlots && (
@@ -453,15 +457,13 @@ export function TimetableSnapshot({ timetable, isLoading, student }: TimetableSn
             slots={boardSlots}
             onChange={() => {}}
             subjects={subjects}
-            readOnly={true}
+            readOnly
             selectedClass={standardName}
             selectedDivision={divisionName}
           />
         </Box>
       ) : (
         <Academic360EmptyState
-          icon="mdi:timetable"
-          color="info"
           title="No timetable published"
           description="Once a timetable is published for this student's class and division, upcoming classes will show up here."
         />

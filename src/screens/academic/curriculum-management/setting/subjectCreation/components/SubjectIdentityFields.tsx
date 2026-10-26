@@ -21,7 +21,7 @@ export function SubjectIdentityFields({ formik }: SubjectIdentityFieldsProps) {
         <ShakingTextField error={Boolean(formik.touched.subjectName && formik.errors.subjectName)}>
           <LanguageInputField
             fullWidth
-            label="Subject Name"
+            label="Subject name"
             required
             name="subjectName"
             size="small"
@@ -45,7 +45,7 @@ export function SubjectIdentityFields({ formik }: SubjectIdentityFieldsProps) {
       <Grid size={{ xs: 12 }}>
         <LanguageInputField
           fullWidth
-          label="Display Name"
+          label="Display name"
           name="displayName"
           size="small"
           value={formik.values.displayName}
@@ -64,7 +64,7 @@ export function SubjectIdentityFields({ formik }: SubjectIdentityFieldsProps) {
             required
             label={
               <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                Subject Category
+                Subject category
                 <CustomTooltip
                   arrow
                   placement="right"
@@ -74,7 +74,7 @@ export function SubjectIdentityFields({ formik }: SubjectIdentityFieldsProps) {
                   <IconButton
                     component="span"
                     tabIndex={0}
-                    aria-label="Subject Category information"
+                    aria-label="Subject category information"
                     size="small"
                     color="info"
                     onClick={(event) => {
@@ -107,7 +107,7 @@ export function SubjectIdentityFields({ formik }: SubjectIdentityFieldsProps) {
         <TextField
           select
           fullWidth
-          label="Subject Icon"
+          label="Subject icon"
           name="icon"
           size="small"
           value={formik.values.icon}

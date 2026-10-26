@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Box, Button } from '@mui/material';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
+import { Box } from '@mui/material';
 import CommonReport from 'src/components/common-report';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { HomeworkReportTitleOptions } from 'src/enums/homework-wise-reports';
@@ -58,25 +56,15 @@ const HomeworkAssignmentReports = ({ addReportDialog }: { addReportDialog: any }
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         sx={{ mb: 1 }}
-        heading="Reports"
+        heading="Generate Report"
         description="Generate and export homework, assignment, and analytics reports."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Homework & Assignment', href: '/academic/homeworkCreation' },
-          { name: 'Reports' },
+          { name: 'Generate Report' },
         ]}
         isBack={addReportDialog.value}
         onBack={addReportDialog.onFalse}
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={addReportDialog.onTrue}
-            startIcon={<Iconify icon={GlobalIcons.report} />}
-          >
-            Generate Report
-          </Button>
-        }
       />
 
       <CommonReport

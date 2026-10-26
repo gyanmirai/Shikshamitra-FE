@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
   Chip,
+  Stack,
   Checkbox,
   ListItem,
   TextField,
@@ -83,141 +86,154 @@ const SubjectAssignmentForm = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <form onSubmit={formik.handleSubmit} aria-busy={formik.isSubmitting} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" sx={{ height: '100%' }}>
-          <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={1} inert={formik.isSubmitting}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={Boolean(classError)}>
-                  <CustomSelect
-                    options={classOptions}
-                    label="Class *"
-                    value={formik.values.classId}
-                    labelKey="label"
-                    valueKey="value"
-                    disabled={isEdit}
-                    onChange={(val) => {
-                      if (String(val) === formik.values.classId) return;
-                      const standard = classOptions.find((c: any) => c.value === val);
-                      formik.setStatus(undefined);
-                      formik.setValues({
-                        ...formik.values,
-                        classId: String(val),
-                        className: standard?.label,
-                        subjects: formik.values.subjects.map((subject) => ({
-                          ...subject,
-                          teacherIds: [],
-                          teachers: [],
-                        })),
-                      });
-                    }}
-                    formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                    error={Boolean(classError)}
-                    helperText={classError || 'Select the class'}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
-                >
-                  <Autocomplete
-                    multiple
-                    fullWidth
-                    size="small"
-                    disableCloseOnSelect
-                    disabled={isEdit || isPublished}
-                    options={subjectsOptions}
-                    loading={isSubjectOptionsLoading}
-                    noOptionsText={
-                      formik.values.classId
-                        ? 'All available subjects have already been allocated to this class'
-                        : 'Please select a class first'
-                    }
-                    getOptionLabel={(option: { label?: string; value?: string }) =>
-                      option?.label ?? ''
-                    }
-                    isOptionEqualToValue={(option, val) => option.value === val.value}
-                    value={formik?.values?.selectedSubjects || []}
-                    onChange={(_, newValue) => handleSubjectChange(newValue as any)}
-                    ListboxProps={{ style: { maxHeight: 200, overflow: 'auto' } }}
-                    renderTags={(val, getTagProps) =>
-                      val.map((option: any, index) => {
-                        const { key, ...tagProps } = getTagProps({ index });
-                        return (
-                          <Chip
-                            key={key}
-                            {...tagProps}
-                            label={option.label}
-                            size="small"
-                            variant="soft"
-                            sx={{ ml: 0.5 }}
-                          />
-                        );
-                      })
-                    }
-                    renderOption={(props, option: any, { selected }) => {
-                      const { key, ...restProps } = props;
-                      return (
-                        <ListItem disablePadding key={key} {...restProps}>
-                          <ListItemButton
-                            disableTouchRipple
-                            disableRipple
-                            sx={{
-                              py: 0.5,
-                              px: 1,
-                              minHeight: 'auto',
-                              '&:hover': { backgroundColor: 'transparent' },
-                            }}
-                          >
-                            <Checkbox
-                              size="small"
-                              checked={selected}
-                              disableRipple
-                              sx={{ mr: 1, p: 0.5 }}
-                            />
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                width: '100%',
-                                alignItems: 'center',
-                              }}
-                            >
-                              {option.label}
-                              <Chip
-                                size="small"
-                                label={option.type === 0 ? 'Core' : 'Elective'}
-                                color={option.type === 0 ? 'primary' : 'secondary'}
-                                sx={{ ml: 1, height: 20 }}
-                              />
-                            </Box>
-                          </ListItemButton>
-                        </ListItem>
-                      );
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Subjects *"
-                        name="selectedSubjects"
-                        error={Boolean(
-                          formik.touched.selectedSubjects && formik.errors.selectedSubjects
-                        )}
-                        helperText={
-                          (formik.touched.selectedSubjects && formik.errors.selectedSubjects) ||
-                          'Choose subjects'
-                        }
-                        inputProps={{ ...params.inputProps, readOnly: true }}
+      <form
+        onSubmit={formik.handleSubmit}
+        aria-busy={formik.isSubmitting}
+        style={{ height: '100%' }}
+      >
+        <Box display="flex" flexDirection="column" sx={{ height: '100%', minHeight: 0 }}>
+          <Scrollbar sx={{ p: 2, flex: 1, minHeight: 0 }}>
+            <Stack spacing={2} inert={formik.isSubmitting}>
+              <FormSectionCard
+                title="Allocation Scope"
+                icon={GlobalIcons.assigned}
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                descriptionTooltip="Choose the class and subjects to configure for this allocation."
+              >
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField error={Boolean(classError)}>
+                      <CustomSelect
+                        options={classOptions}
+                        label="Class *"
+                        value={formik.values.classId}
+                        labelKey="label"
+                        valueKey="value"
+                        disabled={isEdit}
+                        onChange={(val) => {
+                          if (String(val) === formik.values.classId) return;
+                          const standard = classOptions.find((c: any) => c.value === val);
+                          formik.setStatus(undefined);
+                          formik.setValues({
+                            ...formik.values,
+                            classId: String(val),
+                            className: standard?.label,
+                            subjects: formik.values.subjects.map((subject) => ({
+                              ...subject,
+                              teacherIds: [],
+                              teachers: [],
+                            })),
+                          });
+                        }}
+                        formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                        error={Boolean(classError)}
+                        helperText={classError || 'Select the class'}
                       />
-                    )}
-                  />
-                </ShakingTextField>
-              </Grid>
+                    </ShakingTextField>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField
+                      error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
+                    >
+                      <Autocomplete
+                        multiple
+                        fullWidth
+                        size="small"
+                        disableCloseOnSelect
+                        disabled={isEdit || isPublished}
+                        options={subjectsOptions}
+                        loading={isSubjectOptionsLoading}
+                        noOptionsText={
+                          formik.values.classId
+                            ? 'All available subjects have already been allocated to this class'
+                            : 'Please select a class first'
+                        }
+                        getOptionLabel={(option: { label?: string; value?: string }) =>
+                          option?.label ?? ''
+                        }
+                        isOptionEqualToValue={(option, val) => option.value === val.value}
+                        value={formik?.values?.selectedSubjects || []}
+                        onChange={(_, newValue) => handleSubjectChange(newValue as any)}
+                        ListboxProps={{ style: { maxHeight: 200, overflow: 'auto' } }}
+                        renderTags={(val, getTagProps) =>
+                          val.map((option: any, index) => {
+                            const { key, ...tagProps } = getTagProps({ index });
+                            return (
+                              <Chip
+                                key={key}
+                                {...tagProps}
+                                label={option.label}
+                                size="small"
+                                variant="soft"
+                                sx={{ ml: 0.5 }}
+                              />
+                            );
+                          })
+                        }
+                        renderOption={(props, option: any, { selected }) => {
+                          const { key, ...restProps } = props;
+                          return (
+                            <ListItem disablePadding key={key} {...restProps}>
+                              <ListItemButton
+                                disableTouchRipple
+                                disableRipple
+                                sx={{
+                                  py: 0.5,
+                                  px: 1,
+                                  minHeight: 'auto',
+                                  '&:hover': { backgroundColor: 'transparent' },
+                                }}
+                              >
+                                <Checkbox
+                                  size="small"
+                                  checked={selected}
+                                  disableRipple
+                                  sx={{ mr: 1, p: 0.5 }}
+                                />
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    width: '100%',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  {option.label}
+                                  <Chip
+                                    size="small"
+                                    label={option.type === 0 ? 'Core' : 'Elective'}
+                                    color={option.type === 0 ? 'primary' : 'secondary'}
+                                    sx={{ ml: 1, height: 20 }}
+                                  />
+                                </Box>
+                              </ListItemButton>
+                            </ListItem>
+                          );
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Subjects *"
+                            name="selectedSubjects"
+                            error={Boolean(
+                              formik.touched.selectedSubjects && formik.errors.selectedSubjects
+                            )}
+                            helperText={
+                              (formik.touched.selectedSubjects && formik.errors.selectedSubjects) ||
+                              'Choose subjects'
+                            }
+                            inputProps={{ ...params.inputProps, readOnly: true }}
+                          />
+                        )}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                </Grid>
+              </FormSectionCard>
 
               {formik.values.subjects && formik.values.subjects.length > 0 && (
-                <Grid size={{ xs: 12 }}>
+                <Stack spacing={2}>
                   {formik.values.subjects.map((subject, index) => (
                     <SubjectCard
                       key={`${formik.values.classId}:${subject.subjectNo}`}
@@ -233,9 +249,9 @@ const SubjectAssignmentForm = ({
                       onRemove={() => handleRemoveSubject(subject)}
                     />
                   ))}
-                </Grid>
+                </Stack>
               )}
-            </Grid>
+            </Stack>
           </Scrollbar>
 
           <SubjectFormActions

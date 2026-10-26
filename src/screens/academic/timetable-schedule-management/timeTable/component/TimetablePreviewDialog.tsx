@@ -1,8 +1,11 @@
 import type { TimetableBoardProps } from 'src/components/timetable/TimetableBoard';
 
 import { alpha } from '@mui/material/styles';
-import { DialogContent } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CancelButton from 'src/components/cancel-button';
+import { DialogContent, DialogActions } from '@mui/material';
 import TimetableBoard from 'src/components/timetable/TimetableBoard';
 
 interface TimetablePreviewDialogProps extends Pick<
@@ -37,6 +40,7 @@ export function TimetablePreviewDialog({
       handleClose={onClose}
       maxWidth="xl"
       hasForm={false}
+      guardUnsavedChanges={false}
       paperProps={{
         sx: {
           bgcolor: 'background.paper',
@@ -71,6 +75,13 @@ export function TimetablePreviewDialog({
           timetableStatus={timetableStatus}
         />
       </DialogContent>
+      <DialogActions>
+        <CancelButton
+          buttonText="Close"
+          onClick={onClose}
+          startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+        />
+      </DialogActions>
     </CustomDialog>
   );
 }

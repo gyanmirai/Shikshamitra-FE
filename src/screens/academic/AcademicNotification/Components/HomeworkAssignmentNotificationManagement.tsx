@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Box, Card, Switch } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import EditNotificationDialog from 'src/screens/student/studentNotification/editNotificationDialog';
 import {
   NotificationStatusType,
   NotificationStatusOptions,
 } from 'src/enums/notification-status-type';
+
+import { AcademicNotificationTemplateDetails } from './AcademicNotificationTemplateDetails';
 
 const homeworkAssignmentsNotificationsData = [
   {
@@ -719,19 +720,17 @@ const HomeworkAssignmentNotificationManagement = ({ dialog, setIsViewMode }: any
   // Holds the currently selected notification row data for editing/viewing
   const [selectedData, setSelectedData] = useState<any>(null);
   // Determines whether the dialog is opened in view-only mode
-  const [view, setView] = useState(false);
 
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {dialog.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <EditNotificationDialog
+          <AcademicNotificationTemplateDetails
             data={selectedData}
             onClose={() => {
               dialog.onFalse();
               setSelectedData(null);
             }}
-            isFromView={view}
           />
         </Card>
       ) : (
@@ -792,7 +791,6 @@ const HomeworkAssignmentNotificationManagement = ({ dialog, setIsViewMode }: any
                     showViewIcon
                     handleViewClick={() => {
                       setSelectedData(row);
-                      setView(true);
                       dialog.onTrue();
                       setIsViewMode(true);
                     }}

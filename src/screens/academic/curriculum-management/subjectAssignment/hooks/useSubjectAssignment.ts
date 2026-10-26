@@ -11,6 +11,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useRouter, usePathname, useSearchParams } from 'src/routes/hooks';
+import { useAcademicDiscardGuard } from 'src/screens/academic/components/useAcademicDiscardGuard';
 import {
   useGetSubjectKpiQuery,
   useGetSubjectAssignmentsQuery,
@@ -99,6 +100,9 @@ export function useSubjectAssignment() {
   const archiveConfirmDialog = useBoolean();
   const restoreConfirmDialog = useBoolean();
   const copySubjectsDialog = useBoolean();
+  const { requestNavigation, confirmation: discardConfirmation } = useAcademicDiscardGuard(
+    addSubjectDialog.value && isChanges
+  );
 
   const [selectedSubject, setSelectedSubject] = useState<ISubjectFormValues | null>(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -173,18 +177,17 @@ export function useSubjectAssignment() {
    */
   const handleClose = useCallback(
     (_e: unknown, isSubmit?: boolean) => {
-      if (isSubmit || (isChanges && window.confirm('Are you sure to leave this page?'))) {
+      const closeForm = () => {
         addSubjectDialog.onFalse();
         setIsEdit(false);
         setSelectedSubject(null);
-        dispatch(setIsChanges(false));
-      } else if (!isChanges) {
-        addSubjectDialog.onFalse();
-        setIsEdit(false);
-        setSelectedSubject(null);
-      }
+        if (isSubmit || isChanges) dispatch(setIsChanges(false));
+      };
+
+      if (isSubmit) closeForm();
+      else requestNavigation(closeForm);
     },
-    [isChanges, addSubjectDialog, dispatch]
+    [isChanges, addSubjectDialog, dispatch, requestNavigation]
   );
 
   /**
@@ -344,6 +347,7 @@ export function useSubjectAssignment() {
     restoreConfirmDialog,
     showSubjectDialog,
     copySubjectsDialog,
+    discardConfirmation,
     handleClose,
     handleViewSubject,
     handleEditSubject,

@@ -26,12 +26,13 @@ export const SubjectSetupSection: React.FC<SubjectSetupSectionProps> = ({
   getError,
   onChange,
 }) => (
-  <Grid container spacing={1}>
+  <Grid container spacing={2}>
     <Grid size={{ xs: 12, md: 4 }}>
       <ShakingTextField error={!!getError('subjectCode')}>
         <TextField
           fullWidth
-          label="Subject Code *"
+          label="Subject code"
+          required
           placeholder="e.g. MATH-101"
           size="small"
           value={subjectCode || ''}

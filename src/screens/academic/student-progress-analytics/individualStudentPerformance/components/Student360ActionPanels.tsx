@@ -57,8 +57,6 @@ export function Student360ActionPanels({
           </Stack>
         ) : (
           <Academic360EmptyState
-            icon="mdi:check-decagram-outline"
-            color="success"
             title="No active academic alerts"
             description="This student has no active alert from the available Academic 360 data."
             compact
@@ -91,8 +89,6 @@ export function Student360ActionPanels({
           </Stack>
         ) : (
           <Academic360EmptyState
-            icon="mdi:calendar-blank-outline"
-            color="info"
             title="Nothing upcoming"
             description="Upcoming academic activities will show here when available."
             compact

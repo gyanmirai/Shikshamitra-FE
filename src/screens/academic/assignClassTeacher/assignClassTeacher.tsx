@@ -22,6 +22,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -50,6 +51,7 @@ import {
   IconButton,
   Typography,
   Autocomplete,
+  LinearProgress,
 } from '@mui/material';
 import {
   useGetClassTeacherAssignmentsQuery,
@@ -62,6 +64,8 @@ import {
 
 import { shouldCloseReviewDrawer } from './classTeacherReviewDrawer';
 import { getPendingAssignmentRows } from './classTeacherPendingRows';
+import { ClassTeacherHistoryError } from './ClassTeacherHistoryError';
+import { ClassTeacherHistorySkeleton } from './ClassTeacherHistorySkeleton';
 import { getClassTeacherAssignmentStatusColor } from './classTeacherAssignmentStatus';
 import { ClassTeacherAssignmentParameterSelect } from './ClassTeacherAssignmentParameterSelect';
 import { getDraftTeacherWorkload, applyDraftTeacherWorkloads } from './classTeacherDraftWorkload';
@@ -549,7 +553,13 @@ const ClassTeacherAssignment = () => {
     { skip: !canView || !organization }
   );
 
-  const { data: history = [] } = useGetClassTeacherAssignmentHistoryQuery(
+  const {
+    currentData: history = [],
+    isLoading: isHistoryLoading,
+    isFetching: isHistoryFetching,
+    isError: isHistoryError,
+    refetch: refetchHistory,
+  } = useGetClassTeacherAssignmentHistoryQuery(
     { organizationId: organization },
     { skip: !canView || !organization || !historyOpen }
   );
@@ -1187,50 +1197,75 @@ const ClassTeacherAssignment = () => {
           </Box>
 
           {/* Scrollable Content Body */}
-          <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2.5 }}>
-            <Stack spacing={1.5}>
-              {history.length === 0 && (
-                <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
-                  No assignment history found.
-                </Typography>
-              )}
-              {history.map((item) => (
-                <Paper
-                  key={`${item.classId}-${item.divisionId}-${item.changedAt}`}
-                  elevation={0}
-                  sx={{
-                    p: 1.75,
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    bgcolor: 'background.paper',
-                  }}
-                >
-                  <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      {item.className} {item.divisionName}
-                    </Typography>
-                    <Label color="info" variant="soft">
-                      {dayjs(item.changedAt).isValid()
-                        ? dayjs(item.changedAt).format('DD-MM-YYYY')
-                        : '-'}
-                    </Label>
-                  </Stack>
-                  <Typography variant="body2" fontWeight={600} color="text.primary">
-                    {item.newTeacherName || 'Teacher not available'}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    sx={{ mt: 0.5 }}
+          <Box
+            aria-busy={isHistoryLoading || isHistoryFetching}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              p: 2.5,
+              gap: 2,
+            }}
+          >
+            {isHistoryError && (
+              <ClassTeacherHistoryError
+                hasHistory={history.length > 0}
+                busy={isHistoryFetching}
+                onRetry={() => refetchHistory()}
+              />
+            )}
+            {isHistoryLoading || (isHistoryFetching && history.length === 0) ? (
+              <ClassTeacherHistorySkeleton />
+            ) : history.length === 0 ? (
+              !isHistoryError && <EmptyContent title="No assignment history found." />
+            ) : (
+              <Stack spacing={1.5}>
+                {isHistoryFetching && <LinearProgress aria-label="Refreshing assignment history" />}
+                {history.map((item) => (
+                  <Paper
+                    key={`${item.classId}-${item.divisionId}-${item.changedAt}`}
+                    elevation={0}
+                    sx={{
+                      p: 1.75,
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper',
+                    }}
                   >
-                    Reason: {item.changeReason || 'Routine Update'} • Changed by:{' '}
-                    {item.changedBy || 'System'}
-                  </Typography>
-                </Paper>
-              ))}
-            </Stack>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      mb={1}
+                    >
+                      <Typography variant="subtitle2" fontWeight={700}>
+                        {item.className} {item.divisionName}
+                      </Typography>
+                      <Label color="info" variant="soft">
+                        {dayjs(item.changedAt).isValid()
+                          ? dayjs(item.changedAt).format('DD-MM-YYYY')
+                          : '-'}
+                      </Label>
+                    </Stack>
+                    <Typography variant="body2" fontWeight={600} color="text.primary">
+                      {item.newTeacherName || 'Teacher not available'}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                      sx={{ mt: 0.5 }}
+                    >
+                      Reason: {item.changeReason || 'Routine Update'} • Changed by:{' '}
+                      {item.changedBy || 'System'}
+                    </Typography>
+                  </Paper>
+                ))}
+              </Stack>
+            )}
           </Box>
 
           {/* Sticky Bottom Action Bar */}

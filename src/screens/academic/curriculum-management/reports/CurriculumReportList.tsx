@@ -192,6 +192,7 @@ const CurriculumReportList = () => {
       ) : (
         <CustomizableTable
           tableTitle="Curriculum Reports"
+          noDataText="No generated reports yet."
           tableId="curriculum-reports"
           isLoading={isExportsLoading}
           data={rows}

@@ -1,21 +1,16 @@
-import CloseIcon from '@mui/icons-material/Close';
-import FileUploader from 'src/components/custom-upload';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import { useId } from 'react';
+import { Box, Stack } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import CustomAccordion from 'src/components/custom-accordian';
+import { FormSectionCard } from 'src/components/form-section-card';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
-import {
-  Box,
-  Tooltip,
-  Accordion,
-  IconButton,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
 
 import { useSubjectCard } from './hooks/useSubjectCard';
+import { getSubjectDocumentName } from './subjectDocumentName';
+import { SubjectCardHeader } from './components/SubjectCardHeader';
 import { SubjectSetupSection } from './components/SubjectSetupSection';
 import { LearningContentSection } from './components/LearningContentSection';
+import { SubjectAttachmentsSection } from './components/SubjectAttachmentsSection';
 
 import type { ISubjectCardProps } from '../type';
 
@@ -30,6 +25,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   onAccordionToggle,
   onRemove,
 }) => {
+  const headerId = useId();
+  const contentId = `${headerId}-content`;
   const {
     teacherObjs,
     setTeacherObjs,
@@ -52,199 +49,87 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     activeSubjectId,
   });
 
-  const getFileNameFromUrl = (file: string | File): string => {
-    if (!file) return '';
-    if (typeof file !== 'string') return file.name;
-    if (localFileNames && localFileNames[file]) return localFileNames[file];
-
-    const normalized = file.split('?')[0];
-    const segments = normalized.split('/').filter(Boolean);
-    let rawName = decodeURIComponent(segments[segments.length - 1] || '');
-
-    // Check if name has a standard UUID v4 prefix + underscore (36 chars + 1)
-    if (rawName.length > 37 && rawName[36] === '_') {
-      const maybeUuid = rawName.substring(0, 36);
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (uuidRegex.test(maybeUuid)) {
-        rawName = rawName.substring(37);
-      }
-    }
-
-    return rawName;
-  };
+  const getFileNameFromUrl = (file: string | File) => getSubjectDocumentName(file, localFileNames);
 
   return (
     <>
-      <Accordion
-        expanded={isExpanded}
-        onChange={() => onAccordionToggle(subject.subjectNo ?? '')}
+      <Box
         sx={{
-          borderRadius: 1.5,
-          border: (theme) =>
-            `1px solid ${hasSubjectError ? theme.palette.error.main : theme.palette.divider}`,
-          transition: (theme) =>
-            theme.transitions.create(['box-shadow', 'border-color', 'background-color']),
-          '&:before': { display: 'none' },
-          mb: 2,
+          border: 1,
+          borderColor: hasSubjectError ? 'error.main' : 'divider',
+          borderRadius: 2,
           overflow: 'hidden',
-          '&.Mui-expanded': {
-            m: 0,
-            mb: 3,
-            border: (theme) =>
-              `1px solid ${hasSubjectError ? theme.palette.error.main : theme.palette.primary.main}`,
-          },
         }}
       >
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          sx={{
-            py: 1,
-            px: 2,
-            pb: 0,
-            pt: 0,
-            bgcolor: (theme) => (isExpanded ? theme.palette.action.hover : 'transparent'),
-            '& .MuiAccordionSummary-content': { alignItems: 'center', display: 'flex', gap: 1 },
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-            <SubjectColorIndicator color={subject?.subjectColor} />
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
-              {subject.subjectName || 'Untitled Subject'}
-            </Typography>
-          </Box>
-
-          {!isPublished && onRemove && (
-            <Tooltip
-              title={
-                subject.subjectType === 1
-                  ? "Can't remove, subject belongs to elective group"
-                  : 'Remove subject'
-              }
-            >
-              <span>
-                <IconButton
-                  component="span"
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove();
-                  }}
-                  disabled={subject.subjectType === 1}
-                  sx={{
-                    mr: 0.5,
-                    color: 'text.secondary',
-                    '&:hover': { color: 'error.main', bgcolor: 'error.lighter' },
-                  }}
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </span>
-            </Tooltip>
-          )}
-        </AccordionSummary>
-
-        <AccordionDetails sx={{ p: 3, bgcolor: 'background.paper' }}>
-          <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              <Typography
-                variant="overline"
-                sx={{
-                  color: 'text.disabled',
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                Subject Setup
-              </Typography>
-              <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
-            </Box>
-            <SubjectSetupSection
-              subjectCode={subject.subjectCode}
-              teacherObjs={teacherObjs}
-              fetchTeacherOptions={fetchTeacherOptions}
-              onTeachersChange={(newValues) => {
-                formik.setStatus(undefined);
-                setTeacherObjs(newValues);
-                formik.setFieldValue(
-                  `subjects.${index}.teacherIds`,
-                  newValues.map((item) => item.id)
-                );
-                formik.setFieldValue(
-                  `subjects.${index}.teachers`,
-                  newValues.map(({ id, name, employeeCode }) => ({ id, name, employeeCode }))
-                );
-                formik.setFieldTouched(`subjects.${index}.teacherIds`, true, false);
-              }}
-              getError={getError}
-              onChange={handleChange}
+        <CustomAccordion
+          title={subject.subjectName || 'Untitled Subject'}
+          expanded={isExpanded}
+          onChange={() => onAccordionToggle(subject.subjectNo ?? '')}
+          summary={
+            <SubjectCardHeader
+              id={headerId}
+              aria-controls={contentId}
+              subject={subject}
+              expanded={isExpanded}
+              isPublished={isPublished}
+              onToggle={() => onAccordionToggle(subject.subjectNo ?? '')}
+              onRemove={onRemove}
             />
-          </Box>
-
-          <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              <Typography
-                variant="overline"
-                sx={{
-                  color: 'text.disabled',
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  whiteSpace: 'nowrap',
-                }}
+          }
+          content={
+            <Stack spacing={2}>
+              <FormSectionCard
+                title="Subject Setup"
+                icon={GlobalIcons.assigned}
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                descriptionTooltip="Set the subject code and select its teaching team for this class."
               >
-                Learning Content
-              </Typography>
-              <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
-            </Box>
-            <LearningContentSection subject={subject} getError={getError} onChange={handleChange} />
-          </Box>
+                <SubjectSetupSection
+                  subjectCode={subject.subjectCode}
+                  teacherObjs={teacherObjs}
+                  fetchTeacherOptions={fetchTeacherOptions}
+                  onTeachersChange={(newValues) => {
+                    formik.setStatus(undefined);
+                    setTeacherObjs(newValues);
+                    formik.setFieldValue(
+                      `subjects.${index}.teacherIds`,
+                      newValues.map((item) => item.id)
+                    );
+                    formik.setFieldValue(
+                      `subjects.${index}.teachers`,
+                      newValues.map(({ id, name, employeeCode }) => ({ id, name, employeeCode }))
+                    );
+                    formik.setFieldTouched(`subjects.${index}.teacherIds`, true, false);
+                  }}
+                  getError={getError}
+                  onChange={handleChange}
+                />
+              </FormSectionCard>
 
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              <Typography
-                variant="overline"
-                sx={{
-                  color: 'text.disabled',
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  whiteSpace: 'nowrap',
-                }}
+              <FormSectionCard
+                title="Learning Content"
+                icon={GlobalIcons.notebook}
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                descriptionTooltip="Describe the learning goals, prerequisites, and scope for this subject."
               >
-                Attachments
-              </Typography>
-              <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
-            </Box>
+                <LearningContentSection
+                  subject={subject}
+                  getError={getError}
+                  onChange={handleChange}
+                />
+              </FormSectionCard>
 
-            <FileUploader
-              multiple
-              showVisibleDocumentCount={6}
-              value={
-                subject.documents?.map((doc: any) => {
-                  if (typeof doc === 'string') {
-                    return {
-                      url: doc,
-                      filePath: doc,
-                      name: getFileNameFromUrl(doc),
-                      size: undefined,
-                    };
-                  }
-                  return doc;
-                }) as any[]
-              }
-              onChange={handleDropzoneChange}
-              isLoading={isUploading}
-              onPreview={(file: any) => {
-                const url =
-                  file instanceof File
-                    ? URL.createObjectURL(file)
-                    : file?.url || file?.filePath || (typeof file === 'string' ? file : '');
-                setPreviewDoc(url);
-              }}
-              primaryText="Drag & drop documents here, or click to upload"
-            />
-          </Box>
-        </AccordionDetails>
-      </Accordion>
+              <SubjectAttachmentsSection
+                documents={subject.documents}
+                getFileName={getFileNameFromUrl}
+                onChange={handleDropzoneChange}
+                isUploading={isUploading}
+                onPreview={setPreviewDoc}
+              />
+            </Stack>
+          }
+        />
+      </Box>
 
       <DocumentPreviewDialog
         open={!!previewDoc}

@@ -11,10 +11,10 @@ export function ChapterPublicationSection({ formik }: { formik: FormikProps<ICha
   return (
     <FormSectionCard
       icon="mdi:book-open-outline"
-      title="Publication and audience"
+      title="Publication and Audience"
       descriptionTooltip="Publish the chapter and choose its audience to make it available in the mobile syllabus."
     >
-      <Grid container spacing={1.5}>
+      <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             select

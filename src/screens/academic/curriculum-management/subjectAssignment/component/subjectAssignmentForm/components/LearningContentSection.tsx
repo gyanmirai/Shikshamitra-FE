@@ -16,7 +16,7 @@ export const LearningContentSection: React.FC<LearningContentSectionProps> = ({
 }) => {
   const sections = [
     {
-      label: 'Learning Goals',
+      label: 'Learning goals',
       field: 'learningGoal',
       helperText: 'Define measurable outcomes students should achieve',
       placeholder:
@@ -39,14 +39,14 @@ export const LearningContentSection: React.FC<LearningContentSectionProps> = ({
   ];
 
   return (
-    <Grid container spacing={1}>
+    <Grid container spacing={2}>
       {sections.map((section) => (
         <Grid key={section.field} size={{ xs: 12 }}>
           <Box sx={{ mb: 0.5, display: 'flex', alignItems: 'baseline', gap: 1 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
               {section.label}
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {section.helperText}
             </Typography>
           </Box>

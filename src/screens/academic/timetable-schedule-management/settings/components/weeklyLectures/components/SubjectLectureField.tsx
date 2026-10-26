@@ -69,7 +69,7 @@ function SubjectLectureFieldImpl({ index, formik, disabled, isEdit }: SubjectLec
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <LectureStepButton
-            subjectName={subject?.name}
+            subjectName={subject?.name || `subject ${index + 1}`}
             direction="decrease"
             onClick={handleDecrement}
             disabled={isDisabled || currentValue <= MIN_WEEKLY_LECTURES_PER_SUBJECT}
@@ -103,6 +103,7 @@ function SubjectLectureFieldImpl({ index, formik, disabled, isEdit }: SubjectLec
           />
 
           <LectureStepButton
+            subjectName={subject?.name || `subject ${index + 1}`}
             direction="increase"
             onClick={handleIncrement}
             disabled={isDisabled || currentValue >= MAX_WEEKLY_LECTURES_PER_SUBJECT}

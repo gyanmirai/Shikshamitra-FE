@@ -114,7 +114,11 @@ export function getChapterTableColumns(
             <Typography variant="caption">{value}%</Typography>
             <Label color={statusColor(row.coverageStatus)}>{row.coverageStatus}</Label>
           </Stack>
-          <LinearProgress variant="determinate" value={Number(value) || 0} />
+          <LinearProgress
+            aria-label="Chapter progress"
+            variant="determinate"
+            value={Number(value) || 0}
+          />
         </Stack>
       ),
     },
