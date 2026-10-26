@@ -342,6 +342,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
         id: employeeId,
         body: {
           reportingManagerId: values?.reportingManager,
+          reportingManagerKind: values?.reportingManagerKind ?? 'Employee',
         },
       }).unwrap();
       return res;

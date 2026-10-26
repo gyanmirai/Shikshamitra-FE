@@ -8,7 +8,10 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery, useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
+import {
+  useGetReportingManagerOptionsQuery,
+  useLazyGetEmployeeByIdQuery,
+} from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType, EmployeeStatusTypeColor } from 'src/enums/employee-status-type';
 import {
   Box,
@@ -248,8 +251,14 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
     formik.values.reportingManager
       ? {
           id: formik.values.reportingManager,
+          kind: formik.values.reportingManagerKind ?? 'Employee',
           fullName: formik.values.reportingManagerName,
           status: formik.values.reportingManagerStatus,
+          email: formik.values.reportingManagerEmail,
+          roleName:
+            formik.values.reportingManagerKind === 'TenantAdministrator'
+              ? 'Tenant administrator'
+              : undefined,
         }
       : null
   );
@@ -265,7 +274,13 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
   const [getEmployeeById] = useLazyGetEmployeeByIdQuery();
 
   // ── Fetch full manager details ─────────────────────────────────────────────
-  const fetchManagerDetails = async (managerId: string) => {
+  const fetchManagerDetails = async (managerId: string, kind = 'Employee') => {
+    if (kind === 'TenantAdministrator') {
+      lastFetchedIdRef.current = managerId;
+      setIsDetailLoading(false);
+      setSelectedManagerDetails(null);
+      return;
+    }
     if (!managerId) return;
     // Skip if we already have details for this exact manager
     if (lastFetchedIdRef.current === managerId && selectedManagerDetails?.id === managerId) return;
@@ -275,12 +290,14 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
     setDetailError(false);
     try {
       const data = await getEmployeeById(managerId).unwrap();
-      setSelectedManagerDetails(data);
+      if (lastFetchedIdRef.current === managerId) setSelectedManagerDetails(data);
     } catch {
-      setDetailError(true);
-      setSelectedManagerDetails(null);
+      if (lastFetchedIdRef.current === managerId) {
+        setDetailError(true);
+        setSelectedManagerDetails(null);
+      }
     } finally {
-      setIsDetailLoading(false);
+      if (lastFetchedIdRef.current === managerId) setIsDetailLoading(false);
     }
   };
 
@@ -291,19 +308,29 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
         if (prev?.id === formik.values.reportingManager) return prev;
         return {
           id: formik.values.reportingManager,
+          kind: formik.values.reportingManagerKind ?? 'Employee',
           fullName: formik.values.reportingManagerName,
           status: formik.values.reportingManagerStatus,
+          email: formik.values.reportingManagerEmail,
+          roleName:
+            formik.values.reportingManagerKind === 'TenantAdministrator'
+              ? 'Tenant administrator'
+              : undefined,
         };
       });
     } else {
       setSelectedManager(null);
       setSelectedManagerDetails(null);
+      setIsDetailLoading(false);
+      setDetailError(false);
       lastFetchedIdRef.current = null;
     }
   }, [
     formik.values.reportingManager,
     formik.values.reportingManagerName,
     formik.values.reportingManagerStatus,
+    formik.values.reportingManagerKind,
+    formik.values.reportingManagerEmail,
   ]);
 
   // ── Fetch details whenever the assigned manager ID changes (including async initial load) ─
@@ -313,18 +340,19 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
   useEffect(() => {
     const managerId = formik.values.reportingManager;
     if (managerId && lastFetchedIdRef.current !== managerId) {
-      fetchManagerDetails(managerId);
+      fetchManagerDetails(managerId, formik.values.reportingManagerKind);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.reportingManager]);
+  }, [formik.values.reportingManager, formik.values.reportingManagerKind]);
 
   const {
     data: employees,
     isLoading,
     isFetching,
+    isError,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeQuery,
+    currentQueryAndMutation: useGetReportingManagerOptionsQuery,
     params: employeeParams,
   });
 
@@ -400,17 +428,6 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                 Choose from active managers across your organization.
               </Typography>
 
-              {/* Label */}
-              <Typography
-                variant="caption"
-                fontWeight={600}
-                color="text.secondary"
-                display="block"
-                mb={0.75}
-              >
-                Reporting Manager
-              </Typography>
-
               {/* Autocomplete */}
               {isLoading ? (
                 <Skeleton height={40} width="100%" sx={{ borderRadius: 1 }} />
@@ -418,8 +435,21 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                 <CustomTooltip placement="top" title={selectedManager?.fullName || ''}>
                   <Autocomplete
                     options={filteredOptions}
-                    getOptionLabel={(option: any) => option?.fullName || ''}
-                    isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
+                    getOptionKey={(option: any) => `${option.kind ?? 'Employee'}:${option.id}`}
+                    noOptionsText={
+                      isError
+                        ? 'Could not load reporting managers'
+                        : 'No eligible reporting managers'
+                    }
+                    getOptionLabel={(option: any) =>
+                      option?.kind === 'TenantAdministrator'
+                        ? `${option.fullName} (Tenant administrator)`
+                        : option?.fullName || ''
+                    }
+                    isOptionEqualToValue={(option: any, value: any) =>
+                      option?.id === value?.id &&
+                      (option?.kind ?? 'Employee') === (value?.kind ?? 'Employee')
+                    }
                     filterOptions={(x) => x}
                     disabled={!isEditable.value}
                     loading={isFetching}
@@ -431,6 +461,8 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
+                        label="Reporting manager"
+                        required
                         placeholder="Search and select a manager"
                         size="small"
                         fullWidth
@@ -455,11 +487,13 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                       setSelectedManager(value || null);
                       formik.setFieldTouched('reportingManager', !newManagerId, false);
                       setFieldValue('reportingManager', newManagerId, true);
+                      setFieldValue('reportingManagerKind', value?.kind ?? 'Employee');
                       if (newManagerId) {
                         formik.setFieldError?.('reportingManager', undefined);
                       }
                       setFieldValue('reportingManagerName', value?.fullName || '');
                       setFieldValue('reportingManagerStatus', value?.status ?? null);
+                      setFieldValue('reportingManagerEmail', value?.email ?? '');
 
                       // Clear stale details immediately
                       setSelectedManagerDetails(null);
@@ -467,7 +501,7 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
 
                       // Fetch full details for the newly selected manager
                       if (newManagerId) {
-                        fetchManagerDetails(newManagerId);
+                        fetchManagerDetails(newManagerId, value?.kind);
                       }
                     }}
                   />

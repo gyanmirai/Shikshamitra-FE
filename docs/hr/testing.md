@@ -44,6 +44,8 @@ The existing deployment security-workflow assertion also fails on the baseline a
 
 # Validate HR frontend changes
 
+Reporting-manager regression: run `AssignReportingManager.test.tsx`, `employee-form-validation.policy.test.ts` and `employeeApi.contract.test.ts`. Verify explicit administrator selection with no automatic default, stable identity kind on reload, no employee-detail lookup for an administrator login, clearing back to required validation, and self-exclusion. Backend clean-school API tests own tenant bootstrap, eligibility and persisted identity references; local synthetic selector checks are not authenticated deployed acceptance.
+
 TL;DR: run the docs check for HR docs changes, then choose focused unit, contract, or browser checks based on the screen or client you changed.
 
 ## Staff policy permission contract
