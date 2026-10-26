@@ -63,6 +63,8 @@ const ChangeStatusForm = ({
   const defaultEffectiveDate = dayjs().endOf('month');
   const [warningOpen, setWarningOpen] = useState(false);
   const [activationError, setActivationError] = useState('');
+  const [rejectedBlockers, setRejectedBlockers] = useState<string[]>([]);
+  const [requiresActivationRecheck, setRequiresActivationRecheck] = useState(false);
   const [updateStatus, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEmployeeStatusMutation,
@@ -116,8 +118,24 @@ const ChangeStatusForm = ({
         if (
           values.status.value === EmployeeStatusType.Active &&
           status !== EmployeeStatusType.Active
-        )
-          await activation.refetch();
+        ) {
+          const failure = (error as any)?.data?.error;
+          const details = failure?.data;
+          setRequiresActivationRecheck(true);
+          setRejectedBlockers(
+            failure?.code === 'HR:Employee:010201' &&
+              details?.employeeId === employeeId &&
+              Array.isArray(details.blockerCodes)
+              ? details.blockerCodes
+                  .filter(
+                    (code: unknown): code is string =>
+                      typeof code === 'string' && /^[A-Z][A-Z_]{1,79}$/.test(code)
+                  )
+                  .slice(0, 20)
+              : []
+          );
+          await recheckActivation();
+        }
       }
     },
   });
@@ -132,7 +150,22 @@ const ChangeStatusForm = ({
   });
   const activationBlocked =
     activating &&
-    (activation.isFetching || activation.isError || !activation.currentData?.canActivate);
+    (requiresActivationRecheck ||
+      activation.isFetching ||
+      activation.isError ||
+      !activation.currentData?.canActivate);
+  const recheckActivation = async () => {
+    try {
+      const result = await activation.refetch();
+      if (result?.data && !result.error) {
+        setRejectedBlockers([]);
+        setRequiresActivationRecheck(false);
+      }
+    } catch {
+      // Keep the rejected business rules and require a confirmed fresh check.
+      setRequiresActivationRecheck(true);
+    }
+  };
   const isNonActiveSelected = isNonActiveEmployeeStatus(selectedStatus);
   const {
     data: deactivationCheck,
@@ -286,29 +319,40 @@ const ChangeStatusForm = ({
                     ? 'Checking activation requirements…'
                     : activation.isError
                       ? 'Unable to check activation requirements. Retry before activating this staff member.'
-                      : activation.currentData?.canActivate
-                        ? 'The current activation checks pass. The server will validate again when you update the status.'
-                        : 'This staff member remains inactive until the required salary and statutory setup is complete.'}
+                      : requiresActivationRecheck
+                        ? 'Recheck activation requirements before trying again. The staff member remains inactive.'
+                        : activation.currentData?.canActivate
+                          ? 'The current activation checks pass. The server will validate again when you update the status.'
+                          : 'This staff member remains inactive until the required salary and statutory setup is complete.'}
                 </Typography>
-                {!activation.isFetching &&
-                  !activation.isError &&
-                  activation.currentData?.blockerCodes.map((code) => (
-                    <Box key={code}>
-                      <Typography variant="body2">{activationBlockerMessage(code)}</Typography>
-                      <HrSetupLink
-                        setup={
-                          code.startsWith('ESI_') && code !== 'ESI_POLICY_REQUIRED'
-                            ? 'staffPayroll'
-                            : 'salary'
-                        }
-                        employeeId={employeeId}
-                      />
-                    </Box>
-                  ))}
+                {rejectedBlockers.length > 0 && (
+                  <Typography variant="body2">
+                    The last activation attempt reported these requirements. Recheck after
+                    completing setup.
+                  </Typography>
+                )}
+                {(rejectedBlockers.length
+                  ? rejectedBlockers
+                  : !activation.isFetching && !activation.isError
+                    ? (activation.currentData?.blockerCodes ?? [])
+                    : []
+                ).map((code) => (
+                  <Box key={code}>
+                    <Typography variant="body2">{activationBlockerMessage(code)}</Typography>
+                    <HrSetupLink
+                      setup={
+                        code.startsWith('ESI_') && code !== 'ESI_POLICY_REQUIRED'
+                          ? 'staffPayroll'
+                          : 'salary'
+                      }
+                      employeeId={employeeId}
+                    />
+                  </Box>
+                ))}
                 <Button
                   size="small"
                   disabled={activation.isFetching || isLoading}
-                  onClick={() => activation.refetch()}
+                  onClick={recheckActivation}
                 >
                   Recheck activation requirements
                 </Button>

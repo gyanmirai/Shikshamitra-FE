@@ -132,50 +132,62 @@ describe('ChangeStatusForm manager deactivation warning', () => {
     expect(mocks.updateStatus).toHaveBeenCalledOnce();
   });
 
-  it('handles the status service business-error envelope without a synthetic Reason field', async () => {
-    const user = userEvent.setup();
-    mocks.permissions = [
-      hrPermissions.root,
-      hrPermissions.employee.root,
-      hrPermissions.payroll.root,
-      `${hrPermissions.employee.list}.Edit`,
-      hrPermissions.payroll.compensationRevisionActions.view,
-    ].map((name) => ({ name, isGranted: true }));
-    mocks.updateStatus.mockReturnValue({
-      unwrap: async () => {
-        mocks.readiness.currentData = {
-          canActivate: false,
-          requiredMonth: '2026-10-01',
-          compensationRevisionId: null,
-          blockerCodes: ['PAYROLL_SETUP_REQUIRED', 'ESI_POLICY_REQUIRED'],
-        };
-        throw Object.assign(new Error('Employee Payroll Structure Required'), {
-          data: {
-            error: {
-              code: 'HR:Employee:010201',
-              message: 'Employee Payroll Structure Required',
-              data: {
-                employeeId: 'manager-1',
-                requiredMonth: '2026-10',
-                blockerCodes: ['PAYROLL_SETUP_REQUIRED', 'ESI_POLICY_REQUIRED'],
+  it.each(['rejection', 'error result'])(
+    'preserves rejected server blockers and draft after refresh %s, until a confirmed recheck',
+    async (refreshFailure) => {
+      const user = userEvent.setup();
+      mocks.permissions = [
+        hrPermissions.root,
+        hrPermissions.employee.root,
+        hrPermissions.payroll.root,
+        `${hrPermissions.employee.list}.Edit`,
+        hrPermissions.payroll.compensationRevisionActions.view,
+      ].map((name) => ({ name, isGranted: true }));
+      mocks.updateStatus.mockReturnValue({
+        unwrap: async () => {
+          throw Object.assign(new Error('Employee Payroll Structure Required'), {
+            data: {
+              error: {
+                code: 'HR:Employee:010201',
+                message: 'Employee Payroll Structure Required',
+                data: {
+                  employeeId: 'manager-1',
+                  requiredMonth: '2026-10',
+                  blockerCodes: ['PAYROLL_SETUP_REQUIRED', 'ESI_POLICY_REQUIRED'],
+                },
               },
             },
-          },
-        });
-      },
-    });
-    renderForm(EmployeeStatusType.Inactive);
-    await user.click(screen.getByRole('combobox', { name: 'Select Status' }));
-    await user.click(screen.getByRole('option', { name: /^Active/ }));
-    await user.type(screen.getByRole('textbox', { name: 'Remarks' }), 'Keep this draft');
-    await user.click(screen.getByTestId('hr-employee-status-update-button'));
-    expect(await screen.findByText(/Choose an ESIC policy/)).toBeVisible();
-    expect(screen.getByRole('textbox', { name: 'Remarks' })).toHaveValue('Keep this draft');
-    screen
-      .getAllByRole('link', { name: /Review staff salary setup/ })
-      .forEach((link) => expect(link).toHaveAttribute('href', staffSalaryEditorHref('manager-1')));
-    expect(mocks.readiness.refetch).toHaveBeenCalledOnce();
-  });
+          });
+        },
+      });
+      if (refreshFailure === 'rejection')
+        mocks.readiness.refetch.mockRejectedValueOnce(new Error('network unavailable'));
+      else mocks.readiness.refetch.mockResolvedValueOnce({ error: { status: 'FETCH_ERROR' } });
+      renderForm(EmployeeStatusType.Inactive);
+      await user.click(screen.getByRole('combobox', { name: 'Select Status' }));
+      await user.click(screen.getByRole('option', { name: /^Active/ }));
+      await user.type(screen.getByRole('textbox', { name: 'Remarks' }), 'Keep this draft');
+      await user.click(screen.getByTestId('hr-employee-status-update-button'));
+      expect(await screen.findByText(/Choose an ESIC policy/)).toBeVisible();
+      expect(screen.getByRole('textbox', { name: 'Remarks' })).toHaveValue('Keep this draft');
+      screen
+        .getAllByRole('link', { name: /Review staff salary setup/ })
+        .forEach((link) =>
+          expect(link).toHaveAttribute('href', staffSalaryEditorHref('manager-1'))
+        );
+      expect(mocks.readiness.refetch).toHaveBeenCalledOnce();
+      expect(screen.getByTestId('hr-employee-status-update-button')).toBeDisabled();
+      expect(screen.getByText(/The last activation attempt/)).toBeVisible();
+      mocks.readiness.refetch.mockResolvedValueOnce({
+        data: { canActivate: true, blockerCodes: [] },
+      });
+      await user.click(screen.getByRole('button', { name: 'Recheck activation requirements' }));
+      await waitFor(() =>
+        expect(screen.getByTestId('hr-employee-status-update-button')).toBeEnabled()
+      );
+      expect(screen.queryByText(/The last activation attempt/)).not.toBeInTheDocument();
+    }
+  );
 
   it.each(['fetching', 'failed', 'missing'])(
     'fails closed when activation readiness is %s',

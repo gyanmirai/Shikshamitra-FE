@@ -599,6 +599,8 @@ If Save reports `HR:Payroll:CompensationPreviewStale`, preserve the draft and re
 Show gross, estimated deductions, estimated take-home and monthly school cost, then separate earnings, employee deductions and school contributions.
 Show PF/ESIC status and actionable target differences without repeated yearly totals.
 Failed catalogue requests offer Retry and preserve the draft; missing effective versions require policy setup.
+The salary footer explains why Save salary is unavailable and provides a focus action for the relevant salary fields, statutory decisions or preview. An unexplained salary-target difference blocks saving consistently with the existing backend rule; enrollment-explained differences remain allowed. PF/ESIC business failures retain the draft, show safe validation details and offer permission-gated setup actions.
+When activation is rejected, the last server-reported blockers remain available if refreshing readiness fails. A confirmed readiness recheck is required before another activation attempt.
 
 ## Reporting navigation
 

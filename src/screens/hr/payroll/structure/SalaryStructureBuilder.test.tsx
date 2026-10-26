@@ -338,7 +338,10 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       target: { value: '18000' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }));
-    await waitFor(() => expect(screen.getByText('Synthetic preview failure')).toBeInTheDocument());
+    expect(
+      await screen.findByText('The request did not finish with a confirmed result.')
+    ).toBeVisible();
+    expect(screen.queryByText('Synthetic preview failure')).not.toBeInTheDocument();
     expect(onSalaryChange).toHaveBeenLastCalledWith(null);
     expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 18,000');
     fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }));
@@ -849,7 +852,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       expect(
         screen
           .getAllByRole('alert')
-          .some((alert) => /error|failed|wrong/i.test(alert.textContent ?? ''))
+          .some((alert) => /did not finish with a confirmed result/i.test(alert.textContent ?? ''))
       ).toBe(true)
     );
     expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
@@ -927,7 +930,72 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     expect(screen.getByRole('button', { name: /Preview salary|Refresh preview/ })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
     expect(mocks.calculate).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole('button', {
+        name: /Review salary details|Review statutory deductions|Go to salary preview/,
+      })
+    ).not.toBeInTheDocument();
   });
+  it('explains disabled salary saving and focuses the amount and then the preview without discarding entries', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    const amount = screen.getByLabelText('Monthly cost to school (CTC)');
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Enter an amount greater than zero');
+    await user.click(screen.getByRole('button', { name: 'Review salary details' }));
+    expect(amount).toHaveFocus();
+    await user.type(amount, '10000');
+    await user.click(screen.getByRole('button', { name: 'Go to salary preview' }));
+    expect(screen.getByRole('button', { name: 'Preview salary' })).toHaveFocus();
+    expect(amount).toHaveValue('₹ 10,000');
+    expect(mocks.saveSalary).not.toHaveBeenCalled();
+  });
+  it.each([
+    ['HR:Payroll:PfEnrollmentBlocked', 'PF enrollment prevents salary saving', 'statutory'],
+    [
+      'HR:Payroll:CompensationStatutoryCalculationBlocked',
+      'ESIC setup prevents salary saving',
+      'statutory',
+    ],
+    ['HR:Payroll:CompensationTargetNotExact', 'The salary breakdown does not match', 'salary'],
+  ])(
+    'guides an actual %s business failure to the relevant section and preserves the draft',
+    async (code, message, section) => {
+      const user = userEvent.setup();
+      renderBuilder();
+      await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+      await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+      mocks.saveSalary.mockReturnValueOnce({
+        unwrap: vi.fn().mockRejectedValue({
+          status: 400,
+          data: {
+            error: {
+              code,
+              message: 'One or more business rules were violated.',
+              data: {
+                issueCode: 'PF_MEMBERSHIP_REVIEW_REQUIRED',
+                issueCodes: ['ENROLLMENT_REVIEW_REQUIRED'],
+              },
+            },
+          },
+        }),
+      });
+      await user.click(screen.getByRole('button', { name: 'Save salary' }));
+      expect(await screen.findByText(new RegExp(message))).toBeVisible();
+      await user.click(
+        screen.getByRole('button', {
+          name: section === 'statutory' ? 'Review statutory deductions' : 'Review salary details',
+        })
+      );
+      expect(
+        screen.getByLabelText(
+          section === 'statutory' ? 'Statutory deductions' : 'Salary details fields'
+        )
+      ).toHaveFocus();
+      expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 10,000');
+      expect(mocks.activate).not.toHaveBeenCalled();
+    }
+  );
   it('blocks saving when the server reports a statutory calculation blocker', async () => {
     const result = await mocks.calculate().unwrap();
     mocks.calculate.mockClear();
@@ -946,7 +1014,36 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
     await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Resolve ESIC details before saving');
+    await user.click(screen.getByRole('button', { name: 'Review statutory deductions' }));
+    expect(screen.getByRole('group', { name: 'Statutory deductions' })).toHaveFocus();
   });
+
+  it.each([false, true])(
+    'matches the backend salary-target rule with enrollment explanation=%s',
+    async (explained) => {
+      const result = await mocks.calculate().unwrap();
+      mocks.calculate.mockReturnValue({
+        unwrap: vi.fn().mockResolvedValue({
+          ...result,
+          targetResult: { isExact: false, isExplainedByEnrollment: explained, difference: 100 },
+        }),
+      });
+      const user = userEvent.setup();
+      renderBuilder();
+      await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+      await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+      if (explained) expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled();
+      else {
+        expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+        expect(screen.getByRole('status')).toHaveTextContent(
+          'Resolve the salary amount difference before saving'
+        );
+        await user.click(screen.getByRole('button', { name: 'Review salary details' }));
+        expect(screen.getByLabelText('Salary details fields')).toHaveFocus();
+      }
+    }
+  );
 
   it('allows saving a valid preview while ESIC registration is pending', async () => {
     const result = await mocks.calculate().unwrap();
