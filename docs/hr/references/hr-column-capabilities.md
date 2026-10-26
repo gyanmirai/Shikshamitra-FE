@@ -10,7 +10,7 @@ audience: humans-and-agents
 
 # HR column capabilities
 
-This is the per-column follow-up to [route and table ownership](hr-table-coverage.md), audited from FE main f4613b468 and refreshed onto f2708973, with BE main 99dd6973. The earlier adapter inventory did not establish column-level coverage. The user screenshot was independently inspected by the cloud consumer and identified Staff Directory; it showed no visible sort affordances. Current shared headers now show a neutral sort icon before selection. Screenshot identity does not establish the deployed commit.
+This is the per-column follow-up to [route and table ownership](hr-table-coverage.md), audited from FE main f4613b468 and refreshed onto f2708973, with BE main 99dd6973 refreshed onto cc4af601. The earlier adapter inventory did not establish column-level coverage. The user screenshot was independently inspected by the cloud consumer and identified Staff Directory; it showed no visible sort affordances. Current shared headers now show a neutral sort icon before selection. Screenshot identity does not establish the deployed commit.
 
 Run `node scripts/hr/check-column-capabilities.mjs --json` for the route/table/column matrix, declared choices, authorized source mapping and computed accessors. Run `node --test scripts/hr/column-capabilities.test.mjs` for coverage regressions. The AST reader never executes screen code. It includes all imported route branches and permission-conditional column unions; import closure does not assert every table renders on every route.
 
