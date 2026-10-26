@@ -1,9 +1,9 @@
 import type React from 'react';
 
 import { useState } from 'react';
-import { screen, waitFor } from '@testing-library/react';
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { screen, waitFor } from '@testing-library/react';
 import { renderWithProviders } from 'src/test/test-utils';
 
 import { AssignmentPolicyDrawer } from './AssignmentPolicyDrawer';
@@ -119,6 +119,7 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
             canAssignPolicy: true,
             canPreviewImpact: true,
             closeDrawer: vi.fn(),
+            discardDrawer: () => true,
             saveAssignment: vi.fn(),
             previewCurrentAssignmentImpact: vi.fn(),
             previewAssignment: vi.fn(),
@@ -173,6 +174,7 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
             canAssignPolicy: true,
             canPreviewImpact: true,
             closeDrawer: vi.fn(),
+            discardDrawer: () => true,
             saveAssignment: vi.fn(),
             previewCurrentAssignmentImpact: vi.fn(),
             previewAssignment: vi.fn(),
@@ -236,6 +238,7 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
             canAssignPolicy: true,
             canPreviewImpact: true,
             closeDrawer: vi.fn(),
+            discardDrawer: () => true,
             saveAssignment: vi.fn(),
             previewCurrentAssignmentImpact: vi.fn(),
             previewAssignment: vi.fn(),
@@ -312,6 +315,7 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
                 canAssignPolicy: true,
                 canPreviewImpact: true,
                 closeDrawer: vi.fn(),
+                discardDrawer: () => true,
                 saveAssignment: vi.fn(),
                 previewCurrentAssignmentImpact: vi.fn(),
                 previewAssignment: vi.fn(),

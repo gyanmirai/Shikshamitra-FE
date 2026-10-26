@@ -1,6 +1,6 @@
 'use client';
 
-import type { HrPolicyAssignment, HrPolicyAssignmentConflict } from 'src/redux/hr/hr-policy-api';
+import type { HrPolicyAssignmentConflict } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
 import { GlobalIcons } from 'src/utils/icons';
@@ -14,11 +14,15 @@ import {
   Stack,
   Button,
   Drawer,
+  Dialog,
   Divider,
   TableRow,
   TableCell,
   Accordion,
   Typography,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -43,30 +47,16 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     previewPolicyAssignmentImpactState,
     closeImpactDrawer,
     confirmPendingImpactAction,
-    openAssignmentDrawer,
   } = ctx;
 
-  const openConflictingAssignment = (conflict: HrPolicyAssignmentConflict) => {
-    closeImpactDrawer();
-    openAssignmentDrawer(
-      {
-        id: conflict.assignmentId,
-        academicYearId: impactPreview?.academicYearId || '',
-        targetType: conflict.targetType,
-        targetKey: conflict.targetKey,
-        targetDisplayName: conflict.targetDisplayName,
-        payrollPolicyId: conflict.payrollPolicyId,
-        attendancePolicyId: conflict.attendancePolicyId,
-        leavePolicyId: conflict.leavePolicyId || '',
-        effectiveFrom: conflict.effectiveFrom,
-        effectiveTo: conflict.effectiveTo,
-        priority: conflict.priority,
-        isActive: true,
-        assignmentReason: null,
-      } as HrPolicyAssignment,
-      'view'
-    );
-  };
+  const [selectedConflict, setSelectedConflict] = React.useState<HrPolicyAssignmentConflict | null>(
+    null
+  );
+  const openConflictingAssignment = (conflict: HrPolicyAssignmentConflict) =>
+    setSelectedConflict(conflict);
+  React.useEffect(() => {
+    if (!impactDrawerOpen) setSelectedConflict(null);
+  }, [impactDrawerOpen]);
 
   const displayedWarnings = [
     ...(impactPreview?.warnings ?? []),
@@ -442,6 +432,50 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           </>
         ) : null}
       </Box>
+      <Dialog
+        open={Boolean(selectedConflict)}
+        onClose={() => setSelectedConflict(null)}
+        aria-labelledby="assignment-conflict-title"
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle id="assignment-conflict-title">Conflicting assignment</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1}>
+            <Typography>
+              {selectedConflict?.targetDisplayName || selectedConflict?.targetKey}
+            </Typography>
+            <Typography>Scope: {toLabel(selectedConflict?.targetType || '')}</Typography>
+            <Typography>
+              Effective: {formatDate(selectedConflict?.effectiveFrom)} —{' '}
+              {selectedConflict?.effectiveTo
+                ? formatDate(selectedConflict.effectiveTo)
+                : 'No end date'}
+            </Typography>
+            <Typography>Priority: {selectedConflict?.priority}</Typography>
+            <Typography>
+              Payroll: {selectedConflict?.payrollPolicyName || selectedConflict?.payrollPolicyId}
+            </Typography>
+            <Typography>
+              Attendance:{' '}
+              {selectedConflict?.attendancePolicyName || selectedConflict?.attendancePolicyId}
+            </Typography>
+            <Typography>
+              Leave:{' '}
+              {selectedConflict?.leavePolicyName ||
+                selectedConflict?.leavePolicyId ||
+                'Default fallback'}
+            </Typography>
+            <Typography variant="body2">
+              Your proposed changes remain in the editor. Return to the impact preview to continue
+              reviewing them.
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedConflict(null)}>Return to impact</Button>
+        </DialogActions>
+      </Dialog>
     </Drawer>
   );
 }

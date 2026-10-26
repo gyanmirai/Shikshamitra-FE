@@ -855,10 +855,16 @@ export function useHRPolicyWorkspace({
     setAssignmentConflict(null);
   }, []);
 
-  const closeDrawer = useCallback(() => {
-    if (isPolicyOperationActive) return;
+  // Used only after explicit discard consent (or a verified clean editor), so a
+  // navigation action can await successful closure without opening a second prompt.
+  const discardDrawer = useCallback(() => {
+    if (isPolicyOperationActive) return false;
     clearDrawer();
+    return true;
   }, [clearDrawer, isPolicyOperationActive]);
+  const closeDrawer = useCallback(() => {
+    discardDrawer();
+  }, [discardDrawer]);
 
   const openCalendarDrawer = useCallback(
     async (item?: WorkCalendarPolicy) => {
@@ -2172,6 +2178,7 @@ export function useHRPolicyWorkspace({
     openAttendanceDrawer,
     openAssignmentDrawer,
     closeDrawer,
+    discardDrawer,
 
     // Operation overlay
     activePolicyOperation,

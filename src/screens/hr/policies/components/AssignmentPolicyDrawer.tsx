@@ -229,6 +229,7 @@ function AssignmentTargetPicker({
   disabled?: boolean;
 }) {
   const { assignmentForm, setAssignmentForm, employeeOptions, groupOptions } = ctx;
+  const targetId = React.useId();
 
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
@@ -256,8 +257,10 @@ function AssignmentTargetPicker({
 
   if (assignmentForm.targetType === 'employee') {
     return (
-      <DrawerField label="Staff *">
+      <DrawerField label="Staff *" inputId={targetId}>
         <PaginatedSearchSelect
+          id={targetId}
+          inputAriaLabelledBy={`${targetId}-label`}
           label=""
           placeholder="Search staff..."
           fetchOptions={async (query, page) => {
@@ -310,8 +313,9 @@ function AssignmentTargetPicker({
   }
 
   return (
-    <DrawerField label="Group *">
+    <DrawerField label="Group *" inputId={targetId}>
       <Autocomplete
+        id={targetId}
         key="group-target-autocomplete"
         options={groupOptions}
         getOptionLabel={optionLabel}
@@ -333,7 +337,12 @@ function AssignmentTargetPicker({
           );
         }}
         renderInput={(params) => (
-          <TextField {...params} size="small" placeholder="Select group..." />
+          <TextField
+            {...params}
+            size="small"
+            placeholder="Select group..."
+            inputProps={{ ...params.inputProps, 'aria-labelledby': `${targetId}-label` }}
+          />
         )}
       />
     </DrawerField>
@@ -371,6 +380,8 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
   } = ctx;
 
   const originalForm = React.useRef(JSON.stringify(assignmentForm));
+  const fromId = React.useId();
+  const toId = React.useId();
   const router = useRouter();
   const [confirmDiscard, setConfirmDiscard] = React.useState(false);
   const openLeavePolicies = () => {
@@ -379,8 +390,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
       setConfirmDiscard(true);
       return;
     }
-    closeDrawer();
-    router.push(hrPaths.policies.leavePolicies);
+    if (ctx.discardDrawer()) router.push(hrPaths.policies.leavePolicies);
   };
 
   if (!drawer || drawer.kind !== 'assignment') return null;
@@ -493,7 +503,11 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               ))}
             </DrawerSelectField>
             <DrawerFormGrid>
-              <DrawerField label="Effective From *">
+              <DrawerField
+                label="Effective From *"
+                inputId={fromId}
+                helperText={assignmentDateError || undefined}
+              >
                 <DatePicker
                   value={assignmentForm.effectiveFrom ? dayjs(assignmentForm.effectiveFrom) : null}
                   onChange={(val) => {
@@ -506,6 +520,13 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   format="DD/MM/YYYY"
                   slotProps={{
                     textField: {
+                      id: fromId,
+                      InputProps: {
+                        'aria-labelledby': `${fromId}-label`,
+                        'aria-describedby': assignmentDateError
+                          ? `${fromId}-description`
+                          : undefined,
+                      },
                       size: 'small',
                       fullWidth: true,
                       error: Boolean(assignmentDateError),
@@ -516,6 +537,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               </DrawerField>
               <DrawerField
                 label="Effective To (optional)"
+                inputId={toId}
                 helperText={assignmentDateError || 'Leave blank for no end date.'}
               >
                 <DatePicker
@@ -530,6 +552,11 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   format="DD/MM/YYYY"
                   slotProps={{
                     textField: {
+                      id: toId,
+                      InputProps: {
+                        'aria-labelledby': `${toId}-label`,
+                        'aria-describedby': `${toId}-description`,
+                      },
                       size: 'small',
                       fullWidth: true,
                       placeholder: 'No end date',
@@ -684,8 +711,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
             disabled={isPolicyOperationActive}
             onClick={() => {
               setConfirmDiscard(false);
-              closeDrawer();
-              router.push(hrPaths.policies.leavePolicies);
+              if (ctx.discardDrawer()) router.push(hrPaths.policies.leavePolicies);
             }}
           >
             Discard and open Leave Policies
