@@ -8,6 +8,14 @@ import {
 } from './leaveApi';
 
 describe('leaveApi contracts', () => {
+  it('sends numeric Pending status zero instead of silently fetching every status', () => {
+    expect(buildLeaveRequestQueryParams({ status: 0, paidType: 'Unpaid', page: 1 })).toMatchObject({
+      status: 0,
+      paidType: 'Unpaid',
+      page: 1,
+    });
+    expect(buildLeaveRequestQueryParams({ status: '' })).not.toHaveProperty('status');
+  });
   it('preserves active-only defaults unless the policy workspace requests an archive view', () => {
     expect(
       buildLeavePolicyQueryParams({

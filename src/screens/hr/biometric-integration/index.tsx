@@ -158,10 +158,10 @@ const BiometricIntegrationScreen = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'rowNumber', label: 'Row', minWidth: '4vw', align: 'left' },
+      { id: 'rowNumber', filterType: 'number', label: 'Row', minWidth: '4vw', align: 'left' },
       { id: 'employeeName', label: 'Name', minWidth: '12vw', align: 'left', sticky: true },
       { id: 'employeeCode', label: 'Staff Code', align: 'left', minWidth: '10vw' },
-      { id: 'attendanceDate', label: 'Date', align: 'left', minWidth: '8vw' },
+      { id: 'attendanceDate', filterType: 'date', label: 'Date', align: 'left', minWidth: '8vw' },
       { id: 'timeIn', label: 'In-Time', align: 'left', minWidth: '6vw' },
       { id: 'timeOut', label: 'Out-Time', align: 'left', minWidth: '6vw' },
       {

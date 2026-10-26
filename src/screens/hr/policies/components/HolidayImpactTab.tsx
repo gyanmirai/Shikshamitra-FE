@@ -4,10 +4,10 @@ import React from 'react';
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { parseTableDate, extractTextFromReactNode } from 'src/components/customizabaleTable/utils';
 import {
   Card,
   Chip,
-  Alert,
   Stack,
   Button,
   Select,
@@ -20,11 +20,10 @@ import {
   InputLabel,
   Typography,
   FormControl,
-  LinearProgress,
 } from '@mui/material';
 
 import { EmptyRows, SectionTable } from './HRPolicySharedUI';
-import { toLabel, formatDate, getErrorMessage } from '../hr-policy-workspace-utils';
+import { toLabel, formatDate } from '../hr-policy-workspace-utils';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
@@ -171,13 +170,19 @@ export function HolidayImpactTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           Clear Dates
         </Button>
       </Stack>
-      {holidayImpactLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
-      {holidayImpactError ? (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {getErrorMessage(holidayImpactError, 'Could not load holiday impact.')}
-        </Alert>
-      ) : null}
       <SectionTable
+        tableId="hr-holiday-impact"
+        tableTitle="Holiday impact"
+        isLoading={holidayImpactLoading}
+        error={holidayImpactError}
+        columnDefinitions={[
+          {
+            filterType: 'date',
+            filterValue: (value) => extractTextFromReactNode(value),
+            sortValue: (value) =>
+              parseTableDate(extractTextFromReactNode(value))?.valueOf() ?? null,
+          },
+        ]}
         columns={[
           'Date',
           'Holiday',

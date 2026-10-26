@@ -33,8 +33,11 @@ export const shiftManagementApi = api.injectEndpoints({
       invalidatesTags: [shiftManagementType.shift],
     }),
     getShifts: builder.query({
-      query: () => ({
-        url: `/app/shift-management`,
+      query: (
+        params: { skipCount?: number; maxResultCount?: number; sorting?: string } | void
+      ) => ({
+        url: '/app/shift-management',
+        params: params || undefined,
       }),
       providesTags: [shiftManagementType.shift],
     }),

@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters, nameContains } from 'src/screens/hr/utils/server-column-filters';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -855,15 +856,31 @@ function GuidedSetupTab() {
             columns={[
               {
                 id: 'domain',
+                filterType: 'enum',
+                enumOptions: Object.entries(sqaaDomainLabels).map(([value, label]) => ({
+                  value: Number(value),
+                  label,
+                })),
                 label: 'Domain',
                 minWidth: '240px',
                 render: (value) => sqaaDomainLabels[Number(value)] || '-',
               },
-              { id: 'mappedCriteria', label: 'Criteria', minWidth: '100px' },
-              { id: 'evidenceRequiredCriteria', label: 'Required', minWidth: '110px' },
-              { id: 'evidenceSubmitted', label: 'Evidence', minWidth: '110px' },
+              { id: 'mappedCriteria', filterType: 'number', label: 'Criteria', minWidth: '100px' },
+              {
+                id: 'evidenceRequiredCriteria',
+                filterType: 'number',
+                label: 'Required',
+                minWidth: '110px',
+              },
+              {
+                id: 'evidenceSubmitted',
+                filterType: 'number',
+                label: 'Evidence',
+                minWidth: '110px',
+              },
               {
                 id: 'missingEvidence',
+                filterType: 'number',
                 label: 'Missing',
                 minWidth: '110px',
                 render: (value) => (
@@ -1314,139 +1331,156 @@ function TemplatesTab() {
           setTableQuery((current) => ({ ...current, page, pageSize }))
         }
         onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
-        columns={[
-          { id: 'name', label: 'Template', minWidth: '220px' },
-          {
-            id: 'boardType',
-            label: 'Board',
-            minWidth: '120px',
-            render: (value) => boardTypeLabels[Number(value ?? 0)] || '-',
-          },
-          {
-            id: 'staffCategory',
-            label: 'Category',
-            minWidth: '150px',
-            render: (value) => staffCategoryLabels[Number(value)] || '-',
-          },
-          {
-            id: 'sections',
-            label: 'Sections',
-            minWidth: '260px',
-            render: (value) => (
-              <Stack spacing={0.75}>
-                {(value || []).slice(0, 3).map((section: any) => (
-                  <Stack
-                    key={section.id || section.name}
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                  >
-                    <Typography variant="caption" sx={{ minWidth: 120 }} noWrap>
-                      {section.name}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={sqaaDomainLabels[Number(section.sqaaDomain ?? 2)] || 'SQAAF'}
-                    />
-                    <LinearProgress
-                      variant="determinate"
-                      value={Number(section.weight || 0)}
-                      sx={{ flex: 1, minWidth: 72 }}
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      {section.weight}%
-                    </Typography>
-                  </Stack>
-                ))}
-              </Stack>
-            ),
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            minWidth: '110px',
-            render: (value) => (
-              <Chip
-                size="small"
-                color={
-                  Number(value) === 1 ? 'success' : Number(value) === 2 ? 'warning' : 'default'
-                }
-                label={
-                  Number(value) === 1 ? 'Published' : Number(value) === 2 ? 'Archived' : 'Draft'
-                }
-              />
-            ),
-          },
-          {
-            id: 'weight',
-            label: 'Weight',
-            minWidth: '100px',
-            render: (_value, row) => `${getSectionWeightTotal(row.sections || [])}%`,
-          },
-          {
-            excludeFromExport: true,
-            id: 'actions',
-            label: 'Actions',
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            stickyPosition: 'right' as const,
-            minWidth: '80px',
-            render: (_value, row) => (
-              <ThreeDotsActions
-                viewLabel={`View ${String(row.title || row.name || row.id)}`}
-                editLabel={`Edit ${String(row.title || row.name || row.id)}`}
-                deleteLabel={`Delete ${String(row.title || row.name || row.id)}`}
-                moreLabel={`More actions for ${String(row.title || row.name || row.id)}`}
-                actions={({ popover }) => (
-                  <Stack sx={{ minWidth: 150 }}>
-                    <MenuItem
-                      disabled={row.status === 1 || !isTemplatePublishable(row.sections || [])}
-                      onClick={async () => {
-                        popover.onClose();
-                        try {
-                          await publishTemplate(row.id).unwrap();
-                          toast.success('Template published');
-                        } catch (error) {
-                          showPerformanceError(error, 'Unable to publish template');
-                        }
-                      }}
+        searchTerm={tableQuery.search}
+        {...serverColumnFilters(
+          [
+            { id: 'name', label: 'Template', minWidth: '220px' },
+            {
+              id: 'boardType',
+              filterType: 'enum',
+              enumOptions: Object.entries(boardTypeLabels).map(([value, label]) => ({
+                value: Number(value),
+                label,
+              })),
+              label: 'Board',
+              minWidth: '120px',
+              render: (value) => boardTypeLabels[Number(value ?? 0)] || '-',
+            },
+            {
+              id: 'staffCategory',
+              filterType: 'enum',
+              enumOptions: Object.entries(staffCategoryLabels).map(([value, label]) => ({
+                value: Number(value),
+                label,
+              })),
+              label: 'Category',
+              minWidth: '150px',
+              render: (value) => staffCategoryLabels[Number(value)] || '-',
+            },
+            {
+              id: 'sections',
+              label: 'Sections',
+              minWidth: '260px',
+              render: (value) => (
+                <Stack spacing={0.75}>
+                  {(value || []).slice(0, 3).map((section: any) => (
+                    <Stack
+                      key={section.id || section.name}
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
                     >
-                      Publish
-                    </MenuItem>
-                    <MenuItem
-                      onClick={async () => {
-                        popover.onClose();
-                        try {
-                          await cloneTemplate(row.id).unwrap();
-                          toast.success('Template cloned');
-                        } catch (error) {
-                          showPerformanceError(error, 'Unable to clone template');
-                        }
-                      }}
-                    >
-                      Clone
-                    </MenuItem>
-                    <MenuItem
-                      disabled={row.status === 2}
-                      onClick={async () => {
-                        popover.onClose();
-                        try {
-                          await archiveTemplate(row.id).unwrap();
-                          toast.success('Template archived');
-                        } catch (error) {
-                          showPerformanceError(error, 'Unable to archive template');
-                        }
-                      }}
-                    >
-                      Archive
-                    </MenuItem>
-                  </Stack>
-                )}
-              />
-            ),
-          },
-        ]}
+                      <Typography variant="caption" sx={{ minWidth: 120 }} noWrap>
+                        {section.name}
+                      </Typography>
+                      <Chip
+                        size="small"
+                        label={sqaaDomainLabels[Number(section.sqaaDomain ?? 2)] || 'SQAAF'}
+                      />
+                      <LinearProgress
+                        variant="determinate"
+                        value={Number(section.weight || 0)}
+                        sx={{ flex: 1, minWidth: 72 }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {section.weight}%
+                      </Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              ),
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              minWidth: '110px',
+              render: (value) => (
+                <Chip
+                  size="small"
+                  color={
+                    Number(value) === 1 ? 'success' : Number(value) === 2 ? 'warning' : 'default'
+                  }
+                  label={
+                    Number(value) === 1 ? 'Published' : Number(value) === 2 ? 'Archived' : 'Draft'
+                  }
+                />
+              ),
+            },
+            {
+              id: 'weight',
+              label: 'Weight',
+              minWidth: '100px',
+              render: (_value, row) => `${getSectionWeightTotal(row.sections || [])}%`,
+            },
+            {
+              excludeFromExport: true,
+              id: 'actions',
+              label: 'Actions',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              stickyPosition: 'right' as const,
+              minWidth: '80px',
+              render: (_value, row) => (
+                <ThreeDotsActions
+                  viewLabel={`View ${String(row.title || row.name || row.id)}`}
+                  editLabel={`Edit ${String(row.title || row.name || row.id)}`}
+                  deleteLabel={`Delete ${String(row.title || row.name || row.id)}`}
+                  moreLabel={`More actions for ${String(row.title || row.name || row.id)}`}
+                  actions={({ popover }) => (
+                    <Stack sx={{ minWidth: 150 }}>
+                      <MenuItem
+                        disabled={row.status === 1 || !isTemplatePublishable(row.sections || [])}
+                        onClick={async () => {
+                          popover.onClose();
+                          try {
+                            await publishTemplate(row.id).unwrap();
+                            toast.success('Template published');
+                          } catch (error) {
+                            showPerformanceError(error, 'Unable to publish template');
+                          }
+                        }}
+                      >
+                        Publish
+                      </MenuItem>
+                      <MenuItem
+                        onClick={async () => {
+                          popover.onClose();
+                          try {
+                            await cloneTemplate(row.id).unwrap();
+                            toast.success('Template cloned');
+                          } catch (error) {
+                            showPerformanceError(error, 'Unable to clone template');
+                          }
+                        }}
+                      >
+                        Clone
+                      </MenuItem>
+                      <MenuItem
+                        disabled={row.status === 2}
+                        onClick={async () => {
+                          popover.onClose();
+                          try {
+                            await archiveTemplate(row.id).unwrap();
+                            toast.success('Template archived');
+                          } catch (error) {
+                            showPerformanceError(error, 'Unable to archive template');
+                          }
+                        }}
+                      >
+                        Archive
+                      </MenuItem>
+                    </Stack>
+                  )}
+                />
+              ),
+            },
+          ],
+          [nameContains('name')],
+          tableQuery,
+          ({ search }) =>
+            setTableQuery((current) => ({ ...current, page: 1, search: String(search ?? '') }))
+        )}
         data={templates}
         noDataText="No appraisal templates found."
       />
@@ -1871,118 +1905,130 @@ function CyclesTab() {
           setTableQuery((current) => ({ ...current, page, pageSize }))
         }
         onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
-        columns={[
-          { id: 'name', label: 'Cycle', minWidth: '220px' },
-          {
-            id: 'periodStart',
-            label: 'Starts',
-            valueType: 'date',
-            filterType: 'date',
-            render: (value) => dayjs(value).format('DD MMM YYYY'),
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            minWidth: '120px',
-            render: (value) => (
-              <Chip size="small" label={cycleStatusLabels[Number(value)] || 'Draft'} />
-            ),
-          },
-          {
-            id: 'periodEnd',
-            label: 'Ends',
-            valueType: 'date',
-            filterType: 'date',
-            render: (value) => dayjs(value).format('DD MMM YYYY'),
-          },
-          { id: 'assignedCount', label: 'Assigned', minWidth: '110px' },
-          { id: 'finalizedCount', label: 'Finalized', minWidth: '110px' },
-          {
-            excludeFromExport: true,
-            id: 'actions',
-            label: 'Actions',
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            stickyPosition: 'right' as const,
-            minWidth: '80px',
-            render: (_value, row) => (
-              <ThreeDotsActions
-                viewLabel={`View ${String(row.title || row.name || row.id)}`}
-                editLabel={`Edit ${String(row.title || row.name || row.id)}`}
-                deleteLabel={`Delete ${String(row.title || row.name || row.id)}`}
-                moreLabel={`More actions for ${String(row.title || row.name || row.id)}`}
-                actions={({ popover }) => (
-                  <Stack sx={{ minWidth: 160 }}>
-                    <MenuItem
-                      disabled={row.status !== 0}
-                      onClick={async () => {
-                        popover.onClose();
-                        try {
-                          await publishCycle(row.id).unwrap();
-                          toast.success('Cycle published');
-                        } catch (error) {
-                          showPerformanceError(error, 'Unable to publish cycle');
-                        }
-                      }}
-                    >
-                      Publish
-                    </MenuItem>
-                    <MenuItem
-                      disabled={(row.status !== 1 && row.status !== 2) || !templates[0]?.id}
-                      onClick={async () => {
-                        popover.onClose();
-                        try {
-                          await assignEmployees({
-                            id: row.id,
-                            body: {
-                              templateId: templates[0]?.id,
-                              employeeIds: [],
-                              activeEmployeesOnly: true,
-                            },
-                          }).unwrap();
-                          toast.success('Eligible staff assigned to cycle');
-                        } catch (error) {
-                          showPerformanceError(error, 'Unable to assign staff to cycle');
-                        }
-                      }}
-                    >
-                      Assign Staff
-                    </MenuItem>
-                    <MenuItem
-                      disabled={row.status !== 2}
-                      onClick={async () => {
-                        popover.onClose();
-                        try {
-                          await moveToCalibration(row.id).unwrap();
-                          toast.success('Cycle moved to calibration');
-                        } catch (error) {
-                          showPerformanceError(error, 'Unable to move cycle to calibration');
-                        }
-                      }}
-                    >
-                      Move to Calibration
-                    </MenuItem>
-                    <MenuItem
-                      disabled={row.status !== 3}
-                      onClick={async () => {
-                        popover.onClose();
-                        try {
-                          await finalizeCycle(row.id).unwrap();
-                          toast.success('Cycle finalized');
-                        } catch (error) {
-                          showPerformanceError(error, 'Unable to finalize cycle');
-                        }
-                      }}
-                    >
-                      Finalize
-                    </MenuItem>
-                  </Stack>
-                )}
-              />
-            ),
-          },
-        ]}
+        searchTerm={tableQuery.search}
+        {...serverColumnFilters(
+          [
+            { id: 'name', label: 'Cycle', minWidth: '220px' },
+            {
+              id: 'periodStart',
+              label: 'Starts',
+              valueType: 'date',
+              filterType: 'date',
+              render: (value) => dayjs(value).format('DD MMM YYYY'),
+            },
+            {
+              id: 'status',
+              filterType: 'enum',
+              enumOptions: Object.entries(cycleStatusLabels).map(([value, label]) => ({
+                value: Number(value),
+                label,
+              })),
+              label: 'Status',
+              minWidth: '120px',
+              render: (value) => (
+                <Chip size="small" label={cycleStatusLabels[Number(value)] || 'Draft'} />
+              ),
+            },
+            {
+              id: 'periodEnd',
+              label: 'Ends',
+              valueType: 'date',
+              filterType: 'date',
+              render: (value) => dayjs(value).format('DD MMM YYYY'),
+            },
+            { id: 'assignedCount', filterType: 'number', label: 'Assigned', minWidth: '110px' },
+            { id: 'finalizedCount', filterType: 'number', label: 'Finalized', minWidth: '110px' },
+            {
+              excludeFromExport: true,
+              id: 'actions',
+              label: 'Actions',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              stickyPosition: 'right' as const,
+              minWidth: '80px',
+              render: (_value, row) => (
+                <ThreeDotsActions
+                  viewLabel={`View ${String(row.title || row.name || row.id)}`}
+                  editLabel={`Edit ${String(row.title || row.name || row.id)}`}
+                  deleteLabel={`Delete ${String(row.title || row.name || row.id)}`}
+                  moreLabel={`More actions for ${String(row.title || row.name || row.id)}`}
+                  actions={({ popover }) => (
+                    <Stack sx={{ minWidth: 160 }}>
+                      <MenuItem
+                        disabled={row.status !== 0}
+                        onClick={async () => {
+                          popover.onClose();
+                          try {
+                            await publishCycle(row.id).unwrap();
+                            toast.success('Cycle published');
+                          } catch (error) {
+                            showPerformanceError(error, 'Unable to publish cycle');
+                          }
+                        }}
+                      >
+                        Publish
+                      </MenuItem>
+                      <MenuItem
+                        disabled={(row.status !== 1 && row.status !== 2) || !templates[0]?.id}
+                        onClick={async () => {
+                          popover.onClose();
+                          try {
+                            await assignEmployees({
+                              id: row.id,
+                              body: {
+                                templateId: templates[0]?.id,
+                                employeeIds: [],
+                                activeEmployeesOnly: true,
+                              },
+                            }).unwrap();
+                            toast.success('Eligible staff assigned to cycle');
+                          } catch (error) {
+                            showPerformanceError(error, 'Unable to assign staff to cycle');
+                          }
+                        }}
+                      >
+                        Assign Staff
+                      </MenuItem>
+                      <MenuItem
+                        disabled={row.status !== 2}
+                        onClick={async () => {
+                          popover.onClose();
+                          try {
+                            await moveToCalibration(row.id).unwrap();
+                            toast.success('Cycle moved to calibration');
+                          } catch (error) {
+                            showPerformanceError(error, 'Unable to move cycle to calibration');
+                          }
+                        }}
+                      >
+                        Move to Calibration
+                      </MenuItem>
+                      <MenuItem
+                        disabled={row.status !== 3}
+                        onClick={async () => {
+                          popover.onClose();
+                          try {
+                            await finalizeCycle(row.id).unwrap();
+                            toast.success('Cycle finalized');
+                          } catch (error) {
+                            showPerformanceError(error, 'Unable to finalize cycle');
+                          }
+                        }}
+                      >
+                        Finalize
+                      </MenuItem>
+                    </Stack>
+                  )}
+                />
+              ),
+            },
+          ],
+          [nameContains('name')],
+          tableQuery,
+          ({ search }) =>
+            setTableQuery((current) => ({ ...current, page: 1, search: String(search ?? '') }))
+        )}
         data={cycles}
         noDataText="No performance cycles found."
       />
@@ -2248,12 +2294,18 @@ function DevelopmentPlansTab() {
           { id: 'actionPlan', label: 'Action Plan', minWidth: '260px' },
           {
             id: 'targetDate',
+            filterType: 'date',
             label: 'Target',
             minWidth: '140px',
             render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : '-'),
           },
           {
             id: 'status',
+            filterType: 'enum',
+            enumOptions: ['Open', 'In Progress', 'Completed', 'Deferred'].map((label, value) => ({
+              label,
+              value,
+            })),
             label: 'Status',
             minWidth: '130px',
             render: (value) => (
@@ -2356,16 +2408,32 @@ function ReportsTab() {
             columns={[
               {
                 id: 'domain',
+                filterType: 'enum',
+                enumOptions: Object.entries(sqaaDomainLabels).map(([value, label]) => ({
+                  value: Number(value),
+                  label,
+                })),
                 label: 'SQAAF Domain',
                 minWidth: '260px',
                 render: (value) => sqaaDomainLabels[Number(value)] || '-',
               },
-              { id: 'templateCount', label: 'Templates', minWidth: '110px' },
-              { id: 'assignedReviewCount', label: 'Reviews', minWidth: '110px' },
-              { id: 'mappedCriteria', label: 'Criteria', minWidth: '110px' },
-              { id: 'evidenceSubmitted', label: 'Evidence', minWidth: '110px' },
+              { id: 'templateCount', filterType: 'number', label: 'Templates', minWidth: '110px' },
+              {
+                id: 'assignedReviewCount',
+                filterType: 'number',
+                label: 'Reviews',
+                minWidth: '110px',
+              },
+              { id: 'mappedCriteria', filterType: 'number', label: 'Criteria', minWidth: '110px' },
+              {
+                id: 'evidenceSubmitted',
+                filterType: 'number',
+                label: 'Evidence',
+                minWidth: '110px',
+              },
               {
                 id: 'missingEvidence',
+                filterType: 'number',
                 label: 'Missing',
                 minWidth: '110px',
                 render: (value) => (
@@ -2394,6 +2462,7 @@ function ReportsTab() {
               { id: 'action', label: 'Action', excludeFromExport: false, minWidth: '220px' },
               {
                 id: 'dueDate',
+                filterType: 'date',
                 label: 'Due Date',
                 minWidth: '140px',
                 render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : '-'),
@@ -2578,12 +2647,18 @@ function SqaaAuditPackSection() {
           columns={[
             {
               id: 'domain',
+              filterType: 'enum',
+              enumOptions: Object.entries(sqaaDomainLabels).map(([value, label]) => ({
+                value: Number(value),
+                label,
+              })),
               label: 'SQAAF Domain',
               minWidth: '260px',
               render: (value) => sqaaDomainLabels[Number(value)] || '-',
             },
             {
               id: 'readinessPercentage',
+              filterType: 'number',
               label: 'Ready',
               minWidth: '120px',
               render: (value) => (
@@ -2596,13 +2671,29 @@ function SqaaAuditPackSection() {
                 />
               ),
             },
-            { id: 'templateCount', label: 'Templates', minWidth: '110px' },
-            { id: 'assignedReviewCount', label: 'Reviews', minWidth: '110px' },
-            { id: 'mappedCriteria', label: 'Criteria', minWidth: '110px' },
-            { id: 'evidenceRequiredCriteria', label: 'Required', minWidth: '110px' },
-            { id: 'evidenceSubmitted', label: 'Submitted', minWidth: '110px' },
+            { id: 'templateCount', filterType: 'number', label: 'Templates', minWidth: '110px' },
+            {
+              id: 'assignedReviewCount',
+              filterType: 'number',
+              label: 'Reviews',
+              minWidth: '110px',
+            },
+            { id: 'mappedCriteria', filterType: 'number', label: 'Criteria', minWidth: '110px' },
+            {
+              id: 'evidenceRequiredCriteria',
+              filterType: 'number',
+              label: 'Required',
+              minWidth: '110px',
+            },
+            {
+              id: 'evidenceSubmitted',
+              filterType: 'number',
+              label: 'Submitted',
+              minWidth: '110px',
+            },
             {
               id: 'missingEvidence',
+              filterType: 'number',
               label: 'Missing',
               minWidth: '110px',
               render: (value) => (
@@ -2628,6 +2719,11 @@ function SqaaAuditPackSection() {
           columns={[
             {
               id: 'domain',
+              filterType: 'enum',
+              enumOptions: Object.entries(sqaaDomainLabels).map(([value, label]) => ({
+                value: Number(value),
+                label,
+              })),
               label: 'Domain',
               minWidth: '230px',
               render: (value) => sqaaDomainLabels[Number(value)] || '-',
@@ -2698,12 +2794,18 @@ function ReviewTable({
         { id: 'templateName', label: 'Template', minWidth: '190px' },
         {
           id: 'finalScore',
+          filterType: 'number',
           label: 'Score',
           minWidth: '100px',
           render: (value) => formatPerformanceScore(value),
         },
         {
           id: 'status',
+          filterType: 'enum',
+          enumOptions: Object.entries(reviewStatusLabels).map(([value, label]) => ({
+            value: Number(value),
+            label,
+          })),
           label: 'Status',
           minWidth: '120px',
           render: (value) => (

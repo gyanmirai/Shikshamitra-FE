@@ -205,8 +205,12 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                             <Stack spacing={0.5}>
                               <Typography variant="body2">{warning.message}</Typography>
                               {warning.conflict ? (
-                                <Typography variant="caption" sx={{ mt: 1, display: 'block', opacity: 0.8 }}>
-                                  Reference ID: {warning.conflict.assignmentId.substring(0, 8).toUpperCase()}
+                                <Typography
+                                  variant="caption"
+                                  sx={{ mt: 1, display: 'block', opacity: 0.8 }}
+                                >
+                                  Reference ID:{' '}
+                                  {warning.conflict.assignmentId.substring(0, 8).toUpperCase()}
                                 </Typography>
                               ) : null}
                             </Stack>
@@ -320,7 +324,11 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                   ({formatNumber(impactPreview.affectedEmployees?.length ?? 0)})
                 </Typography>
               </Typography>
-              <SectionTable columns={['Staff', 'Department', 'Type']}>
+              <SectionTable
+                tableId="hr-policy-affected-staff"
+                tableTitle="Affected staff"
+                columns={['Staff', 'Department', 'Type']}
+              >
                 {impactPreview.affectedEmployees?.length ? (
                   impactPreview.affectedEmployees.map((employee) => (
                     <TableRow key={employee.employeeId} hover>

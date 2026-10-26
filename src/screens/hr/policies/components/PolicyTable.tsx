@@ -1,5 +1,6 @@
 'use client';
 
+import { serverColumnFilters, nameContains } from 'src/screens/hr/utils/server-column-filters';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { PayrollPolicy, AttendancePolicy } from 'src/redux/hr/hr-policy-api';
@@ -388,7 +389,9 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         tableId={`hr-${type}-policies`}
         tableTitle={type === 'payroll' ? 'Payroll policies' : 'Attendance policies'}
         onExport={exportTable}
-        columns={columns}
+        {...serverColumnFilters(columns, [nameContains('name')], tableQuery, ({ search }) =>
+          setTableQuery((current) => ({ ...current, page: 1, search: String(search ?? '') }))
+        )}
         data={rows}
         error={error}
         onRetry={pageResult.refetch}

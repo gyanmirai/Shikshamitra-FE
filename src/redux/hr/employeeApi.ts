@@ -18,6 +18,14 @@ export interface EmployeeSearchOption {
   status: number;
 }
 
+export interface ReportingManagerOption extends EmployeeSearchOption {
+  kind: 'Employee' | 'TenantAdministrator';
+  employeeCode: string;
+  employeeIdentifier: string;
+  email?: string;
+  designation?: string;
+}
+
 export interface EmployeeOptionsResponse {
   items: EmployeeSearchOption[];
   hasMore: boolean;
@@ -168,6 +176,19 @@ export const employeeApi = api.injectEndpoints({
       providesTags: [roleType.role],
     }),
     // Basic Employee CRUD Operations
+    getReportingManagerOptions: builder.query<
+      { items: ReportingManagerOption[] },
+      { search?: string }
+    >({
+      query: (params) => ({
+        url: '/employees/reporting-manager/options',
+        params: { search: params?.search },
+      }),
+      transformResponse: (items: Omit<ReportingManagerOption, 'employeeIdentifier'>[]) => ({
+        items: items.map((item) => ({ ...item, employeeIdentifier: item.employeeCode })),
+      }),
+      providesTags: [employeeType.employee],
+    }),
     getEmployeeOptions: builder.query<EmployeeOptionsResponse, EmployeeOptionsInput>({
       query: (params) => ({ url: '/employees/options', params }),
       providesTags: [employeeType.employee],
@@ -506,6 +527,7 @@ export const {
   useUpdateEmployeeStatusMutation,
   useGetEmployeeStatusDeactivationCheckQuery,
   useGetReportingManagerByEmployeeIdQuery,
+  useGetReportingManagerOptionsQuery,
   useUpdateReportingManagerByEmployeeIdMutation,
   useGetEmployeesUnderManagerQuery,
   useGetMyEmployeesUnderManagerQuery,

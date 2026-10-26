@@ -44,6 +44,8 @@ The existing deployment security-workflow assertion also fails on the baseline a
 
 # Validate HR frontend changes
 
+Reporting-manager regression: run `AssignReportingManager.test.tsx`, `employee-form-validation.policy.test.ts` and `employeeApi.contract.test.ts`. Verify explicit administrator selection with no automatic default, stable identity kind on reload, no employee-detail lookup for an administrator login, clearing back to required validation, and self-exclusion. Backend clean-school API tests own tenant bootstrap, eligibility and persisted identity references; local synthetic selector checks are not authenticated deployed acceptance.
+
 TL;DR: run the docs check for HR docs changes, then choose focused unit, contract, or browser checks based on the screen or client you changed.
 
 ## Staff policy permission contract
@@ -819,3 +821,17 @@ node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin
 ```
 
 Open `http://127.0.0.1:4196/hr/employee` in the desktop Codex in-app browser. Enter a synthetic note, submit prerequisite/field/network/forbidden failures, inspect the persistent summary, open setup in the separate tab, return and refresh, exercise refresh failure/retry and discard/keep-editing, then confirm successful save clears old feedback. Check keyboard focus and narrow layouts. The harness proves the shared recovery contract; it does not prove authenticated salary/finalize or every HR route. See [the route/form coverage matrix and lifecycle limits](references/validation-recovery.md).
+
+## HR table capability re-audit
+
+Run `node scripts/hr/check-ui-consistency.mjs` for route/table ownership and `--capabilities` for the per-instance operation matrix.
+The [coverage reference](references/hr-table-coverage.md#25-october-capability-re-audit) separates supported local controls, real server integrations, backend dependencies and specialized editable grids.
+
+Run shared-table tests plus `HRPolicySharedUI.table.test.tsx`, `leave-balance.filters.test.tsx`, salary-template settings, performance and policy regression suites after table metadata/data-processing changes.
+Use `node node_modules/@playwright/test/cli.js test --config tests/browser/hr-table-workspace.config.ts` for an isolated fixture of actual shared table, policy adapter and editable calendar/payroll grids at 390, 768 and 1440 pixels.
+It checks filtered Excel data and excluded Actions, numeric criteria, sorting, theme changes, loading/empty/error/retry and draft editing without backend writes.
+Run the existing numeric-menu fixture separately with `--config tests/browser/hr-table-filter.config.ts`.
+Finish with Codex in-app browser inspection of the local fixture; signed-in tenant/backend acceptance must be reported separately.
+
+The endpoint follow-up also checks `server-column-filters.test.ts`, shift and leave API contract tests, and manual-attendance `table-filters.test.tsx`. The latter verifies group/department page reset, identical export predicates, and scope/export locks while a draft is dirty.
+The browser fixture uses the actual complete-export hook with local synthetic paged readers; it verifies status zero, filtered totals, a 15-row filtered workbook from a 10-row page, synchronized name search and clearing; unit regressions also cover scalar replacement.

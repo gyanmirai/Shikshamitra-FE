@@ -3,6 +3,8 @@
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type { EsiManagementMode } from 'src/redux/hr/esi-policy-api';
+import type { StaffStatutoryProfile } from 'src/redux/hr/statutory-profile-api';
+import type { SaveEmployeeCompensation } from 'src/redux/hr/compensation-revision-api';
 import type {
   SalaryBasis,
   PfEnrollment,
@@ -31,6 +33,10 @@ import {
   effectiveEsiPolicyVersion,
   useGetEsiPolicyOptionsQuery,
 } from 'src/redux/hr/esi-policy-api';
+import {
+  StatutoryProfileFields,
+  statutoryProfileSchema,
+} from 'src/screens/hr/employee/statutory-profile-fields';
 import {
   StatutoryProfileEditor,
   type StatutoryProfileDraft,
@@ -74,6 +80,10 @@ import { SalaryTotals, SalaryBreakdown, StatutorySummary } from './salary-summar
 
 type Props = {
   formik: FormikProps<any>;
+  onboarding?: {
+    statutoryForm: FormikProps<StaffStatutoryProfile>;
+    onSalaryChange: (salary: SaveEmployeeCompensation | null) => void;
+  };
   employeeId?: string;
   dateOfJoining?: string | null;
   employeeIsActive?: boolean;
@@ -93,6 +103,7 @@ const contractLabel = (value: string) =>
 
 export function SalaryStructureBuilder({
   formik,
+  onboarding,
   employeeId,
   dateOfJoining,
   employeeIsActive = false,
@@ -111,7 +122,8 @@ export function SalaryStructureBuilder({
     hrPermissions.payroll.compensationRevisionActions.manage
   );
   const canReadCompensation = canView || canManage;
-  const canActivate = hasGrantedPermission(permissions, 'HR.Employee.EmployeeList.Edit');
+  const canActivate =
+    !onboarding && hasGrantedPermission(permissions, 'HR.Employee.EmployeeList.Edit');
   const {
     data: templateData,
     isLoading: templatesLoading,
@@ -157,12 +169,42 @@ export function SalaryStructureBuilder({
   const esiInvalid = esiMode === 'IN_PLATFORM' ? !esiPolicyId : !esiReason.trim();
   const [savedStatutoryProfile, setSavedStatutoryProfile] =
     useState<import('src/redux/hr/statutory-profile-api').StaffStatutoryProfileResponse>();
-  const [statutoryDraft, setStatutoryDraft] = useState<StatutoryProfileDraft | null>(null);
+  const [existingStatutoryDraft, setStatutoryDraft] = useState<StatutoryProfileDraft | null>(null);
+  const onboardingForm = onboarding?.statutoryForm;
+  const isOnboarding = Boolean(onboarding);
+  const [calculation, setCalculation] = useState<SalaryTemplateCalculation | null>(null);
+  const onboardingGross = salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary;
+  const onboardingPfChoiceRequired =
+    isOnboarding && onboardingGross != null && onboardingGross > 25000;
+  const statutoryDraft = useMemo<StatutoryProfileDraft | null>(
+    () =>
+      onboardingForm
+        ? {
+            profile: onboardingForm.values,
+            valid:
+              statutoryProfileSchema.isValidSync(onboardingForm.values) &&
+              (!onboardingPfChoiceRequired || pfChoice !== null),
+            dirty: onboardingForm.dirty,
+            effectiveMonth,
+            concurrencyStamp: null,
+            updatePf: true,
+            updateEsic: true,
+            pfChoice: onboardingPfChoiceRequired
+              ? pfChoice === null
+                ? null
+                : pfChoice === 'OPT_IN'
+              : onboardingForm.values.applyPf,
+          }
+        : existingStatutoryDraft,
+    [onboardingForm, effectiveMonth, existingStatutoryDraft, onboardingPfChoiceRequired, pfChoice]
+  );
+  useEffect(() => {
+    if (isOnboarding && initialMonth) setEffectiveMonth(initialMonth);
+  }, [isOnboarding, initialMonth]);
   const [customizing, setCustomizing] = useState(false);
   const [templateChangeAccepted, setTemplateChangeAccepted] = useState(false);
   const [overrides, setOverrides] = useState<SalaryRuleOverride[]>([]);
   const [customizationReason, setCustomizationReason] = useState('');
-  const [calculation, setCalculation] = useState<SalaryTemplateCalculation | null>(null);
   const [calculatedSignature, setCalculatedSignature] = useState('');
   const [activationCompleted, setActivationCompleted] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -600,6 +642,65 @@ export function SalaryStructureBuilder({
     setPendingMonth(null);
   };
 
+  const statutoryBlocked = calculation
+    ? calculation.pfEligibility?.canSave === false ||
+      !calculation.employeeStateInsurance.canCalculate ||
+      calculation.employeeStateInsurance.issueCodes.some(
+        (code) =>
+          ![
+            'ESI_RATE_OVERRIDE',
+            'ESI_APPLY_DISABLED',
+            'ESI_NUMBER_MISSING',
+            'ESI_REGISTRATION_PENDING',
+            'ESI_BASIS_RECONCILIATION_DIFFERENCE',
+            'ESI_STATUTORY_ASSESSMENT_UNAVAILABLE',
+          ].includes(code) &&
+          (code !== 'ESI_INSURANCE_NUMBER_REQUIRED' ||
+            !calculation.employeeStateInsurance.registrationPending)
+      )
+    : false;
+  const amountInvalid = !Number.isFinite(monthlyAmount) || monthlyAmount <= 0;
+  const reasonInvalid = customizing && overrides.length > 0 && !customizationReason.trim();
+
+  const onboardingSalary =
+    onboarding &&
+    canManage &&
+    calculationCurrent &&
+    !busy &&
+    !amountInvalid &&
+    monthlyAmount <= 100000000 &&
+    !reasonInvalid &&
+    !pfChoiceMissing &&
+    !statutoryBlocked &&
+    !esiInvalid &&
+    selectedVersion &&
+    calculation
+      ? {
+          templateVersionId: selectedVersion.id,
+          salaryBasis,
+          monthlyAmount,
+          effectiveMonth: monthlyPayload(effectiveMonth),
+          pfEnrollment,
+          pfApplicable,
+          pfRuleId: pfApplicable ? pfRuleId : null,
+          esiManagementMode: esiMode,
+          esiPolicyId: esiPolicyId || null,
+          esiExternalReason: esiReason.trim() || null,
+          expectedEsiPolicyVersionId: calculation.employeeStateInsurance.ruleId || null,
+          statutoryProfile: 'IN-GJ' as const,
+          overrides: customizing ? overrides : [],
+          customizationReason: customizing ? customizationReason.trim() || null : null,
+          idempotencyKey: 'onboarding',
+          expectedRevision: null,
+        }
+      : null;
+  const onboardingSalarySignature = JSON.stringify(onboardingSalary);
+  const onboardingChange = useRef(onboarding?.onSalaryChange);
+  onboardingChange.current = onboarding?.onSalaryChange;
+  useEffect(() => {
+    onboardingChange.current?.(JSON.parse(onboardingSalarySignature));
+  }, [onboardingSalarySignature]);
+
   if (
     templatesLoading ||
     revisionsLoading ||
@@ -659,7 +760,7 @@ export function SalaryStructureBuilder({
       </Alert>
     );
   }
-  if (!employeeId) {
+  if (!employeeId && !onboarding) {
     return (
       <Alert severity="info">
         Save the staff first. The staff will be created as Inactive, then salary can be set up
@@ -671,25 +772,6 @@ export function SalaryStructureBuilder({
   const permittedRules = (selectedVersion?.rules || []).filter((rule) =>
     ['BASIC', 'DEARNESS_ALLOWANCE', 'ORDINARY'].includes(rule.semanticType)
   );
-  const statutoryBlocked = calculation
-    ? calculation.pfEligibility?.canSave === false ||
-      !calculation.employeeStateInsurance.canCalculate ||
-      calculation.employeeStateInsurance.issueCodes.some(
-        (code) =>
-          ![
-            'ESI_RATE_OVERRIDE',
-            'ESI_APPLY_DISABLED',
-            'ESI_NUMBER_MISSING',
-            'ESI_REGISTRATION_PENDING',
-            'ESI_BASIS_RECONCILIATION_DIFFERENCE',
-            'ESI_STATUTORY_ASSESSMENT_UNAVAILABLE',
-          ].includes(code) &&
-          (code !== 'ESI_INSURANCE_NUMBER_REQUIRED' ||
-            !calculation.employeeStateInsurance.registrationPending)
-      )
-    : false;
-  const amountInvalid = !Number.isFinite(monthlyAmount) || monthlyAmount <= 0;
-  const reasonInvalid = customizing && overrides.length > 0 && !customizationReason.trim();
   const currentRevision = revisionData?.items.find((item) => item.isCurrent);
   const employeeName =
     formik.values.fullName ||
@@ -729,6 +811,93 @@ export function SalaryStructureBuilder({
   if (!footerStatus)
     footerStatus = calculatedSignature ? 'Preview needs refresh' : 'Preview required';
 
+  const pfSettings = (
+    <Stack spacing={1.5}>
+      {(pfRulesError || (pfApplicable && !pfRules.length)) && (
+        <Alert severity="warning">
+          {pfRulesError
+            ? 'PF rules could not be loaded. Refresh setup and retry.'
+            : 'An active PF rule is required for the selected PF enrollment.'}
+          <HrSetupLink setup="pf" disabled={busy} />
+        </Alert>
+      )}
+      <FormControl
+        fullWidth
+        size="small"
+        disabled={
+          !canManage ||
+          busy ||
+          !pfApplicable ||
+          pfRulesError ||
+          (statutoryDraft?.pfChoice === null && !continuingPfMember)
+        }
+      >
+        <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
+        <Select
+          labelId={pfRuleLabelId}
+          label="PF rule"
+          value={pfRuleId}
+          onChange={(event) => {
+            setPfRuleId(event.target.value);
+            setCalculation(null);
+          }}
+        >
+          {pfRules.map((rule: any) => (
+            <MenuItem key={rule.id} value={rule.id}>
+              {rule.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <TextField
+        select
+        size="small"
+        fullWidth
+        label="Previous PF membership"
+        value={pfEnrollment.membership}
+        disabled={!canManage || busy}
+        onChange={(event) => {
+          setPfEnrollment((value) => ({
+            ...value,
+            membership: event.target.value as PfEnrollment['membership'],
+          }));
+          setCalculation(null);
+        }}
+      >
+        <MenuItem value="UNKNOWN">Needs review</MenuItem>
+        <MenuItem value="EXISTING_MEMBER">Existing PF member</MenuItem>
+        <MenuItem value="NOT_MEMBER">Not previously enrolled</MenuItem>
+      </TextField>
+      {pfApplicable && !pfRequired && pfEnrollment.membership === 'NOT_MEMBER' && (
+        <TextField
+          size="small"
+          fullWidth
+          label="Employee consent reference"
+          value={pfEnrollment.consentReference ?? ''}
+          disabled={!canManage || busy}
+          helperText="Required for voluntary enrollment above the coverage ceiling."
+          onChange={(event) => {
+            setPfEnrollment((value) => ({
+              ...value,
+              consentReference: event.target.value,
+            }));
+            setCalculation(null);
+          }}
+        />
+      )}
+      {calculation?.pfEligibility && (
+        <Alert severity={calculation.pfEligibility.canSave ? 'info' : 'warning'}>
+          PF: {contractLabel(calculation.pfEligibility.status)}. Gross salary:{' '}
+          {formatPayrollCurrency(calculation.pfEligibility.grossSalary ?? calculation.grossSalary)}.
+          PF calculation wages: {formatPayrollCurrency(calculation.pfEligibility.wages)}. Coverage
+          ceiling: {formatPayrollCurrency(calculation.pfEligibility.coverageCeiling)}.
+          {calculation.pfEligibility.issueCode
+            ? ` ${contractLabel(calculation.pfEligibility.issueCode)}. Review school PF coverage in PF settings and the employee enrollment above.`
+            : ''}
+        </Alert>
+      )}
+    </Stack>
+  );
   const actions = (
     <>
       <Typography
@@ -750,29 +919,31 @@ export function SalaryStructureBuilder({
         {footerStatus}
       </Typography>
 
-      <Button
-        size="small"
-        variant="contained"
-        onClick={save}
-        loading={operation === 'save'}
-        sx={
-          actionContainer
-            ? { gridColumn: { xs: 2, sm: 4 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
-            : undefined
-        }
-        disabled={
-          !canManage ||
-          busy ||
-          !calculationCurrent ||
-          pfChoiceMissing ||
-          statutoryBlocked ||
-          savedSignature === signature ||
-          hasConflict ||
-          revisionsError
-        }
-      >
-        Save salary
-      </Button>
+      {!onboarding && (
+        <Button
+          size="small"
+          variant="contained"
+          onClick={save}
+          loading={operation === 'save'}
+          sx={
+            actionContainer
+              ? { gridColumn: { xs: 2, sm: 4 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
+              : undefined
+          }
+          disabled={
+            !canManage ||
+            busy ||
+            !calculationCurrent ||
+            pfChoiceMissing ||
+            statutoryBlocked ||
+            savedSignature === signature ||
+            hasConflict ||
+            revisionsError
+          }
+        >
+          Save salary
+        </Button>
+      )}
     </>
   );
   return (
@@ -795,19 +966,21 @@ export function SalaryStructureBuilder({
               {formik.values.employeeIdentifier ? ` · ${formik.values.employeeIdentifier}` : ''}
             </Typography>
           )}
-          <EmployeeEsiDetails
-            onEditorStateChange={setEsiEditorState}
-            employeeId={employeeId}
-            employeeName={
-              [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ') ||
-              'Employee'
-            }
-            employeeIdentifier={formik.values.employeeIdentifier || ''}
-            onSaved={async () => {
-              setCalculation(null);
-              if (canActivate) await refetchReadiness();
-            }}
-          />
+          {employeeId && (
+            <EmployeeEsiDetails
+              onEditorStateChange={setEsiEditorState}
+              employeeId={employeeId || ''}
+              employeeName={
+                [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ') ||
+                'Employee'
+              }
+              employeeIdentifier={formik.values.employeeIdentifier || ''}
+              onSaved={async () => {
+                setCalculation(null);
+                if (canActivate) await refetchReadiness();
+              }}
+            />
+          )}
         </Box>
         <FormSectionCard
           icon="solar:wallet-money-bold"
@@ -867,7 +1040,7 @@ export function SalaryStructureBuilder({
                 autoComplete="off"
                 type="month"
                 value={effectiveMonth}
-                disabled={!canManage || busy}
+                disabled={Boolean(onboarding) || !canManage || busy}
                 onChange={(event) => {
                   const month = event.target.value;
                   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || month === effectiveMonth) return;
@@ -986,122 +1159,48 @@ export function SalaryStructureBuilder({
               }}
             />
             <Box sx={{ gridColumn: '1 / -1' }}>
-              <StatutoryProfileEditor
-                key={effectiveMonth}
-                employeeId={employeeId}
-                month={initialMonth || suggestedMonthRef.current ? effectiveMonth : undefined}
-                savedProfile={savedStatutoryProfile}
-                draftMode
-                pfSettings={
-                  <Stack spacing={1.5}>
-                    {(pfRulesError || (pfApplicable && !pfRules.length)) && (
-                      <Alert severity="warning">
-                        {pfRulesError
-                          ? 'PF rules could not be loaded. Refresh setup and retry.'
-                          : 'An active PF rule is required for the selected PF enrollment.'}
-                        <HrSetupLink setup="pf" disabled={busy} />
-                      </Alert>
-                    )}
-                    <FormControl
-                      fullWidth
-                      size="small"
-                      disabled={
-                        !canManage ||
-                        busy ||
-                        !pfApplicable ||
-                        pfRulesError ||
-                        (statutoryDraft?.pfChoice === null && !continuingPfMember)
-                      }
-                    >
-                      <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
-                      <Select
-                        labelId={pfRuleLabelId}
-                        label="PF rule"
-                        value={pfRuleId}
-                        onChange={(event) => {
-                          setPfRuleId(event.target.value);
-                          setCalculation(null);
-                        }}
-                      >
-                        {pfRules.map((rule: any) => (
-                          <MenuItem key={rule.id} value={rule.id}>
-                            {rule.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    <TextField
-                      select
-                      size="small"
-                      fullWidth
-                      label="Previous PF membership"
-                      value={pfEnrollment.membership}
-                      disabled={!canManage || busy}
-                      onChange={(event) => {
-                        setPfEnrollment((value) => ({
-                          ...value,
-                          membership: event.target.value as PfEnrollment['membership'],
-                        }));
-                        setCalculation(null);
-                      }}
-                    >
-                      <MenuItem value="UNKNOWN">Needs review</MenuItem>
-                      <MenuItem value="EXISTING_MEMBER">Existing PF member</MenuItem>
-                      <MenuItem value="NOT_MEMBER">Not previously enrolled</MenuItem>
-                    </TextField>
-                    {pfApplicable && !pfRequired && pfEnrollment.membership === 'NOT_MEMBER' && (
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label="Employee consent reference"
-                        value={pfEnrollment.consentReference ?? ''}
-                        disabled={!canManage || busy}
-                        helperText="Required for voluntary enrollment above the coverage ceiling."
-                        onChange={(event) => {
-                          setPfEnrollment((value) => ({
-                            ...value,
-                            consentReference: event.target.value,
-                          }));
-                          setCalculation(null);
-                        }}
-                      />
-                    )}
-                    {calculation?.pfEligibility && (
-                      <Alert severity={calculation.pfEligibility.canSave ? 'info' : 'warning'}>
-                        PF: {contractLabel(calculation.pfEligibility.status)}. Gross salary:{' '}
-                        {formatPayrollCurrency(
-                          calculation.pfEligibility.grossSalary ?? calculation.grossSalary
-                        )}
-                        . PF calculation wages:{' '}
-                        {formatPayrollCurrency(calculation.pfEligibility.wages)}. Coverage ceiling:{' '}
-                        {formatPayrollCurrency(calculation.pfEligibility.coverageCeiling)}.
-                        {calculation.pfEligibility.issueCode
-                          ? ` ${contractLabel(calculation.pfEligibility.issueCode)}. Review school PF coverage in PF settings and the employee enrollment above.`
-                          : ''}
-                      </Alert>
-                    )}
-                  </Stack>
-                }
-                pfEnrollmentRecorded={Boolean(currentRevision)}
-                disabled={!canManage || busy}
-                grossSalary={salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary}
-                onDraftChange={(draft) => {
-                  if (draft && !initialMonth && !suggestedMonthRef.current) {
-                    suggestedMonthRef.current = [
-                      draft.effectiveMonth,
-                      dateOfJoining?.slice(0, 7) || '',
-                    ]
-                      .sort()
-                      .at(-1)!;
-                    setEffectiveMonth(suggestedMonthRef.current);
-                  }
-                  setStatutoryDraft(draft);
-                  if (draft)
-                    setPfChoice(
-                      draft.pfChoice == null ? null : draft.pfChoice ? 'OPT_IN' : 'OPT_OUT'
-                    );
-                }}
-              />
+              {onboarding ? (
+                <StatutoryProfileFields
+                  form={onboarding.statutoryForm}
+                  disabled={!canManage || busy}
+                  grossSalary={salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary}
+                  pfSettings={pfSettings}
+                  pfChoiceRequired={onboardingPfChoiceRequired}
+                  pfChoice={statutoryDraft?.pfChoice}
+                  onPfChoice={(apply) => {
+                    setPfChoice(apply ? 'OPT_IN' : 'OPT_OUT');
+                    onboarding.statutoryForm.setFieldValue('applyPf', apply);
+                  }}
+                />
+              ) : (
+                <StatutoryProfileEditor
+                  key={effectiveMonth}
+                  employeeId={employeeId || ''}
+                  month={initialMonth || suggestedMonthRef.current ? effectiveMonth : undefined}
+                  savedProfile={savedStatutoryProfile}
+                  draftMode
+                  pfSettings={pfSettings}
+                  pfEnrollmentRecorded={Boolean(currentRevision)}
+                  disabled={!canManage || busy}
+                  grossSalary={salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary}
+                  onDraftChange={(draft) => {
+                    if (draft && !initialMonth && !suggestedMonthRef.current) {
+                      suggestedMonthRef.current = [
+                        draft.effectiveMonth,
+                        dateOfJoining?.slice(0, 7) || '',
+                      ]
+                        .sort()
+                        .at(-1)!;
+                      setEffectiveMonth(suggestedMonthRef.current);
+                    }
+                    setStatutoryDraft(draft);
+                    if (draft)
+                      setPfChoice(
+                        draft.pfChoice == null ? null : draft.pfChoice ? 'OPT_IN' : 'OPT_OUT'
+                      );
+                  }}
+                />
+              )}
             </Box>
           </Box>
           <Typography variant="caption" color="text.secondary">
