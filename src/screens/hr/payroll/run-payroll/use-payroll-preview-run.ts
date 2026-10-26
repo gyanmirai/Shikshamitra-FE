@@ -7,6 +7,7 @@ import type {
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { normalizeHrFailure } from 'src/screens/hr/recovery/hr-failure';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   usePayrollPreviewStatusQuery,
@@ -109,13 +110,23 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
         : display?.key === key
           ? display.data.previewRunId
           : '';
-  const pageQuery = usePayrollPreviewEmployeesQuery(
-    { id: completedId, page, pageSize, search },
+  const pageQuery = useHrTableQuery(
     {
+      table: 'payroll-monthly-workbench-table',
+      query: { runId: completedId, search },
+      page,
+      size: pageSize,
+      resetPage: () => updateQuery({ page: 0 }),
       skip: !completedId,
-      refetchOnFocus: true,
-      refetchOnMountOrArgChange: true,
-    }
+    },
+    usePayrollPreviewEmployeesQuery(
+      { id: completedId, page, pageSize, search },
+      {
+        skip: !completedId,
+        refetchOnFocus: true,
+        refetchOnMountOrArgChange: true,
+      }
+    )
   );
 
   const currentPage =
@@ -263,6 +274,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
 
   return {
     data,
+    tableProps: pageQuery.tableProps,
     runId: completedId,
     requestedRunId,
     busy,

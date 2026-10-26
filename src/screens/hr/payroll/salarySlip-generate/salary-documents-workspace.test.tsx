@@ -21,6 +21,7 @@ const state = vi.hoisted(() => ({
   download: vi.fn(),
   successToast: vi.fn(),
   job: { data: undefined } as any,
+  tableRead: vi.fn(),
 }));
 vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({
   useHrTableExport: (...args: any[]) => {
@@ -38,7 +39,7 @@ vi.mock('../../reports/hooks/useHrReportPermissions', () => ({
   useHrReportPermissions: () => ({ canView: true, canExport: true }),
 }));
 vi.mock('../../reports/components/HrReportPreviewTable', () => ({
-  HrReportPreviewTable: ({ preview, onSortChange, headerAction, onExport }: any) => (
+  HrReportPreviewTable: ({ preview, operationalProps, headerAction, onExport }: any) => (
     <div>
       {preview?.reportType}
       {headerAction}
@@ -49,17 +50,19 @@ vi.mock('../../reports/components/HrReportPreviewTable', () => ({
             format: 'excel',
             columns: [{ id: 'netPay', label: 'Net pay' }],
             filters: [],
-            sorts: [],
+            sorts: operationalProps.sorts,
             searchTerm: '',
           })
         }
       >
         Export complete table
       </button>
-      {onSortChange && (
+      {operationalProps.onServerSort && (
         <button
           type="button"
-          onClick={() => onSortChange([{ field: 'netPay', direction: 'desc' }])}
+          onClick={() =>
+            operationalProps.onServerSort('netPay', [{ column: 'netPay', direction: 'desc' }])
+          }
         >
           Sort net pay
         </button>
@@ -87,6 +90,7 @@ describe('salary document previews', () => {
     state.download.mockReset();
     state.successToast.mockReset();
     state.job = {};
+    state.tableRead.mockClear();
   });
   afterEach(() => {
     cleanup();
@@ -102,9 +106,10 @@ describe('salary document previews', () => {
     await settleDebounce();
     fireEvent.click(screen.getByRole('button', { name: 'Sort net pay' }));
     await settleDebounce();
-    expect(state.preview.mock.calls.at(-1)?.[0]).toMatchObject({
-      page: 1,
-      sorts: [{ field: 'netPay', direction: 'desc' }],
+    expect(state.tableRead.mock.calls.at(-1)?.[0]).toMatchObject({
+      table: 'hr-salary-documents',
+      offset: 0,
+      criteria: { sorts: [{ column: 'netPay', direction: 'desc' }] },
     });
   });
 
@@ -188,15 +193,24 @@ describe('salary document previews', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sort net pay' }));
     await settleDebounce();
     fireEvent.click(screen.getByRole('button', { name: 'Export complete table' }));
-    expect(state.export).toHaveBeenCalledWith(expect.objectContaining({ format: 'excel' }));
+    expect(state.export).toHaveBeenCalledWith(
+      expect.objectContaining({ format: 'excel', sorts: [{ column: 'netPay', direction: 'desc' }] })
+    );
     expect(state.exportHook.mock.calls.at(-1)).toEqual([
       'hr-salary-documents',
       expect.objectContaining({
         filters: expect.objectContaining({ month: '2026-09' }),
-        sorts: [{ field: 'netPay', direction: 'desc' }],
       }),
     ]);
     expect(screen.queryByRole('button', { name: 'Export PDF' })).not.toBeInTheDocument();
     expect(screen.queryByText('Export limits apply')).not.toBeInTheDocument();
   });
 });
+
+// This screen test isolates its owning reader; typed criteria transport is covered by the adapter suite.
+vi.mock('src/redux/hr/hrOperationalTableApi', () => ({
+  useHrOperationalTableQuery: (body: unknown, options: unknown) => {
+    state.tableRead(body, options);
+    return { currentData: undefined, isFetching: false, isError: false, refetch: vi.fn() };
+  },
+}));

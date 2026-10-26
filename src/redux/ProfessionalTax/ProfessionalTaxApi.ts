@@ -5,11 +5,11 @@ export const professionalTaxEndpoint = '/payroll/professional-taxes';
 
 export const ProfessionalApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getProfessionalTax: builder.query({
-      query: () => ({
-        url: professionalTaxEndpoint,
-        method: 'GET',
-      }),
+    getProfessionalTax: builder.query<any, { page?: number; pageSize?: number } | void>({
+      query: (args) => {
+        const { page = 1, pageSize = 20 } = args ?? {};
+        return { url: professionalTaxEndpoint, method: 'GET', params: { page, pageSize } };
+      },
       providesTags: [professionalType.pf],
     }),
     addProfessionalTax: builder.mutation({

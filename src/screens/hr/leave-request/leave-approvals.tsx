@@ -1,6 +1,5 @@
 'use client';
 
-import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -22,6 +21,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
@@ -44,7 +44,6 @@ import {
   useRejectLeaveRequestMutation,
   useApproveLeaveRequestMutation,
 } from 'src/redux/hr/leaveApi';
-import { leaveRequestColumnBindings } from './leave-table-filters';
 
 import { LeaveRequestForm } from './leave-calender';
 import { formatLeaveCalendarDateForDisplay } from './leave-request.utils';
@@ -108,19 +107,36 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
     isFetching,
     error,
     refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLeaveRequestsQuery,
-    params: {
-      academicYearId: currentYear?.id,
-      'month-year': date?.format('MMMM-YYYY')?.toUpperCase(),
-      page: page.number,
-      pageSize: page.size,
-      search: page.search,
-      paidType: page.paidType,
-      status: statusFilter === '' ? undefined : statusFilter,
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-leave-requests',
+      query: {
+        academicYearId: currentYear?.id,
+        monthYearAnchor: date?.format('YYYY-MM-01'),
+        status: statusFilter === '' ? undefined : statusFilter,
+        search: page.search,
+        paidType: page.paidType,
+      },
+      page: page.number - 1,
+      size: page.size,
+      resetPage: () => setPage((current) => ({ ...current, number: 1 })),
+      skip: !currentYear?.id,
     },
-  });
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetLeaveRequestsQuery,
+      params: {
+        academicYearId: currentYear?.id,
+        'month-year': date?.format('MMMM-YYYY')?.toUpperCase(),
+        page: page.number,
+        pageSize: page.size,
+        search: page.search,
+        paidType: page.paidType,
+        status: statusFilter === '' ? undefined : statusFilter,
+      },
+    })
+  );
 
   const viewDialog = useBoolean();
   const approveOrRejectConfirmation = useBoolean();
@@ -376,23 +392,8 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
         tableId="leave-approvals-table"
         tableTitle="Leave approvals"
         data={tableData}
-        {...serverColumnFilters(
-          columns,
-          leaveRequestColumnBindings,
-          { status: statusFilter, paidType: page.paidType },
-          (patch) => {
-            setStatusFilter(
-              patch.status === undefined || patch.status === ''
-                ? ''
-                : (Number(patch.status) as EmployeeLeaveStatusType)
-            );
-            setPage((current) => ({
-              ...current,
-              number: 1,
-              paidType: String(patch.paidType ?? ''),
-            }));
-          }
-        )}
+        columns={columns}
+        {...operationalTableProps}
       />
 
       {/* View Dialog */}

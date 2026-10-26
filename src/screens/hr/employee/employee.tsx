@@ -1,6 +1,5 @@
 'use client';
 
-import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -30,15 +29,16 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { RoleColorIndicator } from 'src/components/role-color/RoleColorIndicator';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
+import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   useGetEmployeeQuery,
   useGetEmployeeByIdQuery,
   normalizeIsTeachingFilter,
 } from 'src/redux/hr/employeeApi';
-import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   EmployeeStatusType,
   EmployeeStatusTypeColor,
@@ -201,15 +201,26 @@ const HrEmployee = () => {
     error: tableError,
     refetch,
     isFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEmployeeQuery,
-    params: processedEmployeeParams,
-    options: {
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'employee-table',
+      query: processedEmployeeParams,
+      page: employeeParams.page - 1,
+      size: employeeParams.pageSize,
+      resetPage: () => setEmployeeParams((current) => ({ ...current, page: 1 })),
       skip: open || Boolean(searchParams.employee),
-      refetchOnMountOrArgChange: 30,
     },
-  });
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetEmployeeQuery,
+      params: processedEmployeeParams,
+      options: {
+        skip: open || Boolean(searchParams.employee),
+        refetchOnMountOrArgChange: 30,
+      },
+    })
+  );
   const exportTable = useHrTableExport('employee-table', processedEmployeeParams);
   const handleClose = useCallback(
     (_e?: any, isSubmit?: boolean) => {
@@ -662,43 +673,13 @@ const HrEmployee = () => {
             onServerPagination={handleServerPagination}
             serverSideSearch
             onServerSearch={handleServerSearch}
-            {...serverColumnFilters(
-              columns,
-              [
-                {
-                  column: 'isTeaching',
-                  query: 'isTeaching',
-                  options: EmployeeGroupTypeFilter,
-                  emptyValue: 'All',
-                },
-                {
-                  column: 'statusValue',
-                  query: 'status',
-                  options: EmployeeStatusTypeOptions,
-                  emptyValue: 'All',
-                },
-                {
-                  column: 'organization',
-                  query: 'mediumStageId',
-                  options: organizationOptions.map(({ id, label }) => ({ value: id, label })),
-                  emptyValue: 'All',
-                },
-              ],
-              employeeParams,
-              (patch) =>
-                setEmployeeParams((current) => ({
-                  ...current,
-                  page: 1,
-                  isTeaching: String(patch.isTeaching),
-                  status: String(patch.status),
-                  mediumStageId: String(patch.mediumStageId),
-                }))
-            )}
+            columns={columns}
             searchTerm={employeeParams.search}
             page={employeeParams.page - 1}
             rowsPerPage={employeeParams.pageSize}
             data={tableData || []}
             defaultSearchTerm={employeeParams.search}
+            {...operationalTableProps}
           />
           <CustomDialog
             data-testid="hr-employee-status-dialog"

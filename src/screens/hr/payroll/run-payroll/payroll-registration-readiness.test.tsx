@@ -1,5 +1,5 @@
+import { it, vi, expect, describe } from 'vitest';
 import { act, render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
 
 import { PayrollRegistrationReadiness } from './payroll-registration-readiness';
 
@@ -46,3 +46,13 @@ describe('payroll readiness server search', () => {
     expect(captured.exportQuery.month).toBe('2026-11');
   });
 });
+
+// This screen test isolates its owning reader; typed criteria transport is covered by the adapter suite.
+vi.mock('src/redux/hr/hrOperationalTableApi', () => ({
+  useHrOperationalTableQuery: () => ({
+    currentData: undefined,
+    isFetching: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+}));

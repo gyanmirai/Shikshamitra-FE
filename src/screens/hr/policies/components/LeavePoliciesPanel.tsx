@@ -1,6 +1,5 @@
 'use client';
 
-import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -15,6 +14,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import {
@@ -73,15 +73,30 @@ export function LeavePoliciesPanel() {
     isFetching: isLoading,
     refetch,
     error,
-  } = useGetLeavePoliciesQuery(
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
     {
-      academicYearId: currentYear?.id,
-      page: tableQuery.page,
-      pageSize: tableQuery.pageSize,
-      search: tableQuery.search || undefined,
-      archivedOnly: archiveView === 'archived',
+      table: 'hr-policy-leave',
+      query: {
+        academicYearId: currentYear?.id,
+        search: tableQuery.search,
+        archivedOnly: archiveView === 'archived',
+      },
+      page: tableQuery.page - 1,
+      size: tableQuery.pageSize,
+      resetPage: () => setTableQuery((current) => ({ ...current, page: 1 })),
+      skip: !currentYear?.id,
     },
-    { skip: !currentYear?.id }
+    useGetLeavePoliciesQuery(
+      {
+        academicYearId: currentYear?.id,
+        page: tableQuery.page,
+        pageSize: tableQuery.pageSize,
+        search: tableQuery.search || undefined,
+        archivedOnly: archiveView === 'archived',
+      },
+      { skip: !currentYear?.id }
+    )
   );
   const { data: archivedSummary } = useGetLeavePoliciesQuery(
     {
@@ -513,25 +528,7 @@ export function LeavePoliciesPanel() {
         tableId="hr-leave-policies-workspace"
         tableTitle="Leave policies"
         onExport={exportTable}
-        {...serverColumnFilters(
-          columns,
-          [
-            {
-              column: 'status',
-              query: 'archivedOnly',
-              emptyValue: false,
-              options: [
-                { value: false, label: 'Current (active or draft)' },
-                { value: true, label: 'Archived' },
-              ],
-            },
-          ],
-          { archivedOnly: archiveView === 'archived' },
-          ({ archivedOnly }) => {
-            setArchiveView(archivedOnly ? 'archived' : 'current');
-            setTableQuery((current) => ({ ...current, page: 1 }));
-          }
-        )}
+        columns={columns}
         data={rows}
         error={error}
         onRetry={refetch}
@@ -556,6 +553,7 @@ export function LeavePoliciesPanel() {
             ? 'No archived leave policies.'
             : 'No current leave policies. Create one from Policies & Rules.'
         }
+        {...operationalTableProps}
       />
 
       <CustomDialog

@@ -1,6 +1,5 @@
 'use client';
 
-import { serverColumnFilters, nameContains } from 'src/screens/hr/utils/server-column-filters';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { PayrollPolicy, AttendancePolicy } from 'src/redux/hr/hr-policy-api';
@@ -10,6 +9,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { Card, Chip, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
 import {
@@ -110,7 +110,17 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
     { academicYearId, maxResultCount: 1, isArchived: true },
     { skip: !academicYearId || type !== 'attendance' }
   );
-  const pageResult = type === 'payroll' ? payrollPage : attendancePage;
+  const pageResult = useHrTableQuery(
+    {
+      table: `hr-policy-${type}`,
+      query: listArgs,
+      page: tableQuery.page - 1,
+      size: tableQuery.pageSize,
+      resetPage: () => setTableQuery((current) => ({ ...current, page: 1 })),
+      skip: !academicYearId,
+    },
+    type === 'payroll' ? payrollPage : attendancePage
+  );
   const archiveSummary =
     type === 'payroll' ? payrollArchiveSummary.data : attendanceArchiveSummary.data;
   const items = (pageResult.currentData?.items || []) as Array<PayrollPolicy | AttendancePolicy>;
@@ -389,9 +399,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         tableId={`hr-${type}-policies`}
         tableTitle={type === 'payroll' ? 'Payroll policies' : 'Attendance policies'}
         onExport={exportTable}
-        {...serverColumnFilters(columns, [nameContains('name')], tableQuery, ({ search }) =>
-          setTableQuery((current) => ({ ...current, page: 1, search: String(search ?? '') }))
-        )}
+        columns={columns}
         data={rows}
         error={error}
         onRetry={pageResult.refetch}
@@ -412,6 +420,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         isFilter={false}
         isPagination
         noDataText={noDataMessage}
+        {...pageResult.tableProps}
       />
     </Stack>
   );

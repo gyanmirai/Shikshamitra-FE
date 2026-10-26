@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { HrReportSort, HrReportPreview, HrReportRequest } from 'src/redux/hr/hrReportsApi';
+import type { HrReportPreview, HrReportRequest } from 'src/redux/hr/hrReportsApi';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
@@ -11,6 +11,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { useGetPayslipSettingsQuery } from 'src/redux/hr/payslip-api';
 import { usePreviewHrReportMutation } from 'src/redux/hr/hrReportsApi';
 import { useId, useRef, useState, useEffect, useCallback } from 'react';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { useLazyGetEmployeeOptionsQuery } from 'src/redux/hr/employeeApi';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
@@ -61,7 +62,6 @@ export default function SalaryDocumentsWorkspace({
   const [includeDrafts, setIncludeDrafts] = useState(false);
   const [columns, setColumns] = useState<string[]>(standardSalaryDocumentColumns);
   const [page, setPage] = useState({ number: 1, size: 25 });
-  const [sorts, setSorts] = useState<HrReportSort[]>([]);
   const notesId = useId();
   const {
     open: notesOpen,
@@ -89,7 +89,6 @@ export default function SalaryDocumentsWorkspace({
     columns: [...new Set([...mandatorySalaryDocumentColumns, ...columns])],
     page: page.number,
     pageSize: page.size,
-    sorts: statement ? undefined : sorts,
     filters: {
       employeeIds: statement && employee ? [employee.id] : undefined,
       includeDrafts,
@@ -101,9 +100,9 @@ export default function SalaryDocumentsWorkspace({
   const exportTable = useHrTableExport('hr-salary-documents', request);
   const signature = JSON.stringify(request);
   const [loadPreview] = usePreviewHrReportMutation();
-  const [preview, setPreview] = useState<HrReportPreview>();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [basePreview, setPreview] = useState<HrReportPreview>();
+  const [baseLoading, setLoading] = useState(false);
+  const [baseError, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
   const sequence = useRef(0);
   useEffect(() => {
@@ -136,6 +135,52 @@ export default function SalaryDocumentsWorkspace({
       pendingRequest?.abort();
     };
   }, [signature, ready, active, refresh, loadPreview, closeNotes]);
+  const previewView = useHrTableQuery(
+    {
+      table: 'hr-salary-documents',
+      query: request,
+      page: page.number - 1,
+      size: page.size,
+      resetPage: () => setPage((current) => ({ ...current, number: 1 })),
+      skip: !active || !ready,
+      columnTypes: Object.fromEntries(
+        (request.columns || []).map((id) => [
+          id,
+          id === 'dateOfJoining'
+            ? 'date'
+            : [
+                  'month',
+                  'employeeCode',
+                  'employeeName',
+                  'designation',
+                  'bankAccount',
+                  'pfNumber',
+                  'esicNumber',
+                  'status',
+                ].includes(id)
+              ? 'string'
+              : ['casualLeaveDays', 'paidLeaveDays', 'unpaidLeaveDays', 'payableDays'].includes(id)
+                ? 'number'
+                : 'money',
+        ])
+      ),
+    },
+    {
+      data: basePreview,
+      isLoading: baseLoading,
+      isFetching: baseLoading,
+      error: baseError,
+      refetch: () => setRefresh((value) => value + 1),
+    }
+  );
+  const preview = previewView.data;
+  const loading = previewView.isLoading;
+  const error =
+    typeof previewView.error === 'string'
+      ? previewView.error
+      : previewView.error
+        ? payslipActionError(previewView.error, 'The document preview could not be loaded.')
+        : null;
   const preset = statement
     ? settings.data?.presentation?.statementColumns
     : settings.data?.presentation?.registerColumns;
@@ -336,6 +381,7 @@ export default function SalaryDocumentsWorkspace({
         </Alert>
       )}
       <HrReportPreviewTable
+        operationalProps={previewView.tableProps}
         onExport={exportTable}
         preview={preview}
         headerAction={
@@ -389,18 +435,6 @@ export default function SalaryDocumentsWorkspace({
           statement && !employee
             ? 'Select a staff member and month range.'
             : 'No saved payroll is available for this selection.'
-        }
-        sortableFields={
-          statement ? [] : ['month', 'employeeCode', 'totalEarnings', 'totalDeduction', 'netPay']
-        }
-        sorts={statement ? [] : sorts}
-        onSortChange={
-          statement
-            ? undefined
-            : (selected) => {
-                setSorts(selected);
-                setPage({ ...page, number: 1 });
-              }
         }
         isLoading={loading}
         onPageChange={(number, size) => setPage({ number, size })}

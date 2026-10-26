@@ -1,8 +1,76 @@
 /* eslint-disable no-restricted-syntax */
-import { test, expect } from '@playwright/test';
 import * as XLSX from 'xlsx';
+import { test, expect } from '@playwright/test';
 
 for (const width of [390, 768, 1440]) {
+  test(`typed global criteria and complete filtered export at ${width}px`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'operational', exact: true }).click();
+    await expect(page.getByText('1–10 of 260')).toBeVisible();
+    await page.getByRole('button', { name: 'Go to next page' }).click();
+    await expect(page.locator('tbody tr').first()).toContainText('PF rule 010');
+    const sorted = page.waitForRequest(
+      (request) =>
+        request.url().endsWith('/synthetic-hr/table-query') &&
+        request.postDataJSON().criteria.sorts.length > 0
+    );
+    await page.getByRole('button', { name: 'Sort by Wage ceiling', exact: true }).click();
+    expect((await sorted).postDataJSON()).toMatchObject({
+      offset: 0,
+      criteria: { sorts: [{ column: 'wageCeiling', direction: 'asc' }] },
+    });
+    await expect(page.locator('tbody tr').nth(1)).toContainText('PF rule 020');
+    await page.getByRole('button', { name: 'Sort by Wage ceiling', exact: true }).click();
+    await expect(page.locator('tbody tr').first()).toContainText('No ceiling');
+    await page.getByRole('button', { name: 'Filter Wage ceiling', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Filter Type *', exact: true }).click();
+    await page.getByRole('option', { name: 'Greater Than', exact: true }).click();
+    await page.getByRole('spinbutton', { name: 'Wage ceiling *', exact: true }).fill('8');
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.getByText('1–10 of 38')).toBeVisible();
+    await expect(page.locator('tbody tr').first()).toContainText('PF rule 019');
+    const outgoing = page.waitForRequest(
+      (request) => request.url().endsWith('/synthetic-hr/exports') && request.method() === 'POST'
+    );
+    await page.getByRole('button', { name: 'Export', exact: true }).click();
+    const download = page.waitForEvent('download');
+    await page.getByRole('menuitem', { name: /Excel/ }).click();
+    const payload = (await outgoing).postDataJSON();
+    expect(payload.columns.map((column: { id: string }) => column.id)).toEqual([
+      'name',
+      'wageCeiling',
+      'effectiveFrom',
+    ]);
+    expect(payload.query.criteria).toMatchObject({
+      filters: [{ column: 'wageCeiling', type: 'greaterThan', value: '8' }],
+      sorts: [{ column: 'wageCeiling', direction: 'desc' }],
+    });
+    const workbook = XLSX.readFile((await (await download).path())!);
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets.Data, { header: 1 }) as unknown[][];
+    expect(rows).toHaveLength(39);
+    expect(rows.slice(1).every((row) => Number(row[1]) > 8)).toBe(true);
+    expect(rows[1][0]).toBe('PF rule 019');
+    await page.getByRole('button', { name: 'Operational empty', exact: true }).click();
+    await expect(page.getByText('No results found', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Clear filters', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Operational error', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Retry', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Retry', exact: true }).click();
+    await expect(page.getByText('1–10 of 38')).toBeVisible();
+    await page.getByRole('button', { name: 'Operational loading', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Export', exact: true })).toBeDisabled();
+    await page.getByRole('button', { name: 'Operational normal', exact: true }).click();
+    await expect(page.getByText('1–10 of 38')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width + 1
+    );
+    await page.screenshot({ path: info.outputPath('typed-table-light.png'), fullPage: true });
+    await page.getByRole('button', { name: 'Toggle theme', exact: true }).click();
+    await page.screenshot({ path: info.outputPath('typed-table-dark.png'), fullPage: true });
+  });
   test(`server criteria, page reset and full filtered export at ${width}px`, async ({
     page,
   }, info) => {

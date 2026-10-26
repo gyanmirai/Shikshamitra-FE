@@ -22,6 +22,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
@@ -327,16 +328,26 @@ const AttendanceImportHistoryScreen = () => {
     isFetching: listFetching,
     refetch: refetchAttendanceImports,
     error: tableError,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAttendanceImportsQuery,
-    params: {
-      payrollMonth: payrollMonthParam,
-      maxResultCount: importPage.size,
-      skipCount: (importPage.number - 1) * importPage.size,
-      search: importPage.search,
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-attendance-imports',
+      query: { payrollMonth: payrollMonthParam, search: importPage.search },
+      page: importPage.number - 1,
+      size: importPage.size,
+      resetPage: () => setImportPage((current) => ({ ...current, number: 1 })),
     },
-  });
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetAttendanceImportsQuery,
+      params: {
+        payrollMonth: payrollMonthParam,
+        maxResultCount: importPage.size,
+        skipCount: (importPage.number - 1) * importPage.size,
+        search: importPage.search,
+      },
+    })
+  );
 
   // ── Counts per status for tab labels ──────────────────────────────────────
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -937,6 +948,7 @@ const AttendanceImportHistoryScreen = () => {
             data={listData?.items || []}
             isLoading={listLoading || listFetching || isUploadBusy || listFetching}
             noDataText="No biometric attendance found."
+            {...operationalTableProps}
           />
         </>
       ) : (
@@ -1116,16 +1128,28 @@ const ImportDetailDialog = ({
     isFetching: rowsFetching,
     error: rowsError,
     refetch: refetchImportRows,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAttendanceImportRowsQuery,
-    params: {
-      id: importData?.id,
-      skipCount: (rowsPage - 1) * rowsPageSize,
-      maxResultCount: rowsPageSize,
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-attendance-import-rows',
+      genericSearch: true,
+      query: { importId: importData?.id },
+      page: rowsPage - 1,
+      size: rowsPageSize,
+      resetPage: () => setRowsPage(1),
+      skip: !importData?.id,
     },
-    options: { skip: !importData?.id },
-  });
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetAttendanceImportRowsQuery,
+      params: {
+        id: importData?.id,
+        skipCount: (rowsPage - 1) * rowsPageSize,
+        maxResultCount: rowsPageSize,
+      },
+      options: { skip: !importData?.id },
+    })
+  );
 
   // Sync API rows into local state
   React.useEffect(() => {
@@ -1697,6 +1721,7 @@ const ImportDetailDialog = ({
                 </Typography>
               </Stack>
             }
+            {...operationalTableProps}
           />
         </>
       ) : (

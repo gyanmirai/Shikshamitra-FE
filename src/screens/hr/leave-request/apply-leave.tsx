@@ -1,7 +1,5 @@
 'use client';
 
-import { leaveRequestColumnBindings } from 'src/screens/hr/leave-request/leave-table-filters';
-import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -23,6 +21,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
 import { Box, Card, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
@@ -72,8 +71,8 @@ const ApplyLeave = ({
   const isSelfMode = mode === 'self';
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { byId: organizationById } = useAcademicOrganizationOptions(currentYear?.id);
-  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
-  const [isLeaveRequestsLoading, setIsLeaveRequestsLoading] = useState(false);
+  const [baseLeaveRequests, setLeaveRequests] = useState<any[]>([]);
+  const [baseIsLeaveRequestsLoading, setIsLeaveRequestsLoading] = useState(false);
   const [selfLeaveAccessError, setSelfLeaveAccessError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [tableQuery, setTableQuery] = useState({
@@ -83,8 +82,31 @@ const ApplyLeave = ({
     status: '',
     paidType: '',
   });
-  const [totalCount, setTotalCount] = useState(0);
-  const [tableError, setTableError] = useState<unknown>();
+  const [baseTotalCount, setTotalCount] = useState(0);
+  const [baseTableError, setTableError] = useState<unknown>();
+  const historyView = useHrTableQuery(
+    {
+      table: isSelfMode ? 'hr-self-leave-history' : 'hr-leave-requests',
+      query: { academicYearId: currentYear?.id, ...tableQuery },
+      page: tableQuery.page - 1,
+      size: tableQuery.pageSize,
+      resetPage: () => setTableQuery((current) => ({ ...current, page: 1 })),
+      skip: !currentYear?.id,
+    },
+    {
+      currentData: { items: baseLeaveRequests, totalCount: baseTotalCount },
+      isFetching: baseIsLeaveRequestsLoading,
+      error: baseTableError,
+      refetch: () => setReloadKey((key) => key + 1),
+    }
+  );
+  const leaveRequests = useMemo(
+    () => historyView.currentData?.items || [],
+    [historyView.currentData?.items]
+  );
+  const totalCount = historyView.currentData?.totalCount || 0;
+  const isLeaveRequestsLoading = historyView.isFetching;
+  const tableError = historyView.error;
   const exportTable = useHrTableExport(isSelfMode ? 'hr-self-leave-history' : 'hr-leave-requests', {
     academicYearId: currentYear?.id,
     ...tableQuery,
@@ -502,7 +524,7 @@ const ApplyLeave = ({
                   exportScope="all"
                   onExport={exportTable}
                   error={tableError}
-                  onRetry={() => setReloadKey((key) => key + 1)}
+                  onRetry={historyView.refetch}
                   serverSidePagination
                   serverSideSearch
                   page={tableQuery.page - 1}
@@ -521,18 +543,8 @@ const ApplyLeave = ({
                   tableId="apply-leave-table"
                   data={tableData}
                   searchTerm={tableQuery.search}
-                  {...serverColumnFilters(
-                    columns,
-                    leaveRequestColumnBindings,
-                    tableQuery,
-                    (patch) =>
-                      setTableQuery((current) => ({
-                        ...current,
-                        page: 1,
-                        status: String(patch.status ?? ''),
-                        paidType: String(patch.paidType ?? ''),
-                      }))
-                  )}
+                  columns={columns}
+                  {...historyView.tableProps}
                 />
               </Box>
             </>

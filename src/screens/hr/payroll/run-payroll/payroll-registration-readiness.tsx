@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { HrSetupLink } from 'src/screens/hr/recovery/hr-setup-controls';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useGetPayrollRegistrationReadinessQuery } from 'src/redux/hr/statutory-profile-api';
 import {
@@ -23,9 +24,19 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
   useEffect(() => {
     setPage((current) => ({ ...current, number: 1 }));
   }, [month]);
-  const query = useGetPayrollRegistrationReadinessQuery(
-    { month: month ?? '', page: page.number, pageSize: page.size, search: page.search },
-    { skip: !open || !month }
+  const query = useHrTableQuery(
+    {
+      table: 'hr-payroll-registration-readiness',
+      query: { month: month ?? '', search: page.search },
+      page: page.number - 1,
+      size: page.size,
+      resetPage: () => setPage((current) => ({ ...current, number: 1 })),
+      skip: !open || !month,
+    },
+    useGetPayrollRegistrationReadinessQuery(
+      { month: month ?? '', page: page.number, pageSize: page.size, search: page.search },
+      { skip: !open || !month }
+    )
   );
   const exportTable = useHrTableExport('hr-payroll-registration-readiness', {
     month,
@@ -120,6 +131,7 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
               setPage((current) => ({ ...current, number, size }))
             }
             tableContainerProps={{ sx: { maxHeight: 400, overflow: 'auto' } }}
+            {...query.tableProps}
           />
         </Stack>
       </AccordionDetails>

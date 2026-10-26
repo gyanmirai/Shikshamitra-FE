@@ -1393,6 +1393,7 @@ const RunPayroll = () => {
                   },
                 },
               }}
+              {...preview.tableProps}
             />
           </Box>
 
@@ -1811,9 +1812,7 @@ const RunPayroll = () => {
                               'ESI_APPLY_DISABLED',
                               'ESI_NUMBER_MISSING',
                             ].includes(code)
-                          ) && (
-                            <HrSetupLink setup="staffPayroll" employeeId={activeRow.id} />
-                          )}
+                          ) && <HrSetupLink setup="staffPayroll" employeeId={activeRow.id} />}
                           {(['CRITICAL', 'WARNING', 'INFO'] as const).map((severity) => {
                             const codes = activeRow.issueCodes.filter(
                               (code) => (ISSUE_LABELS[code]?.severity ?? 'INFO') === severity

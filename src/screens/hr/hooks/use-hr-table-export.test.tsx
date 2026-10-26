@@ -104,6 +104,41 @@ describe('complete HR table exports', () => {
     expect(rpc.download).toHaveBeenCalledOnce();
   });
 
+  it('exports the same typed operational filters and global ordering without including hidden columns', async () => {
+    const { result } = renderHook(() =>
+      useHrTableExport('employee-table', { academicYearId: 'year', isTeaching: false })
+    );
+    await act(() =>
+      result.current({
+        ...request,
+        columns: [{ id: 'fullName', label: 'Staff' }],
+        filters: [
+          {
+            column: 'doi',
+            type: 'after',
+            value: '01-04-2026',
+            valueType: 'date',
+            label: 'Joining date',
+          },
+        ],
+        sorts: [{ column: 'fullName', direction: 'desc' }],
+      })
+    );
+    expect(rpc.create.mock.lastCall?.[0]).toMatchObject({
+      table: 'employee-table',
+      query: {
+        academicYearId: 'year',
+        isTeaching: false,
+        criteria: {
+          search: '',
+          filters: [{ column: 'doi', type: 'after', value: '01-04-2026' }],
+          sorts: [{ column: 'fullName', direction: 'desc' }],
+        },
+      },
+      columns: [{ id: 'fullName', label: 'Staff' }],
+    });
+  });
+
   it('cancels the background job and never downloads after cancellation', async () => {
     rpc.create.mockReturnValue(response({ ...completed, status: 'Running' }));
     rpc.status.mockReturnValue(response(completed));

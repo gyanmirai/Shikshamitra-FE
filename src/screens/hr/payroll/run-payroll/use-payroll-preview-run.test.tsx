@@ -540,3 +540,13 @@ describe('background payroll preview', () => {
     expect(mocks.replace).not.toHaveBeenCalled();
   });
 });
+
+// This screen test isolates its owning reader; typed criteria transport is covered by the adapter suite.
+vi.mock('src/redux/hr/hrOperationalTableApi', () => ({
+  useHrOperationalTableQuery: () => ({
+    currentData: undefined,
+    isFetching: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+}));

@@ -16,6 +16,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import {
   Box,
@@ -63,11 +64,22 @@ const ProfessionalTax = () => {
     error: tableError,
     isFetching: tableFetching,
     refetch: retryTable,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetProfessionalTaxQuery,
-    params: tableQuery,
-  });
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-professional-tax',
+      genericSearch: true,
+      query: tableQuery,
+      page: tableQuery.page - 1,
+      size: tableQuery.pageSize,
+      resetPage: () => setTableQuery((current) => ({ ...current, page: 1 })),
+    },
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetProfessionalTaxQuery,
+      params: tableQuery,
+    })
+  );
   const [deletePF, { isLoading: isPFDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteProfessionalTaxMutation,
@@ -216,6 +228,7 @@ const ProfessionalTax = () => {
           },
         ]}
         data={tableData || []}
+        {...operationalTableProps}
       />
       <CustomDialog
         open={dialog.value}

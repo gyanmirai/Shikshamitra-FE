@@ -24,6 +24,7 @@ import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
 import { useGetGroupsQuery } from 'src/redux/calendar/GroupManagement/groupManagementApi';
 import { useGetEmployeeQuery, EMPLOYEE_LIST_MAX_PAGE_SIZE } from 'src/redux/hr/employeeApi';
@@ -377,7 +378,18 @@ export function useHRPolicyWorkspace({
     isFetching: assignmentsLoading,
     error: assignmentsError,
     refetch: refetchAssignments,
-  } = useGetHrPolicyAssignmentsQuery(assignmentListArgs, { skip: !academicYearId });
+    tableProps: assignmentTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-policy-assignments',
+      query: assignmentListArgs,
+      page: assignmentPage.number - 1,
+      size: assignmentPage.size,
+      resetPage: () => setAssignmentPage((current) => ({ ...current, number: 1 })),
+      skip: !academicYearId,
+    },
+    useGetHrPolicyAssignmentsQuery(assignmentListArgs, { skip: !academicYearId })
+  );
 
   const policyAuditTarget =
     auditTarget?.policyType && auditTarget.policyId
@@ -394,7 +406,24 @@ export function useHRPolicyWorkspace({
         : { entityType: 'work_calendar_policy', entityId: '' },
       { skip: !auditTarget }
     );
-  const { currentData: versionHistory, isFetching: versionHistoryLoading } =
+  const {
+    currentData: versionHistory,
+    isFetching: versionHistoryLoading,
+    tableProps: versionTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-policy-versions',
+      query: {
+        policyType: versionTarget?.policyType,
+        policyId: versionTarget?.policyId,
+        search: versionFilters.search,
+        action: versionFilters.action,
+      },
+      page: versionPage.number - 1,
+      size: versionPage.size,
+      resetPage: () => setVersionPage((current) => ({ ...current, number: 1 })),
+      skip: !versionTarget,
+    },
     useGetPolicyVersionsQuery(
       versionTarget
         ? {
@@ -407,7 +436,8 @@ export function useHRPolicyWorkspace({
           }
         : { policyType: 'work_calendar', policyId: '' },
       { skip: !versionTarget }
-    );
+    )
+  );
   const { currentData: versionCompare, isFetching: versionCompareLoading } =
     useComparePolicyVersionsQuery(
       versionTarget && compareVersionIds.from && compareVersionIds.to
@@ -2203,6 +2233,8 @@ export function useHRPolicyWorkspace({
     assignments,
     assignmentRows,
     assignmentListArgs,
+    assignmentTableProps,
+    versionTableProps,
     assignmentPage,
     setAssignmentPage,
     assignmentTotal: assignments?.totalCount || 0,

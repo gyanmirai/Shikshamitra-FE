@@ -107,3 +107,13 @@ describe('staff directory loading', () => {
     expect(screen.getByRole('button', { name: 'Next page' })).toBeEnabled();
   });
 });
+
+// This screen test isolates its owning reader; typed criteria transport is covered by the adapter suite.
+vi.mock('src/redux/hr/hrOperationalTableApi', () => ({
+  useHrOperationalTableQuery: () => ({
+    currentData: undefined,
+    isFetching: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+}));

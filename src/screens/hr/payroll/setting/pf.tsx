@@ -25,6 +25,7 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -86,11 +87,21 @@ const PF = () => {
     refetch,
     error: tableError,
     isFetching: tableFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPFQuery,
-    params: { academicYearId: currentYear?.id, ...tableQuery },
-  });
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-pf-rules',
+      query: tableQuery,
+      page: tableQuery.page - 1,
+      size: tableQuery.pageSize,
+      resetPage: () => setTableQuery((current) => ({ ...current, page: 1 })),
+    },
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetPFQuery,
+      params: { academicYearId: currentYear?.id, ...tableQuery },
+    })
+  );
   const [deletePF, { isLoading: isPFDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeletePFMutation,
@@ -310,6 +321,7 @@ const PF = () => {
           },
         ]}
         data={PFData?.items || []}
+        {...operationalTableProps}
       />
 
       <CustomDialog

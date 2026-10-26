@@ -76,6 +76,8 @@ export type CustomizableTableContainerProps = TableContainerProps & {
 };
 
 export interface ICustomizableTableProps {
+  /** Explicit, server-owned field capabilities for an operational query adapter. */
+  serverColumnTypes?: Record<string, 'string' | 'number' | 'money' | 'date' | 'datetime'>;
   tableContainerProps?: CustomizableTableContainerProps;
   columns: IColumn[];
   data: IData[];

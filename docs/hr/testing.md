@@ -839,3 +839,9 @@ Finish with Codex in-app browser inspection of the local fixture; signed-in tena
 
 The endpoint follow-up also checks `server-column-filters.test.ts`, shift and leave API contract tests, and manual-attendance `table-filters.test.tsx`. The latter verifies group/department page reset, identical export predicates, and scope/export locks while a draft is dirty.
 The browser fixture uses the actual complete-export hook with local synthetic paged readers; it verifies status zero, filtered totals, a 15-row filtered workbook from a 10-row page, synchronized name search and clearing; unit regressions also cover scalar replacement.
+
+### Paired operational-query regressions
+
+Run `use-hr-table-query.test.tsx`, complete-export, controlled-table, professional-tax request and the existing screen suites. The screen tests retain their owning-reader mocks and explicitly mock the new query dependency; transport behavior has dedicated assertions for salary, ESI and the shared adapter. The expanded workspace browser fixture mounts the actual operational hook and table with a 260-row synthetic transport, checking global order, fractional numeric predicates, unlimited ordering, 38 matching export rows from a 10-row page, page reset, actions exclusion, responsive containment and loading/empty/error/retry states.
+
+The document API regression uses valid whole-MB configuration sizes: its existing list DTO casts stored sizes to integers. The initial direct-repository fractional fixture therefore produced six matches for >18 rather than twelve. Correcting the fixture to whole sizes preserves the twelve-match expectation, the match beyond the first source page and cross-tenant exclusion; it does not lower the assertion. Backend numeric regressions separately exercise fractional amounts/days.
