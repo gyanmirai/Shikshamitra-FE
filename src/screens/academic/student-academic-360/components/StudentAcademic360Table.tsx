@@ -7,6 +7,7 @@ import { Box, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { normalizeAcademicStudent } from '../listUtils';
+import { Academic360EmptyState } from './Academic360EmptyState';
 import { studentAcademic360Columns } from './studentAcademic360Columns';
 
 import type { Academic360StudentRow } from '../types';
@@ -76,17 +77,10 @@ export function StudentAcademic360Table({
       <Box
         sx={{ minHeight: 300, display: 'grid', placeItems: 'center', px: 2, textAlign: 'center' }}
       >
-        <Box>
-          <Iconify
-            icon="mdi:account-search-outline"
-            width={42}
-            sx={{ color: 'text.disabled', mb: 1 }}
-          />
-          <Typography variant="subtitle1">Select academic year, board and medium</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Students will appear after the academic context is selected.
-          </Typography>
-        </Box>
+        <Academic360EmptyState
+          title="Select academic year, board and medium"
+          description="Students will appear after the academic context is selected."
+        />
       </Box>
     );
   }

@@ -1,4 +1,5 @@
-import { Box, Grid, Typography } from '@mui/material';
+import { Grid, Stack } from '@mui/material';
+import { EmptyContent } from 'src/components/empty-content';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
 import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 
@@ -26,49 +27,32 @@ const getFileNameFromUrl = (file: string): string => {
 const ChapterDocuments = ({ chapter }: { chapter: IChapter | null }) => {
   const documents = chapter?.documents || [];
 
-  if (documents.length === 0) {
-    return (
-      <Box p={2}>
-        <FormSectionHeader
-          title="Chapter Documents"
-          icon="mdi:file-document-outline"
-          descriptionTooltip="Files saved with this chapter are available to preview and download."
-        />
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          No documents uploaded for this chapter.
-        </Typography>
-      </Box>
-    );
-  }
-
   return (
-    <Box p={2}>
+    <Stack spacing={2}>
       <FormSectionHeader
         title="Chapter Documents"
         icon="mdi:file-document-outline"
         descriptionTooltip="Files saved with this chapter are available to preview and download."
       />
-      <Grid
-        container
-        spacing={1}
-        sx={{
-          overflowY: 'auto',
-        }}
-      >
-        {documents.map((docPath, index: number) => {
-          const doc = {
-            name: getFileNameFromUrl(docPath),
-            url: docPath,
-            size: '',
-          };
-          return (
-            <Grid size={{ xs: 12 }} key={index}>
-              <DocumentCard file={doc} />
-            </Grid>
-          );
-        })}
-      </Grid>
-    </Box>
+      {documents.length === 0 ? (
+        <EmptyContent title="No documents uploaded for this chapter" sx={{ py: 2 }} />
+      ) : (
+        <Grid container spacing={2}>
+          {documents.map((docPath, index: number) => {
+            const doc = {
+              name: getFileNameFromUrl(docPath),
+              url: docPath,
+              size: '',
+            };
+            return (
+              <Grid size={{ xs: 12 }} key={index}>
+                <DocumentCard file={doc} />
+              </Grid>
+            );
+          })}
+        </Grid>
+      )}
+    </Stack>
   );
 };
 

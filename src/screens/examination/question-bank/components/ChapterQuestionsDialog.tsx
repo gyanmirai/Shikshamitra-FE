@@ -4,9 +4,11 @@ import type { RootState } from 'src/redux/store';
 
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Chip, Stack, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Chip, Stack, Button, Typography, DialogActions } from '@mui/material';
 import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 import { useGetQuestionsQuery } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 
@@ -172,8 +174,10 @@ export default function ChapterQuestionsDialog({
       title={`Questions for ${chapterName || 'Chapter'}`}
       titleInfo="Review questions linked to this chapter in the selected academic year."
       maxWidth="lg"
+      hasForm={false}
+      guardUnsavedChanges={false}
     >
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 2, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <FormSectionHeader
           title="Chapter Questions"
           icon="mdi:help-box-outline"
@@ -185,15 +189,21 @@ export default function ChapterQuestionsDialog({
           columns={columns}
           data={data?.items || []}
           isLoading={isFetching}
-          noDataText={
-            <Stack alignItems="center" spacing={1} py={6}>
-              <Typography variant="subtitle2" color="text.secondary">
-                No questions for this chapter yet
-              </Typography>
-            </Stack>
-          }
+          noDataText="No questions for this chapter yet"
         />
       </Box>
+      <DialogActions sx={{ flexShrink: 0 }}>
+        <Button
+          type="button"
+          variant="outlined"
+          color="inherit"
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+        >
+          Close
+        </Button>
+      </DialogActions>
     </CustomDialog>
   );
 }

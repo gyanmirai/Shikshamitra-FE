@@ -5,7 +5,7 @@ import { Iconify } from 'src/components/iconify';
 import HelpTooltip from 'src/components/help-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
-import { Box, Grid, MenuItem, TextField, Typography, FormHelperText } from '@mui/material';
+import { Box, Grid, MenuItem, TextField, FormLabel, FormHelperText } from '@mui/material';
 
 import type { ElectiveSubjectFormValues } from './initialValues';
 
@@ -27,7 +27,7 @@ export function ElectiveGroupDetailsFields({ formik }: ElectiveGroupDetailsField
   const colorErrorId = useId();
   const colorError = Boolean(formik.touched.color && formik.errors.color);
   return (
-    <Grid container spacing={1.5}>
+    <Grid container spacing={2}>
       <Grid size={{ xs: 12 }}>
         <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
           <TextField
@@ -72,12 +72,9 @@ export function ElectiveGroupDetailsFields({ formik }: ElectiveGroupDetailsField
       <Grid size={{ xs: 12 }}>
         <ShakingTextField error={Boolean(formik.touched.color && formik.errors.color)}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 0.5 }}>
-            <Typography
-              variant="subtitle2"
-              color={formik.touched.color && formik.errors.color ? 'error.main' : 'text.primary'}
-            >
-              Elective Group Color *
-            </Typography>
+            <FormLabel required error={colorError}>
+              Elective group color
+            </FormLabel>
             <HelpTooltip
               label="Elective group color information"
               arrow

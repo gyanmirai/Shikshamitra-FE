@@ -1,22 +1,20 @@
 'use client';
 
-import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
+
+import dayjs from 'dayjs';
 import React, { useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import {
   Box,
+  Tab,
   Card,
   Chip,
-  Stack,
-  Table,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  Typography,
   Tabs,
-  Tab,
+  Stack,
+  Typography,
 } from '@mui/material';
 import {
   Timeline,
@@ -28,15 +26,15 @@ import {
   TimelineOppositeContent,
 } from '@mui/lab';
 
-import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { TimetableSnapshot } from './TimetableSnapshot';
 import { AttendanceCalendar } from './AttendanceCalendar';
 import { AttendanceMonthlyList } from './AttendanceMonthlyList';
 import { Academic360EmptyState } from './Academic360EmptyState';
 import { AcademicInsightSections } from './AcademicInsightSections';
-
-import type { Academic360Response, Academic360TimelineEvent, Academic360StudentRow } from '../types';
+import { Academic360SectionHeader } from './Academic360SectionHeader';
 import { ExamsResultsDashboardCard } from './ExamsResultsDashboardCard';
+
+import type { Academic360Response, Academic360StudentRow, Academic360TimelineEvent } from '../types';
 
 type SuccessDetailTabsProps = {
   data?: Academic360Response;
@@ -99,7 +97,12 @@ export function SuccessDetailTabs({ data, activeTab, isLoading, student }: Succe
 
   if (activeTab === 'attendance') {
     return (
-      <Stack spacing={1}>
+      <Stack spacing={2}>
+        <Academic360SectionHeader
+          icon={GlobalIcons.calendar}
+          title="Attendance"
+          description="Daily attendance history shown as a calendar or monthly list."
+        />
         <Tabs
           value={attendanceView}
           onChange={(_e, val) => setAttendanceView(val)}
@@ -165,7 +168,14 @@ export function SuccessDetailTabs({ data, activeTab, isLoading, student }: Succe
     );
 
     return (
-      <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+        <Box sx={{ mb: 2 }}>
+          <Academic360SectionHeader
+            icon={GlobalIcons.history}
+            title="Academic Timeline"
+            description="Academic events for this student, filtered by event type and date range."
+          />
+        </Box>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           spacing={2}
@@ -251,8 +261,6 @@ export function SuccessDetailTabs({ data, activeTab, isLoading, student }: Succe
           </Timeline>
         ) : (
           <Academic360EmptyState
-            icon="mdi:timeline-clock-outline"
-            color="info"
             title={
               timelineFilter === 'All'
                 ? startDate || endDate
@@ -260,7 +268,7 @@ export function SuccessDetailTabs({ data, activeTab, isLoading, student }: Succe
                   : 'No timeline events yet'
                 : `No ${timelineFilter} events`
             }
-            description="Key academic moments for this student — exams, alerts, achievements — will be plotted here as they happen."
+            description="Exams, alerts and achievements will appear here as they happen."
           />
         )}
       </Card>

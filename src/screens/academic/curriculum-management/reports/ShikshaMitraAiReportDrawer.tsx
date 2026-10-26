@@ -6,7 +6,7 @@ import type { AcademicAiReportModule } from 'src/redux/academicAPI/AcademicRepor
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { Box, Alert, Stack, Drawer, Divider, Typography } from '@mui/material';
+import { Box, Alert, Stack, Drawer, Divider } from '@mui/material';
 
 import { AiReportReady } from './AiReportStatus';
 import { AiReportActivity } from './AiReportActivity';
@@ -54,13 +54,11 @@ const MODULE_COPY: Record<AcademicAiReportModule, { description: string; placeho
   },
   'Student Records': {
     description: 'Describe the Student Records report you need.',
-    placeholder:
-      'Example: Enrolled Class 8 students grouped by division with roll and GR numbers',
+    placeholder: 'Example: Enrolled Class 8 students grouped by division with roll and GR numbers',
   },
   'Student Attendance': {
     description: 'Describe the Student Attendance report you need.',
-    placeholder:
-      'Example: Class 10 absent students from 2026-09-01 to 2026-09-15, sorted by date',
+    placeholder: 'Example: Class 10 absent students from 2026-09-01 to 2026-09-15, sorted by date',
   },
 };
 
@@ -119,14 +117,10 @@ export default function ShikshaMitraAiReportDrawer({
       />
       <Divider />
       <Box
-        sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 2, sm: 2.5 } }}
+        sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 2, sm: 3 } }}
         aria-busy={isWorking}
       >
-        <Stack spacing={2.25}>
-          <Typography variant="body2" color="text.secondary">
-            {copy.description} The agent uses only permitted data from the selected academic context
-            and asks you to approve its plan before creating the file.
-          </Typography>
+        <Stack spacing={2}>
           {!hasAcademicContext && (
             <Alert severity="warning">Select an Academic Year, Board, and Medium first.</Alert>
           )}
@@ -139,6 +133,7 @@ export default function ShikshaMitraAiReportDrawer({
               onBlur={formik.handleBlur}
               onSubmit={formik.handleSubmit}
               placeholder={copy.placeholder}
+              description={`${copy.description} Only permitted data from the selected academic context is used.`}
             />
           ) : (
             <AiReportUserMessage prompt={formik.values.prompt} />

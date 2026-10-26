@@ -201,6 +201,7 @@ const TimetableReportList = () => {
       ) : (
         <CustomizableTable
           tableTitle="Timetable Reports"
+          noDataText="No generated reports yet."
           tableId="timetable-reports"
           isLoading={isExportsLoading}
           data={rows}

@@ -37,6 +37,7 @@ const CurriculumReports = ({ addReportDialog }: { addReportDialog: UseBooleanRet
       <CustomBreadcrumbs
         sx={{ mb: 1 }}
         heading="Generate Report"
+        description="Choose a curriculum report, configure its filters, and preview the selected records."
         links={[
           { name: 'Academics', href: '/academic/dashboard/' },
           { name: 'Curriculum' },

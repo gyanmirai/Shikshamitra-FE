@@ -12,6 +12,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { useId, useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetGradeScalingByIdQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
@@ -24,7 +25,6 @@ import {
 } from 'src/enums/grade-entry-status';
 import {
   Box,
-  Card,
   Chip,
   Grid,
   Menu,
@@ -240,139 +240,130 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <Scrollbar sx={{ height: '500px', p: 2 }}>
-            <Grid container spacing={1}>
-              {/* Student Profile */}
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <Card
-                  sx={{
-                    p: 2,
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    boxShadow: 'none',
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <FormSectionCard
+                  title="Student Context"
+                  icon={GlobalIcons.assigned}
+                  descriptionTooltip="Review the student identity and attendance before entering marks."
                 >
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Avatar
-                      alt={data?.studentName || 'Student'}
-                      sx={{
-                        width: 44,
-                        height: 44,
-                        bgcolor: 'primary.main',
-                        color: 'primary.contrastText',
-                        fontWeight: 700,
-                        fontSize: 18,
-                      }}
-                    >
-                      {data?.studentName?.charAt(0)?.toUpperCase() || 'S'}
-                    </Avatar>
-                    <Stack spacing={0.25}>
-                      <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3}>
-                        {data?.studentName || '—'}
-                      </Typography>
-                      <Typography variant="caption" display="block" color="text.secondary">
-                        Roll No: {data?.rollNo || '—'}
-                      </Typography>
-                      <Typography variant="caption" display="block" color="text.secondary">
-                        {[className, divisionName].filter(Boolean).join(' ') || '—'}
-                      </Typography>
-                    </Stack>
-                  </Stack>
-                </Card>
-              </Grid>
-
-              {/* Attendance */}
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <Card
-                  sx={{
-                    p: 2,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    boxShadow: 'none',
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  <FormControl fullWidth size="small">
-                    <InputLabel
-                      id={attendanceLabelId}
-                      aria-label={`Attendance for ${data?.studentName || 'student'}`}
-                    >
-                      Attendance
-                    </InputLabel>
-                    <Select
-                      labelId={attendanceLabelId}
-                      name="attendanceStatus"
-                      label="Attendance"
-                      SelectDisplayProps={{ 'aria-labelledby': attendanceLabelId }}
-                      value={formik.values.attendanceStatus}
-                      onChange={formik.handleChange}
-                      renderValue={(selected) =>
-                        AttendanceStatusLabel[selected as AttendanceStatus] ?? 'Select attendance'
-                      }
-                    >
-                      {AttendanceStatusOptions.map((opt) => (
-                        <MenuItem key={opt.value} value={opt.value}>
-                          <Label
-                            color={AttendanceStatusColor[opt.value as AttendanceStatus] as any}
+                  <Grid container spacing={2}>
+                    {/* Student Profile */}
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Box
+                        sx={{
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Avatar
+                            alt={data?.studentName || 'Student'}
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              bgcolor: 'primary.main',
+                              color: 'primary.contrastText',
+                              fontWeight: 700,
+                              fontSize: 18,
+                            }}
                           >
-                            {opt.label}
-                          </Label>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  {isAbsent && (
-                    <Alert severity="info" sx={{ mt: 1.5, py: 0.5 }}>
-                      Marks entry is disabled for{' '}
-                      <strong>
-                        {AttendanceStatusLabel[formik.values.attendanceStatus as AttendanceStatus]}
-                      </strong>{' '}
-                      students.
-                    </Alert>
-                  )}
-                </Card>
+                            {data?.studentName?.charAt(0)?.toUpperCase() || 'S'}
+                          </Avatar>
+                          <Stack spacing={0.25}>
+                            <Typography variant="body2" lineHeight={1.3}>
+                              {data?.studentName || '—'}
+                            </Typography>
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Roll no.: {data?.rollNo || '—'}
+                            </Typography>
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              {[className, divisionName].filter(Boolean).join(' ') || '—'}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </Box>
+                    </Grid>
+
+                    {/* Attendance */}
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Box
+                        sx={{
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <FormControl fullWidth size="small">
+                          <InputLabel
+                            id={attendanceLabelId}
+                            aria-label={`Attendance for ${data?.studentName || 'student'}`}
+                          >
+                            Attendance
+                          </InputLabel>
+                          <Select
+                            labelId={attendanceLabelId}
+                            name="attendanceStatus"
+                            label="Attendance"
+                            SelectDisplayProps={{ 'aria-labelledby': attendanceLabelId }}
+                            value={formik.values.attendanceStatus}
+                            onChange={formik.handleChange}
+                            renderValue={(selected) =>
+                              AttendanceStatusLabel[selected as AttendanceStatus] ??
+                              'Select attendance'
+                            }
+                          >
+                            {AttendanceStatusOptions.map((opt) => (
+                              <MenuItem key={opt.value} value={opt.value}>
+                                <Label
+                                  color={
+                                    AttendanceStatusColor[opt.value as AttendanceStatus] as any
+                                  }
+                                >
+                                  {opt.label}
+                                </Label>
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        {isAbsent && (
+                          <Alert severity="info" sx={{ mt: 1.5, py: 0.5 }}>
+                            Marks entry is disabled for{' '}
+                            <strong>
+                              {
+                                AttendanceStatusLabel[
+                                  formik.values.attendanceStatus as AttendanceStatus
+                                ]
+                              }
+                            </strong>{' '}
+                            students.
+                          </Alert>
+                        )}
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </FormSectionCard>
               </Grid>
 
               {/* Marks Entry */}
               <Grid size={{ xs: 12 }}>
-                <Card
-                  sx={{
-                    p: 0,
-                    overflow: 'hidden',
-                    boxShadow: 'none',
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
+                <FormSectionCard
+                  title="Marks Entry"
+                  icon={GlobalIcons.notebook}
+                  descriptionTooltip="Enter the student's obtained marks or use a quick score shortcut."
                 >
                   <Box
                     sx={{
-                      px: 2,
-                      py: 1.25,
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
-                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Typography
-                      variant="overline"
-                      sx={{ color: 'text.secondary', letterSpacing: 0.8 }}
-                    >
-                      Marks Entry
-                    </Typography>
-                  </Box>
-
-                  <Box
-                    sx={{
-                      p: 2,
                       opacity: isAbsent ? 0.5 : 1,
                       pointerEvents: isAbsent ? 'none' : 'auto',
                     }}
                   >
-                    <Grid container spacing={1}>
+                    <Grid container spacing={2}>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
-                          label="Total Marks"
+                          label="Total marks"
                           fullWidth
                           disabled
                           name="totalMarks"
@@ -395,7 +386,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       <Grid size={{ xs: 12, md: 6 }}>
                         <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks)}>
                           <TextField
-                            label="Obtained Marks *"
+                            label="Obtained marks"
+                            required={!isAbsent}
                             fullWidth
                             type="number"
                             name="marks"
@@ -447,7 +439,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                           variant="caption"
                           sx={{ color: 'text.secondary', mb: 0.75, display: 'block' }}
                         >
-                          Quick Score
+                          Quick score
                         </Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                           {quickScores.map((qs) => (
@@ -483,39 +475,19 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       </Grid>
                     </Grid>
                   </Box>
-                </Card>
+                </FormSectionCard>
               </Grid>
 
               {/* Feedback */}
               <Grid size={{ xs: 12 }}>
-                <Card
-                  sx={{
-                    p: 0,
-                    overflow: 'hidden',
-                    boxShadow: 'none',
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      px: 2,
-                      py: 1.25,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
-                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Typography
-                      variant="overline"
-                      sx={{ color: 'text.secondary', letterSpacing: 0.8 }}
-                    >
-                      Feedback
-                    </Typography>
-
+                <FormSectionCard
+                  title="Feedback"
+                  icon={GlobalIcons.edit}
+                  descriptionTooltip="Add feedback for this student or choose an existing quick template."
+                  action={
                     <Button
                       ref={templateBtnRef}
+                      type="button"
                       size="small"
                       variant="outlined"
                       color="inherit"
@@ -531,32 +503,30 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                         />
                       }
                       onClick={() => setTemplateMenuOpen(true)}
-                      sx={{ fontSize: 12, py: 0.25 }}
                     >
-                      Quick Templates
+                      Quick templates
                     </Button>
-
-                    <Menu
-                      anchorEl={templateBtnRef.current}
-                      open={templateMenuOpen}
-                      onClose={() => setTemplateMenuOpen(false)}
-                      transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                      anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                      slotProps={{ paper: { sx: { maxWidth: 320, mt: 0.5 } } }}
-                    >
-                      {QUICK_TEMPLATES.map((tpl) => (
-                        <MenuItem
-                          key={tpl}
-                          onClick={() => handleTemplateSelect(tpl)}
-                          sx={{ fontSize: 13, whiteSpace: 'normal', py: 1 }}
-                        >
-                          {tpl}
-                        </MenuItem>
-                      ))}
-                    </Menu>
-                  </Box>
-
-                  <Box sx={{ p: 2 }}>
+                  }
+                >
+                  <Menu
+                    anchorEl={templateBtnRef.current}
+                    open={templateMenuOpen}
+                    onClose={() => setTemplateMenuOpen(false)}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                    slotProps={{ paper: { sx: { maxWidth: 320, mt: 0.5 } } }}
+                  >
+                    {QUICK_TEMPLATES.map((tpl) => (
+                      <MenuItem
+                        key={tpl}
+                        onClick={() => handleTemplateSelect(tpl)}
+                        sx={{ fontSize: 13, whiteSpace: 'normal', py: 1 }}
+                      >
+                        {tpl}
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                  <Box>
                     <ShakingTextField error={!!(formik.touched.feedback && formik.errors.feedback)}>
                       <TextField
                         label="Feedback"
@@ -595,7 +565,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       {formik.values.feedback.length} / {FEEDBACK_MAX_LENGTH}
                     </Typography>
                   </Box>
-                </Card>
+                </FormSectionCard>
               </Grid>
             </Grid>
           </Scrollbar>

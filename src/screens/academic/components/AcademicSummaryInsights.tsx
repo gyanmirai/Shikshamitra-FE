@@ -22,7 +22,7 @@ const numericValue = (value: string | number) => {
 
 export function AcademicSummaryInsights({
   cards,
-  title = 'Academic insights',
+  title = 'Academic Insights',
   description = 'Key totals, progress indicators and items that may need attention in the current view.',
   open,
   onClose,
@@ -54,7 +54,7 @@ export function AcademicSummaryInsights({
       hideTrigger={hideTrigger}
       buttonSx={buttonSx}
       chart={{
-        title: 'Metric comparison',
+        title: 'Metric Comparison',
         description: 'A quick comparison of the current values shown above.',
         categories: cards.map((card) => card.label),
         values: cards.map((card) => numericValue(card.value)),

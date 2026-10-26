@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
-import { Box, Chip, Typography } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseWallClockTime, formatWallClockTime } from 'src/utils/time-of-day';
@@ -66,11 +67,11 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
   if (!examData) return null;
 
   return (
-    <>
+    <Stack spacing={2}>
       <FormSectionHeader
         title="Exam Timetable"
-        icon="mdi:calendar-clock"
-        descriptionTooltip="Review subject dates, school-local times, marks and allocated rooms."
+        icon={GlobalIcons.calendar}
+        descriptionTooltip="Review saved subject dates, school-local times, marks and notes."
       />
       <CustomizableTable
         tableTitle="Exam Timetable"
@@ -188,7 +189,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
         ]}
         data={sortedSubjects}
       />
-    </>
+    </Stack>
   );
 };
 

@@ -255,9 +255,8 @@ export function StudentAcademic360Drawer({
             </Stack>
           ) : (
             <Academic360EmptyState
-              icon="mdi:account-search-outline"
               title="Select a student"
-              description="Choose a student from the list to open their Academic 360 view — health score, attendance, learning, exams and more, all in one place."
+              description="Choose a student from the list to view their academic health, attendance, learning tasks, exams and timetable."
             />
           )}
         </Box>

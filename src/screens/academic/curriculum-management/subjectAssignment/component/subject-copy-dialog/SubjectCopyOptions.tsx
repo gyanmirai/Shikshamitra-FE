@@ -1,7 +1,8 @@
-import { Box, Grid, Stack, Paper, Switch, Divider, Typography } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { Box, Grid, Stack, Switch, Divider, Typography } from '@mui/material';
 
 import { SubjectCopyChoiceCard } from './SubjectCopyChoiceCard';
-import { SubjectCopySectionHeading } from './SubjectCopySectionHeading';
 
 import type { SubjectCopyFormState } from './types';
 
@@ -43,16 +44,14 @@ function ToggleRow({ label, description, checked, onChange }: ToggleRowProps) {
 
 export function SubjectCopyOptions({ form }: Props) {
   return (
-    <Box component="section" aria-labelledby="copy-options-heading">
-      <SubjectCopySectionHeading
-        step={3}
-        title="Review copy settings"
-        description="Supporting data is optional. Existing destination settings stay protected by default."
-      />
-
-      <Grid container spacing={1.5} sx={{ mt: 1.5 }}>
+    <FormSectionCard
+      icon={GlobalIcons.stationaryIcon}
+      title="Copy Settings"
+      descriptionTooltip="Supporting data is optional. Existing destination settings stay protected by default."
+    >
+      <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+          <Box>
             <Typography variant="subtitle2">Include supporting data</Typography>
             <ToggleRow
               label="Documents and links"
@@ -67,15 +66,15 @@ export function SubjectCopyOptions({ form }: Props) {
               checked={form.includeTeachers}
               onChange={form.setIncludeTeachers}
             />
-          </Paper>
+          </Box>
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+          <Box>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               If a subject already exists
             </Typography>
-            <Stack spacing={1} role="radiogroup" aria-label="Existing subject behavior">
+            <Stack spacing={2} role="radiogroup" aria-label="Existing subject behavior">
               <SubjectCopyChoiceCard
                 selected={form.conflictStrategy === 'SKIP'}
                 label="Keep destination settings"
@@ -90,9 +89,9 @@ export function SubjectCopyOptions({ form }: Props) {
                 onSelect={() => form.setConflictStrategy('OVERWRITE')}
               />
             </Stack>
-          </Paper>
+          </Box>
         </Grid>
       </Grid>
-    </Box>
+    </FormSectionCard>
   );
 }

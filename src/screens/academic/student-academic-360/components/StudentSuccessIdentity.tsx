@@ -54,12 +54,17 @@ export function StudentSuccessIdentity({ student, health, kpis, statusLabel, sta
           </Typography>
 
           <CustomTooltip
-            title="Comprehensive 360° student academic dossier: health diagnosis, attendance, assignments, and exam analytics"
+            title="Student academic health, attendance, learning tasks and examination results."
             placement="top"
             arrow
           >
-            <IconButton size="small" sx={{ p: 0.25, color: 'text.secondary', width: 22, height: 22 }}>
-              <Iconify icon={GlobalIcons.info} width={15} />
+            <IconButton
+              size="small"
+              aria-label="Academic 360 information"
+              color="info"
+              sx={{ width: 44, height: 44 }}
+            >
+              <Iconify icon={GlobalIcons.info} width={16} />
             </IconButton>
           </CustomTooltip>
 

@@ -22,7 +22,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({ onClo
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Stack spacing={1.5}>
+        <Stack spacing={2}>
           <FormSectionCard
             icon="mdi:shape-outline"
             title="Group Details"

@@ -1,37 +1,38 @@
 'use client';
 
-import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import dayjs from 'dayjs';
-import { alpha, useTheme } from '@mui/material/styles';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { StudentDetailsDialog } from 'src/screens/examination/resultCreation/ResultCreation';
+import ScheduleExamPreviewDrawer from 'src/screens/examination/scheduleExam/components/ScheduleExamPreviewDrawer';
 import {
   Box,
+  Tab,
   Card,
   Chip,
   Grid,
+  Tabs,
   Stack,
   Button,
   Divider,
-  Skeleton,
-  Typography,
-  DialogActions,
-  Tabs,
-  Tab,
-  TextField,
-  InputAdornment,
-  IconButton,
   Tooltip,
+  Skeleton,
+  TextField,
+  Typography,
+  IconButton,
+  DialogActions,
+  InputAdornment,
   CircularProgress,
 } from '@mui/material';
 
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
-import { StudentDetailsDialog } from 'src/screens/examination/resultCreation/ResultCreation';
-import ScheduleExamPreviewDrawer from 'src/screens/examination/scheduleExam/components/ScheduleExamPreviewDrawer';
-
-import { Academic360EmptyState } from './Academic360EmptyState';
 import { getStudentId, getStudentName } from '../types';
+import { Academic360EmptyState } from './Academic360EmptyState';
+import { Academic360SectionHeader } from './Academic360SectionHeader';
+
 import type { Academic360ExamResult, Academic360StudentRow } from '../types';
 
 export type ExamStatusCategory = 'UPCOMING' | 'COMPLETED' | 'PUBLISHED';
@@ -89,7 +90,7 @@ export function isExamGradingCompleted(exam: ExamItem): boolean {
     if (rawStatus === 'COMPLETED') return true;
     if (typeof exam.percentage === 'number' && exam.percentage > 0) return true;
     if (typeof exam.obtainedMarks === 'number' && exam.obtainedMarks > 0) return true;
-    if (Boolean(exam.grade)) return true;
+    if (exam.grade) return true;
   }
 
   return false;
@@ -714,8 +715,7 @@ export function ExamsResultsDashboardCard({
   }, [deduplicatedExams]);
 
   // Filtered exams according to active status tab and search
-  const filteredExams = useMemo(() => {
-    return deduplicatedExams.filter((exam) => {
+  const filteredExams = useMemo(() => deduplicatedExams.filter((exam) => {
       const isCompleted = isExamGradingCompleted(exam);
 
       // Status tab check
@@ -738,8 +738,7 @@ export function ExamsResultsDashboardCard({
       }
 
       return true;
-    });
-  }, [deduplicatedExams, activeStatusTab, searchQuery]);
+    }), [deduplicatedExams, activeStatusTab, searchQuery]);
 
   // Reset pagination on filter or tab change
   useEffect(() => {
@@ -858,44 +857,25 @@ export function ExamsResultsDashboardCard({
       <Card
         variant="outlined"
         sx={{
-          p: 2,
+          p: { xs: 1.5, sm: 2 },
           borderRadius: 2,
           borderColor: 'divider',
           bgcolor: 'background.paper',
-          boxShadow: (theme) => theme.customShadows?.z1 || '0 1px 3px 0 rgba(0,0,0,0.05)',
         }}
       >
         <Stack spacing={2}>
           {/* HEADER SECTION */}
           <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1.5}>
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 1.5,
-                  display: 'grid',
-                  placeItems: 'center',
-                  bgcolor: (theme) => `${theme.palette.primary.main}14`,
-                  color: 'primary.main',
-                }}
-              >
-                <Iconify icon="mdi:trophy-outline" width={24} />
-              </Box>
-              <Box>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    Exams & Performance
-                  </Typography>
-                  <Label color="primary" variant="soft" sx={{ fontWeight: 600 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Academic360SectionHeader
+                icon={GlobalIcons.rubricFile}
+                title="Exams & Performance"
+                description="Exam schedules, timetable details and student evaluation results by status."
+                action={<Label color="primary" variant="soft" sx={{ fontWeight: 600 }}>
                     {`${metrics.total} Total Exams`}
-                  </Label>
-                </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  Status-wise exam schedules, timetable details & student evaluation results
-                </Typography>
-              </Box>
-            </Stack>
+                  </Label>}
+              />
+            </Box>
 
             <Stack direction="row" spacing={1.5} alignItems="center">
               {metrics.average !== null && (
@@ -1088,14 +1068,6 @@ export function ExamsResultsDashboardCard({
             </Stack>
           ) : (
             <Academic360EmptyState
-              icon={
-                activeStatusTab === 'upcoming'
-                  ? 'mdi:calendar-blank-outline'
-                  : activeStatusTab === 'completed'
-                    ? 'mdi:trophy-outline'
-                    : 'mdi:file-document-outline'
-              }
-              color={activeStatusTab === 'upcoming' ? 'info' : 'warning'}
               title={
                 searchQuery
                   ? 'No matching exams found'

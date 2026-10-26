@@ -111,8 +111,6 @@ export function AttendanceSnapshot({ attendance, isLoading }: AttendanceSnapshot
         </Stack>
       ) : (
         <Academic360EmptyState
-          icon="mdi:calendar-remove-outline"
-          color="info"
           title="No attendance recorded yet"
           description="Attendance history for this student will appear here once daily attendance is marked."
           compact

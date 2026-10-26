@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { EmptyContent } from 'src/components/empty-content';
 import { varAlpha, stylesMode, getSemanticTextStyles } from 'src/theme/styles';
 import { Box, Chip, Alert, Stack, Button, Collapse, Skeleton, Typography } from '@mui/material';
 
@@ -73,7 +74,9 @@ export const getRoomAuditActionConfig = (action: string): AuditActionConfig =>
   ACTION_ICONS[action.trim().toLowerCase()] || DEFAULT_ICON;
 
 const getAuditActionTextStyles = (theme: Theme, tone: LabelColor) =>
-  tone === 'default' ? { color: theme.vars.palette.text.secondary } : getSemanticTextStyles(theme, tone);
+  tone === 'default'
+    ? { color: theme.vars.palette.text.secondary }
+    : getSemanticTextStyles(theme, tone);
 
 const getAuditActionMarkerStyles = (theme: Theme, tone: LabelColor) => {
   if (tone === 'default') {
@@ -168,6 +171,7 @@ interface RoomAuditLogPanelProps {
   logs?: AuditLogEntry[];
   compact?: boolean;
   showRoomChip?: boolean;
+  emptyMessage?: string;
 }
 
 const AuditLogItem = ({
@@ -373,6 +377,7 @@ export const RoomAuditLogPanel = ({
   logs: externalLogs,
   compact = false,
   showRoomChip = false,
+  emptyMessage = 'No audit trail entries found',
 }: RoomAuditLogPanelProps) => {
   const { data, isLoading, isFetching, error, fetch } = useRoomAuditLogs(roomId, {
     skip: Boolean(externalLogs),
@@ -395,18 +400,17 @@ export const RoomAuditLogPanel = ({
     );
   }
 
-  if (error) {
+  if (!externalLogs && error) {
     return <Alert severity="error">{error}</Alert>;
   }
 
   if (logs.length === 0) {
     return (
-      <Box sx={{ py: 4, textAlign: 'center' }}>
-        <Iconify icon="mdi:history" width={40} color="text.disabled" />
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          No audit trail entries found.
-        </Typography>
-      </Box>
+      <EmptyContent
+        title={emptyMessage}
+        sx={{ py: compact ? 2 : 3, height: 'auto' }}
+        slotProps={{ img: { maxWidth: compact ? 96 : 160 } }}
+      />
     );
   }
 

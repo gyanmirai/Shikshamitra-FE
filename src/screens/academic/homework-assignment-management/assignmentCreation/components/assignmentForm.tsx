@@ -16,7 +16,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -25,7 +24,6 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetAssignmentTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
@@ -47,7 +45,6 @@ import {
   Checkbox,
   Skeleton,
   TextField,
-  IconButton,
   Typography,
   FormControl,
   Autocomplete,
@@ -68,6 +65,7 @@ import {
 import { SubmissionTypeCard } from '../../components/SubmissionTypeCard';
 import { ReferenceFileUpload } from '../../components/ReferenceFileUpload';
 import { useReferenceFileUpload } from '../../hooks/useReferenceFileUpload';
+import { LearningTaskFormSection as SectionCard } from '../../components/LearningTaskFormSection';
 import {
   getAssignmentInitialValues,
   hasAssignmentTypeOverrides,
@@ -79,10 +77,11 @@ import type { IAssignmentFormProps } from '../type';
 import type { AssignmentFormValues } from './assignmentFormData';
 
 const cardStyle = {
-  p: 2,
+  p: { xs: 1.5, sm: 2 },
   borderRadius: 2,
-  boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
-  border: '1px solid rgba(145, 158, 171, 0.08)',
+  border: 1,
+  borderColor: 'divider',
+  bgcolor: 'background.paper',
 };
 
 const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onClose }) => {
@@ -490,25 +489,13 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
         onSubmit={formik.handleSubmit}
       >
         <Scrollbar sx={{ p: 2, height: '100%' }}>
-          <Grid container>
+          <Grid container spacing={2}>
             {/* Basic Details Section */}
             <Grid size={{ xs: 12 }}>
               <SectionCard
                 title="Basic Details"
-                paperProps={{ sx: cardStyle }}
-                headerContent={
-                  <Box sx={{ flex: 1, ml: 0.5 }}>
-                    <CustomTooltip
-                      title="Define the core details of the assignment"
-                      placement="right"
-                      arrow
-                    >
-                      <IconButton size="small" aria-label="About basic details" sx={{ p: 0.25 }}>
-                        <Iconify icon="lucide:info" width={18} color="info.main" />
-                      </IconButton>
-                    </CustomTooltip>
-                  </Box>
-                }
+                icon={GlobalIcons.notebook}
+                description="Define the assignment's academic context, title and evaluation settings."
               >
                 {/* Class */}
                 <Grid size={{ xs: 12, md: 6 }}>
@@ -838,24 +825,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
             <Grid size={{ xs: 12 }}>
               <SectionCard
                 title="Description & Attachments"
-                paperProps={{ sx: cardStyle }}
-                headerContent={
-                  <Box sx={{ flex: 1, ml: 0.5 }}>
-                    <CustomTooltip
-                      title="Provide instructions and upload necessary files"
-                      placement="right"
-                      arrow
-                    >
-                      <IconButton
-                        size="small"
-                        aria-label="About description and attachments"
-                        sx={{ p: 0.25 }}
-                      >
-                        <Iconify icon="lucide:info" width={18} color="info.main" />
-                      </IconButton>
-                    </CustomTooltip>
-                  </Box>
-                }
+                icon={GlobalIcons.documentIcon}
+                description="Provide assignment instructions and any reference files."
               >
                 <Grid size={{ xs: 12 }}>
                   <ShakingTextField
@@ -915,26 +886,10 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
               <Grid size={{ xs: 12 }}>
                 <SectionCard
                   title="Schedule & Deadlines"
-                  paperProps={{ sx: cardStyle }}
-                  headerContent={
-                    <Box sx={{ flex: 1, ml: 0.5 }}>
-                      <CustomTooltip
-                        title="Set publish and due dates for each division"
-                        placement="right"
-                        arrow
-                      >
-                        <IconButton
-                          size="small"
-                          aria-label="About schedule and deadlines"
-                          sx={{ p: 0.25 }}
-                        >
-                          <Iconify icon="lucide:info" width={18} color="info.main" />
-                        </IconButton>
-                      </CustomTooltip>
-                    </Box>
-                  }
+                  icon={GlobalIcons.calendar}
+                  description="Set publish and due dates for each division."
                 >
-                  <Grid container spacing={1} sx={{ width: '100%' }}>
+                  <Grid container spacing={2} sx={{ width: '100%' }}>
                     {formik.values.divisions.map((div: any, idx: number) => {
                       const divError = (formik.errors.divisions as any[])?.[idx] as
                         Record<string, string> | undefined;
@@ -1077,24 +1032,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
             <Grid size={{ xs: 12 }}>
               <SectionCard
                 title="Submission Settings"
-                paperProps={{ sx: cardStyle }}
-                headerContent={
-                  <Box sx={{ flex: 1, ml: 0.5 }}>
-                    <CustomTooltip
-                      title="How should students submit this assignment?"
-                      placement="right"
-                      arrow
-                    >
-                      <IconButton
-                        size="small"
-                        aria-label="About submission settings"
-                        sx={{ p: 0.25 }}
-                      >
-                        <Iconify icon="lucide:info" width={18} color="info.main" />
-                      </IconButton>
-                    </CustomTooltip>
-                  </Box>
-                }
+                icon={GlobalIcons.upload}
+                description="Choose how students submit this assignment."
               >
                 <Grid size={{ xs: 12 }}>
                   <FormControl
@@ -1162,10 +1101,14 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           sx={{
             p: 2,
             display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            flexShrink: 0,
             justifyContent: 'flex-end',
             gap: 1,
             borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
             bgcolor: 'background.paper',
+            '& > .MuiButton-root': { whiteSpace: 'nowrap', flexShrink: 0 },
           }}
         >
           <Button

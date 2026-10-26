@@ -39,7 +39,8 @@ const BulkChapterForm = ({
   return (
     <CustomDialog
       open={open}
-      title="Bulk add chapters"
+      title="Bulk Add Chapters"
+      titleInfo="Import chapter details from a template, then review every row before assigning chapters to this subject."
       handleClose={closeAndReset}
       maxWidth="lg"
       hasUnsavedChanges={formik.dirty}
