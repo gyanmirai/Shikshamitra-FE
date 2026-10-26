@@ -3,12 +3,21 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-24
+updated_on: 2026-10-26
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Finance frontend changes
+
+Bank transfer evidence: run `BankTransferTable.test.tsx`,
+`FeeCollectionPreviewDialog.test.tsx` and `FinalPaymentReviewDialog.test.tsx` in their owning
+Finance screen folders, plus `collectionPaymentDetails.test.ts` and `reconciliation.test.ts`.
+In the local browser, collect a QA fee using Bank Transfer with a reference, transfer date,
+holder and receiving bank; compare Payment Details, Payment Verification, provisional PDF,
+the reconciliation row and the official PDF after approval.
+Confirm the receiving bank stays masked and missing historical transfer dates stay unavailable.
+Backend persistence and receipt coverage lives in `BankTransferEvidenceApi_Tests`.
 
 Reconciliation initial loading: run `ReconciliationQuery.test.tsx` under
 `src/screens/finance/Finance-reconciliation/Component`. It covers all payment tables waiting

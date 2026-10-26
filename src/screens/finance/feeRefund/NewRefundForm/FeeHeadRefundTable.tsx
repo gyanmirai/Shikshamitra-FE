@@ -97,7 +97,11 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   const feeHeads: IFeeHeadPayment[] = useMemo(() => {
     if (!eligibility?.feeHeads) return [];
     return eligibility.feeHeads.map((fh) => ({
-      feeHeadId: fh.feeHeadId ?? 'paid-charges',
+      feeHeadId:
+        fh.feeHeadId ??
+        (fh.months.some((m) => 'lateFeeDueFeeId' in m && m.lateFeeDueFeeId)
+          ? 'paid-late-fees'
+          : 'paid-charges'),
       feeHeadName: fh.feeHeadName,
       items: fh.months.map((m): IMonthItem => {
         const monthIndex = typeof m.month === 'number' ? m.month : 0;
@@ -125,6 +129,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         return {
           dueFeeId: m.dueFeeId ?? '',
           chargeId: (m as any).chargeId ?? undefined,
+          lateFeeDueFeeId: 'lateFeeDueFeeId' in m ? (m.lateFeeDueFeeId ?? undefined) : undefined,
           sourceAllocationId: (m as any).sourceAllocationId,
           sourceReceiptId: (m as any).sourceReceiptId,
           receiptNumber: (m as any).receiptNumber,
@@ -172,9 +177,11 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     if (formik.values.refundType === 'full' && formik.values.feeHeadRefunds.length > 0) {
       const refunds = formik.values.feeHeadRefunds;
       let needsUpdate = false;
-      let remainingPolicyAmount = isAdj
-        ? Number.POSITIVE_INFINITY
-        : Number((eligibility as any)?.totalRefundable ?? 0);
+      // Whole-receipt policies require every source; the server apportions their capped payout.
+      let remainingPolicyAmount =
+        isAdj || ('allowPartialRefund' in eligibility && eligibility.allowPartialRefund === false)
+          ? Number.POSITIVE_INFINITY
+          : Number((eligibility as any)?.totalRefundable ?? 0);
       const updated = refunds.map((fh) => {
         const fhInfo = feeHeads.find((f) => f.feeHeadId === fh.feeHeadId);
         if (!fhInfo) return fh;
@@ -235,6 +242,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
                 month,
                 dueFeeId,
                 chargeId: itemInfo?.chargeId,
+                lateFeeDueFeeId: itemInfo?.lateFeeDueFeeId,
                 sourceAllocationId: itemInfo?.sourceAllocationId,
                 sourceReceiptId: itemInfo?.sourceReceiptId,
                 amount: initialAmount,
@@ -252,6 +260,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
                 month,
                 dueFeeId,
                 chargeId: itemInfo?.chargeId,
+                lateFeeDueFeeId: itemInfo?.lateFeeDueFeeId,
                 sourceAllocationId: itemInfo?.sourceAllocationId,
                 sourceReceiptId: itemInfo?.sourceReceiptId,
                 amount: initialAmount,
@@ -306,6 +315,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
               month: i.month,
               dueFeeId: i.dueFeeId,
               chargeId: i.chargeId,
+              lateFeeDueFeeId: i.lateFeeDueFeeId,
               sourceAllocationId: i.sourceAllocationId,
               sourceReceiptId: i.sourceReceiptId,
               amount: formik.values.refundType === 'full' ? Math.max(0, i.refundable) : '',
@@ -319,6 +329,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
             month: i.month,
             dueFeeId: i.dueFeeId,
             chargeId: i.chargeId,
+            lateFeeDueFeeId: i.lateFeeDueFeeId,
             sourceAllocationId: i.sourceAllocationId,
             sourceReceiptId: i.sourceReceiptId,
             amount: formik.values.refundType === 'full' ? Math.max(0, i.refundable) : '',

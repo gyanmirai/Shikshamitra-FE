@@ -20,7 +20,7 @@ export interface IRefundMonthItem {
 }
 
 export interface IRefundFeeHeadItem {
-  feeHeadId: string;
+  feeHeadId: string | null;
   feeHeadName: string;
   totalPaid: number;
   totalRefunded: number;
@@ -318,7 +318,7 @@ const RefundFeeHeadViewTable: React.FC<Props> = ({ data }) => {
       </Box>
 
       {data.map((feeHead) => (
-        <FeeHeadViewGroup key={feeHead.feeHeadId} feeHead={feeHead} />
+        <FeeHeadViewGroup key={feeHead.feeHeadId ?? feeHead.feeHeadName} feeHead={feeHead} />
       ))}
     </Box>
   );
