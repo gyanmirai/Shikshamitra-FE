@@ -167,6 +167,11 @@ const BiometricIntegrationScreen = () => {
       { id: 'timeOut', label: 'Out-Time', align: 'left', minWidth: '6vw' },
       {
         id: 'status',
+        filterType: 'enum',
+        enumOptions: ['Present', 'Absent', 'HalfDay', 'Pending'].map((value) => ({
+          value,
+          label: value === 'HalfDay' ? 'Half day' : value,
+        })),
         label: 'Status',
         align: 'left',
         minWidth: '6vw',

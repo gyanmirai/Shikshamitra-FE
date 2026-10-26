@@ -537,30 +537,32 @@ export function SectionTable({
   columnDefinitions?: Partial<IColumn>[];
 } & Partial<Omit<React.ComponentProps<typeof CustomizableTable>, 'columns' | 'data' | 'tableId'>>) {
   const instance = React.useId();
-  const rows = React.Children.toArray(children).flatMap((child, index) => {
-    if (!React.isValidElement<{ children?: React.ReactNode; selected?: boolean }>(child)) return [];
-    const cells = React.Children.toArray(child.props.children).filter(
-      (cell): cell is React.ReactElement<{ children?: React.ReactNode; colSpan?: number }> =>
-        React.isValidElement(cell)
-    );
-    if (
-      cells.length !== columns.length ||
-      cells.some((cell) => Number(cell.props.colSpan || 1) > 1)
-    )
-      return [];
-    return [
-      {
-        id: String(child.key || index),
-        selected: child.props.selected,
-        ...Object.fromEntries(
-          cells.map((cell, cellIndex) => [
-            columnIds?.[cellIndex] || `column${cellIndex}`,
-            cell.props.children,
-          ])
-        ),
-      },
-    ];
-  });
+  const rows: Array<{ id: string; selected?: boolean; [column: string]: React.ReactNode }> =
+    React.Children.toArray(children).flatMap((child, index) => {
+      if (!React.isValidElement<{ children?: React.ReactNode; selected?: boolean }>(child))
+        return [];
+      const cells = React.Children.toArray(child.props.children).filter(
+        (cell): cell is React.ReactElement<{ children?: React.ReactNode; colSpan?: number }> =>
+          React.isValidElement(cell)
+      );
+      if (
+        cells.length !== columns.length ||
+        cells.some((cell) => Number(cell.props.colSpan || 1) > 1)
+      )
+        return [];
+      return [
+        {
+          id: String(child.key || index),
+          selected: child.props.selected,
+          ...Object.fromEntries(
+            cells.map((cell, cellIndex) => [
+              columnIds?.[cellIndex] || `column${cellIndex}`,
+              cell.props.children,
+            ])
+          ),
+        },
+      ];
+    });
   return (
     <CustomizableTable
       tableId={tableId || `hr-policy-section-${instance}`}
@@ -576,23 +578,37 @@ export function SectionTable({
       data={rows}
       {...tableProps}
       rowProps={(row) => ({ selected: row.selected })}
-      columns={columns.map((label, index) => ({
-        id: columnIds?.[index] || `column${index}`,
-        label,
-        minWidth: 130,
-        filterType: 'string',
-        isSort: label !== 'Actions',
-        isFilter: label !== 'Actions',
-        excludeFromExport: label === 'Actions',
-        sticky: label === 'Actions',
-        stickyPosition: label === 'Actions' ? ('right' as const) : undefined,
-        render: (value: React.ReactNode) => value,
-        sortValue: (value: unknown) =>
-          typeof value === 'number' ? value : extractTextFromReactNode(value).toLowerCase(),
-        exportValue: (value: unknown) =>
-          typeof value === 'number' ? value : extractTextFromReactNode(value),
-        ...columnDefinitions?.[index],
-      }))}
+      columns={columns.map((label, index) => {
+        const categorical =
+          !tableProps.serverSidePagination &&
+          ['Status', 'Type', 'Scope', 'Source', 'Action'].includes(label);
+        const id = columnIds?.[index] || `column${index}`;
+        return {
+          id,
+          label,
+          minWidth: 130,
+          filterType: categorical ? ('enum' as const) : ('string' as const),
+          enumOptions: categorical
+            ? [...new Set(rows.map((row) => extractTextFromReactNode(row[id])))]
+                .filter(Boolean)
+                .map((value) => ({ value, label: value }))
+            : undefined,
+          filterValue: categorical
+            ? (value: unknown) => extractTextFromReactNode(value)
+            : undefined,
+          isSort: label !== 'Actions',
+          isFilter: label !== 'Actions',
+          excludeFromExport: label === 'Actions',
+          sticky: label === 'Actions',
+          stickyPosition: label === 'Actions' ? ('right' as const) : undefined,
+          render: (value: React.ReactNode) => value,
+          sortValue: (value: unknown) =>
+            typeof value === 'number' ? value : extractTextFromReactNode(value).toLowerCase(),
+          exportValue: (value: unknown) =>
+            typeof value === 'number' ? value : extractTextFromReactNode(value),
+          ...columnDefinitions?.[index],
+        };
+      })}
       noDataText={tableProps.noDataText ?? 'No records available.'}
     />
   );

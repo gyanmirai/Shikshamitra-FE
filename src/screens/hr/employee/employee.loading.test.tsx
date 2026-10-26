@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({
   query: { currentData: undefined as any, data: undefined as any, isFetching: true },
   params: { employee: '' } as Record<string, string>,
   useQuery: vi.fn(),
+  table: vi.fn(),
 }));
 
 vi.mock('react-redux', () => ({
@@ -43,21 +44,67 @@ vi.mock('src/components/customDialog', () => ({ default: () => null }));
 vi.mock('src/components/student-popover', () => ({ default: () => null }));
 vi.mock('./chnage-status-form', () => ({ default: () => null }));
 vi.mock('src/components/customizabaleTable', () => ({
-  default: (props: any) => (
-    <div>
-      {props.isLoading ? (
-        <span>Loading staff</span>
-      ) : (
-        props.data.map((row: any) => <span key={row.id}>{row.fullName}</span>)
-      )}
-      <button type="button" disabled={props.paginationDisabled}>
-        Next page
-      </button>
-    </div>
-  ),
+  default: (props: any) => {
+    state.table(props);
+    return (
+      <div>
+        {props.isLoading ? (
+          <span>Loading staff</span>
+        ) : (
+          props.data.map((row: any) => <span key={row.id}>{row.fullName}</span>)
+        )}
+        <button type="button" disabled={props.paginationDisabled}>
+          Next page
+        </button>
+      </div>
+    );
+  },
 }));
 
 describe('staff directory loading', () => {
+  it('gives every directory data column a global sort/filter capability and useful categorical options', () => {
+    state.query = { currentData: { items: [], totalCount: 0 }, data: undefined, isFetching: false };
+    render(<HrEmployee />);
+    const props = state.table.mock.lastCall![0];
+    expect(props.serverSideSort).toBe(true);
+    expect(props.serverSideFilter).toBe(true);
+    const expected = [
+      'fullName',
+      'roleValue',
+      'dob',
+      'genderValue',
+      'doi',
+      'email',
+      'mobileNo',
+      'isTeaching',
+      'shiftName',
+      'organization',
+      'statusValue',
+    ];
+    expect(
+      props.columns.filter((column: any) => column.id !== 'actions').map((column: any) => column.id)
+    ).toEqual(expected);
+    expected.forEach((id) => expect(props.serverColumnTypes).toHaveProperty(id));
+    expect(props.serverColumnTypes).not.toHaveProperty('actions');
+    expect(
+      props.columns
+        .find((column: any) => column.id === 'genderValue')
+        .enumOptions.map((option: any) => option.label)
+    ).toEqual(['Male', 'Female']);
+    expect(
+      props.columns
+        .find((column: any) => column.id === 'isTeaching')
+        .enumOptions.map((option: any) => option.value)
+    ).toEqual([true, false]);
+    expect(
+      props.columns
+        .find((column: any) => column.id === 'statusValue')
+        .enumOptions.map((option: any) => option.value)
+    ).toContain('Upcoming');
+    expect(props.serverColumnTypes.dob).toBe('date');
+    expect(props.serverColumnTypes.doi).toBe('date');
+  });
+
   it('keeps cached rows visible during a background refresh and blocks page changes', () => {
     state.query = {
       currentData: { items: [{ id: '1', fullName: 'Current staff' }], totalCount: 1 },

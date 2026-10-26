@@ -1,11 +1,11 @@
 import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
 
-import { Chip, TableRow, TableCell } from '@mui/material';
 import { vi, it, expect } from 'vitest';
+import { Chip, TableRow, TableCell } from '@mui/material';
 import { render, renderHook } from '@testing-library/react';
 import { useTableData } from 'src/components/customizabaleTable/hooks/useTableData';
-import { useTableConfig } from 'src/components/customizabaleTable/hooks/useTableConfig';
 import { getCellValueForExport } from 'src/components/customizabaleTable/table-export';
+import { useTableConfig } from 'src/components/customizabaleTable/hooks/useTableConfig';
 
 import { SectionTable } from './HRPolicySharedUI';
 
@@ -16,6 +16,32 @@ vi.mock('src/components/customizabaleTable', () => ({
     return null;
   },
 }));
+
+it('offers named categorical choices from complete local policy detail cells', () => {
+  render(
+    <SectionTable columns={['Status', 'Type']}>
+      <TableRow>
+        <TableCell>
+          <Chip label="Matched" />
+        </TableCell>
+        <TableCell>Teaching</TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell>
+          <Chip label="Skipped" />
+        </TableCell>
+        <TableCell>Non teaching</TableCell>
+      </TableRow>
+    </SectionTable>
+  );
+  const props = table.mock.lastCall![0] as ICustomizableTableProps;
+  expect(props.columns[0].filterType).toBe('enum');
+  expect(props.columns[0].enumOptions).toEqual([
+    { label: 'Matched', value: 'Matched' },
+    { label: 'Skipped', value: 'Skipped' },
+  ]);
+  expect(props.columns[0].filterValue?.(props.data[0].column0, props.data[0])).toBe('Matched');
+});
 
 it('sorts rich policy cells by visible text and filters numeric priorities before pagination/export', () => {
   render(

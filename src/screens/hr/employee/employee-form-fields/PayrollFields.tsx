@@ -312,6 +312,10 @@ export const RenderComponents = ({
             {
               id: 'amount',
               label: 'Amount / %',
+              filterType: 'number',
+              filterValue: (_value, row) => (row.isPercentage ? row.percentage : row.amount),
+              sortValue: (_value, row) =>
+                Number(row.isPercentage ? row.percentage : row.amount) || 0,
               render(value: any, row: any) {
                 if (row.isPercentage) {
                   return (

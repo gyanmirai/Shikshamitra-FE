@@ -33,6 +33,11 @@ describe('TableHeader', () => {
       </ThemeProvider>
     );
     expect(screen.getByText('Amount')).toHaveStyle({ textAlign: 'left' });
+    const neutralSort = screen
+      .getByRole('button', { name: 'Sort by Amount' })
+      .querySelector('[data-testid="UnfoldMoreIcon"]');
+    expect(neutralSort).toBeVisible();
+    expect(neutralSort?.parentElement).toHaveStyle({ opacity: '1' });
     expect(screen.getByText('Actions')).toHaveStyle({ textAlign: 'left' });
     expect(screen.queryByRole('button', { name: 'Sort by Actions' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Filter Actions' })).not.toBeInTheDocument();

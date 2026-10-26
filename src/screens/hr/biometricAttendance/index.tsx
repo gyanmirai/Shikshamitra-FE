@@ -736,6 +736,11 @@ const AttendanceImportHistoryScreen = () => {
       },
       {
         id: 'isBatchLocked',
+        filterType: 'enum',
+        enumOptions: [
+          { label: 'Locked', value: true },
+          { label: 'Unlocked', value: false },
+        ],
         excludeFromExport: true,
         label: 'Lock',
         minWidth: '60px',
@@ -1259,6 +1264,13 @@ export const ImportDetailDialog = ({
     () => ({
       id: 'attendanceStatus',
       label: 'Attendance',
+      filterType: 'enum' as const,
+      enumOptions: [
+        { value: 'Present', label: 'Present' },
+        { value: 'Absent', label: 'Absent' },
+        { value: 'HalfDay', label: 'Half day' },
+        { value: 'Pending', label: 'Pending' },
+      ],
       sticky: true,
       minWidth: '180px',
       align: 'left' as const,

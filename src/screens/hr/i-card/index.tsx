@@ -29,7 +29,6 @@ import {
   EmployeeICardStatusType,
   EmployeeICardStatusTypeColor,
   EmployeeICardStatusTypeLabel,
-  EmployeeICardStatusTypeOptions,
 } from 'src/enums/employee-icard-status';
 import {
   Box,
@@ -60,6 +59,7 @@ import {
 } from 'src/redux/hr/employee-icard-template-api';
 
 import { SharedSchoolLogo } from './components/shared-school-logo';
+import { type EmployeeICardRow, createICardStaffColumns } from './i-card-staff-columns';
 import {
   isPdfBlob,
   snapToGrid,
@@ -134,19 +134,6 @@ type BuilderState = {
   designationFilter: string;
   excludeIncompleteEmployees: boolean;
   cardsPerPage: number;
-};
-
-type EmployeeICardRow = {
-  id: string;
-  fullName?: string | null;
-  employeeIdentifier?: string | null;
-  designation?: string | null;
-  department?: string | null;
-  organizationNames?: string[] | null;
-  mobileNo?: string | null;
-  bloodGroup?: string | null;
-  address?: string | null;
-  thumbnailPicture?: string | null;
 };
 
 const iCardActionPermissions = {
@@ -628,6 +615,8 @@ const EmployeeIcardScreen = () => {
               {
                 label: 'Orientation',
                 id: 'orientation',
+                filterType: 'enum',
+                enumOptions: ['Horizontal', 'Vertical'].map((value) => ({ label: value, value })),
                 align: 'left',
                 width: 132,
                 minWidth: 120,
@@ -636,7 +625,10 @@ const EmployeeIcardScreen = () => {
                 label: 'Status',
                 id: 'status',
                 filterType: 'enum',
-                enumOptions: EmployeeICardStatusTypeOptions,
+                enumOptions: [
+                  { label: 'Active', value: 'Active' },
+                  { label: 'Inactive', value: 'Inactive' },
+                ],
                 align: 'left',
                 sticky: true,
                 stickyPosition: 'right' as const,
@@ -746,6 +738,7 @@ const EmployeeICardBuilder = ({
   );
   const [isSaving, setIsSaving] = useState(false);
   const [employeePage, setEmployeePage] = useState(1);
+  const [employeePageSize, setEmployeePageSize] = useState(25);
   const [employeeStatusFilter, setEmployeeStatusFilter] = useState('all');
   const [previewIndex, setPreviewIndex] = useState(0);
   const [previewMode, setPreviewMode] = useState<'single' | 'scroll'>('single');
@@ -802,14 +795,30 @@ const EmployeeICardBuilder = ({
   );
 
   const selectedMediumStageId = state.organization === 'all' ? undefined : state.organization;
-  const { data: employeeData, isFetching: isFetchingEmployees } = useGetEmployeeQuery({
+  const employeeQuery = {
     page: employeePage,
-    pageSize: 25,
+    pageSize: employeePageSize,
     mediumStageId: selectedMediumStageId,
     status: employeeStatusFilter === 'all' ? undefined : employeeStatusFilter,
     designation: state.designationFilter === 'all' ? undefined : state.designationFilter,
     search: state.employeeSearch.trim() || undefined,
-  });
+  };
+  const {
+    data: employeeData,
+    isFetching: isFetchingEmployees,
+    error: employeeError,
+    refetch: retryEmployees,
+    tableProps: employeeTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'employee-icard-selection-table',
+      query: employeeQuery,
+      page: employeePage - 1,
+      size: employeePageSize,
+      resetPage: () => setEmployeePage(1),
+    },
+    useGetEmployeeQuery(employeeQuery)
+  );
   const employees = useMemo(
     () => (employeeData?.items || []) as EmployeeICardRow[],
     [employeeData?.items]
@@ -1009,103 +1018,15 @@ const EmployeeICardBuilder = ({
     );
   };
 
-  const employeeColumns = useMemo<any[]>(
-    () => [
-      {
-        label: (
-          <Checkbox
-            size="small"
-            checked={allVisibleSelected}
-            indeterminate={!allVisibleSelected && someVisibleSelected}
-            onChange={(event) => toggleVisibleSelection(event.target.checked)}
-            onClick={(event) => event.stopPropagation()}
-          />
-        ),
-        id: 'select',
-        width: 72,
-        minWidth: 64,
-        maxWidth: 72,
-        isSort: false,
-        sticky: true,
-        isFilter: false,
-        align: 'center' as const,
-        render: (_: unknown, row: any) => (
-          <Checkbox
-            size="small"
-            checked={state.selectedEmployeeIds.includes((row as EmployeeICardRow).id)}
-            onChange={() => toggleEmployeeSelection(row as EmployeeICardRow)}
-            onClick={(event) => event.stopPropagation()}
-          />
-        ),
-      },
-      {
-        label: 'Staff',
-        id: 'fullName',
-        minWidth: 100,
-        sticky: true,
-        align: 'left' as const,
-        isFilter: false,
-        render: (_: unknown, row: any) => (
-          <Box>
-            <Typography variant="body2">
-              {(row as EmployeeICardRow).fullName || 'Unnamed staff'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {(row as EmployeeICardRow).employeeIdentifier || '-'}
-            </Typography>
-          </Box>
-        ),
-      },
-      {
-        label: 'Designation',
-        id: 'designation',
-        minWidth: 100,
-        align: 'left' as const,
-        isFilter: false,
-        render: (value: string) => value || '-',
-      },
-      {
-        label: 'Readiness',
-        id: 'readiness',
-        minWidth: 100,
-        sticky: true,
-        align: 'left' as const,
-        isSort: false,
-        isFilter: false,
-        render: (_: unknown, row: any) => (
-          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-            {!(row as EmployeeICardRow).thumbnailPicture && (
-              <Label color="warning" variant="soft">
-                Photo
-              </Label>
-            )}
-            {!(row as EmployeeICardRow).mobileNo && (
-              <Label color="warning" variant="soft">
-                Phone
-              </Label>
-            )}
-            {!(row as EmployeeICardRow).designation && (
-              <Label color="warning" variant="soft">
-                Role
-              </Label>
-            )}
-            {!(row as EmployeeICardRow).employeeIdentifier && (
-              <Label color="warning" variant="soft">
-                Code
-              </Label>
-            )}
-            {(row as EmployeeICardRow).thumbnailPicture &&
-              (row as EmployeeICardRow).mobileNo &&
-              (row as EmployeeICardRow).designation &&
-              (row as EmployeeICardRow).employeeIdentifier && (
-                <Label color="success" variant="soft">
-                  Ready
-                </Label>
-              )}
-          </Stack>
-        ),
-      },
-    ],
+  const employeeColumns = useMemo(
+    () =>
+      createICardStaffColumns({
+        allVisibleSelected,
+        someVisibleSelected,
+        selectedEmployeeIds: state.selectedEmployeeIds,
+        toggleEmployeeSelection,
+        toggleVisibleSelection,
+      }),
     [
       allVisibleSelected,
       someVisibleSelected,
@@ -1736,11 +1657,20 @@ const EmployeeICardBuilder = ({
                       tableId="employee-icard-selection-table"
                       tableTitle="Staff selection"
                       columns={employeeColumns}
+                      {...employeeTableProps}
                       data={filteredEmployees}
+                      error={employeeError}
+                      onRetry={retryEmployees}
                       isLoading={isFetchingEmployees}
                       isSearch={false}
-                      isFilter={false}
-                      isPagination={false}
+                      serverSidePagination
+                      totalCount={employeeData?.totalCount || 0}
+                      page={employeePage - 1}
+                      rowsPerPage={employeePageSize}
+                      onServerPagination={(nextPage, nextSize) => {
+                        setEmployeePage(nextPage);
+                        setEmployeePageSize(nextSize);
+                      }}
                       isShowedDense={false}
                       rowProps={(row) => ({
                         selected: state.selectedEmployeeIds.includes((row as EmployeeICardRow).id),

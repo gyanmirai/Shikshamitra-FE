@@ -1233,7 +1233,7 @@ function OverviewWorkspace() {
           <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
             <SectionPanel title="Live Review Queue">
               <ReviewTable
-                rows={rows.slice(0, 5)}
+                rows={rows}
                 onOpen={(row) => setSelectedId(row.id)}
                 noDataText={
                   hasPerformanceSetup
@@ -1376,7 +1376,7 @@ function TemplatesTab() {
             minWidth: '260px',
             render: (value) => (
               <Stack spacing={0.75}>
-                {(value || []).slice(0, 3).map((section: any) => (
+                {(value || []).map((section: any) => (
                   <Stack
                     key={section.id || section.name}
                     direction="row"
@@ -1405,6 +1405,12 @@ function TemplatesTab() {
           },
           {
             id: 'status',
+            filterType: 'enum',
+            enumOptions: [
+              { value: 0, label: 'Draft' },
+              { value: 1, label: 'Published' },
+              { value: 2, label: 'Archived' },
+            ],
             label: 'Status',
             minWidth: '110px',
             render: (value) => (

@@ -12,6 +12,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { formatHrAuditDateTime } from 'src/utils/hr-audit-format';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
@@ -26,8 +27,8 @@ import {
 
 import { LeavePolicyForm } from './LeavePolicyForm';
 import { InfoTooltipIcon } from './HRPolicySharedUI';
+import { getErrorMessage } from '../hr-policy-workspace-utils';
 import { LeavePolicyImpactDrawer } from './LeavePolicyImpactDrawer';
-import { formatDate, getErrorMessage } from '../hr-policy-workspace-utils';
 import { LeaveYearEndSettlementsPanel } from './LeaveYearEndSettlementsPanel';
 import {
   getLeavePolicyTitle,
@@ -465,7 +466,7 @@ export function LeavePoliciesPanel() {
     policyTitle: getLeavePolicyTitle(policy),
     ruleCount: getActivePolicyRules(policy).length,
     encashmentAllowed: getActivePolicyRules(policy).some((rule) => rule.encashmentAllowed),
-    updatedAt: formatDate(policy.lastModificationTime || policy.creationTime),
+    updatedAt: formatHrAuditDateTime(policy.lastModificationTime || policy.creationTime),
   }));
 
   return (

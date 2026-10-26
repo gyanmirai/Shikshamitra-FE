@@ -221,6 +221,8 @@ const LeaveBalance = ({
     () => [
       {
         id: 'paidType',
+        filterType: 'enum',
+        enumOptions: ['Paid', 'Unpaid'].map((value) => ({ label: value, value })),
         label: 'Paid Type',
         align: 'left',
         minWidth: '140px',

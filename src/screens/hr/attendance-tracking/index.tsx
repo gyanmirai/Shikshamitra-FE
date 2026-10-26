@@ -15,12 +15,14 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { durationHours } from 'src/screens/hr/utils/table-values';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -49,6 +51,8 @@ import {
   FormControl,
   DialogActions,
 } from '@mui/material';
+
+import { isRegisterQueryLocked } from './table-query-guard';
 
 type RegisterStatus =
   'NotMarked' | 'Present' | 'HalfDay' | 'Absent' | 'HalfDayLeave' | 'FullDayLeave';
@@ -295,7 +299,6 @@ const AttendanceTrackingScreen = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editRow, setEditRow] = useState<AttendanceRegisterRow | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
-  const [sorting, setSorting] = useState('');
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [draft, setDraft] = useState<AttendanceDraft>({
     status: 'Present' as RegisterStatus,
@@ -337,7 +340,6 @@ const AttendanceTrackingScreen = () => {
       endDate: filters.endDate ? filters.endDate.format('YYYY-MM-DD') : '',
       academicYearId,
       educationMediumStageIds: filters.educationMediumStageIds,
-      sorting,
       employeeId: filters.employeeId,
       employeeGroup:
         filters.employeeGroup === 'all' ? undefined : filters.employeeGroup || undefined,
@@ -349,17 +351,11 @@ const AttendanceTrackingScreen = () => {
       skipCount: (page - 1) * pageSize,
       maxResultCount: pageSize,
     }),
-    [academicYearId, filters, page, pageSize, sorting]
+    [academicYearId, filters, page, pageSize]
   );
 
   const exportTable = useHrTableExport('hr-attendance-register', queryParams);
-  const {
-    currentData: data,
-    isLoading,
-    isFetching,
-    error: tableError,
-    refetch: retryTable,
-  } = useQueryAndMutation({
+  const registerQuery = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGroupedAttendanceRegisterQuery,
     params: queryParams,
@@ -377,6 +373,30 @@ const AttendanceTrackingScreen = () => {
     type: 'mutation',
     currentQueryAndMutation: useBulkAdjustAttendanceRegisterMutation,
   });
+
+  const queryLocked = isRegisterQueryLocked({ editRow, bulkOpen, isAdjusting, isBulkAdjusting });
+  const {
+    currentData: data,
+    isLoading,
+    isFetching,
+    error: tableError,
+    refetch: retryTable,
+    tableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-attendance-register',
+      query: queryParams,
+      page: page - 1,
+      size: pageSize,
+      resetPage: () => {
+        setPage(1);
+        setSelectedIds([]);
+      },
+      skip: !filters.startDate || !filters.endDate || (!academicYearId && !filters.employeeId),
+      locked: queryLocked,
+    },
+    registerQuery
+  );
 
   const rows = useMemo(() => (data?.items || []) as GroupedAttendanceRegisterRow[], [data?.items]);
   useEffect(() => {
@@ -426,17 +446,19 @@ const AttendanceTrackingScreen = () => {
   };
 
   const setFilter = (key: keyof typeof filters, value: any) => {
+    if (queryLocked) return;
     setFilters((prev) => ({ ...prev, [key]: value }));
     resetPaging();
   };
 
   const resetFilters = () => {
+    if (queryLocked) return;
     setFilters(getDefaultFilters());
     setSelectedEmployeeOption(null);
     resetPaging();
   };
   const shiftMonth = (offset: number) => {
-    if (!filters.startDate) return;
+    if (queryLocked || !filters.startDate) return;
     const month = filters.startDate.add(offset, 'month');
     setFilters((prev) => ({
       ...prev,
@@ -633,6 +655,15 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'status',
       label: 'Status',
+      filterType: 'enum',
+      enumOptions: ['NotMarked', 'Present', 'HalfDay', 'Absent'].map((value) => ({
+        value,
+        label: statusMeta(value).label,
+      })),
+      filterValue: (value) =>
+        normalizeStatus(typeof value === 'number' ? value : String(value ?? '')),
+      sortValue: (value) =>
+        statusMeta(typeof value === 'number' ? value : String(value ?? '')).label,
       width: 130,
       minWidth: 130,
       sticky: true,
@@ -680,7 +711,9 @@ const AttendanceTrackingScreen = () => {
       width: 100,
       minWidth: 100,
       align: 'left',
-      filterType: 'string',
+      filterType: 'number',
+      filterValue: (value) => durationHours(value),
+      sortValue: (value) => durationHours(value),
       isSort: true,
       isFilter: true,
       render: (value) => value || '-',
@@ -724,8 +757,37 @@ const AttendanceTrackingScreen = () => {
       width: 110,
       minWidth: 110,
       align: 'left',
-      isSort: false,
-      isFilter: false,
+      isSort: true,
+      isFilter: true,
+      filterType: 'enum',
+      enumOptions: ['Holiday', 'Not marked', 'Editable', 'Locked'].map((value) => ({
+        label: value,
+        value,
+      })),
+      filterValue: (_value, row) =>
+        row.isHoliday
+          ? 'Holiday'
+          : normalizeStatus(row.status) === 'NotMarked' || !row.isMarked
+            ? 'Not marked'
+            : row.canEdit
+              ? 'Editable'
+              : 'Locked',
+      sortValue: (_value, row) =>
+        row.isHoliday
+          ? 'Holiday'
+          : normalizeStatus(row.status) === 'NotMarked' || !row.isMarked
+            ? 'Not marked'
+            : row.canEdit
+              ? 'Editable'
+              : 'Locked',
+      exportValue: (_value, row) =>
+        row.isHoliday
+          ? 'Holiday'
+          : normalizeStatus(row.status) === 'NotMarked' || !row.isMarked
+            ? 'Not marked'
+            : row.canEdit
+              ? 'Editable'
+              : 'Locked',
       render: (_value, row) => {
         const dayRow = row as AttendanceRegisterRow;
         return dayRow.isHoliday ? (
@@ -961,8 +1023,9 @@ const AttendanceTrackingScreen = () => {
       align: 'left',
       width: 190,
       minWidth: 190,
-      isSort: false,
-      isFilter: false,
+      isSort: true,
+      isFilter: true,
+      filterType: 'string',
       render: (_value, row: any) => (
         <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
           {row.absent > 0 && (
@@ -1025,8 +1088,9 @@ const AttendanceTrackingScreen = () => {
       align: 'left',
       width: 145,
       minWidth: 145,
-      isSort: false,
-      isFilter: false,
+      isSort: true,
+      isFilter: true,
+      filterType: 'string',
       render: (_value, row: any) => (
         <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
           <Label color="info" variant="soft">
@@ -1318,6 +1382,7 @@ const AttendanceTrackingScreen = () => {
               value={[filters.startDate, filters.endDate]}
               dateFormat="DD/MM/YYYY"
               onChange={(value) => {
+                if (queryLocked) return;
                 setFilters((prev) => ({ ...prev, startDate: value[0], endDate: value[1] }));
                 resetPaging();
               }}
@@ -1337,6 +1402,7 @@ const AttendanceTrackingScreen = () => {
             size="small"
             color="inherit"
             onClick={() => {
+              if (queryLocked) return;
               const defaults = getDefaultFilters();
               setFilters((prev) => ({
                 ...prev,
@@ -1516,22 +1582,19 @@ const AttendanceTrackingScreen = () => {
         data={rows}
         isLoading={isLoading || (isFetching && !data)}
         isRefreshing={isFetching && !!data}
-        serverSideSort
-        serverSideSortMode="single"
-        onServerSort={(_column, sorts) => {
-          setSorting(sorts.map((sort) => `${sort.column} ${sort.direction}`).join(','));
-          resetPaging();
-        }}
+        {...tableProps}
         serverSide
         serverSidePagination
         totalCount={data?.totalCount || 0}
         serverSideSearch
         searchTerm={filters.search}
+        searchFieldProps={{ disabled: queryLocked }}
+        paginationDisabled={queryLocked}
         onServerSearch={(search) => setFilter('search', search)}
         page={page - 1}
         rowsPerPage={pageSize}
-        isFilter={false}
         onServerPagination={(nextPage, nextPageSize) => {
+          if (queryLocked) return;
           setPage(nextPage);
           setPageSize(nextPageSize);
           setSelectedIds([]);

@@ -23,6 +23,47 @@ vi.mock('src/components/iconify', () => ({
 }));
 
 describe('PolicyAuditDrawer audit rendering', () => {
+  it('filters the actual Before cells by readable weekday labels instead of raw array codes', async () => {
+    const user = userEvent.setup();
+    renderThemed(
+      <PolicyAuditDrawer
+        ctx={
+          {
+            auditTarget: { title: 'Synthetic policy', entityType: 'work_calendar_policy' },
+            auditEvents: {
+              items: [
+                {
+                  id: 'weekday-event',
+                  action: 'edited',
+                  summary: 'Weekly off changed',
+                  changedFields: [
+                    { field: 'customWeeklyOffs', oldValue: [1], newValue: [2] },
+                    {
+                      field: 'sourcePolicyId',
+                      oldValue: '3a216aea-8273-8586-a1a3-3bffdc298e2e',
+                      newValue: null,
+                    },
+                    { field: 'effectiveFrom', oldValue: '2026-10-26', newValue: '2026-10-27' },
+                  ],
+                },
+              ],
+            },
+            auditLoading: false,
+            setAuditTarget: vi.fn(),
+          } as any
+        }
+      />
+    );
+    await user.click(screen.getByRole('button', { name: 'Show changes for Weekly off changed' }));
+    await user.click(screen.getByRole('button', { name: 'Filter Before' }));
+    await user.click(screen.getByRole('combobox', { name: 'Filter Type *' }));
+    await user.click(screen.getByRole('option', { name: 'Contains' }));
+    await user.type(screen.getByRole('textbox', { name: 'Before *' }), 'Monday');
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+    expect(await within(screen.getByRole('table')).findByText('Monday')).toBeVisible();
+    expect(screen.queryByText('26 Oct 2026')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('row')).toHaveLength(2);
+  });
   it('renders changed fields and context without raw JSON or GUIDs', async () => {
     renderThemed(
       <PolicyAuditDrawer

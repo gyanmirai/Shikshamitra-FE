@@ -3,6 +3,214 @@ import * as XLSX from 'xlsx';
 import { test, expect } from '@playwright/test';
 
 for (const width of [390, 768, 1440]) {
+  test(`directory exposes every data-column sort/filter and real enum controls at ${width}px`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'directory', exact: true }).click();
+    await expect(page.locator('.MuiTablePagination-displayedRows')).toHaveText('1\u201325 of 125');
+    const labels = [
+      'Name',
+      'Role',
+      'DOB',
+      'Gender',
+      'DOJ',
+      'Email',
+      'Mobile',
+      'Group',
+      'Shift',
+      'Organization',
+      'Status',
+    ];
+    const ids = [
+      'fullName',
+      'roleValue',
+      'dob',
+      'genderValue',
+      'doi',
+      'email',
+      'mobileNo',
+      'isTeaching',
+      'shiftName',
+      'organization',
+      'statusValue',
+    ];
+    /* eslint-disable no-await-in-loop -- Each click and response changes the same page's sort state. */
+    for (let index = 0; index < labels.length; index += 1) {
+      const button = page.getByRole('button', { name: `Sort by ${labels[index]}`, exact: true });
+      await expect(button.locator('[data-testid="UnfoldMoreIcon"]')).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: `Filter ${labels[index]}`, exact: true })
+      ).toBeVisible();
+      for (const direction of ['asc', 'desc']) {
+        const response = page.waitForResponse(
+          (value) =>
+            value.url().endsWith('/synthetic-hr/table-query') &&
+            value
+              .request()
+              .postDataJSON()
+              .criteria.sorts.some(
+                (sort: any) => sort.column === ids[index] && sort.direction === direction
+              )
+        );
+        await button.click();
+        await response;
+        await expect(
+          button.locator(
+            direction === 'asc'
+              ? '[data-testid="ArrowUpwardIcon"]'
+              : '[data-testid="ArrowDownwardIcon"]'
+          )
+        ).toBeVisible();
+      }
+      await button.click();
+    }
+    /* eslint-enable no-await-in-loop */
+    await expect(page.getByRole('button', { name: 'Sort by Actions', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Filter Actions', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Filter Group', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Group *', exact: true }).click();
+    await page.getByRole('option', { name: 'Non-teaching', exact: true }).click();
+    const filtered = page.waitForRequest(
+      (request) =>
+        request.url().endsWith('/synthetic-hr/table-query') &&
+        request.postDataJSON().criteria.filters.length > 0
+    );
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    expect((await filtered).postDataJSON().criteria.filters).toEqual([
+      { column: 'isTeaching', type: 'equals', value: false },
+    ]);
+    await expect(page.locator('.MuiTablePagination-displayedRows')).toHaveText('1\u201325 of 62');
+    await page.getByRole('button', { name: 'Filter Status', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Status *', exact: true }).click();
+    await page.getByRole('option', { name: 'Upcoming', exact: true }).click();
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.locator('.MuiTablePagination-displayedRows')).toHaveText('1\u201321 of 21');
+    const directoryDownload = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export', exact: true }).click();
+    await page.getByRole('menuitem', { name: /Excel/ }).click();
+    const workbook = XLSX.readFile((await (await directoryDownload).path())!);
+    const exported = XLSX.utils.sheet_to_json<any[]>(workbook.Sheets[workbook.SheetNames[0]], {
+      header: 1,
+    });
+    expect(exported).toHaveLength(22);
+    expect(exported[0]).toHaveLength(11);
+    expect(exported[0]).not.toContain('Actions');
+    expect(JSON.stringify(exported)).toContain('SYN-0003');
+    await page.screenshot({
+      path: info.outputPath('directory-column-controls.png'),
+      fullPage: true,
+    });
+  });
+
+  test(`I-card off-page identifier filtering preserves selected staff across criteria and pages at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'icard', exact: true }).click();
+    await page.getByRole('checkbox', { name: 'Select Staff 000', exact: true }).check();
+    await page.getByRole('button', { name: 'Sort by Staff', exact: true }).click();
+    const descending = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/synthetic-hr/table-query') &&
+        response
+          .request()
+          .postDataJSON()
+          .criteria.sorts.some((sort: any) => sort.direction === 'desc')
+    );
+    await page.getByRole('button', { name: 'Sort by Staff', exact: true }).click();
+    await descending;
+    await page.getByRole('checkbox', { name: 'Select Staff 124', exact: true }).check();
+    await page.getByRole('button', { name: 'Filter Staff', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Filter Type *', exact: true }).click();
+    await page.getByRole('option', { name: 'Contains', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Staff *', exact: true }).fill('SYN-0124');
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.locator('.MuiTablePagination-displayedRows')).toHaveText('1\u20131 of 1');
+    await expect(
+      page.getByRole('checkbox', { name: 'Select Staff 124', exact: true })
+    ).toBeChecked();
+    await expect(page.getByLabel('Selected staff IDs', { exact: true })).toContainText('staff-0');
+    await expect(page.getByLabel('Selected staff IDs', { exact: true })).toContainText('staff-124');
+    await page.getByRole('button', { name: /^Clear \(\d+\)$/ }).click();
+    await expect(page.locator('.MuiTablePagination-displayedRows')).toHaveText('1\u201325 of 125');
+    await page.getByRole('button', { name: 'Go to next page', exact: true }).click();
+    await expect(page.locator('.MuiTablePagination-displayedRows')).toHaveText('26\u201350 of 125');
+    await expect(page.getByLabel('Selected staff IDs', { exact: true })).toContainText('staff-124');
+    await page.getByRole('button', { name: 'Go to previous page', exact: true }).click();
+    await expect(
+      page.getByRole('checkbox', { name: 'Select Staff 124', exact: true })
+    ).toBeChecked();
+  });
+
+  test(`Register criteria/export keep editor and save context at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'register', exact: true }).click();
+    await page.getByRole('button', { name: 'Filter Exceptions', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Filter Type *', exact: true }).click();
+    await page.getByRole('option', { name: 'Contains', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Exceptions *', exact: true }).fill('Locked');
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.locator('.MuiTablePagination-displayedRows')).toHaveText('1\u201325 of 42');
+    await page.getByRole('button', { name: 'Open adjustment', exact: true }).click();
+    await expect(page.getByLabel('Adjustment context', { exact: true })).toHaveText('Staff 000');
+    await expect(page.getByRole('button', { name: 'Sort by Staff', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('textbox', { name: 'Search table', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Go to next page', exact: true })).toBeDisabled();
+    await page.getByRole('button', { name: 'Cancel adjustment', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Sort by Staff', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Start save', exact: true }).click();
+    await expect(page.getByRole('textbox', { name: 'Search table', exact: true })).toBeDisabled();
+    await page.getByRole('button', { name: 'Finish save', exact: true }).click();
+    await expect(page.getByRole('textbox', { name: 'Search table', exact: true })).toBeEnabled();
+    await expect(page.locator('.MuiTablePagination-displayedRows')).toHaveText('1\u201325 of 42');
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export', exact: true }).click();
+    await page.getByRole('menuitem', { name: /Excel/ }).click();
+    const file = await (await download).path();
+    const workbook = XLSX.readFile(file!);
+    const rows = XLSX.utils.sheet_to_json<any[]>(workbook.Sheets[workbook.SheetNames[0]], {
+      header: 1,
+    });
+    expect(rows).toHaveLength(43);
+    expect(JSON.stringify(rows)).not.toContain('Absent');
+  });
+
+  test(`nested salary and readable audit columns filter correctly at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'salary', exact: true }).click();
+    await page.getByRole('button', { name: 'Sort by Amount', exact: true }).click();
+    await expect(page.locator('tbody tr').first()).toContainText('Zulu');
+    await page.getByRole('button', { name: 'Filter Amount', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Filter Type *', exact: true }).click();
+    await page.getByRole('option', { name: 'Greater Than', exact: true }).click();
+    await page.getByRole('spinbutton', { name: 'Amount *', exact: true }).fill('3');
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.locator('tbody tr')).toHaveCount(2);
+    await page.getByRole('button', { name: 'audit', exact: true }).click();
+    await page.getByRole('button', { name: 'Filter Before', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Filter Type *', exact: true }).click();
+    await page.getByRole('option', { name: 'Contains', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Before *', exact: true }).fill('Monday');
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+    await expect(page.locator('tbody tr')).toContainText('Monday');
+    await page.getByRole('button', { name: /^Clear \(\d+\)$/ }).click();
+    await page.getByRole('textbox', { name: 'Search table', exact: true }).fill('3a216aea');
+    await expect(
+      page.getByText('No results found for \u201c3a216aea\u201d', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('textbox', { name: 'Search table', exact: true }).fill('Linked record');
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+    await expect(page.locator('tbody tr')).toContainText('Linked record');
+  });
+
   test(`import row drafts survive query guards, cancel, discard and in-flight save at ${width}px`, async ({
     page,
   }, info) => {
@@ -143,7 +351,7 @@ for (const width of [390, 768, 1440]) {
     expect(rows[1][0]).toBe('PF rule 019');
     await page.getByRole('button', { name: 'Operational empty', exact: true }).click();
     await expect(page.getByText('No results found', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Clear filters', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Clear \(\d+\)$/ })).toBeVisible();
     await page.getByRole('button', { name: 'Operational error', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Retry', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Retry', exact: true }).click();

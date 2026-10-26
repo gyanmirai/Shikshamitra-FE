@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { formatHrAuditDateTime } from 'src/utils/hr-audit-format';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
@@ -16,7 +17,6 @@ import { Card, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
 
 import { InfoTooltipIcon } from './HRPolicySharedUI';
 import {
-  formatDate,
   formatRange,
   getErrorMessage,
   getCalendarWeeklyRuleLabel,
@@ -274,7 +274,9 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     weeklyRule: getCalendarWeeklyRuleLabel(item),
     holidayCount: item.holidaySummary?.includedCount ?? 0,
     version: item.version,
-    updatedAt: formatDate(item.lastModificationTime || item.lastUpdatedAt || item.creationTime),
+    updatedAt: formatHrAuditDateTime(
+      item.lastModificationTime || item.lastUpdatedAt || item.creationTime
+    ),
   }));
 
   return (

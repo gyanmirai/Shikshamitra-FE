@@ -1,6 +1,6 @@
 'use client';
 
-import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   EsiEnrollment,
   EsiImpactPreview,
@@ -13,7 +13,6 @@ import { Visibility } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
-import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import {
   Box,
   Chip,
@@ -117,6 +116,11 @@ export function EsiStatutoryEmployees({
       },
       {
         id: 'enrollmentStatus',
+        filterType: 'enum',
+        enumOptions: enrollmentStatuses.map((value) => ({
+          value,
+          label: enrollmentStatusLabel(value),
+        })),
         label: 'Enrollment',
         minWidth: 150,
         isFilter: false,
@@ -231,38 +235,6 @@ export function EsiStatutoryEmployees({
     [canApproveOverride, canManageEnrollment, onOpenEmployee]
   );
 
-  const tableCriteria = serverColumnFilters(
-    columns,
-    [
-      {
-        column: 'coverageDecisionLabel',
-        query: 'coverage',
-        emptyValue: 'all',
-        options: [
-          { label: 'Covered decisions', value: 'covered' },
-          { label: 'Not covered decisions', value: 'notCovered' },
-        ],
-      },
-      {
-        column: 'readiness',
-        query: 'readiness',
-        emptyValue: 'all',
-        options: [
-          { label: 'Ready', value: 'ready' },
-          { label: 'Needs attention', value: 'needsAttention' },
-        ],
-      },
-    ],
-    { coverage: query.coverage, readiness: query.readiness },
-    (patch) =>
-      onQueryChange({
-        coverage: String(patch.coverage),
-        readiness: String(patch.readiness),
-        page: 0,
-      })
-  );
-  const tableSorts: IParams['sorts'] = [{ column: query.sortBy, direction: query.sortDirection }];
-
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 2, minWidth: 0 }}>
       <Box>
@@ -352,7 +324,7 @@ export function EsiStatutoryEmployees({
         tableId="esi-employee-impact"
         onExport={exportTable}
         tableTitle="ESI staff impact"
-        {...tableCriteria}
+        columns={columns}
         data={(preview?.items || []).map((item) => ({ ...item, id: item.employeeId }))}
         totalCount={preview?.totalCount || 0}
         isLoading={isLoading}
@@ -366,7 +338,6 @@ export function EsiStatutoryEmployees({
         rowsPerPage={query.pageSize}
         rowsPerPageOptions={[10, 25, 50]}
         searchTerm={query.search}
-        sorts={tableSorts}
         searchFieldProps={{ placeholder: 'Search staff name or code' }}
         onServerSearch={(search) => onQueryChange({ search: search.trim() || null, page: 0 })}
         onServerPagination={(page, rowsPerPage) =>
