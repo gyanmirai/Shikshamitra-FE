@@ -1,9 +1,9 @@
 'use client';
 
-import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import React from 'react';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { cleanVersionDisplayValue } from 'src/screens/hr/policies/hr-policy-ui-utils';
 import {
   Box,
@@ -173,6 +173,7 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             searchTerm={versionFilters.search}
             searchFieldProps={{ placeholder: 'Search policy history' }}
             onServerSearch={(search) => setVersionFilters((current) => ({ ...current, search }))}
+            {...ctx.versionTableProps}
           >
             {filteredVersions.length ? (
               filteredVersions.map((version) => (

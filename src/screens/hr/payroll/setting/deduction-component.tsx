@@ -1,6 +1,5 @@
 'use client';
 
-import { serverColumnFilters, nameContains } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -23,6 +22,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -106,14 +106,24 @@ const DeductionComponent = () => {
     refetch,
     error: tableError,
     isFetching: tableFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetDeductionComponentsQuery,
-    params: {
-      academicYearId: currentYear?.id,
-      ...tableQuery,
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-deduction-components',
+      query: tableQuery,
+      page: tableQuery.page - 1,
+      size: tableQuery.pageSize,
+      resetPage: () => setTableQuery((current) => ({ ...current, page: 1 })),
     },
-  });
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetDeductionComponentsQuery,
+      params: {
+        academicYearId: currentYear?.id,
+        ...tableQuery,
+      },
+    })
+  );
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   // Handles closing the incident form
@@ -277,122 +287,117 @@ const DeductionComponent = () => {
         onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
         isLoading={getDeductionComponentsLoading || tableFetching}
         searchTerm={tableQuery.search}
-        {...serverColumnFilters(
-          [
-            {
-              id: 'deductionComponentName',
-              label: 'Name',
-              align: 'left',
-              minWidth: '20vw',
-              sticky: true,
+        columns={[
+          {
+            id: 'deductionComponentName',
+            label: 'Name',
+            align: 'left',
+            minWidth: '20vw',
+            sticky: true,
+          },
+          {
+            id: 'deductionType',
+            label: 'Deduction Type',
+            align: 'left',
+            minWidth: '10vw',
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Fixed', value: 'Fixed' },
+              { label: 'Variable', value: 'Variable' },
+            ],
+            render(value: string | boolean) {
+              if (typeof value === 'boolean') {
+                return value ? 'Fixed' : 'Variable';
+              }
+              return value || 'Fixed';
             },
-            {
-              id: 'deductionType',
-              label: 'Deduction Type',
-              align: 'left',
-              minWidth: '10vw',
-              filterType: 'enum',
-              enumOptions: [
-                { label: 'Fixed', value: 'Fixed' },
-                { label: 'Variable', value: 'Variable' },
-              ],
-              render(value: string | boolean) {
-                if (typeof value === 'boolean') {
-                  return value ? 'Fixed' : 'Variable';
-                }
-                return value || 'Fixed';
-              },
-            },
-            {
-              id: 'calculationType',
-              label: 'Calculation Type',
-              align: 'left',
-              minWidth: '10vw',
-              filterType: 'enum',
-              enumOptions: [
-                { label: 'Amount Based', value: 'Amount' },
-                { label: 'Percentage Based', value: 'Percentage' },
-              ],
-            },
-            {
-              id: 'amount',
-              label: 'Amount / Percentage',
-              align: 'right',
-              minWidth: '10vw',
-              filterType: 'number',
-              render(value, row) {
-                if (row.calculationType === 'PERCENTAGE') {
-                  return (
-                    <Typography variant="caption" fontSize="13px">
-                      {row.percentage}%
-                    </Typography>
-                  );
-                }
+          },
+          {
+            id: 'calculationType',
+            label: 'Calculation Type',
+            align: 'left',
+            minWidth: '10vw',
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Amount Based', value: 'Amount' },
+              { label: 'Percentage Based', value: 'Percentage' },
+            ],
+          },
+          {
+            id: 'amount',
+            label: 'Amount / Percentage',
+            align: 'right',
+            minWidth: '10vw',
+            filterType: 'number',
+            render(value, row) {
+              if (row.calculationType === 'PERCENTAGE') {
                 return (
                   <Typography variant="caption" fontSize="13px">
-                    {formatNumber(value, 'INR')}
+                    {row.percentage}%
                   </Typography>
                 );
-              },
+              }
+              return (
+                <Typography variant="caption" fontSize="13px">
+                  {formatNumber(value, 'INR')}
+                </Typography>
+              );
             },
-            {
-              id: 'customComponent.componentName',
-              label: 'Calculation base',
-              align: 'left',
-              minWidth: '10vw',
-              render(value: string, row: any) {
-                return row?.calculationBase === 'GROSS' ? 'Gross Salary' : value || '-';
-              },
+          },
+          {
+            id: 'customComponent.componentName',
+            label: 'Calculation base',
+            align: 'left',
+            minWidth: '10vw',
+            render(value: string, row: any) {
+              return row?.calculationBase === 'GROSS' ? 'Gross Salary' : value || '-';
             },
-            { id: 'description', label: 'Description', align: 'left', minWidth: '20vw' },
-            {
-              id: 'visibleInPayslip',
-              label: 'Visible In Payslip',
-              align: 'left',
-              minWidth: '10vw',
-              filterType: 'enum',
-              enumOptions: [
-                { value: true, label: 'Yes' },
-                { value: false, label: 'No' },
-              ],
-              render(value: boolean) {
-                return value ? 'Yes' : 'No';
-              },
+          },
+          { id: 'description', label: 'Description', align: 'left', minWidth: '20vw' },
+          {
+            id: 'visibleInPayslip',
+            label: 'Visible In Payslip',
+            align: 'left',
+            minWidth: '10vw',
+            filterType: 'enum',
+            enumOptions: [
+              { value: true, label: 'Yes' },
+              { value: false, label: 'No' },
+            ],
+            render(value: boolean) {
+              return value ? 'Yes' : 'No';
             },
-            {
-              id: 'action',
-              label: 'Action',
-              minWidth: '4vw',
-              align: 'left',
-              sticky: true,
-              stickyPosition: 'right' as const,
-              isSort: false,
-              isFilter: false,
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    showThreeDots={false}
-                    showEditIcon
-                    showDeleteIcon
-                    handleEditClick={() => {
-                      setEditData(row);
-                      isDeductionComponentOpen.onTrue();
-                    }}
-                    handleDeleteClick={() => {
-                      setDeleteInformation(row as PayElement);
-                      confirm.onTrue();
-                    }}
-                  />
-                );
-              },
+          },
+          {
+            id: 'action',
+            label: 'Action',
+            minWidth: '4vw',
+            align: 'left',
+            sticky: true,
+            stickyPosition: 'right' as const,
+            isSort: false,
+            isFilter: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  showThreeDots={false}
+                  showEditIcon
+                  showDeleteIcon
+                  handleEditClick={() => {
+                    setEditData(row);
+                    isDeductionComponentOpen.onTrue();
+                  }}
+                  handleDeleteClick={() => {
+                    setDeleteInformation(row as PayElement);
+                    confirm.onTrue();
+                  }}
+                />
+              );
             },
-          ],
-          [nameContains('deductionComponentName')],
-          tableQuery,
-          ({ search }) =>
-            setTableQuery((current) => ({ ...current, page: 1, search: String(search ?? '') }))
-        )}
+          },
+        ]}
         data={getDeductionComponentsData?.items || []}
+        {...operationalTableProps}
       />
       <CustomDialog
         maxWidth="md"

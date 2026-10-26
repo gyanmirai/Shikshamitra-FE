@@ -1,6 +1,5 @@
 'use client';
 
-import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
@@ -40,6 +39,7 @@ import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { emptyStatutoryProfile } from 'src/redux/hr/statutory-profile-api';
 import CityComponent from 'src/components/stardard-address/city-component';
@@ -57,17 +57,6 @@ import {
   getEmployeeAssignableRoles,
   shouldClearEmployeeRoleSelection,
 } from 'src/screens/hr/employee/employee-role-options';
-import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
 import {
   Box,
   Card,
@@ -100,6 +89,17 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
 
 import { getOnboardingErrorMessage } from './error-message';
 import { statutoryProfileSchema } from '../employee/statutory-profile-fields';
@@ -2799,7 +2799,17 @@ export default function EmployeeOnboardingScreen() {
     isFetching,
     error: tableError,
     refetch: retryTable,
-  } = useGetEmployeeApplicationsQuery(queryArgs);
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'employee-onboarding-table',
+      query: queryArgs,
+      page: employeeParams.page - 1,
+      size: employeeParams.pageSize,
+      resetPage: () => setEmployeeParams((current) => ({ ...current, page: 1 })),
+    },
+    useGetEmployeeApplicationsQuery(queryArgs)
+  );
   const { currentData: detailData } = useGetEmployeeApplicationQuery(applicationId || '', {
     skip: !applicationId,
   });
@@ -3271,27 +3281,7 @@ export default function EmployeeOnboardingScreen() {
           onExport={exportTable}
           error={tableError}
           onRetry={retryTable}
-          {...serverColumnFilters(
-            columns,
-            [
-              {
-                column: 'status',
-                query: 'status',
-                emptyValue: 'All',
-                options: EMPLOYEE_APPLICATION_STATUSES.map((value) => ({
-                  value,
-                  label: getEmployeeApplicationStatusLabel(value),
-                })),
-              },
-            ],
-            employeeParams,
-            ({ status }) =>
-              setEmployeeParams((current) => ({
-                ...current,
-                page: 1,
-                status: status as EmployeeOnboardingListParams['status'],
-              }))
-          )}
+          columns={columns}
           data={applications}
           isLoading={isFetching}
           serverSidePagination
@@ -3311,6 +3301,7 @@ export default function EmployeeOnboardingScreen() {
               'data-application-id': row.id,
             }) as any
           }
+          {...operationalTableProps}
         />
 
         <InviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />

@@ -20,11 +20,14 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
+import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetPolicyAssignmentPreviewQuery } from 'src/redux/hr/hr-policy-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { HrSetupLink, HrSetupRefresh } from 'src/screens/hr/recovery/hr-setup-controls';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
+  Box,
   Grid,
   Chip,
   Stack,
@@ -159,6 +162,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     handleSubmit,
     resetForm,
     isSubmitting,
+    isValidating,
+    submitCount,
     setFieldError,
   } = useFormik({
     enableReinitialize: true,
@@ -419,6 +424,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     data: effectivePolicyPreview,
     isFetching: isEffectivePolicyFetching,
     error: effectivePolicyError,
+    refetch: refetchEffectivePolicy,
   } = useGetPolicyAssignmentPreviewQuery(
     {
       academicYearId: catalogAcademicYearId,
@@ -488,9 +494,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     if (editData) return;
     if (!values.paidType) return;
     if (isEffectivePreviewEmployeeResolutionBlocked || isEffectivePolicyFetching) return;
+    if (effectivePolicyError) return;
     const existsInPolicy = visiblePaidTypeOptions.some((item: any) => item?.id === values.paidType);
     if (!existsInPolicy) {
-      setFieldValue('paidType', '');
       setFieldError(
         'paidType',
         'Selected paid type is no longer available. Please choose another paid type.'
@@ -504,6 +510,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     setFieldValue,
     values.paidType,
     visiblePaidTypeOptions,
+    effectivePolicyError,
   ]);
 
   useEffect(() => {
@@ -528,6 +535,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       ? null
       : getLeaveRequestBalanceWarning(selectedLeaveBalanceData, values.paidType, requestedUnits);
   const isLeaveRequestSubmitting = isSubmitting || isLoading || isApproveLoading || isRejectLoading;
+  useFormikErrorFocus({ errors, submitCount, isSubmitting, isValidating });
   const enforceLeaveNoticePeriod = shouldEnforceLeaveNoticePeriod(
     mode,
     isAdminUser,
@@ -537,7 +545,21 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     !editData && enforceLeaveNoticePeriod && !isLeaveNoticePeriodSatisfied(values.startDate);
 
   return (
-    <>
+    <Box
+      component="form"
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (
+          !editData &&
+          !isLeaveRequestSubmitting &&
+          !hasLeaveNoticePeriodError &&
+          !leaveBalanceWarning
+        )
+          handleSubmit(event);
+      }}
+      sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}
+    >
       <Backdrop
         open={isLeaveRequestSubmitting}
         sx={{
@@ -627,19 +649,34 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   ) : null}
                   {hasBlockingEffectivePolicyState ? (
                     <Alert severity="warning">
-                      No effective leave policy is assigned to this staff member for the selected date.
+                      No effective leave policy is assigned to this staff member for the selected
+                      date.
+                      <HrSetupLink setup="assignments" disabled={isSubmitting} />
+                      <HrSetupRefresh
+                        refresh={() => refetchEffectivePolicy().unwrap()}
+                        disabled={isSubmitting}
+                      />
                     </Alert>
                   ) : null}
                   {effectivePolicyError ? (
                     <Alert severity="warning">
-                      Could not resolve the staff leave policy. Resolve the effective leave
-                      policy before submitting.
+                      Could not resolve the staff leave policy. Resolve the effective leave policy
+                      before submitting.
+                      <HrSetupRefresh
+                        refresh={() => refetchEffectivePolicy().unwrap()}
+                        disabled={isSubmitting}
+                      />
                     </Alert>
                   ) : null}
                   {hasNoAllowedPaidTypes ? (
                     <Alert severity="warning">
                       The effective leave policy has no active paid or unpaid buckets for the
                       selected date.
+                      <HrSetupLink setup="leave" disabled={isSubmitting} />
+                      <HrSetupRefresh
+                        refresh={() => refetchEffectivePolicy().unwrap()}
+                        disabled={isSubmitting}
+                      />
                     </Alert>
                   ) : null}
                 </Stack>
@@ -652,7 +689,24 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   isLoading={
                     isEffectivePreviewEmployeeResolutionBlocked || isEffectivePolicyFetching
                   }
-                  options={visiblePaidTypeOptions}
+                  options={
+                    values.paidType &&
+                    !isSelectedPaidTypeVisible(values.paidType, visiblePaidTypeOptions)
+                      ? [
+                          ...visiblePaidTypeOptions,
+                          {
+                            id: values.paidType,
+                            name: 'Previously selected leave type (unavailable)',
+                          },
+                        ]
+                      : visiblePaidTypeOptions
+                  }
+                  disabledValues={
+                    values.paidType &&
+                    !isSelectedPaidTypeVisible(values.paidType, visiblePaidTypeOptions)
+                      ? [values.paidType]
+                      : []
+                  }
                   label="Paid Type *"
                   value={values.paidType}
                   name="paidType"
@@ -937,9 +991,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             disabled={
               isLeaveRequestSubmitting || hasLeaveNoticePeriodError || Boolean(leaveBalanceWarning)
             }
-            onClick={(e: any) => {
-              handleSubmit(e);
-            }}
             type="submit"
             size="small"
             variant="contained"
@@ -962,7 +1013,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           </LoadingButton>
         )}
       </DialogActions>
-    </>
+    </Box>
   );
 };
 

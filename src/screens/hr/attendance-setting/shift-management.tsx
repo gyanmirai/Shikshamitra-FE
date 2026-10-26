@@ -20,9 +20,10 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Grid, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Stack, Button, TextField, DialogActions } from '@mui/material';
 import {
   useGetShiftsQuery,
   useAddShiftMutation,
@@ -74,15 +75,26 @@ const ShiftManagement = () => {
     error: tableError,
     isFetching: tableFetching,
     refetch: retryTable,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetShiftsQuery,
-    params: {
-      skipCount: (tablePage.number - 1) * tablePage.size,
-      maxResultCount: tablePage.size,
-      sorting,
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-shifts',
+      genericSearch: true,
+      query: {},
+      page: tablePage.number - 1,
+      size: tablePage.size,
+      resetPage: () => setTablePage((current) => ({ ...current, number: 1 })),
     },
-  });
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetShiftsQuery,
+      params: {
+        skipCount: (tablePage.number - 1) * tablePage.size,
+        maxResultCount: tablePage.size,
+        sorting,
+      },
+    })
+  );
 
   const [deleteShift, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
@@ -133,12 +145,6 @@ const ShiftManagement = () => {
         }
       />
 
-      {selectedSort ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Exports include every shift in the server standard order. The selected order applies to
-          this table.
-        </Typography>
-      ) : null}
       <CustomizableTable
         showColumns
         showExport
@@ -162,7 +168,7 @@ const ShiftManagement = () => {
           setTablePage((current) => ({ ...current, number: 1 }));
         }}
         exportContext={[
-          'Complete shift list. Exports use the server standard order; table sorting is not yet supported by the export endpoint.',
+          'All shifts matching the table search and column filters, in the selected order.',
         ]}
         isSearch={false}
         page={tablePage.number - 1}
@@ -234,6 +240,7 @@ const ShiftManagement = () => {
           },
         ]}
         data={data?.items || []}
+        {...operationalTableProps}
       />
 
       <ConfirmDialog

@@ -85,6 +85,11 @@ function inspect(file) {
               source.includes('serverColumnFilters('))
         );
         if (scalarFilter) props.onServerFilter = 'endpoint scalar predicate adapter';
+        if (spreads.some(expression => /(?:operationalTableProps|^tableProps|\.tableProps|ctx\.(?:assignment|version)TableProps)$/.test(expression)) || props.operationalProps)
+        {
+          props.onServerFilter = 'typed operational query adapter';
+          props.onServerSort = 'typed operational query adapter';
+        }
         tables.push({
           file: normalize(file),
           line: ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1,

@@ -21,6 +21,9 @@ const state = vi.hoisted(() => ({
   download: vi.fn(),
   successToast: vi.fn(),
   job: { data: undefined } as any,
+  tableRead: vi.fn(),
+  tableRetry: vi.fn(),
+  tableResult: {} as any,
 }));
 vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({
   useHrTableExport: (...args: any[]) => {
@@ -38,7 +41,7 @@ vi.mock('../../reports/hooks/useHrReportPermissions', () => ({
   useHrReportPermissions: () => ({ canView: true, canExport: true }),
 }));
 vi.mock('../../reports/components/HrReportPreviewTable', () => ({
-  HrReportPreviewTable: ({ preview, onSortChange, headerAction, onExport }: any) => (
+  HrReportPreviewTable: ({ preview, operationalProps, headerAction, onExport }: any) => (
     <div>
       {preview?.reportType}
       {headerAction}
@@ -49,21 +52,39 @@ vi.mock('../../reports/components/HrReportPreviewTable', () => ({
             format: 'excel',
             columns: [{ id: 'netPay', label: 'Net pay' }],
             filters: [],
-            sorts: [],
+            sorts: operationalProps.sorts,
             searchTerm: '',
           })
         }
       >
         Export complete table
       </button>
-      {onSortChange && (
+      {operationalProps.onServerSort && (
         <button
           type="button"
-          onClick={() => onSortChange([{ field: 'netPay', direction: 'desc' }])}
+          onClick={() =>
+            operationalProps.onServerSort('netPay', [{ column: 'netPay', direction: 'desc' }])
+          }
         >
           Sort net pay
         </button>
       )}
+      <button
+        type="button"
+        onClick={() =>
+          operationalProps.onServerFilter([
+            {
+              column: 'netPay',
+              type: 'greaterThan',
+              value: 0,
+              valueType: 'number',
+              label: 'Net pay',
+            },
+          ])
+        }
+      >
+        Filter net pay
+      </button>
     </div>
   ),
 }));
@@ -87,6 +108,9 @@ describe('salary document previews', () => {
     state.download.mockReset();
     state.successToast.mockReset();
     state.job = {};
+    state.tableRead.mockClear();
+    state.tableRetry.mockReset();
+    state.tableResult = { currentData: undefined, isFetching: false, isError: false };
   });
   afterEach(() => {
     cleanup();
@@ -102,9 +126,10 @@ describe('salary document previews', () => {
     await settleDebounce();
     fireEvent.click(screen.getByRole('button', { name: 'Sort net pay' }));
     await settleDebounce();
-    expect(state.preview.mock.calls.at(-1)?.[0]).toMatchObject({
-      page: 1,
-      sorts: [{ field: 'netPay', direction: 'desc' }],
+    expect(state.tableRead.mock.calls.at(-1)?.[0]).toMatchObject({
+      table: 'hr-salary-documents',
+      offset: 0,
+      criteria: { sorts: [{ column: 'netPay', direction: 'desc' }] },
     });
   });
 
@@ -176,6 +201,45 @@ describe('salary document previews', () => {
     });
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
   });
+  it('retries and refreshes the active operational request while preserving its sort and filter', async () => {
+    state.preview.mockReturnValue({
+      abort: vi.fn(),
+      unwrap: async () => ({ reportType: 'Base payroll' }),
+    });
+    const view = render(<SalaryDocumentsWorkspace kind="register" />);
+    await settleDebounce();
+    state.tableResult = {
+      currentData: undefined,
+      isFetching: false,
+      isError: true,
+      error: { status: 503, data: { error: { message: 'Synthetic table query failed' } } },
+    };
+    fireEvent.click(screen.getByText('Sort net pay'));
+    fireEvent.click(screen.getByText('Filter net pay'));
+    expect(screen.getByRole('button', { name: 'Retry preview' })).toBeEnabled();
+    const baseCalls = state.preview.mock.calls.length;
+    state.tableRetry.mockImplementation(() => {
+      state.tableResult = {
+        currentData: { reportType: 'Retried filtered payroll' },
+        isFetching: false,
+        isError: false,
+      };
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Retry preview' }));
+    expect(state.tableRetry).toHaveBeenCalledOnce();
+    view.rerender(<SalaryDocumentsWorkspace kind="register" />);
+    expect(screen.getByText('Retried filtered payroll')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Retry preview' })).not.toBeInTheDocument();
+    expect(state.tableRead.mock.calls.at(-1)?.[0].criteria).toMatchObject({
+      sorts: [{ column: 'netPay', direction: 'desc' }],
+      filters: [{ column: 'netPay', type: 'greaterThan', value: 0 }],
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh Preview' }));
+    await settleDebounce();
+    expect(state.tableRetry).toHaveBeenCalledTimes(2);
+    expect(state.preview).toHaveBeenCalledTimes(baseCalls);
+  });
+
   it('uses the shared complete export source with the active month and sorting', async () => {
     state.preview.mockReturnValue({
       abort: vi.fn(),
@@ -188,15 +252,24 @@ describe('salary document previews', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sort net pay' }));
     await settleDebounce();
     fireEvent.click(screen.getByRole('button', { name: 'Export complete table' }));
-    expect(state.export).toHaveBeenCalledWith(expect.objectContaining({ format: 'excel' }));
+    expect(state.export).toHaveBeenCalledWith(
+      expect.objectContaining({ format: 'excel', sorts: [{ column: 'netPay', direction: 'desc' }] })
+    );
     expect(state.exportHook.mock.calls.at(-1)).toEqual([
       'hr-salary-documents',
       expect.objectContaining({
         filters: expect.objectContaining({ month: '2026-09' }),
-        sorts: [{ field: 'netPay', direction: 'desc' }],
       }),
     ]);
     expect(screen.queryByRole('button', { name: 'Export PDF' })).not.toBeInTheDocument();
     expect(screen.queryByText('Export limits apply')).not.toBeInTheDocument();
   });
 });
+
+// This screen test isolates its owning reader; typed criteria transport is covered by the adapter suite.
+vi.mock('src/redux/hr/hrOperationalTableApi', () => ({
+  useHrOperationalTableQuery: (body: unknown, options: unknown) => {
+    state.tableRead(body, options);
+    return { ...state.tableResult, refetch: state.tableRetry };
+  },
+}));

@@ -7,12 +7,13 @@ import type {
   EsiEmployeeImpact,
 } from 'src/redux/hr/statutory-scheme-api';
 
-import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { Visibility } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
+import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import {
   Box,
   Chip,
@@ -52,15 +53,38 @@ const enrollmentStatuses: EsiEnrollment['status'][] = [
 
 export function EsiStatutoryEmployees({
   query,
-  preview,
-  isLoading,
-  isError,
+  preview: basePreview,
+  isLoading: baseLoading,
+  isError: baseError,
   canManageEnrollment,
   canApproveOverride,
-  onRetry,
+  onRetry: baseRetry,
   onQueryChange,
   onOpenEmployee,
 }: EsiEmployeesPanelProps) {
+  const {
+    data: preview,
+    isLoading,
+    isError,
+    refetch: onRetry,
+    tableProps,
+  } = useHrTableQuery(
+    {
+      table: 'esi-employee-impact',
+      query: { ...query, monthYear: `${query.month.slice(5)}-${query.month.slice(0, 4)}` },
+      page: query.page,
+      size: query.pageSize,
+      resetPage: () => onQueryChange({ page: 0 }),
+    },
+    {
+      data: basePreview,
+      currentData: basePreview,
+      isLoading: baseLoading,
+      isFetching: baseLoading,
+      isError: baseError,
+      refetch: baseRetry,
+    }
+  );
   const exportTable = useHrTableExport('esi-employee-impact', {
     ...query,
     monthYear: `${query.month.slice(5)}-${query.month.slice(0, 4)}`,
@@ -357,19 +381,11 @@ export function EsiStatutoryEmployees({
           });
         }}
         handleRowClick={(row) => onOpenEmployee(row as EsiEmployeeImpact)}
-        rowProps={(row) => ({
-          tabIndex: 0,
-          onKeyDown: (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              onOpenEmployee(row as EsiEmployeeImpact);
-            }
-          },
-          sx: { cursor: 'pointer' },
-        })}
+        rowProps={() => ({ sx: { cursor: 'pointer' } })}
         tableContainerProps={{ sx: { maxWidth: '100%', overflowX: 'auto' } }}
         wrapperProps={{ sx: { minWidth: 0, maxWidth: '100%' } }}
         noDataText="No staff match these filters"
+        {...tableProps}
       />
     </Box>
   );

@@ -1,7 +1,5 @@
 'use client';
 
-import { leaveRequestColumnBindings } from 'src/screens/hr/leave-request/leave-table-filters';
-import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -12,6 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState, useEffect } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
 import { Box, Chip, Alert, Stack, Tooltip, Typography } from '@mui/material';
@@ -197,7 +196,17 @@ const LeaveBalance = ({
   const selfHistory = useGetMyLeaveRequestsQuery(historyQuery, {
     skip: !isSelfMode || !currentYear?.id,
   });
-  const historyResult = isSelfMode ? selfHistory : hrHistory;
+  const historyResult = useHrTableQuery(
+    {
+      table: isSelfMode ? 'hr-self-leave-history' : 'hr-leave-requests',
+      query: historyQuery,
+      page: historyPage.page - 1,
+      size: historyPage.pageSize,
+      resetPage: () => setHistoryPage((current) => ({ ...current, page: 1 })),
+      skip: !currentYear?.id || (!isSelfMode && !scopedEmployeeId),
+    },
+    isSelfMode ? selfHistory : hrHistory
+  );
   const historyData = historyResult.currentData;
   const isLoadingHistory = historyResult.isFetching;
   const exportHistory = useHrTableExport(
@@ -395,18 +404,7 @@ const LeaveBalance = ({
               onServerSearch={(search) =>
                 setHistoryPage((current) => ({ ...current, page: 1, search }))
               }
-              {...serverColumnFilters(
-                historyColumns,
-                leaveRequestColumnBindings,
-                historyPage,
-                (patch) =>
-                  setHistoryPage((current) => ({
-                    ...current,
-                    page: 1,
-                    status: String(patch.status ?? ''),
-                    paidType: String(patch.paidType ?? ''),
-                  }))
-              )}
+              columns={historyColumns}
               data={historyRows}
               isLoading={isLoadingHistory}
               tableTitle="Leave History"
@@ -421,6 +419,7 @@ const LeaveBalance = ({
                   </Typography>
                 </Box>
               }
+              {...historyResult.tableProps}
             />
           </Stack>
         </>

@@ -33,7 +33,9 @@ function SearchResultsPaper({
             size="small"
             disabled={retryDisabled}
             onMouseDown={(event) => event.preventDefault()}
-            onKeyDown={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+            }}
             onClick={retry}
           >
             Retry results
@@ -65,6 +67,7 @@ export function PaginatedSearchSelect<
   getOptionLabel,
   getOptionKey,
   renderOption,
+  onHighlightChange,
   ...props
 }: PaginatedSearchSelectProps<T, Multiple, DisableClearable, FreeSolo>) {
   const {
@@ -168,6 +171,11 @@ export function PaginatedSearchSelect<
         if (reason === 'clear') {
           handleInputChange('');
         }
+      }}
+      onHighlightChange={(event, option, reason) => {
+        onHighlightChange?.(event, option, reason);
+        // Keyboard navigation does not reliably fire the list's scroll event.
+        if (reason === 'keyboard' && option && option === options.at(-1)) loadMore();
       }}
       ListboxProps={{
         onScroll: handleScroll,

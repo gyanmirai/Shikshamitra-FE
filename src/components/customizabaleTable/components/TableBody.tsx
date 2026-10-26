@@ -132,7 +132,6 @@ export const TableBody = ({
               tabIndex={clickable ? 0 : (props?.tabIndex ?? -1)}
               aria-label={action?.label ?? props?.['aria-label']}
               onClick={(event: React.MouseEvent<HTMLTableRowElement>) => {
-                props?.onClick?.(event);
                 if (
                   event.defaultPrevented ||
                   (event.target instanceof Element &&
@@ -141,6 +140,8 @@ export const TableBody = ({
                     ))
                 )
                   return;
+                props?.onClick?.(event);
+                if (event.defaultPrevented) return;
                 if (getRowAction) {
                   if (clickable) {
                     event.currentTarget.focus();
@@ -151,6 +152,13 @@ export const TableBody = ({
                 }
               }}
               onKeyDown={(event: React.KeyboardEvent<HTMLTableRowElement>) => {
+                // A row shortcut must never consume an inline control's native key behavior.
+                if (
+                  event.target !== event.currentTarget ||
+                  event.repeat ||
+                  event.nativeEvent.isComposing
+                )
+                  return;
                 props?.onKeyDown?.(event);
                 if (
                   !event.defaultPrevented &&

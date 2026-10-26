@@ -1,6 +1,5 @@
 'use client';
 
-import { serverColumnFilters, nameContains } from 'src/screens/hr/utils/server-column-filters';
 import type { LabelColor } from 'src/components/label';
 import type { WorkCalendarPolicy } from 'src/redux/hr/hr-policy-api';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -10,6 +9,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useGetWorkCalendarPoliciesQuery } from 'src/redux/hr/hr-policy-api';
 import { Card, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
@@ -88,7 +88,18 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     isFetching: calendarsLoading,
     error: calendarsError,
     refetch,
-  } = useGetWorkCalendarPoliciesQuery(listArgs, { skip: !academicYearId });
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-policy-calendar',
+      query: listArgs,
+      page: tableQuery.page - 1,
+      size: tableQuery.pageSize,
+      resetPage: () => setTableQuery((current) => ({ ...current, page: 1 })),
+      skip: !academicYearId,
+    },
+    useGetWorkCalendarPoliciesQuery(listArgs, { skip: !academicYearId })
+  );
   const { data: archivedSummary } = useGetWorkCalendarPoliciesQuery(
     { academicYearId, maxResultCount: 1, isArchived: true },
     { skip: !academicYearId }
@@ -313,9 +324,7 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         tableId="hr-work-calendars"
         tableTitle="Work calendars"
         onExport={exportTable}
-        {...serverColumnFilters(calendarColumns, [nameContains('name')], tableQuery, ({ search }) =>
-          setTableQuery((current) => ({ ...current, page: 1, search: String(search ?? '') }))
-        )}
+        columns={calendarColumns}
         data={calendarRows}
         error={calendarsError}
         onRetry={refetch}
@@ -340,6 +349,7 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             ? 'No removed work calendars.'
             : 'No work calendars.'
         }
+        {...operationalTableProps}
       />
     </Stack>
   );

@@ -1,4 +1,5 @@
 import { it, vi, expect, describe } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
@@ -14,6 +15,48 @@ vi.mock('../iconify', () => ({
 
 describe('AdaptiveThreeDotsActions', () => {
   const theme = createTheme(defaultSettings);
+  it('focuses the first enabled menu action and skips disabled tooltip entries with arrows', async () => {
+    const user = userEvent.setup();
+    const select = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <AdaptiveThreeDotsActions
+          directActionLimit={0}
+          actions={[
+            {
+              id: 'first-disabled',
+              label: 'Unavailable first',
+              icon: 'mdi:lock',
+              disabled: true,
+              tooltip: 'Not permitted',
+            },
+            { id: 'edit', label: 'Edit staff', icon: 'mdi:pen', onClick: vi.fn() },
+            {
+              id: 'locked',
+              label: 'Locked action',
+              icon: 'mdi:lock',
+              disabled: true,
+              tooltip: 'Locked',
+            },
+            { id: 'review', label: 'Review staff', icon: 'mdi:eye', onClick: select },
+          ]}
+        />
+      </ThemeProvider>
+    );
+    await user.tab();
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Edit staff' })).toHaveFocus());
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('menuitem', { name: 'Review staff' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(select).toHaveBeenCalledOnce();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'More actions' })).toHaveFocus());
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Edit staff' })).toHaveFocus());
+    await user.tab();
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'More actions' })).toHaveFocus();
+  });
 
   it('shows three Finance actions directly and only overflows additional actions', async () => {
     const actions = ['View', 'Edit', 'Clone', 'Archive'].map((label) => ({

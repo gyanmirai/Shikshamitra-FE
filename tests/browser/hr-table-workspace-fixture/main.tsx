@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Box, Chip, Button, Stack, TableRow, TableCell, CssBaseline } from '@mui/material';
-import { ThemeProvider, useColorScheme } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { ThemeProvider, useColorScheme } from '@mui/material/styles';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { SectionTable } from 'src/screens/hr/policies/components/HRPolicySharedUI';
-import { EditableGrids } from './editable-grids';
+import { Box, Chip, Stack, Button, TableRow, TableCell, CssBaseline } from '@mui/material';
+
 import { ServerTable } from './server-table';
+import { EditableGrids } from './editable-grids';
+import { OperationalTable } from './operational-table';
+import { ImportDraftTable } from './import-draft-table';
 
 function ThemeSwitch() {
   const { mode, setMode } = useColorScheme();
@@ -34,15 +37,21 @@ function Fixture() {
         <h1 style={{ fontSize: 18 }}>Synthetic HR policy preview</h1>
         <p>Synthetic staff only. Local fixture endpoints and shared policy tables.</p>
         <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 1 }}>
-          {['populated', 'loading', 'empty', 'error', 'server'].map((value) => (
-            <Button key={value} onClick={() => setState(value)}>
-              {value}
-            </Button>
-          ))}
+          {['populated', 'loading', 'empty', 'error', 'server', 'operational', 'import draft'].map(
+            (value) => (
+              <Button key={value} onClick={() => setState(value)}>
+                {value}
+              </Button>
+            )
+          )}
           <ThemeSwitch />
           <EditableGrids />
         </Stack>
-        {state === 'server' ? (
+        {state === 'import draft' ? (
+          <ImportDraftTable />
+        ) : state === 'operational' ? (
+          <OperationalTable />
+        ) : state === 'server' ? (
           <ServerTable />
         ) : (
           <SectionTable

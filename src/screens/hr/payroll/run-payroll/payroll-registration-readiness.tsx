@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { RouterLink } from 'src/routes/components';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { HrSetupLink } from 'src/screens/hr/recovery/hr-setup-controls';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useGetPayrollRegistrationReadinessQuery } from 'src/redux/hr/statutory-profile-api';
 import {
@@ -17,17 +18,25 @@ import {
   AccordionSummary,
 } from '@mui/material';
 
-import { staffPayrollEditHref } from '../../employee/payroll-profile-utils';
-
 export function PayrollRegistrationReadiness({ month }: { month: string | null }) {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState({ number: 1, size: 25, search: '' });
   useEffect(() => {
     setPage((current) => ({ ...current, number: 1 }));
   }, [month]);
-  const query = useGetPayrollRegistrationReadinessQuery(
-    { month: month ?? '', page: page.number, pageSize: page.size, search: page.search },
-    { skip: !open || !month }
+  const query = useHrTableQuery(
+    {
+      table: 'hr-payroll-registration-readiness',
+      query: { month: month ?? '', search: page.search },
+      page: page.number - 1,
+      size: page.size,
+      resetPage: () => setPage((current) => ({ ...current, number: 1 })),
+      skip: !open || !month,
+    },
+    useGetPayrollRegistrationReadinessQuery(
+      { month: month ?? '', page: page.number, pageSize: page.size, search: page.search },
+      { skip: !open || !month }
+    )
   );
   const exportTable = useHrTableExport('hr-payroll-registration-readiness', {
     month,
@@ -104,13 +113,7 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
                 id: 'action',
                 label: '',
                 render: (_, row) => (
-                  <Button
-                    component={RouterLink}
-                    href={staffPayrollEditHref(row.employeeId)}
-                    size="small"
-                  >
-                    Review staff
-                  </Button>
+                  <HrSetupLink setup="staffPayroll" employeeId={row.employeeId} />
                 ),
               },
             ]}
@@ -128,6 +131,7 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
               setPage((current) => ({ ...current, number, size }))
             }
             tableContainerProps={{ sx: { maxHeight: 400, overflow: 'auto' } }}
+            {...query.tableProps}
           />
         </Stack>
       </AccordionDetails>

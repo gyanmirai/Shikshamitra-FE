@@ -221,3 +221,7 @@ Report history and captured rows use POST query endpoints with typed search, col
 The table view state lives in the page URL and is restored by reload and browser history.
 `useHrTableExport` captures the same report criteria and visible ordered columns for complete server exports.
 Template management and template selection use the shared table over the accessible library.
+
+### Operational table criteria
+
+`hrOperationalTableApi.ts` and `use-hr-table-query.ts` provide the shared typed query adapter for 27 operational table instances. Existing readers remain the unfiltered fast path. Active header criteria use POST `/hr/table-query` with the canonical domain query, typed criteria and zero-based offset/size. Raw response envelopes preserve existing mappers and editing metadata. The field catalog gates header controls; the backend independently validates fields and types. Own mutation tags invalidate criteria views. `useHrTableExport` sends matching criteria and visible columns to the existing complete export workflow. Captured reporting and Attendance Register retain their owning contracts.

@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 import type { HrReportSort, HrReportPreview } from 'src/redux/hr/hrReportsApi';
-import type { TableExportRequest } from 'src/components/customizabaleTable/types';
+import type {
+  TableExportRequest,
+  ICustomizableTableProps,
+} from 'src/components/customizabaleTable/types';
 
 import { useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
@@ -18,6 +21,7 @@ type HrReportPreviewTableProps = {
   emptyMessage?: string;
   headerAction?: ReactNode;
   onExport?: (request: TableExportRequest) => Promise<void>;
+  operationalProps?: Partial<ICustomizableTableProps>;
 };
 
 export function HrReportPreviewTable({
@@ -32,6 +36,7 @@ export function HrReportPreviewTable({
   emptyMessage,
   headerAction,
   onExport,
+  operationalProps,
 }: HrReportPreviewTableProps) {
   const previewColumns = useMemo(
     () =>
@@ -123,6 +128,7 @@ export function HrReportPreviewTable({
         rowsPerPage={preview?.pageSize}
         wrapperProps={{ sx: { minHeight: 0 } }}
         tableContainerProps={{ sx: { overflowX: 'auto' } }}
+        {...operationalProps}
       />
     </Box>
   );

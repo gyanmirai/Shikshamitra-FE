@@ -1,3 +1,4 @@
+import type { HrFailure } from 'src/screens/hr/recovery/hr-failure';
 import type {
   PayrollPreviewPage,
   PayrollPreviewStatus,
@@ -5,6 +6,8 @@ import type {
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { normalizeHrFailure } from 'src/screens/hr/recovery/hr-failure';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   usePayrollPreviewStatusQuery,
@@ -13,7 +16,11 @@ import {
 } from 'src/redux/runPayroll/payroll-preview-run-api';
 
 type PreviewRequest = { context: { key: string }; id: string; awaitingUrl: boolean };
-type PreviewFailure = { key: string; message: string; errorCode?: string };
+type PreviewFailure = HrFailure & { errorCode?: string };
+
+function normalizePreviewFailure(error: unknown): PreviewFailure {
+  return { ...normalizeHrFailure(error), errorCode: parseApiProblemDetail(error).errorCode };
+}
 
 export function usePayrollPreviewRun(month: string, academicYearId: string) {
   const router = useRouter();
@@ -37,7 +44,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
   const search = params.get('search') || '';
   const [searchInput, setSearchInput] = useState(search);
   const [display, setDisplay] = useState<{ key: string; data: PayrollPreviewPage } | null>(null);
-  const [failure, setFailure] = useState<PreviewFailure | null>(null);
+  const [failure, setFailure] = useState<(PreviewFailure & { key: string }) | null>(null);
   const [request, setRequest] = useState<PreviewRequest | null>(null);
   const requestLock = useRef<{ key: string } | null>(null);
   const [pollingInterval, setPollingInterval] = useState(2000);
@@ -103,13 +110,23 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
         : display?.key === key
           ? display.data.previewRunId
           : '';
-  const pageQuery = usePayrollPreviewEmployeesQuery(
-    { id: completedId, page, pageSize, search },
+  const pageQuery = useHrTableQuery(
     {
+      table: 'payroll-monthly-workbench-table',
+      query: { runId: completedId, search },
+      page,
+      size: pageSize,
+      resetPage: () => updateQuery({ page: 0 }),
       skip: !completedId,
-      refetchOnFocus: true,
-      refetchOnMountOrArgChange: true,
-    }
+    },
+    usePayrollPreviewEmployeesQuery(
+      { id: completedId, page, pageSize, search },
+      {
+        skip: !completedId,
+        refetchOnFocus: true,
+        refetchOnMountOrArgChange: true,
+      }
+    )
   );
 
   const currentPage =
@@ -130,13 +147,19 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
   const error = isStarting
     ? null
     : (failure?.key === key ? failure : null) ||
+      (queryError ? normalizePreviewFailure(queryError) : null) ||
       (matches && status.status === 'FAILED'
-        ? {
-            message: status.errorMessage || 'Payroll calculation could not finish. Please retry.',
+        ? normalizePreviewFailure({
+            // The status API uses this generic copy even for known business codes.
+            // Let the recovery contract explain those codes instead of hiding their reason.
+            message:
+              status.errorMessage ===
+              'Payroll calculation could not finish. Retry the calculation or contact support with the run reference.'
+                ? undefined
+                : status.errorMessage,
             errorCode: status.errorCode || undefined,
-          }
-        : null) ||
-      (queryError ? { message: parseApiProblemDetail(queryError).detail } : null);
+          })
+        : null);
   const hasPreparedRun = display?.key === key && display.data.previewRunId === requestedRunId;
   const awaitingResults =
     matches &&
@@ -188,8 +211,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
         return result;
       } catch (caught) {
         if (!stillCurrent()) return null;
-        const problem = parseApiProblemDetail(caught);
-        setFailure({ key, message: problem.detail, errorCode: problem.errorCode });
+        setFailure({ key, ...normalizePreviewFailure(caught) });
         setRequest(null);
         requestLock.current = null;
         return null;
@@ -252,6 +274,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
 
   return {
     data,
+    tableProps: pageQuery.tableProps,
     runId: completedId,
     requestedRunId,
     busy,

@@ -1,4 +1,3 @@
-import { serverColumnFilters, nameContains } from 'src/screens/hr/utils/server-column-filters';
 import type { LabelColor } from 'src/components/label';
 
 import { useState, useEffect } from 'react';
@@ -11,6 +10,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { DocumentType, DocumentFileType, convertFileAcceptType } from 'src/enums/documnet-type';
 import { DocumentStatusOptions, DocumentStatusTypeColors } from 'src/enums/document-statusType';
@@ -130,7 +130,18 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
     refetch: retryTable,
     isLoading,
     isFetching: isEmployeeDocLoading,
-  } = useGetEmployeeDocumentChecklistQuery({ employeeId, ...tableQuery }, { skip: !employeeId });
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-employee-documents',
+      query: { employeeId, ...tableQuery },
+      page: tableQuery.page - 1,
+      size: tableQuery.pageSize,
+      resetPage: () => setTableQuery((current) => ({ ...current, page: 1 })),
+      skip: !employeeId,
+    },
+    useGetEmployeeDocumentChecklistQuery({ employeeId, ...tableQuery }, { skip: !employeeId })
+  );
   const tableData = checklist?.items || [];
   const exportDocuments = useHrTableExport('hr-employee-documents', { employeeId, ...tableQuery });
 
@@ -201,200 +212,195 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
           setTableQuery((current) => ({ ...current, page, pageSize }))
         }
         onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
-        {...serverColumnFilters(
-          [
-            { id: 'title', label: 'Document Name' },
-            {
-              id: 'docType',
-              label: 'Format',
-              isSort: false,
+        columns={[
+          { id: 'title', label: 'Document Name' },
+          {
+            id: 'docType',
+            label: 'Format',
+            isSort: false,
+          },
+          {
+            id: 'statusVal',
+            label: 'Status',
+            minWidth: '100px',
+            align: 'left',
+            isFilter: false,
+            enumOptions: DocumentStatusOptions,
+            filterType: 'enum',
+            render(value, row) {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const color = DocumentStatusTypeColors[
+                row.statusVal as keyof typeof DocumentStatusTypeColors
+              ] as LabelColor;
+              const isUploaded = row.statusVal === 'Uploaded';
+              return (
+                <Tooltip title={row.statusVal}>
+                  <Iconify
+                    icon={isUploaded ? 'mdi:check-circle' : 'mage:file-cross-fill'}
+                    height={22}
+                    width={22}
+                    sx={{
+                      color: (theme) =>
+                        isUploaded ? 'success.main' : theme.vars.palette.grey[500],
+                      cursor: 'default',
+                      transition: 'color 0.3s ease',
+                    }}
+                  />
+                </Tooltip>
+              );
             },
-            {
-              id: 'statusVal',
-              label: 'Status',
-              minWidth: '100px',
-              align: 'left',
-              isFilter: false,
-              enumOptions: DocumentStatusOptions,
-              filterType: 'enum',
-              render(value, row) {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const color = DocumentStatusTypeColors[
-                  row.statusVal as keyof typeof DocumentStatusTypeColors
-                ] as LabelColor;
-                const isUploaded = row.statusVal === 'Uploaded';
-                return (
-                  <Tooltip title={row.statusVal}>
-                    <Iconify
-                      icon={isUploaded ? 'mdi:check-circle' : 'mage:file-cross-fill'}
-                      height={22}
-                      width={22}
+          },
+          {
+            id: 'upload',
+            label: 'Upload',
+            isFilter: false,
+            minWidth: '80px',
+            align: 'left',
+            isSort: false,
+            excludeFromExport: true,
+            render(value, row) {
+              const isUploading = uploadingRows[row.id];
+              return (
+                <Box display="flex" alignItems="center">
+                  {isUploading ? (
+                    <CircularProgress size={22} thickness={4} />
+                  ) : (
+                    <UploadButton
+                      disableRipple
+                      disableElevation
+                      disableFocusRipple
+                      disableTouchRipple
                       sx={{
-                        color: (theme) =>
-                          isUploaded ? 'success.main' : theme.vars.palette.grey[500],
-                        cursor: 'default',
-                        transition: 'color 0.3s ease',
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'transparent',
+                        transition: 'background-color 0.2s ease',
+                        '&:hover': { backgroundColor: '#e0e0e0' },
+                        p: 0,
+                        minWidth: 0,
                       }}
-                    />
-                  </Tooltip>
-                );
-              },
-            },
-            {
-              id: 'upload',
-              label: 'Upload',
-              isFilter: false,
-              minWidth: '80px',
-              align: 'left',
-              isSort: false,
-              excludeFromExport: true,
-              render(value, row) {
-                const isUploading = uploadingRows[row.id];
-                return (
-                  <Box display="flex" alignItems="center">
-                    {isUploading ? (
-                      <CircularProgress size={22} thickness={4} />
-                    ) : (
-                      <UploadButton
-                        disableRipple
-                        disableElevation
-                        disableFocusRipple
-                        disableTouchRipple
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        await handleUpload(file, row);
+                      }}
+                      fileInputProps={{ accept: convertFileAcceptType(row.documentTypes) }}
+                    >
+                      <Iconify
+                        icon={row.uploadedDoc ? 'ci:file-upload' : 'ci:file-upload'}
                         sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: 'transparent',
-                          transition: 'background-color 0.2s ease',
-                          '&:hover': { backgroundColor: '#e0e0e0' },
-                          p: 0,
-                          minWidth: 0,
+                          color: row.uploadedDoc ? 'primary.main' : 'text.secondary',
                         }}
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          await handleUpload(file, row);
-                        }}
-                        fileInputProps={{ accept: convertFileAcceptType(row.documentTypes) }}
-                      >
+                      />
+                    </UploadButton>
+                  )}
+                </Box>
+              );
+            },
+          },
+          {
+            id: 'view',
+            label: 'View',
+            isFilter: false,
+            isSort: false,
+            minWidth: '6vw',
+            align: 'left',
+            excludeFromExport: true,
+            render(value, row) {
+              const isUploading = uploadingRows[row.id];
+              const isDisabled = !row.uploadedDoc || isUploading;
+              return (
+                <Tooltip title={isDisabled ? 'Upload a document first' : 'View document'}>
+                  <span>
+                    <IconButton
+                      style={{
+                        textAlign: 'left',
+                        marginLeft: '0px',
+                        justifyContent: 'flex-start',
+                        display: 'flex',
+                      }}
+                      disabled={isDisabled}
+                      onClick={() => {
+                        setDocId(row.uploadedDoc.documentId);
+                        setViewFileName(row.uploadedDoc.fileName || row.title);
+                        viewDialog.onTrue();
+                      }}
+                    >
+                      <Iconify icon="carbon:view-filled" sx={{ transition: 'color 0.2s ease' }} />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              );
+            },
+          },
+          {
+            id: 'download',
+            label: 'Download',
+            isFilter: false,
+            isSort: false,
+            minWidth: '6vw',
+            align: 'left',
+            excludeFromExport: true,
+            render(value, row) {
+              const isUploading = uploadingRows[row.id];
+              const isDownloading = downloadingRows[row.id];
+              const isDisabled = !row.uploadedDoc || isUploading || isDownloading;
+              return (
+                <Tooltip title={isDisabled ? 'Upload a document first' : 'Download document'}>
+                  <span>
+                    <IconButton
+                      style={{
+                        textAlign: 'left',
+                        marginLeft: '0px',
+                        justifyContent: 'flex-start',
+                        display: 'flex',
+                      }}
+                      disabled={isDisabled}
+                      onClick={async () => {
+                        const { documentId, fileName } = row.uploadedDoc;
+                        setDownloadingRows((prev) => ({ ...prev, [row.id]: true }));
+                        try {
+                          const blob = await fetchDocument({
+                            employeeId,
+                            documentId,
+                          }).unwrap();
+                          // Create a temporary URL and trigger browser download
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = fileName || row.title || 'document';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        } catch {
+                          shikshaMitraToast.error({ message: 'Failed to download document' });
+                        } finally {
+                          setDownloadingRows((prev) => ({ ...prev, [row.id]: false }));
+                        }
+                      }}
+                    >
+                      {isDownloading ? (
+                        <CircularProgress size={18} thickness={4} />
+                      ) : (
                         <Iconify
-                          icon={row.uploadedDoc ? 'ci:file-upload' : 'ci:file-upload'}
-                          sx={{
-                            color: row.uploadedDoc ? 'primary.main' : 'text.secondary',
-                          }}
+                          icon={GlobalIcons.download}
+                          sx={{ transition: 'color 0.2s ease' }}
                         />
-                      </UploadButton>
-                    )}
-                  </Box>
-                );
-              },
+                      )}
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              );
             },
-            {
-              id: 'view',
-              label: 'View',
-              isFilter: false,
-              isSort: false,
-              minWidth: '6vw',
-              align: 'left',
-              excludeFromExport: true,
-              render(value, row) {
-                const isUploading = uploadingRows[row.id];
-                const isDisabled = !row.uploadedDoc || isUploading;
-                return (
-                  <Tooltip title={isDisabled ? 'Upload a document first' : 'View document'}>
-                    <span>
-                      <IconButton
-                        style={{
-                          textAlign: 'left',
-                          marginLeft: '0px',
-                          justifyContent: 'flex-start',
-                          display: 'flex',
-                        }}
-                        disabled={isDisabled}
-                        onClick={() => {
-                          setDocId(row.uploadedDoc.documentId);
-                          setViewFileName(row.uploadedDoc.fileName || row.title);
-                          viewDialog.onTrue();
-                        }}
-                      >
-                        <Iconify icon="carbon:view-filled" sx={{ transition: 'color 0.2s ease' }} />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                );
-              },
-            },
-            {
-              id: 'download',
-              label: 'Download',
-              isFilter: false,
-              isSort: false,
-              minWidth: '6vw',
-              align: 'left',
-              excludeFromExport: true,
-              render(value, row) {
-                const isUploading = uploadingRows[row.id];
-                const isDownloading = downloadingRows[row.id];
-                const isDisabled = !row.uploadedDoc || isUploading || isDownloading;
-                return (
-                  <Tooltip title={isDisabled ? 'Upload a document first' : 'Download document'}>
-                    <span>
-                      <IconButton
-                        style={{
-                          textAlign: 'left',
-                          marginLeft: '0px',
-                          justifyContent: 'flex-start',
-                          display: 'flex',
-                        }}
-                        disabled={isDisabled}
-                        onClick={async () => {
-                          const { documentId, fileName } = row.uploadedDoc;
-                          setDownloadingRows((prev) => ({ ...prev, [row.id]: true }));
-                          try {
-                            const blob = await fetchDocument({
-                              employeeId,
-                              documentId,
-                            }).unwrap();
-                            // Create a temporary URL and trigger browser download
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = fileName || row.title || 'document';
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                          } catch {
-                            shikshaMitraToast.error({ message: 'Failed to download document' });
-                          } finally {
-                            setDownloadingRows((prev) => ({ ...prev, [row.id]: false }));
-                          }
-                        }}
-                      >
-                        {isDownloading ? (
-                          <CircularProgress size={18} thickness={4} />
-                        ) : (
-                          <Iconify
-                            icon={GlobalIcons.download}
-                            sx={{ transition: 'color 0.2s ease' }}
-                          />
-                        )}
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                );
-              },
-            },
-          ],
-          [nameContains('title')],
-          tableQuery,
-          ({ search }) =>
-            setTableQuery((current) => ({ ...current, page: 1, search: String(search ?? '') }))
-        )}
+          },
+        ]}
         data={tableData}
+        {...operationalTableProps}
       />
 
       <CustomDialog

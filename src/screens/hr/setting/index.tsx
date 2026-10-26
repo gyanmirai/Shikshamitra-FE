@@ -21,6 +21,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { Add, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
@@ -72,12 +73,23 @@ const HrSetting = () => {
     isFetching,
     error: tableError,
     refetch: retryTable,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetDocumentConfigurationsQuery,
-    params: queryParams,
-    options: { skip: !currentYear?.id },
-  });
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-document-settings',
+      query: queryParams,
+      page: query.skipCount / query.maxResultCount,
+      size: query.maxResultCount,
+      resetPage: () => setQuery((current) => ({ ...current, skipCount: 0 })),
+      skip: !currentYear?.id,
+    },
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetDocumentConfigurationsQuery,
+      params: queryParams,
+      options: { skip: !currentYear?.id },
+    })
+  );
 
   const [deleteDocumentConfiguration, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -266,6 +278,7 @@ const HrSetting = () => {
         isLoading={isLoading || isFetching || isFetching}
         columns={columns}
         data={tableData || []}
+        {...operationalTableProps}
       />
       <CustomDialog
         open={dialog.value}

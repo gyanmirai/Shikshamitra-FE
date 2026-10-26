@@ -10,6 +10,8 @@ audience: humans-and-agents
 
 ## Payslip & statement settings regression
 
+For HR keyboard coverage, the route/component inventory, synthetic browser procedure, and remaining authenticated acceptance limits, see [Keyboard usability](references/keyboard-usability.md).
+
 `e2e/hr/payroll-document-settings.guest.spec.ts` verifies the settings link, removal of the embedded form, save/reload, view-only controls and contained widths at 390, 768 and 1440 pixels.
 The settings component suites cover draft preservation, optimistic concurrency, interrupted responses, request ordering and deliberate navigation discard.
 The navigation component suite verifies exact Overview selection while retaining payroll ancestry.
@@ -810,6 +812,20 @@ Run `esi-statutory-settings.test.tsx`, `esi-configuration-form.test.ts`, and `ea
 Cover automatic statutory bases, removed rate inputs, optional registration details, help disclosure, per-component classification, scheduled school settings, restricted editing, stale versions and retry idempotency.
 Browser checks should verify the compact school settings and Earning Component treatment action at desktop and narrow widths.
 
+## Validation recovery checks
+
+Run `hr-failure.test.ts`, `hr-recovery-middleware.test.ts`, `hr-recovery-provider.test.tsx`, `SalaryStructureBuilder.test.tsx`, `salary-editor-screen.test.tsx`, `leave-request.utils.test.ts` and `use-unsaved-navigation.test.tsx`. Run scoped ESLint, `npm run ts`, both docs validators and an isolated production build.
+
+For Run Payroll recovery, run `src/screens/hr/payroll/run-payroll` and `src/screens/hr/recovery` with `hr-recovery-middleware.test.ts`, using one Vitest worker. The hook cases cover FAILED jobs, safe polling/result-query reasons, unsafe diagnostics, forbidden/unconfirmed errors, known-code setup and explicit retries. Screen cases cover consistent toast/alert reasons, denied setup access and retained adjustment name/amount/reason while the selected staff setup link opens in a new tab. Setup contract tests deny each missing ancestor/action and unresolved permissions. Browser acceptance must additionally exercise the actual new tab and return without submitting real staff data.
+
+The isolated harness uses production recovery components and actual RTK mutation lifecycle actions with synthetic responses, no authentication and no backend writes:
+
+```sh
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin/vite.js --config tests/browser/hr-recovery-fixture/vite.config.mjs --configLoader runner
+```
+
+Open `http://127.0.0.1:4196/hr/employee` in the desktop Codex in-app browser. Enter a synthetic note, submit prerequisite/field/network/forbidden failures, inspect the persistent summary, open setup in the separate tab, return and refresh, exercise refresh failure/retry and discard/keep-editing, then confirm successful save clears old feedback. Check keyboard focus and narrow layouts. The harness proves the shared recovery contract; it does not prove authenticated salary/finalize or every HR route. See [the route/form coverage matrix and lifecycle limits](references/validation-recovery.md).
+
 ## HR table capability re-audit
 
 Run `node scripts/hr/check-ui-consistency.mjs` for route/table ownership and `--capabilities` for the per-instance operation matrix.
@@ -823,3 +839,23 @@ Finish with Codex in-app browser inspection of the local fixture; signed-in tena
 
 The endpoint follow-up also checks `server-column-filters.test.ts`, shift and leave API contract tests, and manual-attendance `table-filters.test.tsx`. The latter verifies group/department page reset, identical export predicates, and scope/export locks while a draft is dirty.
 The browser fixture uses the actual complete-export hook with local synthetic paged readers; it verifies status zero, filtered totals, a 15-row filtered workbook from a 10-row page, synchronized name search and clearing; unit regressions also cover scalar replacement.
+
+### Paired operational-query regressions
+
+Run `use-hr-table-query.test.tsx`, complete-export, controlled-table, professional-tax request and the existing screen suites. The screen tests retain their owning-reader mocks and explicitly mock the new query dependency; transport behavior has dedicated assertions for salary, ESI and the shared adapter. The expanded workspace browser fixture mounts the actual operational hook and table with a 260-row synthetic transport, checking global order, fractional numeric predicates, unlimited ordering, 38 matching export rows from a 10-row page, page reset, actions exclusion, responsive containment and loading/empty/error/retry states.
+
+The document API regression uses valid whole-MB configuration sizes: its existing list DTO casts stored sizes to integers. The initial direct-repository fractional fixture therefore produced six matches for >18 rather than twelve. Correcting the fixture to whole sizes preserves the twelve-match expectation, the match beyond the first source page and cross-tenant exclusion; it does not lower the assertion. Backend numeric regressions separately exercise fractional amounts/days.
+
+The 26 October combined HR/shared-table run passed 1,125 tests before the academic-only main refresh. On refreshed main `0f5293a486bb2fd4dbd805c10994effb02b22906`, all 168 manager/keyboard/salary/recovery regressions passed; independent full TypeScript, scoped ESLint and the isolated Next.js 16.3.5 production webpack build passed. The frontend/server field catalogs match for all 30 declared sources. The all-module docs validator reports exactly the same 160 issues as an archive of main; HR docs and the 61-route/74-table inventory check pass. No assertion was removed or lowered to obtain these results.
+
+All nine responsive browser scenarios passed again on refreshed main at 390, 768 and 1440 pixels, including complete filtered Excel contents, typed global order/count/page reset, loading/empty/error/retry, light/dark themes and the editable calendar/payroll exceptions. The new fixture assertions use MUI's actual en-dash pagination text and filtered-empty copy; its unlimited renderer uses the raw row because the shared renderer substitutes a dash for null cell values.
+
+Table criteria change matching row counts and response order; canonical payroll/statutory domain summaries keep their selected business scope. Salary displayed-row totals follow the matching page. Authenticated role/tenant browser acceptance and an actual setup-tab/return cycle on the paired backend remain unverified. Earlier internal-browser URL/cleanup denials were not retried. The synthetic Playwright workflow verifies shared production components with local synthetic transports and does not establish authenticated acceptance.
+
+### Import draft, active retry and offset regressions
+
+`import-detail-draft.test.tsx` mounts the production review component and checks active-criteria row identity, status/time edits, background replacement protection, open-editor cancel, pending-save controls/exit, successful save followed by a global query, failed-save retention and explicit keep-editing/discard. `use-attendance-import-row-draft.test.tsx` additionally checks competing editor context and partial-save acknowledgement of submitted rows only. The workspace browser suite has twelve responsive scenarios: three added cases use the production draft controller and table/query components, pause a synthetic save in flight, and verify edited values returned by the subsequent sorted/search request. The salary workspace test verifies Retry and Refresh use the failed operational query, preserving both filters and sorting instead of reloading the legacy base preview.
+
+The backend offset test has a separate disposable tenant with 130 rows, keeping the existing 125-row export fixture and its assertions unchanged. It checks that `offset=1,size=5` returns the same native rows 1–5 with empty and active criteria, and that a 500-row request crosses the source reader's 100-row pages correctly.
+
+The final correction run passed all 1,133 combined HR/shared tests, including the 18 focused correction cases, and all twelve responsive browser scenarios. Independent full TypeScript, scoped ESLint, the isolated Next.js 16.3.5 production build, HR docs/inventory and whitespace checks passed. All-module documentation still reports the identical 160 baseline issues. The new post-save filter case verifies rows/count are reconciled without losing unsubmitted pending drafts; its operational mock retains the real hook's refetch contract. No source permission, assertion, compiler check or filter capability was weakened.

@@ -1,4 +1,5 @@
 import { it, vi, expect, describe } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
@@ -78,7 +79,11 @@ describe('PolicyAuditDrawer audit rendering', () => {
 
     expect(scope.getAllByText('Total 8').length).toBeGreaterThan(0);
     expect(scope.getAllByText('Included 3').length).toBeGreaterThan(0);
-    fireEvent.click(scope.getByText('Edited source Linked record for calendar policy'));
+    fireEvent.click(
+      scope.getByRole('button', {
+        name: 'Show changes for Edited source Linked record for calendar policy',
+      })
+    );
     fireEvent.click(await scope.findByRole('button', { name: 'Show 1 holiday' }));
     expect(await scope.findByText('Annual day')).toBeInTheDocument();
     expect(scope.getAllByText('01 Jun 2025').length).toBeGreaterThan(0);
@@ -228,7 +233,13 @@ describe('PolicyAuditDrawer audit rendering', () => {
       />
     );
 
-    fireEvent.click(screen.getByText('Updated ten settings'));
+    const user = userEvent.setup();
+    const disclosure = screen.getByRole('button', {
+      name: 'Show changes for Updated ten settings',
+    });
+    disclosure.focus();
+    await user.keyboard(' ');
+    expect(disclosure).toHaveAttribute('aria-expanded', 'true');
 
     expect(await screen.findByText('after-1')).toBeInTheDocument();
     expect(screen.getByText('after-8')).toBeInTheDocument();

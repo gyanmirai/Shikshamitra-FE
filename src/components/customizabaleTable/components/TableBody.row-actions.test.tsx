@@ -1,10 +1,10 @@
 import type { ComponentProps } from 'react';
 
-import { vi, it, expect, describe } from 'vitest';
 import { Table } from '@mui/material';
+import { vi, it, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
-import { render, screen, fireEvent } from '@testing-library/react';
 import { createTheme } from 'src/theme/create-theme';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
@@ -39,6 +39,25 @@ function renderBody(overrides: Partial<ComponentProps<typeof TableBody>> = {}) {
 }
 
 describe('table record row actions', () => {
+  it('isolates legacy row shortcuts and mouse handlers from editable controls', () => {
+    const legacyClick = vi.fn();
+    const legacyKey = vi.fn((event) => event.preventDefault());
+    renderBody({
+      rowProps: () => ({ tabIndex: 0, onKeyDown: legacyKey, onClick: legacyClick }),
+      columns: [{ id: 'name', label: 'Name', render: () => <input aria-label="Staff name" /> }],
+    });
+    const input = screen.getByRole('textbox', { name: 'Staff name' });
+    fireEvent.click(input);
+    expect(fireEvent.keyDown(input, { key: ' ' })).toBe(true);
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true);
+    expect(legacyClick).not.toHaveBeenCalled();
+    expect(legacyKey).not.toHaveBeenCalled();
+    fireEvent.keyDown(screen.getByRole('row'), { key: 'Enter', repeat: true });
+    expect(legacyKey).not.toHaveBeenCalled();
+    fireEvent.keyDown(screen.getByRole('row'), { key: 'Enter' });
+    expect(legacyKey).toHaveBeenCalledOnce();
+    expect(screen.getAllByRole('cell').every((cell) => !cell.hasAttribute('tabindex'))).toBe(true);
+  });
   it('preserves ordinary cells unless the column explicitly identifies a row header', () => {
     const { rerender } = renderBody();
     expect(screen.getByRole('cell', { name: record.name }).tagName).toBe('TD');

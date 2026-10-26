@@ -43,7 +43,21 @@ export function useHrTableExport(table: string, query: Record<string, unknown>) 
       const captured = structuredClone({ ...currentQuery.current, ...queryOverride });
       if (table === 'hr-generated-report' || table === 'hr-generated-report-history')
         captured.criteria = reportTableCriteria(searchTerm, filters, sorts);
-      else if (searchTerm || Object.hasOwn(captured, 'search')) captured.search = searchTerm;
+      else {
+        // Register retains its separately owned domain-filter contract.
+        if (table !== 'hr-attendance-register') {
+          const criteria = reportTableCriteria(
+            ['hr-shifts', 'hr-professional-tax', 'hr-attendance-import-rows'].includes(table)
+              ? searchTerm
+              : '',
+            filters,
+            sorts
+          );
+          if (criteria.search || criteria.filters.length || criteria.sorts.length)
+            captured.criteria = criteria;
+        }
+        if (searchTerm || Object.hasOwn(captured, 'search')) captured.search = searchTerm;
+      }
       let job = await create({
         table,
         query: captured,

@@ -1,0 +1,232 @@
+{
+  "hr-generated-report": [],
+  "hr-policy-versions": ["versionNumber", "changeAction", "creationTime", "changeReason"],
+  "hr-policy-assignments": [
+    "target",
+    "sourceType",
+    "organization",
+    "payrollPolicyName",
+    "attendancePolicyName",
+    "leavePolicyName",
+    "effective",
+    "priority",
+    "reason",
+    "status"
+  ],
+  "hr-performance-cycles": [
+    "name",
+    "periodStart",
+    "periodEnd",
+    "status",
+    "assignedCount",
+    "finalizedCount"
+  ],
+  "hr-performance-templates": [
+    "name",
+    "boardType",
+    "staffCategory",
+    "sections",
+    "status",
+    "weight"
+  ],
+  "hr-earning-components": [
+    "earningComponentName",
+    "description",
+    "earningType",
+    "calculationType",
+    "amount",
+    "customComponent.componentName",
+    "visibleInPayslip"
+  ],
+  "hr-deduction-components": [
+    "deductionComponentName",
+    "description",
+    "deductionType",
+    "calculationType",
+    "amount",
+    "customComponent.componentName",
+    "visibleInPayslip"
+  ],
+  "hr-attendance-import-rows": [
+    "rowNumber",
+    "employeeName",
+    "attendanceDate",
+    "timeIn",
+    "timeOut",
+    "errors",
+    "warnings",
+    "status",
+    "attendanceStatus"
+  ],
+  "hr-attendance-imports": [
+    "fileName",
+    "payrollMonth",
+    "importedAt",
+    "importedByName",
+    "totalRows",
+    "validRows",
+    "invalidRows",
+    "status",
+    "isBatchLocked"
+  ],
+  "hr-shifts": ["shiftName", "startTime", "endTime"],
+  "hr-document-settings": ["title", "documentSize", "documentTypesString"],
+  "hr-employee-documents": ["title", "docType", "statusVal"],
+  "hr-icard-templates": ["name", "organization", "orientation", "status"],
+  "hr-self-leave-history": [
+    "name",
+    "employeeIdentifier",
+    "submittedBy",
+    "organization",
+    "description",
+    "remarks",
+    "paidType",
+    "appliedDate",
+    "startDate",
+    "endDate",
+    "totalDays",
+    "reason",
+    "status"
+  ],
+  "hr-pf-rules": [
+    "name",
+    "code",
+    "employeePercentage",
+    "employerPercentage",
+    "contributionBasis",
+    "wageCeiling",
+    "effectiveFrom",
+    "isActive"
+  ],
+  "hr-professional-tax": [
+    "jurisdictionCode",
+    "effectiveFrom",
+    "fromSalary",
+    "toSalary",
+    "taxAmount",
+    "deductInCessationMonth"
+  ],
+  "hr-salary-documents": [],
+  "hr-generated-report-history": ["name", "status", "period", "capturedAt", "rowCount"],
+  "employee-table": [
+    "roleValue",
+    "fullName",
+    "dob",
+    "genderValue",
+    "doi",
+    "email",
+    "mobileNo",
+    "isTeaching",
+    "shiftName",
+    "organization",
+    "statusValue"
+  ],
+  "employee-onboarding-table": ["candidate", "position", "status", "submittedAt", "tokenExpiresAt"],
+  "hr-attendance-register": [
+    "employeeName",
+    "present",
+    "exceptions",
+    "employeeGroup",
+    "department",
+    "editability"
+  ],
+  "hr-manual-attendance": [
+    "employeeCode",
+    "employeeName",
+    "fullName",
+    "attendanceDate",
+    "attendanceStatus",
+    "status",
+    "inTime",
+    "outTime",
+    "timeIn",
+    "timeOut",
+    "remarks",
+    "errors",
+    "warnings"
+  ],
+  "payroll-monthly-workbench-table": [
+    "employeeName",
+    "payableDays",
+    "fullGrossSalary",
+    "grossSalary",
+    "additionalEarnings",
+    "totalEarnings",
+    "totalDeduction",
+    "netSalary",
+    "previousMonthNetPay",
+    "netPayDelta",
+    "issueFilter",
+    "status"
+  ],
+  "hr-payroll-registration-readiness": [
+    "employeeCode",
+    "employeeName",
+    "applyPf",
+    "applyEsic",
+    "effectiveMonth"
+  ],
+  "esi-employee-impact": [
+    "employeeName",
+    "coverageDecisionLabel",
+    "enrollmentStatus",
+    "statutoryWages",
+    "employeeContribution",
+    "employerContribution",
+    "readiness"
+  ],
+  "hr-policy-calendar": [
+    "name",
+    "effective",
+    "weeklyRule",
+    "holidayCount",
+    "version",
+    "updatedAt",
+    "status"
+  ],
+  "hr-policy-payroll": [
+    "name",
+    "calendar",
+    "modeOrThresholds",
+    "integration",
+    "version",
+    "updatedAt",
+    "status"
+  ],
+  "hr-policy-attendance": [
+    "name",
+    "calendar",
+    "modeOrThresholds",
+    "integration",
+    "version",
+    "updatedAt",
+    "status"
+  ],
+  "hr-policy-leave": [
+    "policyTitle",
+    "ruleCount",
+    "buckets",
+    "entitlements",
+    "controls",
+    "updatedAt",
+    "status"
+  ],
+  "hr-leave-requests": [
+    "submittedBy",
+    "appliedDate",
+    "name",
+    "employeeName",
+    "employeeIdentifier",
+    "organization",
+    "description",
+    "remarks",
+    "leavePolicyName",
+    "paidType",
+    "startDate",
+    "endDate",
+    "totalDays",
+    "status",
+    "reason",
+    "appliedOn"
+  ]
+}

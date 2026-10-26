@@ -3,6 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import { EsiStatutoryEmployees } from './esi-statutory-employees';
 
+const tableRpc = vi.hoisted(() => ({ read: vi.fn() }));
+
 vi.mock('src/components/customizabaleTable', () => ({
   default: (props: any) => {
     const row = props.data[0];
@@ -123,11 +125,22 @@ describe('ESI staff panel', () => {
     expect(onQueryChange).toHaveBeenNthCalledWith(1, { search: 'Patel', page: 0 });
     expect(onQueryChange).toHaveBeenNthCalledWith(2, { page: 1, pageSize: 50 });
     expect(onQueryChange).toHaveBeenNthCalledWith(3, {
-      sort: 'statutoryWages',
-      direction: 'desc',
       page: 0,
+    });
+    expect(tableRpc.read.mock.lastCall?.[0]).toMatchObject({
+      table: 'esi-employee-impact',
+      query: { monthYear: '08-2026' },
+      criteria: { sorts: [{ column: 'statutoryWages', direction: 'desc' }] },
     });
   });
 });
 
 vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));
+
+// This screen test isolates its owning reader; typed criteria transport is covered by the adapter suite.
+vi.mock('src/redux/hr/hrOperationalTableApi', () => ({
+  useHrOperationalTableQuery: (body: unknown, options: unknown) => {
+    tableRpc.read(body, options);
+    return { currentData: undefined, isFetching: false, isError: false, refetch: vi.fn() };
+  },
+}));

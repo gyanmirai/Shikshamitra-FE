@@ -13,14 +13,15 @@ import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
@@ -125,6 +126,16 @@ const ManualAttendanceScreen = () => {
     isTeaching: undefined as boolean | undefined,
   });
 
+  // Detect unsaved changes by comparing current data with original
+  const isDirty = useMemo(
+    () =>
+      employeeData.some((emp) => {
+        const original = originalDataRef.current.find((o: any) => o.id === emp.id);
+        return isManualAttendanceRowDirty(emp, original);
+      }),
+    [employeeData]
+  );
+
   const exportTable = useHrTableExport('hr-manual-attendance', {
     attendanceDate: toAttendanceDateParam(date),
     search: query.search,
@@ -139,19 +150,36 @@ const ManualAttendanceScreen = () => {
     isError,
     error: tableError,
     refetch: refetchDayAttendance,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetDayAttendanceQuery,
-    params: {
-      attendanceDate: toAttendanceDateParam(date),
-      search: query.search,
-      department: query.department,
-      isTeaching: query.isTeaching,
-      skipCount: query.skipCount,
-      maxResultCount: query.maxResultCount,
+    tableProps: operationalTableProps,
+  } = useHrTableQuery(
+    {
+      table: 'hr-manual-attendance',
+      query: {
+        attendanceDate: toAttendanceDateParam(date),
+        search: query.search,
+        department: query.department,
+        isTeaching: query.isTeaching,
+      },
+      page: Math.floor(query.skipCount / query.maxResultCount),
+      size: query.maxResultCount,
+      resetPage: () => setQuery((current) => ({ ...current, skipCount: 0 })),
+      skip: !date,
+      locked: isDirty,
     },
-    options: { skip: !date },
-  });
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetDayAttendanceQuery,
+      params: {
+        attendanceDate: toAttendanceDateParam(date),
+        search: query.search,
+        department: query.department,
+        isTeaching: query.isTeaching,
+        skipCount: query.skipCount,
+        maxResultCount: query.maxResultCount,
+      },
+      options: { skip: !date },
+    })
+  );
 
   const canMutateCurrentDay = canMutateManualAttendanceDay({
     hasDate: Boolean(date),
@@ -228,16 +256,6 @@ const ManualAttendanceScreen = () => {
 
     syncRowsFromDayResponse(dayAttendanceData);
   }, [clearDaySpecificState, dayAttendanceData, isError, syncRowsFromDayResponse]);
-
-  // Detect unsaved changes by comparing current data with original
-  const isDirty = useMemo(
-    () =>
-      employeeData.some((emp) => {
-        const original = originalDataRef.current.find((o: any) => o.id === emp.id);
-        return isManualAttendanceRowDirty(emp, original);
-      }),
-    [employeeData]
-  );
 
   // Sync isDirty with global Redux confirmPopup state for route-change guard
   const dispatch = useDispatch();
@@ -1620,6 +1638,7 @@ const ManualAttendanceScreen = () => {
             maxResultCount: rowsPerPage,
           }));
         }}
+        {...operationalTableProps}
       />
 
       {substitution.selected && (

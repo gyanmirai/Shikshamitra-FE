@@ -38,6 +38,8 @@ export function ConfirmDialog({
   ...other
 }: ConfirmDialogProps) {
   const theme = useTheme();
+  const titleId = React.useId();
+  const contentId = React.useId();
   const isBusy =
     disableCancel ||
     (isValidElement(action) && Boolean((action.props as { loading?: boolean }).loading));
@@ -47,8 +49,10 @@ export function ConfirmDialog({
       fullWidth
       maxWidth="xs"
       open={open}
+      aria-labelledby={titleId}
+      aria-describedby={content ? contentId : undefined}
       onClose={(_event, reason) => {
-        if (isBusy || reason === 'escapeKeyDown') return;
+        if (isBusy) return;
         if (disableBackdropClick && reason === 'backdropClick') return;
         onClose();
       }}
@@ -59,14 +63,14 @@ export function ConfirmDialog({
         exit: 0,
       }}
     >
-      <DialogTitle sx={{ p: 2 }}>
+      <DialogTitle id={titleId} sx={{ p: 2 }}>
         <Box display="flex" alignItems="center" gap={1}>
           {typeof icon === 'string' ? iconMap[icon as ConfirmIconType] : icon}
           <Typography variant="h6">{title}</Typography>
         </Box>
       </DialogTitle>
       {content && (
-        <DialogContent sx={{ typography: 'body2', padding: '8px 16px 16px' }}>
+        <DialogContent id={contentId} sx={{ typography: 'body2', padding: '8px 16px 16px' }}>
           {' '}
           <Box component="fieldset" disabled={isBusy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
             <Box inert={isBusy || undefined}>{content}</Box>
@@ -77,6 +81,8 @@ export function ConfirmDialog({
 
       <DialogActions>
         <Button
+          type="button"
+          autoFocus
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           color="inherit"

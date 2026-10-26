@@ -15,8 +15,8 @@ import {
   Button,
   Switch,
   TableContainer,
-  TablePagination,
   LinearProgress,
+  TablePagination,
   FormControlLabel,
 } from '@mui/material';
 
@@ -46,6 +46,7 @@ import type { IParams, IColumnFilterAnchor, ICustomizableTableProps } from './ty
 
 const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   columns,
+  serverColumnTypes,
   data,
   tableTitle = 'Table View',
   exportLabel = 'Export',
@@ -147,12 +148,37 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   // Memoize columns to ensure stability (especially if not memoized by parent)
   const memoizedColumns = useMemo(
     () =>
-      columns.map((col) => ({
-        ...col,
-        isSort: serverSidePagination && !onServerSort && !onSortChange ? false : col.isSort,
-        isFilter: canUseColumnFilters ? (col.isFilter ?? true) : false,
-      })),
-    [canUseColumnFilters, columns, serverSidePagination, onServerSort, onSortChange]
+      columns.map((col) => {
+        const type = serverColumnTypes?.[col.id];
+        if (serverColumnTypes)
+          return {
+            ...col,
+            isSort: Boolean(type && onServerSort),
+            isFilter: Boolean(type && canUseColumnFilters),
+            filterType:
+              type === 'money' || type === 'number'
+                ? ('number' as const)
+                : type === 'date'
+                  ? ('date' as const)
+                  : type === 'datetime'
+                    ? ('dateTime' as const)
+                    : ('string' as const),
+            filterOperators: undefined,
+          };
+        return {
+          ...col,
+          isSort: serverSidePagination && !onServerSort && !onSortChange ? false : col.isSort,
+          isFilter: canUseColumnFilters ? (col.isFilter ?? true) : false,
+        };
+      }),
+    [
+      canUseColumnFilters,
+      columns,
+      serverColumnTypes,
+      serverSidePagination,
+      onServerSort,
+      onSortChange,
+    ]
   );
 
   const { tableConfig, setTableConfig, handleChangeParams } = useTableConfig({

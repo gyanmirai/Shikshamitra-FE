@@ -615,3 +615,9 @@ Reports and captured results apply search, typed column filters and sorting befo
 Exports contain every authorized matching row in the selected column order.
 Captured totals and charts describe the original report; filtered exports omit original totals.
 Designer preview controls refine the first 50 sampled rows, while preview exports apply the same criteria to the complete captured output.
+
+## Validation and setup recovery
+
+HR API mutation failures now have a persistent review dialog with a specific safe reason, named validation fields when supplied by the server, and permission-gated setup links where a verified error code identifies a prerequisite. Keep editing returns focus to the original workflow and clears the notice; Dismiss error also clears it. Successful matching mutations and route/account changes clear stale feedback.
+
+Setup links explicitly open in a separate tab. Keep the original form tab open, return to it after setup, refresh the available choices where offered, then review and submit again. Setup never auto-submits the original form. Closing, canceling or being denied access in setup leaves the original form untouched. Reloading or closing the original tab can lose unsaved values and attachments; no HR draft is written to browser storage. See [validation recovery coverage and rationale](references/validation-recovery.md).

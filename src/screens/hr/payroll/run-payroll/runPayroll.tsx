@@ -24,6 +24,7 @@ import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetHrAuditEventsQuery } from 'src/redux/hr/hr-policy-api';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { HrSetupLink } from 'src/screens/hr/recovery/hr-setup-controls';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { HrAuditValueView } from 'src/screens/hr/components/HrAuditValueView';
@@ -69,7 +70,6 @@ import { usePayrollPreviewRun } from './use-payroll-preview-run';
 import { SalaryDetailsTableCard } from './salary-details-table-card';
 import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 import { getPayrollMutationErrorMessage } from './run-payroll-error-utils';
-import { staffPayrollEditHref } from '../../employee/payroll-profile-utils';
 import { PayrollRegistrationReadiness } from './payroll-registration-readiness';
 import {
   getPayrollAdjustmentSourceLabel,
@@ -309,9 +309,9 @@ const RunPayroll = () => {
       if (completed) {
         shikshaMitraToast.success({ message: 'Payroll preview updated.' });
         notifiedRuns.current.add(notificationKey);
-      } else if (failed) {
+      } else if (failed && previewError) {
         shikshaMitraToast.error({
-          message: 'Payroll preview could not be prepared. Please retry.',
+          message: previewError.message,
         });
       }
       // Retrying a transport failure may finish the same run, so only deduplicate completion.
@@ -1133,7 +1133,11 @@ const RunPayroll = () => {
                 </LoadingButton>
               }
             >
-              Payroll preview could not be prepared. Please retry.
+              <Stack spacing={1}>
+                <Typography variant="body2">{previewError.message}</Typography>
+                <Typography variant="body2">{previewError.guidance}</Typography>
+                {previewError.setup && <HrSetupLink setup={previewError.setup} />}
+              </Stack>
             </Alert>
           ) : null}
           <Box
@@ -1389,6 +1393,7 @@ const RunPayroll = () => {
                   },
                 },
               }}
+              {...preview.tableProps}
             />
           </Box>
 
@@ -1474,15 +1479,7 @@ const RunPayroll = () => {
                               </Typography>
                             )}
                             {check.label === 'Attendance' ? (
-                              <Button
-                                component={RouterLink}
-                                href={hrPaths.attendance.markAttendance}
-                                size="small"
-                                startIcon={<Iconify icon="mdi:calendar-check-outline" />}
-                                sx={{ mt: 0.5 }}
-                              >
-                                Open attendance
-                              </Button>
+                              <HrSetupLink setup="attendance" />
                             ) : null}
                           </Box>
                         </Stack>
@@ -1815,17 +1812,7 @@ const RunPayroll = () => {
                               'ESI_APPLY_DISABLED',
                               'ESI_NUMBER_MISSING',
                             ].includes(code)
-                          ) && (
-                            <Button
-                              component={RouterLink}
-                              href={staffPayrollEditHref(activeRow.id)}
-                              size="small"
-                              variant="outlined"
-                              sx={{ alignSelf: 'flex-start' }}
-                            >
-                              Review statutory registration
-                            </Button>
-                          )}
+                          ) && <HrSetupLink setup="staffPayroll" employeeId={activeRow.id} />}
                           {(['CRITICAL', 'WARNING', 'INFO'] as const).map((severity) => {
                             const codes = activeRow.issueCodes.filter(
                               (code) => (ISSUE_LABELS[code]?.severity ?? 'INFO') === severity

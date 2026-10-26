@@ -2251,3 +2251,7 @@ try {
 ### Component contract template
 
 Use the following subsections for every component above.
+
+### HR mutation recovery and prerequisite links
+
+`src/screens/hr/recovery/hr-recovery-provider.tsx` owns persistent HR mutation feedback through `CustomDialog` and `DialogScrollContent`; `hr-setup-controls.tsx` owns fixed permission-gated setup links and explicit setup refresh. Reuse these controls instead of adding one-off error toasts or same-tab prerequisite redirects. Setup opens with `target="_blank"` and `rel="noopener noreferrer"`, retaining the original mounted form. Never persist HR salary, bank, identity or attachment drafts for this flow. Refresh options without resetting entered values; invalidate dependent previews and retain server validation/concurrency checks. Unknown failures must not invent a prerequisite. See [HR validation recovery](docs/hr/references/validation-recovery.md) for scope, tested coverage and reload/tab limits.

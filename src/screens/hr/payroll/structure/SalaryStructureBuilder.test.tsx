@@ -33,7 +33,7 @@ vi.mock('src/redux/hr/esi-policy-api', () => ({
     ],
     isLoading: false,
     isError: false,
-    refetch: vi.fn().mockResolvedValue({}),
+    refetch: () => mocks.refetchSetup(),
   }),
   effectiveEsiPolicyVersion: (policy: any) => policy?.versions[0],
 }));
@@ -48,6 +48,7 @@ const mocks = vi.hoisted(() => ({
   calculate: vi.fn(),
   saveSalary: vi.fn(),
   refetchReadiness: vi.fn(),
+  refetchSetup: vi.fn(),
   canManageSalary: true,
   refetchRevisions: vi.fn(),
   canViewEsi: true,
@@ -111,6 +112,7 @@ vi.mock('src/redux/PF/PFApi', () => ({
   useGetPFQuery: () => ({
     data: { items: [{ id: 'pf-rule', name: 'School PF', isActive: true }] },
     isError: false,
+    refetch: () => mocks.refetchSetup(),
   }),
 }));
 vi.mock('src/redux/hr/employeeApi', () => ({
@@ -164,6 +166,7 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
     },
     isLoading: mocks.templatesLoading,
     isError: false,
+    refetch: () => mocks.refetchSetup(),
   }),
   useCalculateSalaryTemplateMutation: () => [mocks.calculate, { isLoading: false }],
 }));
@@ -231,6 +234,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     mocks.revisionsFetching = false;
     mocks.canManageSalary = true;
     mocks.refetchRevisions.mockResolvedValue({});
+    mocks.refetchSetup.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });
     mocks.calculate.mockReturnValue({
       unwrap: vi.fn().mockResolvedValue({
         grossSalary: 10000,
@@ -354,6 +358,33 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       );
       expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11');
     });
+  });
+
+  it('retains salary and statutory edits through setup refresh failure and retry without saving', async () => {
+    renderBuilder({ initialMonth: '2026-11' });
+    fireEvent.change(screen.getByLabelText('Monthly cost to school (CTC)'), {
+      target: { value: '18000' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'PF registration details' }));
+    fireEvent.change(screen.getByLabelText('PF number'), { target: { value: 'SYNTHETIC-DRAFT' } });
+    mocks.refetchSetup.mockReturnValueOnce({
+      unwrap: vi.fn().mockRejectedValue(new Error('synthetic')),
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh setup' }));
+    await waitFor(() =>
+      expect(screen.getByText(/Setup could not be refreshed/)).toBeInTheDocument()
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh setup' }));
+    await waitFor(() => expect(screen.getByText(/Setup refreshed/)).toBeInTheDocument());
+    expect(
+      (screen.getByLabelText('Monthly cost to school (CTC)') as HTMLInputElement).value
+    ).toContain('18,000');
+    expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11');
+    expect(screen.getByLabelText('PF number')).toHaveValue('SYNTHETIC-DRAFT');
+    expect(mocks.refetchSetup).toHaveBeenCalledTimes(6);
+    expect(mocks.calculate).not.toHaveBeenCalled();
+    expect(mocks.saveSalary).not.toHaveBeenCalled();
+    expect(mocks.refetchRevisions).not.toHaveBeenCalled();
   });
 
   it('confirms month changes before discarding statutory edits and keeps other salary inputs', async () => {

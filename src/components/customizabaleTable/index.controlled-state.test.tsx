@@ -38,6 +38,40 @@ const renderTable = (table: ReactElement) =>
   renderWithProviders(<ThemeProvider theme={createTheme(defaultSettings)}>{table}</ThemeProvider>);
 
 describe('CustomizableTable controlled server state', () => {
+  it('uses explicit server field capabilities without sorting loaded rows or enabling action criteria', () => {
+    const sort = vi.fn();
+    renderTable(
+      <CustomizableTable
+        tableId="hr-operational-capabilities"
+        columns={[
+          { id: 'amount', label: 'Amount', isSort: false, isFilter: false },
+          { id: 'actions', label: 'Actions' },
+        ]}
+        serverColumnTypes={{ amount: 'money' }}
+        data={[
+          { id: 'first', amount: 10 },
+          { id: 'second', amount: 2 },
+        ]}
+        serverSidePagination
+        serverSideSort
+        serverSideFilter
+        onServerSort={sort}
+        onServerFilter={vi.fn()}
+        totalCount={301}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Sort by Amount' }));
+    expect(sort).toHaveBeenCalledWith('amount', [{ column: 'amount', direction: 'asc' }]);
+    expect(screen.queryByRole('button', { name: 'Sort by Actions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Filter Actions' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Filter Amount' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Filter Type *' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Equals' }));
+    expect(screen.getByRole('spinbutton', { name: 'Amount *' })).toHaveAttribute('step', 'any');
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    // The existing order is retained until the owner supplies the globally ordered response.
+    expect(screen.getAllByRole('row')[1]).toHaveTextContent('10');
+  });
   it('retains safe rows and labels refresh without reporting an empty or initial-loading state', () => {
     renderTable(
       <CustomizableTable
