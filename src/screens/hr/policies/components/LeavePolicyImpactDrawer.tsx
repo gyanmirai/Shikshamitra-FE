@@ -19,12 +19,12 @@ import type { LeavePolicyImpactReview } from '../leave-policy-workspace-utils';
 export function LeavePolicyImpactDrawer({
   open,
   review,
-  loading,
+  archiving,
   onClose,
 }: {
   open: boolean;
   review: LeavePolicyImpactReview | null;
-  loading: boolean;
+  archiving: boolean;
   onClose: () => void;
 }) {
   return (
@@ -38,13 +38,13 @@ export function LeavePolicyImpactDrawer({
         title="Leave Policy Impact"
         helpText="Review affected leave requests, balances, payroll risks, and historical records before confirming."
         onClose={onClose}
-        closeDisabled={loading}
+        closeDisabled={archiving}
       />
       <Divider />
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
         <Box sx={{ flex: 1, overflow: 'auto', p: 2.5 }}>
-          {loading ? <HrLoadingNotice>Loading leave policy impact...</HrLoadingNotice> : null}
-          {!review && !loading ? (
+          {archiving ? <HrLoadingNotice>Archiving leave policy...</HrLoadingNotice> : null}
+          {!review && !archiving ? (
             <HrNotice severity="info">Select a leave policy action to preview impact.</HrNotice>
           ) : null}
           {review ? (
@@ -105,7 +105,7 @@ export function LeavePolicyImpactDrawer({
               spacing={1.5}
               sx={{ px: 2.5, py: 2, bgcolor: 'background.paper', flexShrink: 0 }}
             >
-              <Button onClick={onClose} disabled={loading} size="small" variant="outlined">
+              <Button onClick={onClose} disabled={archiving} size="small" variant="outlined">
                 Close
               </Button>
             </Stack>
