@@ -130,7 +130,8 @@ const AssignmentTypeForm = ({
                 fullWidth
                 size="small"
                 name="assignmentTypeName"
-                label="Name *"
+                label="Name"
+                required
                 value={formik.values.assignmentTypeName}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -155,13 +156,13 @@ const AssignmentTypeForm = ({
               helperText={formik.touched.description && formik.errors.description}
             />
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 fullWidth
                 select
                 size="small"
                 name="defaultSubmissionType"
-                label="Default Submission Type"
+                label="Default submission type"
                 value={formik.values.defaultSubmissionType}
                 onChange={formik.handleChange}
                 error={
@@ -183,14 +184,14 @@ const AssignmentTypeForm = ({
               </TextField>
             </Stack>
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               {showDefaultMarks && (
                 <TextField
                   fullWidth
                   type="number"
                   size="small"
                   name="defaultMarks"
-                  label="Default Marks"
+                  label="Default marks"
                   value={formik.values.defaultMarks}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -205,7 +206,7 @@ const AssignmentTypeForm = ({
                 type="number"
                 size="small"
                 name="defaultDueDays"
-                label="Default Due Days"
+                label="Default due days"
                 value={formik.values.defaultDueDays}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -232,44 +233,53 @@ const AssignmentTypeForm = ({
                   color="primary"
                 />
               }
-              label="Evaluation Required"
+              label="Evaluation required"
             />
 
             {formik.values.evaluationRequired && (
-              <TextField
-                fullWidth
-                select
-                size="small"
-                name="defaultEvaluationMethod"
-                label="Default Evaluation Method *"
-                value={formik.values.defaultEvaluationMethod}
-                onChange={(event) => {
-                  const evaluationMethod = Number(event.target.value) as AssignmentEvaluationMethod;
-                  formik.setFieldValue('defaultEvaluationMethod', evaluationMethod);
-                  if (
-                    !evaluationUsesMarks(formik.values.evaluationRequired, evaluationMethod) &&
-                    formik.values.defaultMarks !== ''
-                  ) {
-                    formik.setFieldValue('defaultMarks', '');
-                  }
-                }}
-                error={
-                  formik.touched.defaultEvaluationMethod &&
-                  Boolean(formik.errors.defaultEvaluationMethod)
-                }
-                helperText={
+              <ShakingTextField
+                error={Boolean(
                   formik.touched.defaultEvaluationMethod && formik.errors.defaultEvaluationMethod
-                }
+                )}
               >
-                <MenuItem value="" disabled>
-                  <em>Select method</em>
-                </MenuItem>
-                {ASSIGNMENT_TYPE_EVALUATION_METHOD_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
+                <TextField
+                  fullWidth
+                  select
+                  size="small"
+                  name="defaultEvaluationMethod"
+                  label="Default evaluation method"
+                  required
+                  value={formik.values.defaultEvaluationMethod}
+                  onChange={(event) => {
+                    const evaluationMethod = Number(
+                      event.target.value
+                    ) as AssignmentEvaluationMethod;
+                    formik.setFieldValue('defaultEvaluationMethod', evaluationMethod);
+                    if (
+                      !evaluationUsesMarks(formik.values.evaluationRequired, evaluationMethod) &&
+                      formik.values.defaultMarks !== ''
+                    ) {
+                      formik.setFieldValue('defaultMarks', '');
+                    }
+                  }}
+                  error={
+                    formik.touched.defaultEvaluationMethod &&
+                    Boolean(formik.errors.defaultEvaluationMethod)
+                  }
+                  helperText={
+                    formik.touched.defaultEvaluationMethod && formik.errors.defaultEvaluationMethod
+                  }
+                >
+                  <MenuItem value="" disabled>
+                    <em>Select method</em>
                   </MenuItem>
-                ))}
-              </TextField>
+                  {ASSIGNMENT_TYPE_EVALUATION_METHOD_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </ShakingTextField>
             )}
           </Stack>
         </FormSectionCard>

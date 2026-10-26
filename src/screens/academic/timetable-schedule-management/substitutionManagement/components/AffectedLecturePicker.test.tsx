@@ -1,5 +1,8 @@
 import { it, vi, expect, describe } from 'vitest';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { AffectedLecturePicker } from './AffectedLecturePicker';
 
@@ -60,12 +63,17 @@ describe('AffectedLecturePicker', () => {
   });
 
   it('shows an empty state when this teacher has no published lectures', () => {
-    render(<AffectedLecturePicker {...defaultProps} lectures={[]} />);
+    const { container } = render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AffectedLecturePicker {...defaultProps} lectures={[]} />
+      </ThemeProvider>
+    );
 
     expect(
       screen.getByText('No published timetable lectures are affected in this time window.')
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Select lecture' })).not.toBeInTheDocument();
+    expect(container.querySelector('svg[viewBox="0 0 320 280"]')).not.toBeNull();
   });
 
   it('distinguishes an existing substitution from an eligible lecture', () => {

@@ -39,6 +39,12 @@ interface UseWeeklyLectureFormResult {
   formik: ReturnType<typeof useFormik<ISubjectFormValues>>;
   allClass: IClassOption[];
   isSubjectsLoading: boolean;
+  isDetailsLoading: boolean;
+  isCapacityLoading: boolean;
+  detailsError: boolean;
+  capacityError: boolean;
+  refetchDetails: () => unknown;
+  refetchCapacity: () => unknown;
   isSubmitting: boolean;
   availableCapacity: number;
   hasSlots: boolean;
@@ -71,14 +77,26 @@ export function useWeeklyLectureForm({
     currentQueryAndMutation: useUpdateWeeklyLectureSlotMutation,
   });
 
-  const { data: weeklyLectureSlotById } = useQueryAndMutation({
+  const {
+    data: weeklyLectureSlotById,
+    isLoading: isDetailsLoading,
+    isFetching: isDetailsFetching,
+    isError: detailsError,
+    refetch: refetchDetails,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetWeeklyLectureSlotByIdQuery,
     params: editData?.id || '',
     options: { skip: !editData?.id },
   });
 
-  const { data: lectureSlotsData } = useQueryAndMutation({
+  const {
+    data: lectureSlotsData,
+    isLoading: isCapacityLoading,
+    isFetching: isCapacityFetching,
+    isError: capacityError,
+    refetch: refetchCapacity,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLectureSlotsQuery,
     params: { AcademicMediumId: medium?.id },
@@ -255,6 +273,12 @@ export function useWeeklyLectureForm({
     formik,
     allClass,
     isSubjectsLoading,
+    isDetailsLoading: Boolean(editData?.id && (isDetailsLoading || isDetailsFetching)),
+    isCapacityLoading: Boolean(isCapacityLoading || isCapacityFetching),
+    detailsError: Boolean(detailsError),
+    capacityError: Boolean(capacityError),
+    refetchDetails,
+    refetchCapacity,
     isSubmitting: isAddLoading || isUpdateLoading,
     availableCapacity,
     hasSlots,

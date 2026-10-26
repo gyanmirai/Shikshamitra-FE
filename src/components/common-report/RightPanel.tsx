@@ -1,3 +1,4 @@
+import { EmptyContent } from 'src/components/empty-content';
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 
@@ -11,21 +12,7 @@ interface RightPanelProps {
 
 export default function RightPanel({ selectedReport }: RightPanelProps) {
   if (!selectedReport) {
-    return (
-      <Box
-        sx={{
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          color: 'text.secondary',
-        }}
-      >
-        <Iconify icon="ph:files-duotone" width={64} style={{ opacity: 0.5, marginBottom: 16 }} />
-        <Typography variant="body1">Select a report to configure settings</Typography>
-      </Box>
-    );
+    return <EmptyContent title="Select a report to configure settings" />;
   }
 
   return (
@@ -39,7 +26,14 @@ export default function RightPanel({ selectedReport }: RightPanelProps) {
         bgcolor: 'background.paper',
       }}
     >
-      <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
+      <Box
+        sx={{
+          p: { xs: 2, lg: 3 },
+          flexShrink: 0,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
         {selectedReport.configurationHelp ? (
           <FormSectionHeader
             icon="mdi:file-document-outline"
@@ -69,7 +63,7 @@ export default function RightPanel({ selectedReport }: RightPanelProps) {
         )}
       </Box>
 
-      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
         {selectedReport.render(selectedReport)}
       </Box>
     </Paper>

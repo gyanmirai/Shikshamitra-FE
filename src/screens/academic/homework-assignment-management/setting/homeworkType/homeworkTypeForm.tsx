@@ -162,7 +162,8 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
                 fullWidth
                 size="small"
                 name="homeworkTypeName"
-                label="Name *"
+                label="Name"
+                required
                 value={formik.values.homeworkTypeName}
                 onChange={(e) => {
                   const value = e.target.value
@@ -201,7 +202,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
               select
               size="small"
               name="defaultSubmissionType"
-              label="Default Submission Type"
+              label="Default submission type"
               value={formik.values.defaultSubmissionType}
               onChange={formik.handleChange}
               error={
@@ -225,7 +226,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
               type="number"
               size="small"
               name="defaultDueDays"
-              label="Default Due Days"
+              label="Default due days"
               value={formik.values.defaultDueDays}
               onChange={formik.handleChange}
               onInput={(e: any) => {

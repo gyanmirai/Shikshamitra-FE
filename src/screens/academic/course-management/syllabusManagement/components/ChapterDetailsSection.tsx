@@ -45,13 +45,13 @@ export function ChapterDetailsSection({
       : 'Choose the expected teaching start and end dates.');
 
   return (
-    <Stack spacing={1.5} mb={2.5}>
+    <Stack spacing={2} mb={2}>
       <FormSectionCard
         icon="mdi:book-open-page-variant-outline"
         title="Chapter Details"
         descriptionTooltip="Enter the chapter identity and its expected teaching window."
       >
-        <Grid container spacing={1.5}>
+        <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
             <ChapterNumberField
               value={formik.values.chapterNo}

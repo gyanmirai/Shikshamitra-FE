@@ -5,9 +5,9 @@ import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
 import { LoadingButton } from '@mui/lab';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
@@ -15,6 +15,7 @@ import { varAlpha, stylesMode } from 'src/theme/styles';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useId, useRef, useMemo, useState, useEffect } from 'react';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
@@ -26,38 +27,39 @@ import {
   useLazyDownloadQuestionBulkTemplateQuery,
 } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 import {
-  Alert,
   Box,
-  Button,
-  Checkbox,
-  Collapse,
-  DialogActions,
-  FormControl,
-  FormControlLabel,
-  FormHelperText,
   Grid,
-  IconButton,
+  Alert,
   Paper,
   Radio,
-  RadioGroup,
   Stack,
+  Button,
   Switch,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
+  Checkbox,
+  Collapse,
+  TextField,
+  IconButton,
+  RadioGroup,
   Typography,
+  FormControl,
+  ToggleButton,
+  DialogActions,
+  FormHelperText,
+  FormControlLabel,
+  ToggleButtonGroup,
 } from '@mui/material';
 
-import type { QuestionFormValues } from './questionFormModel';
-
+import { QuestionFormSection as Section } from './QuestionFormSection';
 import {
-  buildQuestionValidationSchema,
-  createAnswerOptions,
-  createInitialQuestionValues,
-  createNextQuestionValues,
   toQuestionBody,
+  createAnswerOptions,
+  createNextQuestionValues,
+  createInitialQuestionValues,
+  buildQuestionValidationSchema,
 } from './questionFormModel';
+
+import type { QuestionFormValues } from './questionFormModel';
 
 const QUESTION_TYPE_OPTIONS = [
   { value: 1, label: 'MCQ - Single Correct' },
@@ -146,32 +148,6 @@ function collectErrorMessages(value: unknown): string[] {
   return [];
 }
 
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 1.5 }}>
-      <Stack spacing={1.5}>
-        <Box>
-          <Typography variant="subtitle2">{title}</Typography>
-          {description && (
-            <Typography variant="caption" color="text.secondary">
-              {description}
-            </Typography>
-          )}
-        </Box>
-        {children}
-      </Stack>
-    </Paper>
-  );
-}
-
 function CreationModeSelector({
   value,
   onChange,
@@ -189,13 +165,13 @@ function CreationModeSelector({
         onChange={(_, nextValue) => nextValue && onChange(nextValue)}
         aria-label="Question creation mode"
       >
-        <ToggleButton value="manual" aria-label="Manual Entry">
-          <Iconify icon="solar:pen-bold" sx={{ mr: 1, width: 16, height: 16 }} />
-          Manual Entry
+        <ToggleButton value="manual" aria-label="Manual entry">
+          <Iconify icon={GlobalIcons.edit} sx={{ mr: 1, width: 16, height: 16 }} />
+          Manual entry
         </ToggleButton>
-        <ToggleButton value="upload" aria-label="Bulk Upload">
-          <Iconify icon="solar:upload-bold" sx={{ mr: 1, width: 16, height: 16 }} />
-          Bulk Upload
+        <ToggleButton value="upload" aria-label="Bulk upload">
+          <Iconify icon={GlobalIcons.upload} sx={{ mr: 1, width: 16, height: 16 }} />
+          Bulk upload
         </ToggleButton>
       </ToggleButtonGroup>
       <Typography variant="caption" color="text.secondary">
@@ -226,7 +202,7 @@ function ContextSection({
 }) {
   return (
     <Section title="Question Context" description="Select where this question belongs.">
-      <Grid container spacing={1.5}>
+      <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6 }}>
           <ShakingTextField error={formik.touched.standardId && !!formik.errors.standardId}>
             <CustomSelect
@@ -323,7 +299,7 @@ function ObjectiveAnswerEditor({ formik }: { formik: FormikProps<QuestionFormVal
     return (
       <FormControl error={Boolean(optionsError)}>
         <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-          Correct Answer
+          Correct answer
         </Typography>
         <RadioGroup
           row
@@ -415,7 +391,7 @@ function ObjectiveAnswerEditor({ formik }: { formik: FormikProps<QuestionFormVal
                     )
                   }
                 >
-                  <Iconify icon="mingcute:delete-2-line" />
+                  <Iconify icon={GlobalIcons.delete} />
                 </IconButton>
               </Tooltip>
             )}
@@ -426,7 +402,7 @@ function ObjectiveAnswerEditor({ formik }: { formik: FormikProps<QuestionFormVal
         type="button"
         size="small"
         variant="outlined"
-        startIcon={<Iconify icon="mingcute:add-line" />}
+        startIcon={<Iconify icon={GlobalIcons.addIcon} />}
         onClick={() =>
           formik.setFieldValue('options', [
             ...formik.values.options,
@@ -439,7 +415,7 @@ function ObjectiveAnswerEditor({ formik }: { formik: FormikProps<QuestionFormVal
         }
         sx={{ alignSelf: 'flex-start' }}
       >
-        Add Option
+        Add option
       </Button>
       {formik.submitCount > 0 && optionsError && <Alert severity="error">{optionsError}</Alert>}
     </Stack>
@@ -459,9 +435,9 @@ function AnswerSection({
 
   if (ANSWER_KEY_TYPES.includes(questionType)) {
     const labels: Record<number, string> = {
-      4: 'Correct Answer',
-      5: 'Expected Answer / Answer Key',
-      6: 'Model Answer / Answer Key',
+      4: 'Correct answer',
+      5: 'Expected answer / answer key',
+      6: 'Model answer / answer key',
     };
 
     return (
@@ -485,9 +461,7 @@ function AnswerSection({
 
   return (
     <Alert severity="info">
-      This question type uses the existing question text and optional evaluation guidance in
-      Advanced Details. No additional structured answer fields are available in the current frontend
-      contract.
+      Write the question in Question text and add evaluation guidance in Advanced Details.
     </Alert>
   );
 }
@@ -512,10 +486,11 @@ function UploadSection({
           <Button
             size="small"
             color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.download} />}
             disabled={isTemplateDownloading}
             onClick={onDownloadTemplate}
           >
-            {isTemplateDownloading ? 'Downloading...' : 'Download Template'}
+            {isTemplateDownloading ? 'Downloading...' : 'Download template'}
           </Button>
         }
       >
@@ -552,6 +527,7 @@ export default function CreateQuestionDialog({
   initialTopicName = '',
   chapterName,
 }: CreateQuestionDialogProps) {
+  const advancedContentId = useId();
   const { currentYear, currentMedium: medium } = useSelector(
     (state: RootState) => state.globalState
   );
@@ -744,17 +720,9 @@ export default function CreateQuestionDialog({
     <CustomDialog
       open={open}
       handleClose={handleClose}
-      title={
-        <Stack spacing={0.25} component="span">
-          <Typography variant="h5" component="span">
-            {chapterName ? `Create Question - ${chapterName}` : 'Create New Question'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" component="span">
-            Add a question to the Question Bank. You can create another with the same context after
-            saving.
-          </Typography>
-        </Stack>
-      }
+      title={chapterName ? `Create Question - ${chapterName}` : 'Create New Question'}
+      titleInfo="Add a question to the Question Bank. You can create another with the same context after saving."
+      disableClose={createState.isLoading}
       maxWidth="md"
       hasForm={false}
     >
@@ -766,7 +734,7 @@ export default function CreateQuestionDialog({
         style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
       >
         <DialogScrollContent>
-          <Stack spacing={1.5}>
+          <Stack spacing={2}>
             <CreationModeSelector
               value={creationMode}
               onChange={(value) => {
@@ -822,10 +790,10 @@ export default function CreateQuestionDialog({
                   title="Question"
                   description="Choose the question type, scoring, and prompt."
                 >
-                  <Grid container spacing={1.5}>
+                  <Grid container spacing={2}>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <CustomSelect
-                        label="Question Type *"
+                        label="Question type *"
                         options={QUESTION_TYPE_OPTIONS}
                         value={formik.values.questionType}
                         onChange={(value) => handleTypeChange(Number(value))}
@@ -872,7 +840,7 @@ export default function CreateQuestionDialog({
                         error={formik.touched.bloomLevel && !!formik.errors.bloomLevel}
                       >
                         <CustomSelect
-                          label={`Bloom's Level${settings?.requireBloomLevel ? ' *' : ''}`}
+                          label={`Bloom's level${settings?.requireBloomLevel ? ' *' : ''}`}
                           options={BLOOM_OPTIONS}
                           value={formik.values.bloomLevel || ''}
                           onChange={(value) => formik.setFieldValue('bloomLevel', Number(value))}
@@ -893,7 +861,7 @@ export default function CreateQuestionDialog({
                           fullWidth
                           multiline
                           minRows={4}
-                          label="Question Text *"
+                          label="Question text *"
                           name="questionText"
                           value={formik.values.questionText}
                           onChange={(event) => {
@@ -919,26 +887,24 @@ export default function CreateQuestionDialog({
                   <AnswerSection formik={formik} settings={settings} />
                 </Section>
 
-                <Paper variant="outlined" sx={{ borderRadius: 1.5, overflow: 'hidden' }}>
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="inherit"
-                    onClick={() => setAdvancedOpen((value) => !value)}
-                    endIcon={
+                <Section
+                  title="Advanced Details"
+                  description="Optional information for search, evaluation, and analysis."
+                  action={
+                    <IconButton
+                      type="button"
+                      size="small"
+                      aria-label={`${advancedOpen ? 'Collapse' : 'Expand'} advanced details`}
+                      aria-expanded={advancedOpen}
+                      aria-controls={advancedContentId}
+                      onClick={() => setAdvancedOpen((value) => !value)}
+                    >
                       <Iconify icon={advancedOpen ? 'mingcute:up-line' : 'mingcute:down-line'} />
-                    }
-                    sx={{ justifyContent: 'space-between', px: 2, py: 1.5 }}
-                  >
-                    <Box sx={{ textAlign: 'left' }}>
-                      <Typography variant="subtitle2">Advanced Details</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Optional information for search, evaluation, and analysis.
-                      </Typography>
-                    </Box>
-                  </Button>
-                  <Collapse in={advancedOpen}>
-                    <Grid container spacing={1.5} sx={{ p: 2, pt: 0 }}>
+                    </IconButton>
+                  }
+                >
+                  <Collapse in={advancedOpen} id={advancedContentId}>
+                    <Grid container spacing={2}>
                       {settings?.enableNegativeMarking && (
                         <Grid size={12}>
                           <Stack
@@ -961,7 +927,7 @@ export default function CreateQuestionDialog({
                               <TextField
                                 size="small"
                                 type="number"
-                                label="Negative Marks"
+                                label="Negative marks"
                                 name="negativeMarks"
                                 value={formik.values.negativeMarks}
                                 onChange={formik.handleChange}
@@ -979,7 +945,7 @@ export default function CreateQuestionDialog({
                           <LanguageInputField
                             fullWidth
                             size="small"
-                            label={`Learning Outcome${settings?.requireLearningOutcome ? ' *' : ''}`}
+                            label={`Learning outcome${settings?.requireLearningOutcome ? ' *' : ''}`}
                             name="learningOutcome"
                             value={formik.values.learningOutcome}
                             onChange={formik.handleChange}
@@ -1019,7 +985,7 @@ export default function CreateQuestionDialog({
                           fullWidth
                           multiline
                           minRows={3}
-                          label="Explanation / Marking Scheme"
+                          label="Explanation / marking scheme"
                           name="explanation"
                           value={formik.values.explanation}
                           onChange={(event) => {
@@ -1030,7 +996,7 @@ export default function CreateQuestionDialog({
                       </Grid>
                     </Grid>
                   </Collapse>
-                </Paper>
+                </Section>
               </>
             )}
           </Stack>
@@ -1057,11 +1023,11 @@ export default function CreateQuestionDialog({
               disabled={createState.isLoading || isSettingsLoading || isSettingsFetching}
               startIcon={
                 <Iconify
-                  icon={creationMode === 'upload' ? 'solar:upload-bold' : 'mingcute:save-line'}
+                  icon={creationMode === 'upload' ? GlobalIcons.upload : GlobalIcons.submit}
                 />
               }
             >
-              {creationMode === 'upload' ? 'Upload Questions' : 'Save Draft'}
+              {creationMode === 'upload' ? 'Upload questions' : 'Save draft'}
             </LoadingButton>
             {creationMode === 'manual' && (
               <LoadingButton
@@ -1070,10 +1036,10 @@ export default function CreateQuestionDialog({
                 variant="contained"
                 loading={createState.isLoading && activeSubmit === 'another'}
                 disabled={createState.isLoading || isSettingsLoading || isSettingsFetching}
-                startIcon={<Iconify icon="mingcute:add-line" />}
+                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
                 onClick={() => submit('another')}
               >
-                Save & Add Another
+                Save & add another
               </LoadingButton>
             )}
           </Stack>

@@ -1,8 +1,9 @@
 import { Box, Grid } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { SubjectCopyChoiceCard } from './SubjectCopyChoiceCard';
 import { SubjectCopySubjectPicker } from './SubjectCopySubjectPicker';
-import { SubjectCopySectionHeading } from './SubjectCopySectionHeading';
 
 import type { CopySelectionMode } from './types';
 import type { useCopySubjects } from './useCopySubjects';
@@ -18,14 +19,12 @@ export function SubjectCopySubjectScope(props: Props) {
   const { selectionMode, sourceClassSelected, subjects, onModeChange } = props;
 
   return (
-    <Box component="section" aria-labelledby="copy-subjects-heading">
-      <SubjectCopySectionHeading
-        step={2}
-        title="Choose subjects"
-        description="Copy every subject, or select only the ones you need."
-      />
-
-      <Grid container spacing={1} sx={{ mt: 1.5 }} role="radiogroup" aria-label="Subjects to copy">
+    <FormSectionCard
+      icon={GlobalIcons.notebook}
+      title="Choose Subjects"
+      descriptionTooltip="Copy every subject, or select only the ones you need."
+    >
+      <Grid container spacing={2} role="radiogroup" aria-label="Subjects to copy">
         <Grid size={{ xs: 12, sm: 6 }}>
           <SubjectCopyChoiceCard
             selected={selectionMode === 'ALL'}
@@ -45,10 +44,10 @@ export function SubjectCopySubjectScope(props: Props) {
       </Grid>
 
       {selectionMode === 'SPECIFIC' && (
-        <Box sx={{ mt: 1.5 }}>
+        <Box>
           <SubjectCopySubjectPicker sourceClassSelected={sourceClassSelected} subjects={subjects} />
         </Box>
       )}
-    </Box>
+    </FormSectionCard>
   );
 }

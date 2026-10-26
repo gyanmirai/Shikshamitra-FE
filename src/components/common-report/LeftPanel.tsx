@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Icon } from '@iconify/react';
+import { EmptyContent } from 'src/components/empty-content';
 import {
   Box,
   List,
@@ -57,37 +58,41 @@ export default function LeftPanel({
         />
       </Box>
       <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 1.5 }}>
-        <List disablePadding sx={{ maxHeight: '100%', height: '100%' }}>
-          {filteredCategories.map((category) => (
-            <ListItemButton
-              key={category.id}
-              selected={selectedCategory === category.id}
-              onClick={() => onSelectCategory(category.id)}
-              sx={{
-                borderRadius: 1,
-                mb: 0.5,
-                '&.Mui-selected': {
-                  bgcolor: 'primary',
-                  color: 'primary.main',
-                  '&:hover': {
+        {filteredCategories.length === 0 ? (
+          <EmptyContent title="No categories match your search" sx={{ py: 2 }} />
+        ) : (
+          <List disablePadding sx={{ maxHeight: '100%', height: '100%' }}>
+            {filteredCategories.map((category) => (
+              <ListItemButton
+                key={category.id}
+                selected={selectedCategory === category.id}
+                onClick={() => onSelectCategory(category.id)}
+                sx={{
+                  borderRadius: 1,
+                  mb: 0.5,
+                  '&.Mui-selected': {
                     bgcolor: 'primary',
-                  },
-                  '& .MuiListItemIcon-root': {
                     color: 'primary.main',
+                    '&:hover': {
+                      bgcolor: 'primary',
+                    },
+                    '& .MuiListItemIcon-root': {
+                      color: 'primary.main',
+                    },
                   },
-                },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <Icon icon={category.icon as string} width={24} />
-              </ListItemIcon>
-              <ListItemText
-                primary={category.name}
-                primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
-              />
-            </ListItemButton>
-          ))}
-        </List>
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <Icon icon={category.icon as string} width={24} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={category.name}
+                  primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+        )}
       </Box>
     </Paper>
   );

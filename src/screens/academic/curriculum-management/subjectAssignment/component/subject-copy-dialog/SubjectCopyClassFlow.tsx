@@ -1,11 +1,14 @@
 import type { Standards } from 'src/types/school';
 
+import { useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
 import {
   Box,
   Grid,
   Alert,
-  Paper,
   Stack,
   Button,
   Skeleton,
@@ -13,8 +16,6 @@ import {
   Typography,
   Autocomplete,
 } from '@mui/material';
-
-import { SubjectCopySectionHeading } from './SubjectCopySectionHeading';
 
 type Props = {
   sourceClass: Standards | null;
@@ -29,16 +30,16 @@ type Props = {
 export function SubjectCopyClassFlow(props: Props) {
   const { sourceClass, targetClassName, eligibleClasses, isLoading, hasError, onRetry, onChange } =
     props;
+  const [sourceTouched, setSourceTouched] = useState(false);
+  const sourceError = sourceTouched && !sourceClass && eligibleClasses.length > 0;
 
   return (
-    <Box component="section" aria-labelledby="copy-source-heading">
-      <SubjectCopySectionHeading
-        step={1}
-        title="Choose where to copy from"
-        description="The current class is already selected as the destination."
-      />
-
-      <Grid container spacing={1.5} alignItems="center" sx={{ mt: 1.5 }}>
+    <FormSectionCard
+      icon={GlobalIcons.transfer}
+      title="Source and Destination"
+      descriptionTooltip="Choose the source class. The current class is already selected as the destination."
+    >
+      <Grid container spacing={2} alignItems="center">
         <Grid size={{ xs: 12, sm: 5.5 }}>
           {isLoading ? (
             <Skeleton variant="rounded" height={64} />
@@ -54,24 +55,33 @@ export function SubjectCopyClassFlow(props: Props) {
               Classes could not be loaded.
             </Alert>
           ) : (
-            <Autocomplete
-              size="small"
-              options={eligibleClasses}
-              getOptionLabel={(option) => option.name}
-              value={sourceClass}
-              onChange={(_, value) => onChange(value)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Source class"
-                  placeholder="Select a class"
-                  helperText={
-                    eligibleClasses.length === 0 ? 'No other classes contain subjects.' : undefined
-                  }
-                />
-              )}
-              noOptionsText="No classes with subjects"
-            />
+            <ShakingTextField error={sourceError}>
+              <Autocomplete
+                size="small"
+                options={eligibleClasses}
+                getOptionLabel={(option) => option.name}
+                value={sourceClass}
+                onChange={(_, value) => onChange(value)}
+                onBlur={() => setSourceTouched(true)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    required
+                    label="Source class"
+                    placeholder="Select a class"
+                    error={sourceError}
+                    helperText={
+                      eligibleClasses.length === 0
+                        ? 'No other classes contain subjects.'
+                        : sourceError
+                          ? 'Select a source class.'
+                          : undefined
+                    }
+                  />
+                )}
+                noOptionsText="No classes with subjects"
+              />
+            </ShakingTextField>
           )}
         </Grid>
 
@@ -84,28 +94,18 @@ export function SubjectCopyClassFlow(props: Props) {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 5.5 }}>
-          <Paper
-            variant="outlined"
-            sx={{
-              px: 1.5,
-              borderRadius: 2,
-              bgcolor: 'background.neutral',
-              height: 40,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Stack direction="row" spacing={0.5} alignItems="baseline" sx={{ minWidth: 0 }}>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                Destination class:
+          <Box>
+            <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+              <Typography variant="caption" color="text.secondary">
+                Destination class
               </Typography>
-              <Typography variant="subtitle2" noWrap>
+              <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
                 {targetClassName || 'Current class'}
               </Typography>
             </Stack>
-          </Paper>
+          </Box>
         </Grid>
       </Grid>
-    </Box>
+    </FormSectionCard>
   );
 }

@@ -1,16 +1,15 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
 import type { Standards } from 'src/types/school';
 
-import { Box, Stack, Divider } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
+import { Stack } from '@mui/material';
+import { useDispatch } from 'react-redux';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useAcademicDiscardGuard } from 'src/screens/academic/components/useAcademicDiscardGuard';
 
 import { INITIAL_COPY_VALUES } from './subject-copy-dialog/constants';
-import { SubjectCopyInfoTooltip } from './subject-copy-dialog/SubjectCopySectionHeading';
 import { useCopySubjects } from './subject-copy-dialog/useCopySubjects';
 import { SubjectCopyActions } from './subject-copy-dialog/SubjectCopyActions';
 import { SubjectCopyOptions } from './subject-copy-dialog/SubjectCopyOptions';
@@ -27,7 +26,6 @@ export type { CopySubjectPayload } from './subject-copy-dialog/types';
 export default function SubjectCopyDialog(props: SubjectCopyDialogProps) {
   const { open, isLoading, allClass, sourceClassId, sourceClassName, onClose, onConfirm } = props;
   const dispatch = useDispatch();
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const form = useSubjectCopyForm(open);
   const classes = useEligibleCopyClasses({ open, allClass, sourceClassId });
   const subjects = useCopySubjects({
@@ -35,13 +33,6 @@ export default function SubjectCopyDialog(props: SubjectCopyDialogProps) {
     copyFromClass: form.copyFromClass,
     selectionMode: form.selectionMode,
   });
-
-  const handleCancel = () => {
-    if (!isChanges || window.confirm('Are you sure you want to leave this page?')) {
-      dispatch(setIsChanges(false));
-      onClose();
-    }
-  };
 
   const handleConfirm = async () => {
     if (!form.copyFromClass) return;
@@ -66,7 +57,23 @@ export default function SubjectCopyDialog(props: SubjectCopyDialogProps) {
   const canSubmit =
     Boolean(form.copyFromClass) &&
     (form.selectionMode === 'ALL' || subjects.selectedSubjectIds.length > 0);
-  const currentValues = { ...form.currentValues, selectedSubjectIds: subjects.selectedSubjectIds };
+  const currentValues = {
+    copyFromClass: form.copyFromClass,
+    selectionMode: form.selectionMode,
+    selectedSubjectIds: subjects.selectedSubjectIds,
+    includeDocuments: form.includeDocuments,
+    includeTeachers: form.includeTeachers,
+    conflictStrategy: form.conflictStrategy,
+  };
+  const isDirty = JSON.stringify(INITIAL_COPY_VALUES) !== JSON.stringify(currentValues);
+  const discardGuard = useAcademicDiscardGuard(open && isDirty, isLoading);
+  const requestClose = () => {
+    if (isLoading) return;
+    discardGuard.requestNavigation(() => {
+      dispatch(setIsChanges(false));
+      onClose();
+    });
+  };
 
   const handleSourceChange = (value: Standards | null) => {
     form.setCopyFromClass(value);
@@ -82,22 +89,17 @@ export default function SubjectCopyDialog(props: SubjectCopyDialogProps) {
     <>
       <CustomDialog
         open={open}
-        handleClose={onClose}
+        handleClose={requestClose}
         maxWidth="md"
-        title={
-          <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
-            Copy subject allocations
-            <SubjectCopyInfoTooltip
-              label="Copy subject allocations"
-              description="Choose a source class, review what will be copied, then confirm the destination."
-            />
-          </Box>
-        }
+        title="Copy Subject Allocations"
+        titleInfo="Choose a source class, review what will be copied, then confirm the destination."
+        guardUnsavedChanges={false}
+        disableClose={isLoading}
         paperProps={{ sx: { backgroundImage: 'none' } }}
       >
         <BackPopUpChecked initialValues={INITIAL_COPY_VALUES} currentValues={currentValues}>
           <DialogScrollContent>
-            <Stack spacing={3}>
+            <Stack spacing={2}>
               <SubjectCopyClassFlow
                 sourceClass={form.copyFromClass}
                 targetClassName={sourceClassName}
@@ -107,14 +109,12 @@ export default function SubjectCopyDialog(props: SubjectCopyDialogProps) {
                 onRetry={classes.retry}
                 onChange={handleSourceChange}
               />
-              <Divider />
               <SubjectCopySubjectScope
                 selectionMode={form.selectionMode}
                 onModeChange={handleModeChange}
                 sourceClassSelected={Boolean(form.copyFromClass)}
                 subjects={subjects}
               />
-              <Divider />
               <SubjectCopyOptions form={form} />
             </Stack>
           </DialogScrollContent>
@@ -122,11 +122,13 @@ export default function SubjectCopyDialog(props: SubjectCopyDialogProps) {
           <SubjectCopyActions
             isLoading={isLoading}
             canSubmit={canSubmit}
-            onCancel={handleCancel}
+            onCancel={requestClose}
             onReview={() => form.setConfirmOpen(true)}
           />
         </BackPopUpChecked>
       </CustomDialog>
+
+      {discardGuard.confirmation}
 
       <SubjectCopyConfirmDialog
         open={form.confirmOpen}
