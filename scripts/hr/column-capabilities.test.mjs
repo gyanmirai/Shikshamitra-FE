@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import test from 'node:test';
 import { columnInventory } from './column-inventory.mjs';
 import {
@@ -60,6 +61,10 @@ test('directory, Register and I-card data columns use complete-result capabiliti
     );
     for (const column of table.columns.filter((entry) => !entry.exception))
       assert.equal(column.sort, 'global before pagination');
+    if (id === 'employee-icard-selection-table') {
+      assert.ok(table.exportPolicy.includes('generic table export is prohibited'));
+      for (const column of table.columns) assert.equal(column.export, false);
+    }
   }
   const directory = matrix.find((table) => table.table === 'employee-table');
   assert.equal(directory.columns.find((column) => column.id === 'dob').filter, 'date');
@@ -88,4 +93,28 @@ test('numeric/date ESI fields and formerly invisible salary tables remain in the
   const pending = matrix.find((table) => table.table === 'performance-report-pending-actions');
   assert.equal(pending.columns.find((column) => column.id === 'action').filter, 'string');
   assert.equal(pending.columns.find((column) => column.id === 'reviewId').export, false);
+});
+
+test('performance template and cycle UI IDs resolve to their global authorized source fields', () => {
+  const allowedFields = JSON.parse(
+    fs.readFileSync('src/screens/hr/hooks/hr-table-fields.json', 'utf8')
+  );
+  for (const [uiId, source] of [
+    ['performance-templates', 'hr-performance-templates'],
+    ['performance-cycles', 'hr-performance-cycles'],
+  ]) {
+    const table = matrix.find((entry) => entry.table === uiId);
+    assert.ok(table, uiId);
+    assert.equal(table.dataset, source);
+    const dataColumns = table.columns.filter((column) => !column.exception);
+    assert.deepEqual(
+      dataColumns.map((column) => column.id).sort(),
+      [...allowedFields[source]].sort()
+    );
+    for (const column of dataColumns) {
+      assert.equal(column.sort, 'global before pagination');
+      assert.equal(column.export, 'same global criteria, visible ordered fields');
+    }
+    assert.equal(table.columns.find((column) => column.id === 'actions').export, false);
+  }
 });

@@ -17,6 +17,8 @@ const aliases = {
   'hr-work-calendars': 'hr-policy-calendar',
   'hr-leave-policies-workspace': 'hr-policy-leave',
   'hr-{type}-policies': 'hr-policy-payroll',
+  'performance-templates': 'hr-performance-templates',
+  'performance-cycles': 'hr-performance-cycles',
 };
 const actionIds = new Set([
   'action',
@@ -156,11 +158,12 @@ const matrix = columnInventory.map((item) => {
       filter: typeFor(column),
       optionsSource: column.optionsSource,
       enumOptions: Array.isArray(column.enumOptions) ? column.enumOptions : undefined,
-      export: column.excludeFromExport
-        ? false
-        : source
-          ? 'same global criteria, visible ordered fields'
-          : 'filtered visible fields',
+      export:
+        column.excludeFromExport || source === 'employee-icard-selection-table'
+          ? false
+          : source
+            ? 'same global criteria, visible ordered fields'
+            : 'filtered visible fields',
       computedAccessors: Boolean(
         column.filterValue || column.sortValue || column.searchValue || column.exportValue
       ),
@@ -172,6 +175,10 @@ const matrix = columnInventory.map((item) => {
     file: item.file,
     owner: item.owner,
     dataset: source || 'complete local collection / configured adapter',
+    exportPolicy:
+      source === 'employee-icard-selection-table'
+        ? 'Selected-card/PDF workflow only; generic table export is prohibited.'
+        : undefined,
     schema,
     exception,
     columns: rows,
