@@ -66,6 +66,9 @@ unsaved forms; never expose record IDs, raw route segments, or duplicate destina
 
 Sidebar-only Settings and Policies & Rules groups have no landing screen, so they are omitted.
 Self-service Dashboard / My Leave breadcrumbs keep their existing non-HR behavior.
+Staff Directory uses exact active-path matching so onboarding does not select both entries.
+Staff Onboarding appears before Staff Directory; routes, grants, and shortcuts are unchanged.
+HR route-loading fallbacks show progress only; the owning screen supplies the single header.
 
 ## Partial routes
 

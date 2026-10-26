@@ -73,6 +73,8 @@ Omit sidebar-only groups that have no landing route; do not link them to a sibli
 End with the current page as a non-link item, such as `HR Dashboard`, `Employee List`, or `Employee Onboarding`.
 Keep the page action in the breadcrumb header and place dashboard freshness or operational status immediately after the header.
 Use `hrPaths` constants instead of literal HR routes.
+HR route-loading fallbacks show progress only; the owning screen renders the single page header.
+Keep that screen header mounted during data loading and refreshes.
 
 ## Strict screen ordering and table height
 
