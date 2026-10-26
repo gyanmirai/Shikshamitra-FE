@@ -43,8 +43,6 @@ export function SubjectPerformancePanel({ subjects = [] }: SubjectPerformancePan
         </Stack>
       ) : (
         <Academic360EmptyState
-          icon="mdi:chart-line"
-          color="info"
           title="No subject analytics yet"
           description="Subject-wise analytics will appear when Academic 360 receives enough marks or progress records."
           compact

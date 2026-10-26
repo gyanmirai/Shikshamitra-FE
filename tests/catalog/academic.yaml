@@ -1,6 +1,62 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-UI-20261024-SUBJECT-COPY-DIALOG
+    module: Academic
+    submodule: SubjectAllocation
+    title: Copy subject allocations shares form sections and one discard guard while retaining review choices and the copy payload
+    risk: medium
+    priority: P2
+    type: [unit, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/academic/curriculumSubjects]
+    automated: true
+    automationFile: src/screens/academic/curriculum-management/subjectAssignment/component/SubjectCopyDialog.test.tsx
+    status: automated
+    tags: ['@module-academic', '@regression']
+  - id: ACM-UI-20261024-SUBJECT-ALLOCATION-DISCARD
+    module: Academic
+    submodule: SubjectAllocation
+    title: Subject allocation Back preserves dirty values until discard and closes clean or submitted forms without a native prompt
+    risk: medium
+    priority: P2
+    type: [unit, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/academic/curriculumSubjects]
+    automated: true
+    automationFile: src/screens/academic/curriculum-management/subjectAssignment/hooks/useSubjectAssignment.test.tsx
+    status: automated
+    tags: ['@module-academic', '@regression']
+  - id: ACM-UI-20261024-SUBSTITUTION-EMPTY
+    module: Academic
+    submodule: SubstitutionManagement
+    title: Affected lecture states retain prerequisite and error guidance and use the shared student illustration for an empty published schedule
+    risk: medium
+    priority: P2
+    type: [unit, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/academic/substitutionManagement]
+    automated: true
+    automationFile: src/screens/academic/timetable-schedule-management/substitutionManagement/components/AffectedLecturePicker.test.tsx
+    status: automated
+    tags: ['@module-academic', '@regression']
+  - id: ACM-UI-20261024-ELECTIVE-DETAIL
+    module: Academic
+    submodule: ElectiveGroupCreation
+    title: Elective group details preserve saved identity, zero usage, distribution, archive eligibility and dependency navigation within shared sections
+    risk: medium
+    priority: P2
+    type: [unit, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/academic/curriculumSetting/electiveGroupCreation]
+    automated: true
+    automationFile: src/screens/academic/curriculum-management/setting/electiveSubjectSetting/components/ElectiveGroupUsageDrawer.test.tsx
+    status: automated
+    tags: ['@module-academic', '@regression']
   - id: ACM-DESKTOP-20261023-RUBRIC
     module: Academic
     submodule: RubricTemplates

@@ -40,7 +40,7 @@ export function WeeklyLectureClassPicker({
       : undefined;
 
   return (
-    <Grid size={{ xs: 12, md: 4 }}>
+    <Grid size={{ xs: 12 }}>
       <ShakingTextField error={!!(formik.touched.classId && formik.errors.classId)}>
         <CustomSelect
           options={allClass}
@@ -49,7 +49,7 @@ export function WeeklyLectureClassPicker({
           label="Class *"
           labelKey="name"
           valueKey="id"
-          formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+          formControlProps={{ fullWidth: true }}
           error={formik.touched.classId && Boolean(formik.errors.classId)}
           helperText={helperText}
           disabled={disabled || isEditLocked}

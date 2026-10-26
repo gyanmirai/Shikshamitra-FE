@@ -1,4 +1,5 @@
 import { Add, CheckCircle } from '@mui/icons-material';
+import { EmptyContent } from 'src/components/empty-content';
 import { Box, Chip, Grid, Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 import type { AffectedLectureRow } from '../substitutionData';
@@ -58,9 +59,11 @@ export function AffectedLecturePicker({
 
   if (lectures.length === 0) {
     return (
-      <Alert severity="info">
-        No published timetable lectures are affected in this time window.
-      </Alert>
+      <EmptyContent
+        title="No published timetable lectures are affected in this time window."
+        sx={{ py: 2, height: 'auto' }}
+        slotProps={{ img: { maxWidth: 120 } }}
+      />
     );
   }
 

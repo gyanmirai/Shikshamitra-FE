@@ -13,12 +13,12 @@ import { Iconify } from 'src/components/iconify';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import HelpTooltip from 'src/components/help-tooltip';
 import CustomDialog from 'src/components/customDialog';
 import { fileData } from 'src/components/file-thumbnail';
 import { shikshaMitraToast } from 'src/components/toast';
 import { SingleFilePreview } from 'src/components/upload';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -27,11 +27,9 @@ import DocumentPreviewDialog from 'src/components/preview-document/DocumentPrevi
 import {
   Box,
   Grid,
-  Paper,
   Stack,
   Button,
   Drawer,
-  Divider,
   MenuItem,
   TextField,
   IconButton,
@@ -321,17 +319,18 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 alignItems="center"
                 justifyContent="space-between"
                 sx={{
-                  px: 2.5,
+                  px: { xs: 2, sm: 3 },
                   py: 2,
                   borderBottom: '1px solid',
                   borderColor: 'divider',
                   bgcolor: 'background.paper',
+                  flexShrink: 0,
                 }}
               >
                 <Box>
-                  <Stack direction="row" alignItems="center" gap={0.5}>
-                    <Typography variant="subtitle1" fontWeight={700}>
-                      Content (Additional Fields)
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Typography component="h2" variant="h6">
+                      Additional Chapter Details
                     </Typography>
                     <CustomTooltip
                       arrow
@@ -366,76 +365,30 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         color="info"
                         sx={{ p: 0.5, ml: 0.25 }}
                       >
-                        <Iconify icon="lucide:info" width={18} />
+                        <Iconify icon={GlobalIcons.info} width={18} />
                       </IconButton>
                     </CustomTooltip>
                   </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    Syllabus planning, pedagogy, materials & assessment metadata
-                  </Typography>
                 </Box>
 
                 <IconButton
-                  aria-label="Close drawer"
+                  aria-label="Close additional chapter details"
                   onClick={additionalFieldsDrawer.onFalse}
                   size="small"
-                  sx={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: '50%',
-                    bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.12),
-                    color: 'text.secondary',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                      bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.24),
-                      color: 'text.primary',
-                      transform: 'scale(1.06)',
-                    },
-                  }}
                 >
-                  <Iconify icon="mingcute:close-line" width={20} />
+                  <Iconify icon={GlobalIcons.cancel} width={20} />
                 </IconButton>
               </Stack>
 
               {/* Drawer Body - Section-Wise Content */}
-              <Scrollbar sx={{ p: { xs: 1.5, sm: 2 }, flex: 1 }}>
+              <Scrollbar sx={{ p: { xs: 2, sm: 3 }, flex: 1, minHeight: 0 }}>
                 <Stack spacing={2}>
                   {/* Section 1: Planning & Scheduling */}
-                  <Paper
-                    variant="outlined"
-                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  <FormSectionCard
+                    title="Planning & Scheduling"
+                    icon={GlobalIcons.calendar}
+                    descriptionTooltip="Define unit, term, topic name and time allocations."
                   >
-                    <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '12px 12px 12px 3px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.1),
-                          color: 'primary.main',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Iconify icon="solar:calendar-mark-bold-duotone" width={18} />
-                      </Box>
-                      <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
-                            Planning & Scheduling
-                          </Typography>
-                          <HelpTooltip
-                            label="Planning & scheduling information"
-                            title="Define unit, term, topic name and time allocations"
-                          >
-                            <Iconify icon="lucide:info" width={16} />
-                          </HelpTooltip>
-                        </Box>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ my: 1.5 }} />
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
@@ -526,44 +479,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         />
                       </Grid>
                     </Grid>
-                  </Paper>
+                  </FormSectionCard>
 
                   {/* Section 2: Pedagogy & Learning Objectives */}
-                  <Paper
-                    variant="outlined"
-                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  <FormSectionCard
+                    title="Pedagogy & Learning Objectives"
+                    icon={GlobalIcons.notebook}
+                    descriptionTooltip="Set difficulty, taxonomy, outcomes and teaching methodology."
                   >
-                    <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '12px 12px 12px 3px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.1),
-                          color: 'primary.main',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Iconify icon="solar:target-bold-duotone" width={18} />
-                      </Box>
-                      <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
-                            Pedagogy & Learning Objectives
-                          </Typography>
-                          <HelpTooltip
-                            label="Pedagogy & learning objectives information"
-                            title="Difficulty level, taxonomy, outcomes and teaching methodology"
-                          >
-                            <Iconify icon="lucide:info" width={16} />
-                          </HelpTooltip>
-                        </Box>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ my: 1.5 }} />
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
@@ -678,44 +601,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         />
                       </Grid>
                     </Grid>
-                  </Paper>
+                  </FormSectionCard>
 
                   {/* Section 3: Chapter Overview & Detailed Description */}
-                  <Paper
-                    variant="outlined"
-                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  <FormSectionCard
+                    title="Chapter Overview & Detailed Description"
+                    icon={GlobalIcons.documentIcon}
+                    descriptionTooltip="Describe key topics and coverage with formatted text."
                   >
-                    <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '12px 12px 12px 3px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.1),
-                          color: 'primary.main',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Iconify icon="solar:document-text-bold-duotone" width={18} />
-                      </Box>
-                      <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
-                            Chapter Overview & Detailed Description
-                          </Typography>
-                          <HelpTooltip
-                            label="Chapter overview & detailed description information"
-                            title="Rich-text description of key topics and coverage"
-                          >
-                            <Iconify icon="lucide:info" width={16} />
-                          </HelpTooltip>
-                        </Box>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ my: 1.5 }} />
                     <Editor
                       editorProps={{
                         attributes: { 'aria-label': 'Chapter overview and detailed description' },
@@ -736,44 +629,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         },
                       }}
                     />
-                  </Paper>
+                  </FormSectionCard>
 
                   {/* Section 4: Summaries & Stakeholder Notes */}
-                  <Paper
-                    variant="outlined"
-                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  <FormSectionCard
+                    title="Summaries & Stakeholder Notes"
+                    icon={GlobalIcons.assigned}
+                    descriptionTooltip="Provide dedicated guidance for teachers, students, and parents."
                   >
-                    <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '12px 12px 12px 3px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.1),
-                          color: 'primary.main',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Iconify icon="solar:users-group-two-rounded-bold-duotone" width={18} />
-                      </Box>
-                      <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
-                            Summaries & Stakeholder Notes
-                          </Typography>
-                          <HelpTooltip
-                            label="Summaries & stakeholder notes information"
-                            title="Dedicated guidance for teachers, students, and parents"
-                          >
-                            <Iconify icon="lucide:info" width={16} />
-                          </HelpTooltip>
-                        </Box>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ my: 1.5 }} />
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 4 }}>
                         <TextField
@@ -815,44 +678,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         />
                       </Grid>
                     </Grid>
-                  </Paper>
+                  </FormSectionCard>
 
                   {/* Section 5: Resources & Study Materials */}
-                  <Paper
-                    variant="outlined"
-                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  <FormSectionCard
+                    title="Resources & Study Materials"
+                    icon={GlobalIcons.issueBook}
+                    descriptionTooltip="Record links, worksheets, audio/video media, and board reference documents."
                   >
-                    <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '12px 12px 12px 3px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.1),
-                          color: 'primary.main',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Iconify icon="solar:library-bold-duotone" width={18} />
-                      </Box>
-                      <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
-                            Resources & Study Materials
-                          </Typography>
-                          <HelpTooltip
-                            label="Resources & study materials information"
-                            title="Links, worksheets, audio/video media, and board reference documents"
-                          >
-                            <Iconify icon="lucide:info" width={16} />
-                          </HelpTooltip>
-                        </Box>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ my: 1.5 }} />
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
@@ -907,44 +740,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         />
                       </Grid>
                     </Grid>
-                  </Paper>
+                  </FormSectionCard>
 
                   {/* Section 6: Assessment & Metrics */}
-                  <Paper
-                    variant="outlined"
-                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  <FormSectionCard
+                    title="Assessment & Weightage Metrics"
+                    icon={GlobalIcons.usage}
+                    descriptionTooltip="Set exam weightage, question counts and Bloom coverage."
                   >
-                    <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '12px 12px 12px 3px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.1),
-                          color: 'primary.main',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Iconify icon="solar:chart-square-bold-duotone" width={18} />
-                      </Box>
-                      <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Typography component="h2" variant="subtitle1" fontWeight={600}>
-                            Assessment & Weightage Metrics
-                          </Typography>
-                          <HelpTooltip
-                            label="Assessment & weightage metrics information"
-                            title="Exam weightage, question counts and bloom coverage"
-                          >
-                            <Iconify icon="lucide:info" width={16} />
-                          </HelpTooltip>
-                        </Box>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ my: 1.5 }} />
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
@@ -1024,22 +827,21 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         />
                       </Grid>
                     </Grid>
-                  </Paper>
+                  </FormSectionCard>
                 </Stack>
               </Scrollbar>
 
               {/* Drawer Sticky Footer */}
               <Box
                 sx={{
-                  p: 2,
-                  px: 3,
+                  py: 1.75,
+                  px: { xs: 2, sm: 3 },
                   borderTop: (t) => `1px solid ${t.vars.palette.divider}`,
                   bgcolor: 'background.paper',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  boxShadow: (t) =>
-                    `-4px 0 16px ${varAlpha(t.vars.palette.grey['500Channel'], 0.06)}`,
+                  flexShrink: 0,
                 }}
               >
                 <Typography variant="caption" color="text.secondary" fontWeight={500}>
@@ -1048,7 +850,9 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     : 'No additional fields set'}
                 </Typography>
                 <LoadingButton
+                  type="button"
                   variant="contained"
+                  color="inherit"
                   size="small"
                   loading={isDoneSaving}
                   onClick={() => {
@@ -1058,9 +862,9 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       additionalFieldsDrawer.onFalse();
                     }, 700);
                   }}
-                  startIcon={<Iconify icon="mdi:check-bold" width={16} />}
+                  startIcon={<Iconify icon={GlobalIcons.submit} width={16} />}
                 >
-                  Done & Save
+                  Submit
                 </LoadingButton>
               </Box>
             </Drawer>

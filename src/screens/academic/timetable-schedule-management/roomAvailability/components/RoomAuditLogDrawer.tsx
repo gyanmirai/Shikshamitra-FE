@@ -1,13 +1,13 @@
 'use client';
 
-import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import {
   Box,
   Chip,
+  Alert,
   Stack,
   Drawer,
   Button,
@@ -48,7 +48,7 @@ export const RoomAuditLogDrawer = ({
   const [selectedRoomId, setSelectedRoomId] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  const { data, isLoading, isFetching, error } = useRoomAuditLogs(
+  const { data, isLoading, isFetching, error, refetch } = useRoomAuditLogs(
     selectedRoomId === 'all' ? null : selectedRoomId,
     { skip: !open }
   );
@@ -117,68 +117,34 @@ export const RoomAuditLogDrawer = ({
       }}
     >
       {/* Header */}
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
+      <Box
         sx={{
-          px: 3,
-          py: 2.5,
+          px: { xs: 2, sm: 3 },
+          py: 2,
+          flexShrink: 0,
           borderBottom: 1,
           borderColor: 'divider',
-          background: (theme) =>
-            `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.12)} 0%, ${alpha(theme.palette.primary.main, 0.03)} 100%)`,
+          bgcolor: 'background.paper',
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1.5}>
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: 2,
-              display: 'grid',
-              placeItems: 'center',
-              bgcolor: 'primary.main',
-              boxShadow: (theme) => `0 8px 16px 0 ${alpha(theme.palette.primary.main, 0.24)}`,
-            }}
-          >
-            <Iconify icon="mdi:history" width={24} sx={{ color: 'common.white' }} />
-          </Box>
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                Room Audit Trail
-              </Typography>
-              <CustomTooltip
-                title="Track full history of room reservations, maintenance blocks, and approval status changes."
-                arrow
-                placement="right"
-              >
-                <Iconify
-                  icon={GlobalIcons.info}
-                  color="info.main"
-                  width={18}
-                  height={18}
-                  sx={{ cursor: 'pointer', mt: 0.25 }}
-                />
-              </CustomTooltip>
-            </Stack>
-            <Typography variant="caption" color="text.secondary">
-              Every reservation, approval and maintenance action across all rooms
-            </Typography>
-          </Box>
-        </Stack>
-        <IconButton
-          aria-label="Close room audit log"
-          onClick={onClose}
-          sx={{ p: 0.5, color: 'text.secondary' }}
-        >
-          <Iconify icon="mdi:close" />
-        </IconButton>
-      </Stack>
+        <FormSectionHeader
+          title="Room Audit Trail"
+          icon={GlobalIcons.history}
+          titleTypographyProps={{ variant: 'h6' }}
+          descriptionTooltip="Review room reservation, maintenance and approval changes for the selected room scope."
+          action={
+            <IconButton aria-label="Close room audit log" onClick={onClose}>
+              <Iconify icon={GlobalIcons.cancel} />
+            </IconButton>
+          }
+        />
+      </Box>
 
       {/* Filters */}
-      <Stack spacing={2} sx={{ px: 3, py: 2.5, borderBottom: 1, borderColor: 'divider' }}>
+      <Stack
+        spacing={2}
+        sx={{ px: { xs: 2, sm: 3 }, py: 2, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
+      >
         <Autocomplete
           size="small"
           options={roomOptions}
@@ -206,6 +172,7 @@ export const RoomAuditLogDrawer = ({
         <TextField
           size="small"
           fullWidth
+          label="Search audit logs"
           placeholder="Search by action, user, or remarks…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -220,10 +187,30 @@ export const RoomAuditLogDrawer = ({
       </Stack>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflow: 'auto', px: 3, py: 2.5, bgcolor: 'background.neutral' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'auto',
+          px: { xs: 2, sm: 3 },
+          py: 2,
+          bgcolor: 'background.neutral',
+        }}
+      >
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 2, flexShrink: 0 }}
+        >
           <Typography variant="caption" color="text.secondary">
-            {isDataLoading ? 'Loading logs…' : `${filteredLogs.length} of ${data.length} entries`}
+            {isDataLoading
+              ? 'Loading logs…'
+              : error
+                ? 'Audit logs unavailable'
+                : `${filteredLogs.length} of ${data.length} entries`}
           </Typography>
           {(selectedRoomId !== 'all' || search) && (
             <Chip
@@ -250,29 +237,59 @@ export const RoomAuditLogDrawer = ({
             border: 1,
             borderColor: 'divider',
             bgcolor: 'background.paper',
+            flex: filteredLogs.length === 0 ? '1 0 auto' : '0 0 auto',
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
           {isDataLoading ? (
-            <Stack spacing={1.5}>
+            <Stack spacing={1.5} aria-busy="true" aria-label="Loading room audit logs">
               {[1, 2, 3, 4].map((i) => (
                 <Skeleton key={i} variant="rectangular" height={72} sx={{ borderRadius: 1.5 }} />
               ))}
             </Stack>
           ) : error ? (
-            <Typography variant="body2" color="error">
+            <Alert
+              severity="error"
+              action={
+                <Button
+                  type="button"
+                  size="small"
+                  color="inherit"
+                  onClick={() => refetch()}
+                  startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                >
+                  Retry
+                </Button>
+              }
+            >
               {error}
-            </Typography>
+            </Alert>
           ) : (
-            <RoomAuditLogPanel logs={filteredLogs} showRoomChip={selectedRoomId === 'all'} />
+            <RoomAuditLogPanel
+              logs={filteredLogs}
+              showRoomChip={selectedRoomId === 'all'}
+              emptyMessage={
+                search.trim()
+                  ? 'No audit entries match your search'
+                  : 'No audit trail entries found'
+              }
+            />
           )}
         </Box>
       </Box>
 
       {/* Footer */}
       <Divider />
-      <Stack direction="row" justifyContent="flex-end" sx={{ p: 2.5, bgcolor: 'background.paper' }}>
+      <Stack
+        direction="row"
+        justifyContent="flex-end"
+        sx={{ px: { xs: 2, sm: 3 }, py: 1.75, flexShrink: 0, bgcolor: 'background.paper' }}
+      >
         <Button
           variant="outlined"
+          color="inherit"
           onClick={onClose}
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}

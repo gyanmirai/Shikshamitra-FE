@@ -19,7 +19,7 @@ export function LectureStepButton({
   const label = `${isIncrease ? 'Increase' : 'Decrease'} lecture count${subjectName ? ` for ${subjectName}` : ''}`;
 
   return (
-    <Tooltip title={isIncrease ? 'Increase' : 'Decrease'} arrow>
+    <Tooltip title={label} arrow>
       <span>
         <IconButton
           size="small"

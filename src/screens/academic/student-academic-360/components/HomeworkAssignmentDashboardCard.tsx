@@ -1,8 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import type { Medium } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -10,8 +15,6 @@ import { useGetHomeworkByIdQuery } from 'src/redux/academicAPI/HomeworkAssignmen
 import { useGetAssignmentByIdQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 import ViewHomeworkDetails from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 import ViewAssignmentDetails from 'src/screens/academic/homework-assignment-management/assignmentCreation/assignmentDetail/assignmentDetail';
-import type { RootState } from 'src/redux/store';
-import type { Medium } from 'src/types/school';
 import {
   Box,
   Card,
@@ -26,8 +29,9 @@ import {
   LinearProgress,
 } from '@mui/material';
 
-import { Scrollbar } from 'src/components/scrollbar';
 import { Academic360EmptyState } from './Academic360EmptyState';
+import { Academic360SectionHeader } from './Academic360SectionHeader';
+
 import type { Academic360LearningTask, Academic360LearningTasks } from '../types';
 
 type HomeworkAssignmentDashboardCardProps = {
@@ -136,7 +140,7 @@ function formatDueInfo(dueDateStr?: string): { text: string; isOverdue: boolean 
   if (!dueDateStr) return { text: 'No due date', isOverdue: false };
 
   const parsed = new Date(dueDateStr);
-  if (isNaN(parsed.getTime())) {
+  if (Number.isNaN(parsed.getTime())) {
     return { text: dueDateStr, isOverdue: false };
   }
 
@@ -281,32 +285,26 @@ export function HomeworkAssignmentDashboardCard({
     };
   }, [learningTasks, tasks]);
 
-  const needsAttentionTasks = useMemo(() => {
-    return tasks
+  const needsAttentionTasks = useMemo(() => tasks
       .filter((t) => {
         const st = normalizeStatus(t).key;
         return st === 'RESUBMISSION_REQUIRED' || st === 'LATE' || st === 'PENDING' || st === 'EVALUATION_PENDING';
       })
       .sort((a, b) => normalizeStatus(a).priority - normalizeStatus(b).priority)
-      .slice(0, 3);
-  }, [tasks]);
+      .slice(0, 3), [tasks]);
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((t) => {
+  const filteredTasks = useMemo(() => tasks.filter((t) => {
       const st = normalizeStatus(t).key;
       const matchFilter = selectedFilter === 'ALL' || st === selectedFilter;
       const matchSubject = selectedSubject === 'ALL' || t.subjectName === selectedSubject;
       return matchFilter && matchSubject;
-    });
-  }, [tasks, selectedFilter, selectedSubject]);
+    }), [tasks, selectedFilter, selectedSubject]);
 
-  const upcomingTasks = useMemo(() => {
-    return tasks.filter((t) => {
+  const upcomingTasks = useMemo(() => tasks.filter((t) => {
       const st = normalizeStatus(t).key;
       const dueInfo = formatDueInfo(t.dueDate);
       return st === 'PENDING' && !dueInfo.isOverdue;
-    }).slice(0, 3);
-  }, [tasks]);
+    }).slice(0, 3), [tasks]);
 
   const handleNavigateAll = () => {
     if (onViewAll) {
@@ -342,48 +340,29 @@ export function HomeworkAssignmentDashboardCard({
     <Card
       variant="outlined"
       sx={{
-        p: 2,
+        p: { xs: 1.5, sm: 2 },
         borderRadius: 2,
         borderColor: 'divider',
         bgcolor: 'background.paper',
-        boxShadow: (theme) => theme.customShadows?.z1 || '0 1px 3px 0 rgba(0,0,0,0.05)',
       }}
     >
       <Stack spacing={2}>
         {/* CARD HEADER */}
         <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <Box
-              sx={{
-                width: 38,
-                height: 38,
-                borderRadius: 1.5,
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: (theme) => `${theme.palette.primary.main}14`,
-                color: 'primary.main',
-              }}
-            >
-              <Iconify icon="mdi:clipboard-text-outline" width={22} />
-            </Box>
-            <Box>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Typography variant="subtitle1" fontWeight={700}>
-                  Homework & Assignment
-                </Typography>
-                <Chip
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Academic360SectionHeader
+              icon={GlobalIcons.notebook}
+              title="Homework & Assignment"
+              description="Assignment performance, submissions and pending tasks."
+              action={<Chip
                   size="small"
                   variant="soft"
                   color="default"
                   label={`${metrics.total} Assigned`}
                   sx={{ fontWeight: 600, height: 24 }}
-                />
-              </Stack>
-              <Typography variant="caption" color="text.secondary">
-                Academic assignment performance, submissions & pending tasks
-              </Typography>
-            </Box>
-          </Stack>
+                />}
+            />
+          </Box>
 
           <Button
             size="small"
@@ -393,7 +372,7 @@ export function HomeworkAssignmentDashboardCard({
             onClick={handleNavigateAll}
             sx={{ fontWeight: 600, textTransform: 'none' }}
           >
-            View All
+            View all
           </Button>
         </Stack>
 
@@ -816,7 +795,6 @@ export function HomeworkAssignmentDashboardCard({
             </Scrollbar>
           ) : (
             <Academic360EmptyState
-              icon="mdi:clipboard-check-outline"
               title="No assignments match filter"
               description="Try selecting a different status filter or viewing all assignments."
               compact

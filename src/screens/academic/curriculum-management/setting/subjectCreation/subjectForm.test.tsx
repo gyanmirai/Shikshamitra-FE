@@ -30,11 +30,11 @@ it('identifies missing color, focuses its group, clears feedback after selection
   );
   const user = userEvent.setup();
   const { onClose } = renderSubjectForm();
-  await user.type(screen.getByRole('textbox', { name: 'Subject Name' }), 'School Choir');
+  await user.type(screen.getByRole('textbox', { name: 'Subject name' }), 'School Choir');
   await user.click(screen.getByRole('button', { name: 'Submit' }));
   const error = await screen.findByRole('alert');
   expect(error).toHaveTextContent('Subject color is required');
-  const group = screen.getByRole('group', { name: 'Subject Color (required)' });
+  const group = screen.getByRole('group', { name: 'Subject color (required)' });
   expect(group).toHaveAttribute('aria-describedby', error.id);
   await waitFor(() => expect(group).toHaveFocus());
   expect(saved).toHaveLength(0);
@@ -58,11 +58,11 @@ it.each(['Cancel', 'close', 'Escape'])(
       action === 'Escape'
         ? user.keyboard('{Escape}')
         : user.click(screen.getByRole('button', { name: action }));
-    await user.type(screen.getByRole('textbox', { name: 'Subject Name' }), 'School Choir');
+    await user.type(screen.getByRole('textbox', { name: 'Subject name' }), 'School Choir');
     await leave();
     const decision = await screen.findByRole('dialog', { name: 'Discard Unsaved Changes?' });
     await user.click(within(decision).getByRole('button', { name: 'Keep Editing' }));
-    expect(screen.getByRole('textbox', { name: 'Subject Name' })).toHaveValue('School Choir');
+    expect(screen.getByRole('textbox', { name: 'Subject name' })).toHaveValue('School Choir');
     expect(onClose).not.toHaveBeenCalled();
     await leave();
     await user.click(screen.getByRole('button', { name: 'Discard Changes' }));
@@ -97,20 +97,18 @@ it('locks conflicting controls during save and preserves values after failure fo
   );
   const user = userEvent.setup();
   const { onClose } = renderSubjectForm();
-  await user.type(screen.getByRole('textbox', { name: 'Subject Name' }), 'School Choir');
+  await user.type(screen.getByRole('textbox', { name: 'Subject name' }), 'School Choir');
   await user.click(screen.getByRole('button', { name: 'Dark blue (#0D47A1)' }));
   await user.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(attempts).toBe(1));
   expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-  expect(screen.getByRole('textbox', { name: 'Subject Name' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Subject name' })).toBeDisabled();
   fireEvent.keyDown(screen.getByRole('dialog', { name: 'Add Subject' }), { key: 'Escape' });
   expect(onClose).not.toHaveBeenCalled();
   release();
-  await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled()
-  );
-  expect(screen.getByRole('textbox', { name: 'Subject Name' })).toHaveValue('School Choir');
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+  expect(screen.getByRole('textbox', { name: 'Subject name' })).toHaveValue('School Choir');
   await user.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledWith(null, true));
   expect(attempts).toBe(2);

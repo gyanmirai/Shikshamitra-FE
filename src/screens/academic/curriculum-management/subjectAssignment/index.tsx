@@ -46,6 +46,7 @@ const Subject = () => {
     restoreConfirmDialog,
     showSubjectDialog,
     copySubjectsDialog,
+    discardConfirmation,
     handleClose,
     handleViewSubject,
     handleEditSubject,
@@ -208,6 +209,7 @@ const Subject = () => {
           <ViewSubject subject={selectedSubject} classId={classId} classes={classes} />
         </Box>
       )}
+      {discardConfirmation}
     </Box>
   );
 };

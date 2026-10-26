@@ -1,9 +1,11 @@
 'use client';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import { Box, Paper, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
 
 import { AcademicInsightChart } from './AcademicInsightChart';
@@ -101,13 +103,13 @@ export function AcademicInsights({
 
             {(metrics.length > 0 || isLoading) && (
               <Box>
-                <Typography
-                  variant="overline"
-                  color="text.secondary"
-                  sx={{ display: 'block', mb: 1 }}
-                >
-                  Key metrics
-                </Typography>
+                <Box sx={{ mb: 2 }}>
+                  <FormSectionHeader
+                    icon={GlobalIcons.usage}
+                    title="Key Metrics"
+                    descriptionTooltip="Current values for this view. Available metric actions open or narrow the related workspace."
+                  />
+                </Box>
                 <AcademicInsightMetricGrid
                   metrics={metrics}
                   isLoading={isLoading}

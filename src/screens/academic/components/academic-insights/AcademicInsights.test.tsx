@@ -27,7 +27,7 @@ describe('AcademicInsights', () => {
     );
 
     expect(screen.getByText('Readiness checks')).toBeInTheDocument();
-    expect(screen.queryByText('Key metrics')).not.toBeInTheDocument();
+    expect(screen.queryByText('Key Metrics')).not.toBeInTheDocument();
   });
 
   it('opens the full insights drawer and explains its purpose in the header tooltip', async () => {

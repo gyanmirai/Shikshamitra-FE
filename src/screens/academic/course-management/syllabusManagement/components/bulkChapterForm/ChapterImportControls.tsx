@@ -2,9 +2,12 @@
 
 import type { ChangeEvent } from 'react';
 
+import { useId } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Stack, Button, Typography } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Stack, Button, FormLabel, Typography } from '@mui/material';
 
 import { CHAPTER_IMPORT_ACCEPT, MAX_CHAPTER_IMPORT_ROWS } from './chapterImport';
 
@@ -25,69 +28,62 @@ export default function ChapterImportControls({
   onDownload,
   onFileChange,
 }: Props) {
+  const fileLabelId = useId();
+  const fileHelpId = useId();
+  const fileErrorId = useId();
   return (
     <>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        justifyContent="space-between"
-        gap={1.5}
-      >
-        <Stack direction="row" alignItems="flex-start" gap={1.25}>
-          <Box
-            sx={{
-              width: 36,
-              height: 36,
-              borderRadius: 1,
-              display: 'grid',
-              placeItems: 'center',
-              bgcolor: 'action.hover',
-              color: 'text.secondary',
-              flexShrink: 0,
-            }}
-          >
-            <Iconify icon="mdi:file-table-outline" width={20} />
-          </Box>
-          <Box>
-            <Typography variant="subtitle2">Import chapters</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Upload an Excel or CSV file to add multiple chapters at once.
-            </Typography>
-          </Box>
+      <ShakingTextField error={showErrors}>
+        <Stack spacing={1}>
+          <FormLabel id={fileLabelId} component="span" required error={showErrors}>
+            Chapter file
+          </FormLabel>
+          <Stack direction="row" gap={1} flexWrap="wrap">
+            <LoadingButton
+              type="button"
+              size="small"
+              color="inherit"
+              variant="outlined"
+              loading={isDownloading}
+              onClick={onDownload}
+              startIcon={<Iconify icon={GlobalIcons.download} width={18} />}
+            >
+              Download template
+            </LoadingButton>
+            <Button
+              component="label"
+              size="small"
+              variant="contained"
+              disabled={isImporting}
+              aria-label="Upload chapter file (required)"
+              aria-describedby={fileHelpId}
+              startIcon={isImporting ? undefined : <Iconify icon={GlobalIcons.upload} width={18} />}
+            >
+              {isImporting ? 'Reading file…' : 'Upload file'}
+              <input
+                hidden
+                type="file"
+                accept={CHAPTER_IMPORT_ACCEPT}
+                onChange={onFileChange}
+                aria-labelledby={fileLabelId}
+                aria-required="true"
+                aria-invalid={showErrors}
+                aria-describedby={`${fileHelpId}${showErrors ? ` ${fileErrorId}` : ''}`}
+              />
+            </Button>
+          </Stack>
         </Stack>
+      </ShakingTextField>
 
-        <Stack direction="row" gap={1} flexWrap="wrap">
-          <LoadingButton
-            size="small"
-            color="inherit"
-            variant="outlined"
-            loading={isDownloading}
-            onClick={onDownload}
-            startIcon={<Iconify icon="mdi:download-outline" width={18} />}
-          >
-            Download template
-          </LoadingButton>
-          <Button
-            component="label"
-            size="small"
-            variant="contained"
-            disabled={isImporting}
-            startIcon={isImporting ? undefined : <Iconify icon="mdi:tray-arrow-up" width={18} />}
-          >
-            {isImporting ? 'Reading file…' : 'Upload file'}
-            <input hidden type="file" accept={CHAPTER_IMPORT_ACCEPT} onChange={onFileChange} />
-          </Button>
-        </Stack>
-      </Stack>
-
-      <Box sx={{ mt: 1.5, pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
-        <Typography variant="caption" color="text.secondary">
+      <Box>
+        <Typography id={fileHelpId} variant="caption" color="text.secondary">
           Required columns: Chapter Number, Chapter Name, Start Date and End Date. Use YYYY-MM-DD
           for dates. Maximum {MAX_CHAPTER_IMPORT_ROWS} rows and 5 MB.
         </Typography>
 
         {showErrors && (
           <Box
+            id={fileErrorId}
             role="alert"
             sx={{ mt: 1.25, p: 1.25, border: 1, borderColor: 'error.main', borderRadius: 1 }}
           >

@@ -26,7 +26,7 @@ export const GlobalIcons = {
   alertIcon: 'fluent:alert-on-24-regular',
   resetIcon: 'ix:reset',
   publish: 'mdi:publish',
-  documentIcon: 'material-symbols-light:document-outline',
+  documentIcon: 'material-symbols-light:description-outline',
   draftIcon: 'ri:draft-line',
   resignIcon: 'material-symbols-light:edit-document-outline-sharp',
   eye: 'carbon:view-filled',

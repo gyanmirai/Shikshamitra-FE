@@ -7,11 +7,13 @@ import { alpha } from '@mui/material/styles';
 import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import HelpTooltip from 'src/components/help-tooltip';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { EmptyContent } from 'src/components/empty-content';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { useAcademicDiscardGuard } from 'src/screens/academic/components/useAcademicDiscardGuard';
 import {
@@ -55,26 +57,6 @@ import {
 
 import type { RoomSuggestionFilters } from '../services/roomSuggestionFilters';
 import type { SuggestedRoom, RoomReservation, ReservationRequirements } from '../types';
-
-const StepBadge = ({ number }: { number: number }) => (
-  <Box
-    sx={{
-      width: 26,
-      height: 26,
-      borderRadius: '50%',
-      bgcolor: 'primary.main',
-      color: 'common.white',
-      fontSize: 13,
-      fontWeight: 700,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    }}
-  >
-    {number}
-  </Box>
-);
 
 const MatchScoreBadge = ({ score }: { score: number }) => {
   const isHigh = score >= 80;
@@ -355,6 +337,7 @@ export const SmartRoomReservationDrawer = ({
         'aria-label': 'Reserve a Room',
         sx: {
           width: { xs: '100%', md: 1080, xl: 1320 },
+          maxWidth: '100%',
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
@@ -364,150 +347,105 @@ export const SmartRoomReservationDrawer = ({
       }}
     >
       {/* Header */}
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
+      <Box
         sx={{
-          px: 3,
-          py: 2.5,
+          px: { xs: 2, sm: 3 },
+          py: 2,
+          flexShrink: 0,
           borderBottom: 1,
           borderColor: 'divider',
-          background: (theme) =>
-            `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+          bgcolor: 'background.paper',
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1.5}>
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: 2,
-              bgcolor: 'primary.main',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: (theme) => `0 8px 16px 0 ${alpha(theme.palette.primary.main, 0.24)}`,
-            }}
-          >
-            <Iconify icon="mdi:calendar-plus" width={24} sx={{ color: 'common.white' }} />
-          </Box>
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="h6" fontWeight={700} lineHeight={1.3}>
-                Reserve a Room
-              </Typography>
-              <HelpTooltip
-                title="Select date, timeslot, and room requirements to view instant AI recommendations with match scoring and conflict checks."
-                arrow
-                placement="right"
-              >
-                <Iconify
-                  icon={GlobalIcons.info}
-                  color="info.main"
-                  width={18}
-                  height={18}
-                  sx={{ cursor: 'pointer', mt: 0.25 }}
-                />
-              </HelpTooltip>
-            </Stack>
-            <Typography variant="body2" color="text.secondary">
-              Find and book the perfect space in seconds
-            </Typography>
-          </Box>
-        </Stack>
-        <IconButton
-          aria-label="Close room reservation"
-          onClick={handleClose}
-          sx={{
-            bgcolor: 'background.paper',
-            border: 1,
-            borderColor: 'divider',
-            '&:hover': { bgcolor: 'action.hover' },
-          }}
-        >
-          <Iconify icon="mdi:close" width={20} />
-        </IconButton>
-      </Stack>
+        <FormSectionHeader
+          title="Reserve a Room"
+          icon={GlobalIcons.reservation}
+          titleTypographyProps={{ variant: 'h6' }}
+          descriptionTooltip="Choose the date, time and reservation details, find matching rooms, then reserve an available room or request approval."
+          action={
+            <IconButton aria-label="Close room reservation" onClick={handleClose}>
+              <Iconify icon={GlobalIcons.cancel} width={20} />
+            </IconButton>
+          }
+        />
+      </Box>
 
       {/* Main Content Area */}
-      <Box sx={{ flex: 1, overflow: 'hidden', p: 2.5, bgcolor: 'background.neutral' }}>
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: { xs: 'auto', md: 'hidden' },
+          p: { xs: 2, sm: 3 },
+          bgcolor: 'background.neutral',
+        }}
+      >
         <Stack
           direction={{ xs: 'column', md: 'row' }}
-          spacing={3}
-          sx={{ height: '100%', alignItems: 'stretch', overflow: 'hidden' }}
+          spacing={2}
+          sx={{ height: { xs: 'auto', md: '100%' }, minHeight: 0, alignItems: 'stretch' }}
         >
           {/* Left Column: Form Fields (No scrolling on column container) */}
           <Box
             sx={{
-              flex: 1,
-              minWidth: { md: 450 },
+              flex: { xs: '0 0 auto', md: 1 },
+              minWidth: 0,
+              minHeight: 0,
               display: 'flex',
               flexDirection: 'column',
-              height: '100%',
+              height: { xs: 'auto', md: '100%' },
             }}
           >
             {/* Scrollable Fields */}
-            <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: { xs: 'visible', md: 'auto' },
+                pr: { md: 1 },
+              }}
+            >
               <Stack spacing={2}>
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  spacing={1}
-                >
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <StepBadge number={1} />
-                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                      Booking Requirements
-                    </Typography>
-                  </Stack>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="medium"
-                    onClick={handleSearch}
-                    disabled={suggestions.isLoading}
-                    startIcon={
-                      suggestions.isLoading ? (
-                        <CircularProgress size={16} color="inherit" />
-                      ) : (
-                        <Iconify icon="mdi:magnify" />
-                      )
-                    }
-                    sx={{
-                      borderRadius: 1.5,
-                      fontWeight: 700,
-                      boxShadow: (theme) =>
-                        `0 4px 12px 0 ${alpha(theme.palette.primary.main, 0.16)}`,
-                    }}
-                  >
-                    Find Rooms
-                  </Button>
-                </Stack>
-
-                <Stack
-                  spacing={2}
-                  sx={{
-                    p: 2.5,
-                    borderRadius: 2,
-                    border: 1,
-                    borderColor: 'divider',
-                    bgcolor: 'background.paper',
-                  }}
+                <FormSectionCard
+                  title="Booking Requirements"
+                  icon={GlobalIcons.calendar}
+                  descriptionTooltip="Set the reservation purpose, date, time and optional recurrence before finding a room."
+                  action={
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      color="inherit"
+                      size="small"
+                      onClick={handleSearch}
+                      disabled={suggestions.isLoading}
+                      startIcon={
+                        suggestions.isLoading ? (
+                          <CircularProgress size={16} color="inherit" />
+                        ) : (
+                          <Iconify icon={GlobalIcons.search} />
+                        )
+                      }
+                    >
+                      Find rooms
+                    </Button>
+                  }
                 >
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    <CustomSelect
-                      label="Reservation Type *"
-                      options={RESERVATION_TYPE_OPTIONS.map((o) => ({
-                        value: o.value,
-                        label: o.label,
-                      }))}
-                      value={requirements.reservationType}
-                      onChange={(v) => patchRequirements({ reservationType: v as any })}
-                      error={!!fieldErrors.reservationType}
-                      helperText={fieldErrors.reservationType}
-                    />
+                    <ShakingTextField error={!!fieldErrors.reservationType}>
+                      <CustomSelect
+                        name="reservationType"
+                        label="Reservation type"
+                        required
+                        options={RESERVATION_TYPE_OPTIONS.map((o) => ({
+                          value: o.value,
+                          label: o.label,
+                        }))}
+                        value={requirements.reservationType}
+                        onChange={(v) => patchRequirements({ reservationType: v as any })}
+                        error={!!fieldErrors.reservationType}
+                        helperText={fieldErrors.reservationType}
+                      />
+                    </ShakingTextField>
                     <CustomSelect
                       label="Priority"
                       options={PRIORITY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
@@ -516,85 +454,98 @@ export const SmartRoomReservationDrawer = ({
                     />
                   </Stack>
 
-                  <TextField
-                    size="small"
-                    label="Purpose *"
-                    value={requirements.purpose}
-                    onChange={(e) => patchRequirements({ purpose: e.target.value })}
-                    fullWidth
-                    placeholder="e.g. Grade 9 Physics Practical"
-                    error={!!fieldErrors.purpose}
-                    helperText={fieldErrors.purpose}
-                  />
+                  <ShakingTextField error={!!fieldErrors.purpose}>
+                    <TextField
+                      size="small"
+                      name="purpose"
+                      label="Purpose"
+                      required
+                      value={requirements.purpose}
+                      onChange={(e) => patchRequirements({ purpose: e.target.value })}
+                      fullWidth
+                      placeholder="e.g. Grade 9 Physics Practical"
+                      error={!!fieldErrors.purpose}
+                      helperText={fieldErrors.purpose}
+                    />
+                  </ShakingTextField>
 
-                  <DatePicker
-                    label="Date *"
-                    format="DD/MM/YYYY"
-                    value={dayjs(requirements.date)}
-                    onChange={(v: Dayjs | null) => {
-                      if (v) patchRequirements({ date: v.format('YYYY-MM-DD') });
-                    }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: !!fieldErrors.date,
-                        helperText: fieldErrors.date,
-                      },
-                    }}
-                  />
-
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    <TimePicker
-                      label="Start Time *"
-                      format="hh:mm A"
-                      value={
-                        requirements.startTime
-                          ? dayjs(`2000-01-01T${requirements.startTime}`)
-                          : null
-                      }
+                  <ShakingTextField error={!!fieldErrors.date}>
+                    <DatePicker
+                      label="Date"
+                      format="DD/MM/YYYY"
+                      value={dayjs(requirements.date)}
                       onChange={(v: Dayjs | null) => {
-                        patchRequirements({
-                          startTime: v && v.isValid() ? v.format('HH:mm') : '',
-                        });
-                      }}
-                      viewRenderers={{
-                        hours: renderTimeViewClock,
-                        minutes: renderTimeViewClock,
+                        if (v) patchRequirements({ date: v.format('YYYY-MM-DD') });
                       }}
                       slotProps={{
                         textField: {
                           size: 'small',
                           fullWidth: true,
-                          error: !!fieldErrors.startTime,
-                          helperText: fieldErrors.startTime,
+                          required: true,
+                          error: !!fieldErrors.date,
+                          helperText: fieldErrors.date,
                         },
                       }}
                     />
-                    <TimePicker
-                      label="End Time *"
-                      format="hh:mm A"
-                      value={
-                        requirements.endTime ? dayjs(`2000-01-01T${requirements.endTime}`) : null
-                      }
-                      onChange={(v: Dayjs | null) => {
-                        patchRequirements({
-                          endTime: v && v.isValid() ? v.format('HH:mm') : '',
-                        });
-                      }}
-                      viewRenderers={{
-                        hours: renderTimeViewClock,
-                        minutes: renderTimeViewClock,
-                      }}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          fullWidth: true,
-                          error: !!fieldErrors.endTime,
-                          helperText: fieldErrors.endTime,
-                        },
-                      }}
-                    />
+                  </ShakingTextField>
+
+                  <Stack spacing={2}>
+                    <ShakingTextField error={!!fieldErrors.startTime}>
+                      <TimePicker
+                        label="Start time"
+                        format="hh:mm A"
+                        value={
+                          requirements.startTime
+                            ? dayjs(`2000-01-01T${requirements.startTime}`)
+                            : null
+                        }
+                        onChange={(v: Dayjs | null) => {
+                          patchRequirements({
+                            startTime: v && v.isValid() ? v.format('HH:mm') : '',
+                          });
+                        }}
+                        viewRenderers={{
+                          hours: renderTimeViewClock,
+                          minutes: renderTimeViewClock,
+                        }}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            required: true,
+                            error: !!fieldErrors.startTime,
+                            helperText: fieldErrors.startTime,
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                    <ShakingTextField error={!!fieldErrors.endTime}>
+                      <TimePicker
+                        label="End time"
+                        format="hh:mm A"
+                        value={
+                          requirements.endTime ? dayjs(`2000-01-01T${requirements.endTime}`) : null
+                        }
+                        onChange={(v: Dayjs | null) => {
+                          patchRequirements({
+                            endTime: v && v.isValid() ? v.format('HH:mm') : '',
+                          });
+                        }}
+                        viewRenderers={{
+                          hours: renderTimeViewClock,
+                          minutes: renderTimeViewClock,
+                        }}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            required: true,
+                            error: !!fieldErrors.endTime,
+                            helperText: fieldErrors.endTime,
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
                   </Stack>
 
                   <Stack
@@ -605,18 +556,13 @@ export const SmartRoomReservationDrawer = ({
                       p: 1.5,
                       borderRadius: 1.5,
                       border: 1,
-                      borderColor: requirements.isRecurring ? 'primary.main' : 'divider',
-                      bgcolor: (theme) =>
-                        requirements.isRecurring
-                          ? alpha(theme.palette.primary.main, 0.06)
-                          : 'transparent',
-                      transition: 'all 0.2s',
+                      borderColor: 'divider',
                     }}
                   >
                     <Stack direction="row" alignItems="center" spacing={1}>
-                      <Iconify icon="mdi:calendar-sync" width={20} color="primary.main" />
+                      <Iconify icon={GlobalIcons.refresh} width={20} color="text.secondary" />
                       <Typography variant="body2" fontWeight={600}>
-                        Recurring Reservation
+                        Recurring reservation
                       </Typography>
                     </Stack>
                     <Switch
@@ -627,23 +573,16 @@ export const SmartRoomReservationDrawer = ({
                   </Stack>
 
                   {requirements.isRecurring && (
-                    <Stack
-                      spacing={2}
-                      sx={{
-                        p: 2,
-                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                        borderRadius: 1.5,
-                        border: 1,
-                        borderColor: (theme) => alpha(theme.palette.primary.main, 0.16),
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }} color="primary.main">
-                        Recurring Configuration
-                      </Typography>
+                    <Stack spacing={2}>
+                      <FormSectionHeader
+                        title="Recurring Configuration"
+                        icon={GlobalIcons.refresh}
+                        descriptionTooltip="Choose when to repeat this reservation, its end date and which dates to exclude."
+                      />
 
                       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                         <CustomSelect
-                          label="Repeat Pattern"
+                          label="Repeat pattern"
                           options={[
                             { value: 'daily', label: 'Daily' },
                             { value: 'weekly', label: 'Weekly' },
@@ -663,40 +602,43 @@ export const SmartRoomReservationDrawer = ({
                           }}
                         />
 
-                        <DatePicker
-                          label="Repeat Until *"
-                          format="DD/MM/YYYY"
-                          value={dayjs(requirements.recurringConfig?.untilDate)}
-                          onChange={(v: Dayjs | null) => {
-                            if (v) {
-                              patchRequirements({
-                                recurringConfig: {
-                                  ...(requirements.recurringConfig || {
-                                    repeatType: 'daily',
-                                    excludeHolidays: true,
-                                    excludeExamDays: false,
-                                    skipConflictDates: false,
-                                  }),
-                                  untilDate: v.format('YYYY-MM-DD'),
-                                },
-                              });
-                            }
-                          }}
-                          slotProps={{
-                            textField: {
-                              size: 'small',
-                              fullWidth: true,
-                              error: !!fieldErrors.untilDate,
-                              helperText: fieldErrors.untilDate,
-                            },
-                          }}
-                        />
+                        <ShakingTextField error={!!fieldErrors.untilDate}>
+                          <DatePicker
+                            label="Repeat until"
+                            format="DD/MM/YYYY"
+                            value={dayjs(requirements.recurringConfig?.untilDate)}
+                            onChange={(v: Dayjs | null) => {
+                              if (v) {
+                                patchRequirements({
+                                  recurringConfig: {
+                                    ...(requirements.recurringConfig || {
+                                      repeatType: 'daily',
+                                      excludeHolidays: true,
+                                      excludeExamDays: false,
+                                      skipConflictDates: false,
+                                    }),
+                                    untilDate: v.format('YYYY-MM-DD'),
+                                  },
+                                });
+                              }
+                            }}
+                            slotProps={{
+                              textField: {
+                                size: 'small',
+                                fullWidth: true,
+                                required: true,
+                                error: !!fieldErrors.untilDate,
+                                helperText: fieldErrors.untilDate,
+                              },
+                            }}
+                          />
+                        </ShakingTextField>
                       </Stack>
 
                       {requirements.recurringConfig?.repeatType === 'weekly' && (
                         <Stack spacing={1}>
                           <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                            Repeat On Days
+                            Repeat on days
                           </Typography>
                           <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
                             {[
@@ -759,7 +701,7 @@ export const SmartRoomReservationDrawer = ({
                               }}
                             />
                           }
-                          label="Exclude Holidays"
+                          label="Exclude holidays"
                         />
 
                         <FormControlLabel
@@ -780,7 +722,7 @@ export const SmartRoomReservationDrawer = ({
                               }}
                             />
                           }
-                          label="Exclude Exam Days"
+                          label="Exclude exam days"
                         />
 
                         <FormControlLabel
@@ -801,7 +743,7 @@ export const SmartRoomReservationDrawer = ({
                               }}
                             />
                           }
-                          label="Skip Conflicts"
+                          label="Skip conflicts"
                         />
                       </Stack>
                     </Stack>
@@ -816,7 +758,7 @@ export const SmartRoomReservationDrawer = ({
                     multiline
                     rows={2}
                   />
-                </Stack>
+                </FormSectionCard>
               </Stack>
             </Box>
           </Box>
@@ -827,35 +769,37 @@ export const SmartRoomReservationDrawer = ({
           {/* Right Column: Search Results (Independently Scrollable) */}
           <Box
             sx={{
-              flex: 1.6,
-              minWidth: { md: 450 },
+              flex: { xs: '0 0 auto', md: 1.6 },
+              minWidth: 0,
+              minHeight: 0,
               display: 'flex',
               flexDirection: 'column',
-              height: '100%',
+              height: { xs: 'auto', md: '100%' },
             }}
           >
-            <Stack spacing={1} sx={{ height: '100%' }}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <StepBadge number={2} />
-                  <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                    Available Rooms
-                  </Typography>
-                </Stack>
-                {searched && !suggestions.isLoading && suggestions.data.length > 0 && (
-                  <Chip
-                    size="small"
-                    label={
-                      hasResultFilters
-                        ? `${filteredSuggestions.length} of ${suggestions.data.length}`
-                        : `${suggestions.data.length} found`
-                    }
-                    color="primary"
-                    variant="outlined"
-                    sx={{ fontWeight: 600 }}
-                  />
-                )}
-              </Stack>
+            <Stack spacing={2} sx={{ height: { xs: 'auto', md: '100%' }, minHeight: 0 }}>
+              <FormSectionHeader
+                title="Available Rooms"
+                icon={GlobalIcons.reservation}
+                descriptionTooltip="Rooms matching the selected booking date and time, including availability, capacity and approval requirements."
+                action={
+                  searched &&
+                  !suggestions.isLoading &&
+                  suggestions.data.length > 0 && (
+                    <Chip
+                      size="small"
+                      label={
+                        hasResultFilters
+                          ? `${filteredSuggestions.length} of ${suggestions.data.length}`
+                          : `${suggestions.data.length} found`
+                      }
+                      color="primary"
+                      variant="outlined"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  )
+                }
+              />
 
               {searched && !suggestions.isLoading && suggestions.data.length > 0 && (
                 <Box
@@ -965,46 +909,31 @@ export const SmartRoomReservationDrawer = ({
               {!searched && (
                 <Box
                   sx={{
-                    py: 8,
-                    textAlign: 'center',
-                    border: '1px dashed',
-                    borderColor: 'divider',
                     borderRadius: 2,
                     bgcolor: 'background.paper',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    px: 3,
                     flex: 1,
+                    minHeight: 0,
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: '50%',
-                      bgcolor: 'background.neutral',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mb: 2,
-                    }}
-                  >
-                    <Iconify icon="mdi:door-closed" width={36} sx={{ color: 'text.disabled' }} />
-                  </Box>
-                  <Typography variant="subtitle2" color="text.primary" sx={{ mb: 1 }}>
-                    No Search Conducted Yet
-                  </Typography>
-                  <Typography variant="caption" color="text.disabled" sx={{ maxWidth: 320 }}>
-                    Select your booking requirements on the left, then click &ldquo;Find
-                    Rooms&rdquo; to view matching rooms here.
-                  </Typography>
+                  <EmptyContent
+                    title="Find available rooms"
+                    description="Choose the booking requirements, then select Find rooms to view matching rooms."
+                    sx={{ py: 3, height: { xs: 'auto', md: 1 } }}
+                  />
                 </Box>
               )}
 
               {searched && (
-                <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
+                <Box
+                  sx={{
+                    flex: 1,
+                    minHeight: 0,
+                    overflowY: { xs: 'visible', md: 'auto' },
+                    pr: { md: 1 },
+                  }}
+                >
                   {suggestions.isLoading && (
                     <Box
                       sx={{
@@ -1070,42 +999,34 @@ export const SmartRoomReservationDrawer = ({
                   {!suggestions.isLoading &&
                     !suggestions.error &&
                     suggestions.data.length === 0 && (
-                      <Alert severity="warning" sx={{ borderRadius: 1.5 }}>
-                        No matching rooms found. Try modifying your search criteria.
-                      </Alert>
+                      <EmptyContent
+                        title="No matching rooms found"
+                        description="Try changing the booking date, time or requirements."
+                        sx={{ py: 3, height: { xs: 'auto', md: 1 } }}
+                      />
                     )}
 
                   {!suggestions.isLoading &&
                     suggestions.data.length > 0 &&
                     filteredSuggestions.length === 0 && (
-                      <Box
-                        sx={{
-                          py: 6,
-                          px: 3,
-                          border: '1px dashed',
-                          borderColor: 'divider',
-                          borderRadius: 2,
-                          textAlign: 'center',
-                          bgcolor: 'background.paper',
-                        }}
-                      >
-                        <Iconify
-                          icon="mdi:filter-off-outline"
-                          width={34}
-                          sx={{ color: 'text.disabled', mb: 1 }}
-                        />
-                        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                          No rooms match these filters
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Clear or adjust the result filters to view more available rooms.
-                        </Typography>
-                        <Box sx={{ mt: 1.5 }}>
-                          <Button size="small" variant="outlined" onClick={clearResultFilters}>
+                      <EmptyContent
+                        title="No rooms match these filters"
+                        description="Clear or adjust the result filters to view more available rooms."
+                        sx={{ py: 3, height: { xs: 'auto', md: 1 } }}
+                        action={
+                          <Button
+                            type="button"
+                            size="small"
+                            color="inherit"
+                            variant="outlined"
+                            onClick={clearResultFilters}
+                            startIcon={<Iconify icon={GlobalIcons.resetFilter} />}
+                            sx={{ mt: 2 }}
+                          >
                             Clear filters
                           </Button>
-                        </Box>
-                      </Box>
+                        }
+                      />
                     )}
 
                   {!suggestions.isLoading && filteredSuggestions.length > 0 && (
@@ -1285,10 +1206,11 @@ export const SmartRoomReservationDrawer = ({
         direction="row"
         justifyContent="flex-end"
         alignItems="center"
-        sx={{ px: 2.5, py: 2, bgcolor: 'background.paper' }}
+        sx={{ px: { xs: 2, sm: 3 }, py: 1.75, flexShrink: 0, bgcolor: 'background.paper' }}
       >
         <Button
           variant="outlined"
+          color="inherit"
           onClick={handleClose}
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"

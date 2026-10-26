@@ -88,7 +88,7 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
     <Box
       display="flex"
       flexDirection="column"
-      gap={1}
+      gap={2}
       sx={{ maxHeight: 'calc(100vh - 380px)', overflow: 'hidden' }}
     >
       {/* ── Toolbar: subject count + apply-to-all ── */}

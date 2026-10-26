@@ -1,8 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Grid } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { Grid, Alert, Stack, Button, Skeleton } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { CapacityBanner } from './components/CapacityBanner';
@@ -26,6 +29,12 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     formik,
     allClass,
     isSubjectsLoading,
+    isDetailsLoading,
+    isCapacityLoading,
+    detailsError,
+    capacityError,
+    refetchDetails,
+    refetchCapacity,
     isSubmitting,
     availableCapacity,
     hasSlots,
@@ -40,42 +49,84 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   const handleCancel = () => onClose?.(null, false);
   const handleSubmit = () => formik.handleSubmit();
 
-  const { classId, subjects } = formik.values;
+  const { classId } = formik.values;
   const hasClass = !!classId;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={1}>
-          <WeeklyLectureClassPicker
-            formik={formik}
-            allClass={allClass}
-            disabled={disabled}
-            isEditLocked={isEdit && !!editData}
-          />
+        <Stack spacing={2}>
+          <FormSectionCard
+            title="Class Scope"
+            icon={GlobalIcons.assigned}
+            descriptionTooltip="Choose the class whose weekly subject lecture targets are being configured."
+          >
+            <Grid container spacing={2}>
+              <WeeklyLectureClassPicker
+                formik={formik}
+                allClass={allClass}
+                disabled={disabled}
+                isEditLocked={isEdit && !!editData}
+              />
+            </Grid>
+          </FormSectionCard>
 
-          {hasClass && (
-            <Grid size={{ xs: 12 }}>
+          {hasClass &&
+            (isDetailsLoading || isCapacityLoading ? (
+              <Skeleton
+                variant="rounded"
+                height={48}
+                role="status"
+                aria-label="Loading weekly lecture capacity"
+              />
+            ) : detailsError || capacityError ? (
+              <Alert
+                severity="error"
+                action={
+                  <Button
+                    type="button"
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                    onClick={() => {
+                      if (detailsError) refetchDetails();
+                      if (capacityError) refetchCapacity();
+                    }}
+                  >
+                    Retry
+                  </Button>
+                }
+              >
+                Unable to load weekly lecture configuration. Try again.
+              </Alert>
+            ) : (
               <CapacityBanner
                 status={status}
                 availableCapacity={availableCapacity}
                 requiredLectures={requiredLectures}
                 hasSlots={hasSlots}
               />
-            </Grid>
-          )}
-
-          {hasClass &&
-            (isSubjectsLoading ? (
-              <Grid size={{ xs: 12 }}>
-                <SubjectListSkeleton />
-              </Grid>
-            ) : (
-              <Grid size={{ xs: 12 }}>
-                <SubjectsLectureTable formik={formik} disabled={disabled} isEdit={isEdit} />
-              </Grid>
             ))}
-        </Grid>
+
+          {hasClass && (
+            <FormSectionCard
+              title="Subject Lecture Targets"
+              icon={GlobalIcons.notebook}
+              descriptionTooltip="Set each subject's weekly lecture target within the available teaching capacity."
+            >
+              {isSubjectsLoading || isDetailsLoading ? (
+                <Stack role="status" aria-label="Loading subject lecture targets" aria-busy>
+                  <SubjectListSkeleton />
+                </Stack>
+              ) : detailsError ? (
+                <Alert severity="error">Subject lecture targets could not be loaded.</Alert>
+              ) : (
+                <SubjectsLectureTable formik={formik} disabled={disabled} isEdit={isEdit} />
+              )}
+            </FormSectionCard>
+          )}
+        </Stack>
       </DialogScrollContent>
 
       {!disabled && (

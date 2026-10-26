@@ -176,8 +176,8 @@ const HomeworkReportsList = () => {
       {!addReportDialog.value && (
         <CustomBreadcrumbs
           sx={{ mb: 1 }}
-          heading="Homework Reports"
-          description="View and manage generated homework reports"
+          heading="Reports"
+          description="Review generated homework, assignment, and analytics reports."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Homework & Assignment' },
@@ -206,7 +206,8 @@ const HomeworkReportsList = () => {
         <HomeworkAssignmentReports addReportDialog={addReportDialog} />
       ) : (
         <CustomizableTable
-          tableTitle="Homework Reports"
+          tableTitle="Learning Task Reports"
+          noDataText="No generated reports yet."
           tableId="homeworkReportsList"
           isLoading={isExportsLoading}
           data={rows}

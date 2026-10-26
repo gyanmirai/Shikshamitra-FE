@@ -1,8 +1,11 @@
 'use client';
 
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
 import React, { useMemo } from 'react';
-import { Iconify } from 'src/components/iconify';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
@@ -13,8 +16,8 @@ import {
 } from '@mui/material';
 
 import { Academic360EmptyState } from './Academic360EmptyState';
+import { Academic360SectionHeader } from './Academic360SectionHeader';
 
-import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { Academic360SubjectPerformance } from '../types';
 
 type SubjectPerformanceCardProps = {
@@ -141,46 +144,25 @@ export function SubjectPerformanceCard({ subjectPerformance = [] }: SubjectPerfo
     <Card
       variant="outlined"
       sx={{
-        p: 1.5,
-        borderRadius: 1.5,
+        p: { xs: 1.5, sm: 2 },
+        borderRadius: 2,
         height: '100%',
         minHeight: 220,
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      <Stack spacing={1.25} sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Stack direction="row" spacing={1.25} alignItems="center">
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1.25,
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: (theme) => `${theme.palette.primary.main}14`,
-                color: 'primary.main',
-              }}
-            >
-              <Iconify icon="mdi:chart-box-outline" width={18} />
-            </Box>
-            <Box>
-              <Typography variant="subtitle2" fontWeight={700}>
-                Subject Performance
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
-                Cumulative averages and assessment counts across subjects
-              </Typography>
-            </Box>
-          </Stack>
-
-          {subjectPerformance.length > 0 && (
+      <Stack spacing={2} sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Academic360SectionHeader
+          icon={GlobalIcons.notebook}
+          title="Subject Performance"
+          description="Cumulative averages and assessment counts across subjects."
+          action={subjectPerformance.length > 0 && (
             <Label color="default" variant="soft" sx={{ fontWeight: 600, fontSize: 11, height: 22 }}>
               {subjectPerformance.length} {subjectPerformance.length === 1 ? 'Subject' : 'Subjects'}
             </Label>
           )}
-        </Stack>
+        />
 
         {subjectPerformance.length > 0 ? (
           <Box
@@ -208,22 +190,12 @@ export function SubjectPerformanceCard({ subjectPerformance = [] }: SubjectPerfo
               isSearch={false}
               isShowedDense={false}
               tableContainerProps={{ sx: { flex: 1, minHeight: 120 } }}
-              noDataText={
-                <Academic360EmptyState
-                  icon="mdi:chart-box-outline"
-                  color="info"
-                  title="No subject assessment data yet"
-                  description="Subject-wise performance averages and grade distributions will appear here after marks are evaluated."
-                  compact
-                />
-              }
+              noDataText="No subject assessment data yet"
             />
           </Box>
         ) : (
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Academic360EmptyState
-              icon="mdi:chart-box-outline"
-              color="info"
               title="No subject assessment data yet"
               description="Subject-wise performance averages and grade distributions will appear here after marks are evaluated."
               compact

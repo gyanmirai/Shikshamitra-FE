@@ -6,16 +6,15 @@ import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { alpha, useTheme } from '@mui/material/styles';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { FormSectionHeader } from 'src/components/form-section-card';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Stack, TextField, Autocomplete, DialogActions } from '@mui/material';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
@@ -55,7 +54,6 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
   isEdit = false,
   existingNames,
 }) => {
-  const theme = useTheme();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
   const { data: gradeScalings } = useQueryAndMutation({
@@ -129,39 +127,25 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
     },
   });
 
-  const fieldSx = {
-    '& .MuiOutlinedInput-root': { borderRadius: 1.5 },
-  };
-
-  const sectionCardSx = {
-    p: 2,
-    borderRadius: 2,
-    border: `1px solid ${theme.palette.divider}`,
-    bgcolor: alpha(theme.palette.grey[500], 0.04),
-  };
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box display="flex" flexDirection="column" gap={1}>
-        <Scrollbar sx={{ height: '480px' }}>
-          <Stack spacing={1} sx={{ p: 2 }}>
-            {/* Section 1: Basic Information */}
-            <Box sx={sectionCardSx}>
-              <FormSectionHeader
-                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-                icon="solar:notes-bold-duotone"
-                title="Basic Information"
-                descriptionTooltip="Name, category and current status"
-              />
+      <Box display="flex" flexDirection="column" sx={{ flex: '1 1 auto', minHeight: 0 }}>
+        <DialogScrollContent>
+          <Stack spacing={2}>
+            <FormSectionCard
+              icon={GlobalIcons.notebook}
+              title="Basic Information"
+              descriptionTooltip="Name, category and current status"
+            >
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={12}>
                   <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType)}>
                     <TextField
                       fullWidth
-                      label="Exam Type *"
+                      required
+                      label="Exam type"
                       name="examType"
                       size="small"
-                      sx={fieldSx}
                       value={formik.values.examType}
                       onChange={(e) => {
                         const value = e.target.value
@@ -186,7 +170,6 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                     options={CATEGORY_OPTIONS}
                     name="category"
                     size="small"
-                    sx={fieldSx}
                     value={formik.values.category}
                     onChange={(val) => formik.setFieldValue('category', val)}
                     error={formik.touched.category && Boolean(formik.errors.category)}
@@ -195,18 +178,20 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomSelect
-                    fullWidth
-                    label="Status *"
-                    options={STATUS_OPTIONS}
-                    name="status"
-                    size="small"
-                    sx={fieldSx}
-                    value={formik.values.status}
-                    onChange={(val) => formik.setFieldValue('status', val)}
-                    error={formik.touched.status && Boolean(formik.errors.status)}
-                    helperText={formik.touched.status ? (formik.errors.status as string) : ''}
-                  />
+                  <ShakingTextField error={!!(formik.touched.status && formik.errors.status)}>
+                    <CustomSelect
+                      fullWidth
+                      required
+                      label="Status"
+                      options={STATUS_OPTIONS}
+                      name="status"
+                      size="small"
+                      value={formik.values.status}
+                      onChange={(val) => formik.setFieldValue('status', val)}
+                      error={formik.touched.status && Boolean(formik.errors.status)}
+                      helperText={formik.touched.status ? (formik.errors.status as string) : ''}
+                    />
+                  </ShakingTextField>
                 </Grid>
 
                 <Grid size={12}>
@@ -220,7 +205,6 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                       size="small"
                       rows={2}
                       multiline
-                      sx={fieldSx}
                       value={formik.values.description}
                       onChange={formik.handleChange}
                       error={formik.touched.description && Boolean(formik.errors.description)}
@@ -229,28 +213,24 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                   </ShakingTextField>
                 </Grid>
               </Grid>
-            </Box>
+            </FormSectionCard>
 
-            {/* Section 2: Default Rules & Parameters */}
-            <Box sx={sectionCardSx}>
-              <FormSectionHeader
-                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-                icon="solar:ruler-cross-pen-bold-duotone"
-                title="Default Rules & Parameters"
-                descriptionTooltip="Defaults applied when this exam type is used"
-              />
+            <FormSectionCard
+              icon={GlobalIcons.stationaryIcon}
+              title="Default Rules & Parameters"
+              descriptionTooltip="Defaults applied when this exam type is used"
+            >
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={!!(formik.touched.defaultTotalMarks && formik.errors.defaultTotalMarks)}
                   >
                     <TextField
                       fullWidth
-                      label="Default Total Marks"
+                      label="Default total marks"
                       name="defaultTotalMarks"
                       type="number"
                       size="small"
-                      sx={fieldSx}
                       value={formik.values.defaultTotalMarks}
                       onChange={formik.handleChange}
                       error={
@@ -263,17 +243,16 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                   </ShakingTextField>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={!!(formik.touched.defaultWeightage && formik.errors.defaultWeightage)}
                   >
                     <TextField
                       fullWidth
-                      label="Default Weightage (%)"
+                      label="Default weightage (%)"
                       name="defaultWeightage"
                       type="number"
                       size="small"
-                      sx={fieldSx}
                       value={formik.values.defaultWeightage}
                       onChange={formik.handleChange}
                       error={
@@ -284,7 +263,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                   </ShakingTextField>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={12}>
                   <CustomTooltip
                     title={
                       gradeScaleOptions.find(
@@ -309,7 +288,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Default Grade Scale"
+                          label="Default grade scale"
                           error={
                             formik.touched.defaultGradeScaleId &&
                             Boolean(formik.errors.defaultGradeScaleId)
@@ -325,9 +304,9 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                   </CustomTooltip>
                 </Grid>
               </Grid>
-            </Box>
+            </FormSectionCard>
           </Stack>
-        </Scrollbar>
+        </DialogScrollContent>
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <CancelButton onClick={() => onClose(undefined, false)} />
           <SubmitButton
