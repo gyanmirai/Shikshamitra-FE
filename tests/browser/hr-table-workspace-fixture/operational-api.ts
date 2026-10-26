@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function useSyntheticRead(path: string, body: unknown, skip = false) {
   const key = JSON.stringify(body);
@@ -16,7 +16,11 @@ export function useSyntheticRead(path: string, body: unknown, skip = false) {
     })
       .then(async (response) => {
         const data = await response.json();
-        if (!response.ok) throw { status: response.status, data };
+        if (!response.ok)
+          throw Object.assign(new Error(data.detail || 'Synthetic table query failed.'), {
+            status: response.status,
+            data,
+          });
         if (!controller.signal.aborted) setState({ key, data });
       })
       .catch((error) => {
