@@ -363,6 +363,8 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [activeStep, setActiveStep] = useState(editData && initialStep === 5 ? 5 : 0);
+  const [createdEmployeeId, setCreatedEmployeeId] = useState('');
+  const savedEmployeeId = editData?.id || createdEmployeeId;
   const payrollEditRef = React.useRef<PayrollEditHandle>(null);
   const statutoryEditRef = React.useRef<StatutoryProfileEditHandle>(null);
   const [statutoryState, setStatutoryState] = useState({ dirty: false, busy: false });
@@ -372,7 +374,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
     busy: false,
     ready: false,
   });
-  const inlinePayroll = Boolean(editData?.id && activeStep === 5);
+  const inlinePayroll = Boolean(savedEmployeeId && activeStep === 5);
   const payrollDirty = payrollState.dirty || statutoryState.dirty;
   const payrollBusy = payrollState.busy || statutoryState.busy;
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -527,6 +529,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
 
         const resp = await addEmployee({ body: formData }).unwrap();
         const nextValues = applyEmployeeCreateResponseToFormValues(formik.values, resp);
+        setCreatedEmployeeId(nextValues.employeeId);
         formik.setFieldValue('employeeId', nextValues.employeeId);
         formik.setFieldValue('userId', nextValues.userId);
         return getResolvedEmployeeIdentity(nextValues, editData);
@@ -714,7 +717,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
       setIsLoading: (val: boolean) => void,
       isSaveButton: boolean = false
     ) => {
-      if (editData?.id && activeStep === 5) {
+      if (inlinePayroll) {
         setPayrollSubmitting(true);
         setIsLoading(true);
         onBusyChange?.(true);
@@ -724,6 +727,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
             (await payrollEditRef.current?.save())
           ) {
             dispatch(setIsChanges(false));
+            if (!editData) setCompletedSteps((prev) => [...new Set([...prev, 5])]);
             if (!isSaveButton) setActiveStep(6);
           }
         } finally {
@@ -847,6 +851,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
     },
     [
       activeStep,
+      inlinePayroll,
       editData,
       handleBasicInformation,
       onBusyChange,
@@ -947,8 +952,11 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
               {inlinePayroll ? (
                 <Box sx={{ p: { xs: 1, sm: 2 }, minWidth: 0 }}>
                   <PayrollProfileWorkspace
-                    employeeId={editData.id}
-                    employeeName={editData.fullName}
+                    employeeId={savedEmployeeId}
+                    employeeName={
+                      editData?.fullName ||
+                      [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ')
+                    }
                     origin="staff-edit"
                     actionsDisabled={payrollState.busy}
                     statutoryEditorRef={statutoryEditRef}
@@ -956,8 +964,8 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
                     detailsContent={(values, canEdit) => (
                       <PayrollEditDetails
                         ref={payrollEditRef}
-                        key={editData.id}
-                        employeeId={editData.id}
+                        key={savedEmployeeId}
+                        employeeId={savedEmployeeId}
                         initialValues={values}
                         canEdit={canEdit}
                         onStateChange={setPayrollState}

@@ -4,41 +4,17 @@ import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React from 'react';
-import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
-import {
-  Box,
-  Card,
-  Chip,
-  Badge,
-  Alert,
-  Stack,
-  Button,
-  Select,
-  Divider,
-  Popover,
-  MenuItem,
-  MenuList,
-  IconButton,
-  InputLabel,
-  Typography,
-  FormControl,
-} from '@mui/material';
+import { Card, Chip, Alert, Stack, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
-import { formatDate, getErrorMessage } from '../hr-policy-workspace-utils';
-import { defaultAssignmentFilters } from '../hr-policy-workspace.constants';
+import { getErrorMessage } from '../hr-policy-workspace-utils';
 
+import type { AssignmentTableRow } from '../types/hr-policy-workspace.types';
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
-import type { AssignmentFilters, AssignmentTableRow } from '../types/hr-policy-workspace.types';
-
-function getLeavePolicyName(item: any): string {
-  return item?.policyTitle || item?.name || item?.title || item?.id || '-';
-}
 
 // --- AssignmentsTab ------------------------------------------------------------
 
@@ -50,21 +26,14 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     assignmentPage,
     setAssignmentPage,
     assignmentTotal,
-    assignmentFilters,
-    setAssignmentFilters,
-    assignmentFilterAnchorEl,
-    setAssignmentFilterAnchorEl,
-    draftAssignmentFilters,
-    setDraftAssignmentFilters,
+    assignmentSearch,
+    setAssignmentSearch,
     assignmentsLoading,
     assignmentsError,
     refetchAssignments,
     activePayroll = [],
     activeAttendance = [],
     activeLeavePolicies = [],
-    payroll = [],
-    attendance = [],
-    leavePolicies = [],
     canAssignPolicy,
     canViewAudit,
     openAssignmentDrawer,
@@ -72,85 +41,6 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     deleteAssignment,
   } = ctx;
   const exportAssignments = useHrTableExport('hr-policy-assignments', assignmentListArgs);
-
-  const activeFilterCount = [
-    assignmentFilters.targetType !== 'all',
-    assignmentFilters.status !== 'all',
-    Boolean(assignmentFilters.payrollPolicyId),
-    Boolean(assignmentFilters.attendancePolicyId),
-    Boolean(assignmentFilters.leavePolicyId),
-    Boolean(assignmentFilters.activeOnDate),
-    Boolean(assignmentFilters.effectiveFrom),
-    Boolean(assignmentFilters.effectiveTo),
-  ].filter(Boolean).length;
-
-  const activeFilterChips: Array<{
-    label: string;
-    key: keyof AssignmentFilters;
-    reset: Partial<AssignmentFilters>;
-  }> = [];
-
-  if (assignmentFilters.targetType !== 'all')
-    activeFilterChips.push({
-      label: `Source -> ${assignmentFilters.targetType === 'employee' ? 'Staff' : 'Group'}`,
-      key: 'targetType',
-      reset: { targetType: 'all' },
-    });
-  if (assignmentFilters.status !== 'all')
-    activeFilterChips.push({
-      label: `Status -> ${assignmentFilters.status === 'active' ? 'Active' : 'Inactive'}`,
-      key: 'status',
-      reset: { status: 'all' },
-    });
-  if (assignmentFilters.payrollPolicyId) {
-    const name =
-      payroll.find((p) => p.id === assignmentFilters.payrollPolicyId)?.name ||
-      assignmentFilters.payrollPolicyId;
-    activeFilterChips.push({
-      label: `Payroll -> ${name}`,
-      key: 'payrollPolicyId',
-      reset: { payrollPolicyId: '' },
-    });
-  }
-  if (assignmentFilters.attendancePolicyId) {
-    const name =
-      attendance.find((a) => a.id === assignmentFilters.attendancePolicyId)?.name ||
-      assignmentFilters.attendancePolicyId;
-    activeFilterChips.push({
-      label: `Attendance -> ${name}`,
-      key: 'attendancePolicyId',
-      reset: { attendancePolicyId: '' },
-    });
-  }
-  if (assignmentFilters.leavePolicyId) {
-    const name =
-      getLeavePolicyName(
-        leavePolicies.find((item: any) => item.id === assignmentFilters.leavePolicyId)
-      ) || assignmentFilters.leavePolicyId;
-    activeFilterChips.push({
-      label: `Leave -> ${name}`,
-      key: 'leavePolicyId',
-      reset: { leavePolicyId: '' },
-    });
-  }
-  if (assignmentFilters.activeOnDate)
-    activeFilterChips.push({
-      label: `Active on -> ${formatDate(assignmentFilters.activeOnDate)}`,
-      key: 'activeOnDate',
-      reset: { activeOnDate: '' },
-    });
-  if (assignmentFilters.effectiveFrom)
-    activeFilterChips.push({
-      label: `Effective from -> ${formatDate(assignmentFilters.effectiveFrom)}`,
-      key: 'effectiveFrom',
-      reset: { effectiveFrom: '' },
-    });
-  if (assignmentFilters.effectiveTo)
-    activeFilterChips.push({
-      label: `Effective to -> ${formatDate(assignmentFilters.effectiveTo)}`,
-      key: 'effectiveTo',
-      reset: { effectiveTo: '' },
-    });
 
   const assignmentColumns: IColumn[] = [
     {
@@ -285,28 +175,6 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           flexWrap="wrap"
           useFlexGap
         >
-          <Badge
-            badgeContent={activeFilterCount || undefined}
-            color="primary"
-            overlap="circular"
-            sx={{ '& .MuiBadge-badge': { fontSize: 10, height: 16, minWidth: 16 } }}
-          >
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Iconify icon="mdi:filter-outline" />}
-              onClick={(e) => {
-                setDraftAssignmentFilters({ ...assignmentFilters });
-                setAssignmentFilterAnchorEl(e.currentTarget);
-              }}
-              sx={{
-                borderColor: activeFilterCount ? 'primary.main' : undefined,
-                color: activeFilterCount ? 'primary.main' : undefined,
-              }}
-            >
-              Advanced Filters
-            </Button>
-          </Badge>
           <Button
             variant="contained"
             startIcon={<Iconify icon="mdi:plus" />}
@@ -323,38 +191,6 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             New Assignment
           </Button>
         </Stack>
-        {activeFilterChips.length > 0 ? (
-          <Stack
-            direction="row"
-            flexWrap="wrap"
-            gap={1}
-            alignItems="center"
-            sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}
-          >
-            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ mr: 0.5 }}>
-              Active Filters:
-            </Typography>
-            {activeFilterChips.map((chip) => (
-              <Chip
-                key={chip.key}
-                label={chip.label}
-                size="small"
-                onDelete={() => setAssignmentFilters((cur) => ({ ...cur, ...chip.reset }))}
-                sx={{ fontWeight: 500, fontSize: 12 }}
-              />
-            ))}
-            <Button
-              size="small"
-              color="error"
-              variant="text"
-              startIcon={<Iconify icon="mdi:delete-outline" />}
-              onClick={() => setAssignmentFilters(defaultAssignmentFilters())}
-              sx={{ ml: 0.5, px: 1 }}
-            >
-              Clear ({activeFilterChips.length})
-            </Button>
-          </Stack>
-        ) : null}
       </Card>
 
       {activePayroll.length === 0 ||
@@ -370,215 +206,6 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         </Alert>
       ) : null}
 
-      <Popover
-        open={Boolean(assignmentFilterAnchorEl)}
-        anchorEl={assignmentFilterAnchorEl}
-        onClose={() => setAssignmentFilterAnchorEl(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{ sx: { width: 520, p: 2.5, borderRadius: 2 } }}
-      >
-        <Stack spacing={2}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Iconify icon="mdi:filter-outline" width={18} sx={{ color: 'text.secondary' }} />
-              <Typography variant="subtitle2" fontWeight={700}>
-                Advanced Filters
-              </Typography>
-            </Stack>
-            <IconButton size="small" onClick={() => setAssignmentFilterAnchorEl(null)}>
-              <Iconify icon="mdi:close" width={16} />
-            </IconButton>
-          </Stack>
-          <Divider />
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Source</InputLabel>
-              <Select
-                label="Source"
-                value={draftAssignmentFilters.targetType}
-                onChange={(e) =>
-                  setDraftAssignmentFilters((cur) => ({
-                    ...cur,
-                    targetType: e.target.value as AssignmentFilters['targetType'],
-                  }))
-                }
-              >
-                <MenuItem value="all">All</MenuItem>
-                <MenuItem value="employee">Staff</MenuItem>
-                <MenuItem value="group">Group</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Status</InputLabel>
-              <Select
-                label="Status"
-                value={draftAssignmentFilters.status}
-                onChange={(e) =>
-                  setDraftAssignmentFilters((cur) => ({
-                    ...cur,
-                    status: e.target.value as AssignmentFilters['status'],
-                  }))
-                }
-              >
-                <MenuItem value="all">All</MenuItem>
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="inactive">Inactive</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl size="small" fullWidth>
-              <InputLabel shrink>Payroll Policy</InputLabel>
-              <Select
-                label="Payroll Policy"
-                displayEmpty
-                value={draftAssignmentFilters.payrollPolicyId}
-                renderValue={(selected) => {
-                  const value = selected as string;
-                  if (!value) return 'All';
-                  return payroll.find((item) => item.id === value)?.name || value;
-                }}
-                onChange={(e) =>
-                  setDraftAssignmentFilters((cur) => ({ ...cur, payrollPolicyId: e.target.value }))
-                }
-              >
-                <MenuItem value="">All</MenuItem>
-                {payroll.map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl size="small" fullWidth>
-              <InputLabel shrink>Attendance Policy</InputLabel>
-              <Select
-                label="Attendance Policy"
-                displayEmpty
-                value={draftAssignmentFilters.attendancePolicyId}
-                renderValue={(selected) => {
-                  const value = selected as string;
-                  if (!value) return 'All';
-                  return attendance.find((item) => item.id === value)?.name || value;
-                }}
-                onChange={(e) =>
-                  setDraftAssignmentFilters((cur) => ({
-                    ...cur,
-                    attendancePolicyId: e.target.value,
-                  }))
-                }
-              >
-                <MenuItem value="">All</MenuItem>
-                {attendance.map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl size="small" fullWidth>
-              <InputLabel shrink>Leave Policy</InputLabel>
-              <Select
-                label="Leave Policy"
-                displayEmpty
-                value={draftAssignmentFilters.leavePolicyId}
-                renderValue={(selected) => {
-                  const value = selected as string;
-                  if (!value) return 'All';
-                  return getLeavePolicyName(leavePolicies.find((item: any) => item.id === value));
-                }}
-                onChange={(e) =>
-                  setDraftAssignmentFilters((cur) => ({
-                    ...cur,
-                    leavePolicyId: e.target.value,
-                  }))
-                }
-              >
-                <MenuItem value="">All</MenuItem>
-                {leavePolicies.map((item: any) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {getLeavePolicyName(item)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <DatePicker
-              label="Active on"
-              value={
-                draftAssignmentFilters.activeOnDate
-                  ? dayjs(draftAssignmentFilters.activeOnDate)
-                  : null
-              }
-              onChange={(val) =>
-                setDraftAssignmentFilters((cur) => ({
-                  ...cur,
-                  activeOnDate: val?.format('YYYY-MM-DD') || '',
-                }))
-              }
-              format="DD/MM/YYYY"
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            />
-            <Box />
-            <DatePicker
-              label="Effective from"
-              value={
-                draftAssignmentFilters.effectiveFrom
-                  ? dayjs(draftAssignmentFilters.effectiveFrom)
-                  : null
-              }
-              onChange={(val) =>
-                setDraftAssignmentFilters((cur) => ({
-                  ...cur,
-                  effectiveFrom: val?.format('YYYY-MM-DD') || '',
-                }))
-              }
-              format="DD/MM/YYYY"
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            />
-            <DatePicker
-              label="Effective to"
-              value={
-                draftAssignmentFilters.effectiveTo
-                  ? dayjs(draftAssignmentFilters.effectiveTo)
-                  : null
-              }
-              onChange={(val) =>
-                setDraftAssignmentFilters((cur) => ({
-                  ...cur,
-                  effectiveTo: val?.format('YYYY-MM-DD') || '',
-                }))
-              }
-              format="DD/MM/YYYY"
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            />
-          </Box>
-          <Divider />
-          <Stack direction="row" spacing={1.5} justifyContent="flex-end">
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => {
-                const reset = defaultAssignmentFilters();
-                setDraftAssignmentFilters(reset);
-                setAssignmentFilters(reset);
-                setAssignmentFilterAnchorEl(null);
-              }}
-            >
-              Reset
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => {
-                setAssignmentFilters({ ...draftAssignmentFilters });
-                setAssignmentFilterAnchorEl(null);
-              }}
-            >
-              Apply
-            </Button>
-          </Stack>
-        </Stack>
-      </Popover>
-
       <CustomizableTable
         showColumns
         showExport
@@ -592,8 +219,8 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         rowsPerPage={assignmentPage.size}
         totalCount={assignmentTotal}
         onServerPagination={(number, size) => setAssignmentPage({ number, size })}
-        searchTerm={assignmentFilters.search}
-        onServerSearch={(search) => setAssignmentFilters((current) => ({ ...current, search }))}
+        searchTerm={assignmentSearch}
+        onServerSearch={setAssignmentSearch}
         searchFieldProps={{ placeholder: 'Search targets and reasons' }}
         columns={assignmentColumns}
         data={assignmentRows}

@@ -57,6 +57,12 @@ export function useLoginForm() {
     },
   });
 
+  const { setFieldValue } = formik;
+  useEffect(() => {
+    const organization = new URLSearchParams(window.location.search).get('organization')?.trim();
+    if (organization) setFieldValue('organization', organization, false);
+  }, [setFieldValue]);
+
   const toggleHostLogin = () => {
     if (formik.isSubmitting) return;
     setHostLogin((value) => !value);

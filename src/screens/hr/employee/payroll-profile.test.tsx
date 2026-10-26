@@ -140,6 +140,8 @@ describe('staff payroll overview', () => {
   it('preloads salary on pointer and keyboard intent, but not while actions are disabled', () => {
     const { rerender } = render(<PayrollProfileWorkspace employeeId="staff-1" />);
     const link = screen.getByRole('link', { name: 'Set up salary' });
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     fireEvent.mouseEnter(link);
     fireEvent.focus(link);
     expect(mocks.prefetch).toHaveBeenCalledTimes(2);

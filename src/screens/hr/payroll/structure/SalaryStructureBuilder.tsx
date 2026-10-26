@@ -29,6 +29,7 @@ import { useId, useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
+import { type HrFailure, normalizeHrFailure } from 'src/screens/hr/recovery/hr-failure';
 import { HrSetupLink, HrSetupRefresh } from 'src/screens/hr/recovery/hr-setup-controls';
 import {
   effectiveEsiPolicyVersion,
@@ -213,6 +214,8 @@ export function SalaryStructureBuilder({
   const [esiEditorState, setEsiEditorState] = useState({ dirty: false, busy: false });
   const [savedSignature, setSavedSignature] = useState('');
   const [operationError, setOperationError] = useState('');
+  const [operationFailure, setOperationFailure] = useState<HrFailure | null>(null);
+  const [operationSection, setOperationSection] = useState<'salary' | 'statutory'>('salary');
   const [hasConflict, setHasConflict] = useState(false);
   const [localBusy, setLocalBusy] = useState(false);
   const [setupRefreshing, setSetupRefreshing] = useState(false);
@@ -220,6 +223,10 @@ export function SalaryStructureBuilder({
   const [amountTouched, setAmountTouched] = useState(false);
   const [reasonTouched, setReasonTouched] = useState(false);
   const reasonInput = useRef<HTMLInputElement>(null);
+  const salaryFields = useRef<HTMLDivElement>(null);
+  const statutoryFields = useRef<HTMLDivElement>(null);
+  const previewButton = useRef<HTMLButtonElement>(null);
+  const footerStatusId = useId();
   const operationPending = useRef(false);
   const initializedRef = useRef('');
   const suggestedMonthRef = useRef('');
@@ -471,6 +478,7 @@ export function SalaryStructureBuilder({
     setOperation('calculate');
     setLocalBusy(true);
     setOperationError('');
+    setOperationFailure(null);
     try {
       if (esiMode === 'IN_PLATFORM') await refetchEsiPolicies();
       const result = await calculate({
@@ -495,7 +503,14 @@ export function SalaryStructureBuilder({
       setCalculation(result);
       setCalculatedSignature(signature);
     } catch (error: any) {
-      setOperationError(parseApiProblemDetail(error).detail);
+      const failure = normalizeHrFailure(error);
+      setOperationError(failure.message);
+      setOperationFailure(failure);
+      setOperationSection(
+        /Pf|Statutory|Esi/i.test(parseApiProblemDetail(error).errorCode ?? '')
+          ? 'statutory'
+          : 'salary'
+      );
       setCalculation(null);
     } finally {
       operationPending.current = false;
@@ -516,6 +531,7 @@ export function SalaryStructureBuilder({
       !calculation ||
       savedSignature === signature ||
       hasConflict ||
+      targetBlocked ||
       statutoryBlocked
     )
       return;
@@ -528,6 +544,7 @@ export function SalaryStructureBuilder({
     setOperation('save');
     setLocalBusy(true);
     setOperationError('');
+    setOperationFailure(null);
     operationKeyRef.current ||= newKey();
     operationSignatureRef.current = signature;
     try {
@@ -578,6 +595,7 @@ export function SalaryStructureBuilder({
       }
     } catch (error: any) {
       const parsed = parseApiProblemDetail(error);
+      const failure = normalizeHrFailure(error);
       const previewStale = parsed.errorCode === 'HR:Payroll:CompensationPreviewStale';
       if (previewStale) {
         setCalculation(null);
@@ -589,7 +607,11 @@ export function SalaryStructureBuilder({
           ? 'ESIC policy changed. Refresh preview and review the updated salary before saving.'
           : error?.status === 409
             ? 'Salary changed in another session. Reload the history and review before saving again.'
-            : parsed.detail
+            : failure.message
+      );
+      setOperationFailure(previewStale || error?.status === 409 ? null : failure);
+      setOperationSection(
+        /Pf|Statutory|Esi/i.test(parsed.errorCode ?? '') ? 'statutory' : 'salary'
       );
     } finally {
       operationPending.current = false;
@@ -661,6 +683,12 @@ export function SalaryStructureBuilder({
       )
     : false;
   const amountInvalid = !Number.isFinite(monthlyAmount) || monthlyAmount <= 0;
+  // Match CompensationRevisionAppService.EnsureCalculationCanBeSaved.
+  const targetBlocked = Boolean(
+    calculation &&
+    !calculation.targetResult.isExact &&
+    !calculation.targetResult.isExplainedByEnrollment
+  );
   const reasonInvalid = customizing && overrides.length > 0 && !customizationReason.trim();
 
   const onboardingSalary =
@@ -673,6 +701,7 @@ export function SalaryStructureBuilder({
     !reasonInvalid &&
     !pfChoiceMissing &&
     !statutoryBlocked &&
+    !targetBlocked &&
     !esiInvalid &&
     selectedVersion &&
     calculation
@@ -804,6 +833,7 @@ export function SalaryStructureBuilder({
       calculation?.pfEligibility?.canSave === false
         ? 'Resolve PF enrollment before saving'
         : 'Resolve ESIC details before saving';
+  else if (targetBlocked) footerStatus = 'Resolve the salary amount difference before saving';
   else if (savedSignature === signature && calculationCurrent) footerStatus = 'Saved';
   else if (calculationCurrent) {
     footerStatus = reasonInvalid ? 'Add a customization reason before saving' : 'Preview ready';
@@ -811,6 +841,30 @@ export function SalaryStructureBuilder({
 
   if (!footerStatus)
     footerStatus = calculatedSignature ? 'Preview needs refresh' : 'Preview required';
+
+  const focusSection = (section: 'salary' | 'statutory', selector?: string) => {
+    const group = section === 'salary' ? salaryFields.current : statutoryFields.current;
+    const target = (selector ? group?.querySelector<HTMLElement>(selector) : null) ?? group;
+    target?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+    target?.focus();
+  };
+  const reviewStatutory =
+    pfChoiceMissing || (pfApplicable && !pfRuleId) || esiInvalid || statutoryBlocked;
+  const needsPreview =
+    !calculationCurrent &&
+    !amountInvalid &&
+    selectedVersion &&
+    !templateChangeRequired &&
+    !reviewStatutory &&
+    !hasConflict &&
+    !revisionsError;
+  const canReviewSave =
+    canManage &&
+    !busy &&
+    !hasConflict &&
+    !revisionsError &&
+    !(savedSignature === signature && calculationCurrent) &&
+    (!calculationCurrent || reasonInvalid || reviewStatutory || targetBlocked);
 
   const pfSettings = (
     <Stack spacing={1.5}>
@@ -895,6 +949,7 @@ export function SalaryStructureBuilder({
           {calculation.pfEligibility.issueCode
             ? ` ${contractLabel(calculation.pfEligibility.issueCode)}. Review school PF coverage in PF settings and the employee enrollment above.`
             : ''}
+          {!calculation.pfEligibility.canSave && <HrSetupLink setup="pf" disabled={busy} />}
         </HrNotice>
       )}
     </Stack>
@@ -902,6 +957,7 @@ export function SalaryStructureBuilder({
   const actions = (
     <>
       <Typography
+        id={footerStatusId}
         variant="caption"
         color="text.secondary"
         role="status"
@@ -918,6 +974,31 @@ export function SalaryStructureBuilder({
         }
       >
         {footerStatus}
+        {canReviewSave && (
+          <Button
+            size="small"
+            color="inherit"
+            onClick={() => {
+              if (reasonInvalid && calculationCurrent) reasonInput.current?.focus();
+              else if (needsPreview) {
+                previewButton.current?.scrollIntoView?.({ block: 'center' });
+                previewButton.current?.focus();
+              } else
+                focusSection(
+                  reviewStatutory ? 'statutory' : 'salary',
+                  amountInvalid ? '[name="monthlyAmount"]' : undefined
+                );
+            }}
+          >
+            {reasonInvalid && calculationCurrent
+              ? 'Review customization reason'
+              : reviewStatutory
+                ? 'Review statutory deductions'
+                : needsPreview
+                  ? 'Go to salary preview'
+                  : 'Review salary details'}
+          </Button>
+        )}
       </Typography>
 
       {!onboarding && (
@@ -925,6 +1006,7 @@ export function SalaryStructureBuilder({
           size="small"
           variant="contained"
           onClick={save}
+          aria-describedby={footerStatusId}
           loading={operation === 'save'}
           sx={
             actionContainer
@@ -937,6 +1019,7 @@ export function SalaryStructureBuilder({
             !calculationCurrent ||
             pfChoiceMissing ||
             statutoryBlocked ||
+            targetBlocked ||
             savedSignature === signature ||
             hasConflict ||
             revisionsError
@@ -1013,7 +1096,14 @@ export function SalaryStructureBuilder({
               change its earnings breakdown.
             </Alert>
           )}
-          <Grid container columnSpacing={2} rowSpacing={3}>
+          <Grid
+            ref={salaryFields}
+            tabIndex={-1}
+            aria-label="Salary details fields"
+            container
+            columnSpacing={2}
+            rowSpacing={3}
+          >
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small" disabled={!canManage || busy}>
                 <InputLabel id={salaryTemplateLabelId}>Salary template</InputLabel>
@@ -1121,6 +1211,7 @@ export function SalaryStructureBuilder({
               color="inherit"
               startIcon={<Iconify icon="solar:eye-bold" />}
               onClick={calculateSalary}
+              ref={previewButton}
               loading={operation === 'calculate'}
               loadingPosition="start"
               disabled={
@@ -1145,7 +1236,13 @@ export function SalaryStructureBuilder({
           title="Statutory deductions"
           sx={{ border: 0 }}
         >
-          <Box role="group" aria-label="Statutory deductions" sx={{ display: 'grid', gap: 1.5 }}>
+          <Box
+            ref={statutoryFields}
+            tabIndex={-1}
+            role="group"
+            aria-label="Statutory deductions"
+            sx={{ display: 'grid', gap: 1.5 }}
+          >
             <EsiPolicyFields
               mode={esiMode}
               policyId={esiPolicyId}
@@ -1380,6 +1477,34 @@ export function SalaryStructureBuilder({
             }
           >
             {operationError}
+            {operationFailure && (
+              <Stack spacing={1}>
+                {operationFailure.fields.map((field, index) => (
+                  <Typography key={`${field.name}-${index}`} variant="body2">
+                    {field.name}: {field.message}
+                  </Typography>
+                ))}
+                <Typography variant="body2">{operationFailure.guidance}</Typography>
+                {canManage && (
+                  <Button
+                    size="small"
+                    disabled={busy}
+                    onClick={() => focusSection(operationSection)}
+                  >
+                    {operationSection === 'statutory'
+                      ? 'Review statutory deductions'
+                      : 'Review salary details'}
+                  </Button>
+                )}
+                {operationFailure.setup && (
+                  <HrSetupLink
+                    setup={operationFailure.setup}
+                    employeeId={employeeId}
+                    disabled={busy}
+                  />
+                )}
+              </Stack>
+            )}
           </Alert>
         )}
         {calculatedSignature && !calculationCurrent && (

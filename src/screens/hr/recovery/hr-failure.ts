@@ -36,6 +36,21 @@ export function safeHrText(value: unknown): string | undefined {
 }
 
 const known: Record<string, { message: string; setup?: HrSetup }> = {
+  'HR:Payroll:PfEnrollmentBlocked': {
+    message:
+      'PF enrollment prevents salary saving. Review previous PF membership, the enrollment decision and any required consent reference.',
+    setup: 'pf',
+  },
+  'HR:Payroll:CompensationStatutoryCalculationBlocked': {
+    message:
+      'ESIC setup prevents salary saving. Review the ESIC policy, registration details and the issues shown in the salary preview.',
+    setup: 'statutory',
+  },
+  'HR:Payroll:CompensationTargetNotExact': {
+    message:
+      'The salary breakdown does not match the requested amount. Review the amount, basis and template before previewing again.',
+    setup: 'templates',
+  },
   'HR:Employee:010201': {
     message:
       'Staff salary or statutory setup is not ready for activation. Review the activation blockers in salary setup.',

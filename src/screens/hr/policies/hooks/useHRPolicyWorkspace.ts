@@ -95,7 +95,6 @@ import {
   defaultCalendarForm,
   defaultAttendanceForm,
   defaultAssignmentForm,
-  defaultAssignmentFilters,
   ATTENDANCE_ADVANCED_KEYS,
 } from '../hr-policy-workspace.constants';
 import {
@@ -140,7 +139,6 @@ import type {
   AssignmentForm,
   WorkCalendarForm,
   ManualHolidayForm,
-  AssignmentFilters,
   PolicyArchiveView,
   AssignmentTableRow,
   PendingImpactAction,
@@ -264,13 +262,7 @@ export function useHRPolicyWorkspace({
   const [assignmentForm, setAssignmentForm] = useState<AssignmentForm>(
     defaultAssignmentForm(currentYear?.startDate)
   );
-  const [assignmentFilters, setAssignmentFilters] =
-    useState<AssignmentFilters>(defaultAssignmentFilters);
-  const [assignmentFilterAnchorEl, setAssignmentFilterAnchorEl] = useState<HTMLElement | null>(
-    null
-  );
-  const [draftAssignmentFilters, setDraftAssignmentFilters] =
-    useState<AssignmentFilters>(defaultAssignmentFilters);
+  const [assignmentSearch, setAssignmentSearch] = useState('');
   const [assignmentDateError, setAssignmentDateError] = useState('');
   const [assignmentConflict, setAssignmentConflict] = useState<HrPolicyAssignmentConflict | null>(
     null
@@ -316,21 +308,12 @@ export function useHRPolicyWorkspace({
   const [assignmentPage, setAssignmentPage] = useState({ number: 1, size: 20 });
   useEffect(() => {
     setAssignmentPage((current) => ({ ...current, number: 1 }));
-  }, [academicYearId, assignmentFilters]);
+  }, [academicYearId, assignmentSearch]);
   const assignmentListArgs = {
     academicYearId,
     maxResultCount: assignmentPage.size,
     skipCount: (assignmentPage.number - 1) * assignmentPage.size,
-    search: assignmentFilters.search,
-    targetType: assignmentFilters.targetType === 'all' ? undefined : assignmentFilters.targetType,
-    isActive:
-      assignmentFilters.status === 'all' ? undefined : assignmentFilters.status === 'active',
-    payrollPolicyId: assignmentFilters.payrollPolicyId || undefined,
-    attendancePolicyId: assignmentFilters.attendancePolicyId || undefined,
-    leavePolicyId: assignmentFilters.leavePolicyId || undefined,
-    activeOnDate: assignmentFilters.activeOnDate || undefined,
-    effectiveFrom: assignmentFilters.effectiveFrom || undefined,
-    effectiveTo: assignmentFilters.effectiveTo || undefined,
+    search: assignmentSearch,
   };
 
   const { currentData: employees, isFetching: employeesLoading } = useGetEmployeeQuery(
@@ -665,17 +648,16 @@ export function useHRPolicyWorkspace({
 
   /**
    * Memoization Justification:
-   * Expensive O(n x m) operation - filters and maps up to 1000 assignments across
-   * multiple Maps and multi-field search predicates. Without memoization this runs
+   * Maps assignments and resolves their display values across policy and staff lookups.
+   * Without memoization this runs
    * on every keystroke in any unrelated form field. Dependency list covers all inputs
-   * that affect the output: assignment data, active filters, and policy name maps.
+   * that affect the output: assignment data and policy/staff lookups.
    */
   const assignmentRows = useMemo<AssignmentTableRow[]>(() => {
     const payrollNameById = new Map(payroll.map((item) => [item.id, item.name]));
     const attendanceNameById = new Map(attendance.map((item) => [item.id, item.name]));
     const leaveNameById = new Map(leavePolicies.map((item) => [item.id, getLeavePolicyName(item)]));
     const employeeById = new Map(employeeOptions.map((item) => [item.id, item]));
-    const search = assignmentFilters.search.trim().toLowerCase();
 
     return (assignments?.items || []).map((item) => {
       const employeeOption =
@@ -721,7 +703,6 @@ export function useHRPolicyWorkspace({
     });
   }, [
     assignments?.items,
-    assignmentFilters,
     attendance,
     defaultLeavePolicy,
     employeeOptions,
@@ -2346,12 +2327,8 @@ export function useHRPolicyWorkspace({
     // Assignment form
     assignmentForm,
     setAssignmentForm,
-    assignmentFilters,
-    setAssignmentFilters,
-    assignmentFilterAnchorEl,
-    setAssignmentFilterAnchorEl,
-    draftAssignmentFilters,
-    setDraftAssignmentFilters,
+    assignmentSearch,
+    setAssignmentSearch,
     assignmentDateError,
     setAssignmentDateError,
     assignmentConflict,
