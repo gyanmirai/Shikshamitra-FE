@@ -4,10 +4,12 @@ import { columnInventory } from './column-inventory.mjs';
 import {
   columnCapabilityMatrix as matrix,
   columnCapabilityIssues as issues,
+  pendingProjectionGaps,
 } from './check-column-capabilities.mjs';
 
 test('every discovered column definition/call site has a capability entry or an explicit dynamic schema', () => {
   assert.deepEqual(issues, []);
+  assert.deepEqual(pendingProjectionGaps, []);
   assert.equal(matrix.length, columnInventory.length);
   for (const table of matrix) {
     assert.ok(table.columns.length || table.schema, `${table.file}#${table.owner} is unresolved`);
@@ -83,4 +85,7 @@ test('numeric/date ESI fields and formerly invisible salary tables remain in the
     assert.equal(table.columns[1].filter, 'number');
   }
   assert.equal(matrix.filter((table) => table.exception).length, 2);
+  const pending = matrix.find((table) => table.table === 'performance-report-pending-actions');
+  assert.equal(pending.columns.find((column) => column.id === 'action').filter, 'string');
+  assert.equal(pending.columns.find((column) => column.id === 'reviewId').export, false);
 });

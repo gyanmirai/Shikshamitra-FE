@@ -153,6 +153,19 @@ beforeEach(() => {
   state.closeHandler = null;
 });
 
+it('offers canonical named Attendance choices without losing editable row controls', () => {
+  mount();
+  const attendance = state.table.columns.find((column: any) => column.id === 'attendanceStatus');
+  expect(attendance.filterType).toBe('enum');
+  expect(attendance.enumOptions).toEqual([
+    { value: 'Present', label: 'Present' },
+    { value: 'Absent', label: 'Absent' },
+    { value: 'HalfDay', label: 'Half day' },
+    { value: 'Pending', label: 'Pending' },
+  ]);
+  expect(screen.getByRole('button', { name: 'Mark Absent for Synthetic staff' })).toBeEnabled();
+});
+
 it('locks all query changes and ignores a background result without losing the edited row or page', () => {
   const view = mount();
   state.operational = { currentData: originalRows(), isFetching: false };

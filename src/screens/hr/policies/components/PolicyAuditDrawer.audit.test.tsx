@@ -60,7 +60,7 @@ describe('PolicyAuditDrawer audit rendering', () => {
     await user.click(screen.getByRole('option', { name: 'Contains' }));
     await user.type(screen.getByRole('textbox', { name: 'Before *' }), 'Monday');
     await user.click(screen.getByRole('button', { name: 'Apply' }));
-    expect(await screen.findByText('Monday')).toBeVisible();
+    expect(await within(screen.getByRole('table')).findByText('Monday')).toBeVisible();
     expect(screen.queryByText('26 Oct 2026')).not.toBeInTheDocument();
     expect(screen.getAllByRole('row')).toHaveLength(2);
   });

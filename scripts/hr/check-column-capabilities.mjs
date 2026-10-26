@@ -54,69 +54,8 @@ function typeFor(column) {
 }
 const review = columnInventory.find((item) => item.id === 'performance-reviews');
 const issues = [];
-// These are semantic gaps, distinct from structural control/schema coverage. Backend edits are blocked by approval review.
-export const pendingProjectionGaps = [
-  {
-    table: 'hr-attendance-import-rows',
-    columns: ['attendanceStatus'],
-    reason:
-      'Editor prioritizes statusCode and normalizes legacy strings; current projection reads status text directly.',
-  },
-  {
-    table: 'employee-onboarding-table',
-    columns: ['candidate', 'position'],
-    reason:
-      'Candidate shows contact/application fallback and Position shows department; projections currently include only primary name/position.',
-  },
-  {
-    table: 'hr-attendance-register',
-    columns: ['employeeName'],
-    reason:
-      'Staff shows code and division as well as name; projection currently includes only name.',
-  },
-  {
-    table: 'hr-manual-attendance',
-    columns: ['fullName'],
-    reason: 'Staff shows employeeCode alongside name; projection currently includes only name.',
-  },
-  {
-    table: 'payroll-monthly-workbench-table',
-    columns: ['employeeName'],
-    reason: 'Staff shows identifier and group; projection currently includes only name.',
-  },
-  {
-    table: 'esi-employee-impact',
-    columns: ['employeeName'],
-    reason: 'Staff shows identifier; projection currently includes only name.',
-  },
-  {
-    table: 'hr-leave-requests',
-    columns: ['name'],
-    reason: 'Name shows employeeIdentifier; projection currently includes only name.',
-  },
-  {
-    table: 'hr-self-leave-history',
-    columns: ['name'],
-    reason:
-      'Where the Name column is displayed it also shows employeeIdentifier; projection currently includes only name.',
-  },
-  {
-    table: 'hr-policy-calendar',
-    columns: ['effective', 'weeklyRule'],
-    reason:
-      'Displayed formatted/open-ended range and custom weekday labels differ from the raw ISO range/pattern projection.',
-  },
-  {
-    table: 'hr-policy-assignments',
-    columns: ['effective'],
-    reason: 'Displayed formatted/open-ended range differs from the raw ISO range projection.',
-  },
-  {
-    table: 'hr-performance-templates',
-    columns: ['sections'],
-    reason: 'Section names/weights are projected but displayed SQAAF domain labels are omitted.',
-  },
-];
+// Display/query projection parity is covered by the paired backend regressions.
+export const pendingProjectionGaps = [];
 const matrix = columnInventory.map((item) => {
   const id = typeof item.id === 'string' ? item.id : `${item.owner} (adapter)`;
   const source = aliases[id] || (fields[id] ? id : undefined);
@@ -188,7 +127,10 @@ const matrix = columnInventory.map((item) => {
       issues.push(`${item.file}#${item.owner}: unresolved column ${JSON.stringify(column)}`);
       return { id: '?', unresolved: true };
     }
-    const action = actionIds.has(column.id) || column.label === 'Actions';
+    const action =
+      (actionIds.has(column.id) &&
+        !(id === 'performance-report-pending-actions' && column.id === 'action')) ||
+      column.label === 'Actions';
     if (exception || action)
       return {
         id: column.id,

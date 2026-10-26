@@ -1372,7 +1372,7 @@ function TemplatesTab() {
             minWidth: '260px',
             render: (value) => (
               <Stack spacing={0.75}>
-                {(value || []).slice(0, 3).map((section: any) => (
+                {(value || []).map((section: any) => (
                   <Stack
                     key={section.id || section.name}
                     direction="row"
