@@ -22,7 +22,8 @@ describe('Payroll dashboard page shell', () => {
     );
     expect(screen.getAllByRole('heading', { name: 'Payroll Dashboard' })).toHaveLength(1);
     expect(screen.getAllByRole('navigation')).toHaveLength(1);
-    expect(screen.getByRole('link', { name: 'HR/Staff' })).toHaveAttribute('href', '/hr/dashboard');
+    expect(screen.queryByText('HR/Staff')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Payroll Management' })).toHaveAttribute('href', '/hr/payroll');
     expect(screen.getByRole('link', { name: 'Run payroll' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Refresh HR dashboard' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Page description' })).toBeVisible();

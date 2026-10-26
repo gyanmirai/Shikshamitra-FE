@@ -338,9 +338,7 @@ export default function SalaryTemplateSettings() {
         heading="Salary Templates"
         description="Create reusable salary defaults. Changes apply to future salary setups; existing staff salaries stay unchanged."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
-          { name: 'Settings', href: hrPaths.payroll.settings.root },
           { name: 'Salary Templates' },
         ]}
         action={

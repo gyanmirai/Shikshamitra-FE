@@ -316,8 +316,7 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
         <CustomBreadcrumbs
           heading="Leave Approvals"
           links={[
-            { name: 'HR/Staff', href: '/hr/dashboard/' },
-            { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
+            { name: 'Leave Center', href: hrPaths.leaveManagement.leaveCenter },
             { name: 'Leave Approvals' },
           ]}
           description="Review and approve or reject staff leave requests."

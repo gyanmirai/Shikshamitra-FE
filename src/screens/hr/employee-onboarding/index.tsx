@@ -617,8 +617,6 @@ function EmployeeOnboardingDetailView({
           heading="Staff Onboarding"
           description="Review candidate information and complete staff enrollment."
           links={[
-            { name: 'HR/Staff', href: hrPaths.dashboard },
-            { name: 'Staff' },
             { name: 'Staff Onboarding', onClick: onBack },
             { name: 'Application details' },
           ]}
@@ -726,9 +724,8 @@ function EmployeeOnboardingDetailView({
       <CustomBreadcrumbs
         heading={`${candidateName} Application`}
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Staff' },
           { name: 'Staff Onboarding', onClick: onBack },
+          { name: `${candidateName} Application` },
         ]}
         description={application.applicationNumber || 'Candidate onboarding application details.'}
         // sx={onboardingBreadcrumbSx}
@@ -3216,8 +3213,6 @@ export default function EmployeeOnboardingScreen() {
       <CustomBreadcrumbs
         heading="Staff Onboarding"
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Staff' },
           { name: 'Staff Onboarding' },
         ]}
         // sx={onboardingBreadcrumbSx}

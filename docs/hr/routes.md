@@ -44,6 +44,29 @@ The route map is frontend integration truth, not backend product truth:
 | Reports                   | `/hr/reports`                                                                                           | `HR.Reports`                                                               |
 | Notifications             | `/hr/hr-notification`                                                                                   | `HR.Notification`                                                          |
 
+## Breadcrumb hierarchy
+
+HR uses inline `CustomBreadcrumbs` without the redundant `HR/Staff` prefix. The final item is
+current-page text. Ancestors use route constants or existing guarded return callbacks for
+unsaved forms; never expose record IDs, raw route segments, or duplicate destinations.
+
+| Page family | Breadcrumb pattern |
+| --- | --- |
+| HR dashboard, Staff Directory, onboarding list, policy page | Current page |
+| Staff profile / add / update | Staff Directory → Current page |
+| Onboarding application | Staff Onboarding → Candidate application |
+| Payroll | Payroll Management (`/hr/payroll`) → Current page |
+| Salary template editor | Payroll Management → Salary Templates → Create / View / Edit |
+| Salary editor | Payroll Management → Payroll Structure (staff query retained) → Edit Salary |
+| Attendance | Attendance Management (`/hr/attendance-dashboard`) → Current page |
+| Leave detail / balance / approvals | Leave Center (`/hr/leave-center`) → Current page |
+| Report templates and designer | Reports → Report templates → Create / Edit template |
+| Report generation / result | Reports → Choose template (for options) → Current page |
+| Performance setup | Performance Management → Settings → Setup & Readiness |
+
+Sidebar-only Settings and Policies & Rules groups have no landing screen, so they are omitted.
+Self-service Dashboard / My Leave breadcrumbs keep their existing non-HR behavior.
+
 ## Partial routes
 
 These routes require source verification before product claims:

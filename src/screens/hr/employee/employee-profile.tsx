@@ -2,7 +2,6 @@ import type { RootState } from 'src/redux/store';
 
 import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { hrPaths } from 'src/constants/hr-menus';
 import { useDispatch, useSelector } from 'react-redux';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -46,8 +45,6 @@ export default function EmployeeProfile({
       <CustomBreadcrumbs
         heading={heading}
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Staff', onClick: goBack },
           { name: 'Staff Directory', onClick: goBack },
           { name: heading },
         ]}

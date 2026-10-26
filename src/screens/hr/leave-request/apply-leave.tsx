@@ -425,13 +425,10 @@ const ApplyLeave = ({
             <CustomBreadcrumbs
               heading="Calendar View"
               links={[
+                ...(isSelfMode ? [{ name: 'Dashboard', href: '/dashboard/' }] : []),
                 {
-                  name: isSelfMode ? 'Dashboard' : 'HR/Staff',
-                  href: isSelfMode ? '/dashboard/' : '/hr/dashboard/',
-                },
-                {
-                  name: isSelfMode ? 'My Leave' : 'Leave Management',
-                  href: isSelfMode ? MY_LEAVE_PATH : hrPaths.leaveManagement.applyLeave,
+                  name: isSelfMode ? 'My Leave' : 'Leave Center',
+                  href: isSelfMode ? MY_LEAVE_PATH : hrPaths.leaveManagement.leaveCenter,
                   onClick: viewCalendarView.onFalse,
                 },
                 { name: 'Leave Calendar' },
@@ -465,8 +462,7 @@ const ApplyLeave = ({
                 isSelfMode
                   ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave' }]
                   : [
-                      { name: 'HR/Staff', href: '/hr/dashboard/' },
-                      { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
+                      { name: 'Leave Center', href: hrPaths.leaveManagement.leaveCenter },
                       { name: 'Apply Leave' },
                     ]
               }

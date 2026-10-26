@@ -223,9 +223,7 @@ const HrSetting = () => {
           breadcrumbs: {},
         }}
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Staff', href: hrPaths.employee.list },
-          { name: 'Settings', href: hrPaths.employee.setting.documentTypes },
           { name: 'Document Types' },
         ]}
         sx={{ px: 1 }}

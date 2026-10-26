@@ -29,10 +29,13 @@ export default function StatutorySchemesPage() {
         heading="Statutory Schemes"
         description="Configure ESIC and review its effect on payroll."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
-          { name: 'Settings', href: hrPaths.payroll.settings.root },
-          { name: 'Statutory Schemes' },
+          ...(view === 'policies'
+            ? [
+                { name: 'Statutory Schemes', href: hrPaths.payroll.settings.statutorySchemes },
+                { name: 'ESIC Policies' },
+              ]
+            : [{ name: 'Statutory Schemes' }]),
         ]}
       />
       {canView ? (

@@ -102,8 +102,6 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
   const breadcrumbItems = isSelfContext
     ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave' }]
     : [
-        { name: 'HR/Staff', href: hrPaths.dashboard },
-        { name: 'Leave Management', href: HR_ROUTE },
         { name: pageTitle },
       ];
 

@@ -134,7 +134,6 @@ const ShiftManagement = () => {
         }}
         description="Configure shift timings used by attendance evaluation. Manage advanced attendance rules in Policies & Rules."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
           { name: 'Shift Management' },
         ]}

@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import { hrPaths } from 'src/constants/hr-menus';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -1414,8 +1415,7 @@ const ManualAttendanceScreen = () => {
       <CustomBreadcrumbs
         heading="Mark Attendance"
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance Management', href: '/hr/attendance-tracking' },
+          { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
           { name: 'Mark Attendance' },
         ]}
         description="Quickly record staff attendance manually: Choose the date, then mark each staff as Present, Pending, or Absent."

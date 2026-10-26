@@ -140,7 +140,6 @@ function SalaryStructureWorkspace() {
         layout="inline"
         description="Review recurring salary and statutory deductions for a full month."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Payroll Structure' },
         ]}

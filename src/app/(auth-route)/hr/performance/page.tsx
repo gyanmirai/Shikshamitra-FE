@@ -1,5 +1,6 @@
 import React from 'react';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-const Performance = () => <div>Performance</div>;
+const Performance = () => <CustomBreadcrumbs heading="Performance" links={[{ name: 'Performance' }]} />;
 
 export default Performance;

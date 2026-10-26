@@ -140,12 +140,10 @@ const PF = () => {
         heading="PF Rule"
         description="Configure PF rule for staff"
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard' },
           {
             name: 'Payroll Management',
-            href: hrPaths.payroll.runPayroll,
+            href: hrPaths.payroll.root,
           },
-          { name: 'Settings', href: hrPaths.payroll.settings.earningComponents },
           { name: 'PF Rule' },
         ]}
         action={

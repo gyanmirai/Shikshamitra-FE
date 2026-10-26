@@ -65,7 +65,11 @@ A dashboard is not an exception to its module family header pattern.
 Do not switch between `inline` and `stacked`, reverse the breadcrumb hierarchy, or replace the shared description treatment only because the page content changes from a table to dashboard cards.
 
 The HR module uses the inline `CustomBreadcrumbs` pattern demonstrated by `src/screens/hr/employee/employee.tsx` and `src/screens/hr/employee-onboarding/index.tsx`.
-Use `HR/Staff` as the first breadcrumb item and link it to `hrPaths.dashboard` on HR descendant pages.
+Do not prefix HR breadcrumbs with `HR/Staff` or another artificial module root.
+Show only meaningful ancestors with real destinations, followed by the current page as text.
+For example: `Payroll Management` (linked to `hrPaths.payroll.root`) → `Run Payroll`,
+and `Staff Directory` → the staff profile or create/edit page.
+Omit sidebar-only groups that have no landing route; do not link them to a sibling or the current page.
 End with the current page as a non-link item, such as `HR Dashboard`, `Employee List`, or `Employee Onboarding`.
 Keep the page action in the breadcrumb header and place dashboard freshness or operational status immediately after the header.
 Use `hrPaths` constants instead of literal HR routes.

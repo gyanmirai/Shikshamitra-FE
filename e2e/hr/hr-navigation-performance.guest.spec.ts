@@ -174,7 +174,7 @@ test('HR and Reports stay in the application shell during repeat navigation', as
   await expect(page.getByRole('heading', { name: 'HR Dashboard', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Reports', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Search report templates' })).toBeVisible();
-  await page.getByRole('main').getByRole('link', { name: 'HR/Staff', exact: true }).click();
+  await page.locator('a[href="/hr/dashboard"], a[href="/hr/dashboard/"]').first().click();
   await expect(page.getByRole('heading', { name: 'HR Dashboard', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Refresh HR dashboard' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Dashboard refreshed.' })).toBeVisible();

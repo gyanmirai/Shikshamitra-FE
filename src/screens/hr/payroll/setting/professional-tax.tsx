@@ -97,9 +97,7 @@ const ProfessionalTax = () => {
         heading="Professional tax"
         description="Manage effective-dated professional tax salary ranges."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
-          { name: 'Settings', href: hrPaths.payroll.settings.root },
           { name: 'Professional tax' },
         ]}
         action={

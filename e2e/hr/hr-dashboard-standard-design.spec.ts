@@ -685,10 +685,7 @@ test.describe('HR module overview dashboard', () => {
     await expect(shell.getByRole('heading', { level: 1, name: 'HR Dashboard' })).toBeVisible();
     await expect(shell.locator('[data-layout="inline"]')).toBeVisible();
     const breadcrumbs = shell.getByRole('navigation');
-    await expect(breadcrumbs.getByRole('link', { name: 'HR/Staff', exact: true })).toHaveAttribute(
-      'href',
-      '/hr/dashboard'
-    );
+    await expect(breadcrumbs.getByText('HR/Staff', { exact: true })).toHaveCount(0);
     await expect(breadcrumbs.getByText('HR Dashboard', { exact: true })).toBeVisible();
     await expect(breadcrumbs.getByRole('link', { name: 'HR Dashboard', exact: true })).toHaveCount(
       0
