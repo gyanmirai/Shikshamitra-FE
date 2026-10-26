@@ -10,7 +10,12 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetEmployeeNotificationHistoryQuery } from 'src/redux/hr/employeeApi';
 
 const HrAttendanceNotificationScreen = () => {
-  const { data: notificationHistory, isLoading } = useQueryAndMutation({
+  const {
+    data: notificationHistory,
+    isLoading,
+    error,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeNotificationHistoryQuery,
   });
@@ -35,15 +40,23 @@ const HrAttendanceNotificationScreen = () => {
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{ sx: { height: 1 } }}
         isLoading={isLoading}
+        error={error}
+        onRetry={refetch}
+        exportScope="loaded"
+        exportLabel="Export loaded rows"
         noDataText="No attendance notification history found."
         columns={[
           { id: 'name', label: 'Name' },
-          { id: 'date', label: 'Date' },
+          { id: 'date', filterType: 'date', label: 'Date' },
           // { id: 'recipient', label: 'Recipient' },
           { id: 'notificationType', label: 'Notification Type' },
           {
             id: 'status',
             label: 'Status',
+            filterType: 'enum',
+            enumOptions: [
+              ...new Set<string>(rows.map((row: { status: string }) => row.status)),
+            ].map((value) => ({ value, label: value })),
             render(value, row) {
               return <Label color={value === 'Delivered' ? 'success' : 'warning'}>{value}</Label>;
             },

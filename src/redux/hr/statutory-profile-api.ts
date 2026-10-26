@@ -62,7 +62,7 @@ export const statutoryProfileApi = api.injectEndpoints({
           effectiveMonth: string;
         }>;
       },
-      { month: string; page: number; pageSize: number }
+      { month: string; page: number; pageSize: number; search?: string }
     >({
       query: (params) => ({ url: '/payroll/statutory-profile/readiness', params }),
       providesTags: [employeeType.runPayroll],

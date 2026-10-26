@@ -14,6 +14,7 @@ import { useSearchParams } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -115,15 +116,20 @@ const ManualAttendanceScreen = () => {
     currentQueryAndMutation: useUnlockDayAttendanceMutation,
   });
 
+  const [draftFilters, setDraftFilters] = useState({ group: 'all', department: '' });
   const [query, setQuery] = useState({
     skipCount: 0,
     maxResultCount: 50,
     search: '',
+    department: '',
+    isTeaching: undefined as boolean | undefined,
   });
 
   const exportTable = useHrTableExport('hr-manual-attendance', {
     attendanceDate: toAttendanceDateParam(date),
     search: query.search,
+    department: query.department,
+    isTeaching: query.isTeaching,
   });
 
   const {
@@ -139,6 +145,8 @@ const ManualAttendanceScreen = () => {
     params: {
       attendanceDate: toAttendanceDateParam(date),
       search: query.search,
+      department: query.department,
+      isTeaching: query.isTeaching,
       skipCount: query.skipCount,
       maxResultCount: query.maxResultCount,
     },
@@ -1504,12 +1512,84 @@ const ManualAttendanceScreen = () => {
       </Box>
 
       {/* ── Table ── */}
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        useFlexGap
+        flexWrap="wrap"
+        sx={{ mb: 1 }}
+      >
+        <CustomSelect
+          label="Staff group"
+          value={draftFilters.group}
+          disabled={isDirty || isFetching}
+          options={[
+            { id: 'all', name: 'All groups' },
+            { id: 'true', name: 'Teaching' },
+            { id: 'false', name: 'Non Teaching' },
+          ]}
+          valueKey="id"
+          labelKey="name"
+          onChange={(value) => setDraftFilters((current) => ({ ...current, group: String(value) }))}
+          sx={{ minWidth: 180 }}
+        />
+        <TextField
+          size="small"
+          label="Department contains"
+          value={draftFilters.department}
+          disabled={isDirty || isFetching}
+          onChange={(event) =>
+            setDraftFilters((current) => ({ ...current, department: event.target.value }))
+          }
+        />
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={isDirty || isFetching}
+          onClick={() =>
+            setQuery((current) => ({
+              ...current,
+              skipCount: 0,
+              department: draftFilters.department.trim(),
+              isTeaching: draftFilters.group === 'all' ? undefined : draftFilters.group === 'true',
+            }))
+          }
+        >
+          Apply filters
+        </Button>
+        <Button
+          size="small"
+          disabled={isDirty || isFetching}
+          onClick={() => {
+            setDraftFilters({ group: 'all', department: '' });
+            setQuery((current) => ({
+              ...current,
+              skipCount: 0,
+              department: '',
+              isTeaching: undefined,
+            }));
+          }}
+        >
+          Clear filters
+        </Button>
+      </Stack>
+      {query.department || query.isTeaching !== undefined ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          Applied filters:{' '}
+          {query.isTeaching === undefined
+            ? 'All groups'
+            : query.isTeaching
+              ? 'Teaching'
+              : 'Non Teaching'}
+          {query.department ? ` · Department contains ${query.department}` : ''}
+        </Typography>
+      ) : null}
       <CustomizableTable
         showColumns
         showExport
         showFullScreen
         exportScope="all"
-        tableTitle="Staff Directory"
+        tableTitle="Daily attendance"
         tableId="hr-manual-attendance"
         onExport={exportTable}
         exportDisabled={isDirty}

@@ -809,3 +809,17 @@ Verify the embedded calendar has a Back to Requests action in the same tab actio
 Run `esi-statutory-settings.test.tsx`, `esi-configuration-form.test.ts`, and `earning-esi-treatment-dialog.test.tsx`.
 Cover automatic statutory bases, removed rate inputs, optional registration details, help disclosure, per-component classification, scheduled school settings, restricted editing, stale versions and retry idempotency.
 Browser checks should verify the compact school settings and Earning Component treatment action at desktop and narrow widths.
+
+## HR table capability re-audit
+
+Run `node scripts/hr/check-ui-consistency.mjs` for route/table ownership and `--capabilities` for the per-instance operation matrix.
+The [coverage reference](references/hr-table-coverage.md#25-october-capability-re-audit) separates supported local controls, real server integrations, backend dependencies and specialized editable grids.
+
+Run shared-table tests plus `HRPolicySharedUI.table.test.tsx`, `leave-balance.filters.test.tsx`, salary-template settings, performance and policy regression suites after table metadata/data-processing changes.
+Use `node node_modules/@playwright/test/cli.js test --config tests/browser/hr-table-workspace.config.ts` for an isolated fixture of actual shared table, policy adapter and editable calendar/payroll grids at 390, 768 and 1440 pixels.
+It checks filtered Excel data and excluded Actions, numeric criteria, sorting, theme changes, loading/empty/error/retry and draft editing without backend writes.
+Run the existing numeric-menu fixture separately with `--config tests/browser/hr-table-filter.config.ts`.
+Finish with Codex in-app browser inspection of the local fixture; signed-in tenant/backend acceptance must be reported separately.
+
+The endpoint follow-up also checks `server-column-filters.test.ts`, shift and leave API contract tests, and manual-attendance `table-filters.test.tsx`. The latter verifies group/department page reset, identical export predicates, and scope/export locks while a draft is dirty.
+The browser fixture uses the actual complete-export hook with local synthetic paged readers; it verifies status zero, filtered totals, a 15-row filtered workbook from a 10-row page, synchronized name search and clearing; unit regressions also cover scalar replacement.
