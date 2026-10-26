@@ -176,18 +176,6 @@ export type AssignmentForm = {
   isActive: boolean;
 };
 
-export type AssignmentFilters = {
-  search: string;
-  targetType: 'all' | PolicyAssignmentTargetType;
-  status: 'all' | 'active' | 'inactive';
-  payrollPolicyId: string;
-  attendancePolicyId: string;
-  leavePolicyId: string;
-  activeOnDate: string;
-  effectiveFrom: string;
-  effectiveTo: string;
-};
-
 // --- Lookup helpers -----------------------------------------------------------
 
 export type LookupOption = {
