@@ -10,7 +10,42 @@ vi.mock('src/components/toast', () => ({ shikshaMitraToast: { error: toastError 
 describe('school sign in', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState({}, '', '/login');
     signIn.mockResolvedValue({ error: undefined });
+  });
+
+  it('prefills the email school code without submitting credentials or selecting host mode', () => {
+    window.history.replaceState({}, '', '/login?organization=School%20%26%20One');
+    const { result } = renderHook(() => useLoginForm());
+    expect(result.current.formik.values.organization).toBe('School & One');
+    expect(result.current.formik.values.email).toBe('');
+    expect(result.current.formik.values.password).toBe('');
+    expect(result.current.hostLogin).toBe(false);
+    expect(signIn).not.toHaveBeenCalled();
+  });
+
+  it('allows editing the school prefill, clears it through host toggles and restores the link context on revisit', async () => {
+    window.history.replaceState({}, '', '/login?organization=DDVS');
+    const first = renderHook(() => useLoginForm());
+    await act(async () => {
+      await first.result.current.formik.setFieldValue('organization', 'OTHER-SCHOOL');
+    });
+    expect(first.result.current.formik.values.organization).toBe('OTHER-SCHOOL');
+    await act(async () => {
+      first.result.current.toggleHostLogin();
+    });
+    expect(first.result.current.hostLogin).toBe(true);
+    expect(first.result.current.formik.values.organization).toBe('');
+    await act(async () => {
+      first.result.current.toggleHostLogin();
+    });
+    expect(first.result.current.hostLogin).toBe(false);
+    expect(first.result.current.formik.values.organization).toBe('');
+    first.unmount();
+    const revisit = renderHook(() => useLoginForm());
+    expect(revisit.result.current.formik.values.organization).toBe('DDVS');
+    expect(revisit.result.current.hostLogin).toBe(false);
+    expect(signIn).not.toHaveBeenCalled();
   });
 
   it('requires an explicit host sign-in mode and preserves the existing host authentication contract', async () => {
