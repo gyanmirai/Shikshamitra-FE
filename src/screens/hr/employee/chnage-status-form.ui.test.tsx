@@ -1,17 +1,36 @@
 import type React from 'react';
 
 import userEvent from '@testing-library/user-event';
+import { hrPermissions } from 'src/constants/hr-menus';
 import { screen, waitFor } from '@testing-library/react';
 import { renderWithProviders } from 'src/test/test-utils';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 
 import ChangeStatusForm from './chnage-status-form';
+import { staffSalaryEditorHref } from './payroll-profile-utils';
 
 const mocks = vi.hoisted(() => ({
   updateStatus: vi.fn(),
   getEmployeeStatusDeactivationCheck: vi.fn(),
   toastError: vi.fn(),
+  readiness: {
+    currentData: { canActivate: true, blockerCodes: [] },
+    isFetching: false,
+    isError: false,
+    refetch: vi.fn(),
+  } as any,
+  permissions: [] as Array<{ name: string; isGranted: boolean }>,
+}));
+vi.mock('react-redux', async () => ({
+  ...(await vi.importActual('react-redux')),
+  useSelector: (selector: any) =>
+    selector({
+      auth: { permissions: mocks.permissions, loading: false, permissionsInitialized: true },
+    }),
+}));
+vi.mock('src/redux/hr/compensation-revision-api', () => ({
+  useGetEmployeeActivationReadinessQuery: () => mocks.readiness,
 }));
 
 vi.mock('@mui/x-date-pickers/DatePicker', () => ({
@@ -62,6 +81,13 @@ const renderForm = (status = EmployeeStatusType.Active) =>
 describe('ChangeStatusForm manager deactivation warning', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.permissions = [];
+    mocks.readiness = {
+      currentData: { canActivate: true, blockerCodes: [] },
+      isFetching: false,
+      isError: false,
+      refetch: vi.fn(),
+    };
     mocks.updateStatus.mockReturnValue({
       unwrap: vi.fn().mockResolvedValue({}),
     });
@@ -72,6 +98,57 @@ describe('ChangeStatusForm manager deactivation warning', () => {
       isError: false,
     });
   });
+
+  it('lists every server blocker and prevents activation until a successful recheck', async () => {
+    const user = userEvent.setup();
+    mocks.permissions = [
+      hrPermissions.root,
+      hrPermissions.employee.root,
+      hrPermissions.payroll.root,
+      `${hrPermissions.employee.list}.Edit`,
+      hrPermissions.payroll.compensationRevisionActions.view,
+    ].map((name) => ({ name, isGranted: true }));
+    mocks.readiness.currentData = {
+      canActivate: false,
+      blockerCodes: ['PAYROLL_SETUP_REQUIRED', 'ESI_POLICY_REQUIRED'],
+    };
+    const { rerender } = renderForm(EmployeeStatusType.Inactive);
+    await user.click(screen.getByRole('combobox', { name: 'Select Status' }));
+    await user.click(screen.getByRole('option', { name: /^Active/ }));
+    expect(screen.getByText(/Salary structure is not configured/)).toBeVisible();
+    expect(screen.getByText(/ESIC setup needs attention/)).toBeVisible();
+    expect(screen.getByRole('link', { name: /Review staff salary setup/ })).toHaveAttribute(
+      'href',
+      staffSalaryEditorHref('manager-1')
+    );
+    expect(screen.getByTestId('hr-employee-status-update-button')).toBeDisabled();
+    expect(mocks.updateStatus).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Recheck activation requirements' }));
+    expect(mocks.readiness.refetch).toHaveBeenCalledOnce();
+    mocks.readiness.currentData = { canActivate: true, blockerCodes: [] };
+    rerender(changeStatusForm(EmployeeStatusType.Inactive));
+    expect(screen.getByTestId('hr-employee-status-update-button')).toBeEnabled();
+    await user.click(screen.getByTestId('hr-employee-status-update-button'));
+    expect(mocks.updateStatus).toHaveBeenCalledOnce();
+  });
+
+  it.each(['fetching', 'failed', 'missing'])(
+    'fails closed when activation readiness is %s',
+    async (state) => {
+      const user = userEvent.setup();
+      mocks.readiness = {
+        currentData: state === 'missing' ? undefined : { canActivate: true, blockerCodes: [] },
+        isFetching: state === 'fetching',
+        isError: state === 'failed',
+        refetch: vi.fn(),
+      };
+      renderForm(EmployeeStatusType.Inactive);
+      await user.click(screen.getByRole('combobox', { name: 'Select Status' }));
+      await user.click(screen.getByRole('option', { name: /^Active/ }));
+      expect(screen.getByTestId('hr-employee-status-update-button')).toBeDisabled();
+      expect(mocks.updateStatus).not.toHaveBeenCalled();
+    }
+  );
 
   it.each([EmployeeStatusType.Inactive, EmployeeStatusType.Left, EmployeeStatusType.Retired])(
     'checks manager deactivation eligibility for non-active status %s',

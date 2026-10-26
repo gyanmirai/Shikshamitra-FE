@@ -1,9 +1,16 @@
+import dayjs from 'dayjs';
 import { it, vi, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import EmployeeFrom from './employee-form';
 
-const mocks = vi.hoisted(() => ({ save: vi.fn(), toast: vi.fn(), saveStatutory: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  save: vi.fn(),
+  toast: vi.fn(),
+  saveStatutory: vi.fn(),
+  write: vi.fn(),
+  newStaff: false,
+}));
 vi.mock('react-redux', () => ({
   useSelector: (selector: any) =>
     selector({
@@ -18,7 +25,7 @@ vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: mocks.toast, error: vi.fn() },
 }));
 vi.mock('src/redux/customQueryAndMutation', () => ({
-  default: ({ type }: any) => (type === 'mutation' ? [vi.fn()] : {}),
+  default: ({ type }: any) => (type === 'mutation' ? [mocks.write] : {}),
 }));
 vi.mock('src/redux/hr/hr-policy-api', () => ({
   useGetPayrollPoliciesQuery: () => ({}),
@@ -98,7 +105,20 @@ vi.mock('src/components/custom-stepper', async () => {
       saveAndNextButtonProps,
       handleNext,
     }: any) => {
-      const formik = useFormik({ initialValues, onSubmit: () => undefined });
+      const formik = useFormik({
+        initialValues: {
+          ...initialValues,
+          ...(mocks.newStaff
+            ? {
+                dob: dayjs('1990-01-01'),
+                dateOfJoining: dayjs('2026-10-01'),
+                firstName: 'Synthetic',
+                lastName: 'Teacher',
+              }
+            : {}),
+        },
+        onSubmit: () => undefined,
+      });
       return (
         <>
           <div data-testid="current-step">{activeStep}</div>
@@ -125,8 +145,34 @@ vi.mock('src/components/custom-stepper', async () => {
 });
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.newStaff = false;
+  mocks.write.mockReturnValue({
+    unwrap: async () => ({ id: 'created-staff', userId: 'created-user' }),
+  });
   mocks.saveStatutory.mockResolvedValue(true);
   mocks.save.mockReturnValue({ unwrap: async () => undefined });
+});
+
+it('Add Staff reaches editable Payroll fields and persists them through Save & Next', async () => {
+  mocks.newStaff = true;
+  render(<EmployeeFrom handleClose={vi.fn()} />);
+  const advance = async (step: number) => {
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+    await waitFor(() => expect(screen.getByTestId('current-step')).toHaveTextContent(String(step)));
+  };
+  await advance(1);
+  await advance(2);
+  await advance(3);
+  await advance(4);
+  await advance(5);
+  expect(screen.getByLabelText('Bank name *')).toBeEnabled();
+  fireEvent.change(screen.getByLabelText('Punch ID'), { target: { value: 'NEW-PUNCH' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  await waitFor(() => expect(screen.getByTestId('current-step')).toHaveTextContent('6'));
+  expect(mocks.save).toHaveBeenCalledWith({
+    employeeId: 'created-staff',
+    body: { attendanceIntegration: { punchId: 'NEW-PUNCH', totalWorkingHourPerMonth: 160 } },
+  });
 });
 function setup() {
   render(

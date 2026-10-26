@@ -3,7 +3,7 @@ import type { GrantedPermission } from 'src/utils/permissions';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
 
-import { staffPayrollEditHref } from '../employee/payroll-profile-utils';
+import { staffPayrollEditHref, staffSalaryEditorHref } from '../employee/payroll-profile-utils';
 
 import type { HrSetup } from './hr-failure';
 
@@ -97,7 +97,12 @@ export function hrSetupAction(
     hasGrantedPermission(permissions, action.grants)
     ? {
         label: action.label,
-        href: setup === 'staffPayroll' ? staffPayrollEditHref(employeeId!) : action.href,
+        href:
+          setup === 'staffPayroll'
+            ? staffPayrollEditHref(employeeId!)
+            : setup === 'salary' && employeeId
+              ? staffSalaryEditorHref(employeeId)
+              : action.href,
       }
     : null;
 }

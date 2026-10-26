@@ -10,7 +10,18 @@ vi.mock('src/components/toast', () => ({ shikshaMitraToast: { error: toastError 
 describe('school sign in', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState({}, '', '/login');
     signIn.mockResolvedValue({ error: undefined });
+  });
+
+  it('prefills the email school code without submitting credentials or selecting host mode', () => {
+    window.history.replaceState({}, '', '/login?organization=School%20%26%20One');
+    const { result } = renderHook(() => useLoginForm());
+    expect(result.current.formik.values.organization).toBe('School & One');
+    expect(result.current.formik.values.email).toBe('');
+    expect(result.current.formik.values.password).toBe('');
+    expect(result.current.hostLogin).toBe(false);
+    expect(signIn).not.toHaveBeenCalled();
   });
 
   it('requires an explicit host sign-in mode and preserves the existing host authentication contract', async () => {

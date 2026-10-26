@@ -313,6 +313,9 @@ export function PayrollProfileWorkspace({
             <Button
               component={RouterLink}
               href={staffSalaryEditorHref(employeeId, origin)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Opens salary setup in a new tab. Unsaved payroll changes stay in this tab."
               onMouseEnter={actionsDisabled ? undefined : prefetchSalaryEditor}
               onFocus={actionsDisabled ? undefined : prefetchSalaryEditor}
               size="small"
@@ -324,6 +327,12 @@ export function PayrollProfileWorkspace({
           )
         }
       >
+        {origin === 'staff-edit' && (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Salary setup opens in a new tab. Keep this tab open to preserve unsaved payroll changes,
+            then use Save &amp; Next when you return.
+          </Typography>
+        )}
         {!canReadSalary ? (
           <Typography variant="body2" color="text.secondary">
             You do not have permission to view salary.

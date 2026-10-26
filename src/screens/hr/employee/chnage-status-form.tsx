@@ -13,6 +13,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
+import { useGetEmployeeActivationReadinessQuery } from 'src/redux/hr/compensation-revision-api';
 import {
   useUpdateEmployeeStatusMutation,
   useGetEmployeeStatusDeactivationCheckQuery,
@@ -31,6 +32,8 @@ import {
   DialogContent,
 } from '@mui/material';
 
+import { HrSetupLink } from '../recovery/hr-setup-controls';
+import { normalizeHrFailure } from '../recovery/hr-failure';
 import {
   getEmployeeStatusOptions,
   isNonActiveEmployeeStatus,
@@ -59,6 +62,7 @@ const ChangeStatusForm = ({
   const options = getEmployeeStatusOptions(status);
   const defaultEffectiveDate = dayjs().endOf('month');
   const [warningOpen, setWarningOpen] = useState(false);
+  const [activationError, setActivationError] = useState('');
   const [updateStatus, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEmployeeStatusMutation,
@@ -77,6 +81,8 @@ const ChangeStatusForm = ({
     },
     validationSchema: changeStatusValidationSchema,
     onSubmit: async (values) => {
+      if (disableStatusUpdate) return;
+      setActivationError('');
       try {
         await updateStatus({
           id: employeeId,
@@ -106,18 +112,27 @@ const ChangeStatusForm = ({
           return;
         }
 
-        console.error(error);
-        shikshaMitraToast.error({
-          message:
-            (error as any)?.data?.message ||
-            (error as any)?.error ||
-            `Failed to update status of ${employeeName}.`,
-        });
+        setActivationError(normalizeHrFailure(error).message);
+        if (
+          values.status.value === EmployeeStatusType.Active &&
+          status !== EmployeeStatusType.Active
+        )
+          await activation.refetch();
       }
     },
   });
   const theme = useTheme();
   const selectedStatus = formik.values.status?.value;
+  const activating =
+    selectedStatus === EmployeeStatusType.Active && status !== EmployeeStatusType.Active;
+  const activation = useGetEmployeeActivationReadinessQuery(employeeId, {
+    skip: !activating || !employeeId,
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
+  const activationBlocked =
+    activating &&
+    (activation.isFetching || activation.isError || !activation.currentData?.canActivate);
   const isNonActiveSelected = isNonActiveEmployeeStatus(selectedStatus);
   const {
     data: deactivationCheck,
@@ -138,7 +153,7 @@ const ChangeStatusForm = ({
     !hasDeactivationCheckError &&
     deactivationCheck?.canDeactivate === false;
   const disableStatusUpdate =
-    hasActiveReports || isCheckingManagerReports || hasDeactivationCheckError;
+    hasActiveReports || isCheckingManagerReports || hasDeactivationCheckError || activationBlocked;
 
   useEffect(() => {
     if (hasActiveReports) {
@@ -200,14 +215,14 @@ const ChangeStatusForm = ({
                         sx={{
                           color:
                             option.value === EmployeeStatusType.Active
-                              ? theme.vars.palette.success.main
+                              ? theme.palette.success.main
                               : option.value === EmployeeStatusType.Inactive
                                 ? theme.palette.error.main
                                 : option.value === EmployeeStatusType.Left
-                                  ? theme.vars.palette.info.main
+                                  ? theme.palette.info.main
                                   : option.value === EmployeeStatusType.Retired
-                                    ? theme.vars.palette.grey[500]
-                                    : theme.vars.palette.grey[500],
+                                    ? theme.palette.grey[500]
+                                    : theme.palette.grey[500],
                         }}
                       >
                         <Iconify icon="mdi:information" width={20} />
@@ -263,6 +278,47 @@ const ChangeStatusForm = ({
               {MANAGER_DEACTIVATION_CHECK_ERROR}
             </Alert>
           )}
+          {activating && (
+            <Alert severity={activation.isError ? 'error' : 'warning'} variant="outlined">
+              <Stack spacing={1}>
+                <Typography variant="body2">
+                  {activation.isFetching
+                    ? 'Checking activation requirements…'
+                    : activation.isError
+                      ? 'Unable to check activation requirements. Retry before activating this staff member.'
+                      : activation.currentData?.canActivate
+                        ? 'The current activation checks pass. The server will validate again when you update the status.'
+                        : 'This staff member remains inactive until the required salary and statutory setup is complete.'}
+                </Typography>
+                {!activation.isFetching &&
+                  !activation.isError &&
+                  activation.currentData?.blockerCodes.map((code) => (
+                    <Box key={code}>
+                      <Typography variant="body2">{activationBlockerMessage(code)}</Typography>
+                      <HrSetupLink
+                        setup={code.startsWith('ESI_') ? 'staffPayroll' : 'salary'}
+                        employeeId={employeeId}
+                      />
+                    </Box>
+                  ))}
+                <Button
+                  size="small"
+                  disabled={activation.isFetching || isLoading}
+                  onClick={() => activation.refetch()}
+                >
+                  Recheck activation requirements
+                </Button>
+                <Typography variant="caption">
+                  Setup opens in a new tab. Return here and recheck before activating.
+                </Typography>
+              </Stack>
+            </Alert>
+          )}
+          {activationError && (
+            <Alert severity="error" variant="outlined">
+              {activationError}
+            </Alert>
+          )}
         </Stack>
       </DialogScrollContent>
       <DialogActions>
@@ -315,3 +371,13 @@ const ChangeStatusForm = ({
 };
 
 export default ChangeStatusForm;
+
+export function activationBlockerMessage(code: string) {
+  if (code === 'PAYROLL_SETUP_REQUIRED')
+    return 'Salary structure is not configured for the required activation month. Complete salary setup, including PF membership review.';
+  if (/^ESI_[A-Z0-9_]+$/.test(code))
+    return `ESIC setup needs attention: ${code.slice(4).replaceAll('_', ' ').toLowerCase()}. Review statutory registration and salary setup.`;
+  if (/^PF_[A-Z0-9_]+$/.test(code))
+    return `PF enrollment needs attention: ${code.slice(3).replaceAll('_', ' ').toLowerCase()}. Review PF membership in salary setup.`;
+  return 'A configured activation requirement needs review. Review salary and statutory setup or contact your HR administrator.';
+}

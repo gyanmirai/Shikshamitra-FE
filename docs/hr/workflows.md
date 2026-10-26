@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-25
+updated_on: 2026-10-26
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -212,7 +212,10 @@ Frontend workflows must respect backend data ownership:
 
 Do not add a route to docs as active navigation until `src/constants/hr-menus.ts` exposes it.
 If a page exists but menu access is commented or unclear, mark the workflow as partial.
-The Payroll onboarding step links to the dedicated salary setup screen.
+The Add Staff wizard uses the same inline bank, attendance and permission-gated PF/ESIC editors as Update Staff once the personal-information step has returned an employee ID. Save & Next validates and saves the open payroll editors before advancing; failed saves retain the step and its draft.
+The Payroll step opens the dedicated salary setup screen in a separate `noopener noreferrer` tab. The original tab must stay open to retain unsaved payroll fields; reload, tab closure and crashes do not have persistent draft recovery. Returning to the original tab and choosing Save & Next saves those entries explicitly.
+Staff Directory activation reads the existing server activation-readiness endpoint before enabling Update. Loading, failed and missing readiness fail closed; all returned blocker codes receive readable guidance and permission-gated setup actions. After setup, the user explicitly rechecks readiness; the update endpoint remains the final authority. This does not introduce bank or registration requirements beyond the server's configured rules: salary saving owns PF membership decisions, and pending registration can remain nonblocking under the existing policy.
+Welcome-email links use `/login?organization=<school-code>`; the login form prefills that editable school code without submitting credentials or changing to host sign-in.
 Salary setup saves amounts and template provenance in the compensation revision, without copying partial salary metadata into the separate bank-details or one-time-component form.
 Full-month gross is agreed through salary setup; earned gross is calculated by payroll using payable days and the configured salary-day basis.
 After saving an employee as inactive, HR can open **ESIC details** directly from the Payroll onboarding step or salary setup before saving salary or activating the employee.
