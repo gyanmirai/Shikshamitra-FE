@@ -6,9 +6,17 @@ import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
 import { shikshaMitraToast } from 'src/components/toast';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import {
+  useGetPayrollPoliciesQuery,
+  useGetAttendancePoliciesQuery,
+  useUpsertEmployeePolicyOverrideMutation,
+  usePreviewPolicyAssignmentImpactMutation,
+  useDisableEmployeePolicyOverrideMutation,
+} from 'src/redux/hr/hr-policy-api';
 import {
   Box,
   Alert,
@@ -27,13 +35,6 @@ import {
   CircularProgress,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useGetPayrollPoliciesQuery,
-  useGetAttendancePoliciesQuery,
-  useUpsertEmployeePolicyOverrideMutation,
-  usePreviewPolicyAssignmentImpactMutation,
-  useDisableEmployeePolicyOverrideMutation,
-} from 'src/redux/hr/hr-policy-api';
 
 import { DrawerHeader } from '../policies/components/HRPolicySharedUI';
 import {
@@ -328,12 +329,12 @@ export function PayrollProfilePolicyEditor({
               </Typography>
               {[...(impact.blockingWarnings || []), ...(impact.warnings || [])].map(
                 (warning, index) => (
-                  <Alert
+                  <HrNotice
                     key={`${warning.code}-${index}`}
                     severity={warning.severity === 'blocking' ? 'error' : warning.severity}
                   >
                     {warning.message}
-                  </Alert>
+                  </HrNotice>
                 )
               )}
               {impact.affectedPayrollMonths?.length > 0 && (

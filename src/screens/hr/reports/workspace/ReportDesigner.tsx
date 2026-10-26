@@ -14,6 +14,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
@@ -362,9 +363,9 @@ export function ReportDesigner({
               {previewState.data && (
                 <>
                   {previewSignature !== JSON.stringify({ definition, parameters }) && (
-                    <Alert severity="info">
+                    <HrNotice severity="info">
                       Settings changed. Refresh the preview to see the current design.
-                    </Alert>
+                    </HrNotice>
                   )}
                   <Typography variant="body2">
                     Showing the first {previewState.data.rows.length} of{' '}

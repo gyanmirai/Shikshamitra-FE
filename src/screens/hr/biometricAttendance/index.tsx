@@ -17,6 +17,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -48,7 +49,6 @@ import {
   Box,
   Card,
   Grid,
-  Alert,
   Paper,
   Stack,
   Button,
@@ -1710,7 +1710,7 @@ export const ImportDetailDialog = ({
             )}
           </Box>
           {draft.queryLocked && (
-            <Alert
+            <HrNotice
               severity="info"
               sx={{ mb: 1 }}
               action={
@@ -1722,7 +1722,7 @@ export const ImportDetailDialog = ({
               {draft.isSaving
                 ? 'Saving attendance. Keep this review open until the save finishes.'
                 : 'Finish the time edit, then submit or discard changes before searching, sorting, filtering or changing pages.'}
-            </Alert>
+            </HrNotice>
           )}
           <CustomizableTable
             showColumns

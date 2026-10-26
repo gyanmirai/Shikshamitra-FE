@@ -6,6 +6,7 @@ import { useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 import { Chip, Alert, Stack, Button, Typography } from '@mui/material';
@@ -90,9 +91,9 @@ export function ReportGenerate({
       </FormSectionCard>
       {(template.definition.filters.conditions.length > 0 ||
         template.definition.filters.groups.length > 0) && (
-        <Alert severity="info">
+        <HrNotice severity="info">
           Template rules: {describeReportRules(template.definition.filters, form.values, dataset)}.
-        </Alert>
+        </HrNotice>
       )}
       <Typography variant="body2" color="text.secondary">
         Generation captures a fixed result. Changing this selection does not change the template.

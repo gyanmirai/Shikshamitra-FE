@@ -9,9 +9,10 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatCurrency } from 'src/utils/cureencyFormater';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
-import { Box, Card, Grid, Stack, Alert, Button, Avatar, Skeleton, CardHeader } from '@mui/material';
+import { Box, Card, Grid, Stack, Button, Avatar, Skeleton, CardHeader } from '@mui/material';
 import {
   useGetEmployeeSalarySlipQuery,
   useLazyGetEmployeeSalarySlipPdfQuery,
@@ -147,9 +148,9 @@ const PayrollSummary = ({ employee }: any) => {
             {isFetching ? (
               <PayrollSummarySkeleton />
             ) : isError ? (
-              <Alert severity="info">
+              <HrNotice severity="info">
                 No finalized salary slip found for this staff member and month.
-              </Alert>
+              </HrNotice>
             ) : hasSalarySlip ? (
               <>
                 <Grid container spacing={1}>
@@ -219,7 +220,7 @@ const PayrollSummary = ({ employee }: any) => {
                 </Grid>
               </>
             ) : (
-              <Alert severity="info">Select a month to view finalized payroll summary.</Alert>
+              <HrNotice severity="info">Select a month to view finalized payroll summary.</HrNotice>
             )}
           </Box>
         </motion.div>

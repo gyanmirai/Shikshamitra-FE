@@ -6,6 +6,7 @@ import type { HRDashboardPreview, HRDashboardPreviewStatus } from 'src/redux/hr/
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { fDateTime } from 'src/utils/format-time';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 
@@ -112,16 +113,16 @@ export const HrDashboardPreviewShell = ({
       {refreshing ? <LinearProgress aria-label="Refreshing HR dashboard" /> : null}
       {hasError ? <Alert severity="warning">{preview?.lastError}</Alert> : null}
       {preview?.isStale && preview?.status === 'Ready' ? (
-        <Alert severity="info">
+        <HrNotice severity="info">
           This snapshot is older than 24 hours. A fresh view is being prepared automatically. You
           can keep working with the saved data meanwhile.
-        </Alert>
+        </HrNotice>
       ) : null}
       {preview?.status === 'Empty' ? (
-        <Alert severity="info">
+        <HrNotice severity="info">
           The first saved HR dashboard snapshot is being prepared automatically. The next scheduled
           refresh is around {formatScheduleTime(preview.nextScheduledRefreshAt)}.
-        </Alert>
+        </HrNotice>
       ) : null}
       {preview?.status === 'Failed' ? (
         <Alert severity="error">

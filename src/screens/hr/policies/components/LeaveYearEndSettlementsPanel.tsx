@@ -10,6 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import CustomizableTable from 'src/components/customizabaleTable';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
@@ -225,7 +226,7 @@ export function LeaveYearEndSettlementsPanel() {
                 <CircularProgress size={22} />
               </Stack>
             ) : !activeRun ? (
-              <Alert severity="info">No settlement run found.</Alert>
+              <HrNotice severity="info">No settlement run found.</HrNotice>
             ) : (
               <>
                 {runs.length > 1 ? (
@@ -314,7 +315,7 @@ export function LeaveYearEndSettlementsPanel() {
                     ]}
                   />
                 ) : (
-                  <Alert severity="info">No eligible paid leave settlement items.</Alert>
+                  <HrNotice severity="info">No eligible paid leave settlement items.</HrNotice>
                 )}
               </>
             )}

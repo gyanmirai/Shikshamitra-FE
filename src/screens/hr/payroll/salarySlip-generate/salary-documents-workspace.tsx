@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { useGetPayslipSettingsQuery } from 'src/redux/hr/payslip-api';
 import { usePreviewHrReportMutation } from 'src/redux/hr/hrReportsApi';
 import { useId, useRef, useState, useEffect, useCallback } from 'react';
@@ -186,9 +187,9 @@ export default function SalaryDocumentsWorkspace({
     : settings.data?.presentation?.registerColumns;
   if (!permissions.canView)
     return (
-      <Alert severity="info">
+      <HrNotice role="alert" severity="info">
         HR Reports View permission is required to preview salary documents.
-      </Alert>
+      </HrNotice>
     );
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>

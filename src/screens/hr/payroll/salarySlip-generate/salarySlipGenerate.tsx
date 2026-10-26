@@ -13,6 +13,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -394,7 +395,7 @@ export default function PaySlipGenerationScreen({
         />
       )}
       {!canView ? (
-        <Alert severity="info">You do not have access to payslips.</Alert>
+        <HrNotice role="alert" severity="info">You do not have access to payslips.</HrNotice>
       ) : (
         <>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>

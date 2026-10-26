@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetEsiComponentTreatmentsQuery } from 'src/redux/hr/statutory-scheme-api';
@@ -125,9 +126,9 @@ function TreatmentForm({
         <Stack spacing={2}>
           {error && <Alert severity="error">{error}</Alert>}
           {!canEdit && (
-            <Alert severity="info">
+            <HrNotice role="alert" severity="info">
               School-wide HR scope and ESIC editing access are required.
-            </Alert>
+            </HrNotice>
           )}
           <TextField
             label="Changes effective from"

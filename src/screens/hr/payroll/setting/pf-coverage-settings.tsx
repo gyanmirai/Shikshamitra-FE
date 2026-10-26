@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Alert, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import { useGetPfCoverageQuery, useSavePfCoverageMutation } from 'src/redux/hr/pf-coverage-api';
@@ -64,11 +65,11 @@ export function PfCoverageSettings() {
   return (
     <Stack spacing={1} sx={{ mb: 2 }}>
       <Typography variant="subtitle2">School PF coverage</Typography>
-      <Alert severity={current ? 'info' : 'warning'}>
+      <HrNotice severity={current ? 'info' : 'warning'}>
         {current
           ? `School PF coverage: ${current.isCovered ? 'Covered' : 'Not covered'}. Effective ${current.effectiveMonth.slice(0, 7)}.`
           : 'School PF coverage needs review before new salary enrollment decisions can be saved.'}
-      </Alert>
+      </HrNotice>
       {query.isError && (
         <Alert
           severity="error"

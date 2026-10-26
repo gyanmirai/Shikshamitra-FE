@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { serverColumnFilters } from 'src/screens/hr/utils/server-column-filters';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
@@ -280,15 +281,15 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
                     </Stack>
                   ))
                 ) : (
-                  <Alert severity="info">No differences found.</Alert>
+                  <HrNotice severity="info">No differences found.</HrNotice>
                 )}
               </Stack>
             </Paper>
           ) : versions.length >= 2 ? (
-            <Alert severity="info">
+            <HrNotice severity="info">
               Latest change is compared automatically. Select different versions to compare another
               range.
-            </Alert>
+            </HrNotice>
           ) : null}
         </Stack>
       </Drawer>
@@ -341,9 +342,9 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           {restorePreviewLoading ? <LinearProgress /> : null}
-          <Alert severity="info">
+          <HrNotice severity="info">
             Restore creates a new draft. The current active policy is not changed.
-          </Alert>
+          </HrNotice>
           {restorePreview ? (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <Chip
@@ -374,11 +375,11 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             </Stack>
           ) : null}
           {restorePreview?.riskSummary || restorePreview?.recommendedAction ? (
-            <Alert severity={restoreSummarySeverity}>
+            <HrNotice severity={restoreSummarySeverity}>
               {restorePreview.riskSummary || ''}
               {restorePreview.riskSummary && restorePreview.recommendedAction ? ' ' : ''}
               {restorePreview.recommendedAction || ''}
-            </Alert>
+            </HrNotice>
           ) : null}
           <TextField
             label="Draft name"

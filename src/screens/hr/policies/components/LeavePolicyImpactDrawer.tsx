@@ -1,16 +1,15 @@
 'use client';
 
 import React from 'react';
+import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
 import {
   Box,
   Chip,
-  Alert,
   Stack,
   Button,
   Drawer,
   Divider,
   Typography,
-  LinearProgress,
 } from '@mui/material';
 
 import { DrawerHeader } from './HRPolicySharedUI';
@@ -42,11 +41,11 @@ export function LeavePolicyImpactDrawer({
         closeDisabled={loading}
       />
       <Divider />
-      {loading ? <LinearProgress /> : null}
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
         <Box sx={{ flex: 1, overflow: 'auto', p: 2.5 }}>
-          {!review ? (
-            <Alert severity="info">Select a leave policy action to preview impact.</Alert>
+          {loading ? <HrLoadingNotice>Loading leave policy impact...</HrLoadingNotice> : null}
+          {!review && !loading ? (
+            <HrNotice severity="info">Select a leave policy action to preview impact.</HrNotice>
           ) : null}
           {review ? (
             <Stack spacing={2}>
@@ -72,7 +71,7 @@ export function LeavePolicyImpactDrawer({
 
               <Stack spacing={1}>
                 {review.risks.map((risk) => (
-                  <Alert
+                  <HrNotice
                     key={`${risk.label}-${risk.message}`}
                     severity={
                       risk.severity === 'blocking'
@@ -84,15 +83,15 @@ export function LeavePolicyImpactDrawer({
                   >
                     <Typography variant="subtitle2">{risk.label}</Typography>
                     <Typography variant="body2">{risk.message}</Typography>
-                  </Alert>
+                  </HrNotice>
                 ))}
               </Stack>
 
-              <Alert severity="info">
+              <HrNotice severity="info">
                 Historical leave requests keep the archived policy, paid bucket, and reporting
                 context. New requests should only use active leave policies resolved from Leave
                 Policies & Rules.
-              </Alert>
+              </HrNotice>
             </Stack>
           ) : null}
         </Box>

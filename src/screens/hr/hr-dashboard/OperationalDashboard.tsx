@@ -8,6 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useMemo, useState, useEffect } from 'react';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Stack, Alert, Button, Typography, LinearProgress } from '@mui/material';
 import { useGetHROperationalOverviewQuery } from 'src/redux/hr/hrOperationalDashboardApi';
@@ -172,10 +173,10 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
       ) : (
         <>
           {legacyNotice && (
-            <Alert severity="info" onClose={() => setLegacyNotice(false)}>
+            <HrNotice severity="info" onClose={() => setLegacyNotice(false)}>
               Staff filters are no longer used on this dashboard. Find and filter records in Staff
               Directory or Attendance.
-            </Alert>
+            </HrNotice>
           )}
           {overview.isError && (
             <Alert severity="warning">
@@ -195,9 +196,9 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
                 canViewPayroll={canViewPayroll}
               />
               {data && !availableModules && (
-                <Alert severity="info">
+                <HrNotice role="alert" severity="info">
                   No HR summaries are available with your current permissions.
-                </Alert>
+                </HrNotice>
               )}
             </>
           )}
