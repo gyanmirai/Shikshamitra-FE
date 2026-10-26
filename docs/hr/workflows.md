@@ -15,6 +15,8 @@ Backend workflow rules are canonical in `https://github.com/gyanmirai/Shikshamit
 
 ## Core workflows
 
+For register layout, filter composition and synthetic browser checks, see [Attendance register workspace](references/attendance-register-workspace.md).
+
 Use this map to find the first screen and client:
 
 | Workflow                   | Screen entry                                                                | Main client                                  |
