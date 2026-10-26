@@ -54,6 +54,8 @@ unsaved forms; never expose record IDs, raw route segments, or duplicate destina
 | --- | --- |
 | HR dashboard, Staff Directory, onboarding list, policy page | Current page |
 | Staff profile / add / update | Staff Directory → Current page |
+| Staff I-Card list / Document Types | Current page; Staff Directory is a sibling |
+| I-card template editor | Staff I-Card → Create Staff I-Card / Update Staff I-Card (existing Back callback) |
 | Onboarding application | Staff Onboarding → Candidate application |
 | Payroll | Payroll Management (`/hr/payroll`) → Current page |
 | Salary template editor | Payroll Management → Salary Templates → Create / View / Edit |
@@ -63,6 +65,7 @@ unsaved forms; never expose record IDs, raw route segments, or duplicate destina
 | Report templates and designer | Reports → Report templates → Create / Edit template |
 | Report generation / result | Reports → Choose template (for options) → Current page |
 | Performance setup | Performance Management → Settings → Setup & Readiness |
+| Performance root / overview | Performance Management as current-page text |
 
 Sidebar-only Settings and Policies & Rules groups have no landing screen, so they are omitted.
 Self-service Dashboard / My Leave breadcrumbs keep their existing non-HR behavior.

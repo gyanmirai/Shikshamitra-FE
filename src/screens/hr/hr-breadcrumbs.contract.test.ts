@@ -3,7 +3,7 @@ import path from 'node:path';
 import ts from 'typescript';
 import { runInNewContext } from 'node:vm';
 import { readdirSync, readFileSync } from 'node:fs';
-import { it, expect, describe } from 'vitest';
+import { it, vi, expect, describe } from 'vitest';
 
 import { hrPaths } from 'src/constants/hr-menus';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
@@ -67,6 +67,8 @@ function trails(file: string, context: Record<string, unknown> = {}): Crumb[][] 
       isCreate: false,
       readOnly: false,
       formEmployee: null,
+      form: { onFalse: () => {} },
+      selectedTemplate: null,
       requestedEditId: '',
       candidateName: 'Review Candidate',
       onBack: () => {},
@@ -76,7 +78,7 @@ function trails(file: string, context: Record<string, unknown> = {}): Crumb[][] 
       employeeId: 'staff-123',
       salaryStructureHref: (id: string) => `${hrPaths.payroll.structure}?employeeId=${id}`,
       currentTabLabel: 'Work Calendars',
-      currentWorkspace: { label: 'Reviews' },
+      currentWorkspace: { value: 'reviews', label: 'Reviews' },
       view: 'history',
       templateArea: false,
       isDesign: false,
@@ -111,6 +113,7 @@ describe('HR breadcrumb route contract', () => {
       expect(source).not.toContain('HR/Staff');
       for (const links of trails(file)) {
         expect(links.length).toBeGreaterThan(0);
+        expect(links.map((link) => link.name)).not.toContain('Staff');
         expect(new Set(links.map((link) => link.name)).size).toBe(links.length);
         expect(links.at(-1)?.href).toBeUndefined();
         expect(links.at(-1)?.onClick).toBeUndefined();
@@ -166,6 +169,61 @@ describe('HR breadcrumb route contract', () => {
     ]);
   });
 
+  it('shows the I-card list as its current location without a sibling Directory ancestor', () => {
+    expect(trails(`${screenRoot}i-card/index.tsx`)[1]).toEqual([{ name: 'Staff I-Card' }]);
+  });
+
+  it('keeps Document Types independent of its sibling Staff Directory', () => {
+    expect(trails(`${screenRoot}setting/index.tsx`)[0]).toEqual([{ name: 'Document Types' }]);
+  });
+
+  it.each([
+    [null, 'Create Staff I-Card'],
+    [{ id: 'template-123', name: 'Review Template' }, 'Update Staff I-Card'],
+  ])(
+    'describes I-card create/update state and reuses the existing return callback',
+    (selectedTemplate, current) => {
+      const close = vi.fn();
+      const links = trails(`${screenRoot}i-card/index.tsx`, {
+        selectedTemplate,
+        form: { onFalse: close },
+      })[0];
+      expect(links).toEqual([{ name: 'Staff I-Card', onClick: close }, { name: current }]);
+      expect(links[0].href).toBeUndefined();
+      links[0].onClick?.();
+      expect(close).toHaveBeenCalledOnce();
+    }
+  );
+
+  it.each(['professional-management/page.tsx', 'professional-management/overview/page.tsx'])(
+    'treats %s as the current Performance workspace without a self-link',
+    (page) => {
+      expect(readFileSync(path.join(root, appRoot, page), 'utf8')).toContain(
+        'workspace="overview"'
+      );
+      const links = trails(`${screenRoot}professional-management/index.tsx`, {
+        currentWorkspace: { value: 'overview', label: 'Overview' },
+      })[0];
+      expect(links).toEqual([{ name: 'Performance Management' }]);
+    }
+  );
+
+  it.each([
+    ['reviews', 'Reviews'],
+    ['cycles-templates', 'Cycles & Templates'],
+    ['outcomes', 'Outcomes'],
+    ['reports', 'Reports'],
+    ['settings', 'Settings'],
+  ])('keeps a real Performance Management ancestor for %s', (value, label) => {
+    const links = trails(`${screenRoot}professional-management/index.tsx`, {
+      currentWorkspace: { value, label },
+    })[0];
+    expect(links).toEqual([
+      { name: 'Performance Management', href: '/hr/professional-management' },
+      { name: label },
+    ]);
+  });
+
   it.each([
     [null, '', 'Add Staff'],
     [null, 'staff-123', 'Update Staff'],
@@ -200,7 +258,11 @@ describe('HR breadcrumb route contract', () => {
 
   it('links performance setup to its real settings ancestor', () => {
     const links = trails(`${screenRoot}professional-management/index.tsx`, {
-      currentWorkspace: { label: 'Setup & Readiness', parentLabel: 'Settings' },
+      currentWorkspace: {
+        value: 'setup-readiness',
+        label: 'Setup & Readiness',
+        parentLabel: 'Settings',
+      },
     })[0];
     expect(links).toEqual([
       { name: 'Performance Management', href: '/hr/professional-management' },

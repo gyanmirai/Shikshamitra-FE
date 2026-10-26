@@ -1,7 +1,6 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import { hrPaths } from 'src/constants/hr-menus';
 import type { EmployeeICardTemplate } from 'src/redux/hr/employee-icard-template-api';
 import type { AcademicOrganizationSelectOption } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 
@@ -550,7 +549,10 @@ const EmployeeIcardScreen = () => {
           <CustomBreadcrumbs
             heading={selectedTemplate ? 'Update Staff I-Card' : 'Create Staff I-Card'}
             description="Create branded, print-ready staff ID cards."
-            links={[{ name: 'Staff', href: hrPaths.employee.list }, { name: 'Staff I-Card' }]}
+            links={[
+              { name: 'Staff I-Card', onClick: form.onFalse },
+              { name: selectedTemplate ? 'Update Staff I-Card' : 'Create Staff I-Card' },
+            ]}
             isBack
             onBack={form.onFalse}
           />
@@ -569,7 +571,7 @@ const EmployeeIcardScreen = () => {
           <CustomBreadcrumbs
             heading="Staff I-Card"
             description="Manage templates, check readiness, and export staff cards."
-            links={[{ name: 'Staff', href: hrPaths.employee.list }, { name: 'Staff I-Card' }]}
+            links={[{ name: 'Staff I-Card' }]}
             action={
               <Button
                 onClick={handleCreate}
