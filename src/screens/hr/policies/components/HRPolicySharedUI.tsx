@@ -537,30 +537,32 @@ export function SectionTable({
   columnDefinitions?: Partial<IColumn>[];
 } & Partial<Omit<React.ComponentProps<typeof CustomizableTable>, 'columns' | 'data' | 'tableId'>>) {
   const instance = React.useId();
-  const rows = React.Children.toArray(children).flatMap((child, index) => {
-    if (!React.isValidElement<{ children?: React.ReactNode; selected?: boolean }>(child)) return [];
-    const cells = React.Children.toArray(child.props.children).filter(
-      (cell): cell is React.ReactElement<{ children?: React.ReactNode; colSpan?: number }> =>
-        React.isValidElement(cell)
-    );
-    if (
-      cells.length !== columns.length ||
-      cells.some((cell) => Number(cell.props.colSpan || 1) > 1)
-    )
-      return [];
-    return [
-      {
-        id: String(child.key || index),
-        selected: child.props.selected,
-        ...Object.fromEntries(
-          cells.map((cell, cellIndex) => [
-            columnIds?.[cellIndex] || `column${cellIndex}`,
-            cell.props.children,
-          ])
-        ),
-      },
-    ];
-  });
+  const rows: Array<{ id: string; selected?: boolean; [column: string]: React.ReactNode }> =
+    React.Children.toArray(children).flatMap((child, index) => {
+      if (!React.isValidElement<{ children?: React.ReactNode; selected?: boolean }>(child))
+        return [];
+      const cells = React.Children.toArray(child.props.children).filter(
+        (cell): cell is React.ReactElement<{ children?: React.ReactNode; colSpan?: number }> =>
+          React.isValidElement(cell)
+      );
+      if (
+        cells.length !== columns.length ||
+        cells.some((cell) => Number(cell.props.colSpan || 1) > 1)
+      )
+        return [];
+      return [
+        {
+          id: String(child.key || index),
+          selected: child.props.selected,
+          ...Object.fromEntries(
+            cells.map((cell, cellIndex) => [
+              columnIds?.[cellIndex] || `column${cellIndex}`,
+              cell.props.children,
+            ])
+          ),
+        },
+      ];
+    });
   return (
     <CustomizableTable
       tableId={tableId || `hr-policy-section-${instance}`}
