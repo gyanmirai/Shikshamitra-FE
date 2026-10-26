@@ -68,7 +68,7 @@ const entry = (name: string): CataloguePermission => ({
 const catalogue: PermissionCatalogue = {
   groups: [{ name: 'Students', displayName: 'Students', permissions: names.map(entry) }],
 };
-const navigation = studentModule(false)[studentPath][0].items;
+const navigation = studentModule()[studentPath][0].items;
 const grants = names.map((name) => ({ name, isGranted: false }));
 const role = { providerName: 'R', providerKey: 'Admissions staff' };
 const user = { providerName: 'U', providerKey: 'student-permission-user' };

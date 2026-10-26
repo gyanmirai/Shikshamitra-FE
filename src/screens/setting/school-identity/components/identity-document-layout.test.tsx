@@ -65,7 +65,7 @@ describe('school identity document layout', () => {
     expect(screen.getByText('Test principal')).toBeVisible();
     expect(screen.getByText('Sample layout only')).toBeVisible();
     expect(
-      screen.getByRole('button', { name: 'Document layout preview information' })
+      screen.getByRole('button', { name: 'Document Layout Preview information' })
     ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Preview document' })).toBeVisible();
   });

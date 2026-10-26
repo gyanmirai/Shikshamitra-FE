@@ -111,7 +111,7 @@ const activeRoutes: RouteCase[] = [
 ];
 
 const grants = (...names: string[]) => names.map((name) => ({ name, isGranted: true }));
-const items: NavItemBaseProps[] = academicModule(true)['/academic'].flatMap((group) => group.items);
+const items: NavItemBaseProps[] = academicModule()['/academic'].flatMap((group) => group.items);
 const leafPaths = (nodes: NavItemBaseProps[]): string[] =>
   nodes.flatMap((node) =>
     node.children?.length ? leafPaths(node.children) : node.path ? [node.path] : []

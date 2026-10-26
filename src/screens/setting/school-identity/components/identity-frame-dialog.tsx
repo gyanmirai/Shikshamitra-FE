@@ -2,10 +2,14 @@ import { useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import DialogActions from '@mui/material/DialogActions';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 
 import { IDENTITY_LABELS } from '../types';
 import { IdentityFramePreview } from './identity-frame-preview';
@@ -30,13 +34,14 @@ export function IdentityFrameDialog({
   const [placement, setPlacement] = useState(DEFAULT_PLACEMENT);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const cancel = () => {
-    if (
-      !busy &&
-      (placement === DEFAULT_PLACEMENT || window.confirm('Discard image position changes?'))
-    )
-      onClose();
-  };
+  const discardTitle = 'Discard Image Position Changes?';
+  const navigation = useUnsavedNavigation(placement !== DEFAULT_PLACEMENT, {
+    blockNavigation: busy,
+    title: discardTitle,
+    renderConfirmation: (keepEditing, discard) =>
+      renderUnsavedConfirmation(keepEditing, discard, { title: discardTitle, busy }),
+  });
+  const cancel = () => navigation.requestNavigation(onClose);
   const apply = async () => {
     setBusy(true);
     setError('');
@@ -51,45 +56,59 @@ export function IdentityFrameDialog({
     }
   };
   return (
-    <CustomDialog
-      open
-      hasForm={false}
-      title="Adjust Image in Frame"
-      maxWidth="sm"
-      titleInfo="Fit the entire image or fill the frame, then adjust zoom and position. The framed image will be used in documents."
-      handleClose={onClose}
-      disableClose={busy}
-      hasUnsavedChanges={placement !== DEFAULT_PLACEMENT}
-    >
-      <DialogScrollContent>
-        <FormSectionCard
-          title="Image Placement"
-          icon="mdi:crop"
-          descriptionTooltip="Choose how the image fits and position it inside the document frame."
-        >
-          <Stack spacing={2}>
-            <Typography variant="body2">
-              {IDENTITY_LABELS[kind]} · {pending.image.naturalWidth} × {pending.image.naturalHeight}{' '}
-              px
-            </Typography>
-            <IdentityFramePreview kind={kind} pending={pending} placement={placement} />
-            <Typography variant="caption" color="text.secondary">
-              Fit entire image keeps all edges visible. Fill frame crops any edges outside the
-              frame. Empty space stays transparent.
-            </Typography>
-            <IdentityFrameControls value={placement} disabled={busy} onChange={setPlacement} />
-            {error && <Alert severity="error">{error}</Alert>}
-          </Stack>
-        </FormSectionCard>
-      </DialogScrollContent>
-      <DialogActions>
-        <Button disabled={busy} onClick={cancel}>
-          Cancel
-        </Button>
-        <Button variant="contained" disabled={busy} onClick={apply}>
-          {busy ? 'Preparing image…' : 'Use framed image'}
-        </Button>
-      </DialogActions>
-    </CustomDialog>
+    <>
+      <CustomDialog
+        open
+        hasForm={false}
+        title="Adjust Image in Frame"
+        maxWidth="sm"
+        titleInfo="Fit the entire image or fill the frame, then adjust zoom and position. The framed image will be used in documents."
+        handleClose={cancel}
+        guardUnsavedChanges={false}
+        disableClose={busy}
+        hasUnsavedChanges={placement !== DEFAULT_PLACEMENT}
+      >
+        <DialogScrollContent>
+          <FormSectionCard
+            title="Image Placement"
+            icon="mdi:crop"
+            descriptionTooltip="Choose how the image fits and position it inside the document frame."
+          >
+            <Stack spacing={2}>
+              <Typography variant="body2">
+                {IDENTITY_LABELS[kind]} · {pending.image.naturalWidth} ×{' '}
+                {pending.image.naturalHeight} px
+              </Typography>
+              <IdentityFramePreview kind={kind} pending={pending} placement={placement} />
+              <Typography variant="caption" color="text.secondary">
+                Fit entire image keeps all edges visible. Fill frame crops any edges outside the
+                frame. Empty space stays transparent.
+              </Typography>
+              <IdentityFrameControls value={placement} disabled={busy} onChange={setPlacement} />
+              {error && <Alert severity="error">{error}</Alert>}
+            </Stack>
+          </FormSectionCard>
+        </DialogScrollContent>
+        <DialogActions>
+          <Button
+            variant="outlined"
+            disabled={busy}
+            onClick={cancel}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={busy}
+            onClick={apply}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+          >
+            {busy ? 'Preparing image…' : 'Use framed image'}
+          </Button>
+        </DialogActions>
+      </CustomDialog>
+      {navigation.confirmation}
+    </>
   );
 }

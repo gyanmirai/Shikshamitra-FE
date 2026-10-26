@@ -1,6 +1,5 @@
 'use client';
 
-import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
 
 import { ConfirmDialog } from '../confirm-dialog';
@@ -10,6 +9,8 @@ import { useDivisionForm } from './use-division-form';
 import { DivisionRoomField } from './division-room-field';
 import { AcademicFormSection } from './academic-form-section';
 import { academicValidationStyles } from './academic-form-styles';
+import { useAcademicNamePreview } from './use-academic-name-preview';
+import { useAcademicFormClose } from './academic-form-close-context';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 
 import type { DivisionFormProps } from './use-division-form';
@@ -30,6 +31,8 @@ export function DivisionManagementForm({
     showRoomSelection,
     existingDivisions,
   });
+  const namePreview = useAcademicNamePreview('division', formik.values.name, Boolean(editData));
+  const requestClose = useAcademicFormClose(formik.dirty, isSaving, handleClose);
   return (
     <>
       <ConfirmDialog
@@ -66,12 +69,12 @@ export function DivisionManagementForm({
                 label="Division name"
                 value={formik.values.name}
                 disabled={isSaving}
-                onChange={(event) =>
-                  formik.setFieldValue('name', capitalizeFirstLetter(event.target.value))
-                }
+                onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
+                helperText={
+                  formik.touched.name && formik.errors.name ? formik.errors.name : namePreview
+                }
               />
             </ShakingTextField>
             <ShakingTextField error={formik.touched.strength && Boolean(formik.errors.strength)}>
@@ -106,7 +109,7 @@ export function DivisionManagementForm({
           variant="outlined"
           size="small"
           disabled={isSaving}
-          onClick={handleClose}
+          onClick={requestClose}
           startIcon={<AcademicFormActionIcon action="cancel" />}
         >
           Cancel

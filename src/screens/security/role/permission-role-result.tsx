@@ -16,20 +16,26 @@ export default function PermissionRoleResult({
   visibility: boolean;
 }) {
   const unavailable = action.result === 'Unavailable';
-  const allowed = action.roleResult === 'Allowed';
-  const mixed = action.roleResult === 'Mixed access';
+  const overridden = action.overridden && !unavailable;
+  const result = overridden ? action.result : action.roleResult;
+  const allowed = result === 'Allowed' || result === 'Visible';
+  const mixed = result === 'Mixed access';
   const color = unavailable ? 'default' : mixed ? 'warning' : allowed ? 'success' : 'error';
   const text = unavailable
     ? 'Role value unavailable'
-    : mixed
-      ? 'Mixed role access'
-      : visibility
-        ? allowed
-          ? 'Visible by role'
-          : 'Hidden by role'
-        : allowed
-          ? 'Allowed by role'
-          : 'Denied by role';
+    : overridden
+      ? mixed
+        ? 'Mixed access with user overrides'
+        : `${action.result} by user override`
+      : mixed
+        ? 'Mixed role access'
+        : visibility
+          ? allowed
+            ? 'Visible by role'
+            : 'Hidden by role'
+          : allowed
+            ? 'Allowed by role'
+            : 'Denied by role';
   const StatusIcon = unavailable
     ? HelpOutline
     : mixed
@@ -59,9 +65,16 @@ export default function PermissionRoleResult({
       >
         {text}
       </Label>
-      {action.overridden && !unavailable && (
+      {overridden && (
         <Typography variant="caption" color="text.secondary">
-          User override: {action.result}
+          Role default:{' '}
+          {visibility
+            ? action.roleResult === 'Allowed'
+              ? 'Visible'
+              : action.roleResult === 'Denied'
+                ? 'Hidden'
+                : action.roleResult
+            : action.roleResult}
         </Typography>
       )}
     </Stack>

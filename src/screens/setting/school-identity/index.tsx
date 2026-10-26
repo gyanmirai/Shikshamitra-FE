@@ -5,6 +5,7 @@ import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import { instituteSetupPaths } from 'src/constants/institute-setup';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { InstituteFieldFormattingPopover } from 'src/components/institute-field-formatting/institute-field-formatting-popover';
 
 import { useSchoolIdentity } from './hooks/use-school-identity';
 import { IdentityWorkspace } from './components/identity-workspace';
@@ -30,6 +31,7 @@ export default function SchoolIdentityScreen() {
       <CustomBreadcrumbs
         heading="School Identity"
         description="Manage shared school assets and board, medium or organization overrides."
+        action={<InstituteFieldFormattingPopover scope="schoolIdentity" />}
         slotProps={{
           action: {},
           heading: {},

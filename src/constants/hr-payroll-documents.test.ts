@@ -4,7 +4,7 @@ import { getNodeActionPermissionNames } from 'src/screens/security/role/account-
 import hrModule, { hrPaths, hrPermissions } from './hr-menus';
 
 it('exposes Payslip & statement settings in Settings while keeping existing payslip grants in their original editor group', () => {
-  const payroll = Object.values(hrModule(false))[0][0].items.find(
+  const payroll = Object.values(hrModule())[0][0].items.find(
     (item) => item.title === 'Payroll Management'
   )!;
   const settings = payroll.children!.find((item) => item.title === 'Settings')!;

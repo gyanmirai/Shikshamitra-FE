@@ -107,24 +107,22 @@ const GroupCustomSelect = <T extends string>({
         ) : options.length === 0 ? (
           <MenuItem disabled>{noOptionsMessage}</MenuItem>
         ) : (
-          options.map((group, groupIndex) => (
-            <React.Fragment key={groupIndex}>
-              <ListSubheader>{group.label}</ListSubheader>
-              {group.items.map((item: any, itemIndex) => (
-                <MenuItem
-                  key={item[valueKey] as string | number}
-                  value={item[valueKey] as string | number}
-                >
-                  <Checkbox
-                    checked={(value as (string | number)[]).includes(
-                      item[valueKey as keyof OptionItem<T>] as string | number
-                    )}
-                  />
-                  <ListItemText primary={item[labelKey]} />
-                </MenuItem>
-              ))}
-            </React.Fragment>
-          ))
+          options.flatMap((group, groupIndex) => [
+            <ListSubheader key={`group-${groupIndex}`}>{group.label}</ListSubheader>,
+            ...group.items.map((item) => (
+              <MenuItem
+                key={item[valueKey] as string | number}
+                value={item[valueKey] as string | number}
+              >
+                <Checkbox
+                  checked={(value as (string | number)[]).includes(
+                    item[valueKey as keyof OptionItem<T>] as string | number
+                  )}
+                />
+                <ListItemText primary={item[labelKey]} />
+              </MenuItem>
+            )),
+          ])
         )}
       </Select>
       {helperText && <FormHelperText>{helperText}</FormHelperText>}

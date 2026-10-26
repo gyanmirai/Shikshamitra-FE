@@ -1,5 +1,6 @@
 import { api } from 'src/redux/service';
 import { organizationType } from 'src/redux/tagTypes';
+import { academicReorderTags } from 'src/redux/academic-reorder-tags';
 
 export const organizationApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -33,6 +34,14 @@ export const organizationApi = api.injectEndpoints({
         organizationType.academicOrganizationOptions,
       ],
     }),
+    reorderStages: builder.mutation<void, { mediumId: string; ids: string[] }>({
+      query: ({ mediumId, ids }) => ({
+        url: `/education-mediums/${mediumId}/stages/order`,
+        method: 'PUT',
+        body: { ids },
+      }),
+      invalidatesTags: academicReorderTags,
+    }),
     deleteOrganization: builder.mutation({
       query: (id) => ({
         url: `/app/education-medium-stage/${id}`,
@@ -53,4 +62,5 @@ export const {
   useLazyGetOrganizationByIdQuery,
   useGetOrganizationQuery,
   useUpdateOrganizationMutation,
+  useReorderStagesMutation,
 } = organizationApi;

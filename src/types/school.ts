@@ -41,6 +41,7 @@ export interface Organization {
   lastModifierId: string;
   educationMediumId: string;
   name: string;
+  sortOrder?: number;
   standards: Standards[];
 }
 export interface Standards {
@@ -51,6 +52,7 @@ export interface Standards {
   lastModificationTime: string;
   lastModifierId: string;
   name: string;
+  sortOrder?: number;
   educationMediumStageId: string;
   shiftId?: string | null;
   shift?: {
@@ -69,6 +71,7 @@ export interface Division {
   lastModificationTime: string;
   lastModifierId: string;
   name: string;
+  sortOrder?: number;
   strength: number;
   roomId?: string | null;
   roomNumber?: string | null;

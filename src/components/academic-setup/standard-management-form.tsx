@@ -1,7 +1,6 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
 import { Stack, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
@@ -11,6 +10,8 @@ import { useStandardForm } from './use-standard-form';
 import { DialogScrollContent } from '../customDialog';
 import { AcademicFormSection } from './academic-form-section';
 import { academicValidationStyles } from './academic-form-styles';
+import { useAcademicNamePreview } from './use-academic-name-preview';
+import { useAcademicFormClose } from './academic-form-close-context';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 
 import type { StandardFormProps } from './standard-form-model';
@@ -20,6 +21,8 @@ type ShiftOption = { id: string; shiftName: string; startTime: string; endTime: 
 export function StandardManagementForm(props: StandardFormProps) {
   const { editData, handleClose } = props;
   const { formik, confirm, saveStandard, isSaving } = useStandardForm(props);
+  const namePreview = useAcademicNamePreview('standard', formik.values.name, Boolean(editData));
+  const requestClose = useAcademicFormClose(formik.dirty, isSaving, handleClose);
   const { data, isLoading: isShiftLoading } = useGetShiftsQuery(undefined);
   const shifts: ShiftOption[] = data?.items ?? [];
   return (
@@ -57,12 +60,12 @@ export function StandardManagementForm(props: StandardFormProps) {
                 label="Class name"
                 value={formik.values.name}
                 disabled={isSaving}
-                onChange={(event) =>
-                  formik.setFieldValue('name', capitalizeFirstLetter(event.target.value))
-                }
+                onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
+                helperText={
+                  formik.touched.name && formik.errors.name ? formik.errors.name : namePreview
+                }
               />
             </ShakingTextField>
             <ShakingTextField
@@ -103,7 +106,7 @@ export function StandardManagementForm(props: StandardFormProps) {
         <Button
           variant="outlined"
           size="small"
-          onClick={handleClose}
+          onClick={requestClose}
           disabled={isSaving}
           startIcon={<AcademicFormActionIcon action="cancel" />}
         >

@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { studentType } from 'src/redux/tagTypes';
+import { studentType, organizationType } from 'src/redux/tagTypes';
 
 import { studentDirectoryQueryParams } from './student-directory-query';
 
@@ -31,6 +31,7 @@ export const studentRecordsApi = api.injectEndpoints({
       query: (params) => ({ url: '/students/records/directory/options', params }),
       transformResponse: (response: StudentDirectoryOptions | { data?: StudentDirectoryOptions }) =>
         unwrapRecordsResult(response),
+      providesTags: [organizationType.academicHierarchyOptions],
     }),
     getStudentRecordsSettingsRoles: builder.query<{ items: { name: string }[] }, void>({
       query: () => '/students/records/settings/roles',

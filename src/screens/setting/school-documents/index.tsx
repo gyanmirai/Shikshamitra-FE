@@ -3,8 +3,9 @@
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { instituteSetupPaths } from 'src/constants/institute-setup';
-import { Box, Alert, Button, CircularProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Stack, Alert, Button, CircularProgress } from '@mui/material';
+import { InstituteFieldFormattingPopover } from 'src/components/institute-field-formatting/institute-field-formatting-popover';
 
 import { DocumentTable } from './components/document-table';
 import { DocumentEditor } from './components/document-editor';
@@ -35,16 +36,19 @@ export default function SchoolDocumentsScreen() {
           { name: 'School Documents' },
         ]}
         action={
-          permissions.canAdd && (
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-              onClick={() => workspace.setAdding(true)}
-            >
-              Add Document
-            </Button>
-          )
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+            <InstituteFieldFormattingPopover scope="schoolDocuments" />
+            {permissions.canAdd && (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                onClick={() => workspace.setAdding(true)}
+              >
+                Add document
+              </Button>
+            )}
+          </Stack>
         }
       />
       {!permissions.ready ? (

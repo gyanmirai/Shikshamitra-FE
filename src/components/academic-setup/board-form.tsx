@@ -8,6 +8,7 @@ import { BoardNameField } from './board-name-field';
 import { BoardDateFields } from './board-date-fields';
 import { DialogScrollContent } from '../customDialog';
 import { AcademicFormSection } from './academic-form-section';
+import { useAcademicFormClose } from './academic-form-close-context';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 
 import type { BoardFormProps } from './board-form-model';
@@ -15,6 +16,7 @@ import type { BoardFormProps } from './board-form-model';
 export const BoardForm = (props: BoardFormProps) => {
   const { formik, confirm, yearStart, yearEnd, onSubmit, saving } = useBoardForm(props);
   const { editData, academicYear, academicYearId, boards, handleClose } = props;
+  const requestClose = useAcademicFormClose(formik.dirty, saving, handleClose);
   return (
     <>
       <ConfirmDialog
@@ -77,7 +79,7 @@ export const BoardForm = (props: BoardFormProps) => {
         <Button
           variant="outlined"
           size="small"
-          onClick={handleClose}
+          onClick={requestClose}
           disabled={saving}
           startIcon={<AcademicFormActionIcon action="cancel" />}
         >

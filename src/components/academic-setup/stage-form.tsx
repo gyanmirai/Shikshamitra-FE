@@ -1,4 +1,3 @@
-import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
 
 import { useStageForm } from './use-stage-form';
@@ -6,6 +5,8 @@ import { ConfirmDialog } from '../confirm-dialog';
 import ShakingTextField from '../shaking-text-field';
 import { DialogScrollContent } from '../customDialog';
 import { AcademicFormSection } from './academic-form-section';
+import { useAcademicNamePreview } from './use-academic-name-preview';
+import { useAcademicFormClose } from './academic-form-close-context';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 
 import type { StageFormProps } from './use-stage-form';
@@ -13,6 +14,12 @@ import type { StageFormProps } from './use-stage-form';
 export function OrganizationForm(props: StageFormProps) {
   const { editData, handleClose } = props;
   const { formik, confirm, saveStage, isSaving } = useStageForm(props);
+  const namePreview = useAcademicNamePreview(
+    'stage',
+    formik.values.organization,
+    Boolean(editData)
+  );
+  const requestClose = useAcademicFormClose(formik.dirty, isSaving, handleClose);
   const showError = Boolean(formik.touched.organization && formik.errors.organization);
   return (
     <>
@@ -45,12 +52,10 @@ export function OrganizationForm(props: StageFormProps) {
                 autoFocus
                 disabled={isSaving}
                 value={formik.values.organization}
-                onChange={(event) =>
-                  formik.setFieldValue('organization', capitalizeFirstLetter(event.target.value))
-                }
+                onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={showError}
-                helperText={showError ? formik.errors.organization : undefined}
+                helperText={showError ? formik.errors.organization : namePreview}
                 size="small"
               />
             </ShakingTextField>
@@ -62,7 +67,7 @@ export function OrganizationForm(props: StageFormProps) {
           variant="outlined"
           size="small"
           disabled={isSaving}
-          onClick={handleClose}
+          onClick={requestClose}
           startIcon={<AcademicFormActionIcon action="cancel" />}
         >
           Cancel

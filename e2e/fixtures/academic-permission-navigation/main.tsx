@@ -33,7 +33,7 @@ function Preview() {
   const { permissions, loading } = useSelector((state: ReturnType<typeof store.getState>) => state.auth);
   const { mode, setMode } = useColorScheme();
   const pathname = usePathname();
-  const navigation = filterAcademicNavigation(academicModule(true)['/academic'][0].items, permissions);
+  const navigation = filterAcademicNavigation(academicModule()['/academic'][0].items, permissions);
   return <Box sx={{ p: { xs: 1.5, md: 3 } }}>
     <Typography variant="h5">Academic permission navigation</Typography>
     <Alert severity="info" sx={{ my: 2 }}>Synthetic permissions with the production navigation and route guard. No school data is loaded.</Alert>

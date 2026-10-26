@@ -49,7 +49,7 @@ export const NODE_TYPE_META: Record<
   'Academic Year': {
     icon: 'solar:calendar-bold-duotone',
     label: 'Academic year',
-    childLabel: 'Education boards',
+    childLabel: 'Education Boards',
     addLabel: 'Add board',
   },
   'Education Board': {

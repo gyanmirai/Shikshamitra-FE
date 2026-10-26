@@ -3,15 +3,33 @@ import type { FormikProps } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import TextField from '@mui/material/TextField';
 import CustomSelect from 'src/components/custom-select';
-import { capitalizeFirstLetter } from 'src/utils/input-format';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { useInstituteFieldPreview } from 'src/components/institute-field-formatting/use-institute-field-preview';
 
 import { documentCategories } from '../types';
 
 import type { DocumentFormValues } from '../types';
 
-export function DocumentDetailsFields({ formik }: { formik: FormikProps<DocumentFormValues> }) {
+export function DocumentDetailsFields({
+  formik,
+  isEditing = false,
+}: {
+  formik: FormikProps<DocumentFormValues>;
+  isEditing?: boolean;
+}) {
+  const namePreview = useInstituteFieldPreview(
+    'schoolDocuments',
+    'name',
+    formik.values.name,
+    isEditing
+  );
+  const notesPreview = useInstituteFieldPreview(
+    'schoolDocuments',
+    'notes',
+    formik.values.notes,
+    isEditing
+  );
   const nameError = Boolean(formik.touched.name && formik.errors.name);
   const categoryError = Boolean(formik.touched.category && formik.errors.category);
   return (
@@ -30,12 +48,10 @@ export function DocumentDetailsFields({ formik }: { formik: FormikProps<Document
           label="Document name"
           name="name"
           value={formik.values.name}
-          onChange={(event) =>
-            formik.setFieldValue('name', capitalizeFirstLetter(event.target.value))
-          }
+          onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           error={nameError}
-          helperText={formik.touched.name && formik.errors.name}
+          helperText={(formik.touched.name && formik.errors.name) || namePreview}
           slotProps={{ htmlInput: { maxLength: 200 } }}
         />
       </ShakingTextField>
@@ -65,12 +81,10 @@ export function DocumentDetailsFields({ formik }: { formik: FormikProps<Document
         label="Notes"
         name="notes"
         value={formik.values.notes}
-        onChange={(event) =>
-          formik.setFieldValue('notes', capitalizeFirstLetter(event.target.value))
-        }
+        onChange={formik.handleChange}
         onBlur={formik.handleBlur}
         error={Boolean(formik.touched.notes && formik.errors.notes)}
-        helperText={formik.touched.notes && formik.errors.notes}
+        helperText={(formik.touched.notes && formik.errors.notes) || notesPreview}
         slotProps={{ htmlInput: { maxLength: 2000 } }}
       />
     </FormSectionCard>

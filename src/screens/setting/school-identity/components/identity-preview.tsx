@@ -1,9 +1,11 @@
-import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import { useState, useEffect } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import DialogActions from '@mui/material/DialogActions';
 import { FormSectionCard } from 'src/components/form-section-card';
+import PdfPreview from 'src/components/preview-document/pdf-preview';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { usePreviewSchoolIdentityMutation } from 'src/redux/InstituteSetup/schoolIdentityApi';
 
@@ -34,6 +36,7 @@ export function IdentityPreviewButton({
   return (
     <>
       <Button
+        startIcon={<Iconify icon={GlobalIcons.eye} />}
         disabled={disabled || loading.isLoading}
         onClick={async () => {
           setError('');
@@ -57,28 +60,37 @@ export function IdentityPreviewButton({
         <CustomDialog
           open
           title="School Identity Preview"
+          titleInfo="Review the generated document with the current identity choices before downloading."
           hasForm={false}
           hasUnsavedChanges={false}
           maxWidth="lg"
           handleClose={() => setFile(null)}
         >
           <DialogScrollContent>
-            <FormSectionCard icon="mdi:file-document-outline" title="Generated document">
-              {url && (
-                <Box
-                  component="iframe"
-                  src={url}
-                  title="School Identity PDF preview"
-                  sx={{ width: 1, height: { xs: 400, md: 600 }, border: 0 }}
-                />
-              )}
+            <FormSectionCard
+              icon="mdi:file-document-outline"
+              title="Generated Document"
+              descriptionTooltip="This PDF shows the selected school images and signing details."
+            >
+              {url && <PdfPreview url={url} title="School Identity PDF preview" />}
             </FormSectionCard>
           </DialogScrollContent>
           <DialogActions>
-            <Button component="a" href={url} download="school-identity-preview.pdf">
+            <Button
+              component="a"
+              href={url}
+              download="school-identity-preview.pdf"
+              startIcon={<Iconify icon={GlobalIcons.download} />}
+            >
               Download preview
             </Button>
-            <Button onClick={() => setFile(null)}>Close</Button>
+            <Button
+              variant="outlined"
+              onClick={() => setFile(null)}
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Close
+            </Button>
           </DialogActions>
         </CustomDialog>
       )}

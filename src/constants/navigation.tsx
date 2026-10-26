@@ -118,7 +118,7 @@ export const navData = (visibility: boolean[]) => [
         shortcutKey: 'Alt+S',
         shortcutKeyName: 'Alt+S',
         visibility: visibility[1],
-        submodule: studentModule(true)[studentPath].flatMap((list) => list.items),
+        submodule: studentModule()[studentPath].flatMap((list) => list.items),
         permissionName: `${defaultModulePermissionName}Students`,
       },
       {
@@ -129,7 +129,7 @@ export const navData = (visibility: boolean[]) => [
         shortcutKey: 'Alt+A',
         shortcutKeyName: 'Alt+A',
         visibility: visibility[2],
-        submodule: academicModule(true)[academicPath].flatMap((list) => list.items),
+        submodule: academicModule()[academicPath].flatMap((list) => list.items),
         permissionName: `${defaultModulePermissionName}Academics`,
       },
       {
@@ -140,7 +140,7 @@ export const navData = (visibility: boolean[]) => [
         shortcutKey: 'Alt+H',
         shortcutKeyName: 'Alt+H',
         visibility: visibility[4],
-        submodule: hrModule(true)[hrPath].flatMap((list) => list.items),
+        submodule: hrModule()[hrPath].flatMap((list) => list.items),
         permissionName: `${defaultModulePermissionName}HR`,
       },
       {
@@ -258,10 +258,10 @@ export const fullSecurityNavData = () => [
   },
 ];
 
-export const navSubData = (isDdvs: boolean = true) => ({
-  ...studentModule(isDdvs),
-  ...hrModule(isDdvs),
-  ...academicModule(isDdvs),
+export const navSubData = () => ({
+  ...studentModule(),
+  ...hrModule(),
+  ...academicModule(),
   ...financeModule,
   ...securityModule,
   ...instituteSetupModule,

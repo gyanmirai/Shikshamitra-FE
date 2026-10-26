@@ -33,7 +33,7 @@ export default function TableEmptyState({
   if (isFilteredEmptyState) {
     return (
       <EmptyContent
-        slotProps={{ img: { maxWidth: { xs: 72, sm: 160 }, display: { xs: 'none', sm: 'block' } } }}
+        slotProps={{ img: { maxWidth: { xs: 72, sm: 160 } } }}
         title={hasSearch ? `No results found for “${normalizedSearchTerm}”` : 'No results found'}
         description="Try different criteria or clear the active search and filters."
         action={

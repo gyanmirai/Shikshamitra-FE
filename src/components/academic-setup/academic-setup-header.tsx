@@ -1,6 +1,7 @@
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { useAcademicSetupContext } from './academic-setup-context';
+import { AcademicFieldFormattingPopover } from './academic-field-formatting-popover';
 import { AcademicYearContext, type AcademicYearContextProps } from './academic-year-context';
 
 export const AcademicSetupHeader = (props: AcademicYearContextProps) => {
@@ -9,6 +10,7 @@ export const AcademicSetupHeader = (props: AcademicYearContextProps) => {
   return (
     <>
       <CustomBreadcrumbs
+        action={<AcademicFieldFormattingPopover />}
         heading={isOnboarding ? undefined : 'Academic Setup'}
         description={
           isOnboarding

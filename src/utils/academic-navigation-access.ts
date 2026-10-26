@@ -77,7 +77,7 @@ export const canAccessAcademicRoute = (
   if (!hasGrantedPermission(permissions, academicPermissions.root)) return false;
   const normalizedPath = pathname.replace(/\/$/, '');
   const path = routeAliases[normalizedPath] ?? normalizedPath;
-  const items = academicModule(true)[academicPath].flatMap((group) => group.items);
+  const items = academicModule()[academicPath].flatMap((group) => group.items);
   // Unlisted legacy pages retain their own route and screen guards.
   return !hasRoute(items, path) || hasRoute(filterAcademicNavigation(items, permissions), path);
 };
