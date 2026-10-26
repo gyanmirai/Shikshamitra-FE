@@ -75,7 +75,9 @@ const ChapterTable = ({
       tableTitle="Syllabus Chapters"
       tableId="chapterTable"
       isLoading={isLoading}
-      noDataText={<>Chapters Data Not Found </>}
+      noDataText={
+        subjectId ? 'No chapters found for this subject.' : 'Select a subject to view chapters.'
+      }
       columns={columns}
       data={tableData}
     />

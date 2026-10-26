@@ -3,7 +3,10 @@
 import type { ChangeEvent } from 'react';
 
 import { useState } from 'react';
-import { Box, Paper, Typography } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Box, Stack, Skeleton } from '@mui/material';
+import { EmptyContent } from 'src/components/empty-content';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import ChapterImportPreview from './ChapterImportPreview';
 import ChapterImportControls from './ChapterImportControls';
@@ -81,7 +84,11 @@ const ChapterImportPanel = ({
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 2 }}>
+    <FormSectionCard
+      title="Import Chapters"
+      icon={GlobalIcons.documentIcon}
+      descriptionTooltip="Upload an Excel or CSV file to preview and validate chapter details before assignment."
+    >
       <ChapterImportControls
         isImporting={isImporting}
         isDownloading={isDownloading}
@@ -91,28 +98,23 @@ const ChapterImportPanel = ({
         onFileChange={handleFileChange}
       />
 
-      {preview.rows.length > 0 ? (
-        <Box sx={{ mt: 2 }}>
+      {isImporting ? (
+        <Stack spacing={2} role="status" aria-label="Reading and validating chapter file" aria-busy>
+          {[0, 1, 2].map((row) => (
+            <Skeleton key={row} variant="rounded" height={40} />
+          ))}
+        </Stack>
+      ) : preview.rows.length > 0 ? (
+        <Box>
           <ChapterImportPreview fileName={preview.fileName} rows={preview.rows} />
         </Box>
-      ) : (
-        <Box
-          sx={{
-            mt: 2,
-            p: 3,
-            border: 1,
-            borderStyle: 'dashed',
-            borderColor: 'divider',
-            borderRadius: 1.5,
-            textAlign: 'center',
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            Upload a completed template to preview and validate every chapter before assignment.
-          </Typography>
-        </Box>
-      )}
-    </Paper>
+      ) : preview.errors.length === 0 ? (
+        <EmptyContent
+          title={preview.fileName ? 'No chapter rows available.' : 'No chapter file selected.'}
+          description="Upload a completed template to preview and validate every chapter before assignment."
+        />
+      ) : null}
+    </FormSectionCard>
   );
 };
 

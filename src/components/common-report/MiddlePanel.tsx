@@ -1,13 +1,8 @@
 import { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Box,
-  Paper,
-  TextField,
-  Typography,
-  InputAdornment,
-} from '@mui/material';
+import { EmptyContent } from 'src/components/empty-content';
+import { Box, Paper, TextField, InputAdornment } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
 import { ReportChoiceCard } from './ReportChoiceCard';
@@ -93,7 +88,7 @@ export default function MiddlePanel({
         />
       </Box>
 
-      <Scrollbar sx={{ flexGrow: 1, overflowY: 'auto', p: 1.5 }}>
+      <Scrollbar fillContent sx={{ flexGrow: 1, overflowY: 'auto', p: 1.5 }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={selectedCategory + search} // ← triggers animation on category change
@@ -101,15 +96,23 @@ export default function MiddlePanel({
             initial="hidden"
             animate="visible"
             exit="exit"
+            style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
           >
             {visibleReports.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
-                No reports found.
-              </Typography>
+              <EmptyContent
+                title={
+                  search ? 'No reports match your search' : 'No reports available in this category'
+                }
+                sx={{ py: 2 }}
+              />
             ) : null}
             {visibleReports.map((subCat) => (
               <motion.div key={subCat.id} variants={itemVariants}>
-                <ReportChoiceCard report={subCat} selected={selectedReport?.id === subCat.id} onSelect={onSelectReport} />
+                <ReportChoiceCard
+                  report={subCat}
+                  selected={selectedReport?.id === subCat.id}
+                  onSelect={onSelectReport}
+                />
               </motion.div>
             ))}
           </motion.div>

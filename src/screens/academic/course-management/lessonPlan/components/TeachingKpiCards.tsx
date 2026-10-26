@@ -86,11 +86,11 @@ const TeachingKpiCards = ({ lessonPlans, diaryEntries, onCardClick }: Props) => 
 
   return (
     <AcademicInsights
-      title="Teaching insights"
+      title="Teaching Insights"
       description="Weekly planning, diary completion and delivery exceptions in one focused view."
       metrics={metrics}
       chart={{
-        title: 'Teaching workflow',
+        title: 'Teaching Workflow',
         description: 'Compare current planning activity with items that need follow-up.',
         categories: ['Planned', 'Submitted', 'Diaries due', 'Approvals', 'Missed', 'Delayed'],
         values: [

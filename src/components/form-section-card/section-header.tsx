@@ -50,7 +50,7 @@ export function FormSectionHeader({
       )}
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Stack direction="row" spacing={0.5} alignItems="center" useFlexGap flexWrap="wrap">
-          <Typography component="h2" variant="subtitle2" {...titleTypographyProps}>
+          <Typography component="h2" variant="subtitle1" {...titleTypographyProps}>
             {title}
           </Typography>
           {descriptionTooltip && (

@@ -25,7 +25,6 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
@@ -40,7 +39,7 @@ import {
   Skeleton,
   Checkbox,
   TextField,
-  IconButton,
+  FormLabel,
   Typography,
   FormControl,
   Autocomplete,
@@ -66,14 +65,16 @@ import { ReferenceFileUpload } from '../../components/ReferenceFileUpload';
 import HomeworkTypeForm from '../../setting/homeworkType/homeworkTypeForm';
 import { useReferenceFileUpload } from '../../hooks/useReferenceFileUpload';
 import { useHomeworkRubricTemplateSelection } from '../hooks/useHomeworkRubricTemplateSelection';
+import { LearningTaskFormSection as SectionCard } from '../../components/LearningTaskFormSection';
 
 import type { IHomeWorkCreationFormProps } from '../type';
 
 export const cardStyle = {
-  p: 2,
+  p: { xs: 1.5, sm: 2 },
   borderRadius: 2,
-  boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
-  border: '1px solid rgba(145, 158, 171, 0.08)',
+  border: 1,
+  borderColor: 'divider',
+  bgcolor: 'background.paper',
 };
 
 const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
@@ -489,25 +490,13 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             p: 2,
           }}
         >
-          <Grid container>
+          <Grid container spacing={2}>
             {/* Basic Details Section */}
             <Grid size={{ xs: 12 }}>
               <SectionCard
                 title="Academic Details"
-                paperProps={{ sx: cardStyle }}
-                headerContent={
-                  <Box sx={{ flex: 1, ml: 0.5 }}>
-                    <CustomTooltip
-                      title="Select the class, division, subject, and curriculum context."
-                      placement="right"
-                      arrow
-                    >
-                      <IconButton size="small" aria-label="About academic details" sx={{ p: 0.25 }}>
-                        <Iconify icon="lucide:info" width={18} color="info.main" />
-                      </IconButton>
-                    </CustomTooltip>
-                  </Box>
-                }
+                icon={GlobalIcons.notebook}
+                description="Select the class, division, subject and curriculum context."
               >
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
@@ -806,32 +795,31 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             {/* Description Section */}
             <Grid size={{ xs: 12 }}>
               <SectionCard
-                title="Instructions & Attachments *"
-                paperProps={{ sx: cardStyle }}
-                headerContent={
-                  <Box sx={{ flex: 1, ml: 0.5 }}>
-                    <CustomTooltip
-                      title="Provide clear instructions and upload reference files."
-                      placement="right"
-                      arrow
-                    >
-                      <IconButton
-                        size="small"
-                        aria-label="About instructions and attachments"
-                        sx={{ p: 0.25 }}
-                      >
-                        <Iconify icon="lucide:info" width={18} color="info.main" />
-                      </IconButton>
-                    </CustomTooltip>
-                  </Box>
-                }
+                title="Instructions & Attachments"
+                icon={GlobalIcons.documentIcon}
+                description="Provide clear task instructions and any reference files."
               >
                 <Grid size={{ xs: 12 }}>
                   <ShakingTextField
                     error={!!(formik.touched.description && formik.errors.description)}
                   >
+                    <FormLabel
+                      component="div"
+                      id="homework-instructions-label"
+                      required
+                      error={!!(formik.touched.description && formik.errors.description)}
+                      sx={{ display: 'block', mb: 1, typography: 'body2' }}
+                    >
+                      Task instructions
+                    </FormLabel>
                     <Editor
-                      editorProps={{ attributes: { 'aria-label': 'Task instructions' } }}
+                      editorProps={{
+                        attributes: {
+                          'aria-label': 'Task instructions',
+                          'aria-labelledby': 'homework-instructions-label',
+                          'aria-required': 'true',
+                        },
+                      }}
                       value={formik.values.description}
                       onChange={(value) => formik.setFieldValue('description', value)}
                       placeholder="Write a clear description..."
@@ -864,26 +852,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
               <Grid size={{ xs: 12 }}>
                 <SectionCard
                   title="Publish Settings"
-                  paperProps={{ sx: cardStyle }}
-                  headerContent={
-                    <Box sx={{ flex: 1, ml: 0.5 }}>
-                      <CustomTooltip
-                        title="Save as draft, publish now, or schedule visibility by division."
-                        placement="right"
-                        arrow
-                      >
-                        <IconButton
-                          size="small"
-                          aria-label="About publish settings"
-                          sx={{ p: 0.25 }}
-                        >
-                          <Iconify icon="lucide:info" width={18} color="info.main" />
-                        </IconButton>
-                      </CustomTooltip>
-                    </Box>
-                  }
+                  icon={GlobalIcons.calendar}
+                  description="Save as draft, publish now, or schedule visibility by division."
                 >
-                  <Grid container spacing={1} sx={{ width: '100%' }}>
+                  <Grid container spacing={2} sx={{ width: '100%' }}>
                     {formik.values.divisions.map((div, idx) => (
                       <Grid size={{ xs: 12 }} key={div.divisionId}>
                         <Box
@@ -1025,24 +997,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             <Grid size={{ xs: 12 }}>
               <SectionCard
                 title="Submission Settings"
-                paperProps={{ sx: cardStyle }}
-                headerContent={
-                  <Box sx={{ flex: 1, ml: 0.5 }}>
-                    <CustomTooltip
-                      title="How should students submit this homework?"
-                      placement="right"
-                      arrow
-                    >
-                      <IconButton
-                        size="small"
-                        aria-label="About submission settings"
-                        sx={{ p: 0.25 }}
-                      >
-                        <Iconify icon="lucide:info" width={18} color="info.main" />
-                      </IconButton>
-                    </CustomTooltip>
-                  </Box>
-                }
+                icon={GlobalIcons.upload}
+                description="Choose how students submit this homework."
               >
                 <Grid size={{ xs: 12 }}>
                   <FormControl
@@ -1110,10 +1066,14 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           sx={{
             p: 2,
             display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            flexShrink: 0,
             justifyContent: 'flex-end',
             gap: 1,
             borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
             bgcolor: 'background.paper',
+            '& > .MuiButton-root': { whiteSpace: 'nowrap', flexShrink: 0 },
           }}
         >
           <Button

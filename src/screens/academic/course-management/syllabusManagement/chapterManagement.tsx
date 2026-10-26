@@ -4,10 +4,10 @@ import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -18,7 +18,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Card, Stack, Button, MenuItem, MenuList } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Card, Stack, Button, MenuItem, MenuList, DialogActions } from '@mui/material';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useDeleteChapterMutation,
@@ -195,6 +196,10 @@ const Subjects = () => {
   };
 
   const handleBulkClose = () => bulkChapterDialog.onFalse();
+  const closeDocumentsDialog = () => {
+    viewDocumentDialog.onFalse();
+    setSelectedChapter(null);
+  };
 
   const filteredChapters = (subjectId ? chapterResponse || [] : []) as IChapter[];
 
@@ -438,7 +443,8 @@ const Subjects = () => {
           setSelectedChapter(null);
           deleteDialog.onFalse();
         }}
-        title="Delete"
+        title="Delete Chapter"
+        icon={<Iconify icon={GlobalIcons.delete} width={24} sx={{ color: 'error.main' }} />}
         content={
           <>
             Are you sure you want to delete chapter{' '}
@@ -447,6 +453,7 @@ const Subjects = () => {
         }
         action={
           <LoadingButton
+            type="button"
             loading={isDeleteLoading}
             variant="contained"
             color="error"
@@ -463,9 +470,9 @@ const Subjects = () => {
               deleteDialog.onFalse();
               setSelectedChapter(null);
             }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+            startIcon={<Iconify icon={GlobalIcons.delete} width={18} />}
           >
-            Yes
+            Delete
           </LoadingButton>
         }
       />
@@ -473,14 +480,27 @@ const Subjects = () => {
       <CustomDialog
         maxWidth="xs"
         open={viewDocumentDialog.value}
-        handleClose={() => {
-          viewDocumentDialog.onFalse();
-          setSelectedChapter(null);
-        }}
+        handleClose={closeDocumentsDialog}
         title={`Documents for ${selectedChapter?.chapterName || 'Chapter'}`}
         titleInfo="Review the saved learning materials and worksheets attached to this chapter."
+        hasForm={false}
+        guardUnsavedChanges={false}
       >
-        <ChapterDocuments chapter={selectedChapter} />
+        <DialogScrollContent>
+          <ChapterDocuments chapter={selectedChapter} />
+        </DialogScrollContent>
+        <DialogActions sx={{ flexShrink: 0 }}>
+          <Button
+            type="button"
+            variant="outlined"
+            color="inherit"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={closeDocumentsDialog}
+          >
+            Close
+          </Button>
+        </DialogActions>
       </CustomDialog>
 
       {/* Create Question Dialog */}

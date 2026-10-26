@@ -17,7 +17,7 @@ export function SubjectColorField({ formik }: { formik: FormikProps<SubjectFormV
     <ShakingTextField error={Boolean(error)}>
       <Box
         component="fieldset"
-        aria-label="Subject Color (required)"
+        aria-label="Subject color (required)"
         aria-describedby={error ? `${id}-error` : undefined}
         data-subject-color
         tabIndex={-1}
@@ -25,13 +25,13 @@ export function SubjectColorField({ formik }: { formik: FormikProps<SubjectFormV
       >
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 0.5 }}>
           <FormLabel required error={Boolean(error)}>
-            Subject Color
+            Subject color
           </FormLabel>
           <CustomTooltip
             arrow
             title="This color identifies the subject throughout academic screens."
           >
-            <IconButton size="small" aria-label="Subject Color information" color="info">
+            <IconButton size="small" aria-label="Subject color information" color="info">
               <Iconify icon={GlobalIcons.info} width={16} />
             </IconButton>
           </CustomTooltip>

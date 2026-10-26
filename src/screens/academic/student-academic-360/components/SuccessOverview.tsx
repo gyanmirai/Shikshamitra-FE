@@ -4,6 +4,7 @@ import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import {
@@ -20,6 +21,7 @@ import {
 import { HealthScoreGauge } from './HealthScoreGauge';
 import { Academic360EmptyState } from './Academic360EmptyState';
 import { SubjectPerformanceCard } from './SubjectPerformanceCard';
+import { Academic360SectionHeader } from './Academic360SectionHeader';
 
 import type {
   Academic360Response,
@@ -704,50 +706,29 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
       </Grid>
 
       {/* 2. MAIN DASHBOARD CONTENT (BALANCED TWO-COLUMN LAYOUT) */}
-      <Grid container spacing={1.5} alignItems="stretch">
+      <Grid container spacing={2} alignItems="stretch">
         {/* LEFT COLUMN: CORE ACADEMIC INSIGHTS, SUBJECTS & ANALYTICS */}
         <Grid size={{ xs: 12, md: 7.5, lg: 8 }} sx={{ display: 'flex', flexDirection: 'column' }}>
           <Stack
-            spacing={1.5}
+            spacing={2}
             sx={{ height: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}
           >
             {/* Academic Health Diagnostic Breakdown (Hero Section) */}
-            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-              <Stack spacing={1.25}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 1.25,
-                        display: 'grid',
-                        placeItems: 'center',
-                        bgcolor: (theme) => `${theme.palette.primary.main}14`,
-                        color: 'primary.main',
-                      }}
-                    >
-                      <Iconify icon="mdi:scale-balance" width={18} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        Academic Health Diagnostic
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
-                        Weighted score factors and contribution breakdown
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  <Label
+            <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+              <Stack spacing={2}>
+                <Academic360SectionHeader
+                  icon={GlobalIcons.usage}
+                  title="Academic Health Diagnostic"
+                  description="Weighted score factors and their contribution to academic health."
+                  action={<Label
                     variant="soft"
                     color={healthScoreColor}
                     startIcon={<Iconify icon="mdi:check-decagram" width={13} />}
                     sx={{ fontWeight: 600, fontSize: 11, height: 22 }}
                   >
                     {health?.status || 'Support Recommended'}
-                  </Label>
-                </Stack>
+                  </Label>}
+                />
 
                 <Typography
                   variant="body2"
@@ -850,33 +831,13 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
             </Box>
 
             {/* Academic Insights Section */}
-            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-              <Stack spacing={1.25}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 1.25,
-                        display: 'grid',
-                        placeItems: 'center',
-                        bgcolor: (theme) => `${theme.palette.info.main}14`,
-                        color: 'info.main',
-                      }}
-                    >
-                      <Iconify icon="mdi:lightbulb-on-outline" width={18} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        Academic Insights
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
-                        Actionable synthesis and key focal points
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Stack>
+            <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+              <Stack spacing={2}>
+                <Academic360SectionHeader
+                  icon={GlobalIcons.report}
+                  title="Academic Insights"
+                  description="Key points from the student's attendance, examinations and learning tasks."
+                />
 
                 <Grid container spacing={1.25}>
                   {academicInsights.map((insight) => (
@@ -931,36 +892,15 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
 
         {/* RIGHT COLUMN: COMPACT UTILITY RAIL */}
         <Grid size={{ xs: 12, md: 4.5, lg: 4 }} sx={{ display: 'flex', flexDirection: 'column' }}>
-          <Stack spacing={1.5} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Stack spacing={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* 1. Action Center */}
-            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-              <Stack spacing={1}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 1.25,
-                        display: 'grid',
-                        placeItems: 'center',
-                        bgcolor: (theme) => `${theme.palette.warning.main}14`,
-                        color: 'warning.main',
-                      }}
-                    >
-                      <Iconify icon="mdi:alert-decagram-outline" width={18} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        Action Center
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
-                        Items requiring immediate review
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  {alerts.length > 0 && (
+            <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+              <Stack spacing={2}>
+                <Academic360SectionHeader
+                  icon={GlobalIcons.alertIcon}
+                  title="Action Center"
+                  description="Academic flags and overdue tasks requiring review."
+                  action={alerts.length > 0 && (
                     <Label
                       color="warning"
                       variant="soft"
@@ -969,12 +909,10 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                       {alerts.length} {alerts.length === 1 ? 'Alert' : 'Alerts'}
                     </Label>
                   )}
-                </Stack>
+                />
 
                 {alerts.length === 0 ? (
                   <Academic360EmptyState
-                    icon="mdi:check-circle-outline"
-                    color="success"
                     title="Everything looks good"
                     description="No urgent academic flags or overdue tasks detected."
                     compact
@@ -1056,34 +994,13 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
             </Card>
 
             {/* 2. Today & Upcoming */}
-            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-              <Stack spacing={1}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 1.25,
-                        display: 'grid',
-                        placeItems: 'center',
-                        bgcolor: (theme) => `${theme.palette.info.main}14`,
-                        color: 'info.main',
-                      }}
-                    >
-                      <Iconify icon="mdi:calendar-clock-outline" width={18} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        Today & Upcoming
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
-                        Assignments, exams & timetable tasks
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  {upcoming.length > 0 && (
+            <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+              <Stack spacing={2}>
+                <Academic360SectionHeader
+                  icon={GlobalIcons.calendar}
+                  title="Today & Upcoming"
+                  description="Upcoming assignments, examinations and timetable activities."
+                  action={upcoming.length > 0 && (
                     <Label
                       color="default"
                       variant="soft"
@@ -1092,7 +1009,7 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                       {upcoming.length} Tasks
                     </Label>
                   )}
-                </Stack>
+                />
 
                 {upcoming.length > 0 ? (
                   <Scrollbar sx={{ maxHeight: 125, pr: 0.5 }}>
@@ -1178,8 +1095,6 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                   </Scrollbar>
                 ) : (
                   <Academic360EmptyState
-                    icon="mdi:calendar-blank-outline"
-                    color="info"
                     title="No upcoming activities"
                     description="No exams, assignments or timetable deadlines found."
                     compact
@@ -1189,34 +1104,13 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
             </Card>
 
             {/* 3. Growth & Highlights */}
-            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-              <Stack spacing={1}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 1.25,
-                        display: 'grid',
-                        placeItems: 'center',
-                        bgcolor: (theme) => `${theme.palette.success.main}14`,
-                        color: 'success.main',
-                      }}
-                    >
-                      <Iconify icon="mdi:trophy-award" width={18} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        Growth & Highlights
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
-                        Recognized milestones and strengths
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  {achievements.length > 0 && (
+            <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+              <Stack spacing={2}>
+                <Academic360SectionHeader
+                  icon={GlobalIcons.approvedIcon}
+                  title="Growth & Highlights"
+                  description="Recorded academic milestones, strengths and attendance achievements."
+                  action={achievements.length > 0 && (
                     <Label
                       color="success"
                       variant="soft"
@@ -1225,7 +1119,7 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                       {achievements.length} Badges
                     </Label>
                   )}
-                </Stack>
+                />
 
                 {achievements.length > 0 ? (
                   <Scrollbar sx={{ maxHeight: 115, pr: 0.5 }}>
@@ -1237,8 +1131,6 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                   </Scrollbar>
                 ) : (
                   <Academic360EmptyState
-                    icon="mdi:trophy-outline"
-                    color="warning"
                     title="No highlights recorded yet"
                     description="Academic milestones, subject strengths and attendance streaks will appear here."
                     compact
@@ -1248,34 +1140,13 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
             </Card>
 
             {/* 4. Data Completeness (Collapsible) */}
-            <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-              <Stack spacing={1}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 1.25,
-                        display: 'grid',
-                        placeItems: 'center',
-                        bgcolor: (theme) => `${theme.palette.primary.main}14`,
-                        color: 'primary.main',
-                      }}
-                    >
-                      <Iconify icon="mdi:database-check-outline" width={18} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        Data Completeness
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
-                        Record synchronization status
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  <Stack direction="row" spacing={0.5} alignItems="center">
+            <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+              <Stack spacing={2}>
+                <Academic360SectionHeader
+                  icon={GlobalIcons.documentIcon}
+                  title="Data Completeness"
+                  description="Availability of the student records used in this academic summary."
+                  action={<Stack direction="row" spacing={0.5} alignItems="center">
                     <Label
                       color={completenessColor}
                       variant="soft"
@@ -1301,8 +1172,8 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
                         width={18}
                       />
                     </IconButton>
-                  </Stack>
-                </Stack>
+                  </Stack>}
+                />
 
                 <LinearProgress
                   variant="determinate"

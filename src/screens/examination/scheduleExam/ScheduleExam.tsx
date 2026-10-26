@@ -6,13 +6,10 @@ import type { TooltipProps } from '@mui/material';
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useState, useEffect } from 'react';
-import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Card, Typography } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
 import { motion, AnimatePresence } from 'framer-motion';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -25,8 +22,8 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import NewExamForm from './components/examFormComponent';
-import ViewTimetableComp from './components/viewTimetableComp';
 import ScheduledExamTable from './components/scheduleExamTable';
+import ExamTimetableDialog from './components/ExamTimetableDialog';
 import { useScheduleExamListQuery } from './use-schedule-exam-list-query';
 
 import type { IExamFormValues } from './type';
@@ -190,7 +187,11 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           <CustomBreadcrumbs
             sx={{ mb: 1 }}
             heading={selectedExam?.examName ? 'Update Exam' : 'Schedule Exam'}
-            description=" "
+            description={
+              selectedExam?.examName
+                ? 'Update the exam details, subject schedule and room allocation, then review the draft.'
+                : 'Set the exam details, schedule each subject, allocate rooms and review the exam draft.'
+            }
             tooltipProps={
               {
                 title: selectedExam?.examName ? updateTooltip : createTooltip,
@@ -211,7 +212,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           <CustomBreadcrumbs
             sx={{ mb: 1 }}
             heading="Schedule Exam"
-            description=" "
+            description="Review scheduled exams, filter by class and date, and manage their publication status."
             tooltipProps={
               {
                 title: listTooltip,
@@ -327,34 +328,14 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
         }
       />
 
-      <CustomDialog
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedExam?.examName ? `${selectedExam?.examName} Timetable` : ''}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={selectedExam?.examName ? `View  ${selectedExam?.examName} Timetable` : ''}
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+      <ExamTimetableDialog
         open={viewTimeDialog.value}
-        handleClose={() => {
+        examData={selectedExam}
+        onClose={() => {
           viewTimeDialog.onFalse();
           setSelectedExam(null);
         }}
-        maxWidth="lg"
-        paperProps={{ sx: { maxWidth: 1040 } }}
-      >
-        <Box sx={{ px: 2, pb: 2, pt: 2 }}>
-          <ViewTimetableComp examData={selectedExam} />
-        </Box>
-      </CustomDialog>
+      />
     </Box>
   );
 };

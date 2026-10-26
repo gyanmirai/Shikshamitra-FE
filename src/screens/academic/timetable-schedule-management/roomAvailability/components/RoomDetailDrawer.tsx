@@ -7,6 +7,8 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { EmptyContent } from 'src/components/empty-content';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
@@ -15,6 +17,7 @@ import {
   Tabs,
   Stack,
   Alert,
+  Button,
   Drawer,
   Divider,
   Skeleton,
@@ -46,6 +49,17 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
     open && readyRoomId === room?.roomId ? readyRoomId : null,
     selectedDate?.format('YYYY-MM-DD')
   );
+  const schedule =
+    scheduleHook.data?.roomId === room?.roomId &&
+    dayjs(scheduleHook.data?.date).format('YYYY-MM-DD') ===
+      (selectedDate || dayjs()).format('YYYY-MM-DD')
+      ? scheduleHook.data
+      : null;
+  const isScheduleLoading =
+    !readyRoomId ||
+    readyRoomId !== room?.roomId ||
+    scheduleHook.isLoading ||
+    (scheduleHook.isFetching && !schedule);
 
   useEffect(() => {
     if (open && room) {
@@ -89,8 +103,9 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
         alignItems="center"
         justifyContent="space-between"
         sx={{
-          px: 3,
+          px: { xs: 2, sm: 3 },
           py: 2.5,
+          flexShrink: 0,
           borderBottom: 1,
           borderColor: 'divider',
           background: (theme) =>
@@ -113,7 +128,7 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
           </Box>
           <Box>
             <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+              <Typography component="h2" variant="h6" sx={{ lineHeight: 1.2 }}>
                 {room?.roomName || 'Room Details'}
               </Typography>
               <CustomTooltip
@@ -121,13 +136,9 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
                 arrow
                 placement="right"
               >
-                <Iconify
-                  icon={GlobalIcons.info}
-                  color="info.main"
-                  width={18}
-                  height={18}
-                  sx={{ cursor: 'pointer', mt: 0.25 }}
-                />
+                <IconButton aria-label="Room details information" size="small" color="info">
+                  <Iconify icon={GlobalIcons.info} width={18} height={18} />
+                </IconButton>
               </CustomTooltip>
             </Stack>
             <Typography variant="caption" color="text.secondary">
@@ -146,7 +157,7 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
 
       {/* ── Status Banner ─────────────────────────────────── */}
       {room && (
-        <Box sx={{ px: 3, pt: 2 }}>
+        <Box sx={{ px: { xs: 2, sm: 3 }, pt: 2, flexShrink: 0 }}>
           <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
             <RoomStatusChip status={room.status} />
             <Chip size="small" label={room.type} variant="outlined" sx={{ borderRadius: 1 }} />
@@ -184,14 +195,24 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
       <Divider />
 
       {/* ── Content ──────────────────────────────────────── */}
-      <Box sx={{ flex: 1, overflow: 'auto', px: 3, py: 2.5, bgcolor: 'background.neutral' }}>
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflow: 'auto',
+          px: { xs: 2, sm: 3 },
+          py: 2,
+          bgcolor: 'background.neutral',
+        }}
+      >
         {activeTab === 'details' && room && (
           <Stack spacing={2}>
             {/* Facilities */}
-            <Box>
-              <Typography variant="subtitle2" gutterBottom fontWeight={700}>
-                Facilities
-              </Typography>
+            <FormSectionCard
+              title="Facilities"
+              icon={GlobalIcons.itEquipmentIcon}
+              descriptionTooltip="Facilities recorded for this room."
+            >
               <Stack direction="row" flexWrap="wrap" gap={1}>
                 {room.facilities?.length ? (
                   room.facilities.map((f) => {
@@ -213,7 +234,7 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
                   </Typography>
                 )}
               </Stack>
-            </Box>
+            </FormSectionCard>
 
             {/* Current Usage / Conflict */}
             {(() => {
@@ -270,24 +291,18 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
 
             {/* Utilization */}
             {room.utilizationPercentage != null && (
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  border: 1,
-                  borderColor: 'divider',
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Utilization
-                  </Typography>
-                  <Typography variant="body2" fontWeight={700} color="text.secondary">
+              <FormSectionCard
+                title="Utilization"
+                icon={GlobalIcons.usage}
+                descriptionTooltip="The recorded percentage of this room's available time in use."
+                action={
+                  <Typography variant="body2" color="text.secondary">
                     {room.utilizationPercentage}%
                   </Typography>
-                </Stack>
+                }
+              >
                 <LinearProgress
+                  aria-label="Room utilization"
                   variant="determinate"
                   value={room.utilizationPercentage}
                   color={
@@ -299,29 +314,54 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
                   }
                   sx={{ height: 8, borderRadius: 4 }}
                 />
-              </Box>
+              </FormSectionCard>
             )}
 
             {/* Schedule Timeline */}
-            <Box>
-              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
-                Schedule Timeline
-              </Typography>
+            <FormSectionCard
+              title="Schedule Timeline"
+              icon={GlobalIcons.calendar}
+              descriptionTooltip="Review this room's scheduled activity for the selected date."
+            >
               <DatePicker
-                label="Select Date"
+                label="Select date"
                 value={selectedDate}
                 onChange={(newDate) => setSelectedDate(newDate)}
-                slotProps={{ textField: { size: 'small', fullWidth: true, sx: { mb: 2 } } }}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
-              {!readyRoomId || scheduleHook.isLoading || scheduleHook.isFetching ? (
-                <Stack spacing={1}>
+              {scheduleHook.error && !isScheduleLoading && (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button
+                      type="button"
+                      size="small"
+                      variant="outlined"
+                      color="inherit"
+                      startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                      onClick={() => scheduleHook.refetch()}
+                    >
+                      Retry
+                    </Button>
+                  }
+                >
+                  {schedule?.slots.length
+                    ? 'Unable to refresh the room schedule. Previously loaded activity is shown.'
+                    : 'Unable to load the room schedule. Try again.'}
+                </Alert>
+              )}
+              {isScheduleLoading ? (
+                <Stack spacing={2} role="status" aria-label="Loading room schedule" aria-busy>
                   {[1, 2, 3].map((i) => (
                     <Skeleton key={i} height={44} sx={{ borderRadius: 1.5 }} />
                   ))}
                 </Stack>
-              ) : scheduleHook.data?.slots?.length ? (
-                <Stack spacing={1}>
-                  {scheduleHook.data.slots.map((slot) => {
+              ) : schedule?.slots?.length ? (
+                <Stack spacing={2}>
+                  {scheduleHook.isFetching && (
+                    <LinearProgress aria-label="Refreshing room schedule" />
+                  )}
+                  {schedule.slots.map((slot) => {
                     const accentColor = `${SCHEDULE_STATUS_COLORS[slot.status]}.main`;
                     return (
                       <Box
@@ -340,20 +380,19 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
                         }}
                       >
                         <Box sx={{ minWidth: 34 }}>
-                          <Typography variant="caption" fontWeight={700} display="block">
+                          <Typography variant="body2" fontWeight={600} display="block">
                             {slot.period}
                           </Typography>
                         </Box>
                         <Box sx={{ minWidth: 92 }}>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="body2" color="text.secondary">
                             {slot.time}
                           </Typography>
                         </Box>
                         <Typography
-                          variant="caption"
+                          variant="body2"
                           color="text.secondary"
-                          noWrap
-                          sx={{ flex: 1 }}
+                          sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}
                         >
                           {slot.details}
                         </Typography>
@@ -362,18 +401,16 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
                           label={slot.status}
                           color={SCHEDULE_STATUS_COLORS[slot.status]}
                           variant="soft"
-                          sx={{ fontSize: 10, height: 20, flexShrink: 0 }}
+                          sx={{ flexShrink: 0 }}
                         />
                       </Box>
                     );
                   })}
                 </Stack>
               ) : (
-                <Typography variant="body2" color="text.secondary">
-                  No schedule data.
-                </Typography>
+                !scheduleHook.error && <EmptyContent title="No scheduled activity for this date." />
               )}
-            </Box>
+            </FormSectionCard>
           </Stack>
         )}
 
@@ -390,6 +427,29 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
             <RoomAuditLogPanel roomId={room.roomId} />
           </Box>
         )}
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          px: { xs: 2, sm: 3 },
+          py: 1.75,
+          borderTop: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          flexShrink: 0,
+        }}
+      >
+        <Button
+          type="button"
+          size="small"
+          variant="outlined"
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+        >
+          Close
+        </Button>
       </Box>
     </Drawer>
   );

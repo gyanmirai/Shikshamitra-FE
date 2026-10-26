@@ -6,24 +6,23 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { EmptyContent } from 'src/components/empty-content';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   Box,
   Grid,
   Alert,
   Button,
   Switch,
-  Divider,
   TextField,
   IconButton,
   Typography,
@@ -36,6 +35,7 @@ import {
 
 import { getInitialValues } from './initialValues';
 import { stepValidationSchemas } from './validationSchema';
+import { GradeScaleDetailField } from './GradeScaleDetailField';
 
 import type { IGrade, IGradingScale, IGradeFormProps } from './type';
 
@@ -340,7 +340,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({
       descriptionTooltip="Choose a template or set the grade scale title, marks, and status."
       titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
     >
-      <Grid container spacing={1.5}>
+      <Grid container spacing={2}>
         {/* Template Section */}
         {!data && !viewOnly && (
           <Grid size={{ xs: 12 }} sx={{ mb: 1 }}>
@@ -374,7 +374,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({
           <ShakingTextField error={!!(formik.touched.name && formik.errors.name)}>
             <TextField
               fullWidth
-              label="Grade Scale Title *"
+              label="Grade scale title *"
               name="name"
               size="small"
               disabled={!!data || viewOnly}
@@ -390,7 +390,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({
           <ShakingTextField error={!!(formik.touched.totalMarks && formik.errors.totalMarks)}>
             <TextField
               fullWidth
-              label="Total Marks *"
+              label="Total marks *"
               name="totalMarks"
               type="number"
               disabled={!!data || viewOnly}
@@ -412,7 +412,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({
           <ShakingTextField error={!!(formik.touched.passMarks && formik.errors.passMarks)}>
             <TextField
               fullWidth
-              label="Pass Marks"
+              label="Pass marks"
               name="passMarks"
               type="number"
               disabled={viewOnly}
@@ -473,7 +473,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({
                 onChange={(e) => formik.setFieldValue('isDefault', e.target.checked)}
               />
             }
-            label="Set as Default Scale"
+            label="Set as default scale"
           />
         </Grid>
 
@@ -505,7 +505,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({
               size="small"
               onClick={handleAddGradingScale}
             >
-              Add Row
+              Add row
             </Button>
           )}
         </Box>
@@ -524,8 +524,8 @@ const GradeForm: React.FC<IGradeFormProps> = ({
               ? (formik.errors.gradingScale[index] as FormikErrors<IGradingScale> | undefined)
               : undefined;
             const visibleErrors = [
-              ['Min Marks', 'minMarks'],
-              ['Max Marks', 'maxMarks'],
+              ['Min marks', 'minMarks'],
+              ['Max marks', 'maxMarks'],
               ['Grade', 'grade'],
               ['Point', 'gradePoint'],
               ['Remark', 'remark'],
@@ -540,7 +540,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({
             return (
               <Grid
                 container
-                spacing={1.5}
+                spacing={2}
                 key={index}
                 mb={2.5}
                 alignItems="center"
@@ -564,7 +564,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({
                   >
                     <TextField
                       fullWidth
-                      label="Min Marks *"
+                      label="Min marks *"
                       type="number"
                       name={`gradingScale.${index}.minMarks`}
                       size="small"
@@ -601,7 +601,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({
                   >
                     <TextField
                       fullWidth
-                      label="Max Marks *"
+                      label="Max marks *"
                       type="number"
                       name={`gradingScale.${index}.maxMarks`}
                       size="small"
@@ -765,112 +765,69 @@ const GradeForm: React.FC<IGradeFormProps> = ({
   );
 
   const renderSimulator = () => (
-    <Grid container spacing={1}>
-      <Grid size={{ xs: 12 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
-          <Typography variant="subtitle1">Grade Scaling Simulator</Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            title="Verify your grade scaling by entering sample student marks to see how the system calculates grades."
-          >
-            <IconButton size="small" aria-label="About grade scaling simulator">
-              <Iconify icon="lucide:info" sx={{ width: 18, height: 18, color: 'info.main' }} />
-            </IconButton>
-          </CustomTooltip>
-        </Box>
-        <TextField
-          fullWidth
-          label="Sample Obtained Marks"
-          type="number"
-          placeholder="Enter obtained marks..."
-          value={simMarks}
-          onChange={(e) => setSimMarks(e.target.value)}
-          size="small"
-          sx={{ mb: 3 }}
-        />
-        <Divider sx={{ mb: 3 }} />
-
-        {matchedRange ? (
-          <TimetableSettingsSummaryCards
-            cards={[
-              {
-                label: 'Calculated Grade',
-                value: matchedRange.grade,
-                icon: 'solar:target-bold-duotone',
-                color: 'primary',
-              },
-              {
-                label: 'Grade Point',
-                value: matchedRange.gradePoint !== '' ? matchedRange.gradePoint : '-',
-                icon: 'solar:star-fall-bold-duotone',
-                color: 'info',
-              },
-              {
-                label: 'Result Status',
-                value:
-                  matchedRange.resultStatus === 0
+    <FormSectionCard
+      icon={GlobalIcons.notebook}
+      title="Grade Scaling Simulator"
+      descriptionTooltip="Enter sample marks to preview the grade, grade point, result status and remark from the configured ranges."
+    >
+      <TextField
+        fullWidth
+        label="Sample obtained marks"
+        type="number"
+        placeholder="Enter obtained marks..."
+        value={simMarks}
+        onChange={(e) => setSimMarks(e.target.value)}
+        size="small"
+      />
+      {matchedRange ? (
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <GradeScaleDetailField label="Calculated grade" value={matchedRange.grade} />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <GradeScaleDetailField
+              label="Grade point"
+              value={matchedRange.gradePoint !== '' ? matchedRange.gradePoint : '-'}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <GradeScaleDetailField
+              label="Result status"
+              value={
+                <Label
+                  color={
+                    matchedRange.resultStatus === 0
+                      ? 'success'
+                      : matchedRange.resultStatus === 1
+                        ? 'error'
+                        : 'warning'
+                  }
+                >
+                  {matchedRange.resultStatus === 0
                     ? 'Pass'
                     : matchedRange.resultStatus === 1
                       ? 'Fail'
-                      : 'Optional',
-                icon: 'solar:check-circle-bold-duotone',
-                color:
-                  matchedRange.resultStatus === 0
-                    ? 'success'
-                    : matchedRange.resultStatus === 1
-                      ? 'error'
-                      : 'warning',
-              },
-              {
-                label: 'Remark',
-                value: matchedRange.remark || '-',
-                icon: 'solar:chat-round-dots-bold-duotone',
-                color: 'warning',
-              },
-            ]}
-          />
-        ) : (
-          <Box
-            p={4}
-            minHeight={180}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-            gap={1}
-            bgcolor="background.neutral"
-            border="1px dashed"
-            borderColor="divider"
-            borderRadius={1}
-            textAlign="center"
-          >
-            <Box
-              sx={{
-                width: 48,
-                height: 48,
-                borderRadius: 1,
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: 'background.paper',
-                color: 'text.secondary',
-                border: (theme) => `1px solid ${theme.palette.divider}`,
-              }}
-            >
-              <Iconify icon="mdi:calculator-variant-outline" width={26} />
-            </Box>
-            <Typography variant="subtitle2" color="text.primary">
-              Simulator result will appear here
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {simMarks === ''
-                ? 'Enter sample marks above to test the calculator.'
-                : `No grade range defined for ${simMarks} marks.`}
-            </Typography>
-          </Box>
-        )}
-      </Grid>
-    </Grid>
+                      : 'Optional'}
+                </Label>
+              }
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <GradeScaleDetailField label="Remark" value={matchedRange.remark || '-'} />
+          </Grid>
+        </Grid>
+      ) : (
+        <EmptyContent
+          title={simMarks === '' ? 'Enter sample marks' : 'No matching grade range'}
+          description={
+            simMarks === ''
+              ? 'Enter sample marks above to test the calculator.'
+              : `No grade range defined for ${simMarks} marks.`
+          }
+          sx={{ py: 2, height: 'auto' }}
+        />
+      )}
+    </FormSectionCard>
   );
 
   return (
@@ -883,7 +840,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({
       validateOnChange={false}
       validationSchema={activeSchema}
       showSaveButton={false}
-      nextButtonLabel={viewOnly ? 'Next' : 'Save & Next'}
+      nextButtonLabel="Next"
       finalButtonLabel={viewOnly ? 'Close' : 'Submit'}
       saveAndNextButtonProps={{
         loading: isAddLoading || isUpdateLoading,
