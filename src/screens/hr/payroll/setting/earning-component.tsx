@@ -167,9 +167,7 @@ const EarningComponent = () => {
         heading="Earning Component"
         description="Manage the various earning components that make up staff salaries, including fixed and variable pay elements."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
-          { name: 'Settings', href: hrPaths.payroll.settings.earningComponents },
+          { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Earning Component' },
         ]}
         action={

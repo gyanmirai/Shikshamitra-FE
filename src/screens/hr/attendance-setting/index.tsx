@@ -129,11 +129,10 @@ const HrAttendanceSettingScreen = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Setting"
+        heading="Attendance Settings"
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance Management', href: `/hr/attendance-setting` },
-          { name: 'Setting' },
+          { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
+          { name: 'Attendance Settings' },
         ]}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
         description="Keep standard attendance simple: set shifts, use one standard attendance policy, and connect imports or devices when required."

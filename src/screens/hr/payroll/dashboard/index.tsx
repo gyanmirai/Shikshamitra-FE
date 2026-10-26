@@ -88,6 +88,7 @@ const PayrollDashboard = () => {
     <Box>
       <HrDashboardPreviewShell
         title="Payroll Dashboard"
+        ancestors={[{ name: 'Payroll Management', href: hrPaths.payroll.root }]}
         subtitle={
           data
             ? `Stored payroll preview for ${dayjs(`${data.month}-01`).format('MMMM YYYY')}`

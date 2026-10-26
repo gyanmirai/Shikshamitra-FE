@@ -25,8 +25,10 @@ all legacy action labels, icon counts, and status styles in the rest of the scre
 2. Supply the heading, meaningful description, real route links, and the relevant action/back
    behavior. The current breadcrumb item normally has no href. Use route constants.
 3. Inspect comparable pages in the same module. Preserve their inline/stacked layout, root label,
-   route hierarchy, description treatment, and action placement. HR uses inline layout with
-   `HR/Staff` linked to `hrPaths.dashboard` on descendant pages.
+   route hierarchy, description treatment, and action placement. HR uses inline layout without
+   an `HR/Staff` prefix. Include real navigable ancestors and current-page text; omit sidebar
+   groups without a landing screen. Payroll descendants link `Payroll Management` to
+   `hrPaths.payroll.root`.
 4. Follow with only useful page context: selectors, domain filters, status navigation, or metrics.
    Do not add every possible header element or repeat the title inside a content card.
 5. Contained filter/action and status-tab rows use `px: 1` without a second nested inset. Keep

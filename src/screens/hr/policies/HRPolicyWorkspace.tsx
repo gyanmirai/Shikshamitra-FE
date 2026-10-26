@@ -130,11 +130,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             : 'Configure staff calendars, policies, and assignments.'
         }
         sx={{ flexShrink: 0 }}
-        links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Policies & Rules', href: hrPaths.policies.root },
-          { name: currentTabLabel },
-        ]}
+        links={[{ name: currentTabLabel }]}
       />
       {!academicYearId ? <Alert severity="warning">Select an academic year</Alert> : null}
       {isLoading ? <LinearProgress /> : null}

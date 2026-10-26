@@ -83,11 +83,7 @@ const PayrollHome = () => {
     <Box sx={{ minWidth: 0, pb: 2 }}>
       <CustomBreadcrumbs
         heading="Overview"
-        links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
-          { name: 'Overview' },
-        ]}
+        links={[{ name: 'Overview' }]}
         description="Check monthly payroll readiness, resolve setup issues, and open the next action."
         action={
           <Button

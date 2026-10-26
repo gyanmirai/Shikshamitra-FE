@@ -141,7 +141,7 @@ const HrEventsAndHolidaysScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Events & Holidays"
-        links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Events & Holidays' }]}
+        links={[{ name: 'Events & Holidays' }]}
         description="On the Create Event and Holiday screen, you can add new events and holidays to the calendar. The screen also allows you to view and manage the list of existing events and holidays."
       />
       <Card sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5 }}>

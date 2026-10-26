@@ -33,8 +33,7 @@ export default function SalaryDocumentCenter() {
         description="Review monthly payslips, employee salary statements and the school payroll register."
         sx={{ minHeight: 40 }}
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Payroll', href: hrPaths.payroll.runPayroll },
+          { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Salary documents' },
         ]}
       />

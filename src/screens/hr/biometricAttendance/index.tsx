@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import { hrPaths } from 'src/constants/hr-menus';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -798,12 +799,12 @@ const AttendanceImportHistoryScreen = () => {
       {/* Breadcrumbs */}
       {viewImportDialog.value ? (
         <CustomBreadcrumbs
-          heading="Device Integration"
+          heading="Attendance Import Details"
           description="Review imported attendance batches and keep device sync placeholders visible until vendor requirements are finalized."
           links={[
-            { name: 'HR/Staff', href: '/hr/dashboard/' },
-            { name: 'Attendance Management' },
-            { name: 'Device Integration' },
+            { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
+            { name: 'Device Integration', onClick: () => detailCloseHandler.current?.() },
+            { name: 'Attendance Import Details' },
           ]}
           isBack
           onBack={() => detailCloseHandler.current?.()}
@@ -813,8 +814,7 @@ const AttendanceImportHistoryScreen = () => {
           heading="Device Integration"
           description="Excel import is available now. Biometric, RFID, and vendor-specific sync will be enabled after device requirements are confirmed."
           links={[
-            { name: 'HR/Staff', href: '/hr/dashboard/' },
-            { name: 'Attendance Management' },
+            { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
             { name: 'Device Integration' },
           ]}
         />

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { it, vi, expect, describe, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import hrModule from 'src/constants/hr-menus';
 
 import { NavList } from './nav-list';
 
@@ -60,6 +61,22 @@ function Navigation({ data = fees }: { data?: NavItemBaseProps }) {
 afterEach(cleanup);
 
 describe('active navigation ancestors', () => {
+  it.each([
+    ['/hr/employee', 'Staff Directory', 'Staff Onboarding'],
+    ['/hr/employee/', 'Staff Directory', 'Staff Onboarding'],
+    ['/hr/employee?employee=staff-123', 'Staff Directory', 'Staff Onboarding'],
+    ['/hr/employee/onboarding', 'Staff Onboarding', 'Staff Directory'],
+    ['/hr/employee/onboarding/', 'Staff Onboarding', 'Staff Directory'],
+    ['/hr/employee/onboarding?application=application-123', 'Staff Onboarding', 'Staff Directory'],
+  ])('selects only the matching Staff destination on %s', (pathname, selected, other) => {
+    route.pathname = pathname;
+    const staff = Object.values(hrModule(false))
+      .flatMap((groups) => groups.flatMap((group) => group.items))
+      .find((item) => item.title === 'Staff');
+    render(<Navigation data={staff as NavItemBaseProps} />);
+    expect(screen.getByRole('button', { name: selected })).toHaveAttribute('data-active', 'true');
+    expect(screen.getByRole('button', { name: other })).toHaveAttribute('data-active', 'false');
+  });
   it.each(['/hr/payroll/payslip-generation', '/hr/payroll/setting/payslip-statement-settings'])(
     'keeps Overview unselected on %s while revealing the payroll ancestry',
     (pathname) => {

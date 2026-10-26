@@ -1,10 +1,10 @@
 'use client';
 
 import type React from 'react';
+import type { BreadcrumbsLinkProps } from 'src/components/custom-breadcrumbs';
 import type { HRDashboardPreview, HRDashboardPreviewStatus } from 'src/redux/hr/hrDashboardApi';
 
 import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
 import { fDateTime } from 'src/utils/format-time';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -13,6 +13,7 @@ import { Box, Alert, Stack, Button, Typography, LinearProgress } from '@mui/mate
 type Props = {
   title?: string;
   subtitle?: string;
+  ancestors?: BreadcrumbsLinkProps[];
   preview?: HRDashboardPreview;
   isFetching?: boolean;
   isRefreshing?: boolean;
@@ -30,6 +31,7 @@ const formatScheduleTime = (value?: string | null) => fDateTime(value) || 'tomor
 export const HrDashboardPreviewShell = ({
   title,
   subtitle,
+  ancestors = [],
   preview,
   isFetching = false,
   isRefreshing = false,
@@ -42,7 +44,7 @@ export const HrDashboardPreviewShell = ({
   const heading = title || 'HR Dashboard';
   const description =
     subtitle || 'Monitor workforce health, daily attendance, leave actions, and payroll readiness.';
-  const breadcrumbLinks = [{ name: 'HR/Staff', href: hrPaths.dashboard }, { name: heading }];
+  const breadcrumbLinks = [...ancestors, { name: heading }];
 
   return (
     <Box

@@ -171,7 +171,7 @@ describe('SalaryTemplateSettings', () => {
     );
     expect(screen.getByText('Active')).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Salary Templates' })).toBeVisible();
-    expect(screen.getByRole('link', { name: 'HR/Staff' })).toHaveAttribute('href', '/hr/dashboard');
+    expect(screen.queryByText('HR/Staff')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Payroll Management' })).toHaveAttribute(
       'href',
       '/hr/payroll'

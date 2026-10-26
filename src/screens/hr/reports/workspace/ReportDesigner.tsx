@@ -9,7 +9,6 @@ import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
-import { hrPaths } from 'src/constants/hr-menus';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
@@ -159,7 +158,7 @@ export function ReportDesigner({
         heading={savedId ? 'Edit report template' : 'Create report template'}
         description="Define a reusable report. Choose dates and staff when you generate it."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Reports', href: hrReportPaths.history },
           { name: 'Report templates', href: hrReportPaths.library },
           { name: savedId ? 'Edit template' : 'Create template' },
         ]}

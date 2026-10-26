@@ -388,8 +388,7 @@ export default function PaySlipGenerationScreen({
         <CustomBreadcrumbs
           heading="Payslips"
           links={[
-            { name: 'HR/Staff', href: hrPaths.dashboard },
-            { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
+            { name: 'Payroll Management', href: hrPaths.payroll.root },
             { name: 'Payslips' },
           ]}
         />

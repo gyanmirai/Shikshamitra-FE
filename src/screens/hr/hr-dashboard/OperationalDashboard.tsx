@@ -114,7 +114,7 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
           heading="HR Dashboard"
           headingComponent="h1"
           description="Workforce, leave, onboarding and appraisals within your permitted scope."
-          links={[{ name: 'HR/Staff', href: hrPaths.dashboard }, { name: 'HR Dashboard' }]}
+          links={[{ name: 'HR Dashboard' }]}
           action={
             canView && (
               <Button

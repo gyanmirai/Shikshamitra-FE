@@ -32,9 +32,7 @@ export default function PayslipStatementSettings() {
           '& .MuiBreadcrumbs-li': { flexShrink: 0, whiteSpace: 'nowrap' },
         }}
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
-          { name: 'Settings', href: hrPaths.payroll.settings.root },
           { name: 'Payslip & statement settings' },
         ]}
       />

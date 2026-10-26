@@ -1063,7 +1063,6 @@ const RunPayroll = () => {
       <CustomBreadcrumbs
         heading="Run Payroll"
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Run Payroll' },
         ]}

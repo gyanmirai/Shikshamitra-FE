@@ -200,9 +200,7 @@ test.describe('HR UI polish', () => {
         await expect(
           page.getByRole('heading', { name: screen.heading, exact: true }).first()
         ).toBeVisible();
-        await expect(
-          page.getByRole('link', { name: 'HR/Staff', exact: true }).last()
-        ).toHaveAttribute('href', '/hr/dashboard');
+        await expect(page.getByRole('main').getByText('HR/Staff', { exact: true })).toHaveCount(0);
         await noOverflow(page);
         await page.screenshot({
           path: testInfo.outputPath(`${screen.heading.replaceAll(' ', '-')}-${width}.png`),

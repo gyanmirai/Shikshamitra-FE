@@ -17,7 +17,7 @@ const TeacherDashboard = ({ employee }: any) => {
     <Box>
       <CustomBreadcrumbs
         heading="Dashboard"
-        links={[{ name: 'HR' }, { name: 'Dashboard' }]}
+        links={[{ name: 'Dashboard' }]}
         sx={{ px: 1, pb: 1 }}
       />
       <Tabs

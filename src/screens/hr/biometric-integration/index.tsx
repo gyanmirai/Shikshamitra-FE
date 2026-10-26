@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import { hrPaths } from 'src/constants/hr-menus';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -219,8 +220,7 @@ const BiometricIntegrationScreen = () => {
         heading="Import Attendance"
         description="Configure Attendance Types, Leave Policies, and Late Arrival Rules for accurate tracking and enforcement."
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance Management', href: '/hr/biometric-integration/' },
+          { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
           { name: 'Import Attendance' },
         ]}
       />

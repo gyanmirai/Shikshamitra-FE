@@ -152,9 +152,7 @@ const DeductionComponent = () => {
         heading="Deduction Component"
         description="Manage the various deduction components that are subtracted from staff salaries, including fixed and variable deductions."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
-          { name: 'Settings', href: hrPaths.payroll.settings.deductionComponents },
+          { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Deduction Component' },
         ]}
         action={

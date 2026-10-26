@@ -35,7 +35,7 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
       <button type="button" onClick={onBack}>
         Back
       </button>
-      <button type="button" onClick={links[2].onClick}>
+      <button type="button" onClick={links.find((link: any) => link.name === 'Staff Directory').onClick}>
         Staff Directory
       </button>
     </nav>

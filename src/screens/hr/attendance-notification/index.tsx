@@ -29,7 +29,6 @@ const HrAttendanceNotificationScreen = () => {
         heading="Notifications History"
         description="Review delivery status for staff attendance notifications."
         links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
           { name: 'Notifications History' },
         ]}

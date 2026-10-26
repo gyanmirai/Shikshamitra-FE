@@ -549,7 +549,10 @@ const EmployeeIcardScreen = () => {
           <CustomBreadcrumbs
             heading={selectedTemplate ? 'Update Staff I-Card' : 'Create Staff I-Card'}
             description="Create branded, print-ready staff ID cards."
-            links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Staff I-Card' }]}
+            links={[
+              { name: 'Staff I-Card', onClick: form.onFalse },
+              { name: selectedTemplate ? 'Update Staff I-Card' : 'Create Staff I-Card' },
+            ]}
             isBack
             onBack={form.onFalse}
           />
@@ -568,7 +571,7 @@ const EmployeeIcardScreen = () => {
           <CustomBreadcrumbs
             heading="Staff I-Card"
             description="Manage templates, check readiness, and export staff cards."
-            links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Staff I-Card' }]}
+            links={[{ name: 'Staff I-Card' }]}
             action={
               <Button
                 onClick={handleCreate}

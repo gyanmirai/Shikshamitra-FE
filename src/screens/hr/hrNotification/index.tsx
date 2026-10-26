@@ -60,7 +60,6 @@ const HRNotificationScreen = () => {
           heading={isViewMode ? 'View Notification' : 'Edit Notification'}
           description="Configure notifications for staff, attendance, and leave management."
           links={[
-            { name: 'HR/Staff', href: hrPaths.dashboard },
             {
               name: 'Notification',
               href: hrPaths.notification,
@@ -78,7 +77,7 @@ const HRNotificationScreen = () => {
         <CustomBreadcrumbs
           heading="Notification"
           description="Configure notifications for staff, attendance, and leave management."
-          links={[{ name: 'HR/Staff', href: hrPaths.dashboard }, { name: 'Notification' }]}
+          links={[{ name: 'Notification' }]}
           sx={{ px: 1 }}
         />
       )}
