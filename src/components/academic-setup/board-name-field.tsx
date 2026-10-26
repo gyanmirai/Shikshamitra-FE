@@ -1,7 +1,6 @@
 import type { Board } from 'src/types/school';
 
 import { BoardEnum } from 'src/enums/board';
-import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { Alert, Stack, Button, TextField } from '@mui/material';
 import { useGetBoardOptionsQuery } from 'src/redux/board/boardApi';
 
@@ -86,7 +85,7 @@ export const BoardNameField = ({
             label="Custom board name"
             name="customName"
             value={customName}
-            onChange={(event) => onCustomNameChange(capitalizeFirstLetter(event.target.value))}
+            onChange={(event) => onCustomNameChange(event.target.value)}
             error={Boolean(customNameError)}
             helperText={customNameError}
             inputProps={{ maxLength: 128 }}

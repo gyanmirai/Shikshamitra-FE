@@ -1,12 +1,12 @@
 'use client';
 
-import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 
 import { ConfirmDialog } from '../confirm-dialog';
 import { DialogScrollContent } from '../customDialog';
 import { useDivisionForm } from './use-division-form';
 import { academicValidationStyles } from './academic-form-styles';
+import { useAcademicNamePreview } from './use-academic-name-preview';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 
 import type { ExistingDivision } from './onboarding-division-model';
@@ -33,6 +33,7 @@ export function OnboardingDivisionForm({
     existingDivisions,
     showRoomSelection: false,
   });
+  const namePreview = useAcademicNamePreview('division', formik.values.name);
 
   return (
     <Box>
@@ -68,12 +69,12 @@ export function OnboardingDivisionForm({
             inputRef={nameInputRef}
             label="Division Name"
             value={formik.values.name}
-            onChange={(event) =>
-              formik.setFieldValue('name', capitalizeFirstLetter(event.target.value))
-            }
+            onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             error={formik.touched.name && Boolean(formik.errors.name)}
-            helperText={formik.touched.name && formik.errors.name}
+            helperText={
+              formik.touched.name && formik.errors.name ? formik.errors.name : namePreview
+            }
             disabled={isLoading}
           />
           <TextField

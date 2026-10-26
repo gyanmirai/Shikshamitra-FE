@@ -1,6 +1,7 @@
 import type { Division } from 'src/types/school';
 
 import { divisionType } from 'src/redux/tagTypes';
+import { academicReorderTags } from 'src/redux/academic-reorder-tags';
 
 import { api } from '../service';
 
@@ -30,6 +31,14 @@ export const divisionApi = api.injectEndpoints({
       }),
       invalidatesTags: [divisionType.division],
     }),
+    reorderDivisions: builder.mutation<void, { standardId: string; ids: string[] }>({
+      query: ({ standardId, ids }) => ({
+        url: `/standards/${standardId}/divisions/order`,
+        method: 'PUT',
+        body: { ids },
+      }),
+      invalidatesTags: academicReorderTags,
+    }),
     deleteDivision: builder.mutation({
       query: (id) => ({
         url: `/app/division/${id}`,
@@ -45,5 +54,6 @@ export const {
   useGetDivisionByIdQuery,
   useAddDivisionMutation,
   useUpdateDivisionMutation,
+  useReorderDivisionsMutation,
   useDeleteDivisionMutation,
 } = divisionApi;

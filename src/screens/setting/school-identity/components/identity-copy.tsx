@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import DialogActions from '@mui/material/DialogActions';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FormSectionCard } from 'src/components/form-section-card';
@@ -74,6 +76,7 @@ export function IdentityCopyDialog({
     <CustomDialog
       open
       title="Copy School Identity Overrides"
+      titleInfo="Choose an existing override from another academic year and review its images before copying."
       handleClose={onClose}
       hasForm={false}
       hasUnsavedChanges={false}
@@ -84,7 +87,7 @@ export function IdentityCopyDialog({
         <Stack spacing={2}>
           <FormSectionCard
             icon="mdi:content-copy"
-            title="Source context"
+            title="Source Context"
             descriptionTooltip="Select the source board, medium and organization from another academic year at the same override level. Copying replaces this context’s explicit choices and preserves inheritance. Shared school defaults are not copied."
           >
             <IdentityContextFields
@@ -129,7 +132,12 @@ export function IdentityCopyDialog({
         </Stack>
       </DialogScrollContent>
       <DialogActions>
-        <Button disabled={copying.isLoading} onClick={onClose}>
+        <Button
+          variant="outlined"
+          disabled={copying.isLoading}
+          onClick={onClose}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
           Cancel
         </Button>
         <Button
@@ -142,6 +150,7 @@ export function IdentityCopyDialog({
             query.isFetching
           }
           onClick={copySource}
+          startIcon={<Iconify icon={GlobalIcons.copy} />}
         >
           Copy overrides
         </Button>

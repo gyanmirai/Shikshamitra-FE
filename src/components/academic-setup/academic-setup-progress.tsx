@@ -28,7 +28,7 @@ export const AcademicSetupProgress = ({
     >
       <Box sx={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 1, mb: 1 }}>
         <Typography id="hierarchy-progress-title" variant="subtitle2" sx={{ fontWeight: 700 }}>
-          Setup progress
+          Setup Progress
         </Typography>
         <Typography variant="caption" color="text.secondary">
           {isLoading

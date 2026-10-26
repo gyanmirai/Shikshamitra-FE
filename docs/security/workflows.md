@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: How-to
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-26
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -40,7 +40,8 @@ Selecting a module shows its submodules together, and selecting a submodule narr
 Bulk changes remain in the draft until reviewed and saved.
 Provider-ineligible names are excluded, and duplicate feature mappings are submitted only once.
 Hover over a permission selector or focus a choice with the keyboard to inspect effective access, grant sources, and the user role default in its tooltip.
-The same details remain available as an accessible description, without status lines below the choices.
+The same details remain available as an accessible description.
+The visible status badge shows effective access and its source; an overridden action shows its role default in a separate caption.
 Selected Allow, Revoke/Deny, and user Role choices use primary, error, and info tints at the same 0.12 opacity.
 Grant all, Revoke all, and user Follow role use compact segmented-style buttons with regular-weight labels and matching primary, error, and info tints; disabled bulk actions remain neutral.
 The selected module's bulk controls sit beside search.
@@ -65,6 +66,8 @@ Follow role is the default and combines current assigned-role grants.
 Allow and Deny apply only to the selected user and persist through later role-permission updates.
 Follow role removes the explicit override. User saves do not change role permissions or assignments.
 Role defaults, their contributing role names, the selected rule, and effective access are shown separately.
+An explicit Allow or Deny shows Allowed by user override or Denied by user override as the primary status, with Role default below it.
+Follow role shows Allowed by role or Denied by role; a denied role default does not negate a displayed user Allow.
 Provider-ineligible controls remain unavailable.
 Opening either dialog does not copy inherited role grants into user grants or make the form dirty.
 

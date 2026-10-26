@@ -6,8 +6,8 @@ import type {
 } from 'src/redux/student/admissions/admission-fee-selection-types';
 
 import { api } from 'src/redux/service';
-import { studentType, studentOnboardingType } from 'src/redux/tagTypes';
 import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-query';
+import { studentType, organizationType, studentOnboardingType } from 'src/redux/tagTypes';
 
 import type {
   StudentOnboardingCase,
@@ -508,7 +508,10 @@ export const studentOnboardingApi = api.injectEndpoints({
       transformResponse: (
         response: Result<StudentOnboardingFilterOptions> | StudentOnboardingFilterOptions
       ) => unwrap(response),
-      providesTags: [{ type: studentOnboardingType.onboardingFilterOptions, id: 'LIST' }],
+      providesTags: [
+        { type: studentOnboardingType.onboardingFilterOptions, id: 'LIST' },
+        organizationType.academicHierarchyOptions,
+      ],
     }),
     getAvailableOnboardingCampuses: builder.query<StudentOnboardingCampus[], void>({
       query: () => '/student/onboarding/settings/campuses',
@@ -540,6 +543,7 @@ export const studentOnboardingApi = api.injectEndpoints({
         ) => unwrap(response),
         providesTags: (_result, _error, id) => [
           { type: studentOnboardingType.onboardingPlacementOptions, id },
+          organizationType.academicHierarchyOptions,
         ],
       }
     ),

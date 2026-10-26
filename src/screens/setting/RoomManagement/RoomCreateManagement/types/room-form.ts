@@ -17,10 +17,15 @@ export type RoomFormik = FormikProps<RoomFormValues>;
 export interface FloorOption {
   id: string;
   floorName: string;
+  floorNo?: number;
+  totalRoom?: number;
+  roomCount?: number;
 }
 export interface BuildingOption {
   id: string;
   buildingName: string;
+  description?: string;
+  totalFloors?: number;
   floors: FloorOption[];
 }
 export interface RoomTypeOption {

@@ -10,6 +10,7 @@ import { useAddYearMutation, useUpdateYearMutation } from 'src/redux/year/yearAp
 import { ConfirmDialog } from '../confirm-dialog';
 import { DialogScrollContent } from '../customDialog';
 import { AcademicFormSection } from './academic-form-section';
+import { useAcademicFormClose } from './academic-form-close-context';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 import { AcademicYearDateFields } from './academic-year-date-fields';
 import { formatAcademicYearDateForPayload } from './academic-year-date-utils';
@@ -43,6 +44,7 @@ export const AcademicYearForm = ({ editData, onClose }: AcademicYearFormProps) =
     enableReinitialize: true,
     onSubmit: confirm.onTrue,
   });
+  const requestClose = useAcademicFormClose(formik.dirty, isSaving, onClose);
 
   const saveAcademicYear = async () => {
     const { startDate, endDate } = formik.values;
@@ -90,7 +92,8 @@ export const AcademicYearForm = ({ editData, onClose }: AcademicYearFormProps) =
         <Button
           size="small"
           variant="outlined"
-          onClick={onClose}
+          onClick={requestClose}
+          disabled={isSaving}
           startIcon={<AcademicFormActionIcon action="cancel" />}
         >
           Cancel

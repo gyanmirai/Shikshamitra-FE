@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { Box, Stack, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
@@ -11,6 +13,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { instituteSetupPaths } from 'src/constants/institute-setup';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { roomsApi, useDeleteRoomMutation } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
+import { InstituteFieldFormattingPopover } from 'src/components/institute-field-formatting/institute-field-formatting-popover';
 
 import RoomTable from './components/roomTable';
 import RoomForm from './components/AddRoomForm';
@@ -55,17 +58,20 @@ const RoomCreateManagement = () => {
           { name: 'Rooms' },
         ]}
         action={
-          <Button
-            variant="contained"
-            onClick={addRoomDialog.onTrue}
-            startIcon={<Add />}
-            size="small"
-            sx={{
-              width: '130px',
-            }}
-          >
-            Add Room
-          </Button>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+            <InstituteFieldFormattingPopover scope="rooms" />
+            <Button
+              variant="contained"
+              onClick={addRoomDialog.onTrue}
+              startIcon={<Add />}
+              size="small"
+              sx={{
+                width: '130px',
+              }}
+            >
+              Add room
+            </Button>
+          </Stack>
         }
       />
 
@@ -103,6 +109,7 @@ const RoomCreateManagement = () => {
             variant="contained"
             color="error"
             size="small"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={async () => {
               const roomToDelete = selectedRoom;
               let deletedRoomIndex = -1;
@@ -140,7 +147,7 @@ const RoomCreateManagement = () => {
               setSelectedRoom(null);
             }}
           >
-            Delete
+            Delete room
           </LoadingButton>
         }
       />

@@ -49,7 +49,7 @@ export function DocumentEditor({
           <FormBusyRegion busy={formik.isSubmitting} label="Saving document...">
             <Stack spacing={2}>
               {error && <Alert severity="error">{error}</Alert>}
-              <DocumentDetailsFields formik={formik} />
+              <DocumentDetailsFields formik={formik} isEditing={Boolean(document)} />
               <DocumentAttachmentsField
                 formik={formik}
                 documentId={document?.id}

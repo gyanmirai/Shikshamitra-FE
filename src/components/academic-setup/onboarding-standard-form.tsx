@@ -6,7 +6,6 @@ import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
-import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { useAddClassMutation } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -16,6 +15,7 @@ import { ConfirmDialog } from '../confirm-dialog';
 import { DialogScrollContent } from '../customDialog';
 import { standardNameSchema } from './standard-form-model';
 import { academicValidationStyles } from './academic-form-styles';
+import { useAcademicNamePreview } from './use-academic-name-preview';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 
 import type { ExistingStandard } from './standard-form-model';
@@ -53,6 +53,7 @@ export const OnboardingStandardForm = ({
       helpers.setSubmitting(false);
     },
   });
+  const namePreview = useAcademicNamePreview('standard', formik.values.name);
   const saveStandard = async () => {
     const { values } = formik;
     const body = {
@@ -102,12 +103,12 @@ export const OnboardingStandardForm = ({
             name="name"
             label="Class Name"
             value={formik.values.name}
-            onChange={(event) =>
-              formik.setFieldValue('name', capitalizeFirstLetter(event.target.value))
-            }
+            onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             error={formik.touched.name && Boolean(formik.errors.name)}
-            helperText={formik.touched.name && formik.errors.name}
+            helperText={
+              formik.touched.name && formik.errors.name ? formik.errors.name : namePreview
+            }
             size="small"
             disabled={isSaving}
           />

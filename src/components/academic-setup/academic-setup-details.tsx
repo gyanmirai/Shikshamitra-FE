@@ -2,6 +2,7 @@ import { EmptyContent } from 'src/components/empty-content';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 
 import { NODE_TYPE_META } from './academic-setup-model';
+import { AcademicOrderAction } from './academic-order-action';
 import { AcademicSetupChildCard } from './academic-setup-child-card';
 import { AcademicSetupDetailsHeader } from './academic-setup-details-header';
 
@@ -51,9 +52,19 @@ export const AcademicSetupDetails = ({
 
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 1 }}>
         {node.type !== 'Academic Year' && !isFinalLevel && (
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            {meta.childLabel}
-          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 1,
+              mb: 1,
+            }}
+          >
+            <Typography variant="subtitle2">{meta.childLabel}</Typography>
+            <AcademicOrderAction key={`${node.type}-${node.id}`} node={node} />
+          </Box>
         )}
 
         {children.length > 0 ? (

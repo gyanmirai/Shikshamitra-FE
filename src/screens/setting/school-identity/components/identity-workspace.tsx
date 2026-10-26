@@ -1,6 +1,8 @@
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import LinearProgress from '@mui/material/LinearProgress';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -128,7 +130,13 @@ export function IdentityWorkspace({ workspace }: { workspace: SchoolIdentityWork
         disableCancel={saving}
         disableBackdropClick
         action={
-          <Button disabled={saving} onClick={resetOverride}>
+          <Button
+            variant="contained"
+            color="warning"
+            disabled={saving}
+            onClick={resetOverride}
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+          >
             Reset to inherited
           </Button>
         }

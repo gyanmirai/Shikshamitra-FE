@@ -267,7 +267,7 @@ const payrollSettingsMenuItems = [
   // },
 ];
 
-const hrModule = (isDdvs: boolean) => ({
+const hrModule = () => ({
   [hrPath]: [
     {
       subheader: '',

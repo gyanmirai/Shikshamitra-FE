@@ -15,7 +15,7 @@ describe('HR production menu', () => {
     expect(hrPermissions.policyActions).toBe(hrPolicyActionPermissions);
     expect(hrPaths.policyActions).toBe(hrPolicyActionPermissions);
     expect(hrPermissions.policies.leavePolicies).toBe(hrLeavePolicyPermissions.root);
-    const navItems = Object.values(hrModule(true)).flatMap((sections) =>
+    const navItems = Object.values(hrModule()).flatMap((sections) =>
       sections.flatMap((section) => section.items)
     );
     const titles = flattenTitles(navItems);
@@ -127,7 +127,7 @@ describe('HR production menu', () => {
 
 it('groups Reports and Templates under Reporting without changing grants', async () => {
   const { default: hrModule, hrPermissions } = await import('./hr-menus');
-  const items = Object.values(hrModule(true)).flatMap((sections) =>
+  const items = Object.values(hrModule()).flatMap((sections) =>
     sections.flatMap((section) => section.items)
   );
   const reporting = items.find((item) => item.title === 'Reporting');

@@ -1,7 +1,7 @@
 import type { FeeProrationResult } from 'src/redux/finance/fee-proration-result';
 
 import { api } from 'src/redux/service';
-import { studentType, financeModuleType } from 'src/redux/tagTypes';
+import { studentType, organizationType, financeModuleType } from 'src/redux/tagTypes';
 
 import { unwrapRecordsResult } from './student-records-api';
 
@@ -189,6 +189,7 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
       query: (params) => ({ url: '/students/records/transitions/options', params }),
       transformResponse: (response: TransitionOptions | { data?: TransitionOptions }) =>
         unwrapRecordsResult(response),
+      providesTags: [organizationType.academicHierarchyOptions],
     }),
     getStudentRecordTransitions: builder.query<RecordsPage<StudentTransition>, TransitionQuery>({
       query: (params) => ({ url: '/students/records/transitions', params }),

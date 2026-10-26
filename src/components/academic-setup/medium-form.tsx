@@ -1,4 +1,3 @@
-import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { Button, TextField, DialogActions } from '@mui/material';
 
 import { ConfirmDialog } from '../confirm-dialog';
@@ -6,6 +5,8 @@ import { useMediumForm } from './use-medium-form';
 import ShakingTextField from '../shaking-text-field';
 import { DialogScrollContent } from '../customDialog';
 import { AcademicFormSection } from './academic-form-section';
+import { useAcademicNamePreview } from './use-academic-name-preview';
+import { useAcademicFormClose } from './academic-form-close-context';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 
 import type { MediumFormProps } from './use-medium-form';
@@ -13,6 +14,8 @@ import type { MediumFormProps } from './use-medium-form';
 export function MediumForm(props: MediumFormProps) {
   const { editData, handleClose } = props;
   const { formik, confirm, saveMedium, isSaving } = useMediumForm(props);
+  const namePreview = useAcademicNamePreview('medium', formik.values.medium, Boolean(editData));
+  const requestClose = useAcademicFormClose(formik.dirty, isSaving, handleClose);
   const showError = Boolean(formik.touched.medium && formik.errors.medium);
   return (
     <>
@@ -44,12 +47,10 @@ export function MediumForm(props: MediumFormProps) {
               autoFocus
               disabled={isSaving}
               value={formik.values.medium}
-              onChange={(event) =>
-                formik.setFieldValue('medium', capitalizeFirstLetter(event.target.value))
-              }
+              onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={showError}
-              helperText={showError ? formik.errors.medium : undefined}
+              helperText={showError ? formik.errors.medium : namePreview}
               size="small"
             />
           </ShakingTextField>
@@ -60,7 +61,7 @@ export function MediumForm(props: MediumFormProps) {
           variant="outlined"
           size="small"
           disabled={isSaving}
-          onClick={handleClose}
+          onClick={requestClose}
           startIcon={<AcademicFormActionIcon action="cancel" />}
         >
           Cancel

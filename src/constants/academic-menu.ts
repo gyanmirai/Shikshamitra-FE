@@ -203,7 +203,7 @@ export const academicActionPermissions = {
   notification: 'Academics.Notification.View',
 };
 
-const academicModule = (isDdvs: boolean) => ({
+const academicModule = () => ({
   [academicPath]: [
     {
       subheader: '',

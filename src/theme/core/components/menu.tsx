@@ -1,5 +1,7 @@
 import type { Theme, Components } from '@mui/material/styles';
 
+import { handleSelectKeyDown } from 'src/utils/dropdown-select-keyboard';
+
 import { menuItem } from '../../styles';
 
 // ----------------------------------------------------------------------
@@ -13,4 +15,8 @@ const MuiMenuItem: Components<Theme>['MuiMenuItem'] = {
 
 // ----------------------------------------------------------------------
 
-export const menu = { MuiMenuItem };
+const MuiMenu: Components<Theme>['MuiMenu'] = {
+  defaultProps: { onKeyDownCapture: handleSelectKeyDown },
+};
+
+export const menu = { MuiMenu, MuiMenuItem };

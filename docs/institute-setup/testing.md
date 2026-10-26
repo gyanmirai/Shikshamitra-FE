@@ -3,12 +3,21 @@ module: institute-setup
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-10-26
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate School Identity
+
+## Academic field formatting
+
+Run the focused settings, preview, and API tests with `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/components/academic-setup/academic-field-formatting-popover.test.tsx src/components/academic-setup/academic-field-formatting-model.test.ts src/redux/InstituteSetup/academic-field-formatting-api.test.ts --pool=threads --maxWorkers=1`.
+Check all-Default initialization, fresh settings on reopen, preview-only create formatting, exact edit-name preservation, failed-save drafts, dirty-close confirmation, and permission hiding.
+Uppercase coverage checks ASCII and authoritative Unicode previews, saved mode 4, and preservation of existing names across desktop, tablet, and phone widths.
+The synthetic production-screen fixture under `e2e/fixtures/academic-field-formatting/` supports responsive and theme checks without accessing school data.
+Run its focused Playwright configuration, then perform the final smoke in the Codex in-app browser.
+The [backend testing guide](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md#academic-field-formatting) owns tenant, permission, and authoritative create-time tests.
 
 ## Reports
 
@@ -57,6 +66,14 @@ The fixture imports the production screen and shared components, with synthetic 
 
 ## Academic Setup regressions
 
+Reordering uses the production `YearSetup` screen and real RTK Query against the disposable ABP/SQLite bridge.
+Start the bridge described in the [backend testing guide](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md), then run `node node_modules/vite/bin/vite.js --config e2e/fixtures/academic-reorder/vite.config.mjs` on port 4325.
+Run `node e2e/fixtures/academic-reorder/check.mjs` against a fresh bridge for saved stage/class/division order, reload/default-list and medium-wide class-list agreement, append behavior, cancellation, failure/retry, keyboard reordering, phone dark layout and frontend view-only access.
+The fixture labels synthetic sign-in; it does not contact a school database.
+Backend tests own actual permission, tenant and UserScope enforcement.
+Run focused Vitest on `academic-order-dialog.test.tsx`, `academic-order-action.test.tsx`, `academic-order-stale.test.tsx`, `src/redux/class/class-order.test.ts` and `src/redux/class/class-order-options.test.ts`, full TypeScript and changed-file ESLint.
+Finish with a Codex in-app browser smoke on the same fixture; evidence belongs in ignored `.artifacts/class-division-reorder/`.
+
 | Check | Command |
 | --- | --- |
 | Stage-scoped duplicate names, legacy/new API errors, onboarding contracts | `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/components/academic-setup/standard-form-model.test.ts src/components/academic-setup/onboarding-standard-form.test.tsx src/components/academic-setup/onboarding-division-model.test.ts src/utils/academic-setup-error.test.ts --pool=threads` |
@@ -85,6 +102,8 @@ The automated run expects a freshly started bridge: DDVS has four shifts, Swamin
 The existing shift form emits React warnings about nested block elements inside a paragraph. This is an unrelated baseline markup issue; the isolation checks distinguish these warnings from uncaught runtime exceptions.
 
 ## Room form
+
+Capacity regressions in `room-capacity.test.tsx` and `room-capacity-race.test.tsx` use the real forms, Redux and RTK Query with controlled HTTP responses. They cover immediate full-floor feedback, blocked native submission, permission-aware building editing, save/cancel/failure recovery, retained room details, same-floor room edits, unchanged full limits, refresh retry and server conflicts. Start the synthetic browser fixture with `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vite/bin/vite.js --config e2e/fixtures/room-capacity/vite.config.mts`; it uses synthetic HTTP data and never writes school records. Run the focused Playwright spec in `e2e/institute-setup/room-capacity.spec.ts`, then finish with the Codex in-app browser. Keep evidence in ignored `.artifacts/room-capacity/`. This does not establish deployed backend acceptance.
 
 Run `node node_modules/vitest/vitest.mjs run src/screens/setting/RoomManagement/RoomCreateManagement` for layout validation, legacy partial grids, dynamic column fields, per-column stepper limits, separate preview dialogs, zoom, Escape, draft/focus restoration, reusable feature creation, failed-save preservation and successful retry. The tests use real components and RTK Query with controlled network responses.
 

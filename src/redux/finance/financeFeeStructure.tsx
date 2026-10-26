@@ -1,4 +1,4 @@
-import { financeModuleType } from 'src/redux/tagTypes';
+import { organizationType, financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from './financeModuleApi';
 
@@ -10,7 +10,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [financeModuleType.feeStructure],
+      providesTags: [financeModuleType.feeStructure, organizationType.academicHierarchyOptions],
     }),
 
     createFeeStructure: builder.mutation({

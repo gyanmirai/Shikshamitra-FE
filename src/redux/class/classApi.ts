@@ -1,11 +1,12 @@
 import { classType } from 'src/redux/tagTypes';
+import { academicReorderTags } from 'src/redux/academic-reorder-tags';
 
 import { api } from '../service';
 
 export const classApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getClass: builder.query({
-      query: () => ({ url: '/app/standard?Sorting=name asc', redirect: 'follow' }),
+      query: () => ({ url: '/app/standard', redirect: 'follow' }),
       providesTags: [classType.class],
     }),
     getClassById: builder.query({
@@ -27,6 +28,14 @@ export const classApi = api.injectEndpoints({
         body,
       }),
       invalidatesTags: [classType.class],
+    }),
+    reorderClasses: builder.mutation<void, { stageId: string; ids: string[] }>({
+      query: ({ stageId, ids }) => ({
+        url: `/education-medium-stages/${stageId}/standards/order`,
+        method: 'PUT',
+        body: { ids },
+      }),
+      invalidatesTags: academicReorderTags,
     }),
     deleteClass: builder.mutation({
       query: (id) => ({
@@ -52,6 +61,7 @@ export const {
   useLazyGetClassByIdQuery,
   useAddClassMutation,
   useUpdateClassMutation,
+  useReorderClassesMutation,
   useDeleteClassMutation,
   useGetClassByOrganizationIdQuery,
   useLazyGetClassByOrganizationIdQuery,

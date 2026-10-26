@@ -9,7 +9,6 @@ import {
   MenuItem,
   Checkbox,
   Skeleton,
-  TextField,
   IconButton,
   InputLabel,
   Typography,
@@ -18,7 +17,11 @@ import {
   ListSubheader,
   InputAdornment,
   FormHelperText,
+  TextField,
 } from '@mui/material';
+
+import { SearchHeader } from './search-header';
+import { useSearchMenu } from './use-search-menu';
 
 export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   SelectProps<J extends true ? string[] | number[] : string | number>,
@@ -40,6 +43,7 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   valueKey?: T;
   formControlProps?: FormControlProps;
   isSearch?: boolean;
+  searchPlaceholder?: string;
   addOtherItemText?: string;
   addOtherItemOnClick?: () => void;
   disabledValues?: (string | number)[];
@@ -67,6 +71,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   valueKey = 'value' as T,
   formControlProps,
   isSearch = false,
+  searchPlaceholder,
   addOtherItemText = '',
   addOtherItemOnClick,
   disabledValues = [],
@@ -76,6 +81,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   inputProps,
   ...props
 }: CustomSelectProps<T, J>): React.ReactElement => {
+  const searchMenu = useSearchMenu(isSearch, props.MenuProps, formControlProps?.ref);
   const [search, setSearch] = useState('');
   const normalizedSearch = search.trim().toLocaleLowerCase();
   const filteredOptions = (options ?? []).filter(
@@ -173,6 +179,7 @@ const CustomSelect = <T extends string, J extends boolean>({
         }),
       ]}
       {...formControlProps}
+      ref={searchMenu.ref}
       required={Boolean(props.required || formControlProps?.required)}
     >
       {isLoading ? (
@@ -255,9 +262,17 @@ const CustomSelect = <T extends string, J extends boolean>({
               props.onClose?.(event);
             }}
           >
+            {isSearch && (
+              <SearchHeader
+                label={label}
+                placeholder={searchPlaceholder}
+                value={search}
+                onChange={setSearch}
+              />
+            )}
             {filteredOptions.length === 0 ? (
               <MenuItem
-                disabled={typeof noOptionsMessage === 'string'}
+                disabled={Boolean(normalizedSearch) || typeof noOptionsMessage === 'string'}
                 onClick={(event) => {
                   if (typeof noOptionsMessage !== 'string') {
                     event.preventDefault();
@@ -275,7 +290,7 @@ const CustomSelect = <T extends string, J extends boolean>({
                       }
                 }
               >
-                {normalizedSearch ? 'No matching options' : noOptionsMessage}
+                {normalizedSearch ? 'No results found' : noOptionsMessage}
               </MenuItem>
             ) : (
               filteredOptions.flatMap((option, index) => {

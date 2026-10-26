@@ -1,4 +1,10 @@
 export const GlobalIcons = {
+  academicFieldSettings: 'mdi:tune-variant',
+  academicTextCase: 'mdi:format-letter-case',
+  building: 'solar:buildings-2-linear',
+  floors: 'solar:layers-linear',
+  moveUp: 'eva:arrow-upward-fill',
+  moveDown: 'eva:arrow-downward-fill',
   retrunIcon: 'famicons:return-down-back-outline',
   info: 'lucide:info',
   search: 'eva:search-fill',

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import Add from '@mui/icons-material/Add';
-import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useInstituteFieldPreview } from 'src/components/institute-field-formatting/use-institute-field-preview';
 import {
   useGetRoomFeaturesQuery,
   useAddRoomFeatureMutation,
@@ -29,6 +29,7 @@ export function RoomFeatures({ selected, onChange, onBusyChange }: Props) {
   const query = useGetRoomFeaturesQuery();
   const [addFeature, { isLoading }] = useAddRoomFeatureMutation();
   const [name, setName] = useState('');
+  const namePreview = useInstituteFieldPreview('rooms', 'featureName', name);
   const [error, setError] = useState('');
   const options = Array.from(
     new Set([...(query.data?.items.map((feature) => feature.name) ?? []), ...selected])
@@ -42,8 +43,7 @@ export function RoomFeatures({ selected, onChange, onBusyChange }: Props) {
     setError('');
     onBusyChange(true);
     try {
-      const existing = options.find((option) => option.toLowerCase() === trimmed.toLowerCase());
-      const featureName = existing ?? (await addFeature({ name: trimmed }).unwrap()).name;
+      const featureName = (await addFeature({ name: trimmed }).unwrap()).name;
       onChange(Array.from(new Set([...selected, featureName])));
       setName('');
     } catch (failure) {
@@ -99,11 +99,15 @@ export function RoomFeatures({ selected, onChange, onBusyChange }: Props) {
           value={name}
           inputProps={{ maxLength: 100 }}
           onChange={(event) => {
-            setName(capitalizeFirstLetter(event.target.value));
+            setName(event.target.value);
             setError('');
           }}
           error={Boolean(error)}
-          helperText={error || 'Added features remain available for other rooms.'}
+          helperText={
+            error ||
+            (namePreview && `${namePreview} Existing features keep their saved names.`) ||
+            'Added features remain available for other rooms.'
+          }
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
               event.preventDefault();

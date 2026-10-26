@@ -1,6 +1,146 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: INS-UI-20261026-ACADEMIC-FIELD-FORMATTING-UPPERCASE
+    module: InstituteSetup
+    submodule: AcademicSetup
+    title: Uppercase formatting saves and reloads without rewriting existing academic names
+    risk: medium
+    priority: P2
+    type: [functional, regression, responsive]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/academic-setup]
+    automated: true
+    automationFile: e2e/institute-setup/academic-field-formatting.spec.ts
+    status: automated
+    tags: ['@module-institute-setup', '@submodule-academic-setup', '@regression', '@responsive']
+  - id: INS-UI-20261026-ACADEMIC-FIELD-FORMATTING-UNICODE
+    module: InstituteSetup
+    submodule: AcademicSetup
+    title: Unicode field-formatting preview uses the authoritative response while preserving typed input and saved rules
+    risk: high
+    priority: P1
+    type: [functional, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/academic-setup]
+    automated: true
+    automationFile: e2e/institute-setup/academic-field-formatting.spec.ts
+    status: automated
+    tags: ['@module-institute-setup', '@submodule-academic-setup', '@regression']
+  - id: INS-UI-20261026-ACADEMIC-FIELD-FORMATTING
+    module: InstituteSetup
+    submodule: AcademicSetup
+    title: School field formatting opens in an anchored popover with Default rules and preserves saved values and failed-save drafts
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility, permission]
+    roles: [school-admin, restricted-user]
+    tenants: [school]
+    routes: [/setting/academic-setup]
+    automated: true
+    automationFile: e2e/institute-setup/academic-field-formatting.spec.ts
+    status: automated
+    tags: ['@module-institute-setup', '@submodule-academic-setup', '@regression', '@responsive']
+  - id: INS-UI-20261026-IDENTITY-REQUIRED-VALIDATION
+    module: InstituteSetup
+    submodule: SchoolIdentity
+    title: Identity signature required fields use inline Formik errors and focus without native browser validation or save calls
+    risk: high
+    priority: P1
+    type: [unit, regression, accessibility]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/school-identity]
+    automated: true
+    automationFile: src/screens/setting/school-identity/components/identity-editor-validation.test.tsx
+    status: automated
+    tags: ['@module-institute-setup', '@regression']
+  - id: INS-UI-20261026-REPORT-AI-DISCARD
+    module: InstituteSetup
+    submodule: Reports
+    title: AI report drawer preserves an unsaved request or prepared plan until discard and locks close controls while busy
+    risk: high
+    priority: P1
+    type: [unit, regression, accessibility]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/reports]
+    automated: true
+    automationFile: src/screens/setting/reports/components/report-ai.test.tsx
+    status: automated
+    tags: ['@module-institute-setup', '@regression']
+  - id: INS-UI-20261026-IDENTITY-DISCARD
+    module: InstituteSetup
+    submodule: SchoolIdentity
+    title: School Identity editor shell and footer share one discard owner while preserving drafts and busy locks
+    risk: high
+    priority: P1
+    type: [unit, regression, accessibility]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/school-identity]
+    automated: true
+    automationFile: src/screens/setting/school-identity/components/identity-editor-close.test.tsx
+    status: automated
+    tags: ['@module-institute-setup', '@regression']
+  - id: INS-UI-20261026-IDENTITY-LIFECYCLE
+    module: InstituteSetup
+    submodule: SchoolIdentity
+    title: School Identity uploads remain unsaved drafts until submission and retain version context after failures
+    risk: high
+    priority: P1
+    type: [unit, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/school-identity]
+    automated: true
+    automationFile: src/screens/setting/school-identity/hooks/use-identity-editor.test.tsx
+    status: automated
+    tags: ['@module-institute-setup', '@regression']
+  - id: INS-UI-20261026-ROOM-DISCARD
+    module: InstituteSetup
+    submodule: Rooms
+    title: Room Cancel and shell close share a discard decision and preserve draft values until confirmed
+    risk: high
+    priority: P1
+    type: [unit, regression, accessibility]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/room]
+    automated: true
+    automationFile: src/screens/setting/RoomManagement/RoomCreateManagement/components/room-form-close.test.tsx
+    status: automated
+    tags: ['@module-institute-setup', '@regression']
+  - id: INS-UI-20261026-HIERARCHY-DISCARD
+    module: InstituteSetup
+    submodule: AcademicSetup
+    title: Hierarchy form cancellation preserves dirty drafts until discard and shares one close guard across Cancel and shell controls
+    risk: high
+    priority: P1
+    type: [unit, regression, accessibility]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/academic-setup]
+    automated: true
+    automationFile: src/components/academic-setup/academic-form-dialog.test.tsx
+    status: automated
+    tags: ['@module-institute-setup', '@regression']
+  - id: INS-ACADEMIC-004
+    module: InstituteSetup
+    submodule: AcademicSetup
+    title: Saved stage, class and division order survives hierarchy reload and supports keyboard controls and cancellation
+    risk: high
+    priority: P1
+    type: [functional, e2e, regression, accessibility]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/academic-setup]
+    automated: true
+    automationFile: e2e/fixtures/academic-reorder/check.mjs
+    status: automated
+    tags: ['@module-institute-setup', '@regression']
   - id: ACM-UI-20261024-SUBJECT-COPY-DIALOG
     module: Academic
     submodule: SubjectAllocation

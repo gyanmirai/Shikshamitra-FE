@@ -74,8 +74,9 @@ describe('permission source summary', () => {
     );
     expect(screen.getByText(/^Denied\. User override\./)).not.toBeVisible();
     expect(screen.getByRole('radio', { name: 'Deny' })).toBeChecked();
-    expect(screen.getByText('Allowed by role')).toBeVisible();
-    expect(screen.getByText('User override: Denied')).toBeVisible();
+    expect(screen.getByText('Denied by user override')).toBeVisible();
+    expect(screen.getByText('Role default: Allowed')).toBeVisible();
+    expect(screen.queryByText('Allowed by role')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('radio', { name: 'Follow role' }));
     expect(onChange).toHaveBeenCalledWith('inherit');

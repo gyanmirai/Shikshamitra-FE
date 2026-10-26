@@ -1,5 +1,5 @@
-import { useRef } from 'react';
 import { useFormik } from 'formik';
+import { useRef, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useGetRoomTypesQuery } from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
@@ -10,6 +10,7 @@ import {
 } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 
 import { readRoomImage } from '../services/room-image';
+import { roomFloorLimitCode, getRoomFloorCapacity } from '../services/room-capacity';
 import { roomFormSchema, totalRoomBenches, getRoomFormValues } from '../services/room-layout';
 
 import type { IRoom } from '../types';
@@ -21,6 +22,7 @@ export function useRoomForm(editData: IRoom | null | undefined, onClose: () => v
   const [addRoom, addState] = useAddRoomMutation();
   const [updateRoom, updateState] = useUpdateRoomMutation();
   const requestPending = useRef(false);
+  const [rejectedFloor, setRejectedFloor] = useState<{ building: string; floor: string }>();
   const buildings: BuildingOption[] = buildingsQuery.data || [];
   const roomTypes: RoomTypeOption[] = typesQuery.data?.items || [];
 
@@ -28,7 +30,14 @@ export function useRoomForm(editData: IRoom | null | undefined, onClose: () => v
     initialValues: getRoomFormValues(editData),
     validationSchema: roomFormSchema,
     onSubmit: async (values, helpers) => {
-      if (requestPending.current) return;
+      if (
+        requestPending.current ||
+        buildingsQuery.isFetching ||
+        buildingsQuery.isError ||
+        getRoomFloorCapacity(buildings, values, editData)?.isFull ||
+        (rejectedFloor?.building === values.building && rejectedFloor?.floor === values.floor)
+      )
+        return;
       requestPending.current = true;
       helpers.setStatus(undefined);
       const building = buildings.find((item) => item.id === values.building);
@@ -76,25 +85,58 @@ export function useRoomForm(editData: IRoom | null | undefined, onClose: () => v
         helpers.resetForm();
         onClose();
       } catch (error) {
-        helpers.setStatus(
-          parseApiProblemDetail(error).detail || 'Room could not be submitted. Try again.'
-        );
+        const problem = parseApiProblemDetail(error);
+        if (problem.errorCode === roomFloorLimitCode) {
+          setRejectedFloor({ building: values.building, floor: values.floor });
+          const refreshed = await buildingsQuery.refetch();
+          const latest = getRoomFloorCapacity(refreshed.data || [], values, editData);
+          if (
+            !refreshed.error &&
+            latest?.hasCounts &&
+            latest.floor.roomCount! < latest.floor.totalRoom!
+          ) {
+            setRejectedFloor(undefined);
+          }
+        } else helpers.setStatus(problem.detail || 'Room could not be submitted. Try again.');
       } finally {
         requestPending.current = false;
       }
     },
   });
 
+  const capacity = getRoomFloorCapacity(buildings, formik.values, editData);
+  const capacityBlocked = Boolean(
+    capacity?.isFull ||
+    (rejectedFloor?.building === formik.values.building &&
+      rejectedFloor?.floor === formik.values.floor)
+  );
+  const refreshBuildings = async () => {
+    const result = await buildingsQuery.refetch();
+    if (!result.error) {
+      setRejectedFloor(undefined);
+      const building = (result.data as BuildingOption[]).find(
+        (item) => item.id === formik.values.building
+      );
+      if (!building) formik.setFieldValue('building', '');
+      if (!building?.floors.some((floor) => floor.id === formik.values.floor)) {
+        formik.setFieldValue('floor', '');
+      }
+    }
+  };
+
   return {
     formik,
     buildings,
     roomTypes,
+    capacity,
+    capacityBlocked,
+    refreshBuildings,
     floors: buildings.find((building) => building.id === formik.values.building)?.floors || [],
     saving: formik.isSubmitting || addState.isLoading || updateState.isLoading,
     loadingOptions: buildingsQuery.isFetching || typesQuery.isFetching,
     optionsError: buildingsQuery.isError || typesQuery.isError,
     retryOptions: () => {
-      buildingsQuery.refetch();
+      refreshBuildings();
       typesQuery.refetch();
     },
   };
