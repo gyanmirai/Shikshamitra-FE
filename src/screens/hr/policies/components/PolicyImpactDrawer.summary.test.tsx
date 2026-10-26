@@ -38,6 +38,41 @@ vi.mock('./HRPolicySharedUI', () => ({
 }));
 
 describe('PolicyImpactDrawer summary rendering', () => {
+  it('uses one request status and leaves the idle state out of loading', () => {
+    const ctx = {
+      impactDrawerOpen: true,
+      drawerTransitionDuration: 0,
+      impactPreview: null,
+      impactPreviewError: null,
+      pendingImpactAction: null,
+      previewPolicyImpactState: { isLoading: true },
+      previewPolicyAssignmentImpactState: { isLoading: false },
+      closeImpactDrawer: vi.fn(),
+    } as any;
+    const { rerender } = renderWithProviders(<PolicyImpactDrawer ctx={ctx} />);
+    expect(screen.getByRole('status')).toHaveTextContent('Loading impact preview...');
+    expect(screen.getAllByRole('progressbar', { hidden: true })).toHaveLength(1);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    rerender(
+      <PolicyImpactDrawer ctx={{ ...ctx, previewPolicyImpactState: { isLoading: false } }} />
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Impact preview is not loaded yet.');
+    expect(screen.queryByRole('progressbar', { hidden: true })).not.toBeInTheDocument();
+
+    rerender(
+      <PolicyImpactDrawer
+        ctx={{
+          ...ctx,
+          previewPolicyImpactState: { isLoading: false },
+          impactPreviewError: 'Preview could not be loaded.',
+        }}
+      />
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Preview could not be loaded.');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('shows risk summary and recommended action from impact preview', () => {
     renderWithProviders(
       <PolicyImpactDrawer

@@ -616,6 +616,27 @@ Exports contain every authorized matching row in the selected column order.
 Captured totals and charts describe the original report; filtered exports omit original totals.
 Designer preview controls refine the first 50 sampled rows, while preview exports apply the same criteria to the complete captured output.
 
+## Informational and loading feedback
+
+HR workspaces use `src/screens/hr/components/hr-notice.tsx` for routine context, prerequisites,
+impact summaries, review reminders, and successful empty results. Informational notices use
+outlined paper surfaces, divider borders, primary text, and secondary icons from the theme.
+Routine updates announce politely; blocking access/setup prerequisites explicitly retain `role="alert"`.
+Warning, error, and success severities retain the shared Alert palette, icons, and announcements.
+`HrLoadingNotice` pairs one neutral progress indicator with one polite status message; render it
+only while the owning request is active. Policy Impact distinguishes idle, loading, failure, and
+loaded previews without a second header progress bar.
+
+The HR audit intentionally retains these exceptions:
+
+| Surface | Reason |
+| --- | --- |
+| `hr-notification/component/*`, `hrNotification/Components/*`, `employee/employeeAcademic/employeeExam.tsx`, `employee/EmployeeLibrary.tsx`, `events-holidays/request.tsx` | Prominent disclosures that integrations are unavailable or records are demonstrations, rather than routine guidance |
+| `employee/employee-dashboard.tsx` data notice; `hr-dashboard/components/OperationalDashboardSecondary.tsx`; report designer server warnings | Data completeness/unavailability or server warning disclosures retain their existing emphasis and alert announcements |
+| ESIC settings draft impact and staff-review summaries | Existing neutral outlined treatment already follows the feedback guide; preserve issue counts and review actions |
+| Dashboard alert categories, audit-event badges, attendance/leave states, metrics, charts, selected controls, and small help icons | Colors identify domain states or affordances; they are not equivalent informational/loading banners |
+| Shared toast, confirmation, validation recovery, warning/error/success, and table loading components | Preserve their established semantic and recovery behavior; this change is scoped to HR inline context |
+
 ## Validation and setup recovery
 
 HR API mutation failures now have a persistent review dialog with a specific safe reason, named validation fields when supplied by the server, and permission-gated setup links where a verified error code identifies a prerequisite. Keep editing returns focus to the original workflow and clears the notice; Dismiss error also clears it. Successful matching mutations and route/account changes clear stale feedback.

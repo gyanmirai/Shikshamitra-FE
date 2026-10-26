@@ -3,7 +3,8 @@
 import type { EditablePolicyStatus } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
-import { Box, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
+import { Box, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
 
 import {
   DrawerField,
@@ -257,10 +258,10 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
         </PolicySection>
       )}
       {!isManualStatusMode && (
-        <Alert severity="info" sx={{ mb: 2 }}>
+        <HrNotice severity="info" sx={{ mb: 2 }}>
           Standard setup uses 75% for full day, 50% for half day, missing punches require review,
           manual correction is allowed, and payroll impact remains visible.
-        </Alert>
+        </HrNotice>
       )}
       <PolicySection title="Exceptions">
         <DrawerFormGrid columns={3} rowGap={1} alignItems="center">

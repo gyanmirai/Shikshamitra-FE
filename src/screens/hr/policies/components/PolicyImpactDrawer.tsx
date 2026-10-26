@@ -6,6 +6,7 @@ import React from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
 import {
   Box,
   Chip,
@@ -18,7 +19,6 @@ import {
   TableCell,
   Accordion,
   Typography,
-  LinearProgress,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -81,6 +81,8 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const warningCount = displayedWarnings.length + (impactPreview?.requiresConfirmation ? 1 : 0);
   const conflictCount = impactPreview?.effectiveAssignmentConflicts?.length ?? 0;
   const hasBlockingWarnings = Boolean(impactPreview?.blockingWarnings?.length);
+  const isPreviewLoading =
+    previewPolicyImpactState.isLoading || previewPolicyAssignmentImpactState.isLoading;
   const summarySeverity = hasBlockingWarnings
     ? 'error'
     : impactPreview?.requiresConfirmation
@@ -105,21 +107,19 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       />
       <Divider />
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-        {previewPolicyImpactState.isLoading || previewPolicyAssignmentImpactState.isLoading ? (
-          <LinearProgress />
-        ) : null}
-
         {/* -- Sticky top: alerts + chips + accordions -- */}
         <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5, flexShrink: 0 }}>
           <Stack spacing={1.5}>
             {impactPreviewError ? <Alert severity="error">{impactPreviewError}</Alert> : null}
-            {!impactPreview && !impactPreviewError ? (
-              <Alert severity="info">Loading impact preview...</Alert>
+            {isPreviewLoading ? (
+              <HrLoadingNotice>Loading impact preview...</HrLoadingNotice>
+            ) : !impactPreview && !impactPreviewError ? (
+              <HrNotice>Impact preview is not loaded yet.</HrNotice>
             ) : null}
             {impactPreview?.resolutionSummary ? (
-              <Alert severity="info" sx={{ py: 0.75 }}>
+              <HrNotice severity="info" sx={{ py: 0.75 }}>
                 {impactPreview.resolutionSummary}
-              </Alert>
+              </HrNotice>
             ) : null}
 
             {impactPreview ? (
@@ -186,7 +186,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                     <AccordionDetails sx={{ pt: 0, pb: 1.5, px: 2 }}>
                       <Stack spacing={1}>
                         {displayedWarnings.map((warning) => (
-                          <Alert
+                          <HrNotice
                             key={`${warning.code}-${warning.message}`}
                             severity={warning.severity === 'blocking' ? 'error' : warning.severity}
                             sx={{ py: 0.75 }}
@@ -214,7 +214,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                                 </Typography>
                               ) : null}
                             </Stack>
-                          </Alert>
+                          </HrNotice>
                         ))}
                         {impactPreview.requiresConfirmation ? (
                           <Alert
@@ -231,11 +231,11 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                   </Accordion>
                 ) : null}
                 {impactPreview.riskSummary || impactPreview.recommendedAction ? (
-                  <Alert severity={summarySeverity} sx={{ py: 0.75 }}>
+                  <HrNotice severity={summarySeverity} sx={{ py: 0.75 }}>
                     {impactPreview.riskSummary || ''}
                     {impactPreview.riskSummary && impactPreview.recommendedAction ? ' ' : ''}
                     {impactPreview.recommendedAction || ''}
-                  </Alert>
+                  </HrNotice>
                 ) : null}
 
                 {/* Effective assignment conflicts accordion */}

@@ -4,6 +4,7 @@ import type { EditablePolicyStatus } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
+import { HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
 import { useGetWorkCalendarPolicyHolidaysQuery } from 'src/redux/hr/hr-policy-api';
 import {
   Box,
@@ -390,7 +391,9 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             </Alert>
           ) : null}
           {selectedPayrollCalendar && payrollCalendarHolidaysLoading ? (
-            <Alert severity="info">Loading work-calendar holidays for payroll basis preview.</Alert>
+            <HrLoadingNotice>
+              Loading work-calendar holidays for payroll basis preview.
+            </HrLoadingNotice>
           ) : null}
           {payrollPreviewMissingManualDays ? (
             <Alert severity="warning">

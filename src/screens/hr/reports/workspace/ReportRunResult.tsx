@@ -2,6 +2,7 @@ import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'src/routes/hooks';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { Box, Chip, Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import {
@@ -81,10 +82,10 @@ export function ReportRunResult({ id }: { id: string }) {
         </Alert>
       ))}
       {run.isExpired && (
-        <Alert severity="info">
+        <HrNotice severity="info">
           This captured result has expired. Generate again to capture current data for the required
           period.
-        </Alert>
+        </HrNotice>
       )}
       {['Queued', 'Running'].includes(run.status) && (
         <>

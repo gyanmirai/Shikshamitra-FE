@@ -135,7 +135,7 @@ describe('Payroll overview readiness', () => {
   it('explains missing academic-year context and disables refresh', () => {
     mocks.yearId = '';
     renderHome();
-    expect(screen.getByRole('alert')).toHaveTextContent('Select an academic year');
+    expect(screen.getByRole('status')).toHaveTextContent('Select an academic year');
     expect(screen.getByRole('button', { name: 'Refresh status' })).toBeDisabled();
   });
 });

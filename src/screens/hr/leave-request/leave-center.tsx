@@ -8,6 +8,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { useRouter, useSearchParams } from 'src/routes/hooks';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { Box, Tab, Alert, Paper, Button } from '@mui/material';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -254,7 +255,7 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
         {activeTab === 'balance' &&
           !leaveOverviewState.selfAccessError &&
           (!currentYear?.id ? (
-            <Alert severity="info">Select an academic year to view your leave balances.</Alert>
+            <HrNotice severity="info">Select an academic year to view your leave balances.</HrNotice>
           ) : !isSelfContext && !employee?.id ? (
             <Alert severity="warning">
               Your user is not linked to an employee profile. Contact admin/HR.

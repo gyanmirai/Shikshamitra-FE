@@ -29,6 +29,7 @@ import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ShakingTextField from 'src/components/shaking-text-field';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -57,6 +58,17 @@ import {
   getEmployeeAssignableRoles,
   shouldClearEmployeeRoleSelection,
 } from 'src/screens/hr/employee/employee-role-options';
+import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
 import {
   Box,
   Card,
@@ -89,17 +101,6 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
 
 import { getOnboardingErrorMessage } from './error-message';
 import { statutoryProfileSchema } from '../employee/statutory-profile-fields';
@@ -2562,9 +2563,9 @@ export function FinalizeDialog({
                   <SectionCard title="Academic Permission">
                     <Grid size={{ xs: 12 }}>
                       {!form.isTeaching ? (
-                        <Alert severity="info">
+                        <HrNotice severity="info">
                           Academic Permission is not required for non-teaching staff.
-                        </Alert>
+                        </HrNotice>
                       ) : !currentYear?.id ? (
                         <Alert severity="warning">
                           Academic year is not set. Please configure an academic year first.
@@ -2572,9 +2573,9 @@ export function FinalizeDialog({
                       ) : organizationsLoading ? (
                         <LinearProgress />
                       ) : organizationOptions.length === 0 ? (
-                        <Alert severity="info">
+                        <HrNotice severity="info">
                           No organizations found for the current academic year.
-                        </Alert>
+                        </HrNotice>
                       ) : (
                         <Box>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
@@ -2705,10 +2706,10 @@ export function FinalizeDialog({
                       label="Attach submitted resume to staff documents"
                     />
                   </Stack>
-                  <Alert severity="info">
+                  <HrNotice severity="info">
                     Finalize saves the staff and salary together. The staff remains Inactive until
                     an authorized HR user activates them. Logging in does not activate staff.
-                  </Alert>
+                  </HrNotice>
                   {!canManageStatutory && (
                     <Alert severity="warning">
                       Salary management and statutory enrollment permissions are required to

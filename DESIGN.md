@@ -1691,6 +1691,10 @@ shikshaMitraToast.promise(saveRecord(payload).unwrap(), {
 - Do not use a toast as the only feedback for a destructive or irreversible action; confirm the action first and then report the result.
 - Keep toast messages free of sensitive tenant, student, employee, financial, or authentication data unless the displayed value is explicitly safe for the user’s context.
 - Use `alertProps` only for deliberate Alert customization supported by the shared implementation; do not override the severity, close behavior, or design contract casually.
+- HR inline context uses `src/screens/hr/components/hr-notice.tsx`: `HrNotice` keeps routine info
+  on an outlined `background.paper`/`divider` surface with `text.primary` and a `text.secondary`
+  icon; semantic warning/error/success states keep the shared Alert defaults. `HrLoadingNotice`
+  uses one neutral progress indicator and a polite status message tied to the owning request.
 - Use the callback form of `message` or `alertProps` only when the toast needs its own toast ID for an action such as undo or dismiss.
 - Make undo actions idempotent and report the result of the undo operation separately when it can fail.
 - Keep toast-triggering mutations in the owning workflow so a component does not report success for an operation it does not own.

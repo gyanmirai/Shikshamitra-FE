@@ -10,6 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -230,10 +231,10 @@ function SalaryStructureWorkspace() {
           ) : !summary ? (
             <SalaryStructureSkeleton />
           ) : !summary.revisionId ? (
-            <Alert severity="info">
+            <HrNotice severity="info">
               No salary is effective for {formatPayrollMonth(month)}.
               {canManage ? ' Set up salary to see the full-month estimate.' : ''}
-            </Alert>
+            </HrNotice>
           ) : (
             <Stack
               spacing={2}

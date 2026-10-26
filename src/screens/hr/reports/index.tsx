@@ -7,6 +7,7 @@ import { hrPaths } from 'src/constants/hr-menus';
 import { useSearchParams } from 'next/navigation';
 import { RouterLink } from 'src/routes/components';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Alert, Stack, Button, LinearProgress } from '@mui/material';
 import {
@@ -122,7 +123,7 @@ function ReportingWorkspace({ view = 'history', templateId, runId }: ReportsScre
 
   let content;
   if (!permissions.canView) {
-    content = <Alert severity="info">Report access is required to open this workspace.</Alert>;
+    content = <HrNotice role="alert" severity="info">Report access is required to open this workspace.</HrNotice>;
   } else if (error) {
     content = (
       <Alert

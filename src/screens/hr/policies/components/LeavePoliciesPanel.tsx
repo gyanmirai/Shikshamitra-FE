@@ -585,7 +585,7 @@ export function LeavePoliciesPanel() {
       <LeavePolicyImpactDrawer
         open={impactOpen}
         review={impactReview}
-        loading={archiveState.isLoading}
+        archiving={archiveState.isLoading}
         onClose={closeImpact}
       />
       <ConfirmDialog

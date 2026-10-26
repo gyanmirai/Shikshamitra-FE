@@ -17,6 +17,7 @@ import { useRef, useState, useEffect } from 'react';
 import SubmitButton from 'src/components/submit-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { FormSectionCard } from 'src/components/form-section-card';
@@ -100,7 +101,7 @@ export default function EsiStatutorySettings() {
     hrPermissions.payroll.settings.statutorySchemes
   );
   const query = useGetEsiConfigurationQuery(undefined, { skip: !canView });
-  if (!canView) return <Alert severity="info">You do not have access to ESIC settings.</Alert>;
+  if (!canView) return <HrNotice role="alert" severity="info">You do not have access to ESIC settings.</HrNotice>;
   if (query.data?.current) return <ConfigurationForm settings={query.data} />;
   if (query.isError || query.data)
     return (

@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import React, { useMemo, useEffect } from 'react';
+import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { HrDashboardPreviewShell } from 'src/screens/hr/hr-dashboard/components/HrDashboardPreviewShell';
 import { shouldShowDashboardSnapshotSkeleton } from 'src/screens/hr/hr-dashboard/hr-dashboard-preview-state';
 import { HrDashboardSnapshotEmptyState } from 'src/screens/hr/hr-dashboard/components/HrDashboardSnapshotEmptyState';
@@ -225,7 +226,7 @@ const PayrollDashboard = () => {
               <Alert severity="error">{data.blockingIssues[0]}</Alert>
             ) : null}
             {data.recommendedActions.length ? (
-              <Alert severity="info">{data.recommendedActions[0]}</Alert>
+              <HrNotice severity="info">{data.recommendedActions[0]}</HrNotice>
             ) : null}
           </>
         )}
