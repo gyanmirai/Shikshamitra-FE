@@ -128,7 +128,7 @@ beforeEach(() => {
 });
 
 async function addHead() {
-  fireEvent.click(screen.getByRole('button', { name: 'Add Fee Head' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Fee Head' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: /Fee head/ }));
   fireEvent.click(await screen.findByRole('option', { name: 'Tuition' }));
   expect(screen.queryByRole('button', { name: 'Add Head' })).toBeNull();
@@ -170,14 +170,27 @@ it('blocks Next and direct Review when collection is missing while allowing inco
   expect(state.mutate).not.toHaveBeenCalled();
 });
 
-it('validates clearing collection immediately and keeps refund optional', async () => {
-  Object.assign(state.lookups.settings.permissions, { collection: true, collectionRead: true });
+it('requires both policies before review and does not offer to clear a required policy', async () => {
+  Object.assign(state.lookups.settings.permissions, {
+    collection: true,
+    collectionRead: true,
+    refund: true,
+    refundRead: true,
+  });
   state.lookups.settings.policies = [
     {
       family: 'collection',
       id: 'collection',
       versionId: 'collection-v1',
       name: 'Collection',
+      versionNumber: 1,
+      isDefault: false,
+    },
+    {
+      family: 'refund',
+      id: 'refund',
+      versionId: 'refund-v1',
+      name: 'Refund',
       versionNumber: 1,
       isDefault: false,
     },
@@ -189,12 +202,29 @@ it('validates clearing collection immediately and keeps refund optional', async 
   expect(state.policyToast).toHaveBeenCalledWith({
     message: 'Collection Policy added to this draft.',
   });
-  expect(screen.getByRole('button', { name: 'Review & Continue' })).not.toBeDisabled();
-  expect(screen.queryByText('Collection Policy is required')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Change Collection Policy' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Remove Collection Policy' }));
-  expect(screen.getByText('Collection Policy is required')).toBeTruthy();
+  expect(screen.getByText('Refund Policy is required')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
+  expect(screen.queryByText('Collection Policy is required')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
+    'aria-current',
+    'step'
+  );
+  expect(state.mutate).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Change Collection Policy' }));
+  expect(screen.queryByRole('button', { name: 'Remove Collection Policy' })).toBeNull();
+  expect(screen.queryByText(/No Policy/i)).toBeNull();
+  fireEvent.click(
+    within(screen.getByRole('dialog', { name: 'Choose Collection Policy' })).getByRole('button', {
+      name: 'Close',
+    })
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Select Refund Policy' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Select Refund version 1' }));
+  expect(screen.queryByText('Refund Policy is required')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Review & Continue' })).not.toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Change Refund Policy' }));
+  expect(screen.queryByRole('button', { name: 'Remove Refund Policy' })).toBeNull();
 });
 
 it('resumes a saved structure at its scoped saved navigation step', () => {
@@ -212,23 +242,37 @@ it('resumes a saved structure at its scoped saved navigation step', () => {
   expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeTruthy();
 });
 
-it('returns an incomplete saved draft to Policies when its stored progress points to Review', () => {
-  window.localStorage.setItem(
-    'fee-structure-progress:metadata:class:saved',
-    JSON.stringify('review')
-  );
-  render(
-    ui({ ...structureCandidate(), id: 'saved', name: 'Saved fees', status: 1, revisionNumber: 1 })
-  );
-  expect(screen.getByText('Collection Policy is required')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
-  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
-    'aria-current',
-    'step'
-  );
-  expect(state.mutate).not.toHaveBeenCalled();
-});
+it.each([
+  {},
+  { collectionPolicyId: 'collection', collectionPolicyVersionId: 'collection-v1' },
+  { collectionPolicyVersionId: 'collection-v1', refundPolicyVersionId: 'refund-v1' },
+])(
+  'returns an incomplete saved draft to Policies when its stored progress points to Review (%j)',
+  (policies) => {
+    window.localStorage.setItem(
+      'fee-structure-progress:metadata:class:saved',
+      JSON.stringify('review')
+    );
+    render(
+      ui({
+        ...structureCandidate(),
+        ...policies,
+        id: 'saved',
+        name: 'Saved fees',
+        status: 1,
+        revisionNumber: 1,
+      })
+    );
+    expect(screen.getByText('Refund Policy is required')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
+    expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
+      'aria-current',
+      'step'
+    );
+    expect(state.mutate).not.toHaveBeenCalled();
+  }
+);
 
 it('ignores an outstanding preview when a newer saved structure arrives', async () => {
   Object.assign(state.lookups.settings.permissions, { publish: true });
@@ -243,7 +287,10 @@ it('ignores an outstanding preview when a newer saved structure arrives', async 
     ...structureCandidate(),
     id: 'saved',
     name: 'Original fees',
+    collectionPolicyId: 'collection',
     collectionPolicyVersionId: 'collection-v1',
+    refundPolicyId: 'refund',
+    refundPolicyVersionId: 'refund-v1',
     status: 1,
     revisionNumber: 1,
     concurrencyStamp: 'old',
@@ -319,11 +366,13 @@ it('preserves unsaved input while freely visiting policies and returning with Ba
   expect(state.mutate).not.toHaveBeenCalled();
 });
 
-it('saves the selected collection policy before allowing review and publication of the saved draft', async () => {
+it('saves both required policies before allowing review and publication of the saved draft', async () => {
   const record = {
     ...structureCandidate(),
     id: 'saved',
     name: 'Annual fees',
+    refundPolicyId: 'refund',
+    refundPolicyVersionId: 'refund-v1',
     concurrencyStamp: 'stamp-1',
     status: 1,
     revisionNumber: 1,
@@ -678,7 +727,7 @@ it.each(['0', '12.25'])(
 it('excludes fee heads already configured from the Add dropdown', async () => {
   render(ui(savedRecord()));
   fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Add Fee Head' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Fee Head' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: /Fee head/ }));
   expect(screen.queryByRole('option', { name: 'Tuition' })).toBeNull();
   expect(await screen.findByText('All available fee heads have been added.')).toBeTruthy();
@@ -738,7 +787,12 @@ it('confirms replacing customized installments only when a new payment frequency
 });
 
 it('shows unpriced variable installments as entered at assignment even when the table supplies its null placeholder', async () => {
-  Object.assign(state.lookups.settings.permissions, { collection: true, collectionRead: true });
+  Object.assign(state.lookups.settings.permissions, {
+    collection: true,
+    collectionRead: true,
+    refund: true,
+    refundRead: true,
+  });
   state.lookups.settings.policies = [
     {
       family: 'collection',
@@ -748,6 +802,7 @@ it('shows unpriced variable installments as entered at assignment even when the 
       versionNumber: 1,
       isDefault: false,
     },
+    { family: 'refund', id: 'refund', versionId: 'refund-v1', name: 'Refund', versionNumber: 1 },
   ];
   render(ui());
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
@@ -755,6 +810,8 @@ it('shows unpriced variable installments as entered at assignment even when the 
   });
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   await chooseCollection('Collection');
+  fireEvent.click(screen.getByRole('button', { name: 'Select Refund Policy' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Select Refund version 1' }));
   state.mutate.mockReturnValueOnce({
     unwrap: () =>
       Promise.resolve({
@@ -897,18 +954,20 @@ function checklistSetup() {
 it('shows the policy checklist with exact-version coverage and opens its coverage view', async () => {
   render(ui(checklistSetup()));
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
-  expect(screen.getByRole('heading', { name: 'Your policies are ready' })).toBeTruthy();
   expect(screen.queryByRole('alert')).toBeNull();
   expect(screen.getByText('School Collection Policy')).toBeTruthy();
   expect(screen.getByText('1 of 1 fee head has late fees')).toBeTruthy();
-  expect(screen.getByText('No refund policy attached')).toBeTruthy();
+  expect(screen.getByRole('group', { name: 'Refund Policy' })).toHaveAccessibleDescription(
+    'Refund Policy is required'
+  );
+  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Change Collection Policy' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'View Collection Policy fee head impact' }));
   const details = await screen.findByRole('dialog', { name: 'School Collection Policy · v1' });
   expect(within(details).getByText('Late fee applies')).toBeTruthy();
 });
 
-it('replaces the ready checklist state with a warning for a refund policy with no matching heads', () => {
+it('shows a coverage error when the selected refund policy has no matching heads', () => {
   const record = checklistSetup();
   state.lookups.settings.policies.push({
     family: 'refund',
@@ -931,12 +990,8 @@ it('replaces the ready checklist state with a warning for a refund policy with n
   };
   render(ui({ ...record, refundPolicyId: 'refund', refundPolicyVersionId: 'refund-v1' }));
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
-  expect(screen.getByRole('heading', { name: 'Check your policy selections' })).toBeTruthy();
-  expect(screen.queryByText('Your policies are ready')).toBeNull();
   expect(
-    screen.getByText(
-      'No matching fee heads. Choose another refund policy or remove it before publishing.'
-    )
+    screen.getByText('No matching fee heads. Choose another refund policy before publishing.')
   ).toBeTruthy();
   expect(screen.getByRole('button', { name: 'View Refund Policy fee head impact' })).toBeTruthy();
 });
@@ -962,14 +1017,15 @@ it('keeps retained policy pins visible without inventing coverage when their exa
   expect(state.mutate).not.toHaveBeenCalled();
 });
 
-it('preserves authorized policy removal without permission to browse replacements', () => {
+it('retains a required policy when replacements cannot be browsed', () => {
   const record = checklistSetup();
   state.lookups.settings.permissions.collectionRead = false;
   render(ui(record));
   fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   expect(screen.getByRole('button', { name: 'Change Collection Policy' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Remove Collection Policy' }));
-  expect(screen.getByText('Collection Policy is required')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Remove Collection Policy' })).toBeNull();
+  expect(screen.getByText('School Collection Policy')).toBeVisible();
+  expect(screen.queryByText('Collection Policy is required')).toBeNull();
   expect(state.mutate).not.toHaveBeenCalled();
 });

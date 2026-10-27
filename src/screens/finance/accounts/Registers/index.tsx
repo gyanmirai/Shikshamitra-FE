@@ -20,7 +20,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import { useGetAccountsActivityQuery } from 'src/redux/finance/accountsActivityApi';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
-import FinanceListActionRow from 'src/screens/finance/components/FinanceListActionRow';
 
 import ManualEntryForm from './ManualEntryForm';
 import AccountEntryDetails from './AccountEntryDetails';
@@ -327,10 +326,8 @@ function RegisterContent({
               }}
             />
           </Box>
-        </Card>
-        <FinanceListActionRow
-          action={
-            canAdd ? (
+          {canAdd && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', ml: 'auto' }}>
               <Button
                 aria-label={income ? 'Add Income' : 'Add Expense'}
                 ref={addButton}
@@ -343,9 +340,9 @@ function RegisterContent({
               >
                 {income ? 'Add Income' : 'Add Expense'}
               </Button>
-            ) : undefined
-          }
-        />
+            </Box>
+          )}
+        </Card>
         <Box
           sx={{
             display: 'flex',

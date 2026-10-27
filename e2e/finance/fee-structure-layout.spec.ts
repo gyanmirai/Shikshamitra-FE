@@ -23,7 +23,7 @@ import { test, expect } from '@playwright/test';
       ).toBeVisible();
       await expect(
         workspace.getByRole('columnheader', { name: 'Annual amount', exact: true })
-      ).toHaveCSS('text-align', 'right');
+      ).toHaveCSS('text-align', 'left');
       const amount = workspace.getByRole('group', {
         name: 'Annual amount for Tuition Fee',
         exact: true,
@@ -51,7 +51,10 @@ import { test, expect } from '@playwright/test';
       ).toBe(true);
       await workspace.getByRole('button', { name: 'Edit Draft', exact: true }).click();
       await expect(
-        workspace.getByRole('button', { name: 'Add Fee Head', exact: true })
+        workspace
+          .getByRole('heading', { name: 'Fee Heads', exact: true })
+          .locator('xpath=ancestor::section')
+          .getByRole('button', { name: 'Fee Head', exact: true })
       ).toBeVisible();
       const longName = '8th Fee Structure GSEB — Annual Tuition, Transport and Activities '
         .repeat(3)
@@ -63,16 +66,18 @@ import { test, expect } from '@playwright/test';
       const selected = list.locator('[aria-current="true"]');
       await expect(selected).toContainText(longName);
       const nameMetrics = await selected.locator('.MuiTypography-root').evaluate((element) => ({
-        overflow: getComputedStyle(element).textOverflow,
+        wrapping: getComputedStyle(element).whiteSpace,
         width: element.clientWidth,
         scroll: element.scrollWidth,
       }));
-      expect(nameMetrics.overflow).toBe('ellipsis');
-      expect(nameMetrics.scroll).toBeGreaterThan(nameMetrics.width);
+      expect(nameMetrics.wrapping).not.toBe('nowrap');
+      expect(nameMetrics.scroll).toBeLessThanOrEqual(nameMetrics.width + 1);
       await selected.press('Tab');
       await page.keyboard.press('Shift+Tab');
       await expect(selected).toBeFocused();
-      await expect(page.getByRole('tooltip').filter({ hasText: longName })).toBeVisible();
+      await selected.hover();
+      await expect(page.getByRole('tooltip').filter({ hasText: longName })).toHaveCount(0);
+      await expect(list.getByRole('img', { name: 'Unsaved changes' })).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Add Structure', exact: true })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Copy Structure', exact: true })).toBeVisible();
       if (viewport.width < 1200)

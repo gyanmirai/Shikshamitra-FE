@@ -10,6 +10,35 @@ audience: humans-and-agents
 
 # Validate Finance frontend changes
 
+Required income choices, Payment Term names, assignment review and clone feedback: run
+`FeeCategoryForm.ui.test.tsx`, `usePaymentTermForm.errors.test.tsx`,
+`usePaymentTermForm.impact.test.tsx`, the three Assignment workflow/review/table tests, and
+`proration-policy-error.test.ts` in their owning source folders. In the in-app browser use
+`e2e/fixtures/fee-category-readonly` (also the `income=empty` query),
+`e2e/fixtures/payment-term-template` with `name-conflict`,
+`e2e/fixtures/fee-assignment` with `studentColumns` and `bulkSidebar`, and
+`e2e/fixtures/proration-policy` with `clone=default` or `clone=blocked`.
+Check no None category choice, missing-category validation, padded/repeated-space name rejection
+and trimmed successful save, assigned-row exclusion and header selection, left-aligned roll
+numbers, independent review collapses, adjacent policy/total cards and direct reached-step
+navigation. An unchanged review must remain valid; changed input must obtain fresh evidence.
+Cloning a default with an existing Copy must produce a new Draft without replacing the source
+default; blocked clones must state a corrective action. Fixtures use synthetic responses;
+backend tests separately establish persisted name and clone invariants.
+
+Fee Structure setup and bulk review layout: run `feeStructureFields.test.tsx`,
+`ClassAccordionPanel.test.tsx`, `FeeStructureReviewStep.test.tsx`,
+`AssignmentWorkflow.test.tsx`, and `custom-stepper/index.regression.test.tsx` in their owning
+source folders. Check missing Collection/Refund IDs and versions, direct/restored Review
+navigation, incomplete draft saves, bordered icon actions, and schedule expansion. In the
+Codex in-app browser use `e2e/fixtures/fee-structure` and
+`e2e/fixtures/fee-assignment` with the `bulkSidebar` query flag. Verify Fee Head action placement, left-aligned
+annual amounts, adjacent help, compact bordered warnings/schedules, and required policy
+selectors without a clear option. With the 45-student fixture, scroll the fee details and
+student list separately, switch/search/page students, check long names and selection,
+and keep counts/totals and Back/Assign fees visible at desktop and phone widths. These
+fixtures use synthetic responses and do not establish backend persistence or policy enforcement.
+
 Bank transfer evidence: run `BankTransferTable.test.tsx`,
 `FeeCollectionPreviewDialog.test.tsx` and `FinalPaymentReviewDialog.test.tsx` in their owning
 Finance screen folders, plus `collectionPaymentDetails.test.ts` and `reconciliation.test.ts`.
@@ -453,6 +482,20 @@ charge collection counts, reversal, waiver, list/detail parity and cancellation 
 The full frontend TypeScript check, scoped ESLint and backend API compilation passed. Evidence images and
 validation logs are retained in the wrapper workspace's `output/finance-bugfix-verification/`
 and `tmp/` folders, with backend logs under its ignored `.artifacts/` directory.
+
+## Cash Management checks
+
+The 27 October pending-cash correction supersedes the earlier approve-before-expense browser scenario below. The current focused suite passes 47 tests across ten files, including collected/expenses/remaining approval evidence, prefilled net counts of 8000 and zero, stale expense-race refresh preserving the draft while requiring the latest count, pending source balances, exact uncertain retry, manual-entry validation, cache invalidation and permission controls. Command: `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/accounts/CashManagement src/screens/finance/accounts/cashManagementRules.test.ts src/screens/finance/accounts/Registers/ManualEntryForm.test.tsx src/screens/finance/accounts/Registers/manualEntrySchema.test.ts src/screens/finance/accounts/Registers/cashExpenseSource.test.ts src/redux/finance/cashManagementApi.test.ts src/redux/feeCollection/feeCollection.cashCache.test.ts src/screens/security/role/cash-management-permissions.test.ts --pool=threads --maxWorkers=1`. The wrapper verification log is `tmp/simple-cash-management/pending-net-fe-final-tests.log`.
+
+Current browser acceptance uses the synthetic fixture at port 4188: start with pending receipt 10000, Add Expense 2000, verify pending cash 8000, then approve the receiving-bank deposit with prefilled count 8000. Details must retain collected 10000 and expense 2000, show deposited 8000/held zero, and omit a new deposit step. Repeat with a fully spent receipt, ordinary collector (`?collector`), administrator collector (`?collector&admin`), read-only/error states, and legacy approved-held cash (`?legacy`). Fixture state resets on reload and makes no backend writes.
+
+The wrapper focused TypeScript project (`tmp/simple-cash-management/tsconfig.frontend.json`) and Finance documentation validation pass. Typed ESLint reports no errors across the eleven changed source/test/fixture files; its single test import-order warning was corrected. Verification logs use `tmp/simple-cash-management/pending-net-fe-*`. Full-repository TypeScript/build acceptance is not implied by these focused checks.
+
+The administrator self-approval amendment passed 11 focused details/dialog/rules tests, focused TypeScript and typed ESLint checks. The in-app browser verified an enabled Approve Cash action for a synthetic administrator who collected the cash and opened bank selection. The UI follows server `canApprove`; ordinary collectors and users without approval permission remain blocked with explanatory help. Screenshot evidence: wrapper `output/finance-cash-management/admin-self-approval-enabled.png`.
+
+On 27 October 2026 the focused cash, manual-entry, API-cache and permission suites passed 32 tests across nine files. Focused TypeScript and typed ESLint checks passed. The actual shared components passed an Edge browser fixture flow: approve 10000, pay expense 2000, dispatch 6000, confirm credits 5000 and 1000, leaving held cash 2000 and transit zero. Desktop/mobile, read-only permissions and error/retry states were checked. Fixture responses are synthetic; backend persistence is verified separately. The in-app browser bridge was unavailable, so its required smoke remains unverified. Full-repository TypeScript/build acceptance is not implied by these focused checks. See [Cash Management](./references/cash-management.md).
+
+After the final category-routing and required-reference changes, the three affected form/schema suites passed 26 tests; focused TypeScript and typed lint passed again. A fresh Edge flow also checked Cash → Bank Transfer → Cash and the reference requirement. Backend HTTP acceptance passed 43 checks, including persisted deposits/credits and replay stamps; see [backend verification and release limits](../../../Shikshamitra-BE/docs/modules/finance/testing.md).
 
 ## Collection receipt grouping
 

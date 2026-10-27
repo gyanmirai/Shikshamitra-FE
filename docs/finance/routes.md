@@ -40,6 +40,7 @@ the `/finance/adjustments` route remains implemented for direct access.
 | Reconciliation       | `/finance/reconciliation`                   | `src/constants/finance-menu.ts` |
 | Legacy combined page | `/finance/income-and-expense` | Redirects to an authorized Income or Expenses workspace |
 | Old Accounts Activity | `/finance/accounts/activity` | Redirects through the authorized workspace selector |
+| Cash Management | `/finance/accounts/cash-management` | `Finance.Accounts.CashManagement.View`; one submenu with approval and deposit actions |
 | Income               | `/finance/income-tracking`                  | `src/constants/finance-menu.ts` |
 | Expenses             | `/finance/expenseTracking`                  | `src/constants/finance-menu.ts` |
 | Income Category      | `/finance/settings/incomeCategories`        | `src/constants/finance-menu.ts` |

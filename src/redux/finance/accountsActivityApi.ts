@@ -58,7 +58,7 @@ export const accountsActivityApi = financeModuleApi.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [financeModuleType.incomeTracking, financeModuleType.expenseDetails],
+      invalidatesTags: (_, error) => error ? [] : [financeModuleType.incomeTracking, financeModuleType.expenseDetails, financeModuleType.cashManagement],
     }),
     getAccountsActivity: builder.query<
       AccountsActivityPage,
@@ -102,6 +102,8 @@ export interface AccountsManualEntry {
   amount: number;
   paymentMethod: number;
   paymentDate: string;
+  cashCollectionId?: string;
+  cashConcurrencyStamp?: string;
   bankAccountId?: string;
   paymentReference?: string;
   notes?: string;

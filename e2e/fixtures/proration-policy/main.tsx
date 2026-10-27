@@ -12,6 +12,8 @@ import { api } from 'src/redux/service';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useGetProrationPoliciesQuery } from 'src/redux/finance/prorationPolicy';
 import ProrationPolicyDrawer from 'src/screens/finance/policies/components/ProrationPolicyDrawer';
+import ProrationPolicyWorkspace from 'src/screens/finance/policies/workspaces/ProrationPolicyWorkspace';
+import { Snackbar } from 'src/components/snackbar';
 import { useFormik } from 'formik';
 import { createRoot } from 'react-dom/client';
 import { createTheme } from 'src/theme/create-theme';
@@ -34,6 +36,8 @@ const store = configureStore({
     auth: () => ({
       permissions: [
         { name: financePermissions.policies.prorationPolicyActions.activate, isGranted: true },
+        { name: financePermissions.policies.prorationPolicyActions.view, isGranted: true },
+        { name: financePermissions.policies.prorationPolicyActions.clone, isGranted: true },
       ],
     }),
   },
@@ -188,11 +192,21 @@ function Fixture() {
   );
 }
 
+function CloneFixture() {
+  return (
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', p: 2, gap: 1 }}>
+      <Alert severity="info">Clone verification · synthetic policies · no backend writes</Alert>
+      <Box sx={{ flex: 1, minHeight: 0 }}><ProrationPolicyWorkspace /></Box>
+      <Snackbar />
+    </Box>
+  );
+}
+
 createRoot(document.getElementById('root')!).render(
   <ThemeProvider theme={createTheme(defaultSettings)}>
     <CssBaseline />
     <Provider store={store}>
-      <Fixture />
+      {new URLSearchParams(window.location.search).has('clone') ? <CloneFixture /> : <Fixture />}
     </Provider>
   </ThemeProvider>
 );

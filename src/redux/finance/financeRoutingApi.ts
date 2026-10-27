@@ -12,6 +12,7 @@ export interface RoutingOption {
 export type RoutingOperation =
   | 'income-entry'
   | 'expense-entry'
+  | 'cash-expense'
   | 'collection'
   | 'refund'
   | 'refund-policy'

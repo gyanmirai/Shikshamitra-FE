@@ -294,6 +294,7 @@ export const feeTermsType = {
 
 // ===== Finance Module API (reducerPath: financeModuleApi) =====
 export const financeModuleType = {
+  cashManagement: 'CashManagement',
   charges: 'Charges',
   studentCharges: 'StudentCharges',
   feeRefund: 'FeeRefund',

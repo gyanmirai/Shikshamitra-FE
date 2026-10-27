@@ -58,8 +58,10 @@ class DiagnosticBoundary extends React.Component<
 }
 function Fixture() {
   const longSchedule = new URLSearchParams(window.location.search).get('scroll') === 'long';
+  const nameConflict = new URLSearchParams(window.location.search).has('name-conflict');
   const [open, setOpen] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
+  const [savedName, setSavedName] = React.useState('');
   const [mode, setMode] = React.useState<'create' | 'edit' | 'duplicate'>('edit');
   const [detailsTab, setDetailsTab] = React.useState<'details' | 'versions' | null>(null);
   const [showList, setShowList] = React.useState(false);
@@ -124,7 +126,9 @@ function Fixture() {
                 Open copied draft
               </Button>
               {saved && (
-                <Typography role="status">Payment term saved after confirmation</Typography>
+                <Typography role="status">
+                  {nameConflict ? `Saved payment term name: “${savedName}”` : 'Payment term saved after confirmation'}
+                </Typography>
               )}
               <Drawer
                 open={open}
@@ -137,7 +141,12 @@ function Fixture() {
                     open
                     onClose={(_, submit) => {
                       setOpen(false);
-                      if (submit) setSaved(true);
+                      if (submit) {
+                        const writes = (window as any).paymentTermWrites ?? [];
+                        const lastWrite = writes[writes.length - 1];
+                        setSavedName(lastWrite?.name ?? lastWrite?.body?.name ?? '');
+                        setSaved(true);
+                      }
                     }}
                     editData={
                       mode === 'create'
@@ -145,7 +154,7 @@ function Fixture() {
                         : mode === 'edit'
                           ? editData
                           : ({
-                              paymentTermName: 'monthly copy',
+                              paymentTermName: nameConflict ? ' 9th PT One ' : 'monthly copy',
                               boardId: 'board',
                               academicYearId: 'year',
                               demandGenerationRule: 'OnDueDate',

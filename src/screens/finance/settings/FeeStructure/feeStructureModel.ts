@@ -9,6 +9,15 @@ import type {
 export type StructurePolicyFamily = Exclude<PolicyFamily, 'concession'>;
 export const structurePolicyFamilies: StructurePolicyFamily[] = ['collection', 'refund'];
 
+/** Setup completion requires a policy and its pinned version; drafts may remain incomplete. */
+export const structurePolicyError = (
+  candidate: StructureCandidate,
+  family: StructurePolicyFamily
+) =>
+  !candidate[`${family}PolicyId`]?.trim() || !candidate[`${family}PolicyVersionId`]?.trim()
+    ? `${family === 'collection' ? 'Collection' : 'Refund'} Policy is required`
+    : '';
+
 /** Exact server contract: do not refill explicit nulls with a previous/default attachment. */
 export const structureCandidate = (source?: Partial<StructureRecord>): StructureCandidate => ({
   name: source?.name ?? '',

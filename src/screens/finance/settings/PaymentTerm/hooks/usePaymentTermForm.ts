@@ -1,39 +1,39 @@
 'use client';
 
-import { getAllocationSummary } from '../allocationValidation';
 import type { FormikTouched } from 'formik';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { toDateOnly } from 'src/utils/date-only';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { shikshaMitraToast } from 'src/components/toast';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
+  type PaymentTermUsage,
   useCreateRevisionMutation,
   useGetPaymentTermUsageQuery,
-  useGetPaymentTermDefaultImpactQuery,
-  useLazyGetPaymentTermDefaultImpactQuery,
-  type PaymentTermUsage,
-  type PaymentTermDefaultImpact,
   useCreatePaymentTermMutation,
+  type PaymentTermDefaultImpact,
   type CreateInstallmentRequest,
   useLazyGetPaymentTermByIdQuery,
   type PaymentTermDetailResponse,
   useUpdatePaymentTermDraftMutation,
   type UpdatePaymentTermDraftRequest,
+  useGetPaymentTermDefaultImpactQuery,
   type PaymentTermInstallmentResponse,
+  useLazyGetPaymentTermDefaultImpactQuery,
 } from 'src/redux/finance/paymentTerm';
 
+import { toPaymentTermApiDate } from '../paymentTermApiDate';
+import { normalizePaymentTermName } from '../paymentTermName';
+import { getAllocationSummary } from '../allocationValidation';
 import { getInitialPaymentTermData } from '../Components/PaymentTermInitialValues';
 import { paymentTermValidationSchema } from '../Components/PaymentTermValidationSchema';
-import { toPaymentTermApiDate } from '../paymentTermApiDate';
 import { getInvoiceDateError, getInvoiceOffsetLimit } from '../invoiceScheduleValidation';
 
 import type { IInstallment, IPaymentTerm, DemandGenerationRule } from '../type';
@@ -283,6 +283,7 @@ export function usePaymentTermForm(
   useEffect(() => {
     if (!editData?.id && formik.values.paymentTermName) {
       const slug = formik.values.paymentTermName
+        .trim()
         .toUpperCase()
         .replace(/\s+/g, '-')
         .replace(/[^A-Z0-9-]/g, '')
@@ -296,7 +297,7 @@ export function usePaymentTermForm(
   // ── Build API payload ─────────────────────────────────────────────────────
   const buildDraftBody = useCallback(
     (values: IPaymentTerm): UpdatePaymentTermDraftRequest => ({
-      name: values.paymentTermName,
+      name: values.paymentTermName.trim(),
       code: values.paymentTermCode,
       description: values.description || undefined,
       isDefault: values.status === 'Active' && values.isDefaultTerm,
@@ -348,7 +349,7 @@ export function usePaymentTermForm(
       await createTerm({
         academicYearId,
         boardId: values.boardId,
-        name: values.paymentTermName,
+        name: values.paymentTermName.trim(),
         code: values.paymentTermCode,
         description: values.description || undefined,
         isDefault: values.status === 'Active' && values.isDefaultTerm,
@@ -391,7 +392,15 @@ export function usePaymentTermForm(
   const handleSubmit = useCallback(
     async (confirmed = false) => {
       if (isSubmitting || isLoadingDetail) return;
-      const errors = await formik.validateForm();
+      if (
+        formik.status?.nameConflict &&
+        normalizePaymentTermName(formik.status.nameConflict.name) ===
+          normalizePaymentTermName(formik.values.paymentTermName)
+      ) return;
+      const errors = await formik.validateForm({
+        ...formik.values,
+        paymentTermName: formik.values.paymentTermName.trim(),
+      });
       const hasErrors = Object.keys(errors).length > 0;
       if (hasErrors) {
         const instTouched = formik.values.installments.map(() => ({
@@ -433,11 +442,16 @@ export function usePaymentTermForm(
         await submitToAPI();
       } catch (error) {
         const problem = parseApiProblemDetail(error);
-        if (problem.errorCode === 'Finance:PaymentTerm:000023') {
+        if (
+          problem.errorCode === 'Finance:PaymentTerm:000023' ||
+          problem.errorCode === 'Finance:PaymentTerm:000042'
+        ) {
           formik.setStatus({
             nameConflict: {
               name: formik.values.paymentTermName,
-              message: `A payment term already uses the code generated from “${formik.values.paymentTermName.trim()}” in this academic year. Use a different name.`,
+              message: problem.errorCode === 'Finance:PaymentTerm:000042'
+                ? `A payment term named “${formik.values.paymentTermName.trim()}” already exists in this academic year. Use a different name.`
+                : `A payment term already uses the code generated from “${formik.values.paymentTermName.trim()}” in this academic year. Use a different name.`,
             },
           });
           formik.setFieldTouched('paymentTermName', true, false);
@@ -527,7 +541,8 @@ export function usePaymentTermForm(
     const v = formik.values;
     const boardValid = Boolean(v.boardId);
     const nameConflict = formik.status?.nameConflict;
-    const hasNameConflict = nameConflict?.name === v.paymentTermName;
+    const hasNameConflict = Boolean(nameConflict) &&
+      normalizePaymentTermName(nameConflict.name) === normalizePaymentTermName(v.paymentTermName);
     const nameValid = v.paymentTermName.trim().length >= 3 && !hasNameConflict;
     const codeValid = /^[A-Z0-9-]{3,24}$/.test(v.paymentTermCode.trim());
     const hasInstallments = v.installments.length >= 1;

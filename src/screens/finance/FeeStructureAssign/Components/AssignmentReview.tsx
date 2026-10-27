@@ -1,17 +1,17 @@
 import type { AssignmentPreview } from 'src/redux/finance/studentFeeAssignment';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Label } from 'src/components/label';
 import { fDate } from 'src/utils/format-time';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Link, Stack, Typography } from '@mui/material';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { DetailField, DetailSection } from 'src/components/detail-view';
+import { Box, Link, Stack, Button, Collapse, Typography } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
-
 import { selectableAssignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 
 import { groupAssignmentInstallments } from './assignmentReviewPresentation';
@@ -36,6 +36,24 @@ export default function AssignmentReview({
   committed?: boolean;
 }) {
   const [showInstallments, setShowInstallments] = useState(false);
+  const headsExpanded = useBoolean(true);
+  const scheduleExpanded = useBoolean(true);
+  const regionId = useId();
+  const headsRegion = `${regionId}-heads`;
+  const scheduleRegion = `${regionId}-schedule`;
+  const expansionAction = (label: string, id: string, expanded: ReturnType<typeof useBoolean>) => (
+    <Button
+      size="small"
+      color="inherit"
+      aria-label={`${expanded.value ? 'Collapse' : 'Expand'} ${label}`}
+      aria-expanded={expanded.value}
+      aria-controls={id}
+      startIcon={<Iconify icon={expanded.value ? 'mdi:chevron-up' : 'mdi:chevron-down'} />}
+      onClick={expanded.onToggle}
+    >
+      {expanded.value ? 'Collapse' : 'Expand'}
+    </Button>
+  );
   const installments = groupAssignmentInstallments(data.lines);
   const legacy = data.calculationVersion === 'LegacyUnknown';
   const tableId = `assignment-${data.studentId}-${data.structureId}-${committed ? 'saved' : 'preview'}`;
@@ -87,246 +105,20 @@ export default function AssignmentReview({
             alignItems: 'start',
           }}
         >
-          <Box sx={{ gridArea: 'summary', minWidth: 0, alignSelf: 'start' }}>{summary}</Box>
-          <Stack spacing={2} sx={{ gridArea: 'details', minWidth: 0 }}>
-            <DetailSection
-              icon="mdi:format-list-bulleted"
-              title="Fee Breakdown"
-              helpText="Saved fee-head selections, payment-term versions, service dates and assigned amounts. Unselected optional fees are identified separately."
-            >
-              <CustomizableTable
-                {...embeddedTableProps}
-                tableId={`${tableId}-heads`}
-                tableTitle="Assignment fee-head breakdown"
-                data={data.heads.map((head) => ({ ...head, _id: head.feeHeadId }))}
-                noDataText="No fee heads recorded for this assignment."
-                columns={[
-                  {
-                    id: 'feeHeadName',
-                    label: 'Fee Head',
-                    filterType: 'string' as const,
-                    minWidth: 180,
-                    width: '40%',
-                    isSort: false,
-                    isFilter: true,
-                    render: (_value, head) => (
-                      <Stack spacing={0.5}>
-                        <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                          {head.feeHeadName}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {head.isOptional ? 'Optional' : 'Required'}
-                          {!head.included && <Label>Not selected</Label>}
-                        </Typography>
-                        {head.included && head.zeroAmountReason && (
-                          <Typography variant="caption" color="text.secondary">
-                            Zero amount: {head.zeroAmountReason}
-                          </Typography>
-                        )}
-                      </Stack>
-                    ),
-                  },
-                  {
-                    id: 'paymentTermName',
-                    label: 'Payment Term',
-                    filterType: 'string' as const,
-                    minWidth: 180,
-                    isSort: false,
-                    isFilter: true,
-                    render: (_value, head) =>
-                      head.included ? (
-                        <Stack spacing={0.5}>
-                          {head.paymentTermName && (
-                            <Typography variant="body2">
-                              {head.paymentTermName} · v{head.paymentTermVersionNumber ?? '—'}
-                            </Typography>
-                          )}
-                          {head.servicePeriod?.reason && (
-                            <Typography variant="caption" color="text.secondary">
-                              {head.servicePeriod.reason}
-                            </Typography>
-                          )}
-                          {(head.servicePeriod?.startDate || head.servicePeriod?.endDate) && (
-                            <Typography variant="caption" color="text.secondary">
-                              Service period:{' '}
-                              {head.servicePeriod.startDate
-                                ? fDate(head.servicePeriod.startDate)
-                                : '—'}{' '}
-                              –{' '}
-                              {head.servicePeriod.endDate ? fDate(head.servicePeriod.endDate) : '—'}
-                            </Typography>
-                          )}
-                        </Stack>
-                      ) : (
-                        '—'
-                      ),
-                  },
-                  {
-                    id: 'obligation',
-                    label: legacy ? 'Recorded Amount' : 'Assigned Amount',
-                    filterType: 'number' as const,
-                    minWidth: 130,
-                    align: 'left',
-                    cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
-                    isSort: false,
-                    isFilter: true,
-                    render: (value, head) => (
-                      <Stack spacing={0.5}>
-                        <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                          {money(value)}
-                        </Typography>
-                        {!head.included && (
-                          <Typography variant="caption" color="text.secondary">
-                            Not assigned
-                          </Typography>
-                        )}
-                      </Stack>
-                    ),
-                  },
-                ]}
-              />
-            </DetailSection>
-
-            <DetailSection
-              icon="mdi:calendar-clock-outline"
-              title="Installment Schedule"
-              helpText="Recorded installments with demand dates, payment deadlines and assigned amounts. Saved assignments also show paid and outstanding balances. View all opens the individual fee-head installments."
-              action={
-                <Link
-                  component="button"
-                  type="button"
-                  variant="body2"
-                  underline="hover"
-                  color="text.primary"
-                  disabled={!data.lines.length}
-                  onClick={() => setShowInstallments(true)}
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 0.75,
-                    fontWeight: 600,
-                    p: 0,
-                    bgcolor: 'transparent',
-                    border: 0,
-                    '&:focus-visible': {
-                      outline: '2px solid',
-                      outlineColor: 'primary.main',
-                      outlineOffset: 4,
-                      borderRadius: 0.5,
-                    },
-                    '&:disabled': { color: 'text.disabled', cursor: 'default' },
-                  }}
-                >
-                  <Iconify icon={GlobalIcons.eye} width={18} aria-hidden />
-                  View all
-                </Link>
-              }
-            >
-              <CustomizableTable
-                {...embeddedTableProps}
-                tableId={`${tableId}-schedule-ledger`}
-                tableTitle="Assignment installment schedule"
-                data={installments.map((item) => ({ ...item, _id: item.id }))}
-                noDataText="No installments recorded for this assignment."
-                columns={[
-                  {
-                    id: 'label',
-                    label: 'Installment',
-                    filterType: 'string' as const,
-                    minWidth: 145,
-                    isSort: false,
-                    isFilter: true,
-                    render: (value, row) => {
-                      const headCount = new Set(
-                        row.lines.map((line: { feeHeadId: string }) => line.feeHeadId)
-                      ).size;
-                      return (
-                        <Stack spacing={0.5}>
-                          <Typography variant="body2">{value}</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {headCount} {headCount === 1 ? 'fee head' : 'fee heads'}
-                          </Typography>
-                        </Stack>
-                      );
-                    },
-                  },
-                  {
-                    id: 'demandDate',
-                    label: 'Demand date',
-                    filterType: 'date' as const,
-                    renderColumn: () => (
-                      <InfoTooltipIcon
-                        label="About demand dates"
-                        title="The date this installment becomes available for collection."
-                      />
-                    ),
-                    minWidth: 110,
-                    isSort: false,
-                    isFilter: true,
-                    render: (value) => (value ? fDate(value) : '—'),
-                  },
-                  {
-                    id: 'dueDate',
-                    label: 'Due date',
-                    filterType: 'date' as const,
-                    renderColumn: () => (
-                      <InfoTooltipIcon
-                        label="About due dates"
-                        title="The payment deadline for this installment. Assignment preserves the configured date."
-                      />
-                    ),
-                    minWidth: 110,
-                    isSort: false,
-                    isFilter: true,
-                    render: (value) => (value ? fDate(value) : '—'),
-                  },
-                  {
-                    id: 'obligation',
-                    label: 'Assigned Amount',
-                    filterType: 'number' as const,
-                    minWidth: 110,
-                    align: 'left',
-                    cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
-                    isSort: false,
-                    isFilter: true,
-                    render: (value) => money(value),
-                  },
-                  ...(committed
-                    ? [
-                        {
-                          id: 'paid',
-                          label: 'Paid',
-                          filterType: 'number' as const,
-                          minWidth: 100,
-                          align: 'left' as const,
-                          cellSx: {
-                            textAlign: 'right' as const,
-                            fontVariantNumeric: 'tabular-nums',
-                          },
-                          isSort: false,
-                          isFilter: true,
-                          render: (value: number) => money(value),
-                        },
-                        {
-                          id: 'outstanding',
-                          label: 'Outstanding',
-                          filterType: 'number' as const,
-                          minWidth: 110,
-                          align: 'left' as const,
-                          cellSx: {
-                            textAlign: 'right' as const,
-                            fontVariantNumeric: 'tabular-nums',
-                          },
-                          isSort: false,
-                          isFilter: true,
-                          render: (value: number) => money(value),
-                        },
-                      ]
-                    : []),
-                ]}
-              />
-            </DetailSection>
-
+          <Box
+            sx={{
+              gridArea: 'summary',
+              minWidth: 0,
+              display: 'grid',
+              gap: 2,
+              gridTemplateColumns: 'minmax(0, 1fr)',
+              alignItems: 'start',
+              '@container (min-width: 720px)': {
+                gridTemplateColumns: 'minmax(0, 1.3fr) minmax(0, 1fr)',
+              },
+            }}
+          >
+            {summary}
             <DetailSection
               icon="mdi:shield-check-outline"
               title="Applicable Policies"
@@ -335,7 +127,7 @@ export default function AssignmentReview({
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+                  gridTemplateColumns: 'minmax(0, 1fr)',
                   gap: 1.5,
                 }}
               >
@@ -372,6 +164,258 @@ export default function AssignmentReview({
                     />
                   )}
               </Box>
+            </DetailSection>
+          </Box>
+          <Stack spacing={2} sx={{ gridArea: 'details', minWidth: 0 }}>
+            <DetailSection
+              icon="mdi:format-list-bulleted"
+              title="Fee Breakdown"
+              action={expansionAction('fee breakdown', headsRegion, headsExpanded)}
+              helpText="Saved fee-head selections, payment-term versions, service dates and assigned amounts. Unselected optional fees are identified separately."
+            >
+              <Collapse in={headsExpanded.value} id={headsRegion}>
+                <CustomizableTable
+                  {...embeddedTableProps}
+                  tableId={`${tableId}-heads`}
+                  tableTitle="Assignment fee-head breakdown"
+                  data={data.heads.map((head) => ({ ...head, _id: head.feeHeadId }))}
+                  noDataText="No fee heads recorded for this assignment."
+                  columns={[
+                    {
+                      id: 'feeHeadName',
+                      label: 'Fee Head',
+                      filterType: 'string' as const,
+                      minWidth: 180,
+                      width: '40%',
+                      isSort: false,
+                      isFilter: true,
+                      render: (_value, head) => (
+                        <Stack spacing={0.5}>
+                          <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                            {head.feeHeadName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {head.isOptional ? 'Optional' : 'Required'}
+                            {!head.included && <Label>Not selected</Label>}
+                          </Typography>
+                          {head.included && head.zeroAmountReason && (
+                            <Typography variant="caption" color="text.secondary">
+                              Zero amount: {head.zeroAmountReason}
+                            </Typography>
+                          )}
+                        </Stack>
+                      ),
+                    },
+                    {
+                      id: 'paymentTermName',
+                      label: 'Payment Term',
+                      filterType: 'string' as const,
+                      minWidth: 180,
+                      isSort: false,
+                      isFilter: true,
+                      render: (_value, head) =>
+                        head.included ? (
+                          <Stack spacing={0.5}>
+                            {head.paymentTermName && (
+                              <Typography variant="body2">
+                                {head.paymentTermName} · v{head.paymentTermVersionNumber ?? '—'}
+                              </Typography>
+                            )}
+                            {head.servicePeriod?.reason && (
+                              <Typography variant="caption" color="text.secondary">
+                                {head.servicePeriod.reason}
+                              </Typography>
+                            )}
+                            {(head.servicePeriod?.startDate || head.servicePeriod?.endDate) && (
+                              <Typography variant="caption" color="text.secondary">
+                                Service period:{' '}
+                                {head.servicePeriod.startDate
+                                  ? fDate(head.servicePeriod.startDate)
+                                  : '—'}{' '}
+                                –{' '}
+                                {head.servicePeriod.endDate
+                                  ? fDate(head.servicePeriod.endDate)
+                                  : '—'}
+                              </Typography>
+                            )}
+                          </Stack>
+                        ) : (
+                          '—'
+                        ),
+                    },
+                    {
+                      id: 'obligation',
+                      label: legacy ? 'Recorded Amount' : 'Assigned Amount',
+                      filterType: 'number' as const,
+                      minWidth: 130,
+                      align: 'left',
+                      cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
+                      isSort: false,
+                      isFilter: true,
+                      render: (value, head) => (
+                        <Stack spacing={0.5}>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ fontVariantNumeric: 'tabular-nums' }}
+                          >
+                            {money(value)}
+                          </Typography>
+                          {!head.included && (
+                            <Typography variant="caption" color="text.secondary">
+                              Not assigned
+                            </Typography>
+                          )}
+                        </Stack>
+                      ),
+                    },
+                  ]}
+                />
+              </Collapse>
+            </DetailSection>
+
+            <DetailSection
+              icon="mdi:calendar-clock-outline"
+              title="Installment Schedule"
+              helpText="Recorded installments with demand dates, payment deadlines and assigned amounts. Saved assignments also show paid and outstanding balances. View all opens the individual fee-head installments."
+              action={
+                <Stack direction="row" spacing={0.5} alignItems="center" useFlexGap flexWrap="wrap">
+                  {expansionAction('installment schedule', scheduleRegion, scheduleExpanded)}
+                  <Link
+                    component="button"
+                    type="button"
+                    variant="body2"
+                    underline="hover"
+                    color="text.primary"
+                    disabled={!data.lines.length}
+                    onClick={() => setShowInstallments(true)}
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      fontWeight: 600,
+                      p: 0,
+                      bgcolor: 'transparent',
+                      border: 0,
+                      '&:focus-visible': {
+                        outline: '2px solid',
+                        outlineColor: 'primary.main',
+                        outlineOffset: 4,
+                        borderRadius: 0.5,
+                      },
+                      '&:disabled': { color: 'text.disabled', cursor: 'default' },
+                    }}
+                  >
+                    <Iconify icon={GlobalIcons.eye} width={18} aria-hidden />
+                    View all
+                  </Link>
+                </Stack>
+              }
+            >
+              <Collapse in={scheduleExpanded.value} id={scheduleRegion}>
+                <CustomizableTable
+                  {...embeddedTableProps}
+                  tableId={`${tableId}-schedule-ledger`}
+                  tableTitle="Assignment installment schedule"
+                  data={installments.map((item) => ({ ...item, _id: item.id }))}
+                  noDataText="No installments recorded for this assignment."
+                  columns={[
+                    {
+                      id: 'label',
+                      label: 'Installment',
+                      filterType: 'string' as const,
+                      minWidth: 145,
+                      isSort: false,
+                      isFilter: true,
+                      render: (value, row) => {
+                        const headCount = new Set(
+                          row.lines.map((line: { feeHeadId: string }) => line.feeHeadId)
+                        ).size;
+                        return (
+                          <Stack spacing={0.5}>
+                            <Typography variant="body2">{value}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {headCount} {headCount === 1 ? 'fee head' : 'fee heads'}
+                            </Typography>
+                          </Stack>
+                        );
+                      },
+                    },
+                    {
+                      id: 'demandDate',
+                      label: 'Demand date',
+                      filterType: 'date' as const,
+                      renderColumn: () => (
+                        <InfoTooltipIcon
+                          label="About demand dates"
+                          title="The date this installment becomes available for collection."
+                        />
+                      ),
+                      minWidth: 110,
+                      isSort: false,
+                      isFilter: true,
+                      render: (value) => (value ? fDate(value) : '—'),
+                    },
+                    {
+                      id: 'dueDate',
+                      label: 'Due date',
+                      filterType: 'date' as const,
+                      renderColumn: () => (
+                        <InfoTooltipIcon
+                          label="About due dates"
+                          title="The payment deadline for this installment. Assignment preserves the configured date."
+                        />
+                      ),
+                      minWidth: 110,
+                      isSort: false,
+                      isFilter: true,
+                      render: (value) => (value ? fDate(value) : '—'),
+                    },
+                    {
+                      id: 'obligation',
+                      label: 'Assigned Amount',
+                      filterType: 'number' as const,
+                      minWidth: 110,
+                      align: 'left',
+                      cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
+                      isSort: false,
+                      isFilter: true,
+                      render: (value) => money(value),
+                    },
+                    ...(committed
+                      ? [
+                          {
+                            id: 'paid',
+                            label: 'Paid',
+                            filterType: 'number' as const,
+                            minWidth: 100,
+                            align: 'left' as const,
+                            cellSx: {
+                              textAlign: 'right' as const,
+                              fontVariantNumeric: 'tabular-nums',
+                            },
+                            isSort: false,
+                            isFilter: true,
+                            render: (value: number) => money(value),
+                          },
+                          {
+                            id: 'outstanding',
+                            label: 'Outstanding',
+                            filterType: 'number' as const,
+                            minWidth: 110,
+                            align: 'left' as const,
+                            cellSx: {
+                              textAlign: 'right' as const,
+                              fontVariantNumeric: 'tabular-nums',
+                            },
+                            isSort: false,
+                            isFilter: true,
+                            render: (value: number) => money(value),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              </Collapse>
             </DetailSection>
           </Stack>
         </Box>

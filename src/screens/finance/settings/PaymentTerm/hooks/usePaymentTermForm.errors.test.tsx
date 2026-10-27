@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { shikshaMitraToast } from 'src/components/toast';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
 
 import { usePaymentTermForm } from './usePaymentTermForm';
 import { getInitialPaymentTermData } from '../Components/PaymentTermInitialValues';
@@ -36,7 +36,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 describe('Payment term save failures', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  async function submitWithError(error: unknown) {
+  async function submitWithError(error: unknown, name = 'Monthly') {
     createTerm.mockReturnValue({ unwrap: () => Promise.reject(error) });
     const onClose = vi.fn();
     const hook = renderHook(() => usePaymentTermForm(null, onClose), { wrapper });
@@ -44,7 +44,7 @@ describe('Payment term save failures', () => {
       await hook.result.current.formik.setValues(
         getInitialPaymentTermData(
           {
-            paymentTermName: 'Monthly',
+            paymentTermName: name,
             boardId: 'board',
             status: 'Active',
             installments: [
@@ -106,5 +106,32 @@ describe('Payment term save failures', () => {
       message: 'The board period changed. Refresh and review the schedule.',
     });
     expect(result.current.formik.values.paymentTermName).toBe('Monthly');
+  });
+
+  it('retains a duplicate-name block after padding or case changes', async () => {
+    const { result } = await submitWithError({
+      status: 400,
+      data: { errorCode: 'Finance:PaymentTerm:000042', detail: 'Name already exists.' },
+    }, '9th PT One');
+    await act(async () => {
+      await result.current.formik.setFieldValue('paymentTermName', ' \t9TH \u00a0 PT ONE  ');
+    });
+    expect(result.current.checks.nameValid).toBe(false);
+    expect(result.current.formik.status.nameConflict.message).toContain('9th PT One');
+    expect(result.current.formik.values.paymentTermCode).toBe('PT-9TH-PT-ONE');
+    await act(async () => { await result.current.handleSubmit(); });
+    expect(createTerm).toHaveBeenCalledOnce();
+  });
+
+  it('trims names before sending the create request and generating the code', async () => {
+    const { result } = await submitWithError({ status: 400, data: { detail: 'Try again.' } });
+    createTerm.mockReturnValue({ unwrap: async () => ({}) });
+    await act(async () => {
+      await result.current.formik.setFieldValue('paymentTermName', '  9th PT One \t');
+    });
+    await act(async () => { await result.current.handleSubmit(); });
+    expect(createTerm).toHaveBeenLastCalledWith(expect.objectContaining({
+      name: '9th PT One', code: 'PT-9TH-PT-ONE',
+    }));
   });
 });

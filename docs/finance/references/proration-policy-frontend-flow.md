@@ -23,6 +23,21 @@ Switching views resets pagination and the status query while retaining search.
 Restore returns a policy to Draft, making it visible in Current Policies.
 The focused workspace checks are in `src/screens/finance/policies/workspaces/PolicyArchiveWorkspaces.test.tsx`.
 
+## Clone feedback
+
+The row Clone action sends the source ID and target academic year without forcing a copy name.
+The backend chooses an available copy name and creates a Draft with the Default flag cleared;
+the source policy and its versions remain unchanged. This also applies when the source is the
+active default and a previous Copy already exists.
+
+Specific server details and validation messages take precedence over generic business-rule text.
+For older generic Proration Policy errors, the shared ProblemDetails parser uses the policy's
+error code to explain duplicate names/codes, unavailable fee heads, invalid rules, or invalid
+default/status choices with a corrective action. Other policy families keep their own handling.
+The synthetic `clone=default` and `clone=blocked` query scenarios in
+`e2e/fixtures/proration-policy` exercise the real row action and error toast; persisted clone
+integrity is covered by the backend tests linked above.
+
 ## Admission and early-withdrawal form
 
 General information hides the policy code field and places description beside the shared default-policy option; both stack on narrow screens. Existing policy codes remain in the form model for API compatibility.

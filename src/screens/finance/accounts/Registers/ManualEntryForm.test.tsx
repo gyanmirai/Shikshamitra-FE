@@ -18,23 +18,46 @@ const mocks = vi.hoisted(() => ({
   fetching: false,
   error: false,
   canAdd: true,
+  cashStamp: 'v1',
+  routing: vi.fn(),
 }));
 vi.mock('src/redux/finance/accountsActivityApi', () => ({
   useCreateAccountsManualEntryMutation: () => [mocks.create, { isLoading: false }],
 }));
-vi.mock('src/redux/finance/financeRoutingApi', () => ({
-  useGetFinanceRoutingOptionsQuery: () => ({
-    isFetching: mocks.fetching,
-    isError: mocks.error,
-    refetch: mocks.refetch,
-    currentData: mocks.error
-      ? undefined
-      : {
-          incomeCategories: [{ id: 'income-category', label: 'Other income' }],
-          expenseCategories: [{ id: 'expense-category', label: 'Supplies' }],
-          bankAccounts: [{ id: 'bank', label: 'School bank' }],
+vi.mock('src/redux/finance/cashManagementApi', () => ({
+  useGetCashOptionsQuery: () => ({
+    currentData: {
+      bankAccounts: [],
+      cashSources: [
+        {
+          id: 'cash-source',
+          label: 'Receipt CASH-001',
+          remainingAmount: 100,
+          concurrencyStamp: mocks.cashStamp,
         },
+      ],
+    },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
   }),
+}));
+vi.mock('src/redux/finance/financeRoutingApi', () => ({
+  useGetFinanceRoutingOptionsQuery: (params: unknown) => {
+    mocks.routing(params);
+    return {
+      isFetching: mocks.fetching,
+      isError: mocks.error,
+      refetch: mocks.refetch,
+      currentData: mocks.error
+        ? undefined
+        : {
+            incomeCategories: [{ id: 'income-category', label: 'Other income' }],
+            expenseCategories: [{ id: 'expense-category', label: 'Supplies' }],
+            bankAccounts: [{ id: 'bank', label: 'School bank' }],
+          },
+    };
+  },
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
@@ -96,11 +119,23 @@ vi.mock('src/components/custom-numeric-format', () => ({
         onBlur={onBlur}
         onChange={(event) => onValueChange({ value: event.target.value }, { source: 'event' })}
       />
-      {helperText}
+      <span>{helperText}</span>
     </label>
   ),
 }));
 vi.mock('@mui/x-date-pickers', () => ({
+  DateTimePicker: ({ label, value, onChange, disabled }: any) => (
+    <label htmlFor="test-cash-payment-time">
+      {label}
+      <input
+        id="test-cash-payment-time"
+        aria-label={label}
+        value={value.toISOString()}
+        disabled={disabled}
+        onChange={(event) => onChange(dayjs(event.target.value))}
+      />
+    </label>
+  ),
   DatePicker: ({ label, value, onChange, disabled }: any) => (
     <label htmlFor="test-payment-date">
       {label}
@@ -119,20 +154,27 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.fetching = false;
   mocks.error = false;
-    mocks.canAdd = true;
+  mocks.cashStamp = 'v1';
+  mocks.canAdd = true;
   mocks.unwrap.mockReset().mockResolvedValue({});
   mocks.create.mockImplementation(() => ({ unwrap: mocks.unwrap }));
 });
 
 function setup(direction: 'income' | 'expense' = 'income') {
   const onClose = vi.fn();
-  const store = configureStore({ reducer: { confirmPopup, auth: () => ({
-    loading: false,
-    permissionsInitialized: true,
-    permissions: ['IncomeTracking', 'ExpenseTracking'].map((feature) => ({
-      name: `Finance.Accounts.${feature}.Add`, isGranted: mocks.canAdd,
-    })),
-  }) } });
+  const store = configureStore({
+    reducer: {
+      confirmPopup,
+      auth: () => ({
+        loading: false,
+        permissionsInitialized: true,
+        permissions: ['IncomeTracking', 'ExpenseTracking'].map((feature) => ({
+          name: `Finance.Accounts.${feature}.Add`,
+          isGranted: mocks.canAdd,
+        })),
+      }),
+    },
+  });
   const view = render(
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -160,7 +202,17 @@ async function fill(direction: 'income' | 'expense' = 'income') {
     { target: { value: `${direction}-category` } }
   );
   fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '12.34' } });
-  fireEvent.change(screen.getByLabelText('Payment date'), { target: { value: '2026-10-14' } });
+  fireEvent.change(screen.getByLabelText('Payment date'), {
+    target: { value: '2026-10-14T15:45:00+05:30' },
+  });
+  if (direction === 'expense') {
+    fireEvent.change(screen.getByLabelText('Cash source receipt'), {
+      target: { value: 'cash-source' },
+    });
+    fireEvent.change(screen.getByLabelText(/^Payment reference/), {
+      target: { value: 'BILL-1' },
+    });
+  }
   await waitFor(() => expect(screen.getByLabelText('Amount')).toHaveValue('12.34'));
 }
 
@@ -170,6 +222,16 @@ it('blocks manual entry submission without its exact Add permission', () => {
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   expect(mocks.create).not.toHaveBeenCalled();
+});
+
+it('shows the pending balance only in receipt options without extra helper text', async () => {
+  setup('expense');
+  expect(
+    screen.getByRole('option', { name: /Receipt CASH-001.*Available pending cash/ })
+  ).toHaveTextContent('100');
+  await fill('expense');
+  expect(screen.queryByText(/Available pending cash:/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Pending cash after payment/)).not.toBeInTheDocument();
 });
 
 it.each(['income', 'expense'] as const)(
@@ -190,7 +252,7 @@ it.each(['income', 'expense'] as const)(
         counterparty: 'Test payer',
         amount: 12.34,
         categoryId: `${direction}-category`,
-        paymentDate: '2026-10-14T12:00:00+05:30',
+        paymentDate: '2026-10-14T10:15:00.000Z',
         bankAccountId: undefined,
       },
     });
@@ -239,6 +301,43 @@ it('requires a school bank for non-cash and clears it when changing back to cash
   expect(mocks.create.mock.calls[0][0].body.bankAccountId).toBe('bank');
 });
 
+it('uses cash category authority only for cash expenses and marks its reference required', async () => {
+  setup('expense');
+  expect(mocks.routing).toHaveBeenLastCalledWith({
+    academicYearId: 'year',
+    operation: 'cash-expense',
+  });
+  expect(screen.getByLabelText(/^Payment reference/)).toBeRequired();
+  expect(screen.queryByLabelText('Payment reference (optional)')).not.toBeInTheDocument();
+  expect(
+    screen.queryByText('Enter the bill or payment reference for this cash expense.')
+  ).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: '3' } });
+  await waitFor(() =>
+    expect(mocks.routing).toHaveBeenLastCalledWith({
+      academicYearId: 'year',
+      operation: 'expense-entry',
+    })
+  );
+  expect(screen.getByLabelText('Payment reference (optional)')).not.toBeRequired();
+  fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: '0' } });
+  await waitFor(() =>
+    expect(mocks.routing).toHaveBeenLastCalledWith({
+      academicYearId: 'year',
+      operation: 'cash-expense',
+    })
+  );
+});
+
+it('keeps the income category authority and optional reference for cash income', () => {
+  setup('income');
+  expect(mocks.routing).toHaveBeenLastCalledWith({
+    academicYearId: 'year',
+    operation: 'income-entry',
+  });
+  expect(screen.getByLabelText('Payment reference (optional)')).not.toBeRequired();
+});
+
 it('locks saving, preserves failed input, and reuses the request key on retry', async () => {
   let rejectSave!: (error: unknown) => void;
   mocks.unwrap.mockImplementationOnce(
@@ -259,10 +358,12 @@ it('locks saving, preserves failed input, and reuses the request key on retry', 
   const key = mocks.create.mock.calls[0][0].body.idempotencyKey;
   rejectSave({ status: 500, data: { detail: 'Please retry this entry.' } });
   expect(await screen.findByText('Please retry this entry.')).toBeInTheDocument();
+  expect(screen.getByLabelText('Amount')).toBeDisabled();
   expect(screen.getByLabelText('Amount')).toHaveValue('12.34');
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   expect(mocks.create.mock.calls[1][0].body.idempotencyKey).toBe(key);
+  expect(mocks.create.mock.calls[1][0]).toEqual(mocks.create.mock.calls[0][0]);
 });
 
 it('shows lookup failure with Retry and blocks saving', () => {
@@ -272,4 +373,74 @@ it('shows lookup failure with Retry and blocks saving', () => {
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   expect(mocks.refetch).toHaveBeenCalledOnce();
+});
+
+it('requires pending cash evidence and prevents an actual payment exceeding its source', async () => {
+  setup('expense');
+  await fill('expense');
+  fireEvent.change(screen.getByLabelText('Cash source receipt'), { target: { value: '' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  expect(await screen.findByText('Select a pending cash source.')).toBeInTheDocument();
+  expect(mocks.create).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText('Cash source receipt'), {
+    target: { value: 'cash-source' },
+  });
+  fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '100.01' } });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  expect(
+    await screen.findByText('Amount exceeds the available cash source balance.')
+  ).toBeInTheDocument();
+  expect(mocks.create).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '20.25' } });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(mocks.create).toHaveBeenCalledOnce());
+  expect(mocks.create.mock.calls[0][0].body).toMatchObject({
+    cashCollectionId: 'cash-source',
+    cashConcurrencyStamp: 'v1',
+    amount: 20.25,
+  });
+});
+
+it('submits the chosen actual cash payment instant after an after-noon collection', async () => {
+  setup('expense');
+  await fill('expense');
+  fireEvent.change(screen.getByLabelText('Payment date'), {
+    target: { value: '2026-10-14T15:45:00+05:30' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(mocks.create).toHaveBeenCalledOnce());
+  expect(mocks.create.mock.calls[0][0].body.paymentDate).toBe('2026-10-14T10:15:00.000Z');
+  expect(Date.parse(mocks.create.mock.calls[0][0].body.paymentDate)).toBeGreaterThan(
+    Date.parse('2026-10-14T14:00:00+05:30')
+  );
+});
+
+it('refreshes a definitive stale cash source without losing entered expense evidence', async () => {
+  mocks.unwrap.mockRejectedValueOnce({
+    status: 409,
+    data: { code: 'Finance:CashManagement:Stale', detail: 'Cash source changed.' },
+  });
+  mocks.refetch.mockImplementationOnce(async () => {
+    mocks.cashStamp = 'v2';
+    return { data: {} };
+  });
+  const { onClose } = setup('expense');
+  await fill('expense');
+  fireEvent.change(screen.getByLabelText('Notes (optional)'), {
+    target: { value: 'Keep these notes' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  const refresh = await screen.findByRole('button', { name: 'Refresh cash sources' });
+  const key = mocks.create.mock.calls[0][0].body.idempotencyKey;
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  fireEvent.click(refresh);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+  expect(screen.getByLabelText('Amount')).toHaveValue('12.34');
+  expect(screen.getByLabelText('Notes (optional)')).toHaveValue('Keep these notes');
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  expect(mocks.create.mock.calls[1][0].body.cashConcurrencyStamp).toBe('v2');
+  expect(mocks.create.mock.calls[1][0].body.idempotencyKey).not.toBe(key);
 });

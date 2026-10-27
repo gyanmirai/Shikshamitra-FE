@@ -123,7 +123,6 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
 
   const incomeCategoryOptions = useMemo(
     () => [
-      { id: '', displayName: 'None', name: 'None', code: '' },
       ...(incomeCategoryData?.items ?? []).map((category: any) => {
         const displayName = String(category.name ?? '');
         const match = displayName.match(/^(.*?)\s*\[([^\]]+)\]$/);

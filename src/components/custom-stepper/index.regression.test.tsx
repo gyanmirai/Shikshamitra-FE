@@ -14,6 +14,32 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 const schema = Yup.object({ name: Yup.string().required('Student name is required') });
 
+it('lets workspace panels own scrolling while retaining a single form and outside footer', () => {
+  const { container } = render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <CustomStepperWithFormik
+        steps={['Review']}
+        activeStep={0}
+        contentScrollMode="regions"
+        initialValues={{ name: 'Asha' }}
+        validationSchema={schema}
+        showSaveButton={false}
+        handleBack={vi.fn()}
+        handleNext={vi.fn()}
+        renderItem={() => <Box data-testid="workspace-panels">Student list and details</Box>}
+      />
+    </ThemeProvider>
+  );
+  expect(container.querySelectorAll('form')).toHaveLength(1);
+  expect(screen.getByTestId('workspace-panels').closest('[data-simplebar]')).toBeNull();
+  expect(container.querySelector('form')).toContainElement(
+    screen.getByRole('button', { name: 'Submit' })
+  );
+  expect(screen.getByTestId('workspace-panels')).not.toContainElement(
+    screen.getByRole('button', { name: 'Submit' })
+  );
+});
+
 it.each(['outside', 'content'] as const)(
   'blocks invalid progress and preserves entered values with the %s footer',
   async (footerPlacement) => {

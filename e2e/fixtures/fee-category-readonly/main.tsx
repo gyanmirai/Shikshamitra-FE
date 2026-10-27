@@ -68,16 +68,17 @@ function Fixture() {
             Fixture status mutations: {count} · Synthetic data, no backend writes
           </Typography>
           <ThemeControls />
+          <Button onClick={editor.onTrue}>Create fee category</Button>
           <FeeCategoryTable
             archived={!dependencyMode}
             onAddFeeCategory={editor}
             setEditData={setEditData}
           />
-          {editData && (
+          {(editData || editor.value) && (
             <FeeCategoryForm
               open={{ value: true }}
               editData={editData}
-              onClose={() => setEditData(null)}
+              onClose={() => { setEditData(null); editor.onFalse(); }}
             />
           )}
         </Box>

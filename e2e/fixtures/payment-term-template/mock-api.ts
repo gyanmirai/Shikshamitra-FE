@@ -192,6 +192,17 @@ const mutation = () => [
   useCallback(
     (input: unknown) => ({
       unwrap: async () => {
+        const request = input as { name?: string; body?: { name?: string } };
+        const name = request.name ?? request.body?.name;
+        if (
+          new URLSearchParams(window.location.search).has('name-conflict') &&
+          name?.trim().toUpperCase() === '9TH PT ONE'
+        ) {
+          throw {
+            status: 400,
+            data: { errorCode: 'Finance:PaymentTerm:000042', detail: 'A payment term with this name already exists in this academic year.' },
+          };
+        }
         (window as any).paymentTermWrites = [...((window as any).paymentTermWrites ?? []), input];
         return detail;
       },

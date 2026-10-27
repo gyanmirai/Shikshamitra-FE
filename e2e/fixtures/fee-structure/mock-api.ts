@@ -259,7 +259,9 @@ const preview = (candidate: any) => {
     candidate,
     isReady: !errors.length,
     errors,
-    warnings: [],
+    warnings: new URLSearchParams(window.location.search).has('warnings')
+      ? ['Review refund coverage for this fee structure.']
+      : [],
     coverage: candidate.feeHeads.map((head: any) => ({
       feeHeadId: head.feeHeadId,
       name: head.feeHeadName,

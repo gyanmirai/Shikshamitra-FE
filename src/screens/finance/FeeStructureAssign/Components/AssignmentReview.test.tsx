@@ -127,6 +127,43 @@ describe('assignment review evidence', () => {
     expect(screen.queryByRole('button', { name: /edit|service details/i })).not.toBeInTheDocument();
   });
 
+  it('collapses evidence tables independently while keeping totals, policies and View all available', async () => {
+    mount();
+    const heads = screen.getByRole('button', { name: 'Collapse fee breakdown' });
+    const schedule = screen.getByRole('button', { name: 'Collapse installment schedule' });
+    expect(heads).toHaveAttribute('aria-expanded', 'true');
+    expect(schedule).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(heads);
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('table', { name: 'Assignment fee-head breakdown table' })
+      ).not.toBeInTheDocument()
+    );
+    expect(
+      screen.getByRole('table', { name: 'Assignment installment schedule table' })
+    ).toBeVisible();
+    fireEvent.click(schedule);
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('table', { name: 'Assignment installment schedule table' })
+      ).not.toBeInTheDocument()
+    );
+    expect(screen.getByText('Total to assign')).toBeVisible();
+    expect(screen.getByText('School collection · v2')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'View all' })).toBeEnabled();
+    const expand = screen.getByRole('button', { name: 'Expand fee breakdown' });
+    expect(expand).toHaveAttribute('aria-expanded', 'false');
+    expect(document.getElementById(expand.getAttribute('aria-controls')!)).toBeInTheDocument();
+    fireEvent.click(expand);
+    expect(
+      await screen.findByRole('table', { name: 'Assignment fee-head breakdown table' })
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Expand installment schedule' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+  });
+
   it('opens installment evidence with its original information controls and tooltips', async () => {
     mount();
     const viewAll = screen.getByRole('button', { name: 'View all' });

@@ -9,6 +9,7 @@ export default defineConfig({
   publicDir: `${repo}/public`,
   resolve: {
     alias: [
+      { find: /^@mui\/icons-material$/, replacement: `${repo}/e2e/fixtures/fee-structure/icon-barrel.ts` },
       { find: /^(src\/redux\/service|\.\.\/service)$/, replacement: `${here}/mock-service.ts` },
       { find: 'src', replacement: `${repo}/src` },
     ],

@@ -162,6 +162,14 @@ The active assignment drawer, typed client, permissions, retries and verificatio
 
 The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).
 
+## Cash Management client
+
+Cash Management uses `src/redux/finance/cashManagementApi.ts` for list/detail, action-owned options, approval, deposit dispatch and bank-credit confirmation. The existing register client adds the cash source and concurrency stamp to paid expenses. Collection and cash mutations invalidate the Cash Management and affected register tags. See [cash client and retry behavior](./references/cash-management.md).
+
+Cash expense forms request category options with routing operation `cash-expense`; other payment methods retain `expense-entry`. The cash category response contains no bank accounts and does not require Cash Management View or bank-settings access.
+
+Expense cash options contain only positive pending balances. Approval submits `countedAmount` equal to the current `remainingAmount`, including zero; original `amount` and `spentAmount` remain display evidence. The unchanged approval endpoint finalizes the net bank deposit and Income, while legacy deposit/credit endpoints remain available through server capability flags.
+
 ## Separate Accounts register client
 
 `src/redux/finance/accountsActivityApi.ts` owns direction/month/year/category/search/paging, selected-record details and manual creation.

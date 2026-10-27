@@ -99,39 +99,32 @@ it('keeps edits and updates the structure list name when switching between struc
   expect(screen.queryByRole('combobox', { name: 'Fee structure' })).toBeNull();
 });
 
-it('exposes a long structure name in the navigation and its keyboard tooltip', async () => {
+it('keeps structure names accessible without duplicate hover labels or orange dots', async () => {
   setup();
   const name = '8th Fee Structure GSEB with additional annual transport and activity fees';
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: name },
   });
-  const structure = screen.getByRole('button', { name: new RegExp(name) });
+  const structure = screen.getByRole('button', { name });
   expect(structure).toHaveAttribute('aria-current', 'true');
   expect(within(structure).getByText(name)).toBeVisible();
-  // Happy DOM does not implement the browser's keyboard :focus-visible state.
-  const matches = structure.matches.bind(structure);
-  vi.spyOn(structure, 'matches').mockImplementation(
-    (selector) => selector === ':focus-visible' || matches(selector)
-  );
-  fireEvent.focus(structure);
-  expect(await screen.findByRole('tooltip')).toHaveTextContent(name);
+  expect(within(structure).queryByRole('img', { name: 'Unsaved changes' })).toBeNull();
+  fireEvent.mouseOver(structure);
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  expect(screen.queryByRole('tooltip')).toBeNull();
 });
 
-it('shows an unsaved dot on the changed structure across navigation and clears it after saving', () => {
+it('preserves changed structure navigation and save state without an extra dot', () => {
   setup();
   const navigation = within(screen.getByRole('list', { name: 'Fee structures' }));
   expect(navigation.queryByRole('img', { name: 'Unsaved changes' })).toBeNull();
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'Updated general fees' },
   });
-  expect(
-    within(navigation.getByRole('button', { name: /Updated general fees/ })).getByRole('img', {
-      name: 'Unsaved changes',
-    })
-  ).toBeVisible();
+  expect(navigation.getByRole('button', { name: 'Updated general fees' })).toBeVisible();
   expect(navigation.queryByText('Unsaved changes')).toBeNull();
   fireEvent.click(navigation.getByRole('button', { name: 'Activity fees' }));
-  expect(navigation.getByRole('img', { name: 'Unsaved changes' })).toBeVisible();
+  expect(navigation.queryByRole('img', { name: 'Unsaved changes' })).toBeNull();
   fireEvent.click(navigation.getByRole('button', { name: /Updated general fees/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
   expect(navigation.queryByRole('img', { name: 'Unsaved changes' })).toBeNull();
@@ -156,7 +149,7 @@ it('filters structures without losing edits and clears the filter when adding a 
   expect(search).toHaveValue('');
   const newStructure = navigation.getByRole('button', { name: /New fee structure/ });
   expect(newStructure).toHaveAttribute('aria-current', 'true');
-  expect(within(newStructure).getByRole('img', { name: 'Unsaved changes' })).toBeVisible();
+  expect(within(newStructure).queryByRole('img', { name: 'Unsaved changes' })).toBeNull();
   expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('');
   fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
   expect(within(newStructure).queryByRole('img', { name: 'Unsaved changes' })).toBeNull();

@@ -202,6 +202,58 @@ beforeEach(() => {
   }));
 });
 describe('assignment review and commit boundaries', () => {
+  it('keeps bulk student navigation separate from fee details and synchronizes the selected name', async () => {
+    const longName = 'Meera Annapoorna Venkataraman Subramanian Chandrasekharan Ramakrishnan';
+    const students = Array.from({ length: 25 }, (_, index) => ({
+      studentId: `student-${index}`,
+      studentName: index === 22 ? longName : `Student ${index + 1}`,
+      isFeeStructureAssigned: false,
+    }));
+    mocks.bulkPreview.mockImplementation(({ items }) => ({
+      unwrap: async () => ({
+        results: items.map((item: any, index: number) => ({
+          studentId: item.studentId,
+          preview: result(item.studentId, 1000 + index),
+        })),
+      }),
+    }));
+    mount(students);
+    await selectStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await screen.findByRole('button', { name: 'Assign fees (25)' });
+
+    const list = screen.getByLabelText('Selected students list');
+    const details = screen.getByLabelText('Student fee details');
+    const search = screen.getByRole('textbox', { name: 'Search selected students' });
+    expect(list).not.toContainElement(details);
+    expect(list).not.toContainElement(search);
+    expect(list).not.toContainElement(screen.getByText('Ready total'));
+    expect(list).not.toContainElement(screen.getByRole('button', { name: 'Assign fees (25)' }));
+    expect(within(list).getAllByRole('button')).toHaveLength(20);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Go to page 2' }));
+    const student = within(list).getByRole('button', { name: `Select ${longName}` });
+    fireEvent.click(student);
+    expect(student).toHaveAttribute('aria-current', 'true');
+    expect(within(details).getByRole('heading', { name: longName })).toBeVisible();
+    expect(within(details).getByText('Preview amount 1022')).toBeVisible();
+    expect(within(list).queryByRole('button', { current: true })).toBe(student);
+
+    fireEvent.change(search, { target: { value: 'Annapoorna' } });
+    expect(within(list).getAllByRole('button')).toHaveLength(1);
+    expect(within(list).getByRole('button', { name: `Select ${longName}` })).toHaveAttribute(
+      'aria-current',
+      'true'
+    );
+    expect(within(details).getByRole('heading', { name: longName })).toBeVisible();
+    fireEvent.change(search, { target: { value: 'No matching name' } });
+    expect(within(list).getByText('No matching students.')).toBeVisible();
+    expect(screen.getByText('0 assigned · 25 remaining')).toBeVisible();
+    expect(screen.getByText('Ready total')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Back' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Assign fees (25)' })).toBeEnabled();
+  });
+
   it('requires a new preview when its server expiry has passed before confirmation', async () => {
     mocks.preview.mockImplementation(() => ({
       unwrap: async () => ({
@@ -652,7 +704,7 @@ describe('assignment review and commit boundaries', () => {
     await screen.findByText('Preview amount 12000');
     expect(mocks.preview).toHaveBeenCalledTimes(1);
   });
-  it('returns directly to completed setup steps and requires a fresh preview', async () => {
+  it('keeps completed steps directly navigable and reuses an unchanged review', async () => {
     mount();
     await selectStructure();
     fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
@@ -660,10 +712,61 @@ describe('assignment review and commit boundaries', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Step 2: Fees & dates' }));
     expect(screen.getByRole('button', { name: 'Include transport for one' })).toBeInTheDocument();
     expect(screen.queryByText('Preview amount 12000')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Step 3: Review & assign' })).toBeDisabled();
-    fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+    expect(screen.getByRole('button', { name: 'Step 3: Review & assign' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Step 1: Structure & policies' }));
+    expect(screen.getByRole('button', { name: 'Step 2: Fees & dates' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Step 3: Review & assign' }));
     await screen.findByText('Preview amount 12000');
+    expect(mocks.preview).toHaveBeenCalledTimes(1);
+    expect(mocks.commit).not.toHaveBeenCalled();
+  });
+
+  it('locks uncompleted steps, then safely re-previews changed values through direct review navigation', async () => {
+    mount();
+    expect(screen.getByRole('button', { name: 'Step 2: Fees & dates' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Step 3: Review & assign' })).toBeDisabled();
+    await selectStructure();
+    expect(screen.getByRole('button', { name: 'Step 3: Review & assign' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await screen.findByText('Preview amount 12000');
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Include transport for one' }));
+    mocks.preview.mockImplementation(() => ({
+      unwrap: async () => ({ ...result('one', 12500), previewToken: 'changed-token' }),
+    }));
+    fireEvent.click(screen.getByRole('button', { name: 'Step 1: Structure & policies' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Step 3: Review & assign' }));
+    await screen.findByText('Preview amount 12500');
     expect(mocks.preview).toHaveBeenCalledTimes(2);
+    expect(mocks.preview).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        selectedOptionalFeeHeadIds: ['transport'],
+      })
+    );
+    expect(mocks.commit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Assign fees (1)' }));
+    await screen.findByText('Committed amount 12000');
+    expect(mocks.commit).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        selectedOptionalFeeHeadIds: ['transport'],
+        previewToken: 'changed-token',
+      })
+    );
+  });
+
+  it('validates changed policy overrides before direct review navigation', async () => {
+    mount(undefined, true);
+    await selectStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await screen.findByText('Preview amount 12000');
+    fireEvent.click(screen.getByRole('button', { name: 'Step 1: Structure & policies' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit policies' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Collection policy' }), {
+      target: { value: 'collection-version' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Step 3: Review & assign' }));
+    expect(await screen.findByText('Enter a policy override reason.')).toBeVisible();
+    expect(mocks.preview).toHaveBeenCalledTimes(1);
     expect(mocks.commit).not.toHaveBeenCalled();
   });
   it('submits the reviewed token and retains canonical completion', async () => {

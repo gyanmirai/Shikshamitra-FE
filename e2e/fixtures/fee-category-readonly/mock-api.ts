@@ -73,7 +73,10 @@ export const category: any = dependencyMode
     };
 const stableRefetch = () => {};
 const listData = { items: [category], totalCount: 1 };
-const routingData = { items: [{ id: 'income-1', name: 'Tuition' }] };
+const routingData = {
+  items: new URLSearchParams(window.location.search).get('income') === 'empty'
+    ? [] : [{ id: 'income-1', name: 'Tuition' }],
+};
 const listResult = {
   data: listData,
   currentData: listData,

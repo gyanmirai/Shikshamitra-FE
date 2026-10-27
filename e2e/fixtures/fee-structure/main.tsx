@@ -41,7 +41,10 @@ function ThemeControls() {
   );
 }
 function Fixture() {
-  const [configured, setConfigured] = React.useState(false);
+  const missingPolicies = new URLSearchParams(window.location.search).has('missingPolicies');
+  const [configured, setConfigured] = React.useState(
+    missingPolicies || new URLSearchParams(window.location.search).has('warnings')
+  );
   const [pinned, setPinned] = React.useState(false);
   const [incomplete, setIncomplete] = React.useState(false);
   const [workspace, setWorkspace] = React.useState(false);
@@ -180,7 +183,15 @@ function Fixture() {
                           ? incompleteHeadsFixture
                           : pinned
                             ? pinnedPolicyFixture
-                            : readyFixture
+                            : missingPolicies
+                              ? {
+                                  ...readyFixture,
+                                  collectionPolicyId: null,
+                                  collectionPolicyVersionId: null,
+                                  refundPolicyId: null,
+                                  refundPolicyVersionId: null,
+                                }
+                              : readyFixture
                         : undefined,
                     }}
                   />

@@ -4,13 +4,13 @@ import type { IData, IParams } from 'src/components/customizabaleTable/types';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { Stack, Alert, Paper, Button, Checkbox, Typography } from '@mui/material';
 import { useAssignmentStudentsQuery } from 'src/redux/finance/studentFeeAssignment';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
@@ -103,6 +103,11 @@ export default function FeeStructureAssignTable({
     id: student.enrollmentId,
   }));
   const eligible = rows.filter((r) => r.isActive && !r.isFeeStructureAssigned);
+  // Always derive the action payload from the latest enrollment state. A refresh
+  // can mark a previously selected student assigned before effect cleanup runs.
+  const selectedEligible = eligible.filter((row) =>
+    selected.some((student) => student.studentId === row.studentId)
+  );
   return (
     <Stack sx={{ flex: 1, minHeight: 0, gap: 1 }}>
       {feeHeadId && (
@@ -151,7 +156,7 @@ export default function FeeStructureAssignTable({
           />
         </Stack>
       </Paper>
-      {selected.length > 0 && canAssign && standardId && (
+      {selectedEligible.length > 0 && canAssign && standardId && (
         <Stack
           direction="row"
           spacing={1.5}
@@ -161,13 +166,14 @@ export default function FeeStructureAssignTable({
           sx={{ px: 1 }}
         >
           <Typography variant="body2">
-            {selected.length} student{selected.length === 1 ? '' : 's'} selected
+            {selectedEligible.length} student{selectedEligible.length === 1 ? '' : 's'} selected
           </Typography>
           <Button
             size="small"
             startIcon={<Iconify icon="mdi:account-multiple-plus-outline" />}
             variant="contained"
-            onClick={() => onBulkAssign?.(selected, standardId ?? '')}
+            disabled={query.isFetching}
+            onClick={() => onBulkAssign?.(selectedEligible, standardId ?? '')}
           >
             Assign structure
           </Button>
@@ -181,6 +187,10 @@ export default function FeeStructureAssignTable({
         tableTitle="Student fee structure assignments"
         isLoading={query.isFetching}
         data={rows}
+        rowProps={(row) => ({
+          'data-assignment-status': row.isFeeStructureAssigned ? 'assigned' : 'unassigned',
+          sx: row.isFeeStructureAssigned ? { bgcolor: 'action.hover' } : undefined,
+        })}
         noDataText="No enrolled students in this academic context"
         errorContent={
           query.isError ? (
@@ -234,12 +244,14 @@ export default function FeeStructureAssignTable({
                       inputProps={{
                         'aria-label': 'Select eligible students on this page',
                         'aria-checked':
-                          selected.length > 0 && selected.length < eligible.length
+                          selectedEligible.length > 0 && selectedEligible.length < eligible.length
                             ? 'mixed'
-                            : eligible.length > 0 && selected.length === eligible.length,
+                            : eligible.length > 0 && selectedEligible.length === eligible.length,
                       }}
-                      checked={eligible.length > 0 && selected.length === eligible.length}
-                      indeterminate={selected.length > 0 && selected.length < eligible.length}
+                      checked={eligible.length > 0 && selectedEligible.length === eligible.length}
+                      indeterminate={
+                        selectedEligible.length > 0 && selectedEligible.length < eligible.length
+                      }
                       disabled={!standardId || query.isFetching || eligible.length === 0}
                       onChange={(_, checked) => setSelected(checked ? eligible : [])}
                     />
@@ -248,18 +260,36 @@ export default function FeeStructureAssignTable({
                     const row = rawRow as IFeeStructureData & { isActive?: boolean };
                     return (
                       <Checkbox
-                        inputProps={{ 'aria-label': `Select ${row.studentName}` }}
-                        checked={selected.some((s) => s.studentId === row.studentId)}
+                        inputProps={{
+                          'aria-label': `Select ${row.studentName}`,
+                          ...(row.isFeeStructureAssigned && {
+                            'aria-description': 'Fees already assigned',
+                          }),
+                        }}
+                        checked={selectedEligible.some((s) => s.studentId === row.studentId)}
+                        {...(row.isFeeStructureAssigned && {
+                          icon: <Iconify icon="mdi:check-circle-outline" />,
+                        })}
                         disabled={
-                          !standardId || query.isFetching || !row.isActive || row.isFeeStructureAssigned
+                          !standardId ||
+                          query.isFetching ||
+                          !row.isActive ||
+                          row.isFeeStructureAssigned
                         }
-                        onChange={(_, checked) =>
+                        onChange={(_, checked) => {
+                          if (
+                            !standardId ||
+                            query.isFetching ||
+                            !row.isActive ||
+                            row.isFeeStructureAssigned
+                          )
+                            return;
                           setSelected((previous) =>
                             checked
-                              ? [...previous, row]
+                              ? [...previous.filter((s) => s.studentId !== row.studentId), row]
                               : previous.filter((s) => s.studentId !== row.studentId)
-                          )
-                        }
+                          );
+                        }}
                       />
                     );
                   },
@@ -307,7 +337,7 @@ export default function FeeStructureAssignTable({
             width: 130,
             minWidth: 120,
             align: 'left',
-            cellSx: { textAlign: 'right', verticalAlign: 'middle' },
+            cellSx: { textAlign: 'left', verticalAlign: 'middle' },
             isFilter: true,
             isSort: true,
             filterType: 'number',
@@ -388,7 +418,7 @@ export default function FeeStructureAssignTable({
                 return (
                   <Button
                     size="small"
-                    variant="text"
+                    variant="outlined"
                     color="inherit"
                     startIcon={<Iconify icon={GlobalIcons.addIcon} />}
                     aria-label={`Assign fee structure to ${row.studentName}`}
