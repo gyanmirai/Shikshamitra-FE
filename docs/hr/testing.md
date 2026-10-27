@@ -3,10 +3,16 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-22
+updated_on: 2026-10-27
 owner: frontend-team
 audience: humans-and-agents
 ---
+
+## Finalize onboarding role lookup
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/employee-onboarding/finalize-role-field.test.tsx src/screens/hr/employee/employee-role-options.test.ts src/screens/hr/employee/employee-form-fields/RenderRole.test.tsx src/screens/security/role/employee-onboarding-role.test.ts --pool=forks --maxWorkers=1` on Windows.
+The synthetic transport tests cover the Security endpoint, custom and legacy metadata, reserved/non-employee/group exclusions, every-open refresh, empty results, 403/503 recovery without draft loss, invalid selected IDs and Security mutation cache invalidation.
+They do not establish a tenant's deployed role metadata or authenticated browser acceptance. Backend tenant filtering and assignment authorization remain unchanged and require their existing backend security gates before release.
 
 ## Payslip & statement settings regression
 

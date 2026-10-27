@@ -25,7 +25,6 @@ import PhoneInput from 'src/components/phone-input';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { HrBloodGroupArray } from 'src/enums/blood-group';
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -54,10 +53,7 @@ import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'inpu
 import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
-import {
-  getEmployeeAssignableRoles,
-  shouldClearEmployeeRoleSelection,
-} from 'src/screens/hr/employee/employee-role-options';
+import { shouldClearEmployeeRoleSelection } from 'src/screens/hr/employee/employee-role-options';
 import {
   useGetEmployeeApplicationQuery,
   useGetEmployeeApplicationsQuery,
@@ -129,6 +125,7 @@ import {
 } from './status';
 
 import type { FinalizeFormState } from './finalize-validation';
+import { FinalizeRoleField, useFinalizeRoles } from './finalize-role-field';
 
 type InviteFormState = {
   firstName: string;
@@ -1105,7 +1102,6 @@ export function FinalizeDialog({
   const [salaryEditor, setSalaryEditor] = useState({ dirty: false, busy: false });
   const finalizationPending = useRef(false);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: rolesData, isLoading: rolesLoading } = useGetRolesQuery(undefined);
   const { data: shiftsData, isLoading: shiftsLoading } = useGetShiftsQuery(undefined);
   const {
     options: organizationOptions,
@@ -1155,16 +1151,14 @@ export function FinalizeDialog({
   const form = formik.values;
   const selectedEmployeeGroup = form.isTeaching ? 0 : 1;
   const { setFieldValue } = formik;
-  const employeeRoleOptions = useMemo(
-    () => getEmployeeAssignableRoles(rolesData?.items ?? [], selectedEmployeeGroup),
-    [rolesData?.items, selectedEmployeeGroup]
-  );
+  const roleLookup = useFinalizeRoles(open, selectedEmployeeGroup, form.roleId);
+  const { data: rolesData } = roleLookup.query;
   const updateField = (field: keyof FinalizeFormState, value: string | boolean | Dayjs | null) =>
     setFieldValue(field as string, value);
 
   useEffect(() => {
     if (
-      rolesLoading ||
+      !roleLookup.ready ||
       !rolesData?.items ||
       !shouldClearEmployeeRoleSelection(rolesData.items, form.roleId, selectedEmployeeGroup)
     ) {
@@ -1172,7 +1166,7 @@ export function FinalizeDialog({
     }
 
     setFieldValue('roleId', '');
-  }, [form.roleId, rolesData?.items, rolesLoading, selectedEmployeeGroup, setFieldValue]);
+  }, [form.roleId, rolesData?.items, roleLookup.ready, selectedEmployeeGroup, setFieldValue]);
 
   useEffect(() => {
     if (application && open) {
@@ -1214,6 +1208,17 @@ export function FinalizeDialog({
 
   const validateEmployeeFields = async () => {
     const errors = await applyFinalizeEmployeeValidation(formik);
+    if (roleLookup.selectionError) {
+      // Query feedback is live on the field; do not persist a temporary failure
+      // in Formik after a successful retry restores the selected role.
+      if (roleLookup.ready) {
+        errors.roleId = roleLookup.selectionError;
+        formik.setErrors(errors);
+      }
+      setStep(1);
+      focusFirstFormikError({ ...errors, roleId: roleLookup.selectionError });
+      return false;
+    }
     if (Object.keys(errors).length > 0) {
       setStep(1);
       focusFirstFormikError(errors);
@@ -1266,6 +1271,8 @@ export function FinalizeDialog({
   };
 
   const canSubmit =
+    roleLookup.ready &&
+    !roleLookup.selectionError &&
     finalizeEmployeeFieldsSchema.isValidSync(form, { abortEarly: false }) &&
     isStep2Valid &&
     canManageStatutory &&
@@ -2384,32 +2391,17 @@ export function FinalizeDialog({
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
-                      <FormControl
-                        fullWidth
-                        size="small"
-                        error={formik.touched.roleId && Boolean(formik.errors.roleId)}
-                      >
-                        <InputLabel id="fin-role-label">Role *</InputLabel>
-                        <Select
-                          labelId="fin-role-label"
-                          value={form.roleId}
-                          onChange={(e) => {
-                            formik.setFieldValue('roleId', e.target.value);
-                            formik.setFieldTouched('roleId', true, false);
-                          }}
-                          label="Role *"
-                          disabled={rolesLoading}
-                        >
-                          {employeeRoleOptions.map((role: any) => (
-                            <MenuItem key={role.id} value={role.id}>
-                              {role.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                        {formik.touched.roleId && formik.errors.roleId && (
-                          <FormHelperText>{formik.errors.roleId}</FormHelperText>
-                        )}
-                      </FormControl>
+                      <FinalizeRoleField
+                        lookup={roleLookup}
+                        value={form.roleId}
+                        error={formik.touched.roleId ? formik.errors.roleId : undefined}
+                        disabled={finalizeSaving || isLoading}
+                        onChange={(value) => {
+                          formik.setFieldValue('roleId', value);
+                          formik.setFieldTouched('roleId', true, false);
+                        }}
+                        onBlur={() => formik.setFieldTouched('roleId', true)}
+                      />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
                       <FormControl

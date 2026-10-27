@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-10-27
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -62,6 +62,8 @@ Missing policy setup does not block profile entry. Payroll/activation readiness 
 Creation failures keep entered details and allow retry on the same step.
 The Role field uses the employee-specific assignable-role lookup, so Staff Add/Edit does not require access to security role administration.
 Existing staff edits retain their independent save flow.
+Finalize onboarding refreshes its Security role choices each time the dialog opens. If a role is missing, review its Employee audience, **Available for employee onboarding** setting and Employee Group Availability in Security; custom and legacy roles are not automatically approved.
+Use **Refresh roles** after a Security change in another tab. A failed read shows **Retry roles**, preserves entered staff details and blocks progression with stale role data. Access failures require an administrator to review existing Security role access; onboarding does not grant that access.
 Backend authorization and error contracts remain owned by the [HR API documentation](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 
 An invitation remains at Invitation sent until the candidate submits the public application, and only that unsubmitted state offers link regeneration.

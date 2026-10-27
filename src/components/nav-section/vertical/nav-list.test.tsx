@@ -61,6 +61,22 @@ function Navigation({ data = fees }: { data?: NavItemBaseProps }) {
 afterEach(cleanup);
 
 describe('active navigation ancestors', () => {
+  it.each(['/hr/employee', '/hr/employee/onboarding'])(
+    'renders Staff Onboarding immediately before Staff Directory on %s',
+    (pathname) => {
+      route.pathname = pathname;
+      const staff = navSubData()['/hr']
+        .flatMap((group) => group.items)
+        .find((item) => item.title === 'Staff');
+      render(<Navigation data={staff as NavItemBaseProps} />);
+
+      expect(screen.getAllByRole('button').map((button) => button.textContent).slice(1, 3)).toEqual([
+        'Staff Onboarding',
+        'Staff Directory',
+      ]);
+    }
+  );
+
   it.each([
     ['/hr/employee', 'Staff Directory', 'Staff Onboarding'],
     ['/hr/employee/', 'Staff Directory', 'Staff Onboarding'],

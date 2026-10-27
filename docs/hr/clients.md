@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-24
+updated_on: 2026-10-27
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -22,6 +22,9 @@ Staff Directory's Academic Permission step passes `employeeId` to `employeeApi` 
 Salary-template and compensation clients carry PF enrollment declarations and backend eligibility decisions.
 
 `employeeApi.ts` supplies `getEmployeeAssignableRoles` at `/employees/assignable-roles` for the Add/Edit Staff Role field, with role-cache invalidation.
+Finalize onboarding uses `roleApi.getRoles` at `/identity/roles/all`, the same query as Security, and retains that endpoint's existing authorization.
+`finalize-role-field.tsx` subscribes only while Finalize is open, refetches on each opening and on focus/reconnect, and offers explicit refresh/retry. Security role mutations invalidate the shared role tag.
+Only explicitly onboarding-approved Employee roles compatible with the selected staff group appear; empty and failed reads never introduce fallback roles. Continuing/finalizing requires a successful completed read and an eligible selected ID. A failed refresh preserves the draft while blocking stale choices.
 The Add Staff form submits personal information through `addBasicInformation` without `policyOverride` or policy-list requests.
 Policy inheritance is owned by the [backend policy resolver](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/references/policy-architecture.md).
 Explicit policy assignments use their existing authorized policy/profile clients separately. Creation errors retain entered values.
