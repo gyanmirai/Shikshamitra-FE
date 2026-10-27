@@ -1,3 +1,10 @@
+import type {
+  LeaveImpactPage,
+  LeaveImpactReview,
+  LeaveImpactRequest,
+  LeaveReviewApproval,
+} from 'src/screens/hr/policies/leave-impact.types';
+
 import { employeeType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
@@ -119,6 +126,21 @@ export const buildLeaveYearEndSettlementPreviewBody = ({
 
 export const leaveApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    previewLeavePolicyImpact: builder.mutation<LeaveImpactReview, LeaveImpactRequest>({
+      query: (body) => ({ url: '/leave-policies/impact/preview', method: 'POST', body }),
+    }),
+    getLeavePolicyImpactDetails: builder.mutation<
+      LeaveImpactPage,
+      {
+        assessment: LeaveImpactRequest;
+        fingerprint: string;
+        metric: string;
+        skipCount: number;
+        maxResultCount: number;
+      }
+    >({
+      query: (body) => ({ url: '/leave-policies/impact/details', method: 'POST', body }),
+    }),
     // Leave Policies
     getLeavePolicies: builder.query({
       query: (args: LeavePolicyQueryArgs) => ({
@@ -129,11 +151,12 @@ export const leaveApi = api.injectEndpoints({
       providesTags: [employeeType.employeeLeavePolicy],
     }),
     createLeavePolicy: builder.mutation({
-      query: ({ academicYearId, body }) => ({
+      query: ({ academicYearId, body, impactToken }) => ({
         url: '/leave-policies',
         method: 'POST',
         params: { academicYearId },
         body,
+        headers: impactToken ? { 'X-HR-Policy-Impact-Token': impactToken } : undefined,
       }),
       invalidatesTags: [
         employeeType.employeeLeavePolicy,
@@ -150,10 +173,11 @@ export const leaveApi = api.injectEndpoints({
       providesTags: [employeeType.employeeLeavePolicy],
     }),
     updateLeavePolicy: builder.mutation({
-      query: ({ id, body }) => ({
+      query: ({ id, body, impactToken }) => ({
         url: `/leave-policies/${id}`,
         method: 'PUT',
         body,
+        headers: impactToken ? { 'X-HR-Policy-Impact-Token': impactToken } : undefined,
       }),
       invalidatesTags: [
         employeeType.employeeLeavePolicy,
@@ -163,9 +187,16 @@ export const leaveApi = api.injectEndpoints({
       ],
     }),
     setDefaultLeavePolicy: builder.mutation({
-      query: (id) => ({
-        url: `/leave-policies/${id}/set-default`,
+      query: (args: string | ({ id: string } & LeaveReviewApproval)) => ({
+        url: `/leave-policies/${typeof args === 'string' ? args : args.id}/set-default`,
         method: 'PATCH',
+        headers:
+          typeof args === 'string'
+            ? undefined
+            : {
+                'X-HR-Policy-Impact-Token': args.impactToken || '',
+                'X-HR-Leave-Impact-Scope': JSON.stringify(args.impactScope),
+              },
       }),
       invalidatesTags: [
         employeeType.employeeLeavePolicy,
@@ -175,9 +206,16 @@ export const leaveApi = api.injectEndpoints({
       ],
     }),
     deleteLeavePolicy: builder.mutation({
-      query: (id) => ({
-        url: `/leave-policies/${id}`,
+      query: (args: string | ({ id: string } & LeaveReviewApproval)) => ({
+        url: `/leave-policies/${typeof args === 'string' ? args : args.id}`,
         method: 'DELETE',
+        headers:
+          typeof args === 'string'
+            ? undefined
+            : {
+                'X-HR-Policy-Impact-Token': args.impactToken || '',
+                'X-HR-Leave-Impact-Scope': JSON.stringify(args.impactScope),
+              },
       }),
       invalidatesTags: [
         employeeType.employeeLeavePolicy,
@@ -372,6 +410,8 @@ export const leaveApi = api.injectEndpoints({
 });
 
 export const {
+  usePreviewLeavePolicyImpactMutation,
+  useGetLeavePolicyImpactDetailsMutation,
   useGetLeavePoliciesQuery,
   useLazyGetLeavePoliciesQuery,
   useCreateLeavePolicyMutation,

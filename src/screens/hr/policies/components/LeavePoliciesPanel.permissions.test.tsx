@@ -9,6 +9,9 @@ import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
 import { LeavePoliciesPanel } from './LeavePoliciesPanel';
 
 const fixture = vi.hoisted(() => ({ archived: false, mutate: vi.fn() }));
+vi.mock('../hooks/useLeavePolicyImpactReview', () => ({
+  useLeavePolicyImpactReview: () => ({ requestReview: vi.fn(), drawer: null }),
+}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));
 vi.mock('src/screens/hr/hooks/use-hr-table-query', () => ({

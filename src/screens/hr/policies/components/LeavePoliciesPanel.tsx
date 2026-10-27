@@ -5,7 +5,6 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { Add } from '@mui/icons-material';
 import { Label } from 'src/components/label';
-import { hrPaths } from 'src/constants/hr-menus';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { useSelector, useDispatch } from 'react-redux';
@@ -20,11 +19,8 @@ import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
+import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
 import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
-import {
-  hrLeavePolicyPermissions,
-  hrPolicyActionPermissions,
-} from 'src/constants/hr-policy-permissions';
 import {
   useGetLeavePoliciesQuery,
   useDeleteLeavePolicyMutation,
@@ -34,17 +30,13 @@ import {
 
 import { LeavePolicyForm } from './LeavePolicyForm';
 import { InfoTooltipIcon } from './HRPolicySharedUI';
+import { policyImpactRequest } from '../leave-impact.types';
 import { getErrorMessage } from '../hr-policy-workspace-utils';
-import { LeavePolicyImpactDrawer } from './LeavePolicyImpactDrawer';
 import { LeavePolicyDetailsDrawer } from './LeavePolicyDetailsDrawer';
 import { LeaveYearEndSettlementsPanel } from './LeaveYearEndSettlementsPanel';
-import {
-  getLeavePolicyTitle,
-  isLeavePolicyArchived,
-  buildLeavePolicyImpactReview,
-} from '../leave-policy-workspace-utils';
+import { useLeavePolicyImpactReview } from '../hooks/useLeavePolicyImpactReview';
+import { getLeavePolicyTitle, isLeavePolicyArchived } from '../leave-policy-workspace-utils';
 
-import type { LeavePolicyImpactReview } from '../leave-policy-workspace-utils';
 import type { ILeavePolicy, LeavePaidType, ILeavePolicyRule } from '../leave-policy-types';
 
 const getActivePolicyRules = (policy: ILeavePolicy) =>
@@ -62,7 +54,7 @@ const formatRuleEntitlement = (rule?: ILeavePolicyRule) => {
   return `${rule.leaveCount ?? 0} ${rule.accrualPolicyType || 'Yearly'}`;
 };
 
-export function LeavePoliciesPanel() {
+export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeavePolicy) => void }) {
   const dispatch = useDispatch();
   const formCloseState = useRef({ dirty: false, busy: false });
   const [discardOpen, setDiscardOpen] = useState(false);
@@ -77,14 +69,10 @@ export function LeavePoliciesPanel() {
   const canEdit = hasGrantedPermission(permissions, hrLeavePolicyPermissions.edit);
   const canArchive = hasGrantedPermission(permissions, hrLeavePolicyPermissions.archive);
   const canSetDefault = hasGrantedPermission(permissions, hrLeavePolicyPermissions.setDefault);
-  const canViewAssignments = hasGrantedPermission(permissions, hrPolicyActionPermissions.view);
   const [viewPolicy, setViewPolicy] = useState<ILeavePolicy | null>(null);
-  const [archiveError, setArchiveError] = useState('');
   const [editData, setEditData] = useState<ILeavePolicy | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [impactReview, setImpactReview] = useState<LeavePolicyImpactReview | null>(null);
-  const [impactOpen, setImpactOpen] = useState(false);
-  const [archiveTarget, setArchiveTarget] = useState<ILeavePolicy | null>(null);
+  const impactReview = useLeavePolicyImpactReview(currentYear?.id);
   const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
   const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 10, search: '' });
 
@@ -199,71 +187,58 @@ export function LeavePoliciesPanel() {
   };
 
   const previewArchive = useCallback(
-    (policy: ILeavePolicy) => {
-      if (!canArchive) return;
-      setArchiveError('');
+    async (policy: ILeavePolicy) => {
+      if (!canArchive || !currentYear?.id) return;
       if (policy.isDefault) {
         shikshaMitraToast.error({
           message: 'Choose another default before archiving',
         });
         return;
       }
-      setArchiveTarget(policy);
+      const approval = await impactReview.requestReview(
+        policyImpactRequest(policy, 'archive', currentYear)
+      );
+      if (!approval) return;
+      try {
+        await archiveLeavePolicy({ id: policy.id, ...approval }).unwrap();
+        shikshaMitraToast.success({
+          message: `${getLeavePolicyTitle(policy)} archived successfully`,
+        });
+        refetch();
+      } catch (failure) {
+        shikshaMitraToast.error({
+          message: getErrorMessage(failure, 'Could not archive leave policy.'),
+        });
+      }
     },
-    [canArchive]
+    [canArchive, currentYear, impactReview, archiveLeavePolicy, refetch]
   );
 
   const confirmSetDefault = useCallback(
     async (policy: ILeavePolicy) => {
-      if (!canSetDefault || !policy.id || policy.isDefault) {
+      if (!canSetDefault || !policy.id || policy.isDefault || !currentYear?.id) {
         return;
       }
 
       try {
-        await setDefaultLeavePolicy(policy.id).unwrap();
+        const approval = await impactReview.requestReview(
+          policyImpactRequest(policy, 'set-default', currentYear)
+        );
+        if (!approval) return;
+        await setDefaultLeavePolicy({ id: policy.id, ...approval }).unwrap();
         shikshaMitraToast.success({
           message: `${getLeavePolicyTitle(policy)} is now the default leave policy`,
         });
         refetch();
       } catch (defaultError) {
         console.error('Failed to set default leave policy:', defaultError);
-        shikshaMitraToast.error({ message: 'Failed to set default leave policy' });
+        shikshaMitraToast.error({
+          message: getErrorMessage(defaultError, 'Failed to set default leave policy'),
+        });
       }
     },
-    [canSetDefault, refetch, setDefaultLeavePolicy]
+    [canSetDefault, refetch, setDefaultLeavePolicy, currentYear, impactReview]
   );
-
-  const closeImpact = () => {
-    if (archiveState.isLoading) {
-      return;
-    }
-    setImpactOpen(false);
-    setImpactReview(null);
-    setEditData(null);
-  };
-
-  const confirmArchive = async () => {
-    if (!canArchive || !archiveTarget?.id || archiveState.isLoading) {
-      return;
-    }
-
-    try {
-      await archiveLeavePolicy(archiveTarget.id).unwrap();
-      shikshaMitraToast.success({
-        message: `${getLeavePolicyTitle(archiveTarget)} archived successfully`,
-      });
-      setArchiveTarget(null);
-      refetch();
-    } catch (archiveFailure) {
-      console.error('Failed to archive leave policy:', archiveFailure);
-      setArchiveError(
-        getErrorMessage(
-          archiveFailure,
-          'Failed to archive leave policy. Resolve active policy assignments before retrying.'
-        )
-      );
-    }
-  };
 
   const confirmUnarchive = useCallback(
     async (policy: ILeavePolicy) => {
@@ -454,12 +429,24 @@ export function LeavePoliciesPanel() {
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
-                      setImpactReview(buildLeavePolicyImpactReview(policy, 'update'));
-                      setImpactOpen(true);
+                      if (currentYear)
+                        impactReview.requestReview(
+                          policyImpactRequest(policy, 'inspect', currentYear)
+                        );
                     }}
                   >
-                    Review impact checklist
+                    Review impact
                   </MenuItem>
+                  {onHistory ? (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        onHistory(policy);
+                      }}
+                    >
+                      Version history
+                    </MenuItem>
+                  ) : null}
                   {isArchived && canArchive ? (
                     <MenuItem
                       disabled={unarchiveState.isLoading}
@@ -533,6 +520,9 @@ export function LeavePoliciesPanel() {
       openEditDialog,
       openDuplicateDialog,
       previewArchive,
+      currentYear,
+      impactReview,
+      onHistory,
     ]
   );
 
@@ -694,51 +684,8 @@ export function LeavePoliciesPanel() {
         }
       />
 
-      <LeavePolicyImpactDrawer
-        open={impactOpen}
-        review={impactReview}
-        archiving={archiveState.isLoading}
-        onClose={closeImpact}
-      />
+      {impactReview.drawer}
       <LeavePolicyDetailsDrawer policy={viewPolicy} onClose={() => setViewPolicy(null)} />
-      <ConfirmDialog
-        open={Boolean(archiveTarget)}
-        onClose={() => {
-          if (!archiveState.isLoading) setArchiveTarget(null);
-        }}
-        disableCancel={archiveState.isLoading}
-        disableEscapeKeyDown={archiveState.isLoading}
-        disableBackdropClick
-        title="Archive leave policy?"
-        icon="warning"
-        content={
-          <Stack spacing={1}>
-            <Typography variant="body2">
-              Archive &quot;
-              {archiveTarget ? getLeavePolicyTitle(archiveTarget) : 'this leave policy'}&quot;?
-              Historical requests keep their policy and reporting context. Active current or future
-              assignments must be resolved first.
-            </Typography>
-            {archiveError ? <Alert severity="error">{archiveError}</Alert> : null}
-            {canViewAssignments ? (
-              <Button component="a" href={hrPaths.policies.assignments} size="small">
-                Review policy assignments
-              </Button>
-            ) : null}
-          </Stack>
-        }
-        action={
-          <Button
-            color="warning"
-            variant="contained"
-            size="small"
-            loading={archiveState.isLoading}
-            onClick={confirmArchive}
-          >
-            Archive Policy
-          </Button>
-        }
-      />
     </Stack>
   );
 }

@@ -464,10 +464,11 @@ export type HrAuditEventListArgs = {
 };
 
 export type HrPolicyType = 'work_calendar' | 'payroll' | 'attendance';
+export type HrPolicyVersionType = HrPolicyType | 'leave';
 
 export type HrPolicyVersion = {
   id: string;
-  policyType: HrPolicyType;
+  policyType: HrPolicyVersionType;
   policyId: string;
   academicYearId: string;
   versionNumber: number;
@@ -486,7 +487,7 @@ export type HrPolicyVersion = {
 };
 
 export type HrPolicyVersionCompare = {
-  policyType: HrPolicyType;
+  policyType: HrPolicyVersionType;
   policyId: string;
   fromVersion: HrPolicyVersion;
   toVersion: HrPolicyVersion;
@@ -541,7 +542,7 @@ export const policyInvalidationTags = [
 ];
 const policyTags = policyInvalidationTags;
 
-const policyVersionPath = (policyType: HrPolicyType, policyId: string) =>
+const policyVersionPath = (policyType: HrPolicyVersionType, policyId: string) =>
   `/hr/${policyType}/policies/${policyId}/versions`;
 
 export type PolicyHolidayImpactPreviewArgs = {
@@ -1040,7 +1041,7 @@ export const hrPolicyApi = api.injectEndpoints({
     getPolicyVersions: builder.query<
       PagedResult<HrPolicyVersion>,
       {
-        policyType: HrPolicyType;
+        policyType: HrPolicyVersionType;
         policyId: string;
         maxResultCount?: number;
         skipCount?: number;
@@ -1057,7 +1058,12 @@ export const hrPolicyApi = api.injectEndpoints({
     }),
     comparePolicyVersions: builder.query<
       HrPolicyVersionCompare,
-      { policyType: HrPolicyType; policyId: string; fromVersionId: string; toVersionId: string }
+      {
+        policyType: HrPolicyVersionType;
+        policyId: string;
+        fromVersionId: string;
+        toVersionId: string;
+      }
     >({
       query: ({ policyType, policyId, fromVersionId, toVersionId }) => ({
         url: `${policyVersionPath(policyType, policyId)}/compare`,
@@ -1068,7 +1074,7 @@ export const hrPolicyApi = api.injectEndpoints({
     }),
     getPolicyRestorePreview: builder.query<
       HrPolicyImpactPreview,
-      { policyType: HrPolicyType; policyId: string; versionId: string }
+      { policyType: HrPolicyVersionType; policyId: string; versionId: string }
     >({
       query: ({ policyType, policyId, versionId }) => ({
         url: `${policyVersionPath(policyType, policyId)}/${versionId}/restore-preview`,
@@ -1079,7 +1085,7 @@ export const hrPolicyApi = api.injectEndpoints({
     restorePolicyVersionDraft: builder.mutation<
       WorkCalendarPolicy | PayrollPolicy | AttendancePolicy,
       {
-        policyType: HrPolicyType;
+        policyType: HrPolicyVersionType;
         policyId: string;
         versionId: string;
         name?: string;

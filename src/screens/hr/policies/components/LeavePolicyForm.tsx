@@ -36,9 +36,12 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { leaveImpactScope } from '../leave-impact.types';
 import { getErrorMessage } from '../hr-policy-workspace-utils';
 import { getCurrentLeavePolicyTitleSet } from '../leave-policy-workspace-utils';
+import { useLeavePolicyImpactReview } from '../hooks/useLeavePolicyImpactReview';
 
+import type { LeaveReviewApproval } from '../leave-impact.types';
 import type { ILeavePolicy, LeavePaidType, ILeavePolicyRule } from '../leave-policy-types';
 
 type EntitlementMode = 'Limited' | 'Unlimited';
@@ -237,6 +240,7 @@ export function LeavePolicyForm({
   onCloseStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 }) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const impactReview = useLeavePolicyImpactReview(currentYear?.id);
 
   const [createLeavePolicy, { isLoading: isCreateLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -323,9 +327,46 @@ export function LeavePolicyForm({
       };
 
       try {
-        const result = editData?.id
-          ? await updateLeavePolicy({ id: editData.id, body: payload })
-          : await createLeavePolicy({ academicYearId: currentYear?.id, body: payload });
+        const needsReview = Boolean(
+          (editData?.id &&
+            (editData.status === 'Active' || payload.status === 'Active' || payload.isDefault)) ||
+          (payload.isDefault &&
+            leavePoliciesData?.items?.some((policy: ILeavePolicy) => policy.isDefault))
+        );
+        const reviewProposal = () =>
+          impactReview.requestReview({
+            academicYearId: currentYear!.id,
+            policyId: editData?.id,
+            action: editData?.id ? 'update' : 'create',
+            ...leaveImpactScope(currentYear!, editData?.id ? editData.version : undefined),
+            proposal: payload,
+          });
+        let approval = needsReview ? await reviewProposal() : undefined;
+        if (needsReview && !approval) return;
+        const save = (reviewed?: LeaveReviewApproval | null) => {
+          const body = {
+            ...payload,
+            expectedVersion: editData?.id ? editData.version : undefined,
+            impactScope: reviewed?.impactScope,
+          };
+          return editData?.id
+            ? updateLeavePolicy({ id: editData.id, body, impactToken: reviewed?.impactToken })
+            : createLeavePolicy({
+                academicYearId: currentYear?.id,
+                body,
+                impactToken: reviewed?.impactToken,
+              });
+        };
+        let result = await save(approval);
+        // A default can appear while the initial list is loading. Obtain a review
+        // after the server rejects the unreviewed write; never retry a stale token.
+        const code =
+          (result as any)?.error?.data?.error?.code || (result as any)?.error?.data?.code;
+        if (!approval && code === 'ShikshaMitra:HrPolicyImpactConfirmationRequired') {
+          approval = await reviewProposal();
+          if (!approval) return;
+          result = await save(approval);
+        }
 
         if ((result as any)?.error) {
           throw (result as any).error;
@@ -365,6 +406,7 @@ export function LeavePolicyForm({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      {impactReview.drawer}
       <DialogScrollContent>
         <Stack spacing={2}>
           <Grid container spacing={3}>

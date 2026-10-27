@@ -47,6 +47,15 @@ export function LeavePolicyDetailsDrawer({
               />
               <Typography variant="body2">Effective from: {value(policy.effectiveFrom)}</Typography>
               <Typography variant="body2">Effective to: {value(policy.effectiveTo)}</Typography>
+              {policy.version ? (
+                <Typography variant="body2">Current version: {policy.version}</Typography>
+              ) : null}
+              {policy.sourceVersionId ? (
+                <Typography variant="body2">
+                  Created from recorded version {policy.sourceVersionNumber ?? 'unknown'} of policy{' '}
+                  {policy.sourcePolicyId}. The source policy and its references were preserved.
+                </Typography>
+              ) : null}
               <Typography variant="body2">Description: {value(policy.description)}</Typography>
             </PolicySection>
             {(policy.rules || []).map((rule, index) => (

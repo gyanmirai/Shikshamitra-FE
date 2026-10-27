@@ -16,15 +16,17 @@ import type {
 } from 'src/redux/hr/hr-policy-api';
 
 import dayjs from 'dayjs';
-import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import { toDateOnly } from 'src/utils/date-only';
+import { employeeType } from 'src/redux/tagTypes';
 import { useSearchParams } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
+import { leaveApi, useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
+import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
 import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
 import { useGetGroupsQuery } from 'src/redux/calendar/GroupManagement/groupManagementApi';
 import { useGetEmployeeQuery, EMPLOYEE_LIST_MAX_PAGE_SIZE } from 'src/redux/hr/employeeApi';
@@ -283,6 +285,11 @@ export function useHRPolicyWorkspace({
     setVersionPage((current) => ({ ...current, number: 1 }));
   }, [versionTarget?.policyId, versionFilters.search, versionFilters.action]);
   const [restoreVersion, setRestoreVersion] = useState<RestoreVersionState>(null);
+  useEffect(() => {
+    setVersionTarget(null);
+    setRestoreVersion(null);
+    setCompareVersionIds({ from: '', to: '' });
+  }, [academicYearId]);
   const [employeeLookupSearch, setEmployeeLookupSearch] = useState('');
 
   // --- Operation overlay state -----------------------------------------------
@@ -383,10 +390,30 @@ export function useHRPolicyWorkspace({
         : { entityType: 'work_calendar_policy', entityId: '' },
       { skip: !auditTarget }
     );
+  const canViewVersions = hasGrantedPermission(
+    permissions,
+    versionTarget?.policyType === 'leave'
+      ? hrLeavePolicyPermissions.view
+      : hrPermissions.policyActions.view
+  );
+  const leafVersionQuery = useGetPolicyVersionsQuery(
+    versionTarget
+      ? {
+          policyType: versionTarget.policyType,
+          policyId: versionTarget.policyId,
+          maxResultCount: versionPage.size,
+          skipCount: (versionPage.number - 1) * versionPage.size,
+          search: versionFilters.search,
+          action: versionFilters.action,
+        }
+      : { policyType: 'work_calendar', policyId: '' },
+    { skip: !versionTarget || !canViewVersions }
+  );
   const {
-    currentData: versionHistory,
-    isFetching: versionHistoryLoading,
-    tableProps: versionTableProps,
+    currentData: tableVersionHistory,
+    isFetching: tableVersionLoading,
+    tableProps: tableVersionProps,
+    error: tableVersionError,
   } = useHrTableQuery(
     {
       table: 'hr-policy-versions',
@@ -399,45 +426,63 @@ export function useHRPolicyWorkspace({
       page: versionPage.number - 1,
       size: versionPage.size,
       resetPage: () => setVersionPage((current) => ({ ...current, number: 1 })),
-      skip: !versionTarget,
+      skip: !versionTarget || !canViewVersions || versionTarget.policyType === 'leave',
     },
-    useGetPolicyVersionsQuery(
-      versionTarget
-        ? {
-            policyType: versionTarget.policyType,
-            policyId: versionTarget.policyId,
-            maxResultCount: versionPage.size,
-            skipCount: (versionPage.number - 1) * versionPage.size,
-            search: versionFilters.search,
-            action: versionFilters.action,
-          }
-        : { policyType: 'work_calendar', policyId: '' },
-      { skip: !versionTarget }
-    )
+    leafVersionQuery
   );
-  const { currentData: versionCompare, isFetching: versionCompareLoading } =
-    useComparePolicyVersionsQuery(
-      versionTarget && compareVersionIds.from && compareVersionIds.to
-        ? {
-            policyType: versionTarget.policyType,
-            policyId: versionTarget.policyId,
-            fromVersionId: compareVersionIds.from,
-            toVersionId: compareVersionIds.to,
-          }
-        : { policyType: 'work_calendar', policyId: '', fromVersionId: '', toVersionId: '' },
-      { skip: !versionTarget || !compareVersionIds.from || !compareVersionIds.to }
-    );
-  const { currentData: restorePreview, isFetching: restorePreviewLoading } =
-    useGetPolicyRestorePreviewQuery(
-      versionTarget && restoreVersion
-        ? {
-            policyType: versionTarget.policyType,
-            policyId: versionTarget.policyId,
-            versionId: restoreVersion.version.id,
-          }
-        : { policyType: 'work_calendar', policyId: '', versionId: '' },
-      { skip: !versionTarget || !restoreVersion }
-    );
+  const versionHistoryError =
+    leafVersionQuery.error ||
+    (versionTarget?.policyType === 'leave' ? undefined : tableVersionError);
+  const versionAccessUnavailable = !canViewVersions || Boolean(versionHistoryError);
+  const versionHistory = versionAccessUnavailable
+    ? undefined
+    : versionTarget?.policyType === 'leave'
+      ? leafVersionQuery.currentData
+      : tableVersionHistory;
+  const versionHistoryLoading =
+    versionTarget?.policyType === 'leave' ? leafVersionQuery.isFetching : tableVersionLoading;
+  const versionTableProps = versionTarget?.policyType === 'leave' ? {} : tableVersionProps;
+  const {
+    currentData: cachedVersionCompare,
+    isFetching: versionCompareLoading,
+    error: versionCompareError,
+  } = useComparePolicyVersionsQuery(
+    versionTarget && compareVersionIds.from && compareVersionIds.to
+      ? {
+          policyType: versionTarget.policyType,
+          policyId: versionTarget.policyId,
+          fromVersionId: compareVersionIds.from,
+          toVersionId: compareVersionIds.to,
+        }
+      : { policyType: 'work_calendar', policyId: '', fromVersionId: '', toVersionId: '' },
+    { skip: !versionTarget || !canViewVersions || !compareVersionIds.from || !compareVersionIds.to }
+  );
+  const versionCompare =
+    versionAccessUnavailable || versionCompareError ? undefined : cachedVersionCompare;
+  const {
+    currentData: cachedRestorePreview,
+    isFetching: restorePreviewLoading,
+    error: restorePreviewError,
+  } = useGetPolicyRestorePreviewQuery(
+    versionTarget && restoreVersion
+      ? {
+          policyType: versionTarget.policyType,
+          policyId: versionTarget.policyId,
+          versionId: restoreVersion.version.id,
+        }
+      : { policyType: 'work_calendar', policyId: '', versionId: '' },
+    { skip: !versionTarget || !canViewVersions || !restoreVersion }
+  );
+  const restorePreview =
+    versionAccessUnavailable || versionCompareError || restorePreviewError
+      ? undefined
+      : cachedRestorePreview;
+  useEffect(() => {
+    if (versionAccessUnavailable || versionCompareError || restorePreviewError) {
+      setRestoreVersion(null);
+      setCompareVersionIds({ from: '', to: '' });
+    }
+  }, [versionAccessUnavailable, versionCompareError, restorePreviewError]);
 
   // const selectedHolidayCalendarId =
   //   holidayFilters.workCalendarPolicyId ||
@@ -739,6 +784,14 @@ export function useHRPolicyWorkspace({
     hrPermissions.policyActions.setDefault
   );
   const canAssignPolicy = hasGrantedPermission(permissions, hrPermissions.policyActions.assign);
+  const dispatch = useDispatch();
+  const canRestoreVersion =
+    !versionAccessUnavailable &&
+    !versionCompareError &&
+    !restorePreviewError &&
+    (versionTarget?.policyType === 'leave'
+      ? hasGrantedPermission(permissions, hrLeavePolicyPermissions.create)
+      : hasGrantedPermission(permissions, hrPermissions.policyActions.clone));
   const canClonePolicy = hasGrantedPermission(permissions, hrPermissions.policyActions.clone);
   const canPreviewImpact = hasGrantedPermission(
     permissions,
@@ -1198,7 +1251,7 @@ export function useHRPolicyWorkspace({
 
   const restoreVersionAsDraft = useCallback(
     async (version: HrPolicyVersion) => {
-      if (!versionTarget) return;
+      if (!versionTarget || !canRestoreVersion) return;
       if (!restoreVersion?.reason.trim()) {
         shikshaMitraToast.error({ message: 'Enter a restore reason before creating the draft.' });
         return;
@@ -1221,7 +1274,9 @@ export function useHRPolicyWorkspace({
             shikshaMitraToast.success({ message: 'Version restored as a new draft' });
             setVersionTarget(null);
             setRestoreVersion(null);
-            if (versionTarget.policyType === 'work_calendar') {
+            if (versionTarget.policyType === 'leave') {
+              dispatch(leaveApi.util.invalidateTags([employeeType.employeeLeavePolicy]));
+            } else if (versionTarget.policyType === 'work_calendar') {
               openCalendarDrawer(restored as WorkCalendarPolicy);
             } else if (versionTarget.policyType === 'payroll') {
               openPayrollDrawer(restored as PayrollPolicy);
@@ -1244,6 +1299,7 @@ export function useHRPolicyWorkspace({
       restoreVersion,
       restorePolicyVersionDraft,
       versionTarget,
+      canRestoreVersion,
     ]
   );
 
@@ -2275,6 +2331,7 @@ export function useHRPolicyWorkspace({
     canSetDefaultPolicy,
     canAssignPolicy,
     canClonePolicy,
+    canRestoreVersion,
     canPreviewImpact,
     canOpenPayrollWorkbench,
     canOpenAttendanceRegister,
@@ -2414,6 +2471,10 @@ export function useHRPolicyWorkspace({
     restorePreviewLoading,
     restoreVersionState,
     versionHistoryLoading,
+    versionHistoryError,
+    versionAccessUnavailable,
+    restorePreviewError,
+    versionCompareError,
     versionCompareLoading,
 
     // Holiday Impact tab
