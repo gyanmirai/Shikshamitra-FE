@@ -90,6 +90,7 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
             <StepButton
               type="button"
               disabled={disabled}
+              optional={stepCaptions?.[index]}
               aria-current={index === activeStep ? 'step' : undefined}
               onClick={() => onStepClick(index)}
               sx={{

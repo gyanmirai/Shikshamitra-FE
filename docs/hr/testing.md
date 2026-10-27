@@ -8,6 +8,12 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## Onboarding cards and salary setup
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/employee-onboarding src/screens/hr/payroll/structure/SalaryStructureBuilder.test.tsx src/screens/hr/payroll/structure/salary-template-setup-state.test.tsx src/components/custom-stepper --pool=forks --maxWorkers=1` on Windows.
+Coverage includes full-card/text/control toggles, one tab stop, Space/Enter, disabled cards, vertical section focus, salary/statutory draft preservation, preview invalidation, distinct loading/empty/403/failure states, fixed same-origin new-tab creation links, exact creation/route grants and explicit setup retry. Existing finalization and PF/ESIC tests retain required gates and verify no salary save or activation during preview.
+Authenticated browser acceptance must separately verify new-tab creation/publish/return, bank/staff draft retention across the complete wizard, dirty-close/reopen, finalization and responsive light/dark layouts at 390/768/1440px. Synthetic component tests do not establish those browser or backend runtime results.
+
 ## Finalize onboarding role lookup
 
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/employee-onboarding/finalize-role-field.test.tsx src/screens/hr/employee/employee-role-options.test.ts src/screens/hr/employee/employee-form-fields/RenderRole.test.tsx src/screens/security/role/employee-onboarding-role.test.ts --pool=forks --maxWorkers=1` on Windows.
