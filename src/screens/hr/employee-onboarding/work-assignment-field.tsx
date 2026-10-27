@@ -190,3 +190,5 @@ export function WorkAssignmentField({
     </Stack>
   );
 }
+
+export default WorkAssignmentField;

@@ -51,9 +51,10 @@ import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-ap
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
 import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
+import WorkAssignmentField from 'src/screens/hr/employee-onboarding/work-assignment-field';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { shouldClearEmployeeRoleSelection } from 'src/screens/hr/employee/employee-role-options';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
+import { shouldClearEmployeeRoleSelection } from 'src/screens/hr/employee/employee-role-options';
 import {
   useGetEmployeeApplicationQuery,
   useGetEmployeeApplicationsQuery,
@@ -99,8 +100,6 @@ import {
 } from '@mui/material';
 
 import { getOnboardingErrorMessage } from './error-message';
-import { WorkAssignmentField } from './work-assignment-field';
-import { useFinalizeRoles, FinalizeRoleField } from './finalize-role-field';
 import { statutoryProfileSchema } from '../employee/statutory-profile-fields';
 import { SalaryStructureBuilder } from '../payroll/structure/SalaryStructureBuilder';
 import { getLocalMonthKey } from '../payroll/structure/salary-structure-builder-utils';
@@ -132,6 +131,7 @@ import {
 } from './status';
 
 import type { FinalizeFormState } from './finalize-validation';
+import { FinalizeRoleField, useFinalizeRoles } from './finalize-role-field';
 
 type InviteFormState = {
   firstName: string;
