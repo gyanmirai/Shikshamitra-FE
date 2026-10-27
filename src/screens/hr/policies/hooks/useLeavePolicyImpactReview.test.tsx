@@ -74,7 +74,10 @@ function Harness({ year = 'year' }: { year?: string }) {
       <button
         type="button"
         onClick={async () => {
-          const result: LeaveReviewApproval | null = await requestReview(request);
+          const result: LeaveReviewApproval | null = await requestReview({
+            ...request,
+            academicYearId: year,
+          });
           api.approved(result);
         }}
       >
@@ -90,6 +93,55 @@ beforeEach(() => {
 });
 
 describe('authoritative leave review', () => {
+  it.each(['close', 'replace', 'year'] as const)(
+    'clears paged drilldown state on %s before a fresh assessment and ignores late records',
+    async (transition) => {
+      const records = (skipCount: number) => ({
+        totalCount: 60,
+        assessedTotalCount: 60,
+        redactedCount: 0,
+        isScopeRestricted: false,
+        items: [{ id: `old-${skipCount}`, label: `Old record ${skipCount}`, status: 'resolved' }],
+      });
+      api.details.mockImplementation(({ skipCount }: { skipCount: number }) => ({
+        unwrap: () => Promise.resolve(records(skipCount)),
+      }));
+      const view = render(<Harness />);
+      fireEvent.click(screen.getByText('Review'));
+      fireEvent.click(await screen.findByRole('button', { name: 'View records' }));
+      await screen.findByText('Old record 0 | resolved');
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      await screen.findByText('Old record 20 | resolved');
+      expect(screen.getByRole('button', { name: 'Previous' })).toBeEnabled();
+      let finish!: (value: ReturnType<typeof records>) => void;
+      api.details.mockReturnValueOnce({
+        unwrap: () =>
+          new Promise<ReturnType<typeof records>>((done) => {
+            finish = done;
+          }),
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      await screen.findByText(/Loading records/);
+      if (transition === 'close') fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      if (transition === 'year') view.rerender(<Harness year="other" />);
+      const fresh = review();
+      fresh.impact.fingerprint = 'fresh-assessment';
+      api.preview.mockReturnValue({ unwrap: () => Promise.resolve(fresh) });
+      fireEvent.click(screen.getByText('Review'));
+      await screen.findByRole('button', { name: 'View records' });
+      expect(screen.queryByText('Effective Staff records')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Loading records/)).not.toBeInTheDocument();
+      expect(screen.queryByText('Old record 20 | resolved')).not.toBeInTheDocument();
+      await act(async () => finish(records(40)));
+      expect(screen.queryByText('Old record 40 | resolved')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'View records' }));
+      await screen.findByText('Old record 0 | resolved');
+      expect(api.details).toHaveBeenLastCalledWith(
+        expect.objectContaining({ fingerprint: 'fresh-assessment', skipCount: 0 })
+      );
+      expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    }
+  );
   it('keeps a calculated zero distinct from unavailable outcomes and binds approval to the exact scope', async () => {
     render(<Harness />);
     fireEvent.click(screen.getByText('Review'));

@@ -38,6 +38,12 @@ export function useLeavePolicyImpactReview(academicYearId?: string) {
   const sequence = useRef(0);
   const detailSequence = useRef(0);
   const resolve = useRef<((approval: LeaveReviewApproval | null) => void) | null>(null);
+  const resetDetails = useCallback(() => {
+    setMetric('');
+    setOffset(0);
+    setPage(null);
+    setDetailError('');
+  }, []);
   const close = useCallback(() => {
     sequence.current += 1;
     detailSequence.current += 1;
@@ -45,13 +51,15 @@ export function useLeavePolicyImpactReview(academicYearId?: string) {
     resolve.current = null;
     setRequest(null);
     setReview(null);
-    setPage(null);
+    resetDetails();
+    setError('');
     setBusy(false);
-  }, []);
+  }, [resetDetails]);
   useEffect(() => close(), [academicYearId, close]);
   useEffect(
     () => () => {
       sequence.current += 1;
+      detailSequence.current += 1;
       resolve.current?.(null);
     },
     []
@@ -65,9 +73,8 @@ export function useLeavePolicyImpactReview(academicYearId?: string) {
       detailSequence.current += 1;
       setRequest(assessment);
       setReview(null);
-      setPage(null);
+      resetDetails();
       setError('');
-      setDetailError('');
       setBusy(true);
       const outcome = new Promise<LeaveReviewApproval | null>((done) => {
         resolve.current = done;
@@ -88,7 +95,7 @@ export function useLeavePolicyImpactReview(academicYearId?: string) {
         });
       return outcome;
     },
-    [preview]
+    [preview, resetDetails]
   );
 
   const loadDetails = async (key: string, skipCount = 0) => {
@@ -285,8 +292,7 @@ export function useLeavePolicyImpactReview(academicYearId?: string) {
                 },
               });
               resolve.current = null;
-              setRequest(null);
-              setReview(null);
+              close();
             }}
           >
             Confirm and save
