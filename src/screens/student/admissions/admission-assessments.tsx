@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IParams } from 'src/components/customizabaleTable/types';
 import type { AssessmentRosterItem } from 'src/redux/student/admissions/admission-assessment-roster-api';
 import type {
   AssessmentSession,
@@ -11,13 +12,13 @@ import type {
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { Box, Stack, Button, Typography } from '@mui/material';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import {
   usePreviewAssessmentSessionMutation,
   useConfirmAssessmentSessionMutation,
@@ -43,6 +44,10 @@ import {
   useAssessmentPermissions,
   canAdvanceAssessmentApplications,
 } from './assessments/use-assessment-permissions';
+import {
+  readAssessmentColumnFilters,
+  serializeAssessmentColumnFilters,
+} from './assessments/assessment-column-filters';
 
 import type { AssessmentAction } from './assessments/assessment-action-model';
 import type { AssessmentBatchAction } from './assessments/assessment-batch-model';
@@ -58,6 +63,29 @@ export default function AdmissionAssessmentsScreen() {
   } | null>(null);
   const workbench = useAssessmentWorkspaceData(permissions.view, !!batch);
   const { academic, scopes, state, applicants, updateWorkbench } = workbench;
+  const tableFilters = useMemo<IParams['filters']>(
+    () => [
+      ...readAssessmentColumnFilters(state.columnFilters),
+      ...(state.status === 'all'
+        ? []
+        : [
+            {
+              column: 'status',
+              type: 'equals',
+              value: state.status,
+              valueType: 'enum',
+              label: 'Status',
+              displayValue: { pending: 'Pending', ongoing: 'Ongoing', complete: 'Complete' }[
+                state.status
+              ],
+            },
+          ]),
+    ],
+    [state.columnFilters, state.status]
+  );
+  const hasSafeRows = Boolean(applicants.currentData?.items.length);
+  const listError = scopes.isError || applicants.isError;
+  const retryList = scopes.isError ? scopes.refetch : applicants.refetch;
   const manage = useBoolean(state.manageSessions);
   const [managePage, setManagePage] = useState(0);
   const [manageSize, setManageSize] = useState(25);
@@ -83,6 +111,7 @@ export default function AdmissionAssessmentsScreen() {
     state.sessionId,
     state.status,
     state.search,
+    state.columnFilters,
     state.page,
     state.size,
   ]);
@@ -190,6 +219,7 @@ export default function AdmissionAssessmentsScreen() {
             : row.assessment.canComplete)
     );
   const filtered =
+    state.columnFilters ||
     state.search ||
     state.status !== 'all' ||
     state.sessionId ||
@@ -200,6 +230,7 @@ export default function AdmissionAssessmentsScreen() {
   const clearFilters = () =>
     updateWorkbench({
       assessmentSearch: undefined,
+      assessmentFilters: undefined,
       assessmentQueue: undefined,
       assessmentStatus: undefined,
       assessmentSession: undefined,
@@ -216,21 +247,34 @@ export default function AdmissionAssessmentsScreen() {
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
-        height: 1,
+        height: { xs: 'auto', sm: 1 },
         minHeight: 0,
-        '& .MuiButton-root': { minHeight: { xs: 44, sm: 32 } },
+        minWidth: 0,
       }}
     >
       <CustomBreadcrumbs
         heading="Assessments"
         description="Schedule shared sessions, assess applicants and continue their admission journeys."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
-          { name: 'Admissions', href: studentPaths.enrollment.applications },
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Assessments' },
         ]}
+        slotProps={{
+          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
+          heading: {},
+          moreLink: {},
+          breadcrumbs: {},
+        }}
         action={
-          <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="flex-end">
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            alignItems="center"
+            justifyContent="flex-end"
+          >
             <Button
               size="small"
               variant="outlined"
@@ -238,7 +282,7 @@ export default function AdmissionAssessmentsScreen() {
               disabled={!permissions.view || !academic.academicYearId}
               onClick={manage.onTrue}
             >
-              Manage Sessions
+              Manage sessions
             </Button>
             {permissions.manageSessions && (
               <Button
@@ -252,7 +296,7 @@ export default function AdmissionAssessmentsScreen() {
                 }
                 onClick={() => openSetup(null, 'create')}
               >
-                Create Session
+                Create session
               </Button>
             )}
           </Stack>
@@ -265,7 +309,7 @@ export default function AdmissionAssessmentsScreen() {
       ) : (
         <>
           <AssessmentWorkspaceControls data={workbench} />
-          {scopes.isError && <AdmissionQueryError onRetry={scopes.refetch} />}
+          {listError && hasSafeRows && <AdmissionQueryError onRetry={retryList} />}
           {!!selection.length && (
             <Stack
               direction="row"
@@ -282,7 +326,7 @@ export default function AdmissionAssessmentsScreen() {
                   disabled={!batchRows('attendance').length}
                   onClick={() => setBatch({ action: 'attendance', rows: batchRows('attendance') })}
                 >
-                  Record Attendance ({batchRows('attendance').length})
+                  Record attendance ({batchRows('attendance').length})
                 </Button>
               )}
               {permissions.results && (
@@ -292,7 +336,7 @@ export default function AdmissionAssessmentsScreen() {
                   disabled={!batchRows('result').length}
                   onClick={() => setBatch({ action: 'result', rows: batchRows('result') })}
                 >
-                  Record Results ({batchRows('result').length})
+                  Record results ({batchRows('result').length})
                 </Button>
               )}
               {canAdvance && (
@@ -306,28 +350,23 @@ export default function AdmissionAssessmentsScreen() {
                 </Button>
               )}
               <Button size="small" onClick={() => setSelection([])}>
-                Clear Selection
+                Clear selection
               </Button>
             </Stack>
           )}
           <Box
             sx={{
               flex: 1,
-              minHeight: 0,
+              minHeight: { xs: 400, sm: 0 },
+              minWidth: 0,
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
             }}
           >
-            {applicants.isFetching && !!applicants.currentData && (
-              <LinearProgress
-                aria-label="Refreshing assessment applicants"
-                sx={{ flexShrink: 0 }}
-              />
-            )}
             <AssessmentApplicantTable
               items={
-                !workbench.invalidSession && !workbench.invalidScope && !applicants.isError
+                !workbench.invalidSession && !workbench.invalidScope
                   ? (applicants.currentData?.items ?? [])
                   : []
               }
@@ -348,9 +387,24 @@ export default function AdmissionAssessmentsScreen() {
                 (applicants.isFetching && !applicants.currentData)
               }
               errorContent={
-                applicants.isError ? (
-                  <AdmissionQueryError onRetry={applicants.refetch} />
-                ) : undefined
+                listError && !hasSafeRows ? <AdmissionQueryError onRetry={retryList} /> : undefined
+              }
+              isRefreshing={applicants.isFetching && !!applicants.currentData}
+              filters={tableFilters}
+              onServerFilter={(next) =>
+                updateWorkbench({
+                  assessmentFilters: serializeAssessmentColumnFilters(next),
+                  assessmentStatus: next.findLast((item) => item.column === 'status')?.value,
+                  assessmentPage: 0,
+                })
+              }
+              onClearCriteria={() =>
+                updateWorkbench({
+                  assessmentSearch: undefined,
+                  assessmentStatus: undefined,
+                  assessmentFilters: undefined,
+                  assessmentPage: 0,
+                })
               }
               page={state.page}
               rowsPerPage={state.size}
@@ -371,8 +425,8 @@ export default function AdmissionAssessmentsScreen() {
                 })
               }
               noDataText={
-                <Stack alignItems="center" spacing={1}>
-                  <Typography variant="body2">
+                <Stack component="span" alignItems="center" spacing={1}>
+                  <Typography component="span" variant="inherit" color="text.secondary">
                     {!academic.academicYearId
                       ? 'Choose an academic year to view assessments.'
                       : workbench.invalidSession
@@ -387,7 +441,7 @@ export default function AdmissionAssessmentsScreen() {
                   </Typography>
                   {!!filtered && (
                     <Button size="small" variant="outlined" onClick={clearFilters}>
-                      Clear Filters
+                      Clear filters
                     </Button>
                   )}
                 </Stack>

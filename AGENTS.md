@@ -2,6 +2,18 @@
 
 ShikshaMitra frontend is a multi-tenant school operating UI built with Next.js, React, TypeScript, Redux Toolkit Query, and MUI.
 
+## Superpowers integration
+
+Use the installed Superpowers skills for applicable planning, debugging, implementation, review, and verification.
+Within project guidance, this guide, applicable nested `AGENTS.md` files, and `DESIGN.md` take precedence over generic Superpowers procedures and examples.
+
+- Before frontend planning or changes, read the applicable `DESIGN.md` sections and use the project skills required below. `DESIGN.md` is the canonical interface contract; a brainstorm, generated mockup, or Superpowers example cannot override it.
+- Trace the existing frontend/backend flow and affected module documentation before proposing implementation. Resolve unclear workflow, money, permission, or business rules with the user before changing that behavior.
+- Carry the applicable design rules, project skill references, API contracts, permissions, and validation commands into implementation plans, delegated task prompts, and review checklists. Review design compliance as well as functional correctness.
+- Keep temporary designs and implementation plans in the conversation or session artifacts. Do not use Superpowers' default `docs/superpowers/` location or commit temporary plans into maintained module documentation. Follow this guide's documentation practice for durable changes.
+- Preserve unrelated local changes and existing implementation. Do not delete existing code to retrofit a test-first workflow. Follow the existing Git hygiene, worktree tooling, publishing approval, and main-only GitHub Actions rules.
+- Run the relevant local checks, including `npm run ts` for TypeScript changes and focused tests where applicable. Follow the in-app browser requirement below when browser validation is part of the task. Report source checks, automated tests, browser results, and unverified states separately; Superpowers review alone is not proof of completion.
+
 ## Publishing approval
 
 Commits and feature-branch pushes for authorized work do not require a separate permission request.

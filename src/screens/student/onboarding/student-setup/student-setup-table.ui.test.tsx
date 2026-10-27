@@ -4,10 +4,11 @@ import type { ICustomizableTableProps } from 'src/components/customizabaleTable/
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { shikshaMitraToast } from 'src/components/toast';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentSetupTable from './student-setup-table';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
@@ -74,6 +75,15 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
 
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+    dismiss: vi.fn(),
+  },
 }));
 vi.mock('react-redux', () => ({
   useDispatch: () => vi.fn(),
@@ -698,7 +708,7 @@ describe('Student Setup table task interactions', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('preserves empty-filter recovery and renders an error with Retry', () => {
+  it('preserves empty-filter recovery and reports list failures through the standard toast', async () => {
     const input = {
       ...props('division'),
       rows: [],
@@ -711,12 +721,19 @@ describe('Student Setup table task interactions', () => {
     expect(input.onClearWorklistFilters).toHaveBeenCalledOnce();
 
     rerender(tableElement({ ...input, isError: true }));
+    await waitFor(() =>
+      expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'The student setup list could not be loaded. Refresh the page.',
+        })
+      )
+    );
     expect(
-      screen.getByText('Onboarding cases could not be loaded.', { exact: false })
-    ).toBeVisible();
+      screen.queryByText('The student setup list could not be loaded. Refresh the page.')
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(input.noDataText)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(input.onRetry).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(input.onRetry).not.toHaveBeenCalled();
   });
 
   it.each(['division', 'gr-number', 'roll-number'] as const)(

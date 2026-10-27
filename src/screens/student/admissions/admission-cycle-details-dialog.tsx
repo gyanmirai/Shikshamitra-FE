@@ -162,22 +162,7 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
               ))}
             </Box>
             {impactQuery.isError && (
-              <StudentFeedback
-                notificationKey="STU-0043"
-                presentation="persistent"
-                severity="warning"
-                sx={{ mt: 2 }}
-                action={
-                  <Button
-                    color="inherit"
-                    size="small"
-                    aria-label="Retry loading current usage"
-                    onClick={() => impactQuery.refetch()}
-                  >
-                    Retry
-                  </Button>
-                }
-              >
+              <StudentFeedback notificationKey="STU-0043" presentation="toast" severity="error">
                 Current usage could not be refreshed. Showing available counts.
               </StudentFeedback>
             )}
@@ -208,21 +193,7 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
               </Stack>
             )}
             {historyQuery.isError && (
-              <StudentFeedback
-                notificationKey="STU-0044"
-                presentation="toast"
-                severity="error"
-                action={
-                  <Button
-                    color="inherit"
-                    size="small"
-                    aria-label="Retry loading activity history"
-                    onClick={() => historyQuery.refetch()}
-                  >
-                    Retry
-                  </Button>
-                }
-              >
+              <StudentFeedback notificationKey="STU-0044" presentation="toast" severity="error">
                 Activity history could not be loaded.
               </StudentFeedback>
             )}

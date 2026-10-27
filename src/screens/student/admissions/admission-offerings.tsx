@@ -31,28 +31,40 @@ export default function AdmissionOfferingsScreen() {
     screen.filters.isActive ||
     screen.filters.availabilityStatus ||
     screen.filters.configurationStatus ||
-    screen.filters.search
+    screen.filters.search ||
+    screen.filters.columnFilters
   );
   const filteredEmpty =
     hasActiveFilters &&
     !screen.cyclesQuery.isFetching &&
     !screen.offeringsQuery.isFetching &&
     !screen.offeringsQuery.isError &&
-    screen.offeringsQuery.data?.totalCount === 0;
+    screen.currentData?.totalCount === 0;
+  const hasSafeRows = Boolean(screen.rows?.length);
+  const listError = screen.offeringsQuery.isError || screen.cyclesQuery.isError;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+        height: { xs: 'auto', sm: 1 },
+        minHeight: 0,
+        minWidth: 0,
+      }}
+    >
       <CustomBreadcrumbs
-        heading="Admission Offering"
+        heading="Admission offerings"
         description="Connect classes, admission periods, processes, and forms before accepting applications."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
-          { name: 'Admission Offering' },
+          { name: 'Admission offerings' },
         ]}
         slotProps={{
-          action: { alignSelf: 'flex-end' },
+          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
           heading: {},
           moreLink: {},
           breadcrumbs: {},
@@ -63,11 +75,10 @@ export default function AdmissionOfferingsScreen() {
               variant="contained"
               size="small"
               startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-              sx={{ minWidth: 140 }}
               disabled={!screen.cycle || screen.bulkActivation.busy}
               onClick={screen.openBulk}
             >
-              Add Offering
+              Add offering
             </Button>
           ) : null
         }
@@ -81,8 +92,14 @@ export default function AdmissionOfferingsScreen() {
             Create a non-archived Admission Cycle before configuring offerings.
           </StudentFeedback>
         )}
-      {screen.offeringsQuery.isError && (
-        <AdmissionQueryError onRetry={() => screen.offeringsQuery.refetch()} />
+      {listError && hasSafeRows && (
+        <AdmissionQueryError
+          onRetry={() =>
+            screen.cyclesQuery.isError
+              ? screen.cyclesQuery.refetch()
+              : screen.offeringsQuery.refetch()
+          }
+        />
       )}
       <AdmissionOfferingFilters
         cycle={screen.cycle}
@@ -98,23 +115,53 @@ export default function AdmissionOfferingsScreen() {
         }
       />
       <Box
-        sx={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        sx={{
+          flex: 1,
+          minHeight: { xs: 400, sm: 0 },
+          minWidth: 0,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
         <BulkAdmissionOfferingActivation
           activation={screen.bulkActivation}
           disabled={screen.bulkActivationDisabled}
         />
-        <Box sx={{ flex: 1, minHeight: 0 }}>
+        <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
           <AdmissionOfferingTable
-            rows={screen.offeringsQuery.data?.items ?? []}
+            rows={screen.rows ?? []}
+            filters={screen.tableFilters}
+            columnOptions={screen.columnOptions}
+            onFilters={screen.applyTableFilters}
+            sorting={screen.filters.sorting}
             filteredEmpty={filteredEmpty}
+            prerequisite={
+              !screen.cycle
+                ? 'Create an admission period to configure offerings.'
+                : !screen.filters.boardId || !screen.filters.mediumId
+                  ? 'Select a board and medium to view admission offerings.'
+                  : undefined
+            }
             onClearFilters={screen.clearFilters}
             loading={
               screen.cyclesQuery.isLoading ||
-              screen.cyclesQuery.isFetching ||
-              screen.offeringsQuery.isFetching
+              (screen.cyclesQuery.isFetching && !screen.cycles.length) ||
+              (screen.offeringsQuery.isFetching && !screen.currentData)
             }
-            totalCount={screen.offeringsQuery.data?.totalCount ?? 0}
+            refreshing={screen.offeringsQuery.isFetching && Boolean(screen.currentData)}
+            errorContent={
+              listError && !hasSafeRows ? (
+                <AdmissionQueryError
+                  onRetry={() =>
+                    screen.cyclesQuery.isError
+                      ? screen.cyclesQuery.refetch()
+                      : screen.offeringsQuery.refetch()
+                  }
+                />
+              ) : undefined
+            }
+            totalCount={screen.currentData?.totalCount ?? 0}
             page={screen.filters.page}
             rowsPerPage={screen.filters.rowsPerPage}
             search={screen.filters.search}

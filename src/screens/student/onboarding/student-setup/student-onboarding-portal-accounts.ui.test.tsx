@@ -146,7 +146,12 @@ const motherRecipient: StudentCredentialsRecipient = {
   canSend: true,
 };
 const setRecipients = (recipients: StudentCredentialsRecipient[]) => {
-  mocks.query.data = { caseId: 'case-1', concurrencyStamp: 'workspace-stamp', recipients };
+  mocks.query.data = {
+    caseId: 'case-1',
+    concurrencyStamp: 'workspace-stamp',
+    guardianAccessEnabled: true,
+    recipients,
+  };
   mocks.query.currentData = mocks.query.data;
 };
 
@@ -198,12 +203,190 @@ const panel = (props: Partial<ComponentProps<typeof StudentOnboardingPortalAccou
   );
 const type = () => screen.getByRole('combobox', { name: 'Account type' });
 const email = () => screen.getByRole('textbox', { name: 'Email' });
-const sendButton = () => screen.getByRole('button', { name: 'Send Credentials' });
+const sendButton = () => screen.getByRole('button', { name: 'Send login details' });
 const chooseGuardian = () => fireEvent.change(type(), { target: { value: 'guardian' } });
+const confirmAdultIfShown = () => {
+  const checkbox = screen.queryByRole('checkbox', { name: /confirm this person may access/i });
+  if (checkbox && !(checkbox as HTMLInputElement).checked) fireEvent.click(checkbox);
+};
 const selectRecipient = (relationship: string) =>
   fireEvent.change(screen.getByRole('combobox', { name: 'Recipient' }), {
     target: { value: relationship },
   });
+
+it('requires adult confirmation and allows an explicitly selected saved guardian beside parents', async () => {
+  setRecipients([
+    { ...fatherRecipient, email: null, canSend: false },
+    { ...motherRecipient, isMainContact: true },
+    {
+      accountType: 'guardian',
+      relationship: 'guardian',
+      name: 'Aunt Meera',
+      email: 'meera@example.test',
+      canSend: true,
+    },
+  ]);
+  panel();
+  await waitFor(() => expect(type()).toHaveValue('guardian'));
+  expect(screen.getByRole('combobox', { name: 'Recipient' })).toHaveValue('mother');
+  expect(sendButton()).toBeDisabled();
+  const confirmation = screen.getByRole('checkbox', { name: /confirm this person may access/i });
+  fireEvent.click(confirmation);
+  await waitFor(() => expect(sendButton()).toBeEnabled());
+  selectRecipient('guardian');
+  await waitFor(() => expect(email()).toHaveValue('meera@example.test'));
+  expect(confirmation).not.toBeChecked();
+  expect(sendButton()).toBeDisabled();
+  fireEvent.click(confirmation);
+  confirmAdultIfShown();
+  fireEvent.click(sendButton());
+  await waitFor(() =>
+    expect(mocks.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        relationship: 'guardian',
+        expectedEmail: 'meera@example.test',
+        confirmRecipientAccess: true,
+      })
+    )
+  );
+});
+
+it('keeps the only parent selected when a guardian has email and the parent does not', async () => {
+  setRecipients([
+    { ...fatherRecipient, email: null, canSend: false },
+    {
+      accountType: 'guardian',
+      relationship: 'guardian',
+      name: 'Aunt Meera',
+      email: 'meera@example.test',
+      canSend: true,
+    },
+  ]);
+  panel();
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Recipient' })).toHaveValue('father')
+  );
+  expect(email()).toHaveValue('');
+  expect(sendButton()).toBeDisabled();
+});
+
+it('requires fresh adult confirmation after the saved email refreshes', async () => {
+  setRecipients([fatherRecipient]);
+  const view = panel();
+  const confirmation = await screen.findByRole('checkbox', {
+    name: /confirm this person may access/i,
+  });
+  fireEvent.click(confirmation);
+  await waitFor(() => expect(sendButton()).toBeEnabled());
+  setRecipients([{ ...fatherRecipient, email: 'new-raj@example.test' }]);
+  view.rerender(
+    <ThemeProvider theme={createTheme()}>
+      <StudentOnboardingPortalAccounts student={student} canManage />
+    </ThemeProvider>
+  );
+  await waitFor(() => expect(email()).toHaveValue('new-raj@example.test'));
+  expect(confirmation).not.toBeChecked();
+  expect(sendButton()).toBeDisabled();
+});
+
+it('reloads the exact linked guardian with parents saved and keeps guardian email editing reviewed', async () => {
+  setRecipients([
+    { ...fatherRecipient, isMainContact: true, hasLinkedAccount: false, canSend: false },
+    { ...motherRecipient, hasLinkedAccount: false, canSend: false },
+    {
+      accountType: 'guardian',
+      relationship: 'guardian',
+      relationshipLabel: 'Aunt',
+      name: 'Meera',
+      email: 'meera@example.test',
+      canSend: true,
+      hasLinkedAccount: true,
+      canEditEmail: false,
+    },
+  ]);
+  panel();
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Recipient' })).toHaveValue('guardian')
+  );
+  expect(email()).toHaveValue('meera@example.test');
+  expect(screen.getByText('Meera · Guardian (Aunt)')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Update email' })).not.toBeInTheDocument();
+  expect(mocks.send).not.toHaveBeenCalled();
+});
+
+it('reloads the linked mother ahead of the saved main-contact father', async () => {
+  setRecipients([
+    { ...fatherRecipient, isMainContact: true, hasLinkedAccount: false, canSend: false },
+    { ...motherRecipient, hasLinkedAccount: true, canSend: true },
+  ]);
+  panel();
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Recipient' })).toHaveValue('mother')
+  );
+  expect(email()).toHaveValue('rina@example.test');
+  expect(mocks.send).not.toHaveBeenCalled();
+});
+
+it('carries only a checked guardian choice for an enabled legacy case with no sibling candidates', async () => {
+  setRecipients([
+    { ...fatherRecipient, canSend: false },
+    {
+      accountType: 'guardian',
+      relationship: 'guardian',
+      name: 'Aunt Meera',
+      email: 'meera@example.test',
+      isMainContact: true,
+      canSend: false,
+    },
+  ]);
+  mocks.query.data = {
+    ...mocks.query.data!,
+    guardianAccessEnabled: true,
+  } as StudentCredentialsWorkspace;
+  mocks.query.currentData = mocks.query.data;
+  const onParentStateChange = vi.fn();
+  panel({ onParentStateChange });
+  await waitFor(() => expect(email()).toHaveValue('meera@example.test'));
+  expect(onParentStateChange).toHaveBeenLastCalledWith({ caseId: 'case-1', loaded: true });
+  fireEvent.click(screen.getByRole('checkbox', { name: /confirm this person may access/i }));
+  await waitFor(() =>
+    expect(onParentStateChange).toHaveBeenLastCalledWith({
+      caseId: 'case-1',
+      loaded: true,
+      guardianAccessSelection: {
+        expectedEmail: 'meera@example.test',
+        confirmRecipientAccess: true,
+      },
+    })
+  );
+  expect(mocks.send).not.toHaveBeenCalled();
+});
+
+it('ignores even a checked guardian suggestion when adult app access is not needed', async () => {
+  setRecipients([
+    {
+      accountType: 'guardian',
+      relationship: 'guardian',
+      name: 'Aunt Meera',
+      email: 'meera@example.test',
+      canSend: false,
+    },
+  ]);
+  mocks.query.data = {
+    ...mocks.query.data!,
+    guardianAccessEnabled: false,
+  } as StudentCredentialsWorkspace;
+  mocks.query.currentData = mocks.query.data;
+  const onParentStateChange = vi.fn();
+  panel({ onParentStateChange });
+  await waitFor(() => expect(email()).toHaveValue('meera@example.test'));
+  fireEvent.click(screen.getByRole('checkbox', { name: /confirm this person may access/i }));
+  await waitFor(() =>
+    expect(onParentStateChange).toHaveBeenLastCalledWith({ caseId: 'case-1', loaded: true })
+  );
+  expect(sendButton()).toBeDisabled();
+  expect(mocks.send).not.toHaveBeenCalled();
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -230,6 +413,7 @@ it('shows a read-only student email and one send action without the old account 
   expect(screen.queryByText('Credential Emails')).not.toBeInTheDocument();
   expect(screen.queryByText('Disabled')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Create and link account' })).not.toBeInTheDocument();
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   await waitFor(() =>
     expect(mocks.send).toHaveBeenCalledWith({
@@ -238,6 +422,7 @@ it('shows a read-only student email and one send action without the old account 
       relationship: 'self',
       expectedEmail: 'jay@example.test',
       concurrencyStamp: 'workspace-stamp',
+      confirmRecipientAccess: false,
     })
   );
   expect(mocks.legacyAccounts).not.toHaveBeenCalled();
@@ -250,6 +435,7 @@ it('auto-selects the sole parent recipient and switches the saved email with acc
   chooseGuardian();
   await waitFor(() => expect(email()).toHaveValue('raj@example.test'));
   expect(screen.queryByRole('combobox', { name: 'Recipient' })).not.toBeInTheDocument();
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   await waitFor(() =>
     expect(mocks.send).toHaveBeenCalledWith(
@@ -272,6 +458,7 @@ it('requires an explicit recipient when both parent emails are available', async
   expect(sendButton()).toBeDisabled();
   selectRecipient('mother');
   await waitFor(() => expect(email()).toHaveValue('rina@example.test'));
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   await waitFor(() =>
     expect(mocks.send).toHaveBeenCalledWith(
@@ -280,7 +467,7 @@ it('requires an explicit recipient when both parent emails are available', async
   );
 });
 
-it('defaults to the only saved parent email while retaining the missing-email parent choice', async () => {
+it('requires a parent choice without skipping a missing-email parent', async () => {
   setRecipients([
     studentRecipient,
     fatherRecipient,
@@ -288,9 +475,12 @@ it('defaults to the only saved parent email while retaining the missing-email pa
   ]);
   panel();
   chooseGuardian();
+  expect(screen.getByRole('combobox', { name: 'Recipient' })).toHaveValue('');
+  selectRecipient('father');
   await waitFor(() => expect(email()).toHaveValue('raj@example.test'));
   expect(screen.getByRole('combobox', { name: 'Recipient' })).toBeVisible();
   expect(screen.getByRole('option', { name: /Mother/ })).toBeVisible();
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   await waitFor(() =>
     expect(mocks.send).toHaveBeenCalledWith(
@@ -312,6 +502,7 @@ it('uses an eligible non-parent guardian when that is the sole server recipient'
   panel();
   await waitFor(() => expect(email()).toHaveValue('raj@example.test'));
   expect(screen.queryByRole('combobox', { name: 'Recipient' })).not.toBeInTheDocument();
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   await waitFor(() =>
     expect(mocks.send).toHaveBeenCalledWith(
@@ -338,6 +529,25 @@ it('blocks an invalid saved email with actionable field feedback', async () => {
   expect(sendButton()).toBeDisabled();
 });
 
+it('offers short missing-email guidance only to an authorized email editor', async () => {
+  setRecipients([{ ...studentRecipient, email: null, canSend: false, canEditEmail: true }]);
+  const view = panel();
+  await waitFor(() =>
+    expect(screen.getByText('Add an email before sending login details.')).toBeVisible()
+  );
+  expect(screen.getByRole('button', { name: 'Add email' })).toBeEnabled();
+  expect(sendButton()).toBeDisabled();
+  expect(shikshaMitraToast.warning).not.toHaveBeenCalled();
+  expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+  view.rerender(
+    <ThemeProvider theme={createTheme()}>
+      <StudentOnboardingPortalAccounts student={student} canManage={false} />
+    </ThemeProvider>
+  );
+  expect(screen.queryByRole('button', { name: 'Add email' })).not.toBeInTheDocument();
+  expect(screen.getByText(/No email is saved for this student/)).toBeVisible();
+});
+
 it('shows only the selected school policy/readiness reason without enabling settings', async () => {
   setRecipients([
     {
@@ -351,12 +561,12 @@ it('shows only the selected school policy/readiness reason without enabling sett
   fireEvent.change(type(), { target: { value: 'student' } });
   await waitFor(() =>
     expect(
-      screen.getByText('Complete enrollment activation before sending credentials.')
+      screen.getByText('Activate the student before sending login details.')
     ).toBeVisible()
   );
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   expect(
-    screen.getAllByText('Complete enrollment activation before sending credentials.')
+    screen.getAllByText('Activate the student before sending login details.')
   ).toHaveLength(1);
   expect(sendButton()).toBeDisabled();
   expect(screen.queryByRole('button', { name: /Enable parent email/ })).not.toBeInTheDocument();
@@ -377,7 +587,7 @@ it('never displays a previous case recipient while the selected case loads', () 
   panel({ student: { ...student, id: 'case-2' } });
   expect(screen.getByRole('status', { name: 'Loading credentials' })).toBeVisible();
   expect(screen.queryByDisplayValue('jay@example.test')).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Send Credentials' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Send login details' })).not.toBeInTheDocument();
 });
 
 it('toasts an initial error without claiming empty data or adding a Retry row', () => {
@@ -400,7 +610,7 @@ it('offers refresh for an empty workspace without a send action', () => {
   ).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
   expect(mocks.query.refetch).toHaveBeenCalledOnce();
-  expect(screen.queryByRole('button', { name: 'Send Credentials' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Send login details' })).not.toBeInTheDocument();
 });
 
 it('retains safe fields during refresh while preventing a stale send', async () => {
@@ -439,9 +649,10 @@ it('keeps view-only recipients visible without allowing a send', async () => {
   panel({ canManage: false });
   await waitFor(() => expect(email()).toHaveValue('jay@example.test'));
   expect(
-    screen.getByText('An authorized staff member must send them.', { exact: false })
+    screen.getByText('Ask authorized staff to send login details.')
   ).toBeVisible();
   expect(sendButton()).toBeDisabled();
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   expect(mocks.send).not.toHaveBeenCalled();
 });
@@ -455,7 +666,9 @@ it('prevents duplicate submissions and locks the owning drawer during a request'
   const busy = vi.fn();
   const view = panel({ onBusyChange: busy });
   await waitFor(() => expect(sendButton()).toBeEnabled());
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   await waitFor(() => expect(mocks.send).toHaveBeenCalledOnce());
   expect(type()).toBeDisabled();
@@ -476,13 +689,14 @@ it('prevents duplicate submissions and locks the owning drawer during a request'
 it('reports requested delivery as pending instead of claiming the email was sent', async () => {
   panel();
   await waitFor(() => expect(sendButton()).toBeEnabled());
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   await waitFor(() =>
-    expect(mocks.success).toHaveBeenCalledWith({
-      message: 'Credentials requested. Delivery is pending.',
+    expect(shikshaMitraToast.info).toHaveBeenCalledWith({
+      message: 'Login email is queued.',
     })
   );
-  expect(mocks.success).not.toHaveBeenCalledWith({ message: 'Email sent.' });
+  expect(mocks.success).not.toHaveBeenCalled();
 });
 
 it('shows Queued status and disables duplicate sends even if the server canSend flag is inconsistent', async () => {
@@ -491,7 +705,7 @@ it('shows Queued status and disables duplicate sends even if the server canSend 
   panel();
   await waitFor(() => expect(email()).toHaveValue('jay@example.test'));
   expect(screen.getByText('Queued')).toBeVisible();
-  expect(screen.getByText(/Delivery is pending/)).toBeVisible();
+  expect(screen.getByText(/Login email is queued/)).toBeVisible();
   expect(sendButton()).toBeDisabled();
   expect(screen.queryByText('Sent')).not.toBeInTheDocument();
 });
@@ -502,7 +716,7 @@ it('explains a queued completion-timing wait using the server message', async ()
   setRecipients(pending.recipients);
   panel();
   await waitFor(() =>
-    expect(screen.getByText('Delivery starts after onboarding completes.')).toBeVisible()
+    expect(screen.getByText('Login email is queued until onboarding is complete.')).toBeVisible()
   );
   expect(screen.getByText('Queued')).toBeVisible();
   expect(sendButton()).toBeDisabled();
@@ -513,8 +727,8 @@ it('shows sender-accepted delivery without exposing or editing any password', as
   setRecipients(workspaceWithDelivery('Sent').recipients);
   panel();
   await waitFor(() => expect(email()).toHaveValue('jay@example.test'));
-  expect(screen.getByText('Sent')).toBeVisible();
-  expect(screen.getByText('Accepted by the email sender.')).toBeVisible();
+  expect(screen.getByText('Submitted')).toBeVisible();
+  expect(screen.getByText('Submitted for sending.')).toBeVisible();
   expect(screen.queryByRole('textbox', { name: /password/i })).not.toBeInTheDocument();
   expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
 });
@@ -537,10 +751,11 @@ it('preserves the selected recipient and displays the actual server Reason after
   panel();
   chooseGuardian();
   await waitFor(() => expect(email()).toHaveValue('raj@example.test'));
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   await waitFor(() =>
     expect(shikshaMitraToast.error).toHaveBeenCalledWith(
-      expect.objectContaining({ message: expect.stringContaining('The saved email changed.') })
+      expect.objectContaining({ message: expect.stringContaining('The email has changed.') })
     )
   );
   expect(type()).toHaveValue('guardian');
@@ -557,6 +772,7 @@ it('does not report success if the command returns a blocked or failed delivery'
   }));
   panel();
   await waitFor(() => expect(sendButton()).toBeEnabled());
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   await waitFor(() =>
     expect(screen.getByText('Sender unavailable. Try again later.', { exact: false })).toBeVisible()
@@ -583,6 +799,7 @@ it('preserves an explicit parent selection across workspace refreshes and uses t
   );
   await waitFor(() => expect(email()).toHaveValue('updated-rina@example.test'));
   expect(screen.getByRole('combobox', { name: 'Recipient' })).toHaveValue('mother');
+  confirmAdultIfShown();
   fireEvent.click(sendButton());
   await waitFor(() =>
     expect(mocks.send).toHaveBeenCalledWith(

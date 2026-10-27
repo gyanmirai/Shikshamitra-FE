@@ -11,6 +11,7 @@ export const ADMISSION_INQUIRY_FILTER_QUERY_PARAMS: Record<string, string> = {
   inquiryNumber: 'inquiry',
   applicantName: 'applicant',
   admissionOfferingId: 'offering',
+  standardName: 'className',
   normalizedPhone: 'phone',
   email: 'email',
   source: 'source',
@@ -21,6 +22,7 @@ const FILTER_LABELS: Record<string, string> = {
   inquiryNumber: 'Inquiry',
   applicantName: 'Applicant',
   admissionOfferingId: 'Admission interest',
+  standardName: 'Class',
   normalizedPhone: 'Phone',
   email: 'Email',
   source: 'Source',
@@ -87,6 +89,7 @@ export function buildAdmissionInquiryListFilters(
   const inquiryNumber = readTextFilter(filters, 'inquiryNumber');
   const applicantName = readTextFilter(filters, 'applicantName');
   const phone = readTextFilter(filters, 'normalizedPhone');
+  const standardName = readTextFilter(filters, 'standardName');
   const email = readTextFilter(filters, 'email');
   const status = readNumberFilter(filters, 'status');
   const source = readNumberFilter(filters, 'source');
@@ -102,6 +105,8 @@ export function buildAdmissionInquiryListFilters(
     applicantNameFilterType: applicantName?.type,
     phone: phone?.value,
     phoneFilterType: phone?.type,
+    standardName: standardName?.value,
+    standardNameFilterType: standardName?.type,
     email: email?.value,
     emailFilterType: email?.type,
     admissionOfferingId: admissionOfferingId || undefined,

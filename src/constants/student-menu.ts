@@ -344,7 +344,7 @@ const studentModule = () => ({
                   permissionName: studentPermissions.records.overrides,
                 },
                 {
-                  title: 'Guardian portal access',
+                  title: 'Parent / guardian app access',
                   permissionName: studentPermissions.records.guardianAccess,
                 },
                 {

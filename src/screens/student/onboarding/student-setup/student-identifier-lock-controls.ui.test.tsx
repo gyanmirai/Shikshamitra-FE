@@ -4,7 +4,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import StudentIdentifierLockControls from './student-identifier-lock-controls';
 
 const mocks = vi.hoisted(() => ({ save: vi.fn() }));
-vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span data-icon="action" /> }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useSetStudentOnboardingIdentifierLockMutation: () => [mocks.save, { isLoading: false }],
 }));
@@ -104,7 +104,8 @@ it('requires an unlock reason and respects the unlock permission', async () => {
   );
   fireEvent.click(screen.getByRole('button', { name: 'Unlock' }));
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-  await screen.findByText('Enter the reason for unlocking.');
+  const validation = await screen.findByText('Explain why these numbers need to be unlocked.');
+  expect(validation.querySelector('svg, [data-icon]')).toBeNull();
   expect(mocks.save).not.toHaveBeenCalled();
   fireEvent.change(screen.getByLabelText(/Unlock reason/), {
     target: { value: 'Correct assigned Roll numbers' },

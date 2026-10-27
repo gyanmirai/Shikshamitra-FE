@@ -3,7 +3,7 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-24
+updated_on: 2026-10-26
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -96,6 +96,7 @@ The Student I-Card page lists saved designs with View, Edit, and Delete actions 
 `/student/profile` without `student` renders `src/screens/student/records/student-directory.tsx` through the Student Profile entry.
 The retained `/student/records/directory` route mounts the same workspace; it is not a second menu item or list implementation.
 The visible academic row contains Board, Medium, Class and Division only; Active/Former selection lives inside the shared Filters popover.
+Board and Medium each hold one authorized choice without All; `class` and `division` retain comma-separated ID selections for checkbox multi-selects. A single ID remains compatible with existing links. Row/name navigation opens the profile without a View icon; `view=details&edit=details` requests the permission-gated existing editor, and `view=attendance` opens the existing attendance view.
 The global header academic year scopes both records and filter options; a legacy `year` query does not override it.
 The heading is Student List and its description uses the shared information tooltip rather than visible helper text.
 

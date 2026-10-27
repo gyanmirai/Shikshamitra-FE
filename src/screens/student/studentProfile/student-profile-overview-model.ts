@@ -1,5 +1,7 @@
 import type { StudentRecordDetails } from 'src/redux/student/records/student-record-details-api';
 
+import { savedAdult, mainContactRelationship } from './student-parents-contact-model';
+
 const savedText = (value: unknown): string | undefined =>
   typeof value === 'string' && value.trim() ? value.trim() : undefined;
 
@@ -17,7 +19,10 @@ export function profileOverviewContacts(details?: StudentRecordDetails) {
   const generalRestricted = restricted || general?.isMasked;
   const familyRestricted = restricted || family?.isMasked;
   const contact = generalRestricted ? undefined : general?.data;
-  const guardian = familyRestricted ? undefined : savedObject(family?.data?.guardianDetails);
+  const familyData = familyRestricted ? {} : (family?.data ?? {});
+  const relationship = mainContactRelationship(familyData);
+  const main = relationship ? savedAdult(familyData, relationship) : undefined;
+  const familyValue = (value: string | undefined) => (familyRestricted ? 'Restricted' : value);
   const address = [
     savedText(contact?.address1),
     savedText(contact?.address2),
@@ -32,16 +37,31 @@ export function profileOverviewContacts(details?: StudentRecordDetails) {
 
   return [
     {
-      label: 'Primary contact',
-      value: generalRestricted ? 'Restricted' : savedText(contact?.primaryContactNo),
+      label: 'Main contact',
+      value: familyValue(savedText(main?.fullName)),
     },
     {
-      label: 'Primary guardian',
-      value: familyRestricted ? 'Restricted' : savedText(guardian?.fullName),
+      label: 'Relationship',
+      value: familyValue(
+        relationship === 'guardian'
+          ? (savedText(familyData.guardianRelationship) ?? 'Other guardian')
+          : relationship === 'father'
+            ? 'Father'
+            : relationship === 'mother'
+              ? 'Mother'
+              : undefined
+      ),
     },
     {
-      label: 'Guardian email',
-      value: familyRestricted ? 'Restricted' : savedText(guardian?.email),
+      label: 'Phone',
+      value: familyValue(savedText(main?.contactNo)),
+    },
+    { label: 'Email', value: familyValue(savedText(main?.email)) },
+    { label: 'Father', value: familyValue(savedText(savedAdult(familyData, 'father')?.fullName)) },
+    { label: 'Mother', value: familyValue(savedText(savedAdult(familyData, 'mother')?.fullName)) },
+    {
+      label: 'Other guardian',
+      value: familyValue(savedText(savedAdult(familyData, 'guardian')?.fullName)),
     },
     { label: 'Address', value: generalRestricted ? 'Restricted' : address || undefined },
   ];

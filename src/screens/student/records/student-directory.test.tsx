@@ -22,6 +22,48 @@ const mocks = vi.hoisted(() => ({
   queryOptions: {} as any,
   optionsQueryOptions: {} as any,
   options: {} as any,
+  documentRequest: null as any,
+  exportDirectory: vi.fn(),
+}));
+vi.mock('./use-student-directory-export', () => ({
+  useStudentDirectoryExport: () => mocks.exportDirectory,
+}));
+vi.mock('./student-directory-documents', () => ({
+  default: ({ request }: any) => {
+    mocks.documentRequest = request;
+    return null;
+  },
+}));
+vi.mock('src/components/responsiveMultiSelect', () => ({
+  ResponsiveMultiSelect: ({
+    label,
+    value,
+    options,
+    disabled,
+    onChange,
+    getOptionLabel,
+    getOptionValue,
+  }: any) => (
+    <label htmlFor={`multi-${label}`}>
+      {label}
+      <select
+        id={`multi-${label}`}
+        multiple
+        aria-label={label}
+        value={value}
+        disabled={disabled}
+        onChange={(event) =>
+          onChange(Array.from(event.target.selectedOptions).map((item) => item.value))
+        }
+      >
+        {options.map((item: any) => (
+          <option key={getOptionValue(item)} value={getOptionValue(item)}>
+            {getOptionLabel(item)}
+          </option>
+        ))}
+      </select>
+    </label>
+  ),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('next/navigation', () => ({
@@ -111,6 +153,8 @@ vi.mock('src/components/customizabaleTable', () => ({
     mocks.table = props;
     return (
       <section aria-label="Student List table">
+        {props.isRefreshing && <progress aria-label="Refreshing student list" />}
+        {props.columns.find((column: any) => column.id === 'selection')?.label}
         <button type="button" onClick={() => props.onServerSearch('Riya')}>
           Search Riya
         </button>
@@ -129,7 +173,8 @@ vi.mock('src/components/customizabaleTable', () => ({
           ) : props.data.length ? (
             props.data.map((row: any) => (
               <div key={row.studentId}>
-                {props.columns[0].render(null, row)}
+                {props.columns.find((column: any) => column.id === 'selection')?.render(null, row)}
+                {props.columns.find((column: any) => column.id === 'name').render(null, row)}
                 {props.columns.at(-1).render(null, row)}
               </div>
             ))
@@ -149,6 +194,7 @@ beforeEach(() => {
   mocks.params = new URLSearchParams();
   mocks.currentYear = 'year-1';
   mocks.permissions = [];
+  mocks.documentRequest = null;
   mocks.query = {
     currentData: {
       totalCount: 1,
@@ -159,6 +205,9 @@ beforeEach(() => {
           firstName: 'Riya',
           lastName: 'Shah',
           status: 6,
+          standardId: 'class-1',
+          divisionId: 'division-1',
+          maskedFields: [],
           standardName: 'Class 1',
           divisionName: 'A',
         },
@@ -210,7 +259,7 @@ describe('Student List workspace', () => {
       page: '1',
     });
   });
-  it('restores server table context and preserves it in both native profile links', () => {
+  it('restores server table context and preserves it in the student-name profile link', () => {
     mocks.params = new URLSearchParams(
       'population=Former&year=all&page=2&pageSize=25&search=Shah&sort=grNumber%20desc&board=board-1'
     );
@@ -232,7 +281,7 @@ describe('Student List workspace', () => {
       page: 2,
       rowsPerPage: 25,
     });
-    ['Riya Shah', 'View profile for Riya Shah'].forEach((label) => {
+    ['Riya Shah'].forEach((label) => {
       const url = new URL(
         screen.getByRole('link', { name: label }).getAttribute('href')!,
         'http://localhost'
@@ -245,18 +294,19 @@ describe('Student List workspace', () => {
         search: 'Shah',
         sort: 'grNumber desc',
         board: 'board-1',
+        medium: 'medium-1',
         student: 'student-1',
       });
     });
+    expect(
+      screen.queryByRole('link', { name: 'View profile for Riya Shah' })
+    ).not.toBeInTheDocument();
   });
   it('shows only academic selectors in the compact row and keeps description in the shared tooltip', () => {
     render(<StudentDirectory />);
-    expect(screen.getAllByRole('combobox').map((item) => item.getAttribute('aria-label'))).toEqual([
-      'Board',
-      'Medium',
-      'Class',
-      'Division',
-    ]);
+    ['Board', 'Medium', 'Class', 'Division'].forEach((label) =>
+      expect(screen.getByLabelText(label)).toBeVisible()
+    );
     expect(screen.queryByLabelText('Students')).not.toBeInTheDocument();
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
     expect(mocks.header.descriptionDisplay).toBe('tooltip');
@@ -312,11 +362,11 @@ describe('Student List workspace', () => {
       'population=Former&board=board-1&medium=medium-1&class=class-1&division=division-1&search=Shah&sort=name%20desc&page=2'
     );
     render(<StudentDirectory />);
-    expect(screen.getByText('Board: CBSE')).toBeVisible();
-    expect(screen.getByText('Medium: English')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Reset academic filters' }));
     expect(pushedParams()).toEqual({
       population: 'Former',
+      board: 'board-1',
+      medium: 'medium-1',
       search: 'Shah',
       sort: 'name desc',
       page: '0',
@@ -413,18 +463,21 @@ describe('Student List workspace', () => {
     render(<StudentDirectory />);
     expect(screen.getByText('No students match your search or filters.')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    expect(pushedParams()).toEqual({ population: 'Former', sort: 'name desc', page: '0' });
+    expect(pushedParams()).toEqual({
+      population: 'Former',
+      board: 'board-1',
+      medium: 'medium-1',
+      sort: 'name desc',
+      page: '0',
+    });
   });
   it('has compact core columns with sticky status/actions and derived class placement', () => {
     render(<StudentDirectory />);
-    expect(mocks.table.columns.map((column: any) => column.label)).toEqual([
-      'Student',
-      'GR number',
-      'Class / Division',
-      'Roll number',
-      'Status',
-      'Actions',
-    ]);
+    expect(
+      mocks.table.columns
+        .filter((column: any) => column.id !== 'selection')
+        .map((column: any) => column.label)
+    ).toEqual(['Student', 'GR number', 'Class / Division', 'Roll number', 'Status', 'Actions']);
     expect(
       mocks.table.columns.filter((column: any) => column.sticky).map((column: any) => column.id)
     ).toEqual(['status', 'actions']);
@@ -500,17 +553,11 @@ describe('Student List workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Show active students' }));
     expect(pushedParams()).toEqual({ sort: 'name desc', page: '0' });
   });
-  it('preserves the approved historical-entry permission and dialog path', () => {
-    const { rerender } = render(<StudentDirectory />);
-    expect(screen.queryByRole('button', { name: 'Historical entry' })).not.toBeInTheDocument();
+  it('removes both header utilities even for historical-entry administrators', () => {
     mocks.permissions = [{ name: 'Students.Records.Overrides.View', isGranted: true }];
-    rerender(
-      <ThemeProvider theme={createTheme(defaultSettings)}>
-        <StudentDirectory />
-      </ThemeProvider>
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Historical entry' }));
-    expect(screen.getByRole('dialog', { name: 'Historical entry' })).toBeVisible();
+    render(<StudentDirectory />);
+    expect(screen.queryByRole('button', { name: 'Historical entry' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Manage Roll Numbers' })).not.toBeInTheDocument();
   });
   it('allows filter options to retry while keeping table context intact', () => {
     mocks.options.isError = true;
@@ -519,5 +566,213 @@ describe('Student List workspace', () => {
     expect(screen.getByRole('link', { name: 'Riya Shah' })).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Retry filters' }));
     expect(mocks.options.refetch).toHaveBeenCalledOnce();
+  });
+
+  it('uses single Board/Medium choices without All and multi-select Class/Division', () => {
+    render(<StudentDirectory />);
+    expect(screen.getByLabelText('Board')).toHaveValue('board-1');
+    expect(screen.getByLabelText('Medium')).toHaveValue('medium-1');
+    expect(screen.queryByRole('option', { name: 'All boards' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'All mediums' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Class')).toHaveAttribute('multiple');
+    expect(screen.getByLabelText('Division')).toHaveAttribute('multiple');
+    expect(mocks.input).toMatchObject({ boardId: 'board-1', mediumId: 'medium-1' });
+  });
+
+  it('exposes the common table tools and keyboard-accessible row profile action', () => {
+    render(<StudentDirectory />);
+    expect(mocks.table).toMatchObject({
+      showColumns: true,
+      showExport: true,
+      showFullScreen: true,
+      onExport: mocks.exportDirectory,
+    });
+    mocks.table.getRowAction(mocks.table.data[0], 0).onClick();
+    expect(pushedParams()).toMatchObject({
+      student: 'student-1',
+      board: 'board-1',
+      medium: 'medium-1',
+    });
+  });
+
+  it('disables checkboxes without exactly one class and division, then hands selected students to documents', () => {
+    mocks.permissions = [
+      'Students.Records.StudentICard.View',
+      'Students.Records.StudentICard.Add',
+    ].map((name) => ({ name, isGranted: true }));
+    const { rerender } = render(<StudentDirectory />);
+    expect(screen.getByRole('checkbox', { name: 'Select Riya Shah' })).toBeDisabled();
+    mocks.params = new URLSearchParams(
+      'board=board-1&medium=medium-1&class=class-1&division=division-1'
+    );
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentDirectory />
+      </ThemeProvider>
+    );
+    const checkbox = screen.getByRole('checkbox', { name: 'Select Riya Shah' });
+    expect(checkbox).toBeEnabled();
+    fireEvent.click(checkbox);
+    expect(screen.getByText('1 student selected')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Export selected' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Print I-cards' }));
+    expect(mocks.documentRequest).toMatchObject({
+      kind: 'id-card',
+      academicYearId: 'year-1',
+      students: [{ studentId: 'student-1' }],
+      academicScope: {
+        boardIds: ['board-1'],
+        mediumIds: ['medium-1'],
+        standardIds: ['class-1'],
+        divisionIds: ['division-1'],
+      },
+      lockAcademicScope: true,
+    });
+  });
+
+  it('clears selection immediately when the class/division scope becomes multiple', () => {
+    mocks.permissions = [
+      'Students.Records.Certificates.View',
+      'Students.Records.Certificates.Add',
+    ].map((name) => ({ name, isGranted: true }));
+    mocks.options.currentData.standards.push({
+      id: 'class-2',
+      name: 'Class 2',
+      parentId: 'medium-1',
+    });
+    mocks.params = new URLSearchParams(
+      'board=board-1&medium=medium-1&class=class-1&division=division-1'
+    );
+    const { rerender } = render(<StudentDirectory />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Riya Shah' }));
+    expect(screen.getByText('1 student selected')).toBeVisible();
+    mocks.params.set('class', 'class-1,class-2');
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentDirectory />
+      </ThemeProvider>
+    );
+    expect(screen.queryByText('1 student selected')).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Select Riya Shah' })).toBeDisabled();
+    expect(screen.getByRole('checkbox', { name: 'Select Riya Shah' })).not.toBeChecked();
+  });
+
+  it('removes selected students if a same-scope refresh masks their identity', () => {
+    mocks.permissions = [
+      'Students.Records.Certificates.View',
+      'Students.Records.Certificates.Add',
+    ].map((name) => ({ name, isGranted: true }));
+    mocks.params = new URLSearchParams(
+      'board=board-1&medium=medium-1&class=class-1&division=division-1'
+    );
+    const { rerender } = render(<StudentDirectory />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Riya Shah' }));
+    expect(screen.getByText('1 student selected')).toBeVisible();
+    mocks.query.currentData = {
+      totalCount: 1,
+      items: [{ ...mocks.query.currentData.items[0], maskedFields: ['Identity'] }],
+    };
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentDirectory />
+      </ThemeProvider>
+    );
+    expect(screen.queryByText('1 student selected')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Generate certificates' })).not.toBeInTheDocument();
+  });
+
+  it('clears stale selections when a same-page refresh removes the selected student', () => {
+    mocks.permissions = [
+      'Students.Records.Certificates.View',
+      'Students.Records.Certificates.Add',
+    ].map((name) => ({ name, isGranted: true }));
+    mocks.params = new URLSearchParams(
+      'board=board-1&medium=medium-1&class=class-1&division=division-1'
+    );
+    const { rerender } = render(<StudentDirectory />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Riya Shah' }));
+    expect(screen.getByText('1 student selected')).toBeVisible();
+    mocks.query.currentData = { totalCount: 0, items: [] };
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentDirectory />
+      </ThemeProvider>
+    );
+    expect(screen.queryByText('1 student selected')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Generate certificates' })).not.toBeInTheDocument();
+  });
+
+  it('does not revive selection after leaving a scope while its replacement is loading', () => {
+    mocks.permissions = [
+      'Students.Records.Certificates.View',
+      'Students.Records.Certificates.Add',
+    ].map((name) => ({ name, isGranted: true }));
+    mocks.params = new URLSearchParams(
+      'board=board-1&medium=medium-1&class=class-1&division=division-1'
+    );
+    const cached = mocks.query.currentData;
+    const { rerender } = render(<StudentDirectory />);
+    const refresh = () =>
+      rerender(
+        <ThemeProvider theme={createTheme(defaultSettings)}>
+          <StudentDirectory />
+        </ThemeProvider>
+      );
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Riya Shah' }));
+    mocks.params.delete('division');
+    mocks.query.currentData = undefined;
+    mocks.query.isFetching = true;
+    refresh();
+    mocks.params.set('division', 'division-1');
+    mocks.query.currentData = cached;
+    mocks.query.isFetching = false;
+    refresh();
+    expect(screen.queryByText('1 student selected')).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Select Riya Shah' })).not.toBeChecked();
+  });
+
+  it('retains valid selected students across pagination', () => {
+    mocks.permissions = [
+      'Students.Records.Certificates.View',
+      'Students.Records.Certificates.Add',
+    ].map((name) => ({ name, isGranted: true }));
+    mocks.params = new URLSearchParams(
+      'board=board-1&medium=medium-1&class=class-1&division=division-1'
+    );
+    const { rerender } = render(<StudentDirectory />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Riya Shah' }));
+    mocks.params.set('page', '1');
+    mocks.query.currentData = {
+      totalCount: 26,
+      items: [
+        {
+          ...mocks.query.currentData.items[0],
+          id: 'student-2',
+          studentId: 'student-2',
+          firstName: 'Asha',
+        },
+      ],
+    };
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentDirectory />
+      </ThemeProvider>
+    );
+    expect(screen.getByText('1 student selected')).toBeVisible();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Asha Shah' }));
+    expect(screen.getByText('2 students selected')).toBeVisible();
+  });
+
+  it('keeps the permitted certificate action direct without promoting unrelated overflow actions', () => {
+    mocks.permissions = [
+      'Students.Records.Certificates.View',
+      'Students.Records.Certificates.Add',
+    ].map((name) => ({ name, isGranted: true }));
+    render(<StudentDirectory />);
+    expect(screen.getByTestId('table-action-certificate')).toBeVisible();
+    expect(screen.queryByTestId('menu-action-certificate')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'More actions for Riya Shah' })
+    ).not.toBeInTheDocument();
   });
 });

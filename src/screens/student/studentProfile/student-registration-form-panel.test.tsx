@@ -111,6 +111,50 @@ const edit = async () => {
 const set = (name: string, value: string) =>
   fireEvent.change(screen.getByRole('textbox', { name: new RegExp(name) }), { target: { value } });
 
+it('opens the existing editable form once from the Student List details shortcut', async () => {
+  profileNavigation.query = '?view=details&edit=details';
+  renderStudentProfile(profileStudentId, grants);
+  await waitFor(() => expect(screen.getByRole('textbox', { name: /Blood group/ })).toBeEnabled());
+  expect(snapshotReads).toBe(1);
+  expect(writes).toHaveLength(0);
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(await screen.findByRole('button', { name: 'Edit Details' })).toBeVisible();
+  expect(screen.getByRole('textbox', { name: /Blood group/ })).toBeDisabled();
+  expect(snapshotReads).toBe(1);
+  expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute(
+    'href',
+    '/student/profile?view=overview'
+  );
+});
+
+it('does not fetch an editing snapshot from a shortcut without edit permission', async () => {
+  profileNavigation.query = '?view=details&edit=details';
+  renderStudentProfile(profileStudentId, ['Students.Records.StudentList.View']);
+  expect(await screen.findByRole('textbox', { name: /Blood group/ })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+  expect(snapshotReads).toBe(0);
+});
+
+it('keeps a summary-only record read-only even with staff edit grants and an edit shortcut', async () => {
+  mswServer.use(
+    http.get(profileDetailsPath, () =>
+      HttpResponse.json({
+        data: {
+          ...customDetails([source]),
+          studentId: profileStudentId,
+          recordsAccess: 'Summary',
+          formSources: [source],
+        },
+      })
+    )
+  );
+  profileNavigation.query = '?view=details&edit=details';
+  renderStudentProfile(profileStudentId, grants);
+  expect(await screen.findByRole('textbox', { name: /Blood group/ })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+  expect(snapshotReads).toBe(0);
+});
+
 it('renders original offering fields in their form order with protected fields read-only and no edit-time snapshot on viewing', async () => {
   await open();
   expect(screen.getByRole('textbox', { name: /First name/ })).toHaveValue('Aanya');

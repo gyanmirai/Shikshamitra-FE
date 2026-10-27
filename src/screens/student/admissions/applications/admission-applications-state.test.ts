@@ -12,6 +12,8 @@ describe('Applications shareable table context', () => {
         new URLSearchParams('page=4&size=100&search=Riya&sort=decisionEnteredAt&direction=desc')
       )
     ).toEqual({
+      filters: [],
+      status: undefined,
       page: 3,
       rowsPerPage: 100,
       search: 'Riya',
@@ -23,7 +25,7 @@ describe('Applications shareable table context', () => {
       readAdmissionApplicationsState(
         new URLSearchParams('page=-2&size=10000&sort=currentStageName')
       )
-    ).toEqual({ page: 0, rowsPerPage: 25, search: '', sorts: [] });
+    ).toEqual({ filters: [], status: undefined, page: 0, rowsPerPage: 25, search: '', sorts: [] });
   });
   it('cleans obsolete filters while keeping academic scope and paging', () => {
     const value = admissionApplicationsUrl(
@@ -34,7 +36,9 @@ describe('Applications shareable table context', () => {
       {},
       false
     );
-    expect(value).toBe('/student/admissions/applications?board=b&medium=m&class=c&page=3&size=25');
+    expect(value).toBe(
+      '/student/admissions/applications?board=b&medium=m&class=c&page=3&size=25&status=5'
+    );
   });
   it('resets page for a new search without discarding academic scope or sorting', () => {
     expect(

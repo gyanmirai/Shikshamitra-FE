@@ -66,8 +66,10 @@ vi.mock('src/components/customizabaleTable', () => ({
     isLoading: boolean;
     data: { applicantName: string }[];
     noDataText: string;
+    errorContent?: React.ReactNode;
   }) => {
     state.table = props;
+    if (props.errorContent) return props.errorContent;
     if (props.isLoading) return <div role="status">Inquiry skeleton</div>;
     return props.data.length ? (
       <div>{props.data[0].applicantName}</div>
@@ -126,9 +128,7 @@ it('keeps safe rows visible on refetch and handoff progress visible after the mo
   const view = render(<AdmissionInquiriesScreen />);
   expect(state.table.isLoading).toBe(false);
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
-  expect(
-    screen.getByRole('progressbar', { name: 'Refreshing admission inquiries' })
-  ).toBeInTheDocument();
+  expect(state.table.isRefreshing).toBe(true);
   state.data = { items: [], totalCount: 0 };
   state.moving = true;
   state.fetching = false;
@@ -155,4 +155,18 @@ it('distinguishes successful empty, failed and unavailable-scope results from in
   view.rerender(<AdmissionInquiriesScreen />);
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
   expect(screen.getByText(/Select an available academic year/)).toBeInTheDocument();
+});
+
+it('preserves same-scope rows and the table when a refresh fails', () => {
+  Object.assign(state, {
+    board: 'board',
+    medium: 'medium',
+    scopeLoading: false,
+    error: true,
+    data: { items: [{ id: 'inquiry', applicantName: 'Safe inquiry' }], totalCount: 1 },
+  });
+  render(<AdmissionInquiriesScreen />);
+  expect(screen.getByText('Safe inquiry')).toBeInTheDocument();
+  expect(state.table.totalCount).toBe(1);
+  expect(state.table.errorContent).toBeUndefined();
 });

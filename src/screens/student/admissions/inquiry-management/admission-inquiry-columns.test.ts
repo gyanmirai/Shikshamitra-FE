@@ -95,7 +95,7 @@ describe('admission inquiry columns', () => {
   });
   it('shows the selected class name without offering or cycle details', () => {
     const column = buildAdmissionInquiryColumns(columnOptions).find(
-      (item) => item.id === 'admissionOfferingId'
+      (item) => item.id === 'standardName'
     )!;
     const row = inquiry({
       standardName: '1',
@@ -124,7 +124,7 @@ describe('admission inquiry columns', () => {
     });
     expect(columns.slice(-2).map((column) => column.id)).toEqual(['status', 'actions']);
     expect(columns.slice(-2).every((column) => column.stickyPosition === 'right')).toBe(true);
-    expect(columns.find((column) => column.id === 'status')?.stickyOnMobile).toBe(false);
+    expect(columns.find((column) => column.id === 'status')?.stickyOnMobile).not.toBe(false);
     expect(columns.find((column) => column.id === 'actions')?.stickyOnMobile).not.toBe(false);
     expect(columns.find((column) => column.id === 'actions')).toMatchObject({
       width: 152,

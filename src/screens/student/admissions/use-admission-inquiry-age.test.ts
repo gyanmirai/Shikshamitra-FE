@@ -44,6 +44,19 @@ afterEach(() => {
 });
 
 describe('Inquiry age feedback', () => {
+  it('keeps age guidance compact while preserving configured help and cutoff details', () => {
+    const { result } = renderHook(() =>
+      useAdmissionInquiryAge({ sections, values: { BIRTH: '2022-01-01' }, context })
+    );
+    const decorated = result.current.withAgeHelp(field);
+    expect(decorated.helpText).toBe('Age: 4y 3m · Minimum: 5y');
+    expect(decorated).toEqual(expect.objectContaining({
+      helpTextDetails: expect.stringContaining('As recorded.'),
+    }));
+    expect(decorated).toEqual(expect.objectContaining({
+      helpTextDetails: expect.stringContaining('01-04-2026'),
+    }));
+  });
   it.each(['', 'DATE_OF_BIRTH', 'date_of_birth'])(
     'supports published legacy DOB bindings (%s)',
     (bindingKey) => {

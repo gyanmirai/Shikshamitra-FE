@@ -10,6 +10,7 @@ import {
 import type { ReviewDecisionCapabilities } from './admission-review-types';
 import type {
   AdmissionFamilyParent,
+  AdmissionFamilyContacts,
   AdmissionParentRelationship,
 } from './admission-parent-family-types';
 
@@ -34,6 +35,7 @@ export type AssignAdmissionApplicationCounsellorInput = {
   reason?: string;
 };
 export type StartAdmissionDirectRegistrationInput = {
+  familyContacts?: AdmissionFamilyContacts;
   requestId: string;
   admissionOfferingId: string;
   counsellorId?: string | null;
@@ -100,6 +102,7 @@ export type AdmissionApplicationListInput = {
   standardIds?: string[];
   status?: AdmissionApplicationStatus;
   search?: string;
+  columnFilters?: string;
   skipCount?: number;
   maxResultCount?: number;
   sorting?: string;

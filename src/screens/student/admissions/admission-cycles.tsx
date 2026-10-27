@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { AcademicYear } from 'src/types/school';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCycle,
   CloneAdmissionCycle,
@@ -21,9 +21,12 @@ import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { fNumber } from 'src/utils/format-number';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatDateOnly } from 'src/utils/date-only';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -55,6 +58,7 @@ import { AdmissionNumberingDialog } from './admission-numbering-dialog';
 import { useAdmissionCycleFilters } from './use-admission-cycle-filters';
 import { AdmissionCycleActionDialog } from './admission-cycle-action-dialog';
 import { AdmissionCycleConfigurationDialog } from './admission-cycle-configuration-dialog';
+import { cycleColumnFilters, serializeCycleColumnFilters } from './admission-cycle-column-filters';
 import {
   canEditCycle,
   windowLabels,
@@ -85,6 +89,9 @@ const getErrorMessage = (error: unknown): string =>
   'Action failed';
 
 export default function AdmissionCyclesScreen() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isWideWorkspace = useMediaQuery(theme.breakpoints.up('lg'));
   const editDialog = useBoolean();
   const numberingDialog = useBoolean();
   const [editingCycle, setEditingCycle] = useState<AdmissionCycle | null>(null);
@@ -117,13 +124,60 @@ export default function AdmissionCyclesScreen() {
     academicYearId: filters.academicYearId || undefined,
     status: filters.status === '' ? undefined : filters.status,
     windowStatus: filters.windowStatus === '' ? undefined : filters.windowStatus,
+    columnFilters: filters.columnFilters || undefined,
     maxResultCount: filters.rowsPerPage,
     skipCount: filters.page * filters.rowsPerPage,
   });
 
   const hasActiveFilters = Boolean(
-    filters.academicYearId || filters.status !== '' || filters.windowStatus !== '' || filters.search
+    filters.academicYearId ||
+    filters.status !== '' ||
+    filters.windowStatus !== '' ||
+    filters.search ||
+    filters.columnFilters
   );
+
+  const tableFilters = useMemo<IParams['filters']>(
+    () => [
+      ...cycleColumnFilters(filters.columnFilters),
+      ...(filters.status === ''
+        ? []
+        : [
+            {
+              column: 'status',
+              type: 'equals',
+              value: filters.status,
+              valueType: 'enum',
+              label: 'Status',
+              displayValue: lifecycleLabels[filters.status],
+            },
+          ]),
+      ...(filters.windowStatus === ''
+        ? []
+        : [
+            {
+              column: 'windowStatus',
+              type: 'equals',
+              value: filters.windowStatus,
+              valueType: 'enum',
+              label: 'Window',
+              displayValue: windowLabels[filters.windowStatus],
+            },
+          ]),
+    ],
+    [filters.columnFilters, filters.status, filters.windowStatus]
+  );
+
+  const applyTableFilters = (next: IParams['filters']) => {
+    const status = next.findLast((filter) => filter.column === 'status')?.value;
+    const windowStatus = next.findLast((filter) => filter.column === 'windowStatus')?.value;
+    updateFilters({
+      status: status === undefined ? '' : (Number(status) as AdmissionCycleStatus),
+      windowStatus:
+        windowStatus === undefined ? '' : (Number(windowStatus) as AdmissionCycleWindowStatus),
+      columnFilters: serializeCycleColumnFilters(next),
+    });
+  };
 
   const [createCycle, { isLoading: creating }] = useCreateAdmissionCycleMutation();
   const [updateCycle, { isLoading: updating }] = useUpdateAdmissionCycleMutation();
@@ -250,60 +304,72 @@ export default function AdmissionCyclesScreen() {
     {
       id: 'name',
       label: 'Cycle',
+      sticky: isWideWorkspace,
       minWidth: 230,
+      isFilter: true,
+      filterType: 'string',
       render: (_, row) => {
         const cycle = row as unknown as AdmissionCycle;
-        return (
-          <AdmissionTableText
-            text={cycle.name}
-
-            strong
-          />
-        );
+        return <AdmissionTableText text={cycle.name} strong />;
       },
     },
     {
       id: 'startDate',
-      label: 'Application window',
-      minWidth: 210,
+      label: 'Start date',
+      minWidth: 145,
+      isFilter: true,
+      filterType: 'date',
       render: (_, row) => {
         const cycle = row as unknown as AdmissionCycle;
-        const dates = `${formatDateOnly(cycle.startDate)} – ${formatDateOnly(cycle.endDate)}`;
+        const date = formatDateOnly(cycle.startDate);
         const schedule = cycleScheduleSummary(cycle);
         return (
-          <AdmissionTableText text={dates} tooltip={schedule ? `${dates} · ${schedule}` : dates} />
+          <AdmissionTableText text={date} tooltip={schedule ? `${date} · ${schedule}` : date} />
         );
       },
     },
-
+    {
+      id: 'endDate',
+      label: 'End date',
+      minWidth: 145,
+      isFilter: true,
+      filterType: 'date',
+      render: (value) => <AdmissionTableText text={formatDateOnly(value)} />,
+    },
+    {
+      id: 'linkedOfferingCount',
+      label: 'Offerings',
+      minWidth: 120,
+      align: 'right',
+      isFilter: true,
+      filterType: 'number',
+      filterStep: 1,
+      render: (value) => fNumber(value),
+    },
     {
       id: 'applicationCount',
-      label: 'Usage',
-      minWidth: 150,
-      render: (_, row) => {
-        const cycle = row as unknown as AdmissionCycle;
-        return (
-          <AdmissionTableText
-            text={`${cycle.linkedOfferingCount} offerings · ${cycle.applicationCount} applications`}
-          />
-        );
-      },
+      label: 'Applications',
+      minWidth: 135,
+      align: 'right',
+      isFilter: true,
+      filterType: 'number',
+      filterStep: 1,
+      render: (value) => fNumber(value),
     },
 
     {
       id: 'windowStatus',
-      label: (
-        <>
-          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-            Window
-          </Box>
-          <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-            Statuses
-          </Box>
-        </>
-      ),
-      minWidth: 110,
-      sticky: true,
+      label: 'Window',
+      minWidth: 130,
+      isFilter: true,
+      filterType: 'enum',
+      enumOptions: Object.entries(windowLabels).map(([value, label]) => ({
+        value: Number(value),
+        label,
+      })),
+      // Mobile combines both statuses here. On narrow desktop/tablet views,
+      // pin Lifecycle and Actions so the data columns retain a usable scroll area.
+      sticky: isMobile || isWideWorkspace,
       stickyPosition: 'right',
       render: (value, row) => {
         const lifecycle = Number((row as AdmissionCycle).status) as AdmissionCycleStatus;
@@ -337,7 +403,13 @@ export default function AdmissionCyclesScreen() {
     {
       id: 'status',
       label: 'Status',
-      minWidth: 110,
+      minWidth: 130,
+      isFilter: true,
+      filterType: 'enum',
+      enumOptions: Object.entries(lifecycleLabels).map(([value, label]) => ({
+        value: Number(value),
+        label,
+      })),
       sticky: true,
       stickyPosition: 'right',
       stickyOnMobile: false,
@@ -473,24 +545,40 @@ export default function AdmissionCyclesScreen() {
   ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+      }}
+    >
       <CustomBreadcrumbs
-        heading="Admission Periods"
+        heading="Admission periods"
         description="Create, publish, monitor, close and retain controlled admission periods."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
-          { name: 'Admission Periods' },
+          { name: 'Admission periods' },
         ]}
         slotProps={{
-          action: { alignSelf: 'flex-end' },
+          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
           heading: {},
           moreLink: {},
           breadcrumbs: {},
         }}
         action={
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            alignItems="center"
+            justifyContent="flex-end"
+          >
             <Button
               size="small"
               variant="outlined"
@@ -504,31 +592,31 @@ export default function AdmissionCyclesScreen() {
               variant="contained"
               disabled={!canAdd}
               startIcon={<Iconify icon="mdi:plus" />}
-              sx={{ minWidth: 140 }}
               onClick={() => {
                 setEditingCycle(null);
                 editDialog.onTrue();
               }}
             >
-              Add Cycle
+              Add cycle
             </Button>
           </Stack>
         }
       />
 
-      <Paper variant="outlined" sx={{ p: 1 }}>
+      <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
           <TextField
             select
+            fullWidth
             size="small"
             label="Academic year"
             value={filters.academicYearId}
             disabled={academicYearsLoading}
             onChange={(event) => updateFilters({ academicYearId: event.target.value })}
             slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
-            sx={{ minWidth: 180, flex: { sm: 1 } }}
+            sx={{ minWidth: 0, flex: { sm: 1 } }}
           >
-            <MenuItem value="">All Academic Years</MenuItem>
+            <MenuItem value="">All academic years</MenuItem>
             {academicYears.map((year) => (
               <MenuItem key={year.id} value={year.id}>
                 {year.name}
@@ -537,6 +625,7 @@ export default function AdmissionCyclesScreen() {
           </TextField>
           <TextField
             select
+            fullWidth
             size="small"
             label="Lifecycle"
             value={filters.status}
@@ -549,9 +638,9 @@ export default function AdmissionCyclesScreen() {
               })
             }
             slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
-            sx={{ minWidth: 170, flex: { sm: 1 } }}
+            sx={{ minWidth: 0, flex: { sm: 1 } }}
           >
-            <MenuItem value="">All Lifecycles</MenuItem>
+            <MenuItem value="">All lifecycles</MenuItem>
             {Object.entries(lifecycleLabels).map(([value, label]) => (
               <MenuItem key={value} value={Number(value)}>
                 {label}
@@ -560,6 +649,7 @@ export default function AdmissionCyclesScreen() {
           </TextField>
           <TextField
             select
+            fullWidth
             size="small"
             label="Application window"
             value={filters.windowStatus}
@@ -572,9 +662,9 @@ export default function AdmissionCyclesScreen() {
               })
             }
             slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
-            sx={{ minWidth: 190, flex: { sm: 1 } }}
+            sx={{ minWidth: 0, flex: { sm: 1 } }}
           >
-            <MenuItem value="">All Application Windows</MenuItem>
+            <MenuItem value="">All application windows</MenuItem>
             {Object.entries(windowLabels).map(([value, label]) => (
               <MenuItem key={value} value={Number(value)}>
                 {label}
@@ -583,10 +673,11 @@ export default function AdmissionCyclesScreen() {
           </TextField>
           {hasActiveFilters && (
             <Button
+              size="small"
               color="inherit"
               startIcon={<Iconify icon="solar:restart-bold" />}
               onClick={clearFilters}
-              sx={{ minHeight: 44, flexShrink: 0 }}
+              sx={{ flexShrink: 0, alignSelf: { xs: 'flex-end', sm: 'center' } }}
             >
               Clear filters
             </Button>
@@ -594,19 +685,29 @@ export default function AdmissionCyclesScreen() {
         </Stack>
       </Paper>
 
-      {isError && <AdmissionQueryError onRetry={() => refetch()} />}
-      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="admission-cycles"
           tableTitle="Admission periods"
-          wrapperProps={{ sx: { height: 1 } }}
+          wrapperProps={{ sx: { flex: 1, height: 1, minHeight: 0, minWidth: 0 } }}
           tableContainerProps={{ sx: { height: 1 } }}
+          errorContent={isError ? <AdmissionQueryError onRetry={() => refetch()} /> : undefined}
           isLoading={isLoading || isFetching}
           isPagination
           isSearch
           isFilter={false}
           serverSidePagination
           serverSideSearch
+          serverSideFilter
+          filters={tableFilters}
+          onServerFilter={applyTableFilters}
+          onClearCriteria={() =>
+            updateFilters(
+              tableFilters.length
+                ? { search: '', status: '', windowStatus: '', columnFilters: '' }
+                : { search: '' }
+            )
+          }
           page={filters.page}
           rowsPerPage={filters.rowsPerPage}
           searchTerm={filters.search}
@@ -619,14 +720,14 @@ export default function AdmissionCyclesScreen() {
           columns={columns}
           data={data?.items ?? []}
           noDataText={
-            <Stack spacing={1} alignItems="center">
-              <Typography color="text.secondary">
+            <Stack component="span" spacing={1} alignItems="center">
+              <Typography component="span" variant="inherit" color="text.secondary">
                 {hasActiveFilters
                   ? 'No admission periods match the selected filters.'
                   : 'No admission periods have been created yet.'}
               </Typography>
               {hasActiveFilters && (
-                <Button color="inherit" onClick={clearFilters}>
+                <Button size="small" color="inherit" onClick={clearFilters}>
                   Clear filters
                 </Button>
               )}

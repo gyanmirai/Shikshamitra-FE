@@ -148,10 +148,10 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
           concurrencyStamp: currentRecord?.concurrencyStamp,
         }).unwrap();
         recordsRef.current.set(recordKey, savedRecord);
-        shikshaMitraToast.success({ message: 'Onboarding configuration saved.' });
+        shikshaMitraToast.success({ message: 'Onboarding settings saved.' });
       } catch (error) {
         shikshaMitraToast.error({
-          message: 'The onboarding configuration could not be saved. Refresh and retry.',
+          message: 'Onboarding settings could not be saved. Refresh and try again.',
         });
         throw error;
       }
@@ -205,13 +205,11 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
                 </Button>
               }
             >
-              Onboarding settings could not be loaded. Retry before making changes.
+              Onboarding settings could not be loaded. Refresh before making changes.
             </StudentFeedback>
           ) : (
-            <StudentFeedback notificationKey="STU-0937" presentation="persistent" severity="error">
-              The saved onboarding configuration is invalid or uses an unsupported version. Ask an
-              administrator to repair it before making changes; saved rules have not been replaced
-              with defaults.
+            <StudentFeedback notificationKey="STU-0937" presentation="inline" severity="error">
+              Saved onboarding settings cannot be used. Ask your administrator to review them.
             </StudentFeedback>
           )}
         </Box>

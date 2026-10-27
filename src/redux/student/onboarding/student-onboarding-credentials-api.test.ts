@@ -117,6 +117,7 @@ it('sends one bounded owner intent, not an arbitrary email or verification claim
         accountType: 'guardian',
         relationship: 'father',
         expectedEmail: 'raj@example.com',
+        confirmRecipientAccess: true,
         concurrencyStamp: 'current-stamp',
       })
     )
@@ -125,6 +126,7 @@ it('sends one bounded owner intent, not an arbitrary email or verification claim
     accountType: 'guardian',
     relationship: 'father',
     expectedEmail: 'raj@example.com',
+    confirmRecipientAccess: true,
     concurrencyStamp: 'current-stamp',
   });
   expect(result.concurrencyStamp).toBe('refreshed-stamp');
@@ -149,6 +151,7 @@ it('does not silently retry a conflicted send', async () => {
           accountType: 'student',
           relationship: 'self',
           expectedEmail: 'jay@example.com',
+          confirmRecipientAccess: false,
           concurrencyStamp: 'old-stamp',
         })
       )
@@ -178,6 +181,36 @@ it('retries the original parent setup without arbitrary recipient or password fi
     .unwrap();
   expect(body).toEqual({ concurrencyStamp: 'current-stamp' });
   expect(result.caseId).toBe('case-1');
+});
+
+it('passes an explicit guardian access choice through activation without adding a sibling parent identity', async () => {
+  let body: unknown;
+  mswServer.use(
+    http.post('*/api/student/onboarding/case-1/activate', async ({ request }) => {
+      body = await request.json();
+      return HttpResponse.json({ id: 'case-1' });
+    })
+  );
+  const guardianAccessSelection = {
+    expectedEmail: 'aunt@example.test',
+    confirmRecipientAccess: true,
+  };
+  await store
+    .dispatch(
+      studentOnboardingApi.endpoints.activateStudentOnboarding.initiate({
+        id: 'case-1',
+        concurrencyStamp: 'current-stamp',
+        idempotencyKey: 'request-1',
+        guardianAccessSelection,
+      })
+    )
+    .unwrap();
+  expect(body).toEqual({
+    concurrencyStamp: 'current-stamp',
+    idempotencyKey: 'request-1',
+    guardianAccessSelection,
+  });
+  expect(body).not.toHaveProperty('siblingParentSelection');
 });
 
 it('passes the reviewed sibling parent identity with activation without sending credentials', async () => {

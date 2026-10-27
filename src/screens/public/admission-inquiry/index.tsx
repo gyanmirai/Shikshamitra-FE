@@ -4,8 +4,10 @@ import type { AdmissionFormFieldType } from 'src/redux/student/admissions/admiss
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
 import { useRef, useState, useEffect } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
 import AdmissionRuntimeField from 'src/screens/student/admissions/admission-runtime-field';
 import { useAdmissionPhotoReads } from 'src/screens/student/admissions/use-admission-photo-reads';
 import { isAdmissionRuleVisible } from 'src/screens/student/admissions/admission-visibility-rules';
@@ -227,97 +229,105 @@ export default function PublicAdmissionInquiryScreen({ token }: { token: string 
           )}
           {context && !submitted && (
             <>
-              <Typography variant="body2">
-                Admission period: {context.admissionCycleName}
-              </Typography>
-              <TextField
-                select
-                fullWidth
-                required
-                size="small"
-                label="Board"
-                value={boardId}
-                disabled={saving}
-                onChange={(event) => {
-                  setBoardId(event.target.value);
-                  setMediumId('');
-                  setStandardId('');
-                  setOfferingId('');
-                }}
+              <FormSectionCard
+                title="Admission Interest"
+                icon={GlobalIcons.admissionInterest}
+                descriptionTooltip="Choose the board, medium, and class to check admission availability."
               >
-                {unique(academic.map((item) => ({ id: item.boardId, name: item.boardName }))).map(
-                  (item) => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.name}
-                    </MenuItem>
-                  )
-                )}
-              </TextField>
-              <TextField
-                select
-                fullWidth
-                required
-                size="small"
-                label="Medium"
-                value={mediumId}
-                disabled={saving || !boardId}
-                onChange={(event) => {
-                  setMediumId(event.target.value);
-                  setStandardId('');
-                  setOfferingId('');
-                }}
-              >
-                {unique(
-                  academic
-                    .filter((item) => item.boardId === boardId)
-                    .map((item) => ({ id: item.mediumId, name: item.mediumName }))
-                ).map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                fullWidth
-                required
-                size="small"
-                label="Class"
-                value={standardId}
-                disabled={saving || !mediumId}
-                onChange={(event) => {
-                  setStandardId(event.target.value);
-                  setOfferingId('');
-                }}
-              >
-                {unique(
-                  academic
-                    .filter((item) => item.boardId === boardId && item.mediumId === mediumId)
-                    .map((item) => ({ id: item.standardId, name: item.standardName }))
-                ).map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-              {matching.length > 1 && (
-                <TextField
-                  select
-                  fullWidth
-                  required
-                  size="small"
-                  label="Admission option"
-                  value={offeringId}
-                  disabled={saving}
-                  onChange={(event) => setOfferingId(event.target.value)}
-                >
-                  {matching.map((item) => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.name || item.code}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              )}
+                <Stack component={FormFieldSpacing} spacing={2}>
+                  <Typography variant="body2">
+                    Admission period: {context.admissionCycleName}
+                  </Typography>
+                  <TextField
+                    select
+                    fullWidth
+                    required
+                    size="small"
+                    label="Board"
+                    value={boardId}
+                    disabled={saving}
+                    onChange={(event) => {
+                      setBoardId(event.target.value);
+                      setMediumId('');
+                      setStandardId('');
+                      setOfferingId('');
+                    }}
+                  >
+                    {unique(
+                      academic.map((item) => ({ id: item.boardId, name: item.boardName }))
+                    ).map((item) => (
+                      <MenuItem key={item.id} value={item.id}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    select
+                    fullWidth
+                    required
+                    size="small"
+                    label="Medium"
+                    value={mediumId}
+                    disabled={saving || !boardId}
+                    onChange={(event) => {
+                      setMediumId(event.target.value);
+                      setStandardId('');
+                      setOfferingId('');
+                    }}
+                  >
+                    {unique(
+                      academic
+                        .filter((item) => item.boardId === boardId)
+                        .map((item) => ({ id: item.mediumId, name: item.mediumName }))
+                    ).map((item) => (
+                      <MenuItem key={item.id} value={item.id}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    select
+                    fullWidth
+                    required
+                    size="small"
+                    label="Class"
+                    value={standardId}
+                    disabled={saving || !mediumId}
+                    onChange={(event) => {
+                      setStandardId(event.target.value);
+                      setOfferingId('');
+                    }}
+                  >
+                    {unique(
+                      academic
+                        .filter((item) => item.boardId === boardId && item.mediumId === mediumId)
+                        .map((item) => ({ id: item.standardId, name: item.standardName }))
+                    ).map((item) => (
+                      <MenuItem key={item.id} value={item.id}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  {matching.length > 1 && (
+                    <TextField
+                      select
+                      fullWidth
+                      required
+                      size="small"
+                      label="Admission option"
+                      value={offeringId}
+                      disabled={saving}
+                      onChange={(event) => setOfferingId(event.target.value)}
+                    >
+                      {matching.map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name || item.code}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                </Stack>
+              </FormSectionCard>
               {(academic.length === 0 || (standardId && matching.length === 0)) && (
                 <StudentFeedback
                   notificationKey="STU-0678"
@@ -480,38 +490,46 @@ function InquiryForm({
             <Typography variant="h6" component="h2">
               {context.form.name}
             </Typography>
-            {sections
-              .filter((section) =>
-                isAdmissionRuleVisible(section.visibilityRuleJson, formik.values.fields)
-              )
-              .map((section) => (
-                <Stack key={section.code} spacing={1}>
-                  <Typography variant="subtitle1" component="h3">
-                    {section.name}
-                  </Typography>
-                  {section.fields
-                    .filter((field) =>
-                      isAdmissionRuleVisible(field.visibilityRuleJson, formik.values.fields)
-                    )
-                    .map((field) => (
-                      <AdmissionRuntimeField
-                        key={field.code}
-                        onBusyChange={(busy) => onPhotoReading(field.code, busy)}
-                        field={field}
-                        value={formik.values.fields[field.code] ?? ''}
-                        disabled={readingPhoto || formik.isSubmitting || field.readOnly}
-                        error={
-                          formik.submitCount > 0 || touchedFields?.[field.code]
-                            ? fieldErrors?.[field.code]
-                            : undefined
-                        }
-                        formValues={formik.values.fields}
-                        onChange={(value) => formik.setFieldValue(`fields.${field.code}`, value)}
-                        onBlur={() => formik.setFieldTouched(`fields.${field.code}`, true)}
-                      />
-                    ))}
-                </Stack>
-              ))}
+            <Stack component={FormFieldSpacing} spacing={2}>
+              {sections
+                .filter((section) =>
+                  isAdmissionRuleVisible(section.visibilityRuleJson, formik.values.fields)
+                )
+                .map((section) => (
+                  <FormSectionCard
+                    key={section.code}
+                    title={section.name}
+                    icon={GlobalIcons.admissionStudent}
+                    descriptionTooltip={`Complete the ${section.name} fields.`}
+                  >
+                    <Stack spacing={2}>
+                      {section.fields
+                        .filter((field) =>
+                          isAdmissionRuleVisible(field.visibilityRuleJson, formik.values.fields)
+                        )
+                        .map((field) => (
+                          <AdmissionRuntimeField
+                            key={field.code}
+                            onBusyChange={(busy) => onPhotoReading(field.code, busy)}
+                            field={field}
+                            value={formik.values.fields[field.code] ?? ''}
+                            disabled={readingPhoto || formik.isSubmitting || field.readOnly}
+                            error={
+                              formik.submitCount > 0 || touchedFields?.[field.code]
+                                ? fieldErrors?.[field.code]
+                                : undefined
+                            }
+                            formValues={formik.values.fields}
+                            onChange={(value) =>
+                              formik.setFieldValue(`fields.${field.code}`, value)
+                            }
+                            onBlur={() => formik.setFieldTouched(`fields.${field.code}`, true)}
+                          />
+                        ))}
+                    </Stack>
+                  </FormSectionCard>
+                ))}
+            </Stack>
           </>
         )}
         <FormControlLabel

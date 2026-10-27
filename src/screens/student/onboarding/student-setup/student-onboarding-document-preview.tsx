@@ -108,7 +108,7 @@ export function StudentOnboardingDocumentPreview({
                   </Button>
                 }
               >
-                Unable to preview this document.
+                The document could not be opened. Try again or download it.
               </StudentFeedback>
             ) : preview.status === 'unsupported' ? (
               <StudentFeedback notificationKey="STU-0988" presentation="inline" severity="info">

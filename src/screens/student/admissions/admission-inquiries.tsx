@@ -8,8 +8,8 @@ import { Iconify } from 'src/components/iconify';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Stack, Button, DialogActions, LinearProgress } from '@mui/material';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
@@ -42,6 +42,14 @@ import {
 
 export default function AdmissionInquiriesScreen() {
   const academic = useAdmissionAcademicFilters();
+  const previousYear = useRef(academic.academicYearId);
+  const yearChanging = previousYear.current !== academic.academicYearId;
+  useEffect(() => {
+    if (!yearChanging) return;
+    previousYear.current = academic.academicYearId;
+    setPage(0);
+    academic.update('board', '');
+  }, [academic, yearChanging]);
   const router = useRouter();
   const searchParams = useSearchParams();
   const linkedInquiryId = searchParams.get('inquiryId') ?? '';
@@ -91,6 +99,8 @@ export default function AdmissionInquiriesScreen() {
     excludePostApplication: !dashboardFollowUps,
   });
   const skipList =
+    yearChanging ||
+    scopeLoading ||
     !academic.academicYearId ||
     (!academic.dashboardScope && (!academic.boardId || !academic.mediumId));
   const {
@@ -184,15 +194,24 @@ export default function AdmissionInquiriesScreen() {
     );
   }
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+      }}
+    >
       <CustomBreadcrumbs
         heading="Admission inquiries"
         description="Capture open-admission inquiries, edit their forms, and record follow-up notes separately."
         slotProps={{
-          action: {},
+          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
           heading: {},
           moreLink: {},
-          breadcrumbs: { display: { xs: 'none', md: 'flex' } },
+          breadcrumbs: {},
         }}
         links={[
           { name: 'Student', href: studentPaths.dashboard },
@@ -239,101 +258,112 @@ export default function AdmissionInquiriesScreen() {
           academic.update(key, value);
         }}
       />
-      {isError ? (
+      {isError && !skipList && !scopeLoading && Boolean(data?.items.length) && (
         <AdmissionQueryError
           onRetry={() => {
             refetch();
           }}
         />
-      ) : (
-        <Box
-          sx={{
-            flex: 1,
-            minHeight: 0,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {data && isFetching && !scopeLoading && !skipList && !handoff.moving && (
-            <LinearProgress aria-label="Refreshing admission inquiries" />
-          )}
-          {handoff.moving && <LinearProgress aria-label="Moving inquiry to the next stage" />}
-          <CustomizableTable
-            tableId="admission-inquiries"
-            tableTitle="Admission inquiries"
-            wrapperProps={{ sx: { height: 1 } }}
-            tableContainerProps={{ sx: { height: 1 } }}
-            columns={columns}
-            data={skipList || scopeLoading ? [] : (data?.items ?? [])}
-            isLoading={
-              scopeLoading ||
-              (handoff.moving && !data?.items.length) ||
-              (!skipList && (isLoading || !data))
-            }
-            serverSidePagination
-            serverSideSearch
-            serverSideSort
-            serverSideFilter
-            serverSideSortMode="single"
-            searchTerm={search}
-            filters={tableFilters}
-            sorts={sorts}
-            onServerSearch={(nextSearch) => {
-              setPage(0);
-              setSearch(nextSearch);
-            }}
-            onServerFilter={(nextFilters) => {
-              setPage(0);
-              setTableFilters(normalizeAdmissionInquiryTableFilters(nextFilters));
-            }}
-            onServerSort={(_, nextSorts) => {
-              setPage(0);
-              setSorts(nextSorts);
-            }}
-            totalCount={data?.totalCount ?? 0}
-            page={page}
-            rowsPerPage={rowsPerPage}
-            defaultRowsPerPage={25}
-            rowsPerPageOptions={[10, 25, 100]}
-            onServerPagination={(nextPage, nextRowsPerPage) => {
-              setPage(nextPage - 1);
-              setRowsPerPage(nextRowsPerPage);
-            }}
-            isPagination
-            handleRowClick={(row) => openInquiry(row as AdmissionInquiry)}
-            rowProps={(row) => {
-              const inquiry = row as AdmissionInquiry;
-              return {
-                tabIndex: 0,
-                role: 'link',
-                'aria-label': `Open ${formatAdmissionReference(inquiry.inquiryNumber)}`,
-                onKeyDown: (event) => {
-                  if (event.target !== event.currentTarget) return;
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    openInquiry(inquiry);
-                  }
-                },
-                sx: { cursor: 'pointer' },
-              };
-            }}
-            searchFieldProps={{
-              placeholder: 'Search by applicant, inquiry no. or phone',
-              inputProps: { 'aria-label': 'Search admission inquiries' },
-            }}
-            noDataText={
-              skipList
-                ? 'Select an available academic year, Board and Medium to view inquiries'
-                : search || tableFilters.length
-                  ? 'No inquiries match the selected search or filters'
-                  : dashboardFollowUps
-                    ? 'No inquiry follow-ups are due in this scope'
-                    : 'No inquiries awaiting admission handoff'
-            }
-          />
-        </Box>
       )}
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {handoff.moving && <LinearProgress aria-label="Moving inquiry to the next stage" />}
+        <CustomizableTable
+          tableId="admission-inquiries"
+          tableTitle="Admission inquiries"
+          wrapperProps={{ sx: { height: 1, flex: 1, minHeight: 0, minWidth: 0 } }}
+          tableContainerProps={{ sx: { height: 1 } }}
+          columns={columns}
+          data={skipList || scopeLoading ? [] : (data?.items ?? [])}
+          isRefreshing={
+            Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving
+          }
+          errorContent={
+            isError && !skipList && !scopeLoading && !data?.items.length ? (
+              <AdmissionQueryError onRetry={() => refetch()} />
+            ) : undefined
+          }
+          isLoading={
+            yearChanging ||
+            scopeLoading ||
+            (handoff.moving && !data?.items.length) ||
+            (!skipList && !isError && (isLoading || !data))
+          }
+          serverSidePagination
+          serverSideSearch
+          serverSideSort
+          serverSideFilter
+          serverSideSortMode="single"
+          searchTerm={search}
+          filters={tableFilters}
+          sorts={sorts}
+          onClearCriteria={() => {
+            setPage(0);
+            setSearch('');
+            setTableFilters([]);
+          }}
+          onServerSearch={(nextSearch) => {
+            setPage(0);
+            setSearch(nextSearch);
+          }}
+          onServerFilter={(nextFilters) => {
+            setPage(0);
+            setTableFilters(normalizeAdmissionInquiryTableFilters(nextFilters));
+          }}
+          onServerSort={(_, nextSorts) => {
+            setPage(0);
+            setSorts(nextSorts);
+          }}
+          totalCount={skipList || scopeLoading ? 0 : (data?.totalCount ?? 0)}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          defaultRowsPerPage={25}
+          rowsPerPageOptions={[10, 25, 100]}
+          onServerPagination={(nextPage, nextRowsPerPage) => {
+            setPage(nextPage - 1);
+            setRowsPerPage(nextRowsPerPage);
+          }}
+          isPagination
+          handleRowClick={(row) => openInquiry(row as AdmissionInquiry)}
+          rowProps={(row) => {
+            const inquiry = row as AdmissionInquiry;
+            return {
+              tabIndex: 0,
+              role: 'link',
+              'aria-label': `Open ${formatAdmissionReference(inquiry.inquiryNumber)}`,
+              onKeyDown: (event) => {
+                if (event.target !== event.currentTarget) return;
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  openInquiry(inquiry);
+                }
+              },
+              sx: { cursor: 'pointer' },
+            };
+          }}
+          searchFieldProps={{
+            placeholder: 'Search by applicant, inquiry no. or phone',
+            inputProps: { 'aria-label': 'Search admission inquiries' },
+          }}
+          noDataText={
+            skipList
+              ? 'Select an available academic year, Board and Medium to view inquiries'
+              : search || tableFilters.length
+                ? 'No inquiries match the selected search or filters'
+                : dashboardFollowUps
+                  ? 'No inquiry follow-ups are due in this scope'
+                  : 'No inquiries awaiting admission handoff'
+          }
+        />
+      </Box>
       <InquiryFollowUpDialog inquiry={followUpInquiry} onClose={() => setFollowUpInquiry(null)} />
       {historyInquiry && (
         <CustomDialog

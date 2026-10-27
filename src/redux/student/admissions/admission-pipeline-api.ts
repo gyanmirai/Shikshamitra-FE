@@ -46,6 +46,7 @@ export type AdmissionPipelineListInput = AdmissionPipelineAcademicInput & {
   currentStageCode?: string;
   status?: AdmissionApplicationStatus;
   search?: string;
+  columnFilters?: string;
   sorting?: string;
   skipCount: number;
   maxResultCount: number;

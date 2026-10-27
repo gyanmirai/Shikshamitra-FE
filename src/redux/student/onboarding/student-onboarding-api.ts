@@ -26,6 +26,7 @@ import type {
   SaveStudentOnboardingSettings,
   UpsertStudentOnboardingPolicy,
   CreateStudentIdentifierSeries,
+  StudentGuardianAccessSelection,
   StudentOnboardingFilterOptions,
   StudentOnboardingSettingsRecord,
   StudentOnboardingServiceHandoff,
@@ -54,6 +55,7 @@ export type OnboardingAvailableOffering = AdmissionOfferingListItem & {
 };
 
 export type StudentOnboardingRollPreview = {
+  divisionId?: string | null;
   schoolAssignmentMode: 'manual' | 'automatic' | 'both';
   rollAssignmentMode: 'manual' | 'automatic';
   proposedRollNumber: number;
@@ -636,6 +638,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       StudentOnboardingRollPreview,
       {
         id: string;
+        divisionId?: string;
         rollNumber?: number;
         rollAssignmentMode?: 'manual' | 'automatic';
         reason?: string;
@@ -690,6 +693,7 @@ export const studentOnboardingApi = api.injectEndpoints({
         concurrencyStamp?: string | null;
         idempotencyKey: string;
         siblingParentSelection?: StudentSiblingParentSelection;
+        guardianAccessSelection?: StudentGuardianAccessSelection;
       }
     >({
       query: ({ id, ...body }) => ({

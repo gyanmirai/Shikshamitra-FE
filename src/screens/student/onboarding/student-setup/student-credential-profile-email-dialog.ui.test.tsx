@@ -87,11 +87,14 @@ it('validates email before submitting and retains the draft on server failure', 
   const email = screen.getByRole('textbox', { name: /^Email/ });
   fireEvent.change(email, { target: { value: 'invalid' } });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-  expect(await screen.findByText('Enter a valid email.')).toBeVisible();
+  expect(await screen.findByText('Enter a valid email, such as name@example.com.')).toBeVisible();
   expect(state.save).not.toHaveBeenCalled();
   fireEvent.change(email, { target: { value: 'jay@example.test' } });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(state.error).toHaveBeenCalledOnce());
+  expect(state.error).toHaveBeenCalledWith({
+    message: 'Email could not be saved. Refresh App Login and try again.',
+  });
   expect(email).toHaveValue('jay@example.test');
   expect(state.close).not.toHaveBeenCalled();
 });
@@ -125,7 +128,7 @@ it('requires confirmation for a shared parent and requests verification instead 
     relationship: 'father',
   });
   expect(state.success).toHaveBeenCalledWith({
-    message: 'Email verification requested. The current login stays unchanged until verification.',
+    message: 'Verify the new email before the login changes.',
   });
 });
 
@@ -135,6 +138,13 @@ it('locks fields and Cancel during save', () => {
   expect(screen.getByRole('textbox', { name: /^Email/ })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+});
+
+it('keeps email editing unavailable when the recipient cannot edit', () => {
+  renderDialog({ ...student, canEditEmail: false });
+  expect(screen.getByRole('textbox', { name: /^Email/ })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  expect(state.save).not.toHaveBeenCalled();
 });
 
 it('keeps a dirty email when cancellation is declined', async () => {

@@ -12,6 +12,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { matchesTableRowFilters } from 'src/components/customizabaleTable/hooks/table-row-filter';
 
 import { AdmissionPublicInquiryLinks } from './admission-public-inquiry-links';
 
@@ -40,6 +41,7 @@ const hooks = vi.hoisted(() => ({
   },
   links: [] as AdmissionPublicInquiryLink[] | undefined,
   linksError: false,
+  linksFetching: false,
   linksRefetch: vi.fn(),
   revoke: vi.fn(),
   setForm: vi.fn(),
@@ -61,7 +63,9 @@ vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
   },
   useGetAdmissionPublicInquiryLinksQuery: () => ({
     data: hooks.links,
+    currentData: hooks.links,
     isLoading: false,
+    isFetching: hooks.linksFetching,
     isError: hooks.linksError,
     refetch: hooks.linksRefetch,
   }),
@@ -99,7 +103,7 @@ vi.mock('src/components/customizabaleTable', () => ({
     rowProps,
     ...tableProps
   }: ComponentProps<typeof CustomizableTable>) => {
-    hooks.tableProps({ ...tableProps, data });
+    hooks.tableProps({ ...tableProps, data, columns });
     return (
       <table aria-label="Public admission inquiry links">
         <tbody>
@@ -192,6 +196,7 @@ describe('create public inquiry link', () => {
     hooks.setups.isError = false;
     hooks.links = [];
     hooks.linksError = false;
+    hooks.linksFetching = false;
     hooks.options.currentData = [
       { counsellorAssignmentProfileId: 'routing-profile-1', inquiryFormDefinitionId: 'form-1' },
     ];
@@ -234,7 +239,7 @@ describe('create public inquiry link', () => {
     expect(hooks.create).not.toHaveBeenCalled();
   });
 
-  it('blocks stale options while loading another period and allows routing-query retry', async () => {
+  it('blocks stale options while loading another period and reports routing failure through the standard toast', async () => {
     hooks.setups.data = [activeSetup];
     hooks.options.currentData = undefined;
     hooks.options.isFetching = true;
@@ -257,8 +262,10 @@ describe('create public inquiry link', () => {
     expect(
       screen.queryByRole('status', { name: 'Loading published inquiry forms' })
     ).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(hooks.options.refetch).toHaveBeenCalledOnce();
+    expect(hooks.errorToast).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Unable to load admission periods and forms.' })
+    );
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
     expect(hooks.create).not.toHaveBeenCalled();
   });
@@ -291,7 +298,7 @@ describe('create public inquiry link', () => {
     }
   );
 
-  it('removes the form skeleton on failure and offers retry without an empty prerequisite message', async () => {
+  it('removes the form skeleton on failure and shows a toast without an empty prerequisite message', async () => {
     hooks.forms.isLoading = true;
     const { rerender } = renderDrawer();
     expect(screen.getByRole('status', { name: 'Loading published inquiry forms' })).toBeVisible();
@@ -301,12 +308,13 @@ describe('create public inquiry link', () => {
     expect(
       screen.queryByRole('status', { name: 'Loading published inquiry forms' })
     ).not.toBeInTheDocument();
-    expect(screen.getByText('Unable to load admission periods and forms.')).toBeVisible();
+    expect(hooks.errorToast).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Unable to load admission periods and forms.' })
+    );
     expect(
       screen.queryByText('Publish an Inquiry form before creating a link.')
     ).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(hooks.forms.refetch).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   });
 
   it('explains the reported generic OfferingRequired response and refreshes compatibility', async () => {
@@ -425,14 +433,15 @@ describe('create public inquiry link', () => {
     );
 
     const copy = await screen.findByRole('button', { name: 'Copy inquiry link for School fair' });
-    expect(screen.getByText('Unable to load inquiry links.')).toBeVisible();
+    expect(hooks.errorToast).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Unable to load this enrollment data.' })
+    );
     expect(copy).toBeEnabled();
     await user.click(copy);
     expect(clipboard).toHaveBeenCalledWith(
       `${window.location.origin}/admission-inquiry/fixture-token`
     );
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(hooks.linksRefetch).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(copy).toBeEnabled();
   });
 
@@ -605,8 +614,73 @@ describe('public inquiry link details and actions', () => {
     vi.clearAllMocks();
     hooks.links = [activeLink];
     hooks.linksError = false;
+    hooks.linksFetching = false;
     hooks.formLoading = false;
     hooks.revokeLoading = false;
+  });
+
+  it('enables each data header filter on the complete returned list', () => {
+    hooks.links = Array.from({ length: 25 }, (_, index) => ({
+      ...activeLink,
+      id: `link-${index}`,
+      name: `Link ${index}`,
+    }));
+    renderList();
+    const table = hooks.tableProps.mock.lastCall![0];
+    expect(table.data).toHaveLength(25);
+    expect(
+      table.data.filter((row: Record<string, unknown>) =>
+        matchesTableRowFilters(
+          row,
+          [{ column: 'name', type: 'equals', value: 'Link 24', valueType: 'string' }],
+          table.columns
+        )
+      )
+    ).toEqual([expect.objectContaining({ id: 'link-24' })]);
+    expect(table.serverSidePagination).toBeUndefined();
+    expect(table.isFilter).toBe(true);
+    expect(table.columns.filter((column: { id: string }) => column.id !== 'actions')).toEqual(
+      expect.arrayContaining([
+        ...['name', 'sourceDisplay', 'periodName', 'expiresAtUtc', 'formName', 'status'].map((id) =>
+          expect.objectContaining({ id, isFilter: true })
+        ),
+      ])
+    );
+    expect(table.columns.find((column: { id: string }) => column.id === 'actions')).toMatchObject({
+      isFilter: false,
+      sticky: true,
+      stickyPosition: 'right',
+    });
+  });
+
+  it('keeps safe rows visible during background refresh and refresh errors', () => {
+    hooks.linksFetching = true;
+    const { rerender } = renderList();
+    expect(hooks.tableProps.mock.lastCall![0]).toMatchObject({
+      isLoading: false,
+      isRefreshing: true,
+    });
+    hooks.linksFetching = false;
+    hooks.linksError = true;
+    rerender(
+      <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
+    );
+    expect(hooks.tableProps.mock.lastCall![0].data).toEqual([
+      expect.objectContaining({ id: activeLink.id }),
+    ]);
+    expect(screen.getByRole('cell', { name: activeLink.name })).toBeVisible();
+    expect(hooks.errorToast).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Unable to load this enrollment data.' })
+    );
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  });
+
+  it('keeps an initial request failure separate from a successful empty result', () => {
+    hooks.links = undefined;
+    hooks.linksError = true;
+    renderList();
+    expect(hooks.tableProps.mock.lastCall![0].errorContent).toBeTruthy();
+    expect(hooks.tableProps.mock.lastCall![0].data).toEqual([]);
   });
 
   it('groups all existing facts into shared cards with a status label and Close icon', async () => {

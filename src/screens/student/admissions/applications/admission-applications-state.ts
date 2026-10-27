@@ -1,5 +1,7 @@
 import type { IParams } from 'src/components/customizabaleTable/types';
 
+import { readQueueColumnFilters } from '../admission-queue-column-filters';
+
 export const APPLICATION_SORT_COLUMNS = [
   'applicantName',
   'applicationNumber',
@@ -11,7 +13,6 @@ export const APPLICATION_SORT_COLUMNS = [
 ];
 
 const REMOVED_FILTERS = [
-  'status',
   'stage',
   'currentStageSearch',
   'counsellor',
@@ -28,10 +29,15 @@ export function readAdmissionApplicationsState(params: Pick<URLSearchParams, 'ge
       ? [{ column: sort, direction: params.get('direction') === 'desc' ? 'desc' : 'asc' }]
       : [];
   return {
+    filters: readQueueColumnFilters(params.get('filters') ?? '', 'applications'),
     search: params.get('search') ?? '',
     page: Number.isSafeInteger(page) && page > 0 ? page - 1 : 0,
     rowsPerPage: [10, 25, 100].includes(size) ? size : 25,
     sorts,
+    status:
+      /^\d+$/.test(params.get('status') ?? '') && Number(params.get('status')) <= 11
+        ? Number(params.get('status'))
+        : undefined,
   };
 }
 

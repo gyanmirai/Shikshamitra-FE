@@ -7,7 +7,6 @@ import { fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Stack, Button, IconButton, Typography, LinearProgress } from '@mui/material';
 import {
   useGetStudentCredentialEmailsQuery,
@@ -16,6 +15,7 @@ import {
 
 import { StudentSetupLoadingRows } from './student-setup-loading';
 import GuardianCredentialEmailDialog from './guardian-credential-email-dialog';
+import { getOnboardingMessage, getOnboardingErrorMessage } from './student-onboarding-messages';
 
 export default function StudentOnboardingCredentialEmails({
   caseId,
@@ -37,20 +37,20 @@ export default function StudentOnboardingCredentialEmails({
       const result = await sendEmail({ id: caseId, accountType, concurrencyStamp }).unwrap();
       if (result.status === 'Failed' || result.status === 'Blocked') {
         shikshaMitraToast.error({
-          message:
-            result.message ||
-            'Email could not be requested. Review the account and readiness checks.',
+          message: getOnboardingMessage(
+            result.message,
+            'Login email could not be requested. Review the account requirements.'
+          ),
         });
-      } else {
-        shikshaMitraToast.success({
-          message:
-            result.status === 'Sent' ? 'Email sent.' : 'Email requested. Check the sending status.',
-        });
-      }
+      } else if (result.status === 'Sent') {
+        shikshaMitraToast.success({ message: 'Login email submitted for sending.' });
+      } else shikshaMitraToast.info({ message: 'Login email is queued.' });
     } catch (error) {
-      const problem = parseApiProblemDetail(error);
       shikshaMitraToast.error({
-        message: problem.detail || 'Unable to request the email. Refresh the case and retry.',
+        message: getOnboardingErrorMessage(
+          error,
+          'Login email could not be requested. Refresh and try again.'
+        ),
       });
     }
   };
@@ -59,13 +59,13 @@ export default function StudentOnboardingCredentialEmails({
     <Stack spacing={1}>
       <Stack direction="row" spacing={0.5} alignItems="center">
         <Typography component="h4" variant="subtitle2">
-          Credential Emails
+          Login Emails
         </Typography>
         <CustomTooltip
-          title="Sent means the email sender accepted the message. New accounts receive initial credentials; existing parent accounts keep their password when another child is linked."
+          title="Submitted means accepted for sending. Existing parent accounts keep their password when another child is linked."
           arrow
         >
-          <IconButton size="small" aria-label="Credential Emails information">
+          <IconButton size="small" aria-label="Login Emails information">
             <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} />
           </IconButton>
         </CustomTooltip>
@@ -125,7 +125,11 @@ export default function StudentOnboardingCredentialEmails({
                   ? 'Disabled'
                   : email.status === 'NotRequested'
                     ? 'Not requested'
-                    : email.status}
+                    : email.status === 'Pending'
+                      ? 'Queued'
+                      : email.status === 'Sent'
+                        ? 'Submitted'
+                        : email.status}
               </Label>
             </Stack>
             {email.emailEnabled === false && (
@@ -150,17 +154,17 @@ export default function StudentOnboardingCredentialEmails({
               )}
             {email.message && (
               <Typography variant="body2" color="text.secondary">
-                {email.message}
+                {getOnboardingMessage(email.message, 'Review the login email status before retrying.')}
               </Typography>
             )}
             {email.sentAt && (
               <Typography variant="caption" color="text.secondary">
-                Sent {fDateTime(email.sentAt)} · {email.attemptCount} attempt(s)
+                Submitted {fDateTime(email.sentAt)} · {email.attemptCount} attempt(s)
               </Typography>
             )}
             {email.status === 'Pending' && (
               <Typography variant="caption">
-                Sending is pending. Refresh status to check progress.
+                Login email is queued. Refresh to check progress.
               </Typography>
             )}
             {email.emailEnabled !== false && (
@@ -182,7 +186,7 @@ export default function StudentOnboardingCredentialEmails({
                     ? 'Retry email'
                     : email.status === 'Sent'
                       ? 'Send access email again'
-                      : 'Send credential email'}
+                      : 'Send login details'}
               </Button>
             )}
           </Stack>

@@ -1,3 +1,4 @@
+import type { IColumn, TableExportRequest } from 'src/components/customizabaleTable/types';
 import type { useGetStudentRecordsDirectoryQuery } from 'src/redux/student/records/student-records-api';
 import type {
   StudentDirectoryItem,
@@ -6,9 +7,10 @@ import type {
 
 import { useMemo } from 'react';
 import { useResponsive } from 'src/hooks/use-responsive';
-import { Stack, Button, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, Button, Checkbox, Typography } from '@mui/material';
 
 import { directoryStudentName, buildDirectoryColumns } from './student-directory-columns';
 import {
@@ -30,9 +32,23 @@ type Props = {
   update: (values: Record<string, string | number | undefined>) => void;
   population: StudentPopulation;
   academicYearReady: boolean;
+  academicOptionsLoading?: boolean;
+  academicContextMessage?: string;
   profileHref: (studentId: string) => string;
   rowActions?: DirectoryRowActions;
   onClearFilters: () => void;
+  onProfileOpen: (studentId: string) => void;
+  onExport: (request: TableExportRequest) => Promise<void>;
+  canPrintIds: boolean;
+  canGenerateCertificates: boolean;
+  onDocumentAction: (kind: 'id-card' | 'certificate', students: StudentDirectoryItem[]) => void;
+  selection: {
+    selected: StudentDirectoryItem[];
+    enabled: boolean;
+    disabledReason: string;
+    onToggle: (row: StudentDirectoryItem, checked: boolean) => void;
+    onTogglePage: (rows: StudentDirectoryItem[], checked: boolean) => void;
+  };
 };
 export default function StudentDirectoryTable({
   hasFilters,
@@ -45,16 +61,20 @@ export default function StudentDirectoryTable({
   update,
   population,
   academicYearReady,
+  academicOptionsLoading = false,
+  academicContextMessage = 'Select an academic year to view students.',
   profileHref,
   rowActions,
   onClearFilters,
+  onProfileOpen,
+  onExport,
+  canPrintIds,
+  canGenerateCertificates,
+  onDocumentAction,
+  selection,
 }: Props) {
   const compact = useResponsive('down', 'sm');
-  const columns = useMemo(
-    () => buildDirectoryColumns({ profileHref, rowActions, compact }),
-    [profileHref, rowActions, compact]
-  );
-  const rows = useMemo(
+  const rows = useMemo<(StudentDirectoryItem & { name: string; classDivision: string })[]>(
     () =>
       (academicYearReady && !query.isError ? (query.currentData?.items ?? []) : []).map(
         (student: StudentDirectoryItem) => ({
@@ -71,6 +91,101 @@ export default function StudentDirectoryTable({
       ? query.error.status
       : undefined;
   const accessDenied = errorStatus === 401 || errorStatus === 403;
+  const selectedIds = new Set(selection.selected.map((row) => row.studentId));
+  const selectableRows = rows.filter((row) => !(row.maskedFields ?? []).includes('Identity'));
+  const allPageSelected =
+    selectableRows.length > 0 && selectableRows.every((row) => selectedIds.has(row.studentId));
+  const somePageSelected = selectableRows.some((row) => selectedIds.has(row.studentId));
+  const documentActions: DirectoryRowActions = (row) => {
+    const actions = rowActions?.(row) ?? [];
+    const documents = [
+      ...(canGenerateCertificates
+        ? [
+            {
+              id: 'certificate',
+              icon: 'mdi:certificate-outline',
+              label: `Generate Certificate for ${directoryStudentName(row)}`,
+              onClick: () => onDocumentAction('certificate', [row]),
+            },
+          ]
+        : []),
+      ...(canPrintIds
+        ? [
+            {
+              id: 'print-id',
+              icon: 'mdi:card-account-details-outline',
+              label: 'Print I-card',
+              onClick: () => onDocumentAction('id-card', [row]),
+            },
+          ]
+        : []),
+    ];
+    return [
+      ...actions.filter((action) => action.id !== 'change-status'),
+      ...documents,
+      ...actions.filter((action) => action.id === 'change-status'),
+    ].map((action) =>
+      selection.selected.length
+        ? {
+            ...action,
+            disabled: true,
+            tooltip: 'Clear bulk selection to use individual student actions.',
+          }
+        : action
+    );
+  };
+  const checkbox = (
+    label: string,
+    checked: boolean,
+    onChange: (checked: boolean) => void,
+    disabled: boolean,
+    indeterminate = false
+  ) => (
+    <CustomTooltip title={disabled ? selection.disabledReason : label} arrow>
+      <Box component="span" sx={{ display: 'inline-flex' }}>
+        <Checkbox
+          size="small"
+          checked={checked}
+          indeterminate={indeterminate}
+          disabled={disabled}
+          inputProps={{ 'aria-label': label }}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) => onChange(event.target.checked)}
+        />
+      </Box>
+    </CustomTooltip>
+  );
+  const selectionColumn: IColumn = {
+    id: 'selection',
+    align: 'left',
+    isSort: false,
+    isFilter: false,
+    excludeFromExport: true,
+    width: 48,
+    minWidth: 48,
+    headerSx: { px: 1 },
+    cellSx: { px: 1 },
+    label: checkbox(
+      'Select current page',
+      allPageSelected,
+      (checked) => selection.onTogglePage(selectableRows, checked),
+      !selection.enabled || !selectableRows.length,
+      !allPageSelected && somePageSelected
+    ),
+    render: (_value, row) =>
+      checkbox(
+        `Select ${directoryStudentName(row as StudentDirectoryItem)}`,
+        selectedIds.has(row.studentId),
+        (checked) => selection.onToggle(row as StudentDirectoryItem, checked),
+        !selection.enabled ||
+          (row.maskedFields ?? []).includes('Identity') ||
+          (selection.selected.length >= 100 && !selectedIds.has(row.studentId))
+      ),
+  };
+  const columns = [
+    selectionColumn,
+    ...buildDirectoryColumns({ profileHref, rowActions: documentActions, compact }),
+  ];
 
   return (
     <CustomizableTable
@@ -78,12 +193,31 @@ export default function StudentDirectoryTable({
       tableTitle="Student List"
       columns={columns}
       data={rows}
+      showColumns
+      showExport
+      showFullScreen
+      exportScope="all"
+      onExport={onExport}
+      exportDisabled={!academicYearReady || query.isError}
+      getRowAction={(row) =>
+        selection.selected.length
+          ? undefined
+          : {
+              label: `Open profile for ${directoryStudentName(row as StudentDirectoryItem)}`,
+              onClick: () => onProfileOpen(row.studentId),
+            }
+      }
+      rowProps={(row) => ({ selected: selectedIds.has(row.studentId) })}
+      isRefreshing={query.isFetching && Boolean(query.currentData) && !query.isError}
       totalCount={academicYearReady && !query.isError ? (query.currentData?.totalCount ?? 0) : 0}
-      isLoading={academicYearReady && (query.isLoading || (query.isFetching && !query.currentData))}
+      isLoading={
+        academicOptionsLoading ||
+        (academicYearReady && (query.isLoading || (query.isFetching && !query.currentData)))
+      }
       errorContent={
-        !academicYearReady ? (
+        !academicYearReady && !academicOptionsLoading ? (
           <StudentFeedback notificationKey="STU-0851" presentation="inline" severity="info">
-            Select an academic year to view students.
+            {academicContextMessage}
           </StudentFeedback>
         ) : query.isError ? (
           <StudentFeedback

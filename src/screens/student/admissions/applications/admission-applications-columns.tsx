@@ -11,6 +11,7 @@ import { formatAdmissionReference } from '../admission-reference';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
+  ADMISSION_APPLICATION_STATUS_LABELS,
 } from '../application-status';
 
 export function buildAdmissionApplicationsColumns({
@@ -35,8 +36,10 @@ export function buildAdmissionApplicationsColumns({
   };
   const columns: IColumn[] = [
     {
+      // Name and reference stay combined; global search handles both without an ambiguous header filter.
       id: 'applicantName',
       label: 'Applicant',
+      isFilter: false,
       minWidth: 220,
       sticky: true,
       isSort: true,
@@ -82,8 +85,10 @@ export function buildAdmissionApplicationsColumns({
       render: (_, row) => row.standardName || '—',
     },
     {
+      // Phone and email stay combined; global search handles both without an ambiguous header filter.
       id: 'contactPhone',
       label: 'Contact',
+      isFilter: false,
       minWidth: 200,
       isSort: true,
       render: (_, row) => (
@@ -117,6 +122,13 @@ export function buildAdmissionApplicationsColumns({
     {
       id: 'status',
       label: 'Status',
+      stickyOnMobile: false,
+      isFilter: true,
+      filterType: 'enum',
+      enumOptions: Object.entries(ADMISSION_APPLICATION_STATUS_LABELS).map(([value, label]) => ({
+        value: Number(value),
+        label,
+      })),
       width: 170,
       minWidth: 170,
       sticky: true,
@@ -154,5 +166,26 @@ export function buildAdmissionApplicationsColumns({
       ),
     },
   ];
-  return columns.map((column) => ({ isFilter: false, isSort: false, ...column }));
+  return columns.map((column): IColumn => ({
+    isFilter: false,
+    isSort: false,
+    ...column,
+    headerAlign: 'left',
+    ...(column.id === 'standardName'
+      ? {
+          isFilter: true,
+          filterType: 'string' as const,
+          filterOperators: ['contains', 'equals', 'startsWith', 'endsWith'],
+        }
+      : {}),
+    ...(['decisionEnteredAt', 'lastSavedAt'].includes(column.id)
+      ? {
+          isFilter: true,
+          filterType: 'date' as const,
+          filterOperators: ['equals', 'before', 'after'],
+          align: 'right' as const,
+          valueType: 'datetime' as const,
+        }
+      : {}),
+  }));
 }

@@ -5,7 +5,6 @@ import type { StudentOnboardingCase } from 'src/redux/student/onboarding/student
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useRef, useMemo, useState, useEffect } from 'react';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useGetStudentOnboardingCaseQuery,
   useGetStudentOnboardingSettingsQuery,
@@ -19,6 +18,8 @@ import {
   useLazyGetAvailableStudentIdentifierSeriesQuery,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import { getOnboardingErrorMessage } from './student-onboarding-messages';
+import { useStudentRollAutoPreview } from './use-student-roll-auto-preview';
 import {
   readQuickGrMode,
   saveQuickAcademic,
@@ -44,10 +45,13 @@ export function useStudentQuickSetupAcademic({
   caseId,
   canManage,
   disabled = false,
+  reportSaveErrors = true,
 }: {
   caseId: string;
   canManage: boolean;
   disabled?: boolean;
+  /** The page coordinator owns feedback when saving several setup sections together. */
+  reportSaveErrors?: boolean;
 }) {
   const caseQuery = useGetStudentOnboardingCaseQuery(caseId, { skip: !caseId });
   const remoteCase = caseQuery.currentData;
@@ -64,6 +68,7 @@ export function useStudentQuickSetupAcademic({
   const [savedCase, setSavedCase] = useState<StudentOnboardingCase>();
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string>();
+  const [failureIsLocal, setFailureIsLocal] = useState(false);
   const [editingGr, setEditingGr] = useState(false);
   const [editingRoll, setEditingRoll] = useState(false);
   const item = savedCase?.id === caseId ? savedCase : remoteCase;
@@ -115,13 +120,13 @@ export function useStudentQuickSetupAcademic({
         .when('grValue', {
           is: (value: string) =>
             Boolean(editingGr && item?.grNumber && value.trim() !== item.grNumber),
-          then: (field) => field.trim().required('Enter a reason for changing the GR number.'),
+          then: (field) => field.trim().required('Explain why this number needs to change.'),
         }),
       rollMode: Yup.string().oneOf(['', 'manual', 'automatic']),
       rollValue: Yup.string()
         .test(
           'cannot-clear-roll',
-          'Enter a Roll number.',
+          'Enter a roll number.',
           (value) => !editingRoll || Boolean(value)
         )
         .when('rollMode', {
@@ -129,7 +134,7 @@ export function useStudentQuickSetupAcademic({
           then: (field) =>
             field.test(
               'positive-roll',
-              'Enter a positive whole Roll number.',
+              'Enter a positive whole roll number.',
               (value) =>
                 !value || (/^\d+$/.test(value) && Number(value) > 0 && Number(value) <= 2147483647)
             ),
@@ -144,7 +149,7 @@ export function useStudentQuickSetupAcademic({
               item.rollChangeReasonRequired &&
               Number(value) !== item.rollNumber
             ),
-          then: (field) => field.trim().required('Enter a reason for changing the Roll number.'),
+          then: (field) => field.trim().required('Explain why this number needs to change.'),
         }),
     }),
     onSubmit: async () => {
@@ -152,6 +157,33 @@ export function useStudentQuickSetupAcademic({
     },
   });
   const { resetForm } = form;
+  const targetDivision = form.values.divisionId;
+  const rollPlacementChanged = Boolean(
+    item?.divisionId && targetDivision !== item.divisionId && !item.rollNumberLocked
+  );
+  const rollPreview = useStudentRollAutoPreview({
+    caseId: item?.id === caseId ? caseId : '',
+    divisionId: targetDivision,
+    concurrencyStamp: item?.concurrencyStamp,
+    reason: form.values.rollReason,
+    preview: services.previewRoll,
+    enabled: Boolean(
+      canManage &&
+      !disabled &&
+      !busy &&
+      !closed &&
+      !readError &&
+      item &&
+      form.values.rollMode === 'automatic' &&
+      (!item.rollNumber || rollPlacementChanged) &&
+      (item.rollAssignmentMode === 'automatic' ||
+        item.rollAssignmentMode === 'both' ||
+        (item.rollNumberLocked && !item.rollNumber)) &&
+      !placements.isError &&
+      (targetDivision === item.divisionId ||
+        placements.data?.some((division) => division.id === targetDivision && !division.isFull))
+    ),
+  });
   // Background cache invalidation must not overwrite an unsaved field or its baseline.
   useEffect(() => {
     if (baselineRef.current?.id !== caseId) {
@@ -229,7 +261,10 @@ export function useStudentQuickSetupAcademic({
       resetForm({ values: quickAcademicInitialValues(saved, grPolicy) });
       return saved;
     } catch (error) {
-      setFailure(parseApiProblemDetail(error).detail || 'Student setup could not be saved. Retry.');
+      if (reportSaveErrors) {
+        setFailureIsLocal(error instanceof Error && !('data' in error) && !('status' in error));
+        setFailure(getOnboardingErrorMessage(error, 'Could not save student setup. Try again.'));
+      }
       throw error;
     } finally {
       busyRef.current = false;
@@ -247,6 +282,7 @@ export function useStudentQuickSetupAcademic({
     permissionDenied,
     loading: caseQuery.isLoading || (!baselineRef.current && settingsQuery.isLoading),
     error: readError ? 'Student setup could not be loaded.' : failure,
+    errorPresentation: readError || !failureIsLocal ? ('toast' as const) : ('inline' as const),
     retry: () => {
       setFailure(undefined);
       caseQuery.refetch();
@@ -266,6 +302,11 @@ export function useStudentQuickSetupAcademic({
     series: item ? quickAcademicSeries(seriesQuery.data ?? [], item) : [],
     editingGr,
     editingRoll,
+    rollPreview,
+    changeRollMode: (mode: QuickAcademicValues['rollMode']) => {
+      form.setFieldValue('rollMode', mode);
+      if (mode === 'automatic' && form.values.rollMode === 'automatic') rollPreview.refresh();
+    },
     changeDivision: (divisionId: string) => {
       form.setFieldValue('divisionId', divisionId);
       if (item?.rollNumber && !item.rollNumberLocked && !editingRoll) {

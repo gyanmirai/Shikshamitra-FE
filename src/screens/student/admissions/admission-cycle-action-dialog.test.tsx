@@ -1,10 +1,19 @@
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 
 import userEvent from '@testing-library/user-event';
-import { render, screen } from '@testing-library/react';
-import { vi, it, expect, describe, beforeEach } from 'vitest';
+import { act, render, screen, cleanup } from '@testing-library/react';
+import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
 
 import { AdmissionCycleActionDialog } from './admission-cycle-action-dialog';
+
+const notices = vi.hoisted(() => ({ error: vi.fn(() => 'cycle-error'), dismiss: vi.fn() }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: notices }));
+
+afterEach(async () => {
+  cleanup();
+  await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+  vi.clearAllMocks();
+});
 
 const impactHook = vi.hoisted(() => ({
   trigger: vi.fn(),
@@ -46,13 +55,13 @@ const cycle: AdmissionCycle = {
   concurrencyStamp: 'stamp-1',
 };
 
-const renderDelete = (onConfirm = vi.fn()) =>
+const renderDelete = (onConfirm = vi.fn(), onClose = vi.fn()) =>
   render(
     <AdmissionCycleActionDialog
       action="delete"
       cycle={cycle}
       busy={false}
-      onClose={vi.fn()}
+      onClose={onClose}
       onConfirm={onConfirm}
     />
   );
@@ -74,7 +83,9 @@ describe('admission cycle publish confirmation', () => {
     expect(screen.queryByText('RTE')).not.toBeInTheDocument();
     expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
     expect(screen.getByText(/Applications are accepted only during/)).toBeVisible();
-    expect(screen.getByText('This cycle is ready to publish.')).toBeVisible();
+    expect(screen.queryByText('This cycle is ready to publish.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('keeps the publish payload unchanged', async () => {
@@ -116,6 +127,28 @@ describe('admission cycle publish confirmation', () => {
 
     expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
     expect(screen.getByText('Correct the application window.')).toBeVisible();
+    expect(notices.error).not.toHaveBeenCalled();
+  });
+
+  it('keeps publication warnings visible without blocking an otherwise valid publication', () => {
+    render(
+      <AdmissionCycleActionDialog
+        action="publish"
+        cycle={cycle}
+        validation={{
+          isValid: true,
+          errors: [],
+          warnings: [{ code: 'ClosingSoon', message: 'The application window closes tomorrow.' }],
+        }}
+        busy={false}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('The application window closes tomorrow.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
+    expect(notices.error).not.toHaveBeenCalled();
   });
 
   it('locks Publish and Cancel while publishing', () => {
@@ -154,13 +187,23 @@ describe('admission cycle delete confirmation', () => {
     expect(impactHook.trigger).toHaveBeenCalledWith(cycle.id);
   });
 
-  it('keeps Delete disabled when the impact check fails and offers Retry', async () => {
+  it('keeps Delete disabled on a failed impact check and allows closing after an error toast', async () => {
     impactHook.state.isFetching = false;
     impactHook.state.isError = true;
-    renderDelete();
+    const onClose = vi.fn();
+    const onConfirm = vi.fn();
+    renderDelete(onConfirm, onClose);
 
     expect(screen.getByRole('button', { name: 'Delete' })).toBeDisabled();
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(notices.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Could not check linked records. Close this dialog and try again.',
+      })
+    );
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(onConfirm).not.toHaveBeenCalled();
     expect(impactHook.trigger).toHaveBeenCalledWith(cycle.id);
   });
 
@@ -174,9 +217,12 @@ describe('admission cycle delete confirmation', () => {
     };
     renderDelete();
 
-    expect(
-      screen.getByText('Could not check linked records. Retry before continuing.')
-    ).toBeVisible();
+    expect(notices.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Could not check linked records. Close this dialog and try again.',
+      })
+    );
+    expect(screen.queryByText(/Could not check linked records/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Delete' })).toBeDisabled();
   });
 
@@ -275,7 +321,11 @@ describe('admission cycle close confirmation', () => {
     impactHook.state.data!.admissionCycleId = 'another-cycle';
     renderClose();
 
-    expect(screen.getByText('Could not check linked records', { exact: false })).toBeVisible();
+    expect(notices.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Could not check linked records. Close this dialog and try again.',
+      })
+    );
     expect(screen.getByRole('button', { name: 'Close cycle' })).toBeDisabled();
   });
 

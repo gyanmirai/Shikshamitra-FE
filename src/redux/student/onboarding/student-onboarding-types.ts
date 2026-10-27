@@ -312,9 +312,11 @@ export type StudentCredentialEmail = {
 export type StudentCredentialsRecipient = {
   accountType: 'student' | 'guardian';
   relationship: 'self' | 'father' | 'mother' | 'guardian';
+  relationshipLabel?: string | null;
   name?: string | null;
   email?: string | null;
   canSend: boolean;
+  isMainContact?: boolean;
   blockedReason?: string | null;
   delivery?: StudentCredentialEmail | null;
   canEditEmail?: boolean;
@@ -340,6 +342,7 @@ export type UpdateStudentCredentialsEmail = {
 
 export type StudentCredentialsWorkspace = {
   caseId: string;
+  guardianAccessEnabled?: boolean;
   concurrencyStamp: string;
   recipients: StudentCredentialsRecipient[];
   parentSibling?: StudentParentSiblingContext | null;
@@ -351,12 +354,18 @@ export type StudentSiblingParentSelection = {
   expectedUserId: string;
 };
 
+export type StudentGuardianAccessSelection = {
+  expectedEmail: string;
+  confirmRecipientAccess: boolean;
+};
+
 export type StudentParentSiblingContext = {
   enabled: boolean;
   familyConfirmed: boolean;
   isLinked: boolean;
   requiresSelection: boolean;
   canLink: boolean;
+  guardianAccessSelected?: boolean;
   status:
     | 'NewParent'
     | 'NotRequired'
@@ -384,5 +393,6 @@ export type SendStudentCredentials = {
   accountType: StudentCredentialsRecipient['accountType'];
   relationship: StudentCredentialsRecipient['relationship'];
   expectedEmail: string;
+  confirmRecipientAccess: boolean;
   concurrencyStamp: string;
 };

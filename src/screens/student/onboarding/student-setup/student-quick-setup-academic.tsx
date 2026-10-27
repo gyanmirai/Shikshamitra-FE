@@ -5,7 +5,16 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Stack, Button, Skeleton, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Stack,
+  Button,
+  Skeleton,
+  TextField,
+  Typography,
+  InputAdornment,
+  CircularProgress,
+} from '@mui/material';
 
 import type { QuickAcademicMode } from './student-quick-setup-academic-model';
 import type { StudentQuickSetupAcademicEditor } from './use-student-quick-setup-academic';
@@ -57,7 +66,7 @@ export default function StudentQuickSetupAcademic({
         {editor.error && (
           <StudentFeedback
             notificationKey="STU-1029"
-            presentation="persistent"
+            presentation={editor.errorPresentation}
             severity="error"
             action={
               <Button size="small" onClick={editor.retry}>
@@ -107,7 +116,7 @@ export default function StudentQuickSetupAcademic({
       {editor.error && (
         <StudentFeedback
           notificationKey="STU-1030"
-          presentation="persistent"
+          presentation={editor.errorPresentation}
           severity="error"
           action={
             <Button size="small" disabled={editor.busy} onClick={editor.retry}>
@@ -176,7 +185,7 @@ export default function StudentQuickSetupAcademic({
               </Button>
             }
           >
-            Division capacity could not be loaded.
+            Could not load division availability. Try again.
           </StudentFeedback>
         )}
         {editor.placements.isLoading && !closed && <Skeleton variant="rounded" height={36} />}
@@ -249,7 +258,7 @@ export default function StudentQuickSetupAcademic({
             </ShakingTextField>
             {!grAssigned && !closed && !editor.settingsQuery.isFetching && !grPolicy && (
               <Typography variant="caption" color="text.secondary">
-                Published GR settings are unavailable. Review the school settings.
+                GR settings are unavailable. Ask an administrator to check the settings.
               </Typography>
             )}
             {!grAssigned &&
@@ -258,7 +267,7 @@ export default function StudentQuickSetupAcademic({
               !editor.seriesQuery.isError &&
               !series.length && (
                 <Typography variant="caption" color="text.secondary">
-                  No published GR series is available.
+                  No GR numbering rule is available. Ask an administrator to check the settings.
                 </Typography>
               )}
             {!grAssigned && !closed && values.grMode === 'automatic' && grSeries && (
@@ -277,7 +286,7 @@ export default function StudentQuickSetupAcademic({
                   </Button>
                 }
               >
-                GR settings could not be loaded.
+                Could not load GR settings. Try again.
               </StudentFeedback>
             )}
             {editor.editingGr && values.grValue !== item.grNumber && (
@@ -311,7 +320,7 @@ export default function StudentQuickSetupAcademic({
                   disabled={disabled}
                   automatic={rollAuto && (!item.rollNumber || placementInvalidatesRoll)}
                   manual={rollManual}
-                  onChange={(mode) => form.setFieldValue('rollMode', mode)}
+                  onChange={editor.changeRollMode}
                 />
               )}
             </Stack>
@@ -320,8 +329,32 @@ export default function StudentQuickSetupAcademic({
                 size="small"
                 fullWidth
                 label="Roll number"
-                value={rollAssigned || closed ? (item.rollNumber ?? 0) : 0}
-                slotProps={{ input: { readOnly: true } }}
+                value={
+                  rollAssigned || closed
+                    ? (item.rollNumber ?? 0)
+                    : editor.rollPreview.status === 'loading'
+                      ? 'Loading…'
+                      : (editor.rollPreview.number ?? 0)
+                }
+                helperText={
+                  !rollAssigned && !closed && values.rollMode === 'automatic'
+                    ? !values.divisionId
+                      ? 'Select a division to preview the roll number.'
+                      : editor.rollPreview.status === 'ready'
+                        ? 'Preview only · confirmed when saved.'
+                        : undefined
+                    : undefined
+                }
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    endAdornment: editor.rollPreview.status === 'loading' && (
+                      <InputAdornment position="end">
+                        <CircularProgress size={14} aria-label="Loading roll number preview" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
             ) : (
               <ShakingTextField error={Boolean(fieldError('rollValue'))}>
@@ -349,7 +382,7 @@ export default function StudentQuickSetupAcademic({
             )}
             {!rollAssigned && !closed && !item.rollAssignmentMode && (
               <Typography variant="caption" color="text.secondary">
-                Roll settings are unavailable. Review the school settings.
+                Roll number settings are unavailable. Ask an administrator to check the settings.
               </Typography>
             )}
             {editor.editingRoll &&

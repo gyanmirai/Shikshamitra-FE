@@ -1,3 +1,4 @@
+import { shikshaMitraToast } from 'src/components/toast';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
@@ -66,6 +67,7 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useLinkStudentOnboardingParentMutation: () => [vi.fn(), { isLoading: false }],
 }));
 beforeEach(() => {
+  vi.clearAllMocks();
   mocks.send.mockReset();
   mocks.provision.mockReset();
   mocks.sendCredentials.mockReset();
@@ -210,8 +212,9 @@ describe('Onboarding credential email recovery', () => {
     expect(
       screen.queryByRole('button', { name: 'Create and link account' })
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Send Credentials' }));
+    expect(screen.getByRole('button', { name: 'Send login details' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('checkbox', { name: /confirm this person may access/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send login details' }));
     await waitFor(() =>
       expect(mocks.sendCredentials).toHaveBeenCalledWith({
         id: 'case-1',
@@ -219,6 +222,7 @@ describe('Onboarding credential email recovery', () => {
         relationship: 'father',
         expectedEmail: 'parent@example.com',
         concurrencyStamp: 'credential-workspace-stamp',
+        confirmRecipientAccess: true,
       })
     );
     expect(mocks.provision).not.toHaveBeenCalled();
@@ -239,11 +243,15 @@ describe('Onboarding credential email recovery', () => {
     await waitFor(() =>
       expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('parent@example.com')
     );
-    expect(screen.getByRole('button', { name: 'Send Credentials' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Send login details' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('checkbox', { name: /confirm this person may access/i }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Send login details' })).toBeEnabled()
+    );
     expect(
       screen.queryByRole('button', { name: 'Create and link account' })
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Send Credentials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send login details' }));
     await waitFor(() => expect(mocks.sendCredentials).toHaveBeenCalledOnce());
     expect(mocks.provision).not.toHaveBeenCalled();
   });
@@ -259,6 +267,10 @@ describe('Onboarding credential email recovery', () => {
       })
     );
     expect(screen.queryByRole('textbox', { name: /password/i })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(shikshaMitraToast.info).toHaveBeenCalledWith({ message: 'Login email is queued.' })
+    );
+    expect(shikshaMitraToast.success).not.toHaveBeenCalled();
   });
   it('honors denied readiness/permission and does not allow duplicate pending sends', () => {
     mocks.emails.data[0].canSend = false;
@@ -266,9 +278,23 @@ describe('Onboarding credential email recovery', () => {
     expect(screen.getByRole('button', { name: 'Retry email' })).toBeDisabled();
     mocks.emails.data[0] = { ...mocks.emails.data[0], canSend: true, status: 'Pending' };
     rerender(<StudentOnboardingCredentialEmails caseId="case-1" />);
-    expect(screen.getByRole('button', { name: 'Send credential email' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Send login details' })).toBeDisabled();
   });
-  it('keeps loading and failed reads visible with a retry', () => {
+  it('reports sender submission as success without claiming delivery', async () => {
+    mocks.send.mockReturnValue({ unwrap: () => Promise.resolve({ status: 'Sent' }) });
+    mocks.emails.data[0].status = 'Sent';
+    render(<StudentOnboardingCredentialEmails caseId="case-1" concurrencyStamp="case-stamp" />);
+    expect(screen.getByText('Submitted')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Send access email again' }));
+    await waitFor(() =>
+      expect(shikshaMitraToast.success).toHaveBeenCalledWith({
+        message: 'Login email submitted for sending.',
+      })
+    );
+    expect(shikshaMitraToast.info).not.toHaveBeenCalled();
+    expect(screen.queryByText('Email sent.')).not.toBeInTheDocument();
+  });
+  it('keeps loading visible and reports failed reads through the standard toast', () => {
     mocks.emails = { isFetching: true, data: undefined };
     const { rerender } = render(<StudentOnboardingCredentialEmails caseId="case-1" />);
     expect(
@@ -279,8 +305,10 @@ describe('Onboarding credential email recovery', () => {
     ).not.toBeInTheDocument();
     mocks.emails = { isError: true, refetch: vi.fn() };
     rerender(<StudentOnboardingCredentialEmails caseId="case-1" />);
-    fireEvent.click(screen.getByRole('button', { name: 'Retry email status' }));
-    expect(mocks.emails.refetch).toHaveBeenCalledOnce();
+    expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Credential email status could not be loaded.' })
+    );
+    expect(screen.queryByRole('button', { name: 'Retry email status' })).not.toBeInTheDocument();
   });
 });
 
@@ -344,17 +372,18 @@ describe('Required document evidence without bypass', () => {
     expect(screen.queryByRole('button', { name: /Override/ })).not.toBeInTheDocument();
     expect(mocks.override).not.toHaveBeenCalled();
   });
-  it('offers retry for a failed requirement read without claiming there are no requirements', () => {
+  it('toasts a failed requirement read without claiming there are no requirements', () => {
     mocks.documents = { isError: true, refetch: vi.fn() };
     render(<StudentOnboardingDocuments caseId="case-1" enabled canManage />);
-    expect(
-      screen.getByText('Onboarding documents could not be loaded.', { exact: false })
-    ).toBeVisible();
+    expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Student documents could not be loaded. Refresh the page.',
+      })
+    );
     expect(
       screen.queryByText('No onboarding document requirements are configured.')
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(mocks.documents.refetch).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(mocks.override).not.toHaveBeenCalled();
   });
 });

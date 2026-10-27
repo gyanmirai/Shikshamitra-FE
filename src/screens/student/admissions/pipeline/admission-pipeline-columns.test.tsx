@@ -47,7 +47,7 @@ describe('Pipeline missing-source recovery', () => {
   });
   it('keeps only the approved compact visible columns and excludes actions from export', () => {
     expect(columns.filter((column) => !column.defaultHidden).map((column) => column.label)).toEqual(
-      ['Student Name', 'Class', 'Current step', 'Follow-ups', 'Status', 'Actions']
+      ['Student name', 'Class', 'Current step', 'Follow-ups', 'Status', 'Actions']
     );
     expect(
       columns.some((column) =>

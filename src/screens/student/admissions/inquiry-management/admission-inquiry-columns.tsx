@@ -132,7 +132,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
     },
     {
       id: 'applicantName',
-      label: 'Student Name',
+      label: 'Student name',
       minWidth: 220,
       sticky: true,
       stickyPosition: 'left',
@@ -140,11 +140,11 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       render: (value, row) => String(value),
     },
     {
-      id: 'admissionOfferingId',
+      id: 'standardName',
       label: 'Class',
       minWidth: 190,
-      filterType: 'enum',
-      enumOptions: options.offeringOptions,
+      filterType: 'string',
+      filterOperators: ['contains', 'equals', 'startsWith', 'endsWith'],
       render: (_value, row) => (row as AdmissionInquiry).standardName || '—',
     },
     {
@@ -185,12 +185,12 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
     {
       id: 'status',
       label: 'Status',
+      stickyOnMobile: false,
       minWidth: 140,
       filterType: 'enum',
       enumOptions: INQUIRY_STATUS_OPTIONS,
       sticky: true,
       stickyPosition: 'right',
-      stickyOnMobile: false,
       render: (value) => (
         <Label color={statusColors[normalizeInquiryStatus(value)]}>
           {inquiryStatusLabel(value)}
@@ -203,7 +203,8 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       width: 152,
       minWidth: 152,
       maxWidth: 152,
-      align: 'left',
+      align: 'right',
+      headerAlign: 'left',
       sticky: true,
       stickyPosition: 'right',
       isSort: false,
@@ -217,7 +218,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
             moreLabel={`Actions for ${inquiry.applicantName}`}
             sx={{
               gap: 0,
-              justifyContent: 'flex-start',
+              justifyContent: 'flex-end',
               '& .MuiIconButton-root': {
                 width: { xs: 44, sm: 30 },
                 height: { xs: 44, sm: 30 },

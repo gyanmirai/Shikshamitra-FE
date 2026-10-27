@@ -13,7 +13,6 @@ import { useState } from 'react';
 import { useFormik } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Stack, Button, Skeleton, Typography, DialogActions } from '@mui/material';
 import { DocumentActionFields } from 'src/screens/student/admissions/document-verification/document-action-fields';
@@ -31,6 +30,7 @@ import {
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import StudentOnboardingDocuments from './student-onboarding-documents';
+import { getOnboardingErrorMessage } from './student-onboarding-messages';
 import { StudentOnboardingDocumentWorkspace } from './student-onboarding-document-workspace';
 
 type Selection = {
@@ -90,13 +90,15 @@ function WorkflowDocumentAction({
             reason: values.notes || undefined,
           }).unwrap();
         }
-        shikshaMitraToast.success({ message: 'Document evidence updated.' });
+        shikshaMitraToast.success({ message: 'Document updated.' });
         onClose();
       } catch (error) {
-        form.setStatus(
-          parseApiProblemDetail(error).detail ||
-            'Evidence could not be updated. Refresh the checklist and retry.'
-        );
+        shikshaMitraToast.error({
+          message: getOnboardingErrorMessage(
+            error,
+            'The document could not be updated. Refresh the checklist and try again.'
+          ),
+        });
       }
     },
   });
@@ -111,7 +113,7 @@ function WorkflowDocumentAction({
     >
       <DialogScrollContent>
         {form.status && (
-          <StudentFeedback notificationKey="STU-1024" presentation="persistent" severity="error">
+          <StudentFeedback notificationKey="STU-1024" presentation="inline" severity="error">
             {form.status}
           </StudentFeedback>
         )}
@@ -171,7 +173,7 @@ export default function StudentOnboardingWorkflowDocuments({
           </Button>
         }
       >
-        Offering document requirements could not be loaded.
+        Admission documents could not be loaded. Refresh the page.
       </StudentFeedback>
     );
   if (!query.data)

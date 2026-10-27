@@ -3,7 +3,6 @@ import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { RouterLink } from 'src/routes/components';
 import { Link, Stack, Avatar } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
@@ -129,29 +128,29 @@ export const buildDirectoryColumns = ({
     isSort: false,
     isFilter: false,
     align: 'left',
-    minWidth: rowActions ? (compact ? 122 : 138) : 80,
-    width: rowActions ? (compact ? 122 : 138) : 80,
+    minWidth: compact ? 160 : 184,
+    width: compact ? 160 : 184,
     cellSx: compact ? { px: 1 } : undefined,
     headerSx: compact ? { px: 1 } : undefined,
     sticky: true,
     stickyPosition: 'right',
     excludeFromExport: true,
-    render: (_value, row) => (
-      <AdaptiveThreeDotsActions
-        actions={[
-          {
-            id: 'view',
-            icon: GlobalIcons.eye,
-            label: `View profile for ${directoryStudentName(row as StudentDirectoryItem)}`,
-            href: profileHref(row.studentId),
-          },
-          ...(rowActions?.(row as StudentDirectoryItem) ?? []),
-        ]}
-        moreLabel={`More actions for ${directoryStudentName(row as StudentDirectoryItem)}`}
-        directActionLimit={2}
-        collapseOnOverflow={false}
-        sx={{ justifyContent: 'flex-end' }}
-      />
-    ),
+    render: (_value, row) => {
+      const actions = rowActions?.(row as StudentDirectoryItem) ?? [];
+      const directCount = actions.filter((action) =>
+        ['edit-details', 'attendance-history', 'certificate'].includes(action.id)
+      ).length;
+      return (
+        <AdaptiveThreeDotsActions
+          actions={actions}
+          moreLabel={`More actions for ${directoryStudentName(row as StudentDirectoryItem)}`}
+          directActionLimit={
+            directCount >= 3 ? 3 : directCount === 2 ? 2 : directCount === 1 ? 1 : 0
+          }
+          collapseOnOverflow={false}
+          sx={{ justifyContent: 'flex-end' }}
+        />
+      );
+    },
   },
 ];

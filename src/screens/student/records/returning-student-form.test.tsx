@@ -37,6 +37,7 @@ vi.mock('src/components/toast', () => ({
 }));
 vi.mock('src/components/form-section-card', () => ({
   FormSectionCard: ({ children }: any) => <section>{children}</section>,
+  FormFieldSpacing: ({ children, ...props }: any) => <div {...props}>{children}</div>,
 }));
 vi.mock('src/components/custom-select', () => ({
   default: ({ label, value, options, onChange, disabled }: any) => (

@@ -4,8 +4,10 @@ import type { StudentRecordProfile } from 'src/redux/student/student-profile-typ
 import type { RecordChange } from 'src/redux/student/records/student-record-changes-api';
 import type { StudentRecordDetails } from 'src/redux/student/records/student-record-details-api';
 
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { fDate } from 'src/utils/format-time';
 import { GenderType } from 'src/enums/gender';
 import { Iconify } from 'src/components/iconify';
@@ -15,9 +17,10 @@ import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Paper, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
+import { Box, Alert, Paper, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
 
 import { profileOverviewContacts } from './student-profile-overview-model';
+import { StudentParentsContactDialog } from './student-parents-contact-dialog';
 
 export function ProfileValues({ values }: { values: { label: string; value: unknown }[] }) {
   return (
@@ -187,6 +190,18 @@ export function StudentProfileOverview({
   detailsError?: boolean;
 }) {
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const [contactsOpen, setContactsOpen] = useState(false);
+  const [contactResult, setContactResult] = useState<string | null>(null);
+  const family = details?.structuredSections.find((section) => section.section === 'family');
+  const canManageContacts =
+    !detailsLoading &&
+    !detailsError &&
+    details?.recordsAccess === 'Full' &&
+    family?.canEdit === true &&
+    !family.isMasked &&
+    hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
+    hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
   const board = currentYear?.boards?.find((item: Board) =>
     item.educationMediums?.some((medium: Medium) => medium.id === student.academicMediumId)
   );
@@ -302,28 +317,39 @@ export function StudentProfileOverview({
         </FormSectionCard>
         <FormSectionCard
           icon="mdi:account-group-outline"
-          title="Guardian & contact"
+          title="Parents & Contact"
+          descriptionTooltip="Saved parents, optional other guardian and the main school contact. App access is managed separately."
           sx={{ minWidth: 0, height: 1 }}
           action={
-            <Button size="small" component={RouterLink} href={viewHref('details')}>
-              View Details
-            </Button>
+            canManageContacts ? (
+              <Button
+                size="small"
+                color="inherit"
+                startIcon={<Iconify icon={GlobalIcons.edit} />}
+                onClick={() => {
+                  setContactResult(null);
+                  setContactsOpen(true);
+                }}
+              >
+                Manage contacts
+              </Button>
+            ) : undefined
           }
         >
           <Divider />
           {detailsLoading ? (
-            <Stack aria-label="Loading guardian and contact details" spacing={1}>
+            <Stack aria-label="Loading parents and contact details" spacing={1}>
               {Array.from({ length: 4 }, (_, index) => (
                 <Skeleton key={index} height={24} />
               ))}
             </Stack>
-          ) : detailsError && !details ? (
-            <Typography variant="body2" color="text.secondary">
-              Guardian and contact details could not be loaded. Use Retry details above to try
-              again.
-            </Typography>
-          ) : (
+          ) : detailsError && !details ? null : (
             <ProfileValues values={profileOverviewContacts(details)} />
+          )}
+          {contactResult && (
+            <Alert severity={contactResult.endsWith('review.') ? 'info' : 'success'}>
+              {contactResult}
+            </Alert>
           )}
         </FormSectionCard>
       </Box>
@@ -422,6 +448,17 @@ export function StudentProfileOverview({
           </Box>
         </Stack>
       </FormSectionCard>
+      {contactsOpen && details && (
+        <StudentParentsContactDialog
+          studentId={student.studentId}
+          details={details}
+          onClose={() => setContactsOpen(false)}
+          onSubmitted={(message) => {
+            setContactsOpen(false);
+            setContactResult(message);
+          }}
+        />
+      )}
     </Stack>
   );
 }

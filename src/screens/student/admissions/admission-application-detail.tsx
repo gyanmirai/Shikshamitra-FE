@@ -801,15 +801,11 @@ export default function AdmissionApplicationDetailScreen({
                 sx={{
                   flex: 1,
                   display: 'flex',
-                  '& > fieldset, & > fieldset > div': {
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flex: 1,
-                    minWidth: 0,
-                  },
+                  minWidth: 0,
                 }}
               >
                 <FormBusyRegion
+                  fillContent
                   busy={workspaceBusy}
                   showOverlay={false}
                   label={

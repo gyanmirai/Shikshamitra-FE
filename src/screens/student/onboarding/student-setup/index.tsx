@@ -4,7 +4,10 @@ import type { RootState } from 'src/redux/store';
 import type { TooltipProps } from '@mui/material';
 import type { IParams } from 'src/components/customizabaleTable/types';
 import type { RollNumberScope } from 'src/redux/student/onboarding/student-roll-number-batches-api';
-import type { StudentSiblingParentSelection } from 'src/redux/student/onboarding/student-onboarding-types';
+import type {
+  StudentSiblingParentSelection,
+  StudentGuardianAccessSelection,
+} from 'src/redux/student/onboarding/student-onboarding-types';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
@@ -13,7 +16,6 @@ import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -39,6 +41,7 @@ import { StudentSetupFilters } from './student-setup-academic-filters';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import StudentSetupTaskNavigation from './student-setup-task-navigation';
 import StudentRollNumberWorkspace from './student-roll-number-workspace';
+import { getOnboardingErrorMessage } from './student-onboarding-messages';
 import { useStudentSetupAssignment } from './use-student-setup-assignment';
 import StudentSetupAssignmentToolbar from './student-setup-assignment-toolbar';
 import StudentIdentifierLockControls from './student-identifier-lock-controls';
@@ -841,13 +844,13 @@ export default function StudentSetupScreen() {
   const openAssignment = (type: StudentAssignmentType, studentIds: string[]) => {
     if (!canManageOnboarding) {
       shikshaMitraToast.error({
-        message: 'You do not have permission to change onboarding cases.',
+        message: 'You can view student setup but cannot make changes. Ask your administrator for access.',
       });
       return;
     }
     if (studentIds.length !== 1) {
       shikshaMitraToast.error({
-        message: 'Select one student to review and save placement or identifiers.',
+        message: 'Select one student to update the division, GR number or roll number.',
       });
       return;
     }
@@ -858,12 +861,13 @@ export default function StudentSetupScreen() {
     student: StudentOnboardingItem,
     latestConcurrencyStamp?: string,
     action: 'refresh' | 'activate' = 'refresh',
-    siblingParentSelection?: StudentSiblingParentSelection
+    siblingParentSelection?: StudentSiblingParentSelection,
+    guardianAccessSelection?: StudentGuardianAccessSelection
   ) => {
     if (student.source !== 'onboarding-case') return;
     if (!canManageOnboarding) {
       shikshaMitraToast.error({
-        message: 'You do not have permission to update or activate this onboarding case.',
+        message: 'You cannot update or activate this student. Ask your administrator for access.',
       });
       return;
     }
@@ -875,9 +879,10 @@ export default function StudentSetupScreen() {
           concurrencyStamp: latestConcurrencyStamp ?? student.concurrencyStamp,
           idempotencyKey: crypto.randomUUID(),
           ...(siblingParentSelection ? { siblingParentSelection } : {}),
+          ...(guardianAccessSelection ? { guardianAccessSelection } : {}),
         }).unwrap();
         shikshaMitraToast.success({
-          message: `${student.studentName} is active and available in Student Records. Open App Login if app access is pending.`,
+          message: `${student.studentName} is now active.`,
         });
         setSelectedStudentId(null);
         return;
@@ -888,15 +893,14 @@ export default function StudentSetupScreen() {
         concurrencyStamp: student.concurrencyStamp,
       }).unwrap();
       shikshaMitraToast.success({
-        message: `Readiness refreshed for ${student.studentName}.`,
+        message: `Setup checks updated for ${student.studentName}.`,
       });
     } catch (error) {
       shikshaMitraToast.error({
-        message:
-          parseApiProblemDetail(error).detail ||
+        message: getOnboardingErrorMessage(error,
           (action === 'activate' || student.backendStatus === 2
-            ? 'Student activation could not be completed. Refresh the case and resolve any new blockers.'
-            : 'Readiness could not be refreshed. Please retry with the latest case data.'),
+            ? 'The student could not be activated. Refresh and check the remaining requirements.'
+            : 'Setup checks could not be updated. Refresh and try again.')),
       });
     }
   };
@@ -983,7 +987,7 @@ export default function StudentSetupScreen() {
             </Button>
           }
         >
-          The selected onboarding case could not be loaded.
+          Student setup could not be loaded. Refresh the page.
         </StudentFeedback>
       )}
       <Box
@@ -1061,7 +1065,7 @@ export default function StudentSetupScreen() {
                 </Button>
               }
             >
-              Could not load academic filter options.
+              Class filters could not be loaded. Refresh the page.
             </StudentFeedback>
           )}
 
@@ -1072,7 +1076,7 @@ export default function StudentSetupScreen() {
               severity="info"
               onClose={() => setShowFilterAlert(false)}
             >
-              Select an academic year to load onboarding cases.
+              Select an academic year to view student setup.
             </StudentFeedback>
           ) : null}
           {assignment.contextChanged && (
@@ -1271,7 +1275,7 @@ export default function StudentSetupScreen() {
                     </Button>
                   }
                 >
-                  Could not load roll numbering.
+                  Roll number settings could not be loaded. Refresh the page.
                 </StudentFeedback>
               )}
               <StudentSetupTable

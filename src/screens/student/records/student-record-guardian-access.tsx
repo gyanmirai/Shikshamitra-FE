@@ -46,12 +46,12 @@ export default function StudentRecordGuardianAccess({ studentId }: { studentId: 
   if (!canView)
     return (
       <StudentFeedback notificationKey="STU-0891" presentation="inline" severity="info">
-        Guardian portal access is available to staff with access review permission.
+        Parent / guardian app access is available to staff with access review permission.
       </StudentFeedback>
     );
   return (
     <Stack spacing={1.5}>
-      <Typography variant="h6">Guardian portal access</Typography>
+      <Typography variant="h6">Parent / Guardian App Access</Typography>
       {(links.isFetching || reviews.isFetching) && (
         <LinearProgress aria-label="Loading guardian access" />
       )}
@@ -76,7 +76,7 @@ export default function StudentRecordGuardianAccess({ studentId }: { studentId: 
       )}
       {links.currentData?.length === 0 && (
         <StudentFeedback notificationKey="STU-0893" presentation="inline" severity="info">
-          No guardian currently has portal access to this student.
+          No parent or guardian currently has app access to this student.
         </StudentFeedback>
       )}
       {(links.currentData ?? []).map((link) => (
@@ -105,7 +105,7 @@ export default function StudentRecordGuardianAccess({ studentId }: { studentId: 
             {review.status === 'Pending' && (
               <Typography variant="body2">
                 {review.onApprovedChangeMode === 'SuspendUntilReview'
-                  ? 'Previous access was suspended under the school rule. Verify the guardian before restoring or replacing access.'
+                  ? 'Previous access was suspended under the school rule. Verify the parent or guardian before restoring or replacing access.'
                   : 'Previous access remains under the school rule. Review and revoke or confirm it.'}
               </Typography>
             )}
@@ -115,7 +115,7 @@ export default function StudentRecordGuardianAccess({ studentId }: { studentId: 
                 sx={{ alignSelf: 'flex-start' }}
                 onClick={() => setSelected(review)}
               >
-                Review guardian access
+                Review parent / guardian access
               </Button>
             )}
           </Stack>
@@ -123,7 +123,7 @@ export default function StudentRecordGuardianAccess({ studentId }: { studentId: 
       ))}
       {reviews.currentData?.length === 0 && (
         <Typography variant="body2" color="text.secondary">
-          No guardian access reviews have been created.
+          No parent or guardian access reviews have been created.
         </Typography>
       )}
       {selected && canManage && (
@@ -228,7 +228,7 @@ function GuardianReviewForm({
     <CustomDialog
       open
       handleClose={onClose}
-      title="Review guardian portal access"
+      title="Review Parent / Guardian App Access"
       maxWidth="md"
       onSubmit={(event) => {
         event.preventDefault();

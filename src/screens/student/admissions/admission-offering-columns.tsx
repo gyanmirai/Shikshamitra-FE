@@ -3,6 +3,7 @@ import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/adm
 
 import Box from '@mui/material/Box';
 import { Label } from 'src/components/label';
+import { fNumber } from 'src/utils/format-number';
 import { formatDateOnly } from 'src/utils/date-only';
 import CustomTooltip from 'src/components/custom-tooltip';
 
@@ -12,16 +13,24 @@ import {
   availabilityColors,
   availabilityLabels,
   admissionTrackLabels,
-  admissionEntryModeLabels,
 } from './admission-offering-model';
 
 import type { AdmissionOfferingActionProps } from './admission-offering-row-actions';
 
-export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionProps): IColumn[] => [
+export type OfferingColumnOptions = Partial<Record<string, { value: string; label: string }[]>>;
+
+export const buildAdmissionOfferingColumns = (
+  actions: AdmissionOfferingActionProps,
+  options: OfferingColumnOptions = {}
+): IColumn[] => [
   {
     id: 'name',
     label: 'Offering',
     sticky: true,
+    rowHeader: true,
+    isFilter: true,
+    filterType: 'string',
+    filterOperators: ['contains', 'equals', 'startsWith', 'endsWith'],
     minWidth: 210,
     render: (value, row) => (
       <AdmissionTableText
@@ -34,30 +43,49 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
   {
     id: 'boardName',
     label: 'Board',
+    isFilter: true,
+    filterType: 'enum',
+    filterOperators: ['equals'],
+    enumOptions: options.boardName ?? [],
+    isSort: false,
     minWidth: 120,
     render: (value) => <AdmissionTableText text={String(value ?? '—')} />,
   },
   {
     id: 'mediumName',
     label: 'Medium',
+    isFilter: true,
+    filterType: 'enum',
+    filterOperators: ['equals'],
+    enumOptions: options.mediumName ?? [],
     minWidth: 120,
     render: (value) => <AdmissionTableText text={String(value ?? '—')} />,
   },
   {
     id: 'stageName',
     label: 'School level',
+    isFilter: true,
+    filterType: 'enum',
+    filterOperators: ['equals'],
+    enumOptions: options.stageName ?? [],
     minWidth: 130,
     render: (value) => <AdmissionTableText text={String(value ?? '—')} />,
   },
   {
     id: 'standardName',
-    label: 'Standard',
+    label: 'Class',
+    isFilter: true,
+    filterType: 'enum',
+    filterOperators: ['equals'],
+    enumOptions: options.standardName ?? [],
     minWidth: 130,
     render: (value) => <AdmissionTableText text={String(value ?? '—')} />,
   },
   {
     id: 'workflowName',
     label: 'Workflow',
+    isFilter: false,
+    isSort: false,
     minWidth: 170,
     render: (_, row) => (
       <AdmissionTableText
@@ -72,23 +100,45 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
   {
     id: 'effectiveOpenDate',
     label: 'Open',
+    isFilter: true,
+    filterType: 'date',
+    filterOperators: ['equals', 'after', 'before'],
+    align: 'right',
+    headerAlign: 'left',
     minWidth: 120,
     render: (value) => <AdmissionTableText text={formatDateOnly(value)} />,
   },
   {
     id: 'effectiveCloseDate',
     label: 'Close',
+    isFilter: true,
+    filterType: 'date',
+    filterOperators: ['equals', 'after', 'before'],
+    align: 'right',
+    headerAlign: 'left',
     minWidth: 120,
     render: (value) => <AdmissionTableText text={formatDateOnly(value)} />,
   },
   {
     id: 'applicationCount',
     label: 'Applications',
+    isFilter: true,
+    filterType: 'number',
+    filterOperators: ['equals', 'greaterThan', 'lessThan', 'between'],
+    filterStep: 1,
+    align: 'right',
+    headerAlign: 'left',
+    render: (value) => fNumber(value),
     minWidth: 120,
   },
   {
     id: 'availabilityStatus',
     label: 'Availability',
+    isFilter: true,
+    filterType: 'enum',
+    filterOperators: ['equals'],
+    enumOptions: options.availabilityStatus ?? [],
+    isSort: false,
     sticky: true,
     stickyPosition: 'right',
     stickyOnMobile: false,
@@ -103,16 +153,13 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
   },
   {
     id: 'configurationStatus',
-    label: (
-      <>
-        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-          Configuration
-        </Box>
-        <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-          Statuses
-        </Box>
-      </>
-    ),
+    isFilter: true,
+    filterType: 'enum',
+    filterOperators: ['equals'],
+    enumOptions: options.configurationStatus ?? [],
+    isSort: false,
+    label: 'Configuration',
+    stickyOnMobile: false,
     sticky: true,
     stickyPosition: 'right',
     minWidth: 130,
@@ -156,15 +203,18 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
     minWidth: 150,
     headerSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
     cellSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
-    align: 'left',
+    align: 'right',
+    headerAlign: 'left',
     isSort: false,
     isFilter: false,
     excludeFromExport: true,
     render: (_, data) => (
-      <AdmissionOfferingRowActions
-        row={data as unknown as AdmissionOfferingListItem}
-        {...actions}
-      />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <AdmissionOfferingRowActions
+          row={data as unknown as AdmissionOfferingListItem}
+          {...actions}
+        />
+      </Box>
     ),
   },
 ];

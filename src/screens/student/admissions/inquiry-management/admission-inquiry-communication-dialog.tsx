@@ -26,6 +26,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { inquirySchoolContact } from './inquiry-school-contact';
 import {
   getInquiryCommunicationTemplate,
   inquiryCommunicationTemplateOptions,
@@ -78,6 +79,7 @@ export const admissionInquiryCommunicationSchema = Yup.object({
 });
 
 export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose }: Props) {
+  const recipient = inquiry ? inquirySchoolContact(inquiry) : null;
   const [createCommunication, createState] = useCreateAdmissionInquiryCommunicationMutation();
   const formik = useFormik<FormValues>({
     initialValues: {
@@ -85,7 +87,7 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
       title: inquiry ? `Admission follow-up – ${inquiry.applicantName}` : '',
       subject: '',
       body: '',
-      channels: [1],
+      channels: recipient?.defaultChannels ?? [],
       importanceLevel: 0,
       requiresAcknowledgement: false,
       publishImmediately: canSend,
@@ -165,8 +167,10 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
           <Stack spacing={0.25}>
             <Typography variant="subtitle2">Recipient</Typography>
             <Typography variant="body2" color="text.secondary">
-              {inquiry.applicantName} · {inquiry.normalizedPhone}
-              {inquiry.email ? ` · ${inquiry.email}` : ''}
+              {recipient?.fullName}
+              {recipient?.relationship ? ` · ${recipient.relationship}` : ''}
+              {recipient?.mobile ? ` · ${recipient.mobile}` : ''}
+              {recipient?.email ? ` · ${recipient.email}` : ''}
             </Typography>
           </Stack>
 

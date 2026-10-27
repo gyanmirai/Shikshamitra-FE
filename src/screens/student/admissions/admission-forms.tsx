@@ -25,6 +25,7 @@ import { AdmissionFormCloneDialog } from './admission-form-clone-dialog';
 import { buildAdmissionFormListQuery } from './form-list/form-list-query';
 import { AdmissionFormPublishDialog } from './admission-form-publish-dialog';
 import { AdmissionFormHistoryDialog } from './admission-form-history-dialog';
+import { normalizeAdmissionFormFilters } from './form-list/form-column-filters';
 import { ApplicationExperienceNavigation } from './application-experience-navigation';
 
 import type { ApplicationExperienceView } from './application-experience-navigation';
@@ -45,16 +46,22 @@ export default function AdmissionFormsScreen() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<IParams['filters']>([]);
+  const [filterScope, setFilterScope] = useState(view);
+  const scopeChanging = filterScope !== view;
   useEffect(() => {
     setPage(0);
     setSearch('');
     setFilters([]);
+    setFilterScope(view);
   }, [view]);
   const listQuery = useMemo(
     () => buildAdmissionFormListQuery({ page, rowsPerPage, search, filters, purpose }),
     [filters, page, purpose, rowsPerPage, search]
   );
-  const query = useGetAdmissionFormsQuery(listQuery);
+  const query = useGetAdmissionFormsQuery(listQuery, { skip: scopeChanging });
+  const currentData = scopeChanging ? undefined : query.currentData;
+  const listError = !scopeChanging && query.isError;
+  const hasSafeRows = Boolean(currentData?.items.length);
   const columns = createFormColumns({
     canManage: actions.canManage,
     canPublish: actions.canPublish,
@@ -70,18 +77,27 @@ export default function AdmissionFormsScreen() {
   });
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+      }}
+    >
       <CustomBreadcrumbs
-        heading="Admission Form"
+        heading="Admission forms"
         description="Create and publish the inquiry and registration forms used across admissions."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
-          { name: 'Admission Form' },
+          { name: 'Admission forms' },
         ]}
         slotProps={{
-          action: { alignSelf: 'flex-end' },
+          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
           heading: {},
           moreLink: {},
           breadcrumbs: {},
@@ -92,28 +108,32 @@ export default function AdmissionFormsScreen() {
             variant="contained"
             disabled={!actions.canManage}
             startIcon={<Iconify icon="mdi:plus" />}
-            sx={{ minWidth: 140 }}
             onClick={() => actions.create(purpose)}
           >
-            Add Form
+            Add form
           </Button>
         }
       />
       <ApplicationExperienceNavigation value={view} />
-      {query.isError && <AdmissionQueryError onRetry={() => query.refetch()} />}
+      {listError && hasSafeRows && <AdmissionQueryError onRetry={() => query.refetch()} />}
       <Box
         role="tabpanel"
         id={`application-experience-${view}-panel`}
         aria-labelledby={`application-experience-${view}-tab`}
-        sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+        sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}
       >
         <CustomizableTable
           tableId={`admission-forms-${view}`}
           tableTitle={`${view[0].toUpperCase()}${view.slice(1)} forms`}
-          wrapperProps={{ sx: { height: 1 } }}
+          wrapperProps={{ sx: { flex: 1, height: 1, minHeight: 0, minWidth: 0 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
-          data={query.data?.items ?? []}
+          data={currentData?.items ?? []}
+          errorContent={
+            listError && !hasSafeRows ? (
+              <AdmissionQueryError onRetry={() => query.refetch()} />
+            ) : undefined
+          }
           handleRowClick={(row) => actions.preview((row as AdmissionForm).id)}
           rowProps={(row) => ({
             tabIndex: 0,
@@ -128,12 +148,13 @@ export default function AdmissionFormsScreen() {
               }
             },
           })}
-          totalCount={query.data?.totalCount ?? 0}
+          totalCount={currentData?.totalCount ?? 0}
           page={page}
           rowsPerPage={rowsPerPage}
           searchTerm={search}
           filters={filters}
-          isLoading={query.isLoading || query.isFetching}
+          isLoading={scopeChanging || query.isLoading || (query.isFetching && !currentData)}
+          isRefreshing={query.isFetching && Boolean(currentData)}
           isPagination
           isSearch
           isFilter
@@ -150,7 +171,12 @@ export default function AdmissionFormsScreen() {
             setPage(0);
           }}
           onServerFilter={(value) => {
-            setFilters(value);
+            setFilters(normalizeAdmissionFormFilters(value));
+            setPage(0);
+          }}
+          onClearCriteria={() => {
+            setSearch('');
+            setFilters([]);
             setPage(0);
           }}
           noDataText={`No ${view} forms configured yet. Create a draft to begin.`}

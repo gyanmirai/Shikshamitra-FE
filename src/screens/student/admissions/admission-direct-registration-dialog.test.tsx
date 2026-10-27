@@ -207,6 +207,124 @@ beforeEach(() => {
 });
 
 describe('Special direct-registration entry', () => {
+  it('captures an optional guardian main contact without requiring another parent or repeating the family check', async () => {
+    renderDrawer();
+    await selectOffering();
+    fillApplicant();
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other guardian' }));
+    fireEvent.change(screen.getByLabelText(/Guardian full name/), {
+      target: { value: 'Pooja Shah' },
+    });
+    fireEvent.change(screen.getByLabelText(/Guardian relationship/), { target: { value: 'Aunt' } });
+    fireEvent.change(screen.getByLabelText('Guardian email'), {
+      target: { value: 'AUNT@Example.COM' },
+    });
+    fireEvent.change(screen.getByLabelText('Main school contact'), {
+      target: { value: 'guardian' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
+    await waitFor(() => expect(state.start).toHaveBeenCalledOnce());
+    expect(state.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parentRelationship: 'mother',
+        guardianFirstName: 'Aarti',
+        guardianMobile: '9876543210',
+        familyContacts: {
+          mainContactRelationship: 'guardian',
+          otherGuardian: {
+            fullName: 'Pooja Shah',
+            relationship: 'Aunt',
+            email: 'aunt@example.com',
+          },
+        },
+      })
+    );
+    expect(state.findFamilies).toHaveBeenCalledOnce();
+  });
+
+  it('resets the main contact to the parent when the optional guardian is removed', async () => {
+    renderDrawer();
+    await selectOffering();
+    fillApplicant();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other guardian' }));
+    fireEvent.change(screen.getByLabelText('Main school contact'), {
+      target: { value: 'guardian' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other guardian' }));
+    expect(screen.getByLabelText('Main school contact')).toHaveValue('mother');
+    expect(screen.queryByLabelText(/Guardian full name/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
+    await waitFor(() => expect(state.start).toHaveBeenCalledOnce());
+    expect(state.start).toHaveBeenCalledWith(
+      expect.objectContaining({ familyContacts: { mainContactRelationship: 'mother' } })
+    );
+  });
+
+  it('keeps the default main contact on the captured parent when its relationship changes', async () => {
+    renderDrawer();
+    await selectOffering();
+    fillApplicant();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other parent' }));
+    expect(screen.getByLabelText('Main school contact')).toHaveValue('mother');
+    fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: 'father' } });
+    expect(screen.getByLabelText('Main school contact')).toHaveValue('father');
+  });
+
+  it('requires reviewing optional parent details before a sibling confirmation can change parent roles', async () => {
+    state.findFamilies.mockImplementation(() => ({
+      unwrap: async () => [
+        {
+          familyId: 'family-1',
+          familyNumber: 'FAM-1',
+          applicants: [],
+          parents: [
+            {
+              sourceApplicantId: 'sibling-1',
+              relationship: 'father',
+              name: 'Raj',
+              firstName: 'Raj',
+              mobile: '9876543210',
+            },
+          ],
+        },
+      ],
+    }));
+    renderDrawer();
+    await selectOffering();
+    fillApplicant();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other parent' }));
+    fireEvent.change(screen.getByLabelText(/Father full name/), { target: { value: 'Raj' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/Existing family found/);
+    fireEvent.change(screen.getByLabelText('Parent'), { target: { value: 'sibling-1:father' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add sibling' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Add Sibling?' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add sibling' }));
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(
+      screen.getByText(
+        /Select the confirmed parent relationship and review the other parent details/
+      )
+    ).toBeVisible();
+    expect(screen.getByLabelText('Relationship')).toHaveValue('mother');
+    expect(screen.getByLabelText(/Father full name/)).toHaveValue('Raj');
+    expect(state.start).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other parent' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add sibling' }));
+    const reviewed = await screen.findByRole('dialog', { name: 'Add Sibling?' });
+    fireEvent.click(within(reviewed).getByRole('button', { name: 'Add sibling' }));
+    await screen.findByText(/Sibling family confirmed/);
+    expect(
+      screen.queryByText(
+        /Select the confirmed parent relationship and review the other parent details/
+      )
+    ).not.toBeInTheDocument();
+  });
+
   it.each([2, 3])(
     'selects a registration-first offering for special admission type %s',
     async (track) => {

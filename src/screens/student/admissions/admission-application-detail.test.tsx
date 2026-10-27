@@ -286,6 +286,25 @@ const loadPaymentDetail = () => {
 };
 
 describe('AdmissionApplicationDetailScreen', () => {
+  it('keeps the shared body in the flex chain while a stage changes from idle to saving', () => {
+    loadPaymentDetail();
+    const { rerender } = render(<AdmissionApplicationDetailScreen presentation="drawer" />);
+    const editor = screen.getByText('Fee selection editor');
+    const fieldset = editor.closest('fieldset')!;
+    const body = fieldset.parentElement!;
+    expect(getComputedStyle(body).display).toBe('flex');
+    expect(getComputedStyle(fieldset).display).toBe('flex');
+    expect(getComputedStyle(fieldset.firstElementChild!).display).toBe('flex');
+    detailState.advanceState.isLoading = true;
+    rerender(<AdmissionApplicationDetailScreen presentation="drawer" />);
+    expect(screen.getByText('Fee selection editor')).toBe(editor);
+    expect(fieldset).toBeDisabled();
+    expect(getComputedStyle(body).display).toBe('flex');
+    detailState.advanceState.isLoading = false;
+    rerender(<AdmissionApplicationDetailScreen presentation="drawer" />);
+    expect(fieldset).not.toBeDisabled();
+    expect(screen.getByText('Fee selection editor')).toBe(editor);
+  });
   it.each(['applicationQuery', 'workflowQuery'] as const)(
     'refreshes status with a skeleton while retaining the dirty payment editor (%s)',
     (queryName) => {

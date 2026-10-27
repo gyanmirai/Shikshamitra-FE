@@ -35,6 +35,7 @@ export function readAssessmentWorkbench(params: URLSearchParams) {
       : 'all',
     sessionId: params.get('assessmentSession') ?? '',
     search: (params.get('assessmentSearch') ?? '').slice(0, 128),
+    columnFilters: params.get('assessmentFilters') ?? '',
     page: Number.isSafeInteger(page) && page >= 0 ? page : 0,
     size: [10, 25, 100].includes(size) ? size : 25,
     sort: sortColumns.includes(sort) ? sort : 'enteredAt',

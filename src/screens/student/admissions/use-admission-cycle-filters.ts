@@ -13,6 +13,7 @@ export type AdmissionCycleFilters = {
   status: AdmissionCycleStatus | '';
   windowStatus: AdmissionCycleWindowStatus | '';
   search: string;
+  columnFilters: string;
   page: number;
   rowsPerPage: number;
 };
@@ -54,6 +55,7 @@ export function useAdmissionCycleFilters() {
     status: readNumberFilter<AdmissionCycleStatus>(searchParams.get('status'), 0, 3),
     windowStatus: readNumberFilter<AdmissionCycleWindowStatus>(searchParams.get('window'), 0, 4),
     search: searchParams.get('search') ?? '',
+    columnFilters: searchParams.get('filters') ?? '',
     page: readPage(searchParams.get('page')),
     rowsPerPage: readRowsPerPage(searchParams.get('size')),
   }));
@@ -68,6 +70,7 @@ export function useAdmissionCycleFilters() {
       status: next.status === '' ? '' : String(next.status),
       window: next.windowStatus === '' ? '' : String(next.windowStatus),
       search: next.search,
+      filters: next.columnFilters,
       page: next.page > 0 ? String(next.page + 1) : '',
       size: next.rowsPerPage !== 10 ? String(next.rowsPerPage) : '',
     };
@@ -85,6 +88,7 @@ export function useAdmissionCycleFilters() {
       status: '',
       windowStatus: '',
       search: '',
+      columnFilters: '',
       page: 0,
       rowsPerPage: filters.rowsPerPage,
     });

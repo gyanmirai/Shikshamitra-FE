@@ -2,6 +2,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import { Label } from 'src/components/label';
+import { fNumber } from 'src/utils/format-number';
 
 import { FormRowActions } from './form-row-actions';
 import { AdmissionTableText } from '../admission-table-text';
@@ -39,9 +40,9 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
     {
       id: 'purpose',
       label: 'Purpose',
-      filterType: 'enum' as const,
-      enumOptions: PURPOSE_LABELS.map((label, value) => ({ label, value })),
-      isFilter: true,
+      minWidth: 130,
+      // The selected Inquiry/Registration tab already fixes this read-only context.
+      isFilter: false,
       isSort: false,
       render: (value) => PURPOSE_LABELS[Number(value ?? 1)] ?? 'Registration',
     },
@@ -49,21 +50,30 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
       id: 'version',
       label: 'Version',
       filterType: 'number' as const,
+      minWidth: 115,
+      align: 'right',
+      filterStep: 1,
       isFilter: true,
       isSort: false,
+      render: (value) => fNumber(value),
     },
 
     {
       id: 'sectionCount',
       label: 'Sections',
       filterType: 'number' as const,
+      minWidth: 120,
+      align: 'right',
+      filterStep: 1,
       isFilter: true,
       isSort: false,
-      render: (value) => Number(value) || 0,
+      render: (value) => fNumber(Number(value) || 0),
     },
     {
       id: 'status',
       label: 'Status',
+      minWidth: 130,
+      isFilter: true,
       filterType: 'enum' as const,
       enumOptions: STATUS_LABELS.map((label, value) => ({ label, value })),
       isSort: false,

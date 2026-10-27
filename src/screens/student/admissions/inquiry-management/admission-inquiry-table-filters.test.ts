@@ -75,3 +75,16 @@ describe('Admission Inquiry shared-table filters', () => {
     ).toMatchObject({ excludePostApplication: false });
   });
 });
+
+it('filters the displayed class name independently of loaded offering choices', () => {
+  expect(
+    buildAdmissionInquiryListFilters(
+      [{ column: 'standardName', type: 'equals', value: 'Class 6', valueType: 'string' }],
+      ''
+    )
+  ).toMatchObject({
+    standardName: 'Class 6',
+    standardNameFilterType: 'equals',
+    admissionOfferingId: undefined,
+  });
+});

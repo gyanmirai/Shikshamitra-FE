@@ -1,5 +1,4 @@
 import { vi, it, expect, describe } from 'vitest';
-import { render, screen } from '@testing-library/react';
 import { getCellValueForExport } from 'src/components/customizabaleTable/table-export';
 
 import { buildAdmissionApplicationsColumns } from './admission-applications-columns';
@@ -20,19 +19,12 @@ describe('Applications record presentation', () => {
       isFilter: false,
       excludeFromExport: true,
     });
-    expect(columns.every((column) => column.isFilter === false)).toBe(true);
+    expect(columns.filter((column) => column.isFilter).map((column) => column.id)).toEqual(['standardName', 'decisionEnteredAt', 'lastSavedAt', 'status']);
+    expect(cell('applicantName').isFilter).toBe(false);
+    expect(cell('contactPhone').isFilter).toBe(false);
   });
-  it('uses honest missing data and distinguishes an unresolved counsellor', () => {
-    render(
-      <>
-        {cell('assignedCounsellorName').render?.('-', {
-          assignedCounsellorId: 'archived',
-          assignedCounsellorName: null,
-        })}
-      </>
-    );
-    expect(screen.getByText('Assigned counsellor unavailable')).toBeInTheDocument();
-    expect(screen.queryByText('Unassigned')).not.toBeInTheDocument();
+  it('uses honest missing decision dates', () => {
+    expect(columns.some((column) => column.id === 'assignedCounsellorName')).toBe(false);
     expect(getCellValueForExport({ decisionEnteredAt: null }, cell('decisionEnteredAt'))).toBe(
       'Not recorded'
     );

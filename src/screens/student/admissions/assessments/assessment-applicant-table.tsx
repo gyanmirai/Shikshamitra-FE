@@ -146,7 +146,9 @@ export function AssessmentApplicantTable({
       : []),
     {
       id: 'applicantName',
-      label: 'Student Name',
+      label: 'Student name',
+      // Combined name/reference identity remains read-only; global search covers both.
+      isFilter: false,
       minWidth: narrow ? 120 : 200,
       headerSx: narrow ? { px: 0.5 } : undefined,
       cellSx: narrow ? { px: 0.5, overflowWrap: 'anywhere' } : undefined,
@@ -159,12 +161,19 @@ export function AssessmentApplicantTable({
         </Box>
       ),
     },
-    { id: 'applicationNumber', label: 'Application number', defaultHidden: true },
+    {
+      id: 'applicationNumber',
+      label: 'Application number',
+      defaultHidden: true,
+      isFilter: true,
+      filterType: 'string',
+    },
     {
       id: 'className',
       label: 'Class',
       isSort: false,
-      isFilter: false,
+      isFilter: true,
+      filterType: 'string',
       minWidth: 100,
       render: (_, row) => row.className || '—',
     },
@@ -172,7 +181,8 @@ export function AssessmentApplicantTable({
       id: 'sessionName',
       label: 'Session',
       isSort: false,
-      isFilter: false,
+      isFilter: true,
+      filterType: 'string',
       minWidth: 150,
       render: (_, data) => displayAttempt(data as AssessmentRosterItem)?.sessionName ?? '—',
     },
@@ -180,7 +190,9 @@ export function AssessmentApplicantTable({
       id: 'attendance',
       label: 'Attendance',
       isSort: false,
-      isFilter: false,
+      isFilter: true,
+      filterType: 'enum',
+      enumOptions: Object.entries(attendanceLabels).map(([value, label]) => ({ value, label })),
       render: (_, data) => {
         const value = displayAttempt(data as AssessmentRosterItem)?.attendance ?? 'pending';
         return (
@@ -194,12 +206,14 @@ export function AssessmentApplicantTable({
       id: 'result',
       label: 'Result',
       isSort: false,
-      isFilter: false,
+      isFilter: true,
+      filterType: 'enum',
+      enumOptions: Object.entries(resultLabels).map(([value, label]) => ({ value, label })),
       render: (_, data) => resultLabel(displayAttempt(data as AssessmentRosterItem)?.outcome),
     },
     {
       id: 'nextAction',
-      label: 'Next Action',
+      label: 'Next action',
       isSort: false,
       isFilter: false,
       minWidth: 120,
@@ -237,11 +251,14 @@ export function AssessmentApplicantTable({
     {
       id: 'status',
       label: 'Status',
+      stickyOnMobile: false,
       isSort: false,
-      isFilter: false,
+      isFilter: true,
+      filterType: 'enum',
+      enumOptions: Object.entries(progressLabels).map(([value, label]) => ({ value, label })),
       sticky: true,
       stickyPosition: 'right',
-      minWidth: 90,
+      minWidth: 120,
       render: (_, data) => (
         <Label
           color={
@@ -294,12 +311,13 @@ export function AssessmentApplicantTable({
       data={data}
       tableTitle="Assessment students"
       exportLabel="Export"
-      wrapperProps={{ sx: { height: 1 } }}
+      wrapperProps={{ sx: { height: 1, minWidth: 0, minHeight: 0 } }}
       tableContainerProps={{ sx: { height: 1 } }}
       isSearch
       isPagination
       serverSidePagination
       serverSideSearch
+      serverSideFilter
       serverSideSort
       serverSideSortMode="single"
       searchFieldProps={{

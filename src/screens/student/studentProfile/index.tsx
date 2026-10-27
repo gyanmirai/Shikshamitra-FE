@@ -3,21 +3,19 @@
 import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
-import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
 import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { financePermissions } from 'src/constants/finance-menu';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import StudentDirectory from 'src/screens/student/records/student-directory';
+import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { recordsQueryUrl } from 'src/screens/student/records/records-url-state';
 import { directoryStudentName } from 'src/screens/student/records/student-directory-columns';
-import AssignmentDrawer from 'src/screens/finance/FeeStructureAssign/Components/AssignmentDrawer';
 
 import Finance from './finance';
 import Library from './libraray';
@@ -112,18 +110,27 @@ export function StudentProfile() {
         : undefined
     );
   }, []);
-  const [feeStudent, setFeeStudent] = useState<StudentDirectoryItem | null>(null);
   const canChange =
     hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
     hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
-  const canAssignFees =
-    hasGrantedPermission(permissions, `${financePermissions.fees.structureAssign}.View`) &&
-    hasGrantedPermission(permissions, `${financePermissions.fees.structureAssign}.Add`);
+  const canViewAttendance = hasGrantedPermission(
+    permissions,
+    studentPermissions.attendance.markAttendance
+  );
+  const profileActionHref = (id: string, view: 'details' | 'attendance') =>
+    recordsQueryUrl(studentPaths.records.studentList, params.toString(), {
+      student: id,
+      view,
+      edit: view === 'details' ? 'details' : undefined,
+      section: undefined,
+      tab: undefined,
+    });
   const listHref = recordsQueryUrl(studentPaths.records.studentList, params.toString(), {
     student: undefined,
     view: undefined,
     section: undefined,
     tab: undefined,
+    edit: undefined,
   });
   if (studentId)
     return (
@@ -165,25 +172,35 @@ export function StudentProfile() {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
       <StudentDirectory
         rowActions={
-          canChange || canAssignFees
+          canChange || canViewAttendance
             ? (row) => [
                 ...(canChange
                   ? [
                       {
-                        id: 'change-status',
-                        label: `Change status for ${directoryStudentName(row)}`,
-                        icon: 'mdi:account-edit-outline',
-                        href: `${studentPaths.records.changes}?mode=new&student=${encodeURIComponent(row.studentId)}&section=status`,
+                        id: 'edit-details',
+                        label: `Edit Details for ${directoryStudentName(row)}`,
+                        icon: GlobalIcons.edit,
+                        href: profileActionHref(row.studentId, 'details'),
                       },
                     ]
                   : []),
-                ...(canAssignFees
+                ...(canViewAttendance
                   ? [
                       {
-                        id: 'assign-fees',
-                        label: `Assign fee structure for ${directoryStudentName(row)}`,
-                        icon: 'mdi:cash-multiple',
-                        onClick: () => setFeeStudent(row),
+                        id: 'attendance-history',
+                        label: `Attendance History for ${directoryStudentName(row)}`,
+                        icon: 'mdi:calendar-check-outline',
+                        href: profileActionHref(row.studentId, 'attendance'),
+                      },
+                    ]
+                  : []),
+                ...(canChange
+                  ? [
+                      {
+                        id: 'change-status',
+                        label: 'Change Status',
+                        icon: 'mdi:account-edit-outline',
+                        href: `${studentPaths.records.changes}?mode=new&student=${encodeURIComponent(row.studentId)}&section=status`,
                       },
                     ]
                   : []),
@@ -191,22 +208,6 @@ export function StudentProfile() {
             : undefined
         }
       />
-      {feeStudent && currentYear?.id && (
-        <AssignmentDrawer
-          students={[
-            {
-              id: feeStudent.studentId,
-              studentId: feeStudent.studentId,
-              studentName: [feeStudent.firstName, feeStudent.middleName, feeStudent.lastName]
-                .filter(Boolean)
-                .join(' '),
-            },
-          ]}
-          academicYearId={currentYear.id}
-          academicYearName={currentYear.name}
-          onClose={() => setFeeStudent(null)}
-        />
-      )}
     </Box>
   );
 }

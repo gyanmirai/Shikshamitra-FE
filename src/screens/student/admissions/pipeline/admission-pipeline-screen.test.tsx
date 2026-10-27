@@ -22,6 +22,7 @@ const context = vi.hoisted(() => ({
     totalCount: 31,
   },
   error: false,
+  optionsError: false,
   fetching: false,
   scopeLoading: false,
   board: 'board-1',
@@ -150,11 +151,31 @@ vi.mock('src/redux/student/admissions/admission-pipeline-api', () => ({
     return {
       currentData: { defaultMyCases: false, counsellors: [], stages: [] },
       isFetching: false,
-      isError: false,
+      isError: context.optionsError,
       refetch: vi.fn(),
     };
   },
 }));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  context.params = new URLSearchParams();
+  context.year = 'year-1';
+  context.canView = true;
+  context.canAssign = false;
+  context.bulkBusy = false;
+  context.error = false;
+  context.optionsError = false;
+  context.fetching = false;
+  context.scopeLoading = false;
+  context.board = 'board-1';
+  context.medium = 'medium-1';
+  context.initialLoading = false;
+  context.data = {
+    items: [{ id: 'app-1', applicationNumber: 'APP-1', applicantName: 'QA Applicant', status: 0 }],
+    totalCount: 31,
+  };
+});
 
 describe('Pipeline worklist', () => {
   it('keeps the scoped worklist mounted below the drawer and closes without losing list filters', async () => {
@@ -181,26 +202,6 @@ describe('Pipeline worklist', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Open row' })).toHaveFocus());
   });
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    context.params = new URLSearchParams();
-    context.year = 'year-1';
-    context.canView = true;
-    context.canAssign = false;
-    context.bulkBusy = false;
-    context.error = false;
-    context.fetching = false;
-    context.scopeLoading = false;
-    context.board = 'board-1';
-    context.medium = 'medium-1';
-    context.initialLoading = false;
-    context.data = {
-      items: [
-        { id: 'app-1', applicationNumber: 'APP-1', applicantName: 'QA Applicant', status: 0 },
-      ],
-      totalCount: 31,
-    };
-  });
   it('uses backend default queue and scoped server paging, rather than inquiry rows', () => {
     context.params = new URLSearchParams('page=2&size=10&search=Jay&sort=enteredAt&direction=desc');
     render(<AdmissionInquiryPipelineScreen />);
@@ -245,7 +246,7 @@ describe('Pipeline worklist', () => {
     view.rerender(<AdmissionInquiryPipelineScreen />);
     expect(context.table.isLoading).toBe(false);
     expect(context.table.data).toEqual(context.data.items);
-    expect(screen.getByRole('progressbar', { name: 'Refreshing Pipeline' })).toBeInTheDocument();
+    expect(context.table.isRefreshing).toBe(true);
   });
   it('keeps cached Pipeline rows without a competing refresh bar behind an application drawer', () => {
     context.fetching = true;
@@ -293,16 +294,16 @@ describe('Pipeline worklist', () => {
       scroll: false,
     });
   });
-  it('withholds rows on failure and labels background refresh without hiding safe rows', () => {
+  it('preserves safe rows on failure and labels background refresh', () => {
     context.error = true;
     const rendered = render(<AdmissionInquiryPipelineScreen />);
     expect(screen.getByText('Query failed')).toBeInTheDocument();
-    expect(screen.queryByText('Open row')).not.toBeInTheDocument();
+    expect(screen.getByText('Open row')).toBeInTheDocument();
     context.error = false;
     context.fetching = true;
     rendered.rerender(<AdmissionInquiryPipelineScreen />);
     expect(context.table.isLoading).toBe(false);
-    expect(screen.getByRole('progressbar', { name: 'Refreshing Pipeline' })).toBeInTheDocument();
+    expect(context.table.isRefreshing).toBe(true);
   });
   it('waits for refreshed totals before changing a retained page', () => {
     context.params = new URLSearchParams('page=4&size=10');
@@ -350,4 +351,50 @@ describe('Pipeline worklist', () => {
     );
     expect(context.bulkInput).toEqual({});
   });
+});
+
+it('preserves the current Pipeline worklist on a failed refresh', () => {
+  context.error = true;
+  render(<AdmissionInquiryPipelineScreen />);
+  expect(context.table.data).toEqual(context.data.items);
+  expect(screen.getByText('Open row')).toBeInTheDocument();
+  expect(context.table.errorContent).toBeUndefined();
+});
+
+it('shares the status criterion with top filters and sends only scalar column predicates to the server', () => {
+  const filters = [
+    { column: 'contactPhone', type: 'startsWith', value: '987', valueType: 'string' },
+  ];
+  context.params = new URLSearchParams({
+    board: 'board-1',
+    medium: 'medium-1',
+    status: '0',
+    filters: JSON.stringify(filters),
+    page: '3',
+  });
+  render(<AdmissionInquiryPipelineScreen />);
+  expect(context.list).toHaveBeenLastCalledWith(
+    expect.objectContaining({ status: 0, columnFilters: JSON.stringify(filters), skipCount: 50 }),
+    expect.objectContaining({ skip: false })
+  );
+  expect(context.filterProps.values.status).toBe(0);
+  expect(context.table.filters).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ column: 'status', value: 0, displayValue: 'Draft' }),
+    ])
+  );
+  context.table.onServerFilter([{ column: 'status', type: 'equals', value: 4, valueType: 'enum' }]);
+  const target = new URL(context.replace.mock.calls.at(-1)![0], 'https://school.test');
+  expect(target.searchParams.get('status')).toBe('4');
+  expect(target.searchParams.has('page')).toBe(false);
+  expect(target.searchParams.has('filters')).toBe(false);
+});
+it('keeps a successful empty list available when only operational options fail', () => {
+  context.optionsError = true;
+  context.data = { items: [], totalCount: 0 };
+  render(<AdmissionInquiryPipelineScreen />);
+  expect(context.table.data).toEqual([]);
+  expect(context.table.errorContent).toBeUndefined();
+  expect(context.table.isLoading).toBe(false);
+  expect(screen.getByText('Query failed')).toBeInTheDocument();
 });

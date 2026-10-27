@@ -33,6 +33,7 @@ import {
 import AdmissionRuntimeField from './admission-runtime-field';
 import { useAdmissionInquiryAge } from './use-admission-inquiry-age';
 import { isAdmissionRuleVisible } from './admission-visibility-rules';
+import { AdmissionFamilyContacts } from './admission-family-contacts';
 import { useAdmissionFormLanguage } from './use-admission-form-language';
 import { useAdmissionInquiryDialog } from './use-admission-inquiry-dialog';
 import { AdmissionSectionFields } from './components/admission-section-fields';
@@ -614,6 +615,28 @@ export default function AdmissionInquiryFormPage() {
                   </InquiryFormSection>
                 )}
 
+              {controller.canCreateInquiry &&
+                !controller.runtimeLoading &&
+                !controller.runtimeError && (
+                  <AdmissionFamilyContacts
+                    parentRelationship={formik.values.parentRelationship}
+                    value={formik.values.familyContacts}
+                    errors={
+                      typeof formik.errors.familyContacts === 'object'
+                        ? formik.errors.familyContacts
+                        : undefined
+                    }
+                    touched={
+                      typeof formik.touched.familyContacts === 'object'
+                        ? formik.touched.familyContacts
+                        : undefined
+                    }
+                    submitted={formik.submitCount > 0}
+                    disabled={controller.busy}
+                    onChange={(value) => formik.setFieldValue('familyContacts', value)}
+                    onBlur={(name) => formik.setFieldTouched(`familyContacts.${name}`, true)}
+                  />
+                )}
               <AdmissionInquiryDuplicateMatches
                 matches={controller.matches}
                 guardianPhone={controller.currentGuardianPhone}

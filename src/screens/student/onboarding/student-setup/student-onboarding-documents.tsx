@@ -56,7 +56,7 @@ export default function StudentOnboardingDocuments({
           </Button>
         }
       >
-        Onboarding documents could not be loaded.
+        Student documents could not be loaded. Refresh the page.
       </StudentFeedback>
     );
   }
@@ -168,11 +168,11 @@ export default function StudentOnboardingDocuments({
                     file,
                   }).unwrap();
                   shikshaMitraToast.success({
-                    message: `${selectedDocument.name} uploaded successfully.`,
+                    message: `${selectedDocument.name} uploaded.`,
                   });
                 } catch {
                   shikshaMitraToast.error({
-                    message: `${selectedDocument.name} could not be uploaded. Check the file type and size, then retry.`,
+                    message: `${selectedDocument.name} could not be uploaded. Check the allowed file type and size, then try again.`,
                   });
                 } finally {
                   event.target.value = '';

@@ -7,11 +7,12 @@ import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useSetStudentOnboardingIdentifierLockMutation } from 'src/redux/student/onboarding/student-onboarding-api';
+
+import { getOnboardingErrorMessage } from './student-onboarding-messages';
 
 export default function StudentIdentifierLockControls({
   academicYearId,
@@ -43,8 +44,11 @@ export default function StudentIdentifierLockControls({
     validationSchema: Yup.object({
       reason:
         action === 'unlock'
-          ? Yup.string().trim().required('Enter the reason for unlocking.').max(1000)
-          : Yup.string().max(1000),
+          ? Yup.string()
+              .trim()
+              .required('Explain why these numbers need to be unlocked.')
+              .max(1000, 'Keep the reason within 1000 characters.')
+          : Yup.string().max(1000, 'Keep the reason within 1000 characters.'),
     }),
     onSubmit: async (values) => {
       if (
@@ -66,14 +70,16 @@ export default function StudentIdentifierLockControls({
           reason: values.reason.trim() || undefined,
         }).unwrap();
         shikshaMitraToast.success({
-          message: `${label} ${action === 'lock' ? 'locked' : 'unlocked'} for this Division's students.`,
+          message: `${label} ${action === 'lock' ? 'locked' : 'unlocked'} for this division.`,
         });
         setAction(null);
         form.resetForm();
       } catch (error) {
         form.setStatus(
-          parseApiProblemDetail(error).detail ||
-            'The number lock could not be changed. Refresh and retry.'
+          getOnboardingErrorMessage(
+            error,
+            'Could not change the number lock. Refresh and try again.'
+          )
         );
       } finally {
         savingRef.current = false;
@@ -126,9 +132,9 @@ export default function StudentIdentifierLockControls({
         <DialogScrollContent>
           <Stack spacing={1.5}>
             <StudentFeedback notificationKey="STU-0968" presentation="inline" severity="info">
-              This applies to {label} for students in the selected Division. New students receive
-              the next available number while locked; after unlocking, published numbering rules
-              apply.
+              This applies to {identifierType === 'gr' ? 'GR numbers' : 'roll numbers'} in this
+              division. New students get the next available number while locked. Unlocking restores
+              the school numbering rules.
             </StudentFeedback>
             {action === 'unlock' && (
               <ShakingTextField error={Boolean(form.touched.reason && form.errors.reason)}>
@@ -148,11 +154,7 @@ export default function StudentIdentifierLockControls({
               </ShakingTextField>
             )}
             {form.status && (
-              <StudentFeedback
-                notificationKey="STU-0969"
-                presentation="persistent"
-                severity="error"
-              >
+              <StudentFeedback notificationKey="STU-0969" presentation="toast" severity="error">
                 {form.status}
               </StudentFeedback>
             )}

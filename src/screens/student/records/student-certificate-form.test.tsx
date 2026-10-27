@@ -1,3 +1,5 @@
+import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
+
 import { it, vi, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -11,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   generated: vi.fn(),
   close: vi.fn(),
 }));
-const students = [
+const students: StudentDirectoryItem[] = [
   {
     id: 'student-1',
     studentId: 'student-1',
@@ -21,6 +23,9 @@ const students = [
     standardName: 'Class 1',
     divisionName: 'A',
     maskedFields: [],
+    status: 6,
+    entrySource: 'CompletedOnboarding',
+    hasPhoto: false,
   },
   {
     id: 'student-2',
@@ -31,8 +36,41 @@ const students = [
     standardName: 'Class 1',
     divisionName: 'A',
     maskedFields: [],
+    status: 6,
+    entrySource: 'CompletedOnboarding',
+    hasPhoto: false,
   },
 ];
+
+it('retains directory students in the matching academic scope without issuing on open', async () => {
+  const user = userEvent.setup();
+  render(
+    <StudentCertificateForm
+      certificateType={1}
+      certificateLabel="Bonafide"
+      initialStudents={students.map((student) => ({
+        ...student,
+        academicYearId: 'year-1',
+        academicMediumId: 'medium-1',
+        standardId: 'class-1',
+        divisionId: 'division-1',
+      }))}
+      academicYearId="year-1"
+      onClose={mocks.close}
+      onGenerated={mocks.generated}
+    />
+  );
+  expect(screen.getByRole('checkbox', { name: 'Select Asha Patel' })).toBeChecked();
+  expect(screen.getByRole('checkbox', { name: 'Select Ravi Shah' })).toBeChecked();
+  expect(mocks.preview).not.toHaveBeenCalled();
+  expect(mocks.issue).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Preview' }));
+  await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(2));
+  expect(mocks.preview.mock.calls.map(([input]) => input.studentId)).toEqual([
+    'student-1',
+    'student-2',
+  ]);
+});
 vi.mock('react-redux', () => ({
   useSelector: (select: any) =>
     select({ globalState: { currentYear: { id: 'year-1' } }, auth: { permissions: [] } }),
@@ -46,6 +84,7 @@ vi.mock('src/components/toast', () => ({
     success: vi.fn(),
   },
 }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/components/customDialog', () => ({
   default: ({ open, title, children, onSubmit, hasForm }: any) =>
     !open ? null : (

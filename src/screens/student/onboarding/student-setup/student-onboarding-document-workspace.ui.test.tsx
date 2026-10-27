@@ -19,12 +19,23 @@ vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
 const responsive = vi.hoisted(() => ({ compact: false }));
+const feedback = vi.hoisted(() => ({ error: vi.fn() }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: feedback.error,
+    success: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+  },
+}));
 vi.mock('src/hooks/use-responsive', () => ({ useResponsive: () => responsive.compact }));
 const createUrl = vi.fn(() => 'blob:student-private-preview');
 const revokeUrl = vi.fn();
 const endpoint = `${documentPath}/evidence/evidence-1/download`;
 addIcon('mdi:lock-outline', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 beforeEach(() => {
+  feedback.error.mockClear();
   responsive.compact = false;
   createUrl.mockClear();
   revokeUrl.mockClear();
@@ -164,7 +175,7 @@ it('embeds an authorized PDF with fallback instead of treating it as an image', 
   expect(screen.queryByRole('button', { name: 'Zoom in' })).not.toBeInTheDocument();
 });
 
-it('keeps Close during a failed preview and retries the authenticated request', async () => {
+it('keeps Close and Download during a failed preview and shows one standard error toast', async () => {
   let requests = 0;
   mswServer.use(
     http.get(endpoint, () => {
@@ -176,9 +187,17 @@ it('keeps Close during a failed preview and retries the authenticated request', 
   );
   renderWorkspace();
   await userEvent.click(screen.getByRole('button', { name: 'View Birth certificate' }));
-  await userEvent.click(await screen.findByRole('button', { name: 'Retry preview' }));
-  expect(await screen.findByRole('img', { name: 'Birth certificate preview' })).toBeVisible();
-  expect(requests).toBe(2);
+  await waitFor(() =>
+    expect(feedback.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'The document could not be opened. Try again or download it.',
+      })
+    )
+  );
+  expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'close' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Download Birth certificate' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Retry preview' })).not.toBeInTheDocument();
+  expect(requests).toBe(1);
 });
 
 it('handles unsupported formats and image decode failure without an unsafe URL', async () => {
@@ -198,8 +217,14 @@ it('handles unsupported formats and image decode failure without an unsafe URL',
   await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'close' }));
   await userEvent.click(screen.getByRole('button', { name: 'View Birth certificate' }));
   fireEvent.error(await screen.findByRole('img', { name: 'Birth certificate preview' }));
-  expect(screen.getByText('Unable to preview this document.')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Retry preview' })).toBeEnabled();
+  await waitFor(() =>
+    expect(feedback.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'The document could not be opened. Try again or download it.',
+      })
+    )
+  );
+  expect(screen.queryByRole('button', { name: 'Retry preview' })).not.toBeInTheDocument();
 });
 
 it('preserves uploaded copy when a later original was recorded and shows all evidence history', async () => {

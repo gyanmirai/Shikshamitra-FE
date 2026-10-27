@@ -4,7 +4,7 @@ import { it, vi, expect } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { renderWithProviders } from 'src/test/test-utils';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { assessmentResponse } from 'src/redux/student/admissions/assessment-test-fixture';
 
@@ -55,6 +55,37 @@ const renderTable = (
       />
     </ThemeProvider>
   );
+
+it('exposes real scalar filters while leaving combined identity and next-action controls unfilterable', async () => {
+  const onServerFilter = vi.fn();
+  renderWithProviders(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <AssessmentApplicantTable
+        items={[row('Sam')]}
+        canAdvance
+        onAction={vi.fn()}
+        onDetails={vi.fn()}
+        onServerFilter={onServerFilter}
+      />
+    </ThemeProvider>
+  );
+  expect(screen.queryByRole('button', { name: 'Filter Student name' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Filter Next action' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Filter Attendance' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Attendance *' }));
+  fireEvent.click(await screen.findByRole('option', { name: 'Absent' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+  await waitFor(() =>
+    expect(onServerFilter).toHaveBeenCalledWith([
+      expect.objectContaining({
+        column: 'attendance',
+        type: 'equals',
+        value: 'absent',
+        valueType: 'enum',
+      }),
+    ])
+  );
+});
 
 it('selects an active row without opening details and supports select-all for eligible rows only', () => {
   const pending = row('Pending student');
