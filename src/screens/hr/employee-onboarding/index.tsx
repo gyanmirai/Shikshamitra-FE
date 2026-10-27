@@ -55,6 +55,17 @@ import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/Inform
 import { shouldClearEmployeeRoleSelection } from 'src/screens/hr/employee/employee-role-options';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
+import {
   Box,
   Card,
   Chip,
@@ -86,17 +97,6 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
 
 import { getOnboardingErrorMessage } from './error-message';
 import { WorkAssignmentField } from './work-assignment-field';
