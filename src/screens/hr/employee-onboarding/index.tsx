@@ -52,19 +52,8 @@ import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-gr
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
 import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import { shouldClearEmployeeRoleSelection } from 'src/screens/hr/employee/employee-role-options';
-import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
+import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   Box,
   Card,
@@ -97,8 +86,21 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
 
 import { getOnboardingErrorMessage } from './error-message';
+import { AcademicPermissionCard } from './academic-permission-card';
+import { useFinalizeRoles, FinalizeRoleField } from './finalize-role-field';
 import { statutoryProfileSchema } from '../employee/statutory-profile-fields';
 import { SalaryStructureBuilder } from '../payroll/structure/SalaryStructureBuilder';
 import { getLocalMonthKey } from '../payroll/structure/salary-structure-builder-utils';
@@ -125,7 +127,6 @@ import {
 } from './status';
 
 import type { FinalizeFormState } from './finalize-validation';
-import { FinalizeRoleField, useFinalizeRoles } from './finalize-role-field';
 
 type InviteFormState = {
   firstName: string;
@@ -614,10 +615,7 @@ function EmployeeOnboardingDetailView({
         <CustomBreadcrumbs
           heading="Staff Onboarding"
           description="Review candidate information and complete staff enrollment."
-          links={[
-            { name: 'Staff Onboarding', onClick: onBack },
-            { name: 'Application details' },
-          ]}
+          links={[{ name: 'Staff Onboarding', onClick: onBack }, { name: 'Application details' }]}
           // sx={onboardingBreadcrumbSx}
           // slotProps={onboardingBreadcrumbSlotProps}
           isBack
@@ -1093,7 +1091,6 @@ export function FinalizeDialog({
   onClose: () => void;
   onFinalized: (employee: FinalizedEmployeeResult) => void;
 }) {
-  const theme = useTheme();
   const [step, setStep] = useState(0);
   const [maxStepVisited, setMaxStepVisited] = useState(0);
   const [academicTouched, setAcademicTouched] = useState(false);
@@ -2589,68 +2586,20 @@ export function FinalizeDialog({
                                 const isChecked = selectedStageIds?.includes(option.id);
                                 return (
                                   <Grid key={option.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                                    <Paper
-                                      variant="outlined"
-                                      sx={{
-                                        px: 1.5,
-                                        py: 1,
-                                        borderRadius: 1.5,
-                                        borderColor: isChecked ? 'primary.main' : 'divider',
-                                        bgcolor: isChecked
-                                          ? theme.vars.palette.primary.lightChannel
-                                          : 'background.paper',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                        '&:hover': {
-                                          borderColor: 'primary.main',
-                                          bgcolor: theme.vars.palette.primary.lightChannel,
-                                        },
-                                      }}
-                                      onClick={() => {
-                                        const current = selectedStageIds;
-                                        const next = isChecked
-                                          ? current.filter((id) => id !== option.id)
-                                          : [...current, option.id];
+                                    <AcademicPermissionCard
+                                      name={option.name || option.label}
+                                      detail={[option.mediumName, option.boardName]
+                                        .filter(Boolean)
+                                        .join(' · ')}
+                                      checked={isChecked}
+                                      disabled={finalizeSaving || isLoading || salaryEditor.busy}
+                                      onChange={(checked) => {
+                                        const next = checked
+                                          ? [...selectedStageIds, option.id]
+                                          : selectedStageIds.filter((id) => id !== option.id);
                                         updateField('academicPermissionStageIds', next.join(','));
                                       }}
-                                    >
-                                      <FormControlLabel
-                                        control={
-                                          <Checkbox
-                                            size="small"
-                                            checked={isChecked}
-                                            onChange={() => {
-                                              const current = selectedStageIds;
-                                              const next = isChecked
-                                                ? current.filter((id) => id !== option.id)
-                                                : [...current, option.id];
-                                              updateField(
-                                                'academicPermissionStageIds',
-                                                next.join(',')
-                                              );
-                                            }}
-                                            onClick={(e) => e.stopPropagation()}
-                                          />
-                                        }
-                                        label={
-                                          <Box>
-                                            <Typography
-                                              variant="body2"
-                                              fontWeight={isChecked ? 600 : 400}
-                                            >
-                                              {option.name || option.label}
-                                            </Typography>
-                                            {option.mediumName && (
-                                              <Typography variant="caption" color="text.secondary">
-                                                {option.mediumName}
-                                                {option.boardName ? ` · ${option.boardName}` : ''}
-                                              </Typography>
-                                            )}
-                                          </Box>
-                                        }
-                                        sx={{ m: 0, width: '100%' }}
-                                      />
-                                    </Paper>
+                                    />
                                   </Grid>
                                 );
                               })}
@@ -2663,18 +2612,43 @@ export function FinalizeDialog({
                 </Box>
               )}
 
+              <Box
+                component="fieldset"
+                disabled={finalizeSaving || isLoading}
+                inert={finalizeSaving || isLoading}
+                sx={{
+                  display: currentStep === 3 ? 'block' : 'none',
+                  mt: 2,
+                  border: 0,
+                  p: 0,
+                  minWidth: 0,
+                }}
+              >
+                {canManageStatutory && (
+                  <SalaryStructureBuilder
+                    formik={formik}
+                    dateOfJoining={form.doj}
+                    initialMonth={salaryMonth}
+                    onboarding={{ statutoryForm, onSalaryChange: setSalary }}
+                    onEditorStateChange={setSalaryEditor}
+                  />
+                )}
+              </Box>
               {currentStep === 3 && (
-                <Stack spacing={2}>
-                  <Typography variant="subtitle2">Final review</Typography>
+                <Stack spacing={2} sx={{ mt: 2 }}>
+                  <Typography variant="subtitle1" component="h3" fontWeight={600}>
+                    Final Review
+                  </Typography>
                   <Typography variant="body2">
-                    Staff/user creation will happen now for {form.firstName} {form.lastName}.
+                    Review these choices, then select Finalize to save {form.firstName}{' '}
+                    {form.lastName} and their salary.
                   </Typography>
                   <Stack>
                     <FormControlLabel
                       control={
                         <Checkbox
                           checked={form.useSubmittedPhoto}
-                          disabled={!application.hasPhoto}
+                          disabled={finalizeSaving || isLoading || !application.hasPhoto}
                           onChange={(event) =>
                             updateField('useSubmittedPhoto', event.target.checked)
                           }
@@ -2686,7 +2660,7 @@ export function FinalizeDialog({
                       control={
                         <Checkbox
                           checked={form.attachResumeAsDocument}
-                          disabled={!application.hasResume}
+                          disabled={finalizeSaving || isLoading || !application.hasResume}
                           onChange={(event) =>
                             updateField('attachResumeAsDocument', event.target.checked)
                           }
@@ -2706,7 +2680,7 @@ export function FinalizeDialog({
                     </Alert>
                   )}
                   {!canSubmit && (
-                    <Typography variant="body2" color="error">
+                    <Typography variant="body2" color="text.secondary">
                       {form.isTeaching
                         ? 'Complete required staff fields, Academic Permission, and a valid salary preview before finalizing.'
                         : 'Complete required staff fields and a valid salary preview before finalizing.'}
@@ -2714,27 +2688,6 @@ export function FinalizeDialog({
                   )}
                 </Stack>
               )}
-              <Box
-                component="fieldset"
-                disabled={finalizeSaving || isLoading}
-                sx={{
-                  display: currentStep === 3 ? 'block' : 'none',
-                  mt: 2,
-                  border: 0,
-                  p: 0,
-                  minWidth: 0,
-                }}
-              >
-                {canManageStatutory && (
-                  <SalaryStructureBuilder
-                    formik={formik}
-                    dateOfJoining={form.doj}
-                    initialMonth={salaryMonth}
-                    onboarding={{ statutoryForm, onSalaryChange: setSalary }}
-                    onEditorStateChange={setSalaryEditor}
-                  />
-                )}
-              </Box>
             </Box>
           )}
         />

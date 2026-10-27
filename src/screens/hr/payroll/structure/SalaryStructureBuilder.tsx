@@ -20,6 +20,7 @@ import { ExpandMore } from '@mui/icons-material';
 import { useGetPFQuery } from 'src/redux/PF/PFApi';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomStepper from 'src/components/custom-stepper';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
@@ -70,6 +71,7 @@ import {
   Typography,
   InputLabel,
   FormControl,
+  LinearProgress,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -78,6 +80,7 @@ import { EsiPolicyFields } from '../setting/esi-policy-fields';
 import { getLocalMonthKey } from './salary-structure-builder-utils';
 import { formatPayrollMonth } from '../setting/esi-statutory-utils';
 import { EmployeeEsiDetails } from '../setting/employee-esi-details';
+import { SalaryTemplateSetupState } from './salary-template-setup-state';
 import { SalaryTotals, SalaryBreakdown, StatutorySummary } from './salary-summary-view';
 
 type Props = {
@@ -131,6 +134,7 @@ export function SalaryStructureBuilder({
     isLoading: templatesLoading,
     isFetching: templatesFetching,
     isError: templatesError,
+    error: templateError,
     refetch: refetchTemplates,
   } = useGetActiveSalaryTemplatesQuery(undefined, { refetchOnMountOrArgChange: 30 });
   const { data: pfData, isError: pfRulesError, refetch: refetchPfRules } = useGetPFQuery({});
@@ -226,6 +230,7 @@ export function SalaryStructureBuilder({
   const salaryFields = useRef<HTMLDivElement>(null);
   const statutoryFields = useRef<HTMLDivElement>(null);
   const previewButton = useRef<HTMLButtonElement>(null);
+  const previewSection = useRef<HTMLDivElement>(null);
   const footerStatusId = useId();
   const operationPending = useRef(false);
   const initializedRef = useRef('');
@@ -237,6 +242,7 @@ export function SalaryStructureBuilder({
   const pfRuleLabelId = useId();
 
   const templates = templateData?.items || [];
+  const templateLookupReady = Boolean(templateData) && !templatesError && !templatesFetching;
   const defaultTemplate = templates.find((template) => template.isDefault) || templates[0];
   const selectedTemplate = selectedTemplateId
     ? templates.find((template) => template.id === selectedTemplateId)
@@ -462,6 +468,7 @@ export function SalaryStructureBuilder({
 
   const calculateSalary = async () => {
     if (
+      !templateLookupReady ||
       operationPending.current ||
       !canManage ||
       !selectedVersion ||
@@ -521,6 +528,7 @@ export function SalaryStructureBuilder({
 
   const save = async () => {
     if (
+      !templateLookupReady ||
       operationPending.current ||
       !canManage ||
       !employeeId ||
@@ -693,6 +701,7 @@ export function SalaryStructureBuilder({
 
   const onboardingSalary =
     onboarding &&
+    templateLookupReady &&
     canManage &&
     calculationCurrent &&
     !busy &&
@@ -762,32 +771,22 @@ export function SalaryStructureBuilder({
       </Box>
     );
   }
-  if (templatesError && !templateData) {
+  if (!templateData || (templatesError && !templates.length)) {
     return (
-      <Box display="grid" gap={2.5}>
-        <Alert
-          severity="error"
-          action={
-            <Button size="small" onClick={() => refetchTemplates()}>
-              Retry
-            </Button>
-          }
-        >
-          Salary templates could not be loaded.
-        </Alert>
-      </Box>
+      <SalaryTemplateSetupState
+        onboarding={isOnboarding}
+        failed
+        accessDenied={Boolean(
+          templateError && 'status' in templateError && templateError.status === 403
+        )}
+        busy={busy}
+        refresh={refreshSetup}
+      />
     );
   }
   if (!templates.length) {
     return (
-      <Alert severity="warning">
-        Create an active salary template before setting up staff salary.
-        <HrSetupLink setup="templates" disabled={busy} />
-        <HrSetupRefresh refresh={refreshSetup} disabled={busy} />
-        <Typography variant="body2">
-          Keep this tab open. Return here after setup and refresh the choices.
-        </Typography>
-      </Alert>
+      <SalaryTemplateSetupState onboarding={isOnboarding} busy={busy} refresh={refreshSetup} />
     );
   }
   if (!employeeId && !onboarding) {
@@ -850,7 +849,16 @@ export function SalaryStructureBuilder({
   };
   const reviewStatutory =
     pfChoiceMissing || (pfApplicable && !pfRuleId) || esiInvalid || statutoryBlocked;
+  const salaryDetailsReady = Boolean(
+    selectedVersion &&
+    templateLookupReady &&
+    !templateChangeRequired &&
+    !amountInvalid &&
+    monthlyAmount <= 100000000 &&
+    /^\d{4}-\d{2}$/.test(effectiveMonth)
+  );
   const needsPreview =
+    templateLookupReady &&
     !calculationCurrent &&
     !amountInvalid &&
     selectedVersion &&
@@ -859,6 +867,7 @@ export function SalaryStructureBuilder({
     !hasConflict &&
     !revisionsError;
   const canReviewSave =
+    templateLookupReady &&
     canManage &&
     !busy &&
     !hasConflict &&
@@ -1014,6 +1023,7 @@ export function SalaryStructureBuilder({
               : undefined
           }
           disabled={
+            !templateLookupReady ||
             !canManage ||
             busy ||
             !calculationCurrent ||
@@ -1031,12 +1041,77 @@ export function SalaryStructureBuilder({
     </>
   );
   return (
-    <Box display="grid" gap={2.5} sx={{ minWidth: 0 }}>
+    <Box
+      display="grid"
+      gap={2.5}
+      sx={{
+        minWidth: 0,
+        gridTemplateColumns: onboarding
+          ? { xs: 'minmax(0, 1fr)', md: '220px minmax(0, 1fr)' }
+          : 'minmax(0, 1fr)',
+        alignItems: 'start',
+      }}
+    >
+      {onboarding && (
+        <Box component="nav" aria-label="Salary setup sections" sx={{ minWidth: 0 }}>
+          <CustomStepper
+            orientation="vertical"
+            ariaLabel="Salary setup progress"
+            steps={['Template and amount', 'Statutory deductions', 'Salary preview']}
+            activeStep={!salaryDetailsReady ? 0 : reviewStatutory ? 1 : 2}
+            stepStates={[
+              salaryDetailsReady ? 'completed' : 'active',
+              onboardingSalary ? 'completed' : 'pending',
+              onboardingSalary ? 'completed' : 'pending',
+            ]}
+            stepCaptions={[
+              <Typography variant="caption" key="amount" color="text.secondary">
+                {!selectedVersion
+                  ? 'Choose an active template.'
+                  : amountInvalid
+                    ? 'Enter a monthly amount greater than zero.'
+                    : 'Template and amount selected.'}
+              </Typography>,
+              <Typography variant="caption" key="statutory" color="text.secondary">
+                {reviewStatutory
+                  ? 'Complete PF and ESIC details before previewing.'
+                  : 'Review PF and ESIC declarations; preview checks eligibility.'}
+              </Typography>,
+              <Typography variant="caption" key="preview" color="text.secondary">
+                {onboardingSalary
+                  ? 'Ready for final review. Finalize saves staff and salary together.'
+                  : 'Preview salary after setup. Changes require a fresh preview.'}
+              </Typography>,
+            ]}
+            disabled={busy}
+            onStepClick={(index) => {
+              if (index < 2) focusSection(index === 0 ? 'salary' : 'statutory');
+              else {
+                const target = calculation ? previewSection.current : previewButton.current;
+                target?.scrollIntoView?.({ block: 'center' });
+                target?.focus();
+              }
+            }}
+          />
+        </Box>
+      )}
       <Box
         component="fieldset"
         disabled={busy}
         sx={{ border: 0, p: 0, m: 0, minWidth: 0, display: 'grid', gap: 2.5 }}
       >
+        {templatesFetching && <LinearProgress aria-label="Refreshing salary templates" />}
+        {templatesError && (
+          <SalaryTemplateSetupState
+            onboarding={isOnboarding}
+            failed
+            accessDenied={Boolean(
+              templateError && 'status' in templateError && templateError.status === 403
+            )}
+            busy={busy}
+            refresh={refreshSetup}
+          />
+        )}
         <Box
           display="flex"
           alignItems="center"
@@ -1105,7 +1180,11 @@ export function SalaryStructureBuilder({
             rowSpacing={3}
           >
             <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth size="small" disabled={!canManage || busy}>
+              <FormControl
+                fullWidth
+                size="small"
+                disabled={!canManage || busy || !templateLookupReady}
+              >
                 <InputLabel id={salaryTemplateLabelId}>Salary template</InputLabel>
                 <Select
                   labelId={salaryTemplateLabelId}
@@ -1215,6 +1294,7 @@ export function SalaryStructureBuilder({
               loading={operation === 'calculate'}
               loadingPosition="start"
               disabled={
+                !templateLookupReady ||
                 !canManage ||
                 busy ||
                 !selectedVersion ||
@@ -1511,7 +1591,14 @@ export function SalaryStructureBuilder({
           <HrNotice severity="info">Your changes need a new preview.</HrNotice>
         )}
         {calculation ? (
-          <Box display="grid" gap={2} aria-live="polite">
+          <Box
+            ref={previewSection}
+            tabIndex={-1}
+            aria-label="Salary preview"
+            display="grid"
+            gap={2}
+            aria-live="polite"
+          >
             {calculation.targetResult.isExplainedByEnrollment && (
               <Alert severity="warning">
                 Statutory contribution changes explain a CTC difference of{' '}
@@ -1633,7 +1720,13 @@ export function SalaryStructureBuilder({
       {actionContainer ? (
         createPortal(actions, actionContainer)
       ) : (
-        <Box display="flex" justifyContent="flex-end" flexWrap="wrap" gap={1}>
+        <Box
+          display="flex"
+          justifyContent="flex-end"
+          flexWrap="wrap"
+          gap={1}
+          sx={{ gridColumn: onboarding ? { xs: 1, md: 2 } : undefined }}
+        >
           {actions}
         </Box>
       )}
