@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 
 import { Tabs } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
@@ -41,6 +42,15 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+    dismiss: vi.fn(),
+  },
 }));
 vi.mock('src/components/custom-tabs', () => ({
   CustomTabs: ({
@@ -125,6 +135,13 @@ vi.mock('./student-onboarding-portal-accounts', () => ({
 vi.mock('./student-onboarding-case-operations', () => ({ default: () => null }));
 
 const student = studentOnboardingTestData[0];
+
+beforeEach(async () => {
+  // Let the previous mount's StrictMode-safe notice release finish before reusing its message.
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+});
 
 describe('Student Setup drawer readiness UI', () => {
   beforeEach(() => {
@@ -211,7 +228,7 @@ describe('Student Setup drawer readiness UI', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it('retains additional admission details loading and retry in the details-only drawer', () => {
+  it('retains details-only loading and reports admission detail failures through the standard toast', async () => {
     mocks.capturedFieldsAvailable = false;
     mocks.capturedFieldsLoading = true;
     const props = {
@@ -226,9 +243,17 @@ describe('Student Setup drawer readiness UI', () => {
     mocks.capturedFieldsLoading = false;
     mocks.capturedFieldsError = true;
     rerender(<StudentSetupDrawer {...props} />);
-    expect(screen.getByText('Additional admission details could not be loaded.')).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(mocks.refetchCapturedFields).toHaveBeenCalledOnce();
+    await waitFor(() =>
+      expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Additional admission details could not be loaded.' })
+      )
+    );
+    expect(
+      screen.queryByText('Additional admission details could not be loaded.')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(mocks.refetchCapturedFields).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
   });
 
@@ -593,7 +618,7 @@ describe('Student Setup drawer readiness UI', () => {
 
   it.each(['loading', 'error'] as const)(
     'keeps activation disabled during preview %s without showing stale blockers',
-    (state) => {
+    async (state) => {
       mocks.activationPreview.lastError = 'An outdated blocker';
       mocks.activationPreviewFetching = state === 'loading';
       mocks.activationPreviewError = state === 'error';
@@ -613,10 +638,26 @@ describe('Student Setup drawer readiness UI', () => {
         expect(
           screen.getByRole('progressbar', { name: 'Checking activation readiness' })
         ).toBeInTheDocument();
-      else
+      else {
+        await waitFor(() =>
+          expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+            expect.objectContaining({
+              message: expect.stringContaining(
+                'The latest activation preview could not be loaded.'
+              ),
+            })
+          )
+        );
         expect(
-          screen.getByText('The latest activation preview could not be loaded.', { exact: false })
-        ).toBeVisible();
+          screen.queryByText('The latest activation preview could not be loaded.', { exact: false })
+        ).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+        expect(
+          within(screen.getByRole('dialog', { name: 'Activate Student' })).getByRole('button', {
+            name: 'Cancel',
+          })
+        ).toBeEnabled();
+      }
     }
   );
 
@@ -717,7 +758,7 @@ describe('Student Setup drawer readiness UI', () => {
     expect(screen.getByRole('button', { name: 'Approve onboarding' })).toBeDisabled();
   });
 
-  it('retains admission detail loading and retry in the combined panel', () => {
+  it('retains combined-panel loading and reports admission detail failures through the standard toast', async () => {
     mocks.capturedFieldsAvailable = false;
     mocks.capturedFieldsLoading = true;
     const liveStudent = {
@@ -737,11 +778,17 @@ describe('Student Setup drawer readiness UI', () => {
     mocks.capturedFieldsError = true;
     rerender(<StudentSetupDrawer open student={liveStudent} onClose={vi.fn()} />);
 
+    await waitFor(() =>
+      expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Additional admission details could not be loaded.' })
+      )
+    );
     expect(
-      screen.getByText('Additional admission details could not be loaded.')
-    ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(mocks.refetchCapturedFields).toHaveBeenCalledOnce();
+      screen.queryByText('Additional admission details could not be loaded.')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(mocks.refetchCapturedFields).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
   });
 
   it('keeps requirement review actions unavailable without manage permission', () => {
@@ -901,7 +948,7 @@ it('shows a pending history read instead of treating the paged worklist as empty
   expect(screen.queryByText('No onboarding activity recorded yet.')).not.toBeInTheDocument();
 });
 
-it('offers a history retry and withholds stale events when the full case read fails', () => {
+it('uses the standard history-error toast and withholds stale events after a failed case read', async () => {
   mocks.caseEvents = null;
   mocks.capturedFieldsLoading = false;
   mocks.capturedFieldsError = true;
@@ -914,9 +961,17 @@ it('offers a history retry and withholds stale events when the full case read fa
     />
   );
   fireEvent.click(screen.getByRole('tab', { name: 'History' }));
-  expect(screen.getByText('Handling history could not be loaded.')).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(mocks.refetchCapturedFields).toHaveBeenCalledOnce();
+  await waitFor(() =>
+    expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Handling history could not be loaded.' })
+    )
+  );
+  expect(screen.queryByText('Handling history could not be loaded.')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(screen.queryByText('No onboarding activity recorded yet.')).not.toBeInTheDocument();
+  expect(screen.queryByText(/Handled by:/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
+  expect(mocks.refetchCapturedFields).not.toHaveBeenCalled();
 });
 
 it('does not show the previous student actor when the current case changes', () => {

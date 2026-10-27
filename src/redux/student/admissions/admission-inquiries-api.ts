@@ -12,6 +12,7 @@ import type {
 import type {
   AdmissionFamilyParent,
   AdmissionParentContact,
+  AdmissionFamilyContacts,
   AdmissionParentRelationship,
 } from './admission-parent-family-types';
 
@@ -44,6 +45,13 @@ export type AdmissionInquiryStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type AdmissionInquirySource = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionInquiryWorkQueue = 1 | 2 | 3 | 4;
 export type AdmissionInquiry = {
+  mainSchoolContact?: {
+    fullName: string;
+    relationship: 'father' | 'mother' | 'guardian';
+    relationshipLabel?: string | null;
+    mobile?: string | null;
+    email?: string | null;
+  } | null;
   id: string;
   concurrencyStamp: string;
   inquiryNumber: string;
@@ -114,6 +122,8 @@ export type AdmissionInquiryListInput = {
   applicantNameFilterType?: string;
   phone?: string;
   phoneFilterType?: string;
+  standardName?: string;
+  standardNameFilterType?: string;
   email?: string;
   emailFilterType?: string;
   status?: AdmissionInquiryStatus;
@@ -158,6 +168,7 @@ export type AdmissionInquiryCommunicationResult = {
   deliveryErrorCode?: string | null;
 };
 export type CreateAdmissionInquiry = {
+  familyContacts?: AdmissionFamilyContacts;
   admissionCycleId: string;
   admissionOfferingId: string | null;
   boardId: string;

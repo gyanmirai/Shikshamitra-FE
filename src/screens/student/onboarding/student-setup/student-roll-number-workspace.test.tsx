@@ -1,4 +1,5 @@
 import { it, vi, expect, beforeEach } from 'vitest';
+import { shikshaMitraToast } from 'src/components/toast';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentRollNumberWorkspace from './student-roll-number-workspace';
@@ -11,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   apply: vi.fn(),
   context: {} as any,
 }));
-vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span data-icon="action" /> }));
 vi.mock('src/components/customDialog', () => ({
   default: ({ children, title, handleClose, disableClose, formProps }: any) => (
     <form role="dialog" aria-label={title} {...formProps}>
@@ -127,7 +128,9 @@ it('does not save renumbering until a reason and explicit confirmation are provi
   });
   render(<StudentRollNumberWorkspace scope={scope} operation="renumber" onClose={vi.fn()} />);
   fireEvent.click(await screen.findByRole('button', { name: 'Review Renumber' }));
-  expect(await screen.findByText('Enter a reason for renumbering.')).toBeInTheDocument();
+  expect(
+    await screen.findByText('Explain why these roll numbers need to change.')
+  ).toBeInTheDocument();
   expect(mocks.submit).not.toHaveBeenCalled();
   fireEvent.change(screen.getByRole('textbox', { name: /Reason/ }), {
     target: { value: 'Annual roster review' },
@@ -149,7 +152,9 @@ it('blocks submission when server row validation fails', async () => {
   });
   render(<StudentRollNumberWorkspace scope={scope} operation="assign-missing" onClose={vi.fn()} />);
   expect(await screen.findByRole('button', { name: 'Submit Assignment' })).toBeDisabled();
-  expect(screen.getByText(/Correct the flagged records/)).toBeInTheDocument();
+  const blocker = screen.getByText(/Fix the listed issues/);
+  expect(blocker).toBeInTheDocument();
+  expect(blocker.closest('[data-student-feedback]')?.querySelector('[data-icon], svg')).toBeNull();
 });
 it('retains safe data but disables writes after a failed request until refresh', async () => {
   mocks.submit.mockReturnValue({ unwrap: () => Promise.reject(new Error('Roster changed')) });
@@ -255,9 +260,7 @@ it('does not report incomplete applied rows as refreshed or repeat an assignment
     />
   );
   expect(
-    await screen.findByText(
-      'Saved Roll numbers could not be refreshed. Refresh to load the assignment result.'
-    )
+    await screen.findByText('Roll numbers were saved. Refresh to see the result.')
   ).toBeVisible();
   expect(applied).not.toHaveBeenCalled();
   expect(close).not.toHaveBeenCalled();
@@ -310,12 +313,20 @@ it('shows applicable policy and validates its reason before requesting approval'
   expect(screen.getByText('Approval 1: Principal')).toBeVisible();
   expect(mocks.submit).not.toHaveBeenCalled();
   fireEvent.click(submit);
-  expect(await screen.findByText('Enter a reason before saving.')).toBeVisible();
+  expect(
+    await screen.findByText('Explain why these roll numbers need to be assigned.')
+  ).toBeVisible();
   fireEvent.change(screen.getByRole('textbox', { name: 'Reason' }), {
     target: { value: 'Prepare class register' },
   });
   fireEvent.click(submit);
   await screen.findByText('Awaiting Approval');
+  const waiting = screen.getByText(
+    'Roll number assignment is waiting for approval. Numbers have not changed.'
+  );
+  expect(waiting.closest('[data-student-feedback]')?.querySelector('svg, [data-icon]')).toBeNull();
+  expect(shikshaMitraToast.info).toHaveBeenCalledWith({ message: waiting.textContent });
+  expect(shikshaMitraToast.success).not.toHaveBeenCalled();
   expect(mocks.submit).toHaveBeenCalledOnce();
   expect(mocks.apply).not.toHaveBeenCalled();
   expect(screen.queryByRole('button', { name: 'Approve Batch' })).not.toBeInTheDocument();
@@ -373,8 +384,27 @@ it('uses only server decision/apply capabilities when reviewing a pending policy
   );
   fireEvent.click(await screen.findByRole('button', { name: 'Approve Batch' }));
   expect(mocks.apply).not.toHaveBeenCalled();
+  expect(
+    await screen.findByText('Approved. The new roll numbers still need to be applied.')
+  ).toBeVisible();
   fireEvent.click(await screen.findByRole('button', { name: 'Apply Approved Batch' }));
   await waitFor(() => expect(close).toHaveBeenCalledOnce());
   expect(mocks.decide).toHaveBeenCalledOnce();
   expect(mocks.apply).toHaveBeenCalledOnce();
+});
+
+it('explains a rejected assignment without applying any numbers', async () => {
+  const pending = { ...pageBatch, status: 'PendingApproval', canSubmit: false, canDecide: true };
+  mocks.load.mockReturnValue({ unwrap: async () => pending });
+  mocks.decide.mockReturnValue({
+    unwrap: async () => ({ ...pending, status: 'Rejected', canDecide: false, canApply: false }),
+  });
+  render(<StudentRollNumberWorkspace scope={scope} batchId="batch-1" onClose={vi.fn()} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Reject' }));
+  const rejected = await screen.findByText(
+    'Roll number assignment was not approved. Numbers have not changed.'
+  );
+  expect(rejected.closest('[data-student-feedback]')?.querySelector('svg, [data-icon]')).toBeNull();
+  expect(mocks.apply).not.toHaveBeenCalled();
+  expect(screen.queryByRole('button', { name: 'Apply Approved Batch' })).not.toBeInTheDocument();
 });

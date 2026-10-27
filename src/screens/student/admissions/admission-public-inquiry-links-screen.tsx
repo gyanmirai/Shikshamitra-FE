@@ -18,19 +18,35 @@ export default function AdmissionPublicInquiryLinksScreen() {
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, gap: 1 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+        gap: 1,
+      }}
+    >
       <CustomBreadcrumbs
-        heading="Public Inquiry Links"
+        heading="Public inquiry links"
         description="Create and manage public admission inquiry forms and links."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
-          { name: 'Public Inquiry Links' },
+          { name: 'Public inquiry links' },
         ]}
+        slotProps={{
+          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
+          heading: {},
+          moreLink: {},
+          breadcrumbs: {},
+        }}
         action={
           canEdit ? (
             <Button
+              size="small"
               variant="contained"
               startIcon={<Iconify icon="mdi:link-plus" />}
               onClick={() => setCreateOpen(true)}

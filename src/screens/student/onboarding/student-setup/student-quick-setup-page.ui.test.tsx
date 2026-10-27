@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   activate: vi.fn(),
   sendCredentials: vi.fn(),
   success: vi.fn(),
+  error: vi.fn(),
   events: [] as string[],
   parentContext: undefined as
     | {
@@ -55,7 +56,7 @@ vi.mock('src/components/form-section-card', () => ({
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
-    error: vi.fn(),
+    error: mocks.error,
     warning: vi.fn(),
     info: vi.fn(),
     dismiss: vi.fn(),
@@ -400,6 +401,27 @@ describe('single-student setup page', () => {
     await waitFor(() => expect(screen.getByText('Student active')).toBeInTheDocument());
     expect(mocks.activate).toHaveBeenCalledOnce();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(mocks.success).toHaveBeenCalledWith({ message: 'Student is now active.' });
+  });
+
+  it('reports request failure once through the standard toast while preserving entered setup', async () => {
+    const { props } = renderPage();
+    mocks.saveAcademic.mockRejectedValueOnce({
+      status: 500,
+      data: { detail: 'System.InvalidOperationException: internal failure' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
+    await waitFor(() =>
+      expect(mocks.error).toHaveBeenCalledWith({
+        message: 'Changes could not be saved. Try again.',
+        alertProps: expect.any(Function),
+      })
+    );
+    expect(screen.queryByText(/internal failure/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Changes could not be saved. Try again.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save & Activate' })).toBeEnabled();
+    expect(mocks.activate).not.toHaveBeenCalled();
+    expect(props.onClose).not.toHaveBeenCalled();
   });
 
   it('shows authoritative activation blockers without activating the student', async () => {

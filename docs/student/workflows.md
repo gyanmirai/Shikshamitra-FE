@@ -3,10 +3,20 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-24
+updated_on: 2026-10-27
 owner: frontend-team
 audience: humans-and-agents
 ---
+
+## Parents and contact selection
+
+1. New Inquiry and Direct Registration start with Father or Mother. Add the other parent or other guardian only when needed; both parents are not required.
+2. The Main school contact selector defaults to the captured parent. An added guardian can be explicitly selected while parents remain saved. A selected guardian needs its own mobile or email. Sibling confirmation cannot silently swap the roles of entered optional-parent details.
+3. Student Profile uses **Parents & Contact**. **Manage contacts** opens the shared compact dialog, reads the current family snapshot and submits an audited Records change with a reason. Applied and awaiting-approval outcomes are shown separately; restricted fields and stale drafts remain guarded.
+4. App Login suggests the exact existing linked adult, then the recorded contact/default parent. Staff explicitly confirms adult app access before Send Credentials. Choosing the main school contact does not grant access or change an existing account. A guardian can be chosen instead of a new sibling-parent handoff only through the explicit case authorisation.
+5. Compose Inquiry communication shows the selected person's name, relationship and own destinations. Missing guardian details never display another person's inbox/phone. The original parent contact remains the family-matching identity.
+
+Backend rules and invariants are owned by [Student product documentation](../../../Shikshamitra-BE/docs/modules/student/product.md#parents-and-the-main-school-contact).
 
 ## Add or update the app-login email
 
@@ -23,7 +33,7 @@ Existing Not needed app-access policies still block sending; this email editor d
 
 Student operational notices use `shikshaMitraToast` through `StudentFeedback`, with matching severity and one announcement per unchanged active message in the current workspace. Equivalent rerenders, StrictMode effect replay and duplicate nested notices do not create additional notifications. Clearing a condition and encountering a later failure starts a new notification episode. Leaving the owning context dismisses its old notification.
 
-DESIGN.md's persistent-state requirements still apply: field validation, loading/empty/restricted states, normal record metadata and confirmation consequences use plain local content rather than banners or transient-only feedback. Blocking failures retain their local explanation and current Retry/Reload/Download actions after the toast expires. No permission, validation, workflow, Finance, activation or credential-delivery rule changes. Student-scoped shared-table feedback uses the same adapter; other modules retain their existing table behavior.
+DESIGN.md's persistent-state requirements still apply: field validation, loading/empty/restricted states, normal record metadata and confirmation consequences use plain local content rather than banners or transient-only feedback. Onboarding validation has no leading icons. Missing setup requirements remain in their owning region; API request failures use the standard toast without duplicate inline errors or extra Retry rows. Onboarding-only message formatting explains known backend reasons without changing the shared error parser or server checks. Queued login emails remain distinct from emails submitted to the sender; neither proves mailbox delivery. No permission, validation, workflow, Finance, activation or credential-delivery rule changes. Student-scoped shared-table feedback uses the same adapter; other modules retain their existing table behavior.
 
 ## Configure automatic application numbering
 
@@ -475,22 +485,28 @@ Save draft permits partial marking. Submit attendance requires the complete elig
 1. Complete configured Admissions and finalize to create or link the permanent Student and its Onboarding case.
 2. Continue preparation in Onboarding until enrollment activation; a finalized-only case stays in Onboarding rather than Student List.
 3. Open Student Records → Student List in the global header year; Active is the default population, with Former available inside Filters.
-4. Narrow by Board, Medium, Class and Division; server search, sorting and pagination preserve that academic/population context.
-   Applied academic filters appear as removable chips. Removing a parent clears its dependent choices; Reset academic filters preserves the student population, search and sort.
+4. Choose one Board and one Medium; these selectors have no All option and initially use the first available authorized board/medium pair. Class and Division use the shared searchable checkbox multi-select; clearing them keeps the board/medium context. Server search, sorting and pagination preserve the selected academic/population scope.
+   Applied class/division filters appear as removable chips. Removing a class clears dependent divisions; Reset academic filters preserves Board, Medium, student population, search and sort. Invalid saved academic IDs block queries/export until corrected or reset rather than expanding the population.
    Student, GR number and Class / Division have text column filters; Roll number supports comparisons and inclusive ranges; Status offers Active, Inactive and Left. Column criteria combine with academic/population scope and search on the server before counting and paging. Column chips clear only their own criteria, and the filtered-empty recovery clears search and column filters together while retaining academic scope. Actions has neither filtering nor sorting.
-5. Open the Student name or View link; Overview shows permanent identity, selected-year placement and linked admission/onboarding milestones.
+5. Click a row or Student name, or use the row's keyboard action, to open the profile; there is no separate View icon. Overview shows permanent identity, selected-year placement and linked admission/onboarding milestones.
 6. Use Details, Documents or History without losing list context; related school/service views remain reachable through Related.
 
 Activated students remain discoverable while credential preparation or email work is pending in Onboarding.
 Former students retain their permanent identity and selected-year history.
 
-Row actions show up to two permitted actions directly and place the remainder in the shared overflow menu. Profile and status-change destinations retain native links; fee assignment opens the existing drawer.
+Student List shows up to three permitted primary actions directly: Edit Details, Attendance History and Generate Certificate. This is the user-approved exception to the two-action reference images. Print I-card and Change Status remain in the shared overflow menu with short visible action labels; missing primary grants do not promote secondary actions. Direct icon controls retain student-specific accessible names. Edit Details enters the existing writable Details editor once; profile Back/tab navigation clears the edit shortcut. Assign Fee Structure is removed from this list's actions; other Finance workflows retain their existing behavior.
+The header has no Manage Roll Numbers or Historical entry buttons and this change adds no replacement entry points for them.
+Common Columns, Export and Fullscreen utilities remain in the shared table. Export downloads the complete matching server population in the chosen Excel/PDF format and visible exportable columns; it never exports only the loaded page or selected students.
+Bulk checkboxes require Active students, exactly one valid Class and one valid Division, and the owning document permissions. Select current page affects only visible eligible rows; the selection can retain up to 100 students across pages in the same scope. Academic year/scope, population, search, sort, column-filter or permission changes clear it; a successful same-page background refresh also clears the selection to avoid retaining removed or moved students. Bulk selection disables individual row actions.
+Selected students can open Print I-cards or Generate certificates in existing preview/issue workflows with their source academic year pinned. Opening a workflow never issues a document or saves an I-card template automatically; changing the global year blocks commands until the workspace is reopened. There is no Export selected action.
+The I-card handoff captures Board/Medium from the validated list scope and Class/Division from the selected rows. Checkbox bulk printing, including one selected student, makes all four academic fields read-only; row Print I-card retains the existing editable selection path. Drawer and section help use the shared information tooltip. The drawer gives the builder a bounded workspace so its stepper/footer stay visible around one scrolling step body.
+Review shows one complete, proportionally scaled card with a selected-student chooser and bounded Previous/Next controls, rather than a clipped gallery plus duplicate Live Preview. Photo availability stays explicit. Export shows the selected count, cards per A4 page and a paged sheet preview aligned to the PDF layout; downloading the PDF and issuing numbered cards remain separate commands. Directory printing does not save template changes automatically.
 Approved historical records retain their existing eligibility path; missing admission or onboarding evidence is displayed as unavailable rather than synthesized.
 Student List keeps Student, GR number, Class / Division, Roll number, Status and Actions as its compact core columns; school-specific fields appear only in the profile.
 
 ### Edit the retained offering form and review audit history
 
-Overview uses a compact Academic year / Board / Record source strip, matching-height Student details and Guardian & contact cards, and one Record activity panel for linked admission/onboarding milestones and recent changes. Thin theme dividers separate each group; summary cards stack at narrow widths and retain matching heights. Class/Division, Roll, GR and Medium stay in the identity header. Contact and address values come only from permitted saved structured sections; student or father email is never substituted for guardian email. Missing values display `—`, masked sections display `Restricted`, and a missing entry source is not inferred as a historical record. Age is derived from a valid saved date of birth. Existing detail/history reads supply the overview, with local contact loading/error states and the existing retry actions.
+Overview uses a compact Academic year / Board / Record source strip, matching-height Student details and Parents & Contact cards, and one Record activity panel for linked admission/onboarding milestones and recent changes. Thin theme dividers separate each group; summary cards stack at narrow widths and retain matching heights. Class/Division, Roll, GR and Medium stay in the identity header. The main contact's name, relationship, phone and email come only from that permitted saved adult profile; another person's contact details are never substituted. Missing values display `—`, masked sections display `Restricted`, and a missing entry source is not inferred as a historical record. Manage contacts uses the audited family editor. Age is derived from a valid saved date of birth. Existing detail/history reads supply the overview.
 Details displays the retained offering Registration form in its original field order and configured grid, including supported mapped and custom fields. Edit details opens the same form inline. Policy-masked fields and protected identifiers, placement, file/photo or read-only fields cannot be changed through this form.
 Editing a school form later does not add its new questions to existing profiles or reinterpret their original submissions.
 Admission/onboarding milestones remain on Overview; the separate Admission & Onboarding tab has been removed. Inquiry remains in its existing Admissions workspace.
@@ -553,7 +569,7 @@ Portal Access offers only student and parent/guardian login requirements; saved 
 The simplified drawer hides separate account-preparation and release-timing controls; enabled email recipients still require their corresponding account preparation.
 
 Credentials shows Account type, the selected person's read-only saved Email and one Send Credentials action.
-One parent recipient is selected automatically; multiple legal parent recipients expose a Recipient selector.
+App Login suggests the exact existing linked adult, then an explicit main contact or sole parent. Multiple available adults expose a Recipient selector. Adult sends require explicit access confirmation; a suggested contact is not a grant.
 Send creates or safely reuses the account and queues the selected email through one backend command.
 Only the selected recipient's status or actionable block is displayed; verification checkboxes, separate Create/link actions and repeated Disabled policy rows are removed.
 Saved account requirements and readiness remain authoritative; an explicit manual Send requests the selected email without changing the school's automatic-email preferences.
@@ -615,6 +631,8 @@ Missing required access, permission, recipient or readiness still produces one a
 The legacy audited case-only correction API remains available to its existing authorized consumers but is not part of the simplified Send flow.
 
 ## Roll-number settings and division review
+
+In Setup Status, the single-student Roll Auto field shows a server-calculated preview for the selected Division, including a Division that has not been saved yet. Previewing does not reserve a number or save placement. Changing Division or switching to Manual clears the earlier preview; stale responses cannot replace the current selection. Save for Later and Save & Activate recalculate and validate the number through the existing assignment commands before committing it. A displayed preview can change if another student receives that number first.
 
 1. In Onboarding Settings → Roll Number, select the academic path, grouping, sort field/direction and name format, save a Draft, then Publish through the existing versioned rule flow.
 2. In Student Setup → Roll Number, choose one Class and one Division. Auto targets eligible unassigned cases on the visible table page; existing assigned numbers and off-page students are unchanged.

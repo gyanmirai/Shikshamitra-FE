@@ -21,7 +21,6 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -44,6 +43,7 @@ import {
 
 import StudentAssignmentDrawer from './student-assignment-drawer';
 import { rollSortOptions, rollGroupingOptions } from '../setting/roll-ordering-fields';
+import { getOnboardingMessage, getOnboardingErrorMessage } from './student-onboarding-messages';
 
 type Props = {
   scope: RollNumberScope;
@@ -122,7 +122,7 @@ const columns: IColumn[] = [
     render: (value, row) =>
       value ? (
         <Typography variant="body2" color="error.main">
-          {value}
+          {getOnboardingMessage(value, 'Review this student before assigning a roll number.')}
         </Typography>
       ) : (
         <Label color="success">{row.batchStatus === 'Applied' ? 'Applied' : 'Ready'}</Label>
@@ -149,6 +149,7 @@ export default function StudentRollNumberWorkspace({
   const [apply, applyState] = useApplyRollNumberBatchMutation();
   const [batch, setBatch] = useState<RollNumberBatch>();
   const [error, setError] = useState('');
+  const [localError, setLocalError] = useState(false);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
@@ -164,11 +165,11 @@ export default function StudentRollNumberWorkspace({
               .trim()
               .required(
                 batch.operation === 'renumber'
-                  ? 'Enter a reason for renumbering.'
-                  : 'Enter a reason before saving.'
+                  ? 'Explain why these roll numbers need to change.'
+                  : 'Explain why these roll numbers need to be assigned.'
               )
-              .max(1000)
-          : Yup.string().trim().max(1000),
+              .max(1000, 'Keep the reason within 1000 characters.')
+          : Yup.string().trim().max(1000, 'Keep the reason within 1000 characters.'),
     }),
     onSubmit: async () => {
       if (!batch?.canSubmit || pending.current) return;
@@ -204,11 +205,11 @@ export default function StudentRollNumberWorkspace({
       (data.caseIds?.length !== caseIds.length || caseIds.some((id) => !data.caseIds?.includes(id)))
     )
       throw new RollBatchVerificationError(
-        'The current-page assignment could not be verified. Refresh before trying again.'
+        'Could not verify the selected students. Refresh and try again.'
       );
     if (quick && typeof data.approvalRequired !== 'boolean')
       throw new RollBatchVerificationError(
-        'The school approval policy could not be verified. Refresh before trying again.'
+        'Could not verify the approval rule. Refresh and try again.'
       );
   };
   const accept = async (data: RollNumberBatch, nextPage = 0, nextSize = 25) => {
@@ -225,9 +226,7 @@ export default function StudentRollNumberWorkspace({
         applied.status !== 'Applied' ||
         applied.items.length !== applied.totalCount
       )
-        throw new RollBatchVerificationError(
-          'Saved Roll numbers could not be refreshed. Refresh to load the assignment result.'
-        );
+        throw new RollBatchVerificationError('Roll numbers were saved. Refresh to see the result.');
       onApplied(applied.items);
     }
     setBatch(data);
@@ -237,13 +236,14 @@ export default function StudentRollNumberWorkspace({
       form.resetForm({ values: { reason: data.canDecide ? '' : data.reason } });
     if (quick && data.status === 'Applied') onClose();
   };
-  const showError = (issue: unknown) =>
+  const showError = (issue: unknown) => {
+    setLocalError(issue instanceof RollBatchVerificationError);
     setError(
-      (issue instanceof RollBatchVerificationError
+      issue instanceof RollBatchVerificationError
         ? issue.message
-        : parseApiProblemDetail(issue).detail) ||
-        'Roll numbering could not be completed. Refresh the preview before trying again.'
+        : getOnboardingErrorMessage(issue, 'Could not assign roll numbers. Refresh and try again.')
     );
+  };
   const generate = async (selected: RollBatchOperation) => {
     if (pending.current) return;
     pending.current = true;
@@ -318,15 +318,15 @@ export default function StudentRollNumberWorkspace({
     ).unwrap();
     await accept(result);
     setConfirmationOpen(false);
-    shikshaMitraToast.success({
+    shikshaMitraToast[result.status === 'Applied' ? 'success' : 'info']({
       message:
         result.status === 'Applied'
           ? 'Division roll numbers saved.'
           : result.status === 'PendingApproval'
-            ? 'Roll numbering is awaiting school approval. No numbers have changed.'
+            ? 'Roll number assignment is waiting for approval. Numbers have not changed.'
             : result.status === 'Approved'
-              ? 'Batch approved. An authorized operator can apply it.'
-              : 'Batch rejected. No numbers have changed.',
+              ? 'Approved. The new roll numbers still need to be applied.'
+              : 'Roll number assignment was not approved. Numbers have not changed.',
     });
   }
   async function command(action: 'submit' | 'approve' | 'reject' | 'apply') {
@@ -479,11 +479,15 @@ export default function StudentRollNumberWorkspace({
                 </Button>
               }
             >
-              Could not load roll numbering. Retry before continuing.
+              Could not load roll number settings. Try again.
             </StudentFeedback>
           )}
           {error && (
-            <StudentFeedback notificationKey="STU-1039" presentation="persistent" severity="error">
+            <StudentFeedback
+              notificationKey="STU-1039"
+              presentation={localError ? 'inline' : 'toast'}
+              severity="error"
+            >
               {error}
             </StudentFeedback>
           )}
@@ -541,7 +545,10 @@ export default function StudentRollNumberWorkspace({
               </Stack>
               {context.currentData?.blockedReason && (
                 <Typography variant="body2" color="text.secondary">
-                  {context.currentData.blockedReason}
+                  {getOnboardingMessage(
+                    context.currentData.blockedReason,
+                    'Review the roll number settings before continuing.'
+                  )}
                 </Typography>
               )}
               {(context.currentData?.batches ?? []).map((item) => (
@@ -614,17 +621,34 @@ export default function StudentRollNumberWorkspace({
               {batch.blockedCount > 0 && (
                 <StudentFeedback
                   notificationKey="STU-1040"
-                  presentation="persistent"
+                  presentation="inline"
                   severity="warning"
                 >
-                  {batch.blockedCount} student(s) need attention. Correct the flagged records, then
-                  generate a new preview. No numbers have changed.
+                  {batch.blockedCount} students need attention. Fix the listed issues, then create a
+                  new preview. Numbers have not changed.
                 </StudentFeedback>
               )}
               {batch.status === 'PendingApproval' && (
                 <StudentFeedback notificationKey="STU-1041" presentation="inline" severity="info">
-                  School approval is required. The whole batch will be applied together after
-                  approval.
+                  Roll number assignment is waiting for approval. Numbers have not changed.
+                </StudentFeedback>
+              )}
+              {batch.status === 'Approved' && (
+                <StudentFeedback
+                  notificationKey="STU-1041-approved"
+                  presentation="inline"
+                  severity="info"
+                >
+                  Approved. The new roll numbers still need to be applied.
+                </StudentFeedback>
+              )}
+              {batch.status === 'Rejected' && (
+                <StudentFeedback
+                  notificationKey="STU-1041-rejected"
+                  presentation="inline"
+                  severity="info"
+                >
+                  Roll number assignment was not approved. Numbers have not changed.
                 </StudentFeedback>
               )}
               {quick && (
@@ -682,7 +706,11 @@ export default function StudentRollNumberWorkspace({
                   .filter((item) => item.issue)
                   .map((item) => (
                     <Typography key={item.studentId} variant="body2" color="error.main">
-                      {item.studentName}: {item.issue}
+                      {item.studentName}:{' '}
+                      {getOnboardingMessage(
+                        item.issue,
+                        'Review this student before assigning a roll number.'
+                      )}
                     </Typography>
                   ))}
               {(batch.status === 'Preview' || batch.canDecide || batch.reason) && (

@@ -12,6 +12,7 @@ import {
   useLazyGetAvailableStudentIdentifierSeriesQuery,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import { getOnboardingMessage } from './student-onboarding-messages';
 import {
   runStudentSetupAssignment,
   getStudentSetupAssignmentValue,
@@ -110,7 +111,13 @@ export function useStudentSetupAssignment({
         grAssignmentMode,
         services,
         onResult: (result) => {
-          setResults((current) => [...current, result]);
+          setResults((current) => [
+            ...current,
+            {
+              ...result,
+              message: getOnboardingMessage(result.message, 'Review this student and try again.'),
+            },
+          ]);
           if (result.updatedStudent)
             setAutomaticPage((current) =>
               current?.contextKey === contextKey && current.type === type
@@ -151,11 +158,11 @@ export function useStudentSetupAssignment({
           changedRows.map((row) => {
             let field = Yup.string()
               .trim()
-              .required(type === 'division' ? 'Choose a division.' : 'Enter a number.');
+              .required(type === 'division' ? 'Select a division.' : 'Enter a number.');
             if (type === 'roll-number')
               field = field.test(
                 'positive-roll',
-                'Enter a positive whole Roll number.',
+                'Enter a positive whole roll number.',
                 (value) =>
                   /^\d+$/.test(value ?? '') && Number(value) > 0 && Number(value) <= 2147483647
               );
@@ -171,7 +178,7 @@ export function useStudentSetupAssignment({
         return Yup.object({
           values: Yup.object(fields),
           reason: needsReason
-            ? reason.required('Enter a reason for changing an existing number.')
+            ? reason.required('Explain why this number needs to change.')
             : reason,
         });
       }),
@@ -302,8 +309,10 @@ export function useStudentSetupAssignment({
             .filter((row) => !baseline.ids.includes(row.id))
             .map((row) => [
               row.id,
-              getStudentSetupAssignmentEligibility(row, type, 'manual', grAssignmentMode).reason ??
-                'Not selected for editing.',
+              getOnboardingMessage(
+                getStudentSetupAssignmentEligibility(row, type, 'manual', grAssignmentMode).reason,
+                'Not selected for editing.'
+              ),
             ])
         )
       : {};

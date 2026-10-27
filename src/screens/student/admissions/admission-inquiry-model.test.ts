@@ -80,6 +80,100 @@ const offering = {
 } as AdmissionOfferingListItem;
 
 describe('admission inquiry model', () => {
+  it('rejects sibling confirmation that would relabel an entered optional parent', () => {
+    expect(() =>
+      buildAdmissionInquiryPayload(
+        {
+          ...values,
+          parentRelationship: 'mother',
+          familyContacts: {
+            addOtherParent: true,
+            otherParentFullName: 'Raj Shah',
+            otherParentMobile: '',
+            otherParentEmail: '',
+            addGuardian: false,
+            guardianFullName: '',
+            guardianRelationship: '',
+            guardianMobile: '',
+            guardianEmail: '',
+            mainContactRelationship: '',
+          },
+        },
+        fields,
+        offering,
+        'family-1',
+        false,
+        undefined,
+        {
+          sourceApplicantId: 'sibling-1',
+          relationship: 'father',
+          name: 'Raj Shah',
+          firstName: 'Raj',
+          mobile: '9876543210',
+        }
+      )
+    ).toThrowError(
+      'Select the confirmed parent relationship and review the other parent details before linking this family.'
+    );
+  });
+
+  it('keeps the selected sibling parent proof when a guardian becomes the main contact', () => {
+    const payload = buildAdmissionInquiryPayload(
+      {
+        ...values,
+        parentRelationship: 'mother',
+        familyContacts: {
+          addOtherParent: false,
+          otherParentFullName: '',
+          otherParentMobile: '',
+          otherParentEmail: '',
+          addGuardian: true,
+          guardianFullName: '  Pooja Shah  ',
+          guardianRelationship: ' Aunt ',
+          guardianMobile: '9876543211',
+          guardianEmail: ' AUNT@Example.COM ',
+          mainContactRelationship: 'guardian',
+        },
+      },
+      fields,
+      offering,
+      'family-1',
+      false,
+      undefined,
+      {
+        sourceApplicantId: 'sibling-1',
+        relationship: 'mother',
+        name: 'Meera',
+        firstName: 'Meera',
+        email: 'mother@example.com',
+        mobile: '9876543210',
+      }
+    );
+    expect(payload).toMatchObject({
+      existingFamilyId: 'family-1',
+      existingParentApplicantId: 'sibling-1',
+      parentRelationship: 'mother',
+      guardianFirstName: 'Meera',
+      guardianEmail: 'mother@example.com',
+      guardianPhone: '9876543210',
+      familyContacts: {
+        mainContactRelationship: 'guardian',
+        otherGuardian: {
+          fullName: 'Pooja Shah',
+          relationship: 'Aunt',
+          mobile: '9876543211',
+          email: 'aunt@example.com',
+        },
+      },
+    });
+  });
+
+  it('defaults the main contact to the captured parent without requiring another adult', () => {
+    expect(
+      buildAdmissionInquiryPayload({ ...values, parentRelationship: 'mother' }, fields, offering)
+    ).toMatchObject({ familyContacts: { mainContactRelationship: 'mother' } });
+  });
+
   it('checks both saved Father and Mother form contacts without treating student email as a parent', () => {
     const parentFields = [
       ...fields,

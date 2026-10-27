@@ -139,6 +139,7 @@ export function StudentProfileView({
       view: nextView,
       section: undefined,
       tab: undefined,
+      edit: undefined,
     });
   const tabs = useMemo<UseTabsReturn>(
     () => ({
@@ -154,13 +155,18 @@ export function StudentProfileView({
                   ? 'activity'
                   : String(value),
             tab: undefined,
+            edit: undefined,
           }),
           { scroll: false }
         );
       },
       onChange: (_event, next) =>
         router.push(
-          recordsQueryUrl(pathname, params.toString(), { view: String(next), tab: undefined }),
+          recordsQueryUrl(pathname, params.toString(), {
+            view: String(next),
+            tab: undefined,
+            edit: undefined,
+          }),
           { scroll: false }
         ),
     }),
@@ -328,7 +334,9 @@ export function StudentProfileView({
                 ? detailsSkeleton
                 : details && (
                     <StudentRegistrationFormPanel
+                      key={details.studentId}
                       details={details}
+                      requestEdit={params.get('edit') === 'details'}
                       onEditingChange={onFormEditingChange}
                       onNavigationGuardChange={onNavigationGuardChange}
                       onSaved={() => {

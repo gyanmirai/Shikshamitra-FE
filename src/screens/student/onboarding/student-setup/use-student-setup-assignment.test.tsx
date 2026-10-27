@@ -342,7 +342,7 @@ describe('Student Setup assignment controller', () => {
       await edit(result, { 'case-1': '' }, 'Correct captured data');
       await submit(result);
       expect(result.current.manualErrors['case-1']).toBe(
-        type === 'division' ? 'Choose a division.' : 'Enter a number.'
+        type === 'division' ? 'Select a division.' : 'Enter a number.'
       );
       expect(result.current.form.values.values['case-1']).toBe('');
       expect(mocks.getCase).not.toHaveBeenCalled();
@@ -359,7 +359,7 @@ describe('Student Setup assignment controller', () => {
       act(() => result.current.startManual(rows));
       await edit(result, { 'case-1': value });
       await submit(result);
-      expect(result.current.manualErrors['case-1']).toBe('Enter a positive whole Roll number.');
+      expect(result.current.manualErrors['case-1']).toBe('Enter a positive whole roll number.');
       expect(result.current.form.values.values['case-1']).toBe(value);
       expect(mocks.getCase).not.toHaveBeenCalled();
       expect(mocks.previewRoll).not.toHaveBeenCalled();
@@ -393,9 +393,7 @@ describe('Student Setup assignment controller', () => {
     await edit(result, { 'case-1': 'GR-0007' });
     expect(result.current.needsReason).toBe(true);
     await submit(result);
-    expect(result.current.form.errors.reason).toBe(
-      'Enter a reason for changing an existing number.'
-    );
+    expect(result.current.form.errors.reason).toBe('Explain why this number needs to change.');
     expect(mocks.getCase).not.toHaveBeenCalled();
     expect(mocks.assignGr).not.toHaveBeenCalled();
     await edit(result, {}, '  Correct the reserved GR  ');
@@ -454,7 +452,7 @@ describe('Student Setup assignment controller', () => {
     expect(result.current.results.map((item) => item.status)).toEqual(['saved', 'failed']);
     expect(result.current.messages['case-2']).toMatchObject({
       status: 'failed',
-      message: 'This GR number is already reserved.',
+      message: 'This GR number is already in use or reserved. Enter a different number.',
     });
     expect(result.current.form.values).toEqual({
       values: { 'case-1': 'GR-NEW1', 'case-2': 'GR-NEW2' },

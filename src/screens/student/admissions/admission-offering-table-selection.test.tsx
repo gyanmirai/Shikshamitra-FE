@@ -6,8 +6,13 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import { AdmissionOfferingTable } from './admission-offering-table';
 
+const tableProps = vi.hoisted(() => ({ current: {} as ICustomizableTableProps }));
+
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ columns, data, handleRowClick, rowProps, noDataText }: ICustomizableTableProps) => (
+  default: (props: ICustomizableTableProps) => {
+    tableProps.current = props;
+    const { columns, data, handleRowClick, rowProps, noDataText } = props;
+    return (
     <table>
       <thead>
         <tr>
@@ -27,7 +32,8 @@ vi.mock('src/components/customizabaleTable', () => ({
         ))}
       </tbody>
     </table>
-  ),
+    );
+  },
 }));
 vi.mock('./admission-offering-columns', () => ({
   buildAdmissionOfferingColumns: () => [
@@ -145,5 +151,22 @@ describe('Offering table selection', () => {
     render(<AdmissionOfferingTable {...props()} rows={[]} />);
     expect(screen.getByText('No admission offering has been configured.')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+  });
+  it('wires shared server filters and refresh state while keeping current rows visible', () => {
+    const onFilters = vi.fn();
+    const filters = [{ column: 'applicationCount', type: 'equals', value: 0, valueType: 'number' }];
+    render(<AdmissionOfferingTable {...props()} filters={filters} onFilters={onFilters} refreshing />);
+    expect(tableProps.current.isRefreshing).toBe(true);
+    expect(tableProps.current.isLoading).toBe(false);
+    expect(tableProps.current.serverSideFilter).toBe(true);
+    expect(tableProps.current.filters).toEqual(filters);
+    tableProps.current.onServerFilter?.(filters);
+    expect(onFilters).toHaveBeenCalledWith(filters);
+    expect(screen.getByText('Class 1 General')).toBeVisible();
+  });
+  it('shows the missing academic prerequisite instead of a successful empty list', () => {
+    render(<AdmissionOfferingTable {...props()} rows={[]} prerequisite="Select a board and medium to view admission offerings." />);
+    expect(screen.getByText('Select a board and medium to view admission offerings.')).toBeVisible();
+    expect(screen.queryByText('No admission offering has been configured.')).not.toBeInTheDocument();
   });
 });

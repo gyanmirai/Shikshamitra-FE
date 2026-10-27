@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   casesError: false,
   focusedCaseFetching: false,
   focusedCaseError: false,
+  toastError: vi.fn(),
   refetchCase: vi.fn(),
   permissions: [{ name: 'Students.Onboarding.Add', isGranted: true }],
   cancel: vi.fn(),
@@ -56,6 +57,15 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace, push: mocks.push }),
   usePathname: () => '/student/onboarding/setup',
   useSearchParams: () => mocks.params,
+}));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: mocks.toastError,
+    success: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+  },
 }));
 vi.mock('src/redux/student/onboarding/student-roll-number-batches-api', () => ({
   useGetRollNumberBatchContextQuery: () => ({
@@ -444,16 +454,18 @@ describe('Student Setup workspace selection wiring', () => {
     expect(screen.getByTestId('student-setup-worklist')).toBeVisible();
   });
 
-  it('keeps a failed deep link separate from the worklist and offers Retry and Back', () => {
+  it('keeps a failed deep link separate from the worklist with a standard error toast and Back', () => {
     mocks.params.set('case', 'outside-current-page');
     mocks.focusedCaseError = true;
     render(element);
-    expect(
-      screen.getByText('selected onboarding case could not be loaded', { exact: false })
-    ).toBeVisible();
+    expect(mocks.toastError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Student setup could not be loaded. Refresh the page.',
+      })
+    );
     expect(screen.getByTestId('student-setup-worklist')).not.toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(mocks.refetchCase).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(mocks.refetchCase).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(mocks.params.get('case')).toBeNull();
   });

@@ -2,6 +2,7 @@ import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admissi
 
 import { Label } from 'src/components/label';
 import { Box, Stack, Typography } from '@mui/material';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
 
 export function renderPipelineStep(row: AdmissionPipelineItem) {
@@ -16,7 +17,7 @@ export function renderPipelineStep(row: AdmissionPipelineItem) {
         </Typography>
         {current >= 0 && (
           <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-            {current + 1} of {stages.length}
+            {formatNumber(current + 1)} of {formatNumber(stages.length)}
           </Typography>
         )}
       </Stack>
@@ -101,9 +102,9 @@ export function renderPipelineFollowUps(row: AdmissionPipelineItem) {
   const overdue = row.overdueFollowUpCount;
   const badge = row.hasOverdueFollowUp
     ? overdue && overdue > 0
-      ? `${overdue} overdue`
+      ? `${formatNumber(overdue)} overdue`
       : 'Overdue'
-    : `${row.openFollowUpCount} open`;
+    : `${formatNumber(row.openFollowUpCount)} open`;
   const purpose = row.nextFollowUpPurpose?.trim() || 'Follow up with family';
   return (
     <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>

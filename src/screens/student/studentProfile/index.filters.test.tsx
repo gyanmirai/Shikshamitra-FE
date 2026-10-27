@@ -9,7 +9,6 @@ const state = vi.hoisted(() => ({
   params: new URLSearchParams(),
   push: vi.fn(),
   close: vi.fn(),
-  feeProps: {} as any,
   viewProps: {} as any,
   boundaryYear: undefined as any,
   permissions: [] as { name: string; isGranted: boolean }[],
@@ -63,12 +62,6 @@ vi.mock('src/screens/student/records/student-directory', () => ({
     </>
   ),
 }));
-vi.mock('src/screens/finance/FeeStructureAssign/Components/AssignmentDrawer', () => ({
-  default: (props: any) => {
-    state.feeProps = props;
-    return <div role="dialog">Assign fee structure</div>;
-  },
-}));
 vi.mock('./finance', () => ({ default: () => null }));
 vi.mock('./libraray', () => ({ default: () => null }));
 vi.mock('./academic', () => ({ default: () => null }));
@@ -116,38 +109,97 @@ beforeEach(() => {
 it('uses Student Directory with no unauthorised row actions', () => {
   render(<StudentProfile />);
   expect(screen.getByRole('heading', { name: 'Student List' })).toBeVisible();
-  expect(screen.queryByText('Change status')).not.toBeInTheDocument();
-  expect(screen.queryByText('Assign fee structure')).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('link', { name: /Edit Details|Change Status|Attendance History/ })
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Assign fee structure/ })).not.toBeInTheDocument();
 });
+
+it.each([['View'], ['Add'], ['View', 'Add']])(
+  'does not expose list fee assignment with Finance grants %j',
+  (...actions) => {
+    state.permissions = [
+      ...actions.map((action) => ({
+        name: `${financePermissions.fees.structureAssign}.${action}`,
+        isGranted: true,
+      })),
+    ];
+    render(<StudentProfile />);
+    expect(screen.queryByRole('button', { name: /Assign fee structure/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  }
+);
 
 it('routes authorised status edits through the existing audited change request', () => {
   state.permissions = ['Students.Records.Changes.View', 'Students.Records.Changes.Add'].map(
     (name) => ({ name, isGranted: true })
   );
   render(<StudentProfile />);
-  expect(screen.getByRole('link', { name: 'Change status for Riya Shah' })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: 'Change Status' })).toHaveAttribute(
     'href',
     `${studentPaths.records.changes}?mode=new&student=student-1&section=status`
   );
 });
 
-it('reuses the Finance assignment drawer with the selected identity and current year', () => {
-  state.permissions = ['.View', '.Add'].map((suffix) => ({
-    name: financePermissions.fees.structureAssign + suffix,
-    isGranted: true,
-  }));
+it('orders edit and attendance shortcuts before governed status changes without fee assignment', () => {
+  state.params = new URLSearchParams(
+    'board=board-1&medium=medium-1&class=class-1&division=division-1&page=2'
+  );
+  state.permissions = [
+    'Students.Records.Changes.View',
+    'Students.Records.Changes.Add',
+    `${financePermissions.fees.structureAssign}.View`,
+    `${financePermissions.fees.structureAssign}.Add`,
+    'Students.Attendance.MarkAttendance.View',
+  ].map((name) => ({ name, isGranted: true }));
   render(<StudentProfile />);
-  fireEvent.click(screen.getByRole('button', { name: 'Assign fee structure for Riya Shah' }));
-  expect(screen.getByRole('dialog')).toBeVisible();
-  expect(state.feeProps.students).toEqual([
-    { id: 'student-1', studentId: 'student-1', studentName: 'Riya Shah' },
+  const actions = Array.from(document.querySelectorAll('a, button'))
+    .map((element) => element.textContent)
+    .filter(Boolean);
+  expect(actions).toEqual([
+    'Edit Details for Riya Shah',
+    'Attendance History for Riya Shah',
+    'Change Status',
   ]);
-  expect(state.feeProps.academicYearId).toBe('year-1');
+  const edit = new URL(
+    screen.getByRole('link', { name: 'Edit Details for Riya Shah' }).getAttribute('href')!,
+    'http://localhost'
+  );
+  expect(edit.pathname).toBe(studentPaths.records.studentList);
+  expect(Object.fromEntries(edit.searchParams)).toEqual({
+    board: 'board-1',
+    medium: 'medium-1',
+    class: 'class-1',
+    division: 'division-1',
+    page: '2',
+    student: 'student-1',
+    view: 'details',
+    edit: 'details',
+  });
+  const attendance = new URL(
+    screen.getByRole('link', { name: 'Attendance History for Riya Shah' }).getAttribute('href')!,
+    'http://localhost'
+  );
+  expect(attendance.searchParams.get('view')).toBe('attendance');
+  expect(attendance.searchParams.has('edit')).toBe(false);
+});
+
+it('shows attendance alone without exposing editing or fee assignment grants', () => {
+  state.permissions = [{ name: 'Students.Attendance.MarkAttendance.View', isGranted: true }];
+  render(<StudentProfile />);
+  expect(screen.getByRole('link', { name: 'Attendance History for Riya Shah' })).toBeVisible();
+  expect(
+    screen.queryByRole('link', { name: 'Edit Details for Riya Shah' })
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'Change Status' })).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('button', { name: 'Assign fee structure for Riya Shah' })
+  ).not.toBeInTheDocument();
 });
 
 it('opens a selected profile and returns to the preserved list filters and page', () => {
   state.params = new URLSearchParams(
-    'student=student-1&population=Former&board=board-1&medium=medium-1&class=class-1&division=division-1&search=Riya&page=2&view=details'
+    'student=student-1&population=Former&board=board-1&medium=medium-1&class=class-1&division=division-1&search=Riya&page=2&view=details&edit=details'
   );
   render(<StudentProfile />);
   expect(screen.getByText('Profile for student-1')).toBeVisible();

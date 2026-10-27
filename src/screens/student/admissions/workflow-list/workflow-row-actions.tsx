@@ -105,6 +105,7 @@ export function WorkflowRowActions({
       moreLabel={`Actions for ${workflow.name}`}
       mobileDirectActionLimit={0}
       sx={{
+        justifyContent: 'flex-end',
         gap: 0,
         '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } },
       }}

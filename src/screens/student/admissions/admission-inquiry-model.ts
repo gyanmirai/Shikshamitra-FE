@@ -20,6 +20,13 @@ import { normalizeEmail } from 'src/utils/input-format';
 
 import { normalizeAdmissionEmailValue } from './admission-email-values';
 import { getDynamicAdmissionValidationErrors } from './admission-form-validation';
+import {
+  buildAdmissionFamilyContacts,
+  admissionFamilyContactsSchema,
+  initialAdmissionFamilyContacts,
+  getAdmissionSiblingParentReviewError,
+  type AdmissionFamilyContactsFormValues,
+} from './admission-family-contacts-model';
 
 export type AdmissionInquiryFormValues = {
   admissionCycleId?: string;
@@ -31,6 +38,7 @@ export type AdmissionInquiryFormValues = {
   sourceDetail: string;
   sendAcknowledgement: boolean;
   parentRelationship?: '' | AdmissionParentRelationship;
+  familyContacts?: AdmissionFamilyContactsFormValues;
   fields: Record<string, string>;
 };
 
@@ -80,10 +88,12 @@ export const initialAdmissionInquiryValues: AdmissionInquiryFormValues = {
   sourceDetail: '',
   sendAcknowledgement: true,
   parentRelationship: '',
+  familyContacts: initialAdmissionFamilyContacts,
   fields: {},
 };
 
 export const admissionInquirySchema = Yup.object({
+  familyContacts: admissionFamilyContactsSchema,
   boardId: Yup.string().required('Board is required'),
   mediumId: Yup.string().required('Medium is required'),
   standardId: Yup.string().required('Class is required'),
@@ -364,6 +374,14 @@ export function buildAdmissionInquiryPayload(
   duplicateOverrideReason?: string,
   parentSelection?: AdmissionSiblingParentSelection
 ): CreateAdmissionInquiry {
+  const parentReviewError =
+    parentSelection &&
+    getAdmissionSiblingParentReviewError(
+      values.familyContacts,
+      values.parentRelationship,
+      parentSelection.relationship
+    );
+  if (parentReviewError) throw new Error(parentReviewError);
   const applicantFirstName = boundValue(
     values,
     fields,
@@ -388,6 +406,15 @@ export function buildAdmissionInquiryPayload(
     existingFamilyId,
     existingParentApplicantId: parentSelection?.sourceApplicantId,
     parentRelationship: parentSelection?.relationship || values.parentRelationship || undefined,
+    ...(parentSelection?.relationship || values.parentRelationship
+      ? {
+          familyContacts: buildAdmissionFamilyContacts(
+            values.familyContacts,
+            parentSelection?.relationship ||
+              (values.parentRelationship as AdmissionParentRelationship)
+          ),
+        }
+      : {}),
     createSeparateFamily,
     duplicateOverrideReason: duplicateOverrideReason?.trim() || null,
     applicantName,

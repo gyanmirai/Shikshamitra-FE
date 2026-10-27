@@ -1,5 +1,6 @@
 import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
 
+import { useEffect } from 'react';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
@@ -89,7 +90,14 @@ vi.mock('./application-detail/application-workspace-redirect', () => ({
   }) => <section aria-label={`Recover application ${applicationId}`} data-return-to={returnTo} />,
 }));
 vi.mock('./admission-academic-filters', () => ({
-  AdmissionAcademicFilters: () => <div>Academic filters</div>,
+  AdmissionAcademicFilters: ({
+    onLoadingChange,
+  }: {
+    onLoadingChange?: (value: boolean) => void;
+  }) => {
+    useEffect(() => onLoadingChange?.(false), [onLoadingChange]);
+    return <div>Academic filters</div>;
+  },
   useAdmissionAcademicFilters: () => ({
     academicYearId: state.academicYearId,
     boardId: state.boardId,
@@ -249,10 +257,10 @@ describe('Applications decision workspace', () => {
     render(<AdmissionApplicationsScreen />);
     const [input] = state.query.mock.calls[0];
     expect(input).not.toHaveProperty('assignedCounsellorId');
-    expect(input).not.toHaveProperty('status');
+    expect(input.status).toBe(4);
     expect(input).not.toHaveProperty('currentStageSearch');
     expect(state.replace).toHaveBeenCalledWith(
-      '/student/admissions/applications?board=board-1&medium=medium-1&page=2',
+      '/student/admissions/applications?board=board-1&medium=medium-1&page=2&status=4',
       { scroll: false }
     );
   });
@@ -289,9 +297,7 @@ describe('Applications decision workspace', () => {
   it('retains safe current rows while a background refresh is labelled', () => {
     state.queryResult.isFetching = true;
     render(<AdmissionApplicationsScreen />);
-    expect(
-      screen.getByRole('progressbar', { name: 'Refreshing applications' })
-    ).toBeInTheDocument();
+    expect(state.tableProps?.isRefreshing).toBe(true);
     expect(screen.getByText('Parth Patel')).toBeInTheDocument();
     expect(state.tableProps?.isLoading).toBe(false);
   });
@@ -339,11 +345,67 @@ describe('Applications decision workspace', () => {
     state.search += '&search=unknown';
     state.queryResult.currentData = { items: [], totalCount: 0 };
     render(<AdmissionApplicationsScreen />);
-    expect(screen.getByText('No applications match your search')).toBeInTheDocument();
+    expect(
+      screen.getByText('No applications match the selected search or filters')
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
     expect(state.replace).toHaveBeenLastCalledWith(
       '/student/admissions/applications?board=board-1&medium=medium-1',
       { scroll: false }
     );
   });
+});
+
+it('preserves current application rows and counts after a failed background refresh', () => {
+  state.queryResult.isError = true;
+  render(<AdmissionApplicationsScreen />);
+  expect(screen.getByText('Parth Patel')).toBeInTheDocument();
+  expect(state.tableProps?.totalCount).toBe(500);
+  expect(state.tableProps?.errorContent).toBeUndefined();
+});
+
+it('restores scalar filters and explicit Draft while applying them across the server list', () => {
+  const filters = [
+    { column: 'standardName', type: 'equals', value: 'Class 6', valueType: 'string' },
+  ];
+  state.search += `&status=0&filters=${  encodeURIComponent(JSON.stringify(filters))}`;
+  render(<AdmissionApplicationsScreen />);
+  expect(state.query).toHaveBeenLastCalledWith(
+    expect.objectContaining({ status: 0, columnFilters: JSON.stringify(filters), skipCount: 25 }),
+    expect.objectContaining({ skip: false })
+  );
+  expect(state.tableProps?.filters).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ column: 'status', value: 0, displayValue: 'Draft' }),
+    ])
+  );
+  state.tableProps?.onServerFilter?.([
+    { column: 'standardName', type: 'startsWith', value: 'Class', valueType: 'string' },
+  ]);
+  const target = new URL(state.replace.mock.calls.at(-1)![0], 'https://school.test');
+  expect(target.searchParams.has('page')).toBe(false);
+  expect(target.searchParams.has('status')).toBe(false);
+  expect(JSON.parse(target.searchParams.get('filters')!)[0]).toMatchObject({
+    column: 'standardName',
+    type: 'startsWith',
+  });
+});
+
+it('suppresses successful empty and skeleton states for an initial failed request', () => {
+  state.queryResult.currentData = undefined;
+  state.queryResult.isError = true;
+  render(<AdmissionApplicationsScreen />);
+  expect(state.tableProps?.errorContent).toBeTruthy();
+  expect(state.tableProps?.isLoading).toBe(false);
+  expect(screen.queryByText(/No applications have reached/)).not.toBeInTheDocument();
+});
+
+it('withholds old cached argument data while the current scope has no response', () => {
+  state.queryResult.data = state.queryResult.currentData;
+  state.queryResult.currentData = undefined;
+  state.queryResult.isFetching = true;
+  render(<AdmissionApplicationsScreen />);
+  expect(state.tableProps?.data).toEqual([]);
+  expect(state.tableProps?.isLoading).toBe(true);
+  expect(screen.queryByText('Parth Patel')).not.toBeInTheDocument();
 });

@@ -1,36 +1,38 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { StudentDirectoryInput } from 'src/redux/student/records/student-records-types';
+import type {
+  StudentDirectoryItem,
+  StudentDirectoryInput,
+} from 'src/redux/student/records/student-records-types';
 
-import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Box, Chip, Stack, Paper, Button, LinearProgress } from '@mui/material';
+import { Box, Chip, Paper, Stack, Button, Typography } from '@mui/material';
 import {
   useGetStudentRecordsDirectoryQuery,
   useGetStudentRecordsDirectoryOptionsQuery,
 } from 'src/redux/student/records/student-records-api';
 
-import LegacyRecordEntry from './legacy-record-entry';
 import StudentDirectoryTable from './student-directory-table';
 import StudentDirectoryFilters from './student-directory-filters';
+import StudentDirectoryDocuments from './student-directory-documents';
 import { recordsQueryUrl, positivePageValue } from './records-url-state';
+import { useStudentDirectoryExport } from './use-student-directory-export';
 import { directoryColumnFilters } from './student-directory-column-filters';
-import StudentDirectoryFilterFields from './student-directory-filter-fields';
-import StudentRollNumberWorkspace from '../onboarding/student-setup/student-roll-number-workspace';
+import StudentDirectoryAcademicFilters from './student-directory-academic-filters';
+import { directoryScope, directoryBulkScopeReady } from './student-directory-scope';
 
 import type { DirectoryRowActions } from './student-directory-columns';
+import type { DirectoryDocumentRequest } from './student-directory-documents';
 
 type Props = { rowActions?: DirectoryRowActions };
+const MAX_SELECTION = 100;
 
 export default function StudentDirectory({ rowActions }: Props) {
   const router = useRouter();
@@ -39,18 +41,19 @@ export default function StudentDirectory({ rowActions }: Props) {
   const currentQuery = params.toString();
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const legacyOpen = useBoolean();
-  const rollOpen = useBoolean();
-  const canUseLegacy = hasGrantedPermission(permissions, 'Students.Records.Overrides.View');
   const population = params.get('population') === 'Former' ? 'Former' : 'Active';
   const year =
     params.get('dashboard') === 'directory'
       ? params.get('year') || currentYear?.id || ''
       : (currentYear?.id ?? '');
-  const boardId = params.get('board') ?? '';
-  const mediumId = params.get('medium') ?? '';
-  const standardId = params.get('class') ?? '';
-  const divisionId = params.get('division') ?? '';
+  const options = useGetStudentRecordsDirectoryOptionsQuery(
+    { academicYearId: year },
+    { skip: !year }
+  );
+  const scope = useMemo(
+    () => directoryScope(new URLSearchParams(currentQuery), options.currentData),
+    [currentQuery, options.currentData]
+  );
   const page = positivePageValue(params.get('page'), 0, 100000);
   const pageSize = Math.max(10, positivePageValue(params.get('pageSize'), 25, 100));
   const search = params.get('search') ?? '';
@@ -62,99 +65,192 @@ export default function StudentDirectory({ rowActions }: Props) {
         ...values,
         year: params.get('dashboard') === 'directory' ? year : undefined,
       });
-      if (url !== `${pathname}${currentQuery ? `?${currentQuery}` : ''}`) {
+      if (url !== `${pathname}${currentQuery ? `?${currentQuery}` : ''}`)
         router.push(url, { scroll: false });
-      }
     },
     [currentQuery, pathname, router, params, year]
   );
   const input: StudentDirectoryInput = {
     population,
     academicYearId: year || undefined,
-    boardId: boardId || undefined,
-    mediumId: mediumId || undefined,
-    standardId: standardId || undefined,
-    divisionId: divisionId || undefined,
+    boardId: scope.board || undefined,
+    mediumId: scope.medium || undefined,
+    standardId: scope.classes.length === 1 ? scope.classes[0] : undefined,
+    standardIds: scope.classes.length > 1 ? scope.classes : undefined,
+    divisionId: scope.divisions.length === 1 ? scope.divisions[0] : undefined,
+    divisionIds: scope.divisions.length > 1 ? scope.divisions : undefined,
     search,
     sorting: sorting || undefined,
     columnFilters: columnFilters.length ? columnFilters : undefined,
     skipCount: page * pageSize,
     maxResultCount: pageSize,
   };
-  const query = useGetStudentRecordsDirectoryQuery(input, { skip: !year });
-  const options = useGetStudentRecordsDirectoryOptionsQuery(
-    { academicYearId: year },
-    { skip: !year }
+  const academicYearReady = Boolean(year && scope.ready);
+  const query = useGetStudentRecordsDirectoryQuery(input, { skip: !academicYearReady });
+  const exportDirectory = useStudentDirectoryExport(input, [
+    `Academic year: ${currentYear?.id === year ? currentYear.name : year}`,
+    `Board: ${options.currentData?.boards.find((item) => item.id === scope.board)?.name ?? ''}`,
+    `Medium: ${options.currentData?.mediums.find((item) => item.id === scope.medium)?.name ?? ''}`,
+    `Classes: ${scope.classes.length ? scope.classes.map((id) => options.currentData?.standards.find((item) => item.id === id)?.name ?? id).join(', ') : 'All matching classes'}`,
+    `Divisions: ${scope.divisions.length ? scope.divisions.map((id) => options.currentData?.divisions.find((item) => item.id === id)?.name ?? id).join(', ') : 'All matching divisions'}`,
+  ]);
+  const hasAction = (feature: string) =>
+    hasGrantedPermission(permissions, `${feature}.View`) &&
+    hasGrantedPermission(permissions, `${feature}.Add`);
+  const canPrintIds = hasAction('Students.Records.StudentICard');
+  const canGenerateCertificates = hasAction('Students.Records.Certificates');
+  const selectionEnabled =
+    directoryBulkScopeReady(scope, population) &&
+    (canPrintIds || canGenerateCertificates) &&
+    !query.isError &&
+    !options.isError;
+  const scopeKey = JSON.stringify([
+    year,
+    scope,
+    population,
+    search,
+    sorting,
+    columnFilters,
+    canPrintIds,
+    canGenerateCertificates,
+    query.isError,
+  ]);
+  const [selection, setSelection] = useState<{
+    key: string;
+    students: Record<string, StudentDirectoryItem>;
+  }>({ key: scopeKey, students: {} });
+  const selected =
+    selection.key === scopeKey && selectionEnabled ? Object.values(selection.students) : [];
+  const [documentRequest, setDocumentRequest] = useState<DirectoryDocumentRequest | null>(null);
+  const lastCompletedPage = useRef<{ key: string; data: typeof query.currentData } | null>(null);
+  useEffect(() => {
+    setSelection((previous) =>
+      previous.key !== scopeKey ? { key: scopeKey, students: {} } : previous
+    );
+    if (!query.currentData || query.isFetching) return;
+    const pageKey = `${scopeKey}:${page}:${pageSize}`;
+    const refreshed =
+      lastCompletedPage.current?.key === pageKey &&
+      lastCompletedPage.current.data !== query.currentData;
+    lastCompletedPage.current = { key: pageKey, data: query.currentData };
+    setSelection((previous) => {
+      // Paging preserves the cohort; refreshing it invalidates previously selected membership.
+      if (previous.key !== scopeKey || refreshed) return { key: scopeKey, students: {} };
+      const currentRows = new Map(
+        (query.currentData?.items ?? []).map((row) => [row.studentId, row])
+      );
+      let changed = false;
+      const students = { ...previous.students };
+      Object.keys(students).forEach((id) => {
+        const row = currentRows.get(id);
+        if (!row) return;
+        if (
+          (row.maskedFields ?? []).includes('Identity') ||
+          row.standardId !== scope.classes[0] ||
+          row.divisionId !== scope.divisions[0] ||
+          ![6, 'Enrolled', 'Active'].includes(row.status)
+        ) {
+          delete students[id];
+          changed = true;
+        } else if (students[id] !== row) {
+          students[id] = row;
+          changed = true;
+        }
+      });
+      return changed ? { key: scopeKey, students } : previous;
+    });
+  }, [
+    scopeKey,
+    page,
+    pageSize,
+    query.currentData,
+    query.isFetching,
+    scope.classes,
+    scope.divisions,
+  ]);
+  const toggleStudents = (rows: StudentDirectoryItem[], checked: boolean) => {
+    if (!selectionEnabled || query.isFetching) return;
+    setSelection((previous) => {
+      const students = previous.key === scopeKey ? { ...previous.students } : {};
+      rows.forEach((row) => {
+        if (!checked) delete students[row.studentId];
+        else if (
+          Object.keys(students).length < MAX_SELECTION &&
+          !(row.maskedFields ?? []).includes('Identity') &&
+          row.standardId === scope.classes[0] &&
+          row.divisionId === scope.divisions[0]
+        )
+          students[row.studentId] = row;
+      });
+      return { key: scopeKey, students };
+    });
+  };
+  const openDocuments = (
+    kind: DirectoryDocumentRequest['kind'],
+    students: StudentDirectoryItem[],
+    lockAcademicScope = false
+  ) => {
+    if (
+      !year ||
+      !students.length ||
+      students.length > MAX_SELECTION ||
+      query.isError ||
+      options.isError ||
+      !academicYearReady ||
+      (kind === 'id-card' ? !canPrintIds : !canGenerateCertificates)
+    )
+      return;
+    setDocumentRequest({
+      kind,
+      students,
+      academicYearId: year,
+      academicScope: {
+        boardIds: [scope.board],
+        mediumIds: [scope.medium],
+        standardIds: [
+          ...new Set(
+            students.flatMap((student) => (student.standardId ? [student.standardId] : []))
+          ),
+        ],
+        divisionIds: [
+          ...new Set(
+            students.flatMap((student) => (student.divisionId ? [student.divisionId] : []))
+          ),
+        ],
+      },
+      lockAcademicScope,
+    });
+  };
+  const profileHref = useCallback(
+    (studentId: string) =>
+      recordsQueryUrl(studentPaths.records.studentList, currentQuery, {
+        board: scope.board || undefined,
+        medium: scope.medium || undefined,
+        student: studentId,
+        view: undefined,
+        edit: undefined,
+        section: undefined,
+        tab: undefined,
+        year: undefined,
+      }),
+    [currentQuery, scope.board, scope.medium]
   );
   const clearScope = () =>
     update({
-      board: undefined,
-      medium: undefined,
       class: undefined,
       division: undefined,
       search: undefined,
       columnFilters: undefined,
       page: 0,
     });
-  const academicFilters = [
-    {
-      key: 'board',
-      label: 'Board',
-      value: boardId,
-      choices: options.currentData?.boards,
-      reset: { board: undefined, medium: undefined, class: undefined, division: undefined },
-    },
-    {
-      key: 'medium',
-      label: 'Medium',
-      value: mediumId,
-      choices: options.currentData?.mediums,
-      reset: { medium: undefined, class: undefined, division: undefined },
-    },
-    {
-      key: 'class',
-      label: 'Class',
-      value: standardId,
-      choices: options.currentData?.standards,
-      reset: { class: undefined, division: undefined },
-    },
-    {
-      key: 'division',
-      label: 'Division',
-      value: divisionId,
-      choices: options.currentData?.divisions,
-      reset: { division: undefined },
-    },
-  ].filter((filter) => filter.value);
-  const rollHelp = !year
-    ? 'Select an academic year first'
-    : options.isError
-      ? 'Reload academic filter choices to manage roll numbers'
-      : !standardId || !divisionId
-        ? 'Choose one Class and one Division first'
-        : 'Review division roll numbering and approval batches';
-  const profileHref = useCallback(
-    (studentId: string) =>
-      recordsQueryUrl(studentPaths.records.studentList, currentQuery, {
-        student: studentId,
-        view: undefined,
-        section: undefined,
-        tab: undefined,
-        year: undefined,
-      }),
-    [currentQuery]
-  );
+  const selectionReason = !directoryBulkScopeReady(scope, population)
+    ? 'Select exactly one class and one division in Active students to use bulk actions.'
+    : !canPrintIds && !canGenerateCertificates
+      ? 'Your permissions do not allow bulk student documents.'
+      : 'Reload student records and filter choices before selecting students.';
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: 1,
-        minHeight: 0,
-        minWidth: 0,
-      }}
-    >
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, minWidth: 0 }}>
       <CustomBreadcrumbs
         heading="Student List"
         description="Find active and former students and open their permanent profile."
@@ -164,58 +260,12 @@ export default function StudentDirectory({ rowActions }: Props) {
           { name: 'Student Records', href: studentPaths.records.root },
           { name: 'Student List' },
         ]}
-        action={
-          <Stack
-            direction="row"
-            spacing={1}
-            useFlexGap
-            flexWrap="wrap"
-            alignItems="center"
-            justifyContent="flex-end"
-          >
-            {population === 'Active' && (
-              <CustomTooltip title={rollHelp} arrow>
-                <Box
-                  component="span"
-                  tabIndex={!year || !standardId || !divisionId || options.isError ? 0 : undefined}
-                  aria-label={rollHelp}
-                  sx={{ display: 'inline-flex' }}
-                >
-                  <Button
-                    type="button"
-                    size="small"
-                    variant="outlined"
-                    color="inherit"
-                    disabled={!year || !standardId || !divisionId || options.isError}
-                    startIcon={<Iconify icon="mdi:format-list-numbered" width={16} />}
-                    onClick={rollOpen.onTrue}
-                  >
-                    Manage Roll Numbers
-                  </Button>
-                </Box>
-              </CustomTooltip>
-            )}
-            {canUseLegacy && (
-              <Button
-                type="button"
-                size="small"
-                variant="contained"
-                color="inherit"
-                startIcon={<Iconify icon={GlobalIcons.addIcon} width={16} />}
-                onClick={legacyOpen.onTrue}
-              >
-                Historical entry
-              </Button>
-            )}
-          </Stack>
-        }
       />
       {options.isError && (
         <StudentFeedback
           notificationKey="STU-0853"
-          presentation="toast"
+          presentation="persistent"
           severity="error"
-          sx={{ mb: 1 }}
           action={
             <Button color="inherit" onClick={() => options.refetch()}>
               Retry filters
@@ -225,14 +275,40 @@ export default function StudentDirectory({ rowActions }: Props) {
           Academic filter choices could not be loaded. The current view is preserved.
         </StudentFeedback>
       )}
+      {year && options.currentData && !scope.ready && !options.isError && (
+        <StudentFeedback
+          notificationKey="STUDENT-DIRECTORY-SCOPE"
+          presentation="inline"
+          severity="warning"
+          action={
+            <Button
+              color="inherit"
+              onClick={() =>
+                update({
+                  board: scope.board,
+                  medium: scope.medium,
+                  class: undefined,
+                  division: undefined,
+                  page: 0,
+                })
+              }
+            >
+              Reset academic filters
+            </Button>
+          }
+        >
+          Some academic selections are unavailable. Reset the filters or choose an available board
+          and medium.
+        </StudentFeedback>
+      )}
       <Paper variant="outlined" sx={{ p: 1, mb: 1, borderRadius: 2, flexShrink: 0 }}>
         <Stack
           direction={{ xs: 'column', lg: 'row' }}
           spacing={1}
           alignItems={{ xs: 'stretch', lg: 'center' }}
         >
-          <StudentDirectoryFilterFields
-            values={{ board: boardId, medium: mediumId, class: standardId, division: divisionId }}
+          <StudentDirectoryAcademicFilters
+            scope={scope}
             options={options.currentData}
             isLoading={options.isLoading || (options.isFetching && !options.currentData)}
             disabled={!year || options.isError}
@@ -245,7 +321,7 @@ export default function StudentDirectory({ rowActions }: Props) {
             }
           />
         </Stack>
-        {academicFilters.length > 0 && (
+        {(scope.classes.length > 0 || scope.divisions.length > 0) && (
           <Stack
             direction="row"
             spacing={1}
@@ -255,61 +331,123 @@ export default function StudentDirectory({ rowActions }: Props) {
             aria-label="Applied academic filters"
             sx={{ pt: 1 }}
           >
-            {academicFilters.map((filter) => (
+            {scope.classes.length > 0 && (
               <Chip
-                key={filter.key}
                 size="small"
                 variant="outlined"
-                label={`${filter.label}: ${filter.choices?.find((choice) => choice.id === filter.value)?.name ?? 'Selected'}`}
-                onDelete={() => update({ ...filter.reset, page: 0 })}
+                label={`${scope.classes.length} ${scope.classes.length === 1 ? 'class' : 'classes'} selected`}
+                onDelete={() => update({ class: undefined, division: undefined, page: 0 })}
               />
-            ))}
+            )}
+            {scope.divisions.length > 0 && (
+              <Chip
+                size="small"
+                variant="outlined"
+                label={`${scope.divisions.length} ${scope.divisions.length === 1 ? 'division' : 'divisions'} selected`}
+                onDelete={() => update({ division: undefined, page: 0 })}
+              />
+            )}
             <Button
               size="small"
               color="inherit"
-              onClick={() =>
-                update({
-                  board: undefined,
-                  medium: undefined,
-                  class: undefined,
-                  division: undefined,
-                  page: 0,
-                })
-              }
-              startIcon={<Iconify icon={GlobalIcons.resetFilter} width={16} />}
+              onClick={() => update({ class: undefined, division: undefined, page: 0 })}
             >
               Reset academic filters
             </Button>
           </Stack>
         )}
       </Paper>
+      {selected.length > 0 && (
+        <Stack
+          role="toolbar"
+          aria-label="Selected students"
+          direction="row"
+          spacing={1}
+          useFlexGap
+          flexWrap="wrap"
+          alignItems="center"
+          sx={{ px: 2, py: 1, mb: 1, borderRadius: 1, bgcolor: 'action.selected', flexShrink: 0 }}
+        >
+          <Typography variant="subtitle2" sx={{ mr: 'auto' }}>
+            {selected.length} {selected.length === 1 ? 'student' : 'students'} selected
+          </Typography>
+          {canPrintIds && (
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="small"
+              disabled={query.isFetching}
+              onClick={() => openDocuments('id-card', selected, true)}
+            >
+              Print I-cards
+            </Button>
+          )}
+          {canGenerateCertificates && (
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="small"
+              disabled={query.isFetching}
+              onClick={() => openDocuments('certificate', selected)}
+            >
+              Generate certificates
+            </Button>
+          )}
+          <Button
+            color="inherit"
+            size="small"
+            onClick={() => setSelection({ key: scopeKey, students: {} })}
+          >
+            Clear selection
+          </Button>
+          <Typography variant="caption" color="text.secondary">
+            Up to {MAX_SELECTION} students
+          </Typography>
+        </Stack>
+      )}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-        {query.isFetching && !query.isLoading && (
-          <LinearProgress
-            aria-label="Refreshing student list"
-            sx={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1 }}
-          />
-        )}
         <StudentDirectoryTable
-          {...{ query, page, pageSize, search, sorting, update, columnFilters }}
-          population={population}
-          academicYearReady={Boolean(year)}
-          profileHref={profileHref}
-          rowActions={rowActions}
+          {...{
+            query,
+            page,
+            pageSize,
+            search,
+            sorting,
+            update,
+            columnFilters,
+            population,
+            academicYearReady,
+            profileHref,
+            rowActions,
+          }}
+          onProfileOpen={(studentId) => router.push(profileHref(studentId))}
+          academicOptionsLoading={Boolean(year) && options.isLoading}
+          academicContextMessage={
+            !year
+              ? 'Select an academic year to view students.'
+              : 'Choose an available board and medium to view students.'
+          }
+          onExport={exportDirectory}
+          canPrintIds={canPrintIds}
+          canGenerateCertificates={canGenerateCertificates}
+          onDocumentAction={openDocuments}
+          selection={{
+            selected,
+            enabled: selectionEnabled && !query.isFetching,
+            disabledReason: selectionReason,
+            onToggle: (row, checked) => toggleStudents([row], checked),
+            onTogglePage: toggleStudents,
+          }}
           onClearFilters={clearScope}
           hasFilters={Boolean(
-            boardId || mediumId || standardId || divisionId || search || columnFilters.length
+            scope.classes.length || scope.divisions.length || search || columnFilters.length
           )}
         />
       </Box>
-      {legacyOpen.value && <LegacyRecordEntry open onClose={legacyOpen.onFalse} />}
-      {rollOpen.value && year && standardId && divisionId && (
-        <StudentRollNumberWorkspace
-          key={`${year}:${standardId}:${divisionId}`}
-          scope={{ academicYearId: year, standardId, divisionId }}
-          onClose={rollOpen.onFalse}
-        />
-      )}
+      <StudentDirectoryDocuments
+        request={documentRequest}
+        onClose={() => setDocumentRequest(null)}
+      />
     </Box>
   );
 }

@@ -1,7 +1,10 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { StudentSiblingParentSelection } from 'src/redux/student/onboarding/student-onboarding-types';
+import type {
+  StudentSiblingParentSelection,
+  StudentGuardianAccessSelection,
+} from 'src/redux/student/onboarding/student-onboarding-types';
 
 import Link from 'next/link';
 import { LoadingButton } from '@mui/lab';
@@ -70,7 +73,8 @@ type StudentSetupDrawerProps = {
     student: StudentOnboardingItem,
     concurrencyStamp?: string,
     action?: 'refresh' | 'activate',
-    siblingParentSelection?: StudentSiblingParentSelection
+    siblingParentSelection?: StudentSiblingParentSelection,
+    guardianAccessSelection?: StudentGuardianAccessSelection
   ) => void | Promise<void>;
   primaryActionLoading?: boolean;
   canManage?: boolean;
@@ -1187,7 +1191,15 @@ export default function StudentSetupDrawer({
                 );
                 return;
               }
-              if (currentParentState?.selection)
+              if (currentParentState?.guardianAccessSelection)
+                await onPrimaryAction?.(
+                  activeStudent,
+                  activationPreview?.concurrencyStamp,
+                  'activate',
+                  currentParentState.selection,
+                  currentParentState.guardianAccessSelection
+                );
+              else if (currentParentState?.selection)
                 await onPrimaryAction?.(
                   activeStudent,
                   activationPreview?.concurrencyStamp,

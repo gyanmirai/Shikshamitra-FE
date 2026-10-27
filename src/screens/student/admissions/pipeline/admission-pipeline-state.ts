@@ -2,8 +2,15 @@ import type { AdmissionApplicationStatus } from 'src/redux/student/admissions/ad
 
 import { studentPaths } from 'src/constants/student-menu';
 
+import { readQueueColumnFilters } from '../admission-queue-column-filters';
+
 export const PIPELINE_ACTIVE_STATUSES: AdmissionApplicationStatus[] = [0, 1, 4, 5, 6, 7, 8];
 export const PIPELINE_SORT_COLUMNS = [
+  'inquiryNumber',
+  'standardName',
+  'contactPhone',
+  'contactEmail',
+  'status',
   'applicationNumber',
   'applicantName',
   'currentStageName',
@@ -18,6 +25,7 @@ export function readAdmissionPipelineState(params: Params) {
   const status = params.get('status');
   const sort = params.get('sort');
   return {
+    filters: readQueueColumnFilters(params.get('filters') ?? '', 'pipeline'),
     search: params.get('search') ?? '',
     page: Number.isSafeInteger(page) && page > 0 ? page - 1 : 0,
     rowsPerPage: [10, 25, 100].includes(size) ? size : 25,

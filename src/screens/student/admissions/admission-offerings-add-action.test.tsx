@@ -103,6 +103,8 @@ const screenState = (bulkOpen = false) => ({
     rowsPerPage: 10,
   },
   cyclesQuery: { isLoading: false, isFetching: false, isError: false },
+  currentData: { totalCount: 0, items: [] },
+  rows: [],
   offeringsQuery: {
     isFetching: false,
     isError: false,
@@ -134,11 +136,11 @@ describe('Admission Offerings add action', () => {
     render(<AdmissionOfferingsScreen />);
 
     expect(screen.queryByRole('button', { name: 'Bulk create' })).not.toBeInTheDocument();
-    expect(screen.getByRole('banner').querySelector('button')?.textContent).toBe('Add Offering');
+    expect(screen.getByRole('banner').querySelector('button')?.textContent).toBe('Add offering');
     expect(screen.getByRole('region', { name: 'Offering context filters' })).toHaveTextContent(
       'Filters'
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Add Offering' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add offering' }));
     expect(openBulk).toHaveBeenCalledOnce();
   });
 

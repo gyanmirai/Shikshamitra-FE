@@ -157,6 +157,8 @@ export const admissionFormsApi = api.injectEndpoints({
         search?: string;
         status?: AdmissionFormStatus;
         purpose?: AdmissionFormPurpose;
+        version?: number;
+        columnFilters?: string;
         skipCount?: number;
         maxResultCount?: number;
       }

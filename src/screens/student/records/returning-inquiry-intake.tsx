@@ -1,9 +1,10 @@
 import type { ReturnInquiryIntake } from 'src/redux/student/records/student-record-transitions-api';
 
+import { GlobalIcons } from 'src/utils/icons';
 import CustomSelect from 'src/components/custom-select';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { FormSectionCard } from 'src/components/form-section-card';
 import { Grid, Stack, Button, TextField, Typography } from '@mui/material';
+import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
 
 import AdmissionRuntimeField from '../admissions/admission-runtime-field';
 import { isAdmissionRuleVisible } from '../admissions/admission-visibility-rules';
@@ -53,11 +54,11 @@ export default function ReturningInquiryIntake({
     onChange({ ...values, fields });
   };
   return (
-    <Stack spacing={2}>
+    <Stack component={FormFieldSpacing} spacing={2}>
       <FormSectionCard
-        icon="mdi:clipboard-text-outline"
-        title="Inquiry details"
-        description="The approved request follows this school’s inquiry form. Permanent identity and linked guardian details are read-only; changes use Changes & Approvals."
+        icon={GlobalIcons.admissionDetails}
+        title="Inquiry Details"
+        descriptionTooltip="The approved request follows this school’s inquiry form. Permanent identity and linked guardian details are read-only; changes use Changes & Approvals."
       >
         <CustomSelect
           label="Inquiry source"
@@ -124,7 +125,12 @@ export default function ReturningInquiryIntake({
               )
             : 1;
           return (
-            <FormSectionCard key={section.id} icon="mdi:form-select" title={section.name}>
+            <FormSectionCard
+              key={section.id}
+              icon={GlobalIcons.admissionStudent}
+              title={section.name}
+              descriptionTooltip={`Complete the ${section.name} fields.`}
+            >
               {Array.from({ length: count }, (_, index) => {
                 const rowValues = section.isRepeatable
                   ? {
@@ -138,13 +144,13 @@ export default function ReturningInquiryIntake({
                     }
                   : values.fields;
                 return (
-                  <Stack key={index} spacing={1}>
+                  <Stack key={index} spacing={2}>
                     {section.isRepeatable && (
                       <Typography variant="subtitle2">
                         {section.entryLabel || section.name} {index + 1}
                       </Typography>
                     )}
-                    <Grid container spacing={1}>
+                    <Grid container spacing={2}>
                       {section.fields
                         .filter((field) =>
                           isAdmissionRuleVisible(field.visibilityRuleJson, rowValues)

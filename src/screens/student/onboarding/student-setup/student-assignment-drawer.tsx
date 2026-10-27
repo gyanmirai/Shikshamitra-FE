@@ -2,10 +2,11 @@
 
 import type { ReactNode } from 'react';
 
-import { useId, useRef, useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useId, useRef, useState, useEffect } from 'react';
 import { Box, Stack, Drawer, IconButton, Typography } from '@mui/material';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 
 /** Assignment-only shell; callers retain their existing save and unsaved-work guards. */
 export default function StudentAssignmentDrawer({
@@ -15,6 +16,8 @@ export default function StudentAssignmentDrawer({
   children,
   actions,
   wide = false,
+  titleInfo,
+  contentLayout = 'scroll',
 }: {
   title: string;
   busy: boolean;
@@ -22,6 +25,8 @@ export default function StudentAssignmentDrawer({
   children: ReactNode;
   actions: ReactNode;
   wide?: boolean;
+  titleInfo?: string;
+  contentLayout?: 'scroll' | 'workspace';
 }) {
   const titleId = useId();
   const mounted = useRef(false);
@@ -75,19 +80,28 @@ export default function StudentAssignmentDrawer({
         spacing={1}
         sx={{ px: 2, py: 1.5, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Typography id={titleId} component="h2" variant="subtitle1" sx={{ minWidth: 0 }}>
-          {title}
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0 }}>
+          <Typography id={titleId} component="h2" variant="subtitle1" sx={{ minWidth: 0 }}>
+            {title}
+          </Typography>
+          {titleInfo && <InfoTooltipIcon title={titleInfo} label={`${title} information`} />}
+        </Stack>
         <IconButton aria-label={`Close ${title}`} disabled={busy} onClick={onClose}>
           <Iconify icon="mdi:close" width={20} />
         </IconButton>
       </Stack>
-      <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-        <Box sx={{ p: 2 }}>{children}</Box>
-      </Scrollbar>
-      <Box component="footer" sx={{ flexShrink: 0, borderTop: 1, borderColor: 'divider' }}>
-        {actions}
-      </Box>
+      {contentLayout === 'workspace' ? (
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', p: 2 }}>{children}</Box>
+      ) : (
+        <>
+          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+            <Box sx={{ p: 2 }}>{children}</Box>
+          </Scrollbar>
+          <Box component="footer" sx={{ flexShrink: 0, borderTop: 1, borderColor: 'divider' }}>
+            {actions}
+          </Box>
+        </>
+      )}
     </Drawer>
   );
 }

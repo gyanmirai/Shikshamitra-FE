@@ -45,6 +45,7 @@ export type AssessmentRosterQuery = {
   standardIds?: string;
   sessionId?: string;
   search?: string;
+  columnFilters?: string;
   queue?: AssessmentQueue;
   status?: AssessmentProgress;
   sorting?: string;

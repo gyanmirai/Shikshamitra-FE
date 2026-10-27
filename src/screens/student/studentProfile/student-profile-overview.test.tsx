@@ -1,10 +1,11 @@
 import type { StudentRecordDetails } from 'src/redux/student/records/student-record-details-api';
 
-import { http, HttpResponse, delay } from 'msw';
 import { it, vi, expect } from 'vitest';
 import { mswServer } from 'src/test/mswServer';
+import { http, delay, HttpResponse } from 'msw';
 import userEvent from '@testing-library/user-event';
-import { screen, within } from '@testing-library/react';
+import { shikshaMitraToast } from 'src/components/toast';
+import { screen, within, waitFor } from '@testing-library/react';
 
 import { profileOverviewContacts } from './student-profile-overview-model';
 import {
@@ -45,6 +46,7 @@ const details: StudentRecordDetails = {
       isMasked: false,
       canEdit: false,
       data: {
+        mainContactRelationship: 'guardian',
         guardianDetails: { fullName: 'Meera Patel', email: 'guardian@example.test' },
         fatherDetails: { fullName: 'Father name', email: 'father@example.test' },
       },
@@ -57,14 +59,18 @@ const details: StudentRecordDetails = {
 
 it('uses saved guardian data and formats saved location objects without confusing student and guardian email', () => {
   expect(profileOverviewContacts(details)).toEqual([
-    { label: 'Primary contact', value: '+91-9000012345' },
-    { label: 'Primary guardian', value: 'Meera Patel' },
-    { label: 'Guardian email', value: 'guardian@example.test' },
+    { label: 'Main contact', value: 'Meera Patel' },
+    { label: 'Relationship', value: 'Other guardian' },
+    { label: 'Phone', value: undefined },
+    { label: 'Email', value: 'guardian@example.test' },
+    { label: 'Father', value: 'Father name' },
+    { label: 'Mother', value: undefined },
+    { label: 'Other guardian', value: 'Meera Patel' },
     { label: 'Address', value: '12 School Road, West Colony, Ahmedabad, Gujarat, 380015, India' },
   ]);
 });
 
-it('does not infer a guardian from father details or use the student email as a guardian email', () => {
+it('shows the saved father as the only parent contact and uses his own mailbox', () => {
   const withoutGuardian = {
     ...details,
     structuredSections: details.structuredSections.map((section) =>
@@ -76,10 +82,14 @@ it('does not infer a guardian from father details or use the student email as a 
         : section
     ),
   };
-  expect(profileOverviewContacts(withoutGuardian).slice(1, 3)).toEqual([
-    { label: 'Primary guardian', value: undefined },
-    { label: 'Guardian email', value: undefined },
-  ]);
+  expect(profileOverviewContacts(withoutGuardian)).toEqual(
+    expect.arrayContaining([
+      { label: 'Main contact', value: 'Father name' },
+      { label: 'Relationship', value: 'Father' },
+      { label: 'Email', value: 'father@example.test' },
+      { label: 'Other guardian', value: undefined },
+    ])
+  );
 });
 
 it.each(['masked sections', 'summary access'])('does not reveal saved values under %s', (mode) => {
@@ -109,7 +119,7 @@ it('renders the approved overview with actual saved contacts and retains detail/
     'Approved historical entry'
   );
   expect(screen.getByRole('heading', { name: 'Record activity' })).toBeVisible();
-  expect(screen.getByText('Meera Patel')).toBeVisible();
+  expect(screen.getAllByText('Meera Patel')).toHaveLength(2);
   expect(screen.queryByText('student@example.test')).not.toBeInTheDocument();
   expect(
     screen.getByText('12 School Road, West Colony, Ahmedabad, Gujarat, 380015, India')
@@ -143,13 +153,14 @@ it('keeps the profile context and shows a contact skeleton while saved details a
     })
   );
   renderStudentProfile();
-  expect(await screen.findByLabelText('Loading guardian and contact details')).toBeVisible();
+  expect(await screen.findByLabelText('Loading parents and contact details')).toBeVisible();
   expect(screen.getByRole('tab', { name: 'Overview' })).toBeVisible();
   expect(await screen.findByText('guardian@example.test')).toBeVisible();
 });
 
-it('reports a failed contact read with the existing retry and recovers to the saved data', async () => {
+it('reports a failed contact read through the standard toast and recovers on normal profile reload', async () => {
   let reads = 0;
+  const toast = vi.spyOn(shikshaMitraToast, 'error');
   mswServer.use(
     http.get(profilePath, () => HttpResponse.json({ data: studentProfile })),
     http.get(profileDetailsPath, () => {
@@ -159,11 +170,29 @@ it('reports a failed contact read with the existing retry and recovers to the sa
         : HttpResponse.json({ data: details });
     })
   );
-  renderStudentProfile();
-  const retry = await screen.findByRole('button', { name: 'Retry details' });
-  expect(screen.getByText(/Guardian and contact details could not be loaded/)).toBeVisible();
-  await userEvent.click(retry);
-  expect(await screen.findByText('guardian@example.test')).toBeVisible();
+  const profile = renderStudentProfile();
+  try {
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Student details could not be loaded. Your profile context has been kept.',
+        })
+      )
+    );
+    expect(screen.getByRole('tab', { name: 'Overview' })).toBeVisible();
+    expect(screen.getByText('Aanya Patel')).toBeVisible();
+    expect(
+      screen.queryByText(/Parents and contact details could not be loaded/)
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry details' })).not.toBeInTheDocument();
+    expect(screen.queryByText('guardian@example.test')).not.toBeInTheDocument();
+    profile.unmount();
+    renderStudentProfile();
+    expect(await screen.findByText('guardian@example.test')).toBeVisible();
+    expect(reads).toBe(2);
+  } finally {
+    toast.mockRestore();
+  }
 });
 
 it('retains the restricted history message without a false empty state or a history API request', async () => {

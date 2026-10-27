@@ -8,7 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Box, Stack, Button, TextField, Typography, CircularProgress } from '@mui/material';
+import { Box, Stack, TextField, Typography, CircularProgress } from '@mui/material';
 import {
   type AdmissionCycle,
   type AdmissionCycleAction,
@@ -157,15 +157,11 @@ export function AdmissionCycleActionDialog({
           {impactError && (
             <StudentFeedback
               notificationKey="STU-0028"
+              scopeKey={cycle.id}
               presentation="toast"
               severity="error"
-              action={
-                <Button color="inherit" size="small" onClick={() => loadImpact(cycle.id)}>
-                  Retry
-                </Button>
-              }
             >
-              Could not check linked records. Retry before continuing.
+              Could not check linked records. Close this dialog and try again.
             </StudentFeedback>
           )}
 
@@ -176,41 +172,30 @@ export function AdmissionCycleActionDialog({
                 are accepted only during {dayjs(cycle.startDate).format('DD MMM YYYY')}–
                 {dayjs(cycle.endDate).format('DD MMM YYYY')}.
               </Typography>
-              {/* {validation?.errors.map((issue) => (
-                <Alert severity="error" key={issue.code}>
-                  {issue.message}
-                </Alert>
-              ))}
-              {validation?.warnings
-                .filter((issue) => !dismissedNotices.has(`warning:${issue.code}`))
-                .map((issue) => (
-                  <Alert
-                    severity="warning"
-                    key={issue.code}
-                    closeText="Dismiss publication warning"
-                    onClose={() =>
-                      setDismissedNotices((current) =>
-                        new Set(current).add(`warning:${issue.code}`)
-                      )
-                    }
-                  >
-                    {issue.message}
-                  </Alert>
-                ))}
-              {!validation && !dismissedNotices.has('readiness') && (
-                <Alert
-                  severity="info"
-                  closeText="Dismiss publication information"
-                  onClose={() =>
-                    setDismissedNotices((current) => new Set(current).add('readiness'))
-                  }
+              {validation?.errors.map((issue) => (
+                <StudentFeedback
+                  key={issue.code}
+                  notificationKey={`admission-cycle:publish:error:${issue.code}`}
+                  scopeKey={cycle.id}
+                  presentation="inline"
+                  severity="error"
+                  role="alert"
                 >
-                  Checking publication readiness…
-                </Alert>
-              )}
-              {validation?.isValid && !validation.warnings.length && (
-                <Alert severity="success">This cycle is ready to publish.</Alert>
-              )} */}
+                  {issue.message}
+                </StudentFeedback>
+              ))}
+              {validation?.warnings.map((issue) => (
+                <StudentFeedback
+                  key={issue.code}
+                  notificationKey={`admission-cycle:publish:warning:${issue.code}`}
+                  scopeKey={cycle.id}
+                  presentation="inline"
+                  severity="warning"
+                  role="status"
+                >
+                  {issue.message}
+                </StudentFeedback>
+              ))}
             </>
           )}
 

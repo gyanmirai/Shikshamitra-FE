@@ -28,6 +28,7 @@ describe('Pipeline navigation state', () => {
         )
       )
     ).toEqual({
+      filters: [],
       search: 'Jay',
       myCases: false,
       assignedCounsellorId: undefined,

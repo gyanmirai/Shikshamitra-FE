@@ -40,7 +40,7 @@ export function AdmissionPipelineRowActions({ row, href, onOpen }: Props) {
         size="small"
         variant="outlined"
         onClick={open}
-        sx={{ width: { xs: 80, sm: 152 }, whiteSpace: 'nowrap' }}
+        sx={{ whiteSpace: 'nowrap', width: 'auto' }}
       >
         <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
           {label}

@@ -253,7 +253,7 @@ describe('quick academic save', () => {
         services,
         onSaved: vi.fn(),
       })
-    ).rejects.toThrow('published GR assignment settings');
+    ).rejects.toThrow('GR settings are unavailable. Reload before assigning a number.');
     expect(services.assignGr).not.toHaveBeenCalled();
   });
 
@@ -286,7 +286,7 @@ describe('quick academic save', () => {
         services,
         onSaved: vi.fn(),
       })
-    ).rejects.toThrow('Choose a published GR series');
+    ).rejects.toThrow('Select the GR numbering rule.');
     expect(services.assignGr).not.toHaveBeenCalled();
   });
 

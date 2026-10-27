@@ -19,6 +19,7 @@ import StudentQuickSetupAcademic from './student-quick-setup-academic';
 import { useStudentQuickSetupAcademic } from './use-student-quick-setup-academic';
 
 const mocks = vi.hoisted(() => ({
+  toastError: vi.fn(),
   caseQuery: {
     currentData: undefined as StudentOnboardingCase | undefined,
     isLoading: false,
@@ -89,6 +90,15 @@ const mocks = vi.hoisted(() => ({
   preview: vi.fn(),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: mocks.toastError,
+    warning: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+    dismiss: vi.fn(),
+  },
+}));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingCaseQuery: () => mocks.caseQuery,
   useGetStudentOnboardingSettingsQuery: () => mocks.settingsQuery,
@@ -152,6 +162,15 @@ beforeEach(() => {
       concurrencyStamp: 'v2',
     }),
   }));
+  mocks.preview.mockImplementation((input) => ({
+    unwrap: async () => ({
+      divisionId: input.divisionId ?? 'A',
+      schoolAssignmentMode: 'both',
+      rollAssignmentMode: input.rollAssignmentMode,
+      proposedRollNumber: 7,
+      concurrencyStamp: 'v1',
+    }),
+  }));
 });
 
 function Harness({
@@ -169,19 +188,88 @@ function Harness({
   );
 }
 
-it('renders one compact academic card and changes modes without assigning anything on open', async () => {
+it('shows an Auto preview in the compact academic card without assigning anything on open', async () => {
   render(<Harness />);
   expect(await screen.findByRole('heading', { name: 'Class & Numbers' })).toBeInTheDocument();
   expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1);
-  expect(screen.getByRole('textbox', { name: 'Roll number' })).toHaveValue('0');
+  await waitFor(() =>
+    expect(screen.getByRole('textbox', { name: 'Roll number' })).toHaveValue('7')
+  );
   const roll = screen.getByRole('group', { name: 'Roll number assignment method' });
   fireEvent.click(within(roll).getByRole('button', { name: 'Manual' }));
   expect(await screen.findByRole('textbox', { name: 'Roll number' })).toHaveValue('');
   expect(screen.getByRole('textbox', { name: 'Roll number' })).toHaveAttribute('placeholder', '0');
   expect(mocks.gr).not.toHaveBeenCalled();
   expect(mocks.roll).not.toHaveBeenCalled();
-  expect(mocks.preview).not.toHaveBeenCalled();
+  expect(mocks.preview).toHaveBeenCalledOnce();
   expect(mocks.place).not.toHaveBeenCalled();
+});
+
+it('keeps zero and plain prerequisite guidance when no division is selected', async () => {
+  mocks.caseQuery.currentData = makeCase({ divisionId: null });
+  render(<Harness />);
+  const field = await screen.findByRole('textbox', { name: 'Roll number' });
+  expect(field).toHaveValue('0');
+  const guidance = screen.getByText('Select a division to preview the roll number.');
+  expect(guidance.querySelector('svg, [data-icon]')).toBeNull();
+  expect(mocks.preview).not.toHaveBeenCalled();
+  expect(mocks.roll).not.toHaveBeenCalled();
+});
+
+it('previews a selected unsaved division without saving placement, GR or Roll', async () => {
+  mocks.caseQuery.currentData = makeCase({ divisionId: null });
+  const { result } = renderHook(() =>
+    useStudentQuickSetupAcademic({ caseId: 'case', canManage: true })
+  );
+  await act(async () => {
+    await result.current.form.setFieldValue('divisionId', 'A');
+  });
+  await waitFor(() => expect(result.current.rollPreview.number).toBe(7));
+  expect(mocks.preview).toHaveBeenCalledWith({
+    id: 'case',
+    divisionId: 'A',
+    rollAssignmentMode: 'automatic',
+  });
+  expect(result.current.form.values.rollValue).toBe('');
+  expect(mocks.place).not.toHaveBeenCalled();
+  expect(mocks.gr).not.toHaveBeenCalled();
+  expect(mocks.roll).not.toHaveBeenCalled();
+});
+
+it('recalculates on Save instead of assigning the earlier display preview', async () => {
+  mocks.caseQuery.currentData = makeCase({ grNumber: '001' });
+  mocks.preview.mockImplementation((input) => ({
+    unwrap: async () => ({
+      divisionId: input.divisionId ?? 'A',
+      schoolAssignmentMode: 'both',
+      rollAssignmentMode: 'automatic',
+      proposedRollNumber: input.divisionId ? 7 : 9,
+      concurrencyStamp: 'v1',
+    }),
+  }));
+  mocks.roll.mockImplementation((input) => ({
+    unwrap: async () => ({
+      ...mocks.caseQuery.currentData,
+      rollNumber: input.rollNumber,
+      concurrencyStamp: 'v2',
+    }),
+  }));
+  const { result } = renderHook(() =>
+    useStudentQuickSetupAcademic({ caseId: 'case', canManage: true })
+  );
+  await waitFor(() => expect(result.current.rollPreview.number).toBe(7));
+  expect(mocks.roll).not.toHaveBeenCalled();
+  await act(async () => {
+    await result.current.save();
+  });
+  expect(mocks.roll).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({
+      rollNumber: 9,
+      rollAssignmentMode: 'automatic',
+      concurrencyStamp: 'v1',
+    })
+  );
+  expect(result.current.caseData?.rollNumber).toBe(9);
 });
 
 it('shows an assigned Roll number without changing it on open', async () => {
@@ -248,13 +336,17 @@ it('adopts a recovered school mode only when no user draft would be overwritten'
   expect(result.current.dirty).toBe(false);
 });
 
-it('shows a recoverable initial error instead of an endless skeleton', () => {
+it('uses the standard request-error toast without an inline Retry row or endless skeleton', async () => {
   mocks.caseQuery.currentData = undefined;
   mocks.caseQuery.isError = true;
   render(<Harness />);
-  expect(screen.getByText('Student setup could not be loaded.', { exact: false })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(mocks.caseQuery.refetch).toHaveBeenCalledOnce();
+  await waitFor(() =>
+    expect(mocks.toastError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Student setup could not be loaded.' })
+    )
+  );
+  expect(screen.queryByText('Student setup could not be loaded.')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
 });
 
@@ -281,7 +373,7 @@ it('rejects invalid manual Roll before any server reads or writes', async () => 
   await act(async () => {
     await expect(result.current.save()).rejects.toThrow('highlighted');
   });
-  expect(result.current.form.errors.rollValue).toBe('Enter a positive whole Roll number.');
+  expect(result.current.form.errors.rollValue).toBe('Enter a positive whole roll number.');
   expect(mocks.getCase).not.toHaveBeenCalled();
 });
 
@@ -348,7 +440,64 @@ it('keeps a failed manual draft and the server error available for retry', async
     await expect(result.current.save()).rejects.toBeDefined();
   });
   expect(result.current.form.values.grValue).toBe('123');
-  expect(result.current.error).toBe('GR number already exists.');
+  expect(result.current.error).toBe(
+    'This GR number is already in use or reserved. Enter a different number.'
+  );
+  expect(result.current.errorPresentation).toBe('toast');
   expect(result.current.busy).toBe(false);
   expect(result.current.dirty).toBe(true);
+});
+
+it('leaves save-result feedback to the page when it owns the operation', async () => {
+  const failure = { status: 503, data: { detail: 'Service unavailable' } };
+  mocks.gr.mockReturnValue({
+    unwrap: () => Promise.reject(failure),
+  });
+  const { result } = renderHook(() =>
+    useStudentQuickSetupAcademic({
+      caseId: 'case',
+      canManage: true,
+      reportSaveErrors: false,
+    })
+  );
+  await act(async () => {
+    await result.current.form.setFieldValue('grMode', 'manual');
+    await result.current.form.setFieldValue('grValue', '123');
+  });
+  await act(async () => {
+    await expect(result.current.save()).rejects.toBe(failure);
+  });
+  expect(result.current.error).toBeUndefined();
+  expect(result.current.form.values.grValue).toBe('123');
+  expect(result.current.dirty).toBe(true);
+  expect(mocks.toastError).not.toHaveBeenCalled();
+});
+
+it('keeps a missing GR numbering-rule choice local and preserves the unsaved draft', async () => {
+  mocks.getSeries.mockImplementation(() => ({
+    unwrap: async () => [mocks.seriesQuery.data[0], { ...mocks.seriesQuery.data[0], id: 'other' }],
+  }));
+  const { result } = renderHook(() =>
+    useStudentQuickSetupAcademic({ caseId: 'case', canManage: true })
+  );
+  await act(async () => {
+    await result.current.form.setFieldValue('grMode', 'manual');
+    await result.current.form.setFieldValue('grValue', '123');
+  });
+  await act(async () => {
+    await expect(result.current.save()).rejects.toThrow('Select the GR numbering rule.');
+  });
+  expect(result.current.errorPresentation).toBe('inline');
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <StudentQuickSetupAcademic editor={result.current} />
+    </ThemeProvider>
+  );
+  const validation = screen.getByText('Select the GR numbering rule.');
+  expect(
+    validation.closest('[data-student-feedback]')?.querySelector('svg, [data-icon]')
+  ).toBeNull();
+  expect(mocks.toastError).not.toHaveBeenCalled();
+  expect(result.current.form.values.grValue).toBe('123');
+  expect(mocks.gr).not.toHaveBeenCalled();
 });

@@ -1,24 +1,35 @@
 'use client';
 
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { ReactNode } from 'react';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 
+import { Box, Button } from '@mui/material';
 import Checkbox from '@mui/material/Checkbox';
-import { Stack, Button, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { buildAdmissionOfferingColumns } from './admission-offering-columns';
 
+import type { OfferingColumnOptions } from './admission-offering-columns';
 import type { AdmissionOfferingActionProps } from './admission-offering-row-actions';
 
 type Props = AdmissionOfferingActionProps & {
   rows: AdmissionOfferingListItem[];
   loading: boolean;
+  refreshing?: boolean;
+  errorContent?: ReactNode;
+  columnOptions?: OfferingColumnOptions;
+  filters?: IParams['filters'];
+  sorting?: string;
+  onFilters?: (filters: IParams['filters']) => void;
   totalCount: number;
   page: number;
   rowsPerPage: number;
   search: string;
   filteredEmpty?: boolean;
+  prerequisite?: string;
   onClearFilters?: () => void;
   onSearch: (value: string) => void;
   onSort: (value: string) => void;
@@ -33,6 +44,8 @@ type Props = AdmissionOfferingActionProps & {
 };
 
 export function AdmissionOfferingTable(props: Props) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const {
     rows,
     loading,
@@ -47,8 +60,23 @@ export function AdmissionOfferingTable(props: Props) {
     onPagination,
     onView,
     selection,
+    refreshing,
+    errorContent,
+    columnOptions,
+    filters,
+    sorting,
+    onFilters,
+    prerequisite,
   } = props;
-  const columns = buildAdmissionOfferingColumns(props);
+  const columns = buildAdmissionOfferingColumns(props, columnOptions);
+  // The mobile cell summarizes two independent statuses; its combined heading is read-only.
+  if (isMobile) {
+    const configuration = columns.find((column) => column.id === 'configurationStatus');
+    if (configuration) {
+      configuration.isFilter = false;
+      configuration.label = 'Statuses';
+    }
+  }
   if (selection) {
     const selectedCount = selection.eligibleIds.filter((id) =>
       selection.selectedIds.includes(id)
@@ -125,12 +153,30 @@ export function AdmissionOfferingTable(props: Props) {
         },
       })}
       isLoading={loading}
+      isRefreshing={refreshing}
+      errorContent={errorContent}
       isPagination
       isSearch
       serverSide
       serverSidePagination
       serverSideSearch
       serverSideSort
+      serverSideFilter
+      isFilter
+      filters={filters}
+      sorts={
+        sorting
+          ? [
+              {
+                column: sorting.split(' ')[0],
+                direction: sorting.endsWith('desc') ? 'desc' : 'asc',
+              },
+            ]
+          : []
+      }
+      onServerFilter={onFilters}
+      onClearCriteria={onClearFilters}
+      maxServerRowsPerPage={100}
       totalCount={totalCount}
       page={page}
       rowsPerPage={rowsPerPage}
@@ -140,21 +186,25 @@ export function AdmissionOfferingTable(props: Props) {
         onSort(sorts[0] ? `${sorts[0].column} ${sorts[0].direction}` : '')
       }
       onServerPagination={onPagination}
-      wrapperProps={{ sx: { height: 1 } }}
-      tableContainerProps={{ sx: { height: 1 } }}
+      wrapperProps={{ sx: { height: 1, minHeight: 0, minWidth: 0 } }}
+      tableContainerProps={{ sx: { height: 1, minWidth: 0 } }}
       noDataText={
-        <Stack spacing={1} alignItems="center">
-          <Typography variant="body2" color="text.secondary">
-            {filteredEmpty
-              ? 'No admission offerings match the selected filters.'
-              : 'No admission offering has been configured.'}
-          </Typography>
-          {filteredEmpty && onClearFilters && (
+        <Box
+          component="span"
+          sx={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}
+        >
+          <Box component="span" sx={{ typography: 'body2', color: 'text.secondary' }}>
+            {prerequisite ||
+              (filteredEmpty
+                ? 'No admission offerings match the selected filters.'
+                : 'No admission offering has been configured.')}
+          </Box>
+          {!prerequisite && filteredEmpty && onClearFilters && (
             <Button size="small" color="inherit" onClick={onClearFilters}>
               Clear filters
             </Button>
           )}
-        </Stack>
+        </Box>
       }
     />
   );

@@ -178,7 +178,7 @@ export default function StudentSetupTable({
           rollNumberTask: student.rollNo ?? 0,
           divisionTask: `${student.standardName} / ${student.divisionName}`,
           pendingWork: pendingTasks.map((task) => task.label).join('; ') || setup.pendingText,
-          accounts: `Student: ${accountStatusMeta[student.studentAccountStatus].label} · Guardian: ${accountStatusMeta[student.guardianAccountStatus].label}`,
+          accounts: `Student: ${accountStatusMeta[student.studentAccountStatus].label} · Parent / guardian: ${accountStatusMeta[student.guardianAccountStatus].label}`,
           statusLabel:
             view === 'readiness' ? setup.status.label : onboardingStageMeta[student.status].label,
         };
@@ -844,7 +844,7 @@ export default function StudentSetupTable({
               </Button>
             }
           >
-            Onboarding cases could not be loaded.
+            The student setup list could not be loaded. Refresh the page.
           </StudentFeedback>
         ) : undefined
       }

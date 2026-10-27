@@ -4,6 +4,7 @@ import type {
   AdmissionApplicationForm,
 } from 'src/redux/student/admissions/admission-applications-api';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useMemo, useState, useEffect } from 'react';
@@ -12,8 +13,12 @@ import CustomStepper from 'src/components/custom-stepper';
 import { LoadingButton } from 'src/components/loading-button';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Grid, Stack, Button, Typography } from '@mui/material';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useLazyGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
+import {
+  FormSectionCard,
+  FormFieldSpacing,
+  FormSectionHeader,
+} from 'src/components/form-section-card';
 
 import AdmissionRuntimeField from '../admission-runtime-field';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
@@ -222,7 +227,7 @@ export function ApplicationRuntimeForm({
           isAdmissionRuleVisible(field.visibilityRuleJson, rowValues)
         )}
         columns={fieldsPerRow}
-        spacing={compact ? 1 : 3}
+        spacing={2}
         renderField={(field) => {
           const value =
             entryIndex === undefined
@@ -266,27 +271,12 @@ export function ApplicationRuntimeForm({
     );
   };
 
-  const sectionHeader = (title: string, action?: ReactNode) =>
-    action
-      ? {
-          headerContent: (
-            <Stack
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              gap={1}
-              useFlexGap
-              flexWrap="wrap"
-              sx={{ width: 1, borderBottom: '1px dashed', borderColor: 'divider', pb: 1 }}
-            >
-              <Typography variant="h6" fontWeight={700}>
-                {title}
-              </Typography>
-              {action}
-            </Stack>
-          ),
-        }
-      : { title };
+  const sectionHeader = (title: string, action?: ReactNode) => ({
+    title,
+    icon: GlobalIcons.admissionDetails,
+    descriptionTooltip: `Details captured in ${title} on the published registration form.`,
+    action,
+  });
   const renderSection = (section: (typeof localizedSections)[number]) => {
     const actions = section.id === currentSections[0]?.id ? sectionActions : undefined;
     if (!section.isRepeatable) {
@@ -305,38 +295,20 @@ export function ApplicationRuntimeForm({
       return (
         <Box key={section.id} sx={{ width: 1 }}>
           {groups.length ? (
-            <Stack spacing={compact ? 1.5 : 2}>
+            <Stack spacing={2}>
               {groups.map((group, index) => (
-                <SectionCard
+                <FormSectionCard
                   key={group.name}
                   {...sectionHeader(group.name, index === 0 ? actions : undefined)}
-                  gridProps={{ spacing: compact ? 1 : 2 }}
-                  paperProps={{
-                    sx: {
-                      boxShadow: 'none',
-                      '&:hover': { boxShadow: 'none' },
-                      ...(compact && { p: 1.5 }),
-                    },
-                  }}
                 >
                   {renderSectionFields(section, undefined, group.fields)}
-                </SectionCard>
+                </FormSectionCard>
               ))}
             </Stack>
           ) : (
-            <SectionCard
-              {...sectionHeader(section.name, actions)}
-              gridProps={{ spacing: compact ? 1 : 2 }}
-              paperProps={{
-                sx: {
-                  boxShadow: 'none',
-                  '&:hover': { boxShadow: 'none' },
-                  ...(compact && { p: 1.5 }),
-                },
-              }}
-            >
+            <FormSectionCard {...sectionHeader(section.name, actions)}>
               {renderSectionFields(section)}
-            </SectionCard>
+            </FormSectionCard>
           )}
         </Box>
       );
@@ -349,28 +321,12 @@ export function ApplicationRuntimeForm({
     const entryLabel = section.entryLabel || section.name.replace(/s$/i, '') || 'Entry';
     const maxEntries = section.maxEntries ?? 1;
     return (
-      <Stack key={section.id} spacing={1.5}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          gap={1}
-          useFlexGap
-          flexWrap="wrap"
-        >
-          <Typography variant="subtitle1">{section.name}</Typography>
-          {actions}
-        </Stack>
+      <Stack key={section.id} spacing={2}>
+        <FormSectionHeader {...sectionHeader(section.name, actions)} />
         {Array.from({ length: count }, (_, entryIndex) => (
-          <SectionCard
+          <FormSectionCard
             key={`${section.id}-${entryIndex}`}
-            title={`${entryLabel} ${entryIndex + 1}`}
-            gridProps={{ spacing: compact ? 1 : 2 }}
-            paperProps={
-              compact
-                ? { sx: { p: 1.5, boxShadow: 'none', '&:hover': { boxShadow: 'none' } } }
-                : undefined
-            }
+            {...sectionHeader(`${entryLabel} ${entryIndex + 1}`)}
           >
             {renderSectionFields(section, entryIndex)}
             {count > Math.max(section.minEntries ?? 0, 1) &&
@@ -392,7 +348,7 @@ export function ApplicationRuntimeForm({
                   </Button>
                 </Grid>
               )}
-          </SectionCard>
+          </FormSectionCard>
         ))}
         {count < maxEntries && application.status === 0 && !readOnly && (
           <Button
@@ -527,7 +483,9 @@ export function ApplicationRuntimeForm({
               />
             </Box>
           )}
-          <Stack spacing={2} sx={{ flex: 1, minWidth: 0 }}>
+          <FormFieldSpacing
+            sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}
+          >
             {isStepper ? (
               currentSections.length ? (
                 currentSections.map(renderSection)
@@ -537,7 +495,7 @@ export function ApplicationRuntimeForm({
             ) : (
               visibleSections.map(renderSection)
             )}
-          </Stack>
+          </FormFieldSpacing>
         </Stack>
         {documents && (!isStepper || safeActiveStep === visibleSteps.length - 1) && (
           <Stack sx={{ mt: 2 }}>{documents}</Stack>

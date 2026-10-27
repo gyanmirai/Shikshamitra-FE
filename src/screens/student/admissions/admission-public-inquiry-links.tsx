@@ -53,6 +53,7 @@ import {
 } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import { AdmissionTableText } from './admission-table-text';
+import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionIntakeNotice } from './admission-intake-notice';
 import { INQUIRY_SOURCE_OPTIONS } from './inquiry-management/admission-inquiry-list-options';
 
@@ -319,7 +320,7 @@ export function AdmissionPublicInquiryLinks({
     }
   };
 
-  const listedLinks = links.data ?? [];
+  const listedLinks = links.currentData ?? [];
   const sessionLinks = Object.values(createdLinks)
     .reverse()
     .map(
@@ -346,6 +347,7 @@ export function AdmissionPublicInquiryLinks({
       id: 'name',
       label: 'Link',
       filterType: 'string',
+      isFilter: true,
       sticky: true,
       stickyPosition: 'left',
       stickyOnMobile: false,
@@ -356,6 +358,7 @@ export function AdmissionPublicInquiryLinks({
       id: 'sourceDisplay',
       label: 'Source',
       filterType: 'string',
+      isFilter: true,
       minWidth: 190,
       render: (value) => <AdmissionTableText text={String(value ?? '')} />,
     },
@@ -363,13 +366,15 @@ export function AdmissionPublicInquiryLinks({
       id: 'periodName',
       label: 'Admission period',
       filterType: 'string',
+      isFilter: true,
       minWidth: 180,
       render: (value) => <AdmissionTableText text={String(value ?? '')} />,
     },
     {
       id: 'expiresAtUtc',
       label: 'Expires',
-      filterType: 'dateTime',
+      filterType: 'date',
+      isFilter: true,
       minWidth: 150,
       render: (_value, row) => {
         const { expiresAtUtc } = row as LinkRow;
@@ -385,13 +390,16 @@ export function AdmissionPublicInquiryLinks({
       id: 'formName',
       label: 'Inquiry form',
       filterType: 'string',
+      isFilter: true,
       minWidth: 180,
       render: (value) => <AdmissionTableText text={String(value ?? '')} />,
     },
     {
       id: 'status',
       label: 'Status',
+      stickyOnMobile: false,
       filterType: 'enum',
+      isFilter: true,
       enumOptions: ['Active', 'Expired', 'Revoked'].map((value) => ({ label: value, value })),
       sticky: true,
       stickyPosition: 'right',
@@ -475,7 +483,17 @@ export function AdmissionPublicInquiryLinks({
 
   return (
     <>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          gap: 1,
+          height: 1,
+          minHeight: 0,
+          minWidth: 0,
+        }}
+      >
         {error && !createOpen && (
           <StudentFeedback
             notificationKey="STU-0139"
@@ -486,52 +504,45 @@ export function AdmissionPublicInquiryLinks({
             {error}
           </StudentFeedback>
         )}
-        {links.isError && !links.data && (
-          <StudentFeedback
-            notificationKey="STU-0140"
-            presentation="toast"
-            severity="error"
-            action={
-              <Button size="small" onClick={() => links.refetch()}>
-                Retry
-              </Button>
+        {links.isError && rows.length > 0 && (
+          <AdmissionQueryError onRetry={() => links.refetch()} />
+        )}
+        <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
+          <CustomizableTable
+            tableId="admission-public-inquiry-links"
+            tableTitle="Public admission inquiry links"
+            wrapperProps={{ sx: { flex: 1, height: 1, minHeight: 0, minWidth: 0 } }}
+            tableContainerProps={{ sx: { height: 1 } }}
+            columns={columns}
+            data={rows}
+            errorContent={
+              links.isError && rows.length === 0 ? (
+                <AdmissionQueryError onRetry={() => links.refetch()} />
+              ) : undefined
             }
-          >
-            Unable to load inquiry links.
-          </StudentFeedback>
-        )}
-        {(!links.isError || links.data || rows.length > 0) && (
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-            <CustomizableTable
-              tableId="admission-public-inquiry-links"
-              tableTitle="Public admission inquiry links"
-              wrapperProps={{ sx: { height: 1 } }}
-              tableContainerProps={{ sx: { height: 1 } }}
-              columns={columns}
-              data={rows}
-              {...createdTableContext}
-              handleRowClick={(row) => setViewLink(row as LinkRow)}
-              rowProps={(row) => ({
-                tabIndex: 0,
-                sx: { cursor: 'pointer' },
-                onKeyDown: (event) => {
-                  if (
-                    event.target === event.currentTarget &&
-                    (event.key === 'Enter' || event.key === ' ')
-                  ) {
-                    event.preventDefault();
-                    setViewLink(row as LinkRow);
-                  }
-                },
-              })}
-              isLoading={links.isLoading}
-              isPagination
-              isSearch
-              isFilter
-              noDataText="No inquiry links yet. Create a link for a website, QR code, or school event."
-            />
-          </Box>
-        )}
+            {...createdTableContext}
+            handleRowClick={(row) => setViewLink(row as LinkRow)}
+            rowProps={(row) => ({
+              tabIndex: 0,
+              sx: { cursor: 'pointer' },
+              onKeyDown: (event) => {
+                if (
+                  event.target === event.currentTarget &&
+                  (event.key === 'Enter' || event.key === ' ')
+                ) {
+                  event.preventDefault();
+                  setViewLink(row as LinkRow);
+                }
+              },
+            })}
+            isLoading={links.isLoading || (!links.currentData && links.isFetching)}
+            isRefreshing={Boolean(links.currentData && links.isFetching)}
+            isPagination
+            isSearch
+            isFilter
+            noDataText="No inquiry links yet. Create a link for a website, QR code, or school event."
+          />
+        </Box>
       </Box>
 
       <CustomDialog

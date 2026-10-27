@@ -3,7 +3,7 @@ import type { StudentRecordDetails } from 'src/redux/student/records/student-rec
 
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { useId, useState, useEffect } from 'react';
+import { useId, useRef, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -20,11 +20,13 @@ export function StudentRegistrationFormPanel({
   onSaved,
   onEditingChange,
   onNavigationGuardChange,
+  requestEdit = false,
 }: {
   details: StudentRecordDetails;
   onSaved: () => void;
   onEditingChange?: (editing: boolean) => void;
   onNavigationGuardChange?: (requestNavigation: ((proceed: () => void) => void) | null) => void;
+  requestEdit?: boolean;
 }) {
   const router = useRouter();
   const formId = useId();
@@ -34,6 +36,7 @@ export function StudentRegistrationFormPanel({
   const [ready, setReady] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   const [editingAccess, setEditingAccess] = useState('');
+  const editRequestHandled = useRef(false);
   const permissions = useSelector((root: RootState) => root.auth.permissions);
   const sources = details.formSources ?? [];
   const accessKey = JSON.stringify(
@@ -48,6 +51,12 @@ export function StudentRegistrationFormPanel({
     hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
     hasGrantedPermission(permissions, 'Students.Records.Changes.Add') &&
     sources.some((source) => (source.formEditableFieldCodes?.length ?? 0) > 0);
+  useEffect(() => {
+    if (!requestEdit || editRequestHandled.current || !canEdit) return;
+    editRequestHandled.current = true;
+    setEditingAccess(accessKey);
+    setEditing(true);
+  }, [requestEdit, canEdit, accessKey]);
   const guard = useUnsavedNavigation(editing && dirty, {
     push: router.push,
     blockNavigation: busy,

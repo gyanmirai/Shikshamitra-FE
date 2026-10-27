@@ -3,12 +3,42 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-24
+updated_on: 2026-10-27
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Parent defaults and optional guardians (27 October 2026)
+
+Run the family-contact, inquiry-model, inquiry-form-page and direct-registration suites; profile overview-model, overview and parents-contact-dialog suites; parent-sibling state/UI, portal-accounts UI and credentials API suites; and inquiry school-contact/communication-template suites. The combined single-worker run passes 176 assertions across 13 files. Coverage includes parent defaults, explicit guardian selection alongside parents, role-conflict recovery, separate recipient email, edited relationship clearing, retained siblings, stale/permission/busy guards and explicit adult access confirmation. The saved policy capability distinguishes Optional from Not needed and blocks confirmed guardian activation when the current capability is unavailable.
+
+The separate existing drawer/Quick Setup run passes 43 of 47 assertions, including the original four-argument parent activation callback. Four drawer assertions still expect former inline Additional admission details, activation-preview and Handling history error/Retry copy; they remain failures rather than being weakened. Full TypeScript and scoped feature-file ESLint pass. Student documentation validation passes; all-module documentation validation retains unrelated testing-folder taxonomy/frontmatter failures.
+
+Local in-app browser inspection loaded the Inquiry and Offering screens, but later form interactions stalled. Parent/guardian form completion, responsive contact-dialog acceptance, current-backend persistence and app-access delivery remain unverified by that browser attempt. Automated fixture tests do not establish staging, production or mailbox delivery.
+
+## Student List actions and I-card print refinement (26 October 2026)
+
+- Ten focused suites pass 99 tests. Coverage includes the three permitted direct actions (Edit Details, Attendance History, Generate Certificate), short Print I-card/Change Status overflow labels, all primary-permission combinations, captured academic scope, one-student bulk read-only fields, editable row printing, single-card navigation/scaling, A4 capacity/paging and separate PDF versus issuance commands. A stale-template regression reproduces the old preview and verifies the refreshed server template snapshot without saving the template.
+- Full `npm run ts`, scoped ESLint and formatting pass. Evidence is in `.artifacts/icard-revision-focused.log`, `.artifacts/icard-revision-typecheck.log` and `.artifacts/icard-revision-eslint.log`; Student documentation validation and scoped diff checks complete the handoff.
+- Authenticated in-app localhost checks verify the three direct icons and concise overflow menu, selected Board CBSE/Medium English/Class 1/Division A as four read-only fields, keyboard-opened drawer/Choose Students tooltips, the single complete Review card and next-student boundary, and separate Export/Issue actions. An actual two-student bulk PDF downloaded successfully; Issue cards, template save, student changes and fee assignment were not executed.
+- Light-theme checks at 1440×900, 768×1024 and 390×844 keep the document/dialog within the viewport. At 390 px, the Review card width and scroll width both measure 298 px; its footer remains inside the 844 px viewport. Captures include `.artifacts/icard-revision-students-desktop.png`, `icard-revision-review-desktop.png`, `icard-revision-review-mobile.png`, `icard-revision-export-mobile.png` and `icard-revision-export-tablet.png`. Dark-theme visual acceptance and staging/production deployment remain unverified. These checks supersede the earlier network-blocked I-card browser result below.
+
+## Pipeline drawer width regression (26 October 2026)
+
+The current `FormBusyRegion` has an outer status wrapper around its disabled fieldset. Pipeline's former direct-fieldset selectors stopped matching that structure, breaking the flex chain and shrinking all stage bodies. The shared region now offers opt-in `fillContent`; Pipeline uses it instead of styling internal fieldset descendants. Other consumers retain the default layout, busy locks and status placement. Scrollbar, photo rendering, Finance and backend contracts are unchanged.
+
+Run `node node_modules/@playwright/test/cli.js test --config e2e/student/pipeline-drawer-width.config.ts`. The real shared components with synthetic stage bodies reproduced a roughly 464 px body in a 1210 px drawer before the fix. Six geometry cases pass at 1440×900, 768×1024 and 390×844 in light/dark themes, covering five common stage-body variants, actual photo/field alignment, focus-mode draft retention, busy-state width/locks, bounded horizontal/vertical scrolling and reachable footer actions. This layout fixture does not certify real backend workflow transitions.
+
+The new detail regression also fails against the baseline outer wrapper and passes with the fill layout, retaining mounted content through idle/saving transitions. The twelve-suite focused run reports 193 passed and nine existing Retry/error-copy failures in application detail, assessment, finalization and fee selection; the same nine reproduce without the fix, with no new failures. Full `npm run ts`, changed-source ESLint, formatting and Student documentation validation pass. Evidence and the named failure comparison are retained under `.artifacts/pipeline-width-20261026/`. Local live-workflow verification is blocked by “Account access could not be verified”; the final in-app browser smoke covers the isolated real-component layout fixture, five body variants, photo alignment, busy/focus draft retention, dark mode and keyboard scrolling without changing student records. This is not authenticated workflow or deployment acceptance.
+
+## Student List filters, actions and bulk documents (26 October 2026)
+
+- Nine focused suites pass 79 tests covering single Board/Medium, checkbox Class/Division scope, unavailable-ID blocking, permission-aware direct/overflow actions, row navigation, exact single-class/single-division bulk eligibility, selection invalidation, selected document handoff and complete filtered export. A regression first reproduced a removed student remaining selected after a same-page refresh; successful refresh now clears the selection while page changes retain it.
+- Full `npm run ts` passes. Changed-source ESLint and Student documentation validation are recorded in `.artifacts/student-directory-lint-final.log` and `.artifacts/student-directory-docs.log`; focused test and TypeScript evidence is in `.artifacts/student-directory-final-focused.log` and `.artifacts/student-directory-typecheck-final.log`.
+- Authenticated localhost checks verify the removed header utilities/View icon, three permitted direct actions, shared Columns/Export controls, disabled bulk selection before class/division, enabled selection for Class 1 / A and the selected-student certificate chooser. No student edit, fee assignment or document issuance was saved. The I-card drawer opened to template loading, after which the in-app browser reported `ERR_NETWORK_IO_SUSPENDED`; its loaded state, final mobile layout and browser export remain unverified. Automated document/export coverage does not replace that live acceptance.
+- A broader repository suite was stopped after failures in untouched Finance, HR, Admissions, Dashboard and API-cache tests; `.artifacts/student-directory-full-suite.log` retains the partial evidence. This is not a passing repository-wide gate. Backend contracts are reused without backend changes; staging and production have not been deployed or verified for this change.
 
 ## App Login email add/update validation (24 October 2026)
 

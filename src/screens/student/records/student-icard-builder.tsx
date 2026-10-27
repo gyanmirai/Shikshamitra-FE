@@ -10,12 +10,15 @@ import type {
   StudentDirectoryOption,
 } from 'src/redux/student/records/student-records-types';
 
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomStepper from 'src/components/custom-stepper';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 import { TemplateIdentityAsset } from 'src/screens/setting/school-identity/components/template-identity-asset';
 import {
   useGetStudentRecordsDirectoryQuery,
@@ -32,6 +35,7 @@ import {
   Typography,
   ToggleButton,
   LinearProgress,
+  InputAdornment,
   FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -123,12 +127,13 @@ const normalizeTemplate = (
   showPhoto: value.showPhoto ?? previous.showPhoto,
   fields: value.fields ?? previous.fields,
 });
-type Scope = {
+export type StudentICardAcademicScope = {
   boardIds: string[];
   mediumIds: string[];
   standardIds: string[];
   divisionIds: string[];
 };
+type Scope = StudentICardAcademicScope;
 const emptyScope: Scope = { boardIds: [], mediumIds: [], standardIds: [], divisionIds: [] };
 const asStringArray = (value: string[] | number[]) => value.map(String);
 const studentName = (student: StudentDirectoryItem) =>
@@ -138,15 +143,44 @@ const studentName = (student: StudentDirectoryItem) =>
 export default function StudentICardBuilder({
   onClose,
   initialTemplate,
+  initialStudents,
+  initialAcademicScope,
+  lockAcademicScope = false,
+  academicYearId,
+  contextInvalid = false,
+  onBusyChange,
 }: {
   onClose: () => void;
   initialTemplate?: IdCardTemplate | null;
+  initialStudents?: StudentDirectoryItem[];
+  initialAcademicScope?: StudentICardAcademicScope;
+  lockAcademicScope?: boolean;
+  academicYearId?: string;
+  contextInvalid?: boolean;
+  onBusyChange?: (busy: boolean) => void;
 }) {
+  const directoryMode = initialStudents !== undefined;
+  const firstStep = directoryMode ? 2 : 0;
+  const visibleSteps = directoryMode ? steps.slice(2) : steps;
+  const [initialSelection] = useState(() =>
+    (initialStudents ?? [])
+      .filter(
+        (student, index, all) =>
+          !student.maskedFields.includes('Identity') &&
+          (!academicYearId ||
+            !student.academicYearId ||
+            student.academicYearId === academicYearId) &&
+          all.findIndex((item) => item.studentId === student.studentId) === index
+      )
+      .slice(0, 100)
+  );
   const [identityUploading, setIdentityUploading] = useState(false);
   const templateQuery = useGetRecordIdTemplateQuery(undefined, {
     skip: initialTemplate !== undefined,
   });
-  const optionsQuery = useGetStudentRecordsDirectoryOptionsQuery({});
+  const optionsQuery = useGetStudentRecordsDirectoryOptionsQuery(
+    academicYearId ? { academicYearId } : {}
+  );
   const [saveTemplate, saveState] = useSaveRecordIdTemplateMutation();
   const [createTemplate, createState] = useCreateRecordIdTemplateMutation();
   const [updateTemplate, updateState] = useUpdateRecordIdTemplateMutation();
@@ -156,13 +190,51 @@ export default function StudentICardBuilder({
   const [template, setTemplate] = useState<IdCardTemplate | null>(() =>
     initialTemplate === undefined ? null : normalizeTemplate(initialTemplate ?? {})
   );
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(firstStep);
   const [completed, setCompleted] = useState<number[]>([]);
-  const [scope, setScope] = useState<Scope>(emptyScope);
+  const [scope, setScope] = useState<Scope>(() =>
+    initialAcademicScope
+      ? {
+          boardIds: [...initialAcademicScope.boardIds],
+          mediumIds: [...initialAcademicScope.mediumIds],
+          standardIds: [...initialAcademicScope.standardIds],
+          divisionIds: [...initialAcademicScope.divisionIds],
+        }
+      : initialSelection.length
+        ? {
+            boardIds: [],
+            mediumIds: [
+              ...new Set(
+                initialSelection.flatMap((student) =>
+                  student.academicMediumId ? [student.academicMediumId] : []
+                )
+              ),
+            ],
+            standardIds: [
+              ...new Set(
+                initialSelection.flatMap((student) =>
+                  student.standardId ? [student.standardId] : []
+                )
+              ),
+            ],
+            divisionIds: [
+              ...new Set(
+                initialSelection.flatMap((student) =>
+                  student.divisionId ? [student.divisionId] : []
+                )
+              ),
+            ],
+          }
+        : emptyScope
+  );
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
-  const [selected, setSelected] = useState<Record<string, StudentDirectoryItem>>({});
+  const [selected, setSelected] = useState<Record<string, StudentDirectoryItem>>(() =>
+    Object.fromEntries(initialSelection.map((student) => [student.studentId, student]))
+  );
   const [previews, setPreviews] = useState<IdCard[]>([]);
+  const [previewStudentId, setPreviewStudentId] = useState(initialSelection[0]?.studentId ?? '');
+  const [sheetPage, setSheetPage] = useState(0);
   const [error, setError] = useState('');
   const [templateNameTouched, setTemplateNameTouched] = useState(false);
   const issueKey = useRef('');
@@ -177,6 +249,9 @@ export default function StudentICardBuilder({
   const templateName = template?.name ?? '';
   const schoolName = template?.schoolName ?? '';
   const templateNameError = templateNameTouched && !templateName.trim();
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
 
   useEffect(() => {
     if (initialTemplate === undefined && templateQuery.currentData && !template)
@@ -223,15 +298,40 @@ export default function StudentICardBuilder({
   const directory = useGetStudentRecordsDirectoryQuery(
     {
       population: 'Active',
+      ...(academicYearId ? { academicYearId } : {}),
       maxResultCount: 25,
       skipCount: page * 25,
       search: search.trim() || undefined,
       ...scope,
     },
-    { skip: step < 2 }
+    { skip: step < 2 || contextInvalid }
   );
   const rows = directory.currentData?.items ?? [];
   const selectedRows = Object.values(selected);
+  const missingPhotoCount = selectedRows.filter((row) => !row.hasPhoto).length;
+  const reviewStudent =
+    selectedRows.find((student) => student.studentId === previewStudentId) ?? selectedRows[0];
+  const reviewIndex = reviewStudent ? selectedRows.indexOf(reviewStudent) : 0;
+  const reviewCard = previews.find((card) => card.studentId === reviewStudent?.studentId);
+  const cardsPerSheet = Math.min(
+    template?.cardsPerPage ?? 8,
+    template?.orientation === 'Vertical' ? 9 : 10
+  );
+  const sheetCount = Math.max(1, Math.ceil(selectedRows.length / cardsPerSheet));
+  const currentSheetPage = Math.min(sheetPage, sheetCount - 1);
+  const sheetStudents = selectedRows.slice(
+    currentSheetPage * cardsPerSheet,
+    (currentSheetPage + 1) * cardsPerSheet
+  );
+  const contextSummary = [
+    ...scope.boardIds.map((id) => options?.boards?.find((item) => item.id === id)?.name),
+    ...scope.mediumIds.map((id) => options?.mediums?.find((item) => item.id === id)?.name),
+    ...scope.standardIds.map((id) => options?.standards?.find((item) => item.id === id)?.name),
+    ...scope.divisionIds.map((id) => options?.divisions?.find((item) => item.id === id)?.name),
+    options?.academicYears?.find((item) => item.id === academicYearId)?.name,
+  ]
+    .filter(Boolean)
+    .join(' · ');
   const sample =
     previews[0] ??
     (selectedRows[0]
@@ -252,10 +352,12 @@ export default function StudentICardBuilder({
     setPreviews([]);
   };
   const changeScope = (patch: Partial<Scope>) => {
+    if (lockAcademicScope) return;
     setScope((previous) => ({ ...previous, ...patch }));
     setPage(0);
     setSelected({});
     setPreviews([]);
+    setCompleted((current) => current.filter((value) => value < 2));
     issueKey.current = '';
   };
   const scopeSelect = (
@@ -263,21 +365,47 @@ export default function StudentICardBuilder({
     key: keyof Scope,
     choices: StudentDirectoryOption[],
     patch: (value: string[]) => Partial<Scope>
-  ) => (
-    <CustomSelect
-      label={label}
-      multiple
-      value={scope[key]}
-      options={choices}
-      labelKey="name"
-      valueKey="id"
-      isSearch
-      isLoading={optionsQuery.isFetching}
-      onChange={(value) => changeScope(patch(asStringArray(value)))}
-      disabled={busy || optionsQuery.isError}
-      formControlProps={{ sx: { width: '100%', minWidth: 0 } }}
-    />
-  );
+  ) =>
+    lockAcademicScope ? (
+      <TextField
+        fullWidth
+        size="small"
+        label={label}
+        value={
+          scope[key]
+            .map(
+              (id) =>
+                choices.find((item) => item.id === id)?.name ??
+                (optionsQuery.isFetching ? 'Loading…' : 'Unavailable')
+            )
+            .join(', ') || 'All'
+        }
+        slotProps={{
+          input: {
+            readOnly: true,
+            endAdornment: (
+              <InputAdornment position="end">
+                <Iconify icon={GlobalIcons.lockIcon} width={16} />
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
+    ) : (
+      <CustomSelect
+        label={label}
+        multiple
+        value={scope[key]}
+        options={choices}
+        labelKey="name"
+        valueKey="id"
+        isSearch
+        isLoading={optionsQuery.isFetching}
+        onChange={(value) => changeScope(patch(asStringArray(value)))}
+        disabled={busy || optionsQuery.isError}
+        formControlProps={{ sx: { width: '100%', minWidth: 0 } }}
+      />
+    );
   const toggleStudent = (student: StudentDirectoryItem) => {
     setSelected((previous) => {
       const next = { ...previous };
@@ -286,6 +414,7 @@ export default function StudentICardBuilder({
       return next;
     });
     setPreviews([]);
+    setCompleted((current) => current.filter((value) => value < 2));
     issueKey.current = '';
   };
   const togglePage = () => {
@@ -299,6 +428,7 @@ export default function StudentICardBuilder({
       return next;
     });
     setPreviews([]);
+    setCompleted((current) => current.filter((value) => value < 2));
     issueKey.current = '';
   };
   const save = async () => {
@@ -330,6 +460,7 @@ export default function StudentICardBuilder({
     }
   };
   const preview = async (templateId = template?.id ?? undefined) => {
+    if (contextInvalid) return false;
     if (!selectedRows.length) {
       setError('Select at least one student.');
       return false;
@@ -340,6 +471,13 @@ export default function StudentICardBuilder({
         templateId,
       }).unwrap();
       setPreviews(cards);
+      if (directoryMode && cards[0]?.templateSnapshot) {
+        setTemplate((current) => ({
+          ...normalizeTemplate(cards[0].templateSnapshot, current ?? defaultTemplate),
+          cardsPerPage: current?.cardsPerPage ?? cards[0].templateSnapshot.cardsPerPage,
+        }));
+        setSheetPage(0);
+      }
       setError('');
       return true;
     } catch {
@@ -348,6 +486,7 @@ export default function StudentICardBuilder({
     }
   };
   const advance = async () => {
+    if (contextInvalid) return;
     if (step === 0 && !templateName.trim()) {
       setTemplateNameTouched(true);
       setError('');
@@ -365,7 +504,7 @@ export default function StudentICardBuilder({
       setError('Select at least one student.');
       return;
     }
-    const saved = step === 2 ? await save() : null;
+    const saved = step === 2 ? (directoryMode ? template : await save()) : null;
     if (step === 2 && !saved) return;
     if (step === 2 && !(await preview(saved?.id ?? undefined))) return;
     if (step === 3 && !previews.length && !(await preview())) return;
@@ -374,8 +513,8 @@ export default function StudentICardBuilder({
     setStep((current) => Math.min(current + 1, steps.length - 1));
   };
   const exportPdf = async () => {
-    if (!template || !selectedRows.length) return;
-    const saved = await save();
+    if (contextInvalid || !template || !selectedRows.length) return;
+    const saved = directoryMode ? template : await save();
     if (!saved) return;
     try {
       const pdf = await exportCards({
@@ -391,8 +530,8 @@ export default function StudentICardBuilder({
     }
   };
   const issue = async () => {
-    if (!selectedRows.length) return;
-    const saved = await save();
+    if (contextInvalid || !selectedRows.length) return;
+    const saved = directoryMode ? template : await save();
     if (!saved) return;
     try {
       issueKey.current ||= crypto.randomUUID();
@@ -462,15 +601,27 @@ export default function StudentICardBuilder({
 
   return (
     <Paper
-      sx={{ height: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', p: 2, gap: 2 }}
+      sx={{
+        height: 1,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        p: 2,
+        gap: 2,
+      }}
     >
       <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
         <CustomStepper
-          steps={steps}
-          activeStep={step}
+          steps={visibleSteps}
+          activeStep={step - firstStep}
           ariaLabel="Student I-Card creation steps"
-          stepStates={steps.map((_, index) =>
-            completed.includes(index) ? 'completed' : index === step ? 'active' : 'pending'
+          stepStates={visibleSteps.map((_, index) =>
+            completed.includes(index + firstStep)
+              ? 'completed'
+              : index + firstStep === step
+                ? 'active'
+                : 'pending'
           )}
         />
       </Box>
@@ -479,8 +630,13 @@ export default function StudentICardBuilder({
         sx={{ display: { xs: 'block', sm: 'none' } }}
         aria-live="polite"
       >
-        Step {step + 1} of {steps.length}: {steps[step]}
+        Step {step - firstStep + 1} of {visibleSteps.length}: {steps[step]}
       </Typography>
+      {contextInvalid && (
+        <Typography role="alert" variant="body2" color="warning.main">
+          The academic year changed. Close this workspace and select students again.
+        </Typography>
+      )}
       {error && (
         <StudentFeedback
           notificationKey="STU-0864"
@@ -491,9 +647,22 @@ export default function StudentICardBuilder({
           {error}
         </StudentFeedback>
       )}
-      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
+      <Box
+        component="fieldset"
+        disabled={busy || contextInvalid}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          overflowY: 'auto',
+          border: 0,
+          m: 0,
+          p: 0,
+          pr: 0.5,
+        }}
+      >
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: step === 2 ? 12 : 7 }}>
+          <Grid size={{ xs: 12, md: step >= 2 ? 12 : 7 }} sx={{ minWidth: 0 }}>
             {step === 0 && (
               <Stack spacing={2}>
                 <Grid container spacing={1.25}>
@@ -682,11 +851,16 @@ export default function StudentICardBuilder({
             )}
             {step === 2 && (
               <Stack spacing={2}>
-                <Typography variant="subtitle1">Choose students</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Select one or more boards, mediums, classes, and divisions. The choices narrow
-                  from left to right.
-                </Typography>
+                <FormSectionHeader
+                  title="Choose Students"
+                  icon={GlobalIcons.assigned}
+                  titleTypographyProps={{ fontWeight: 600 }}
+                  descriptionTooltip={
+                    lockAcademicScope
+                      ? 'Academic filters come from Student List and stay read-only for bulk printing. Choose which students to include below.'
+                      : 'Select one or more boards, mediums, classes, and divisions. The choices narrow from left to right.'
+                  }
+                />
                 {optionsQuery.isError && (
                   <StudentFeedback
                     notificationKey="STU-0865"
@@ -795,70 +969,272 @@ export default function StudentICardBuilder({
             )}
             {step === 3 && (
               <Stack spacing={2}>
-                <Typography variant="subtitle1">Review cards</Typography>
-                <Typography variant="body2">
-                  {selectedRows.length} student{selectedRows.length === 1 ? '' : 's'} selected.{' '}
-                  {selectedRows.filter((row) => !row.hasPhoto).length} missing photo.
-                </Typography>
-                <Button
-                  variant="outlined"
-                  disabled={busy}
-                  onClick={() => {
-                    preview();
-                  }}
-                  sx={{ alignSelf: 'flex-start' }}
+                <FormSectionHeader
+                  title="Review Cards"
+                  actionFullWidthOnMobile
+                  icon={GlobalIcons.eye}
+                  titleTypographyProps={{ fontWeight: 600 }}
+                  descriptionTooltip="Review each selected student's card before exporting or issuing. Refresh preview to reload the card data."
+                  action={
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={busy || contextInvalid}
+                      onClick={() => preview()}
+                      startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
+                    >
+                      Refresh preview
+                    </Button>
+                  }
+                />
+                {contextSummary && (
+                  <Typography variant="body2" color="text.secondary">
+                    {contextSummary}
+                  </Typography>
+                )}
+                <Stack direction="row" useFlexGap flexWrap="wrap" gap={1}>
+                  <Typography variant="body2">
+                    {selectedRows.length} {selectedRows.length === 1 ? 'student' : 'students'}{' '}
+                    selected
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color={missingPhotoCount ? 'warning.main' : 'text.secondary'}
+                  >
+                    {missingPhotoCount} missing {missingPhotoCount === 1 ? 'photo' : 'photos'}
+                  </Typography>
+                </Stack>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1}
+                  alignItems="center"
+                  sx={{ width: 1, maxWidth: 600, mx: 'auto' }}
                 >
-                  Refresh preview
-                </Button>
-                <Grid container spacing={1.5}>
-                  {previews.map((card) => (
-                    <Grid key={card.studentId} size={{ xs: 12, sm: 6 }}>
-                      <StudentCardPreview template={template} card={card} />
-                    </Grid>
-                  ))}
-                </Grid>
+                  <CustomSelect
+                    label="Student to preview"
+                    value={reviewStudent?.studentId ?? ''}
+                    options={selectedRows.map((student) => ({
+                      id: student.studentId,
+                      name: `${studentName(student)}${student.grNumber ? ` · ${student.grNumber}` : ''}`,
+                    }))}
+                    labelKey="name"
+                    valueKey="id"
+                    onChange={(value) => setPreviewStudentId(String(value))}
+                    disabled={busy}
+                    isSearch
+                    formControlProps={{ sx: { flex: 1, minWidth: 0 } }}
+                  />
+                  <Stack direction="row" spacing={1} alignItems="center" flexShrink={0}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      aria-label="Previous student"
+                      disabled={busy || reviewIndex === 0}
+                      onClick={() => setPreviewStudentId(selectedRows[reviewIndex - 1].studentId)}
+                    >
+                      Previous
+                    </Button>
+                    <Typography variant="caption" aria-live="polite">
+                      {reviewIndex + 1} of {selectedRows.length}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      aria-label="Next student"
+                      disabled={busy || reviewIndex >= selectedRows.length - 1}
+                      onClick={() => setPreviewStudentId(selectedRows[reviewIndex + 1].studentId)}
+                    >
+                      Next
+                    </Button>
+                  </Stack>
+                </Stack>
+                <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'background.neutral', borderRadius: 2 }}>
+                  <Box
+                    sx={{
+                      width: 1,
+                      maxWidth: template.orientation === 'Vertical' ? 320 : 560,
+                      mx: 'auto',
+                    }}
+                  >
+                    <StudentCardPreview template={template} card={reviewCard} />
+                  </Box>
+                </Box>
+                <Typography variant="caption" color="text.secondary" textAlign="center">
+                  {reviewCard?.hasPhoto ? 'Photo is available in the PDF.' : 'Photo unavailable'}
+                </Typography>
               </Stack>
             )}
             {step === 4 && (
-              <Stack spacing={2}>
-                <Typography variant="subtitle1">Export student I-Cards</Typography>
-                <Typography variant="body2">
-                  {selectedRows.length} cards are ready. Export creates a print PDF. Issue records
-                  numbered cards in student history.
-                </Typography>
-                <TextField
-                  size="small"
-                  type="number"
-                  label="Cards per A4 page"
-                  value={template.cardsPerPage}
-                  onChange={(event) =>
-                    patchTemplate({
-                      cardsPerPage: Math.max(1, Math.min(10, Number(event.target.value) || 1)),
-                    })
-                  }
-                  inputProps={{ min: 1, max: 10 }}
-                  sx={{ maxWidth: 220 }}
-                />
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <Button
-                    variant="contained"
-                    disabled={busy || !selectedRows.length}
-                    onClick={exportPdf}
-                  >
-                    Export bulk PDF
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    disabled={busy || !selectedRows.length}
-                    onClick={issue}
-                  >
-                    Issue cards
-                  </Button>
-                </Stack>
-              </Stack>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Stack spacing={2} sx={{ minWidth: 0 }}>
+                    <FormSectionHeader
+                      title="Export Student I-Cards"
+                      icon={GlobalIcons.printer}
+                      titleTypographyProps={{ fontWeight: 600 }}
+                      descriptionTooltip="Download a printable PDF or issue numbered cards to student history. These are separate actions."
+                    />
+                    {contextSummary && (
+                      <Typography variant="body2" color="text.secondary">
+                        {contextSummary}
+                      </Typography>
+                    )}
+                    <Typography variant="body2">
+                      {selectedRows.length} {selectedRows.length === 1 ? 'card' : 'cards'} selected
+                      · {sheetCount} A4 {sheetCount === 1 ? 'page' : 'pages'}
+                    </Typography>
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Cards per A4 page"
+                      value={template.cardsPerPage}
+                      onChange={(event) => {
+                        setSheetPage(0);
+                        setTemplate({
+                          ...template,
+                          cardsPerPage: Math.max(1, Math.min(10, Number(event.target.value) || 1)),
+                        });
+                      }}
+                      inputProps={{ min: 1, max: 10 }}
+                      sx={{ maxWidth: 220 }}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      Layout: {template.orientation}
+                    </Typography>
+                    {template.orientation === 'Vertical' && template.cardsPerPage === 10 && (
+                      <Typography variant="caption" color="text.secondary">
+                        Portrait cards fit up to 9 per A4 page.
+                      </Typography>
+                    )}
+                    <Stack spacing={2} alignItems="flex-start">
+                      <Stack spacing={0.5} alignItems="flex-start">
+                        <Button
+                          size="small"
+                          variant="contained"
+                          startIcon={<Iconify icon={GlobalIcons.download} width={18} />}
+                          disabled={busy || contextInvalid || !selectedRows.length}
+                          onClick={exportPdf}
+                        >
+                          Export bulk PDF
+                        </Button>
+                        <Typography variant="caption" color="text.secondary">
+                          Download a printable PDF.
+                        </Typography>
+                      </Stack>
+                      <Stack spacing={0.5} alignItems="flex-start">
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<Iconify icon={GlobalIcons.assigned} width={18} />}
+                          disabled={busy || contextInvalid || !selectedRows.length}
+                          onClick={issue}
+                        >
+                          Issue cards
+                        </Button>
+                        <Typography variant="caption" color="text.secondary">
+                          Save numbered cards in student history.
+                        </Typography>
+                      </Stack>
+                    </Stack>
+                  </Stack>
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }} sx={{ minWidth: 0 }}>
+                  <Paper variant="outlined" sx={{ p: 1.5, minWidth: 0 }}>
+                    <Typography component="h3" variant="subtitle2" sx={{ mb: 1 }}>
+                      A4 Print Preview
+                    </Typography>
+                    <Box
+                      sx={{
+                        width: 1,
+                        maxWidth: 320,
+                        mx: 'auto',
+                        aspectRatio: '210 / 297',
+                        border: 1,
+                        borderColor: 'divider',
+                        bgcolor: 'background.paper',
+                        p: '3.333%',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          // The PDF uses 85.6/54 mm cards within the 196 mm A4 content width.
+                          gridTemplateColumns:
+                            template.orientation === 'Vertical'
+                              ? 'repeat(3, minmax(0, 27.551%))'
+                              : 'repeat(2, minmax(0, 43.673%))',
+                          columnGap: '1.0204%',
+                          rowGap: 0.5,
+                        }}
+                      >
+                        {Array.from({ length: cardsPerSheet }, (_, index) => {
+                          const student = sheetStudents[index];
+                          const card = previews.find(
+                            (item) => item.studentId === student?.studentId
+                          );
+                          return student ? (
+                            <StudentCardPreview
+                              key={student.studentId}
+                              template={template}
+                              card={card}
+                            />
+                          ) : (
+                            <Box
+                              key={`empty-${index}`}
+                              aria-label="Unused card slot"
+                              sx={{
+                                aspectRatio:
+                                  template.orientation === 'Vertical' ? '260 / 420' : '420 / 260',
+                                border: '1px dashed',
+                                borderColor: 'divider',
+                                borderRadius: 0.5,
+                                bgcolor: 'background.neutral',
+                              }}
+                            />
+                          );
+                        })}
+                      </Box>
+                    </Box>
+                    <Typography variant="caption" component="p" textAlign="center" sx={{ mt: 1 }}>
+                      {cardsPerSheet} {cardsPerSheet === 1 ? 'slot' : 'slots'} per page ·{' '}
+                      {sheetStudents.length} {sheetStudents.length === 1 ? 'card' : 'cards'} on this
+                      page
+                    </Typography>
+                    {sheetCount > 1 && (
+                      <Stack
+                        direction="row"
+                        justifyContent="center"
+                        spacing={1}
+                        alignItems="center"
+                        sx={{ mt: 1 }}
+                      >
+                        <Button
+                          size="small"
+                          aria-label="Previous A4 page"
+                          disabled={busy || currentSheetPage === 0}
+                          onClick={() => setSheetPage(currentSheetPage - 1)}
+                        >
+                          Previous
+                        </Button>
+                        <Typography variant="caption" aria-live="polite">
+                          Page {currentSheetPage + 1} of {sheetCount}
+                        </Typography>
+                        <Button
+                          size="small"
+                          aria-label="Next A4 page"
+                          disabled={busy || currentSheetPage >= sheetCount - 1}
+                          onClick={() => setSheetPage(currentSheetPage + 1)}
+                        >
+                          Next
+                        </Button>
+                      </Stack>
+                    )}
+                  </Paper>
+                </Grid>
+              </Grid>
             )}
           </Grid>
-          {step !== 2 && (
+          {step < 2 && (
             <Grid size={{ xs: 12, md: 5 }}>
               <Paper variant="outlined" sx={{ p: 1.5, position: 'sticky', top: 0 }}>
                 <Typography variant="subtitle2">Live Preview</Typography>
@@ -880,16 +1256,18 @@ export default function StudentICardBuilder({
         <Button
           variant="outlined"
           disabled={busy}
-          onClick={() => (step === 0 ? onClose() : setStep((value) => value - 1))}
+          onClick={() => (step === firstStep ? onClose() : setStep((value) => value - 1))}
         >
-          {step === 0 ? 'Cancel' : 'Back'}
+          {step === firstStep ? 'Cancel' : 'Back'}
         </Button>
         <Stack direction="row" spacing={1}>
-          <Button variant="outlined" disabled={busy} onClick={save}>
-            Save
-          </Button>
+          {!directoryMode && (
+            <Button variant="outlined" disabled={busy} onClick={save}>
+              Save
+            </Button>
+          )}
           {step < 4 ? (
-            <Button variant="contained" disabled={busy} onClick={advance}>
+            <Button variant="contained" disabled={busy || contextInvalid} onClick={advance}>
               Next
             </Button>
           ) : (
@@ -911,14 +1289,47 @@ export function StudentCardPreview({
   card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'>;
 }) {
   const vertical = template.orientation === 'Vertical';
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [availableWidth, setAvailableWidth] = useState(0);
+  const cardWidth = vertical ? 260 : 420;
+  const cardHeight = vertical ? 420 : 260;
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return undefined;
+    const measure = () => setAvailableWidth(element.getBoundingClientRect().width);
+    measure();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', measure);
+      return () => window.removeEventListener('resize', measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   return (
     <Box
-      sx={{ overflowX: 'auto', mt: 1.5, p: 1.5, bgcolor: 'background.neutral', borderRadius: 1.5 }}
+      ref={containerRef}
+      role="img"
+      aria-label={
+        card?.studentSnapshot.StudentName
+          ? `I-card preview for ${card.studentSnapshot.StudentName}`
+          : 'I-card composition preview'
+      }
+      sx={{
+        width: 1,
+        minWidth: 0,
+        position: 'relative',
+        aspectRatio: `${cardWidth} / ${cardHeight}`,
+      }}
     >
       <Box
         sx={{
-          width: vertical ? 260 : 420,
-          height: vertical ? 420 : 260,
+          position: 'absolute',
+          inset: 0,
+          width: cardWidth,
+          height: cardHeight,
+          transform: `scale(${availableWidth ? availableWidth / cardWidth : 0})`,
+          transformOrigin: 'top left',
           bgcolor: template.backgroundColor,
           color: 'text.primary',
           border: '1px solid',
@@ -984,13 +1395,13 @@ export function StudentCardPreview({
                 height: 44,
                 border: '1px solid',
                 borderColor: 'divider',
-                bgcolor: '#FFFFFF',
+                bgcolor: 'background.paper',
                 display: 'grid',
                 placeItems: 'center',
                 flexShrink: 0,
               }}
             >
-              <Typography variant="caption" sx={{ color: '#111827' }}>
+              <Typography variant="caption" color="text.primary">
                 QR
               </Typography>
             </Box>

@@ -10,7 +10,6 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Box, Stack, Avatar, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import {
   useActivateStudentOnboardingMutation,
@@ -25,6 +24,7 @@ import StudentQuickSetupAcademic from './student-quick-setup-academic';
 import { useStudentQuickSetupAcademic } from './use-student-quick-setup-academic';
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
 import StudentOnboardingWorkflowDocuments from './student-onboarding-workflow-documents';
+import { getOnboardingMessage, getOnboardingErrorMessage } from './student-onboarding-messages';
 
 import type { StudentSetupView } from './student-setup-view';
 import type { StudentOnboardingItem } from './student-onboarding-model';
@@ -82,6 +82,7 @@ export default function StudentQuickSetupPage({
   });
   const [failure, setFailure] = useState<string>();
   const [failureSeverity, setFailureSeverity] = useState<'error' | 'info'>('error');
+  const [failurePresentation, setFailurePresentation] = useState<'inline' | 'toast'>('inline');
   const [activatedCase, setActivatedCase] = useState<StudentOnboardingCase>();
   const [getCase] = useLazyGetStudentOnboardingCaseQuery();
   const [previewActivation] = useLazyPreviewStudentOnboardingActivationQuery();
@@ -89,6 +90,7 @@ export default function StudentQuickSetupPage({
   const editor = useStudentQuickSetupAcademic({
     caseId: student.id,
     canManage,
+    reportSaveErrors: false,
     disabled: Boolean(saving) || credentialsBusy || feesState.busy,
   });
   const current = editor.caseData?.studentEnrollmentId
@@ -177,7 +179,7 @@ export default function StudentQuickSetupPage({
       shikshaMitraToast.error({
         message:
           parentState.caseId === student.id && parentState.loaded
-            ? parentState.blockedReason || 'Review App Login before activating.'
+            ? getOnboardingMessage(parentState.blockedReason, 'Review App Login before activating.')
             : 'Wait for App Login settings to load before activating.',
       });
       bodyRef.current
@@ -214,21 +216,20 @@ export default function StudentQuickSetupPage({
               concurrencyStamp: preview.concurrencyStamp,
               idempotencyKey,
               siblingParentSelection: parentState.selection,
+              guardianAccessSelection: parentState.guardianAccessSelection,
             }).unwrap(),
         },
       });
       // Enrollment is durable even if its background refresh or access preparation fails.
       if (result.studentEnrollmentId) setActivatedCase(result);
       shikshaMitraToast.success({
-        message: result.studentEnrollmentId ? 'Student activated.' : 'Student setup saved.',
+        message: result.studentEnrollmentId ? 'Student is now active.' : 'Student setup saved.',
       });
     } catch (error) {
-      const { detail } = parseApiProblemDetail(error);
+      const requestFailure = !(error instanceof Error) || 'data' in error || 'status' in error;
+      setFailurePresentation(requestFailure ? 'toast' : 'inline');
       setFailure(
-        detail ||
-          (error instanceof Error
-            ? error.message
-            : 'Setup could not be completed. Review the highlighted fields and retry.')
+        getOnboardingErrorMessage(error, 'Changes could not be saved. Try again.')
       );
       // Reconcile persisted progress after a lost response; never reallocate a saved number.
       const recovered = await getCase(student.id, false)
@@ -237,6 +238,7 @@ export default function StudentQuickSetupPage({
       if (recovered?.studentEnrollmentId) {
         setActivatedCase(recovered);
         setFailureSeverity('info');
+        setFailurePresentation('inline');
         setFailure('The student is active. Review any remaining App Login work below.');
       }
       bodyRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
@@ -332,7 +334,7 @@ export default function StudentQuickSetupPage({
           {editor.permissionDenied ? (
             <StudentFeedback
               notificationKey="STU-1034"
-              presentation="persistent"
+              presentation="inline"
               severity="error"
               action={
                 <Button size="small" onClick={editor.retry}>
@@ -347,7 +349,7 @@ export default function StudentQuickSetupPage({
               {scopeChanged && (
                 <StudentFeedback
                   notificationKey="STU-1035"
-                  presentation="persistent"
+                  presentation="inline"
                   severity="warning"
                 >
                   The academic year changed. Close this student and reopen it in the correct year.
@@ -356,7 +358,7 @@ export default function StudentQuickSetupPage({
               {failure && (
                 <StudentFeedback
                   notificationKey="STU-1036"
-                  presentation="persistent"
+                  presentation={failurePresentation}
                   severity={failureSeverity}
                   role="alert"
                 >

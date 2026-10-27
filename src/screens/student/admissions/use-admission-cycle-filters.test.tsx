@@ -31,6 +31,7 @@ describe('useAdmissionCycleFilters', () => {
       status: 1,
       windowStatus: 0,
       search: 'fresh',
+      columnFilters: '',
       page: 2,
       rowsPerPage: 25,
     });
@@ -68,5 +69,24 @@ describe('useAdmissionCycleFilters', () => {
     expect(result.current.filters.windowStatus).toBe('');
     expect(result.current.filters.page).toBe(0);
     expect(result.current.filters.rowsPerPage).toBe(10);
+  });
+
+  it('preserves header criteria across paging and removes them when clearing', () => {
+    const criteria =
+      '[{"column":"endDate","type":"before","value":"01-04-2027","valueType":"date"}]';
+    mocks.query = `filters=${encodeURIComponent(criteria)}&page=3&size=25`;
+    const { result } = renderHook(() => useAdmissionCycleFilters());
+
+    expect(result.current.filters.columnFilters).toBe(criteria);
+    act(() => result.current.update({ status: 0 }));
+    const query = new URL(mocks.replace.mock.lastCall![0], 'http://localhost').searchParams;
+    expect(query.get('filters')).toBe(criteria);
+    expect(query.get('status')).toBe('0');
+    expect(query.has('page')).toBe(false);
+    act(() => result.current.clear());
+    expect(result.current.filters.columnFilters).toBe('');
+    expect(mocks.replace).toHaveBeenLastCalledWith('/student/admissions/settings/cycles?size=25', {
+      scroll: false,
+    });
   });
 });

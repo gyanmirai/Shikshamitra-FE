@@ -10,6 +10,9 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { AdmissionPipelineMoreFilters } from './admission-pipeline-more-filters';
 
+const notices = vi.hoisted(() => ({ error: vi.fn(), dismiss: vi.fn() }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: notices }));
+
 type Props = ComponentProps<typeof AdmissionPipelineMoreFilters>;
 
 ['filter-variant', 'filter-off-outline', 'check', 'close'].forEach((name) => {
@@ -106,16 +109,19 @@ describe('Pipeline operational filters', () => {
     });
   });
 
-  it('keeps the existing criteria on option errors and offers a guarded retry', async () => {
+  it('keeps existing criteria on option errors and uses toast feedback without an inline retry row', async () => {
     const user = userEvent.setup();
     const onRetry = vi.fn();
     const { props } = renderFilters({ isError: true, onRetry, values: { status: 1 } });
     await openFilters(user);
-    expect(screen.getByText('Could not load filter options.')).toBeVisible();
+    expect(notices.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Could not load filter options.' })
+    );
+    expect(screen.queryByText('Could not load filter options.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Apply Filters' })).toBeDisabled();
     expect(screen.getByRole('combobox', { name: 'Status' })).toHaveTextContent('Submitted');
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(onRetry).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(onRetry).not.toHaveBeenCalled();
     expect(props.onApply).not.toHaveBeenCalled();
   });
 

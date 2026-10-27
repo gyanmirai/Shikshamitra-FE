@@ -248,6 +248,8 @@ export const admissionWorkflowsApi = api.injectEndpoints({
         version?: number;
         isUsed?: boolean;
         createdFrom?: string;
+        columnFilters?: string;
+        sorting?: string;
         createdTo?: string;
         skipCount?: number;
         maxResultCount?: number;

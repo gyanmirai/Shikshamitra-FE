@@ -5,8 +5,8 @@ import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admissi
 
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import { Box, Button } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
-import { Box, Button, LinearProgress } from '@mui/material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -20,7 +20,9 @@ import {
 } from 'src/redux/student/admissions/admission-pipeline-api';
 
 import { AdmissionQueryError } from './admission-query-error';
+import { getAdmissionApplicationStatusLabel } from './application-status';
 import AdmissionApplicationDetailScreen from './admission-application-detail';
+import { serializeQueueColumnFilters } from './admission-queue-column-filters';
 import { buildAdmissionPipelineColumns } from './pipeline/admission-pipeline-columns';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import { AdmissionPipelineMoreFilters } from './pipeline/admission-pipeline-more-filters';
@@ -67,7 +69,14 @@ export default function AdmissionInquiryPipelineScreen() {
     mediumId: academic.mediumId || undefined,
     ...academicClassFilterInput(academic.standardId),
   };
-  const skip = !canView || !academic.academicYearId || !academic.boardId || !academic.mediumId;
+  const yearChanging = previousYear.current !== academic.academicYearId;
+  const skip =
+    scopeLoading ||
+    yearChanging ||
+    !canView ||
+    !academic.academicYearId ||
+    !academic.boardId ||
+    !academic.mediumId;
   const optionsQuery = useGetAdmissionPipelineOptionsQuery(academicInput, {
     skip,
     refetchOnMountOrArgChange: true,
@@ -79,6 +88,7 @@ export default function AdmissionInquiryPipelineScreen() {
 
       currentStageCode: state.currentStageCode,
       status: state.status,
+      columnFilters: serializeQueueColumnFilters(state.filters, 'pipeline') || undefined,
       search: state.search || undefined,
       skipCount: state.page * state.rowsPerPage,
       maxResultCount: state.rowsPerPage,
@@ -177,6 +187,7 @@ export default function AdmissionInquiryPipelineScreen() {
   };
   const hasFilters = Boolean(
     state.search ||
+    state.filters.length ||
     state.assignedCounsellorId ||
     state.currentStageCode ||
     state.status !== undefined ||
@@ -188,21 +199,28 @@ export default function AdmissionInquiryPipelineScreen() {
   return (
     <Box
       ref={worklistRef}
-      sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+      }}
     >
       <CustomBreadcrumbs
         heading="Pipeline"
         description="Continue active admissions and follow up with families."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Pipeline' },
         ]}
         slotProps={{
-          action: {},
+          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
           heading: {},
           moreLink: {},
-          breadcrumbs: { display: { xs: 'none', md: 'flex' } },
+          breadcrumbs: {},
         }}
         action={
           canView && (
@@ -213,7 +231,7 @@ export default function AdmissionInquiryPipelineScreen() {
 
               variant="outlined"
             >
-              Open Applications
+              Open applications
             </Button>
           )
         }
@@ -246,99 +264,140 @@ export default function AdmissionInquiryPipelineScreen() {
               />
             }
           />
-          {listQuery.isError || optionsQuery.isError ? (
-            <AdmissionQueryError
-              onRetry={() => {
-                if (!skip && !interactionLocked.current) {
-                  listQuery.refetch();
-                  optionsQuery.refetch();
-                }
-              }}
-            />
-          ) : (
-            <Box
-              sx={{
-                flex: 1,
-                minHeight: 0,
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              {data && listQuery.isFetching && !scopeLoading && !skip && !applicationId && (
-                <LinearProgress aria-label="Refreshing Pipeline" />
-              )}
-              <CustomizableTable
-                tableId="admission-application-pipeline"
-                tableTitle="Active admissions"
-                exportLabel="Export"
-                wrapperProps={{ sx: { height: 1 } }}
-                tableContainerProps={{ sx: { height: 1 } }}
-                columns={columns}
-                data={skip || scopeLoading ? [] : (data?.items ?? [])}
-                isLoading={scopeLoading || (!skip && (listQuery.isLoading || !data))}
-                serverSidePagination
-                serverSideSearch
-                serverSideSort
-                serverSideSortMode="single"
-                isFilter
-                searchTerm={state.search}
-                sorts={state.sorts}
-                totalCount={data?.totalCount ?? 0}
-                onServerSearch={(search) => updateInteractive({ search: search || undefined })}
-                onServerSort={(_, sorts) =>
-                  updateInteractive({ sort: sorts[0]?.column, direction: sorts[0]?.direction })
-                }
-                page={state.page}
-                rowsPerPage={state.rowsPerPage}
-                defaultRowsPerPage={25}
-                rowsPerPageOptions={[10, 25, 100]}
-                isPagination
-                onServerPagination={(page, size) =>
-                  updateInteractive(
-                    { page: String(page), size: String(size) },
-                    size !== state.rowsPerPage
-                  )
-                }
-                handleRowClick={(row) => openApplication(row as AdmissionPipelineItem)}
-                rowProps={(row) => ({
-                  tabIndex: 0,
-                  role: 'link',
-                  'data-application-id': row.id,
-                  'aria-label': `Continue ${row.applicationNumber}`,
-                  onKeyDown: (event) => {
-                    if (
-                      event.target === event.currentTarget &&
-                      (event.key === 'Enter' || event.key === ' ')
-                    ) {
-                      event.preventDefault();
-                      openApplication(row as AdmissionPipelineItem);
-                    }
-                  },
-                  sx: {
-                    cursor: 'pointer',
-                    '& > .MuiTableCell-sizeSmall': { py: 0.5 },
-                    '& > .MuiTableCell-sizeMedium': { py: 1.5 },
-                  },
-                })}
-                searchFieldProps={{
-                  placeholder: 'Search applicant, application, inquiry or phone',
-                  inputProps: { 'aria-label': 'Search Pipeline' },
+          {((listQuery.isError && Boolean(data?.items.length)) || optionsQuery.isError) &&
+            !skip &&
+            !scopeLoading && (
+              <AdmissionQueryError
+                onRetry={() => {
+                  if (!skip && !interactionLocked.current) {
+                    listQuery.refetch();
+                    optionsQuery.refetch();
+                  }
                 }}
-                noDataText={
-                  !academic.academicYearId
-                    ? 'Select an academic year to view Pipeline'
-                    : !academic.boardId || !academic.mediumId
-                      ? 'Select an available Board and Medium to view Pipeline'
-                      : hasFilters
-                        ? 'No active admissions match these filters'
-                        : myCases
-                          ? 'You have no active admission cases'
-                          : 'No active admissions. Move an Interested inquiry to the next stage to start.'
-                }
               />
-            </Box>
-          )}
+            )}
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              minWidth: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <CustomizableTable
+              tableId="admission-application-pipeline"
+              tableTitle="Active admissions"
+              exportLabel="Export"
+              wrapperProps={{ sx: { height: 1, flex: 1, minHeight: 0, minWidth: 0 } }}
+              tableContainerProps={{ sx: { height: 1 } }}
+              columns={columns}
+              data={skip || scopeLoading ? [] : (data?.items ?? [])}
+              isLoading={
+                yearChanging ||
+                scopeLoading ||
+                (!skip && !listQuery.isError && (listQuery.isLoading || !data))
+              }
+              isRefreshing={
+                Boolean(data) && listQuery.isFetching && !scopeLoading && !skip && !applicationId
+              }
+              errorContent={
+                listQuery.isError && !skip && !scopeLoading && !data?.items.length ? (
+                  <AdmissionQueryError
+                    onRetry={() => {
+                      listQuery.refetch();
+                      optionsQuery.refetch();
+                    }}
+                  />
+                ) : undefined
+              }
+              onClearCriteria={() =>
+                updateInteractive({ search: undefined, filters: undefined, status: undefined })
+              }
+              serverSideFilter
+              filters={[
+                ...state.filters,
+                ...(state.status !== undefined
+                  ? [
+                      {
+                        column: 'status',
+                        type: 'equals',
+                        value: state.status,
+                        valueType: 'enum',
+                        label: 'Status',
+                        displayValue: getAdmissionApplicationStatusLabel(state.status),
+                      },
+                    ]
+                  : []),
+              ]}
+              onServerFilter={(filters) =>
+                updateInteractive({
+                  filters: serializeQueueColumnFilters(filters, 'pipeline', false) || undefined,
+                  status: filters.find((filter) => filter.column === 'status')?.value?.toString(),
+                })
+              }
+              serverSidePagination
+              serverSideSearch
+              serverSideSort
+              serverSideSortMode="single"
+              isFilter
+              searchTerm={state.search}
+              sorts={state.sorts}
+              totalCount={skip || scopeLoading ? 0 : (data?.totalCount ?? 0)}
+              onServerSearch={(search) => updateInteractive({ search: search || undefined })}
+              onServerSort={(_, sorts) =>
+                updateInteractive({ sort: sorts[0]?.column, direction: sorts[0]?.direction })
+              }
+              page={state.page}
+              rowsPerPage={state.rowsPerPage}
+              defaultRowsPerPage={25}
+              rowsPerPageOptions={[10, 25, 100]}
+              isPagination
+              onServerPagination={(page, size) =>
+                updateInteractive(
+                  { page: String(page), size: String(size) },
+                  size !== state.rowsPerPage
+                )
+              }
+              handleRowClick={(row) => openApplication(row as AdmissionPipelineItem)}
+              rowProps={(row) => ({
+                tabIndex: 0,
+                role: 'link',
+                'data-application-id': row.id,
+                'aria-label': `Continue ${row.applicationNumber}`,
+                onKeyDown: (event) => {
+                  if (
+                    event.target === event.currentTarget &&
+                    (event.key === 'Enter' || event.key === ' ')
+                  ) {
+                    event.preventDefault();
+                    openApplication(row as AdmissionPipelineItem);
+                  }
+                },
+                sx: {
+                  cursor: 'pointer',
+                  '& > .MuiTableCell-sizeSmall': { py: 0.5 },
+                  '& > .MuiTableCell-sizeMedium': { py: 1.5 },
+                },
+              })}
+              searchFieldProps={{
+                placeholder: 'Search applicant, application, inquiry or phone',
+                inputProps: { 'aria-label': 'Search Pipeline' },
+              }}
+              noDataText={
+                !academic.academicYearId
+                  ? 'Select an academic year to view Pipeline'
+                  : !academic.boardId || !academic.mediumId
+                    ? 'Select an available Board and Medium to view Pipeline'
+                    : hasFilters
+                      ? 'No active admissions match these filters'
+                      : myCases
+                        ? 'You have no active admission cases'
+                        : 'No active admissions. Move an Interested inquiry to the next stage to start.'
+              }
+            />
+          </Box>
         </>
       )}
       {canView && applicationId && (

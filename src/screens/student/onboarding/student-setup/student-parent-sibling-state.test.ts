@@ -13,6 +13,7 @@ const father = {
 };
 const workspace: StudentCredentialsWorkspace = {
   caseId: 'case-1',
+  guardianAccessEnabled: true,
   concurrencyStamp: 'stamp',
   recipients: [],
   parentSibling: {
@@ -42,6 +43,126 @@ it('passes the one existing parent account identity without creating credentials
       expectedUserId: father.userId,
     },
   });
+});
+it('passes only an explicitly confirmed current guardian choice instead of reusing a sibling parent', () => {
+  const current = {
+    ...workspace,
+    recipients: [
+      {
+        accountType: 'guardian' as const,
+        relationship: 'guardian' as const,
+        name: 'Aunt',
+        email: 'aunt@example.test',
+        canSend: false,
+      },
+    ],
+  };
+  expect(
+    getStudentParentSiblingActivationState('case-1', current, false, '', {
+      expectedEmail: 'aunt@example.test',
+      confirmRecipientAccess: true,
+    })
+  ).toEqual({
+    caseId: 'case-1',
+    loaded: true,
+    guardianAccessSelection: {
+      expectedEmail: 'aunt@example.test',
+      confirmRecipientAccess: true,
+    },
+  });
+  expect(
+    getStudentParentSiblingActivationState('case-1', current, false, '', {
+      expectedEmail: 'stale@example.test',
+      confirmRecipientAccess: true,
+    }).blockedReason
+  ).toBeTruthy();
+});
+
+it('retains an already linked guardian without creating a new activation access choice', () => {
+  const current = {
+    ...workspace,
+    recipients: [
+      {
+        accountType: 'guardian' as const,
+        relationship: 'guardian' as const,
+        email: 'aunt@example.test',
+        canSend: true,
+        hasLinkedAccount: true,
+      },
+    ],
+    parentSibling: {
+      ...workspace.parentSibling!,
+      status: 'NotRequired' as const,
+      guardianAccessSelected: true,
+      candidates: [],
+    },
+  };
+  expect(
+    getStudentParentSiblingActivationState('case-1', current, false, '', {
+      expectedEmail: 'aunt@example.test',
+      confirmRecipientAccess: false,
+    })
+  ).toEqual({ caseId: 'case-1', loaded: true });
+});
+
+it('does not make an unchecked guardian suggestion block activation when app access is not required', () => {
+  const current = {
+    ...workspace,
+    guardianAccessEnabled: false,
+    parentSibling: { ...workspace.parentSibling!, status: 'NotRequired' as const },
+  };
+  expect(
+    getStudentParentSiblingActivationState('case-1', current, false, '', {
+      expectedEmail: 'aunt@example.test',
+      confirmRecipientAccess: false,
+    })
+  ).toEqual({ caseId: 'case-1', loaded: true });
+});
+
+it('carries a confirmed enabled guardian choice without sibling candidates and ignores an unchecked suggestion', () => {
+  const current = {
+    ...workspace,
+    guardianAccessEnabled: true,
+    parentSibling: undefined,
+    recipients: [
+      {
+        accountType: 'guardian' as const,
+        relationship: 'guardian' as const,
+        email: 'aunt@example.test',
+        canSend: false,
+      },
+    ],
+  };
+  const choice = { expectedEmail: 'aunt@example.test', confirmRecipientAccess: true };
+  expect(getStudentParentSiblingActivationState('case-1', current, false, '', choice)).toEqual({
+    caseId: 'case-1',
+    loaded: true,
+    guardianAccessSelection: choice,
+  });
+  expect(
+    getStudentParentSiblingActivationState('case-1', current, false, '', {
+      ...choice,
+      confirmRecipientAccess: false,
+    })
+  ).toEqual({ caseId: 'case-1', loaded: true });
+  expect(
+    getStudentParentSiblingActivationState(
+      'case-1',
+      { ...current, guardianAccessEnabled: false },
+      false,
+      '',
+      choice
+    )
+  ).toEqual({ caseId: 'case-1', loaded: true });
+  const unknownPolicy = getStudentParentSiblingActivationState(
+    'case-1',
+    { ...current, guardianAccessEnabled: undefined },
+    false,
+    '',
+    choice
+  );
+  expect(unknownPolicy.guardianAccessSelection).toBeUndefined();
+  expect(unknownPolicy.blockedReason).toBeTruthy();
 });
 it('requires staff selection when both parent accounts are eligible and preserves the selected identity', () => {
   const both = {

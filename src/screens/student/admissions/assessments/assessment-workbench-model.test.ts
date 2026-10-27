@@ -84,6 +84,20 @@ describe('assessment next action follows the operational queue', () => {
 });
 
 describe('assessment workbench URL and action safety', () => {
+  it('restores column criteria independently from search, status and paging', () => {
+    const criteria =
+      '[{"column":"className","type":"contains","value":"Grade","valueType":"string"}]';
+    const params = new URLSearchParams({
+      assessmentFilters: criteria,
+      assessmentStatus: 'ongoing',
+      assessmentPage: '2',
+    });
+    expect(readAssessmentWorkbench(params)).toMatchObject({
+      columnFilters: criteria,
+      status: 'ongoing',
+      page: 2,
+    });
+  });
   it('distinguishes pinned workflows using names without repeating identical offering codes', () => {
     expect(
       assessmentScopeLabel({

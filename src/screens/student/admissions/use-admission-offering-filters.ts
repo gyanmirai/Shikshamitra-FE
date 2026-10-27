@@ -15,6 +15,7 @@ export type AdmissionOfferingFilters = {
   availabilityStatus: string;
   configurationStatus: string;
   search: string;
+  columnFilters?: string;
   sorting: string;
   page: number;
   rowsPerPage: number;
@@ -40,6 +41,7 @@ export function useAdmissionOfferingFilters() {
     availabilityStatus: searchParams.get('availability') ?? '',
     configurationStatus: searchParams.get('configuration') ?? '',
     search: searchParams.get('search') ?? '',
+    columnFilters: searchParams.get('filters') ?? '',
     sorting: searchParams.get('sort') ?? '',
     page: Math.max(Number(searchParams.get('page') ?? 1) - 1, 0),
     rowsPerPage: Number(searchParams.get('size') ?? 10),
@@ -61,6 +63,7 @@ export function useAdmissionOfferingFilters() {
       availability: next.availabilityStatus,
       configuration: next.configurationStatus,
       search: next.search,
+      filters: next.columnFilters ?? '',
       sort: next.sorting,
       page: next.page > 0 ? String(next.page + 1) : '',
       size: next.rowsPerPage !== 10 ? String(next.rowsPerPage) : '',
@@ -85,6 +88,7 @@ export function useAdmissionOfferingFilters() {
       availabilityStatus: '',
       configurationStatus: '',
       search: '',
+      columnFilters: '',
       page: 0,
     });
 

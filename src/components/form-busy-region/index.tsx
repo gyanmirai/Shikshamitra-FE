@@ -10,14 +10,37 @@ type Props = {
   children: ReactNode;
   /** Preserve control-level feedback without covering it with a second loader. */
   showOverlay?: boolean;
+  /** Continue the owning workspace's flex layout through the blocking region. */
+  fillContent?: boolean;
 };
 
 /** Keeps a blocking form visible while disabling native and custom controls. */
-export function FormBusyRegion({ busy, label = 'Saving…', children, showOverlay = true }: Props) {
+export function FormBusyRegion({
+  busy,
+  label = 'Saving…',
+  children,
+  showOverlay = true,
+  fillContent = false,
+}: Props) {
+  const contentLayout = fillContent
+    ? ({
+        display: 'flex',
+        flexDirection: 'column',
+        flex: '1 1 auto',
+        minHeight: 0,
+        minWidth: 0,
+      } as const)
+    : {};
   return (
-    <Box aria-busy={busy} sx={{ position: 'relative', minWidth: 0 }}>
-      <Box component="fieldset" disabled={busy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
-        <Box inert={busy || undefined}>{children}</Box>
+    <Box aria-busy={busy} sx={{ position: 'relative', minWidth: 0, ...contentLayout }}>
+      <Box
+        component="fieldset"
+        disabled={busy}
+        sx={{ border: 0, p: 0, m: 0, minWidth: 0, ...contentLayout }}
+      >
+        <Box inert={busy || undefined} sx={contentLayout}>
+          {children}
+        </Box>
       </Box>
       {/* Keep feedback outside the fieldset so loading transitions preserve container-query layout. */}
       {busy && !showOverlay && (

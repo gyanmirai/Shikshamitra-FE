@@ -38,6 +38,7 @@ export type AdmissionCycleListInput = {
   academicYearId?: string;
   status?: AdmissionCycleStatus;
   windowStatus?: AdmissionCycleWindowStatus;
+  columnFilters?: string;
   sorting?: string;
   skipCount?: number;
   maxResultCount?: number;

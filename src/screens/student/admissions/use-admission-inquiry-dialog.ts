@@ -26,6 +26,7 @@ import {
 
 import { useAdmissionPhotoReads } from './use-admission-photo-reads';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
+import { getAdmissionSiblingParentReviewError } from './admission-family-contacts-model';
 import { getInquiryCommunicationTemplate } from './inquiry-management/inquiry-communication-templates';
 import {
   admissionInquirySchema,
@@ -337,6 +338,15 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
         )
       ) {
         setRequestError('Check the parent details again before linking this family.');
+        return;
+      }
+      const parentReviewError = getAdmissionSiblingParentReviewError(
+        formik.values.familyContacts,
+        formik.values.parentRelationship,
+        parent.relationship
+      );
+      if (parentReviewError) {
+        setRequestError(parentReviewError);
         return;
       }
       await submit(familyId, false, parent);

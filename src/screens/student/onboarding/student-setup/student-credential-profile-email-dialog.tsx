@@ -13,7 +13,6 @@ import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useUpdateStudentCredentialsEmailMutation } from 'src/redux/student/onboarding/student-onboarding-api';
@@ -27,6 +26,8 @@ import {
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
+
+import { getOnboardingErrorMessage } from './student-onboarding-messages';
 
 type Props = {
   caseId: string;
@@ -59,7 +60,11 @@ export default function StudentCredentialProfileEmailDialog({
       confirmSharedParent: false,
     },
     validationSchema: Yup.object({
-      email: Yup.string().trim().email('Enter a valid email.').max(256).required('Enter an email.'),
+      email: Yup.string()
+        .trim()
+        .email('Enter a valid email, such as name@example.com.')
+        .max(256)
+        .required('Add an email before sending login details.'),
       confirmSharedParent: shared
         ? Yup.boolean().oneOf([true], 'Confirm the shared parent email change.')
         : Yup.boolean(),
@@ -84,16 +89,17 @@ export default function StudentCredentialProfileEmailDialog({
         );
         shikshaMitraToast.success({
           message: updated?.pendingEmail
-            ? 'Email verification requested. The current login stays unchanged until verification.'
+            ? 'Verify the new email before the login changes.'
             : 'Email saved.',
         });
         helpers.resetForm({ values });
         onClose();
       } catch (error) {
         shikshaMitraToast.error({
-          message:
-            parseApiProblemDetail(error).detail ||
-            'Email could not be saved. Refresh App Login and try again.',
+          message: getOnboardingErrorMessage(
+            error,
+            'Email could not be saved. Refresh App Login and try again.'
+          ),
         });
       } finally {
         submitting.current = false;
@@ -123,9 +129,10 @@ export default function StudentCredentialProfileEmailDialog({
       onClose();
     } catch (error) {
       shikshaMitraToast.error({
-        message:
-          parseApiProblemDetail(error).detail ||
-          'The pending change could not be cancelled. Refresh App Login and try again.',
+        message: getOnboardingErrorMessage(
+          error,
+          'The pending change could not be cancelled. Refresh App Login and try again.'
+        ),
       });
     } finally {
       submitting.current = false;
@@ -185,8 +192,8 @@ export default function StudentCredentialProfileEmailDialog({
                 </Typography>
                 {recipient.hasLinkedAccount && (
                   <Typography variant="body2" color="text.secondary">
-                    The new email must be verified before the login changes. The existing password
-                    and linked children stay unchanged.
+                    Verify the new email before the login changes. The password and linked children
+                    stay unchanged.
                   </Typography>
                 )}
                 <ShakingTextField error={emailError}>

@@ -4,11 +4,13 @@ import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admissi
 import { Label } from 'src/components/label';
 import { Checkbox, Typography } from '@mui/material';
 
+import { PIPELINE_ACTIVE_STATUSES } from './admission-pipeline-state';
 import { AdmissionPipelineRowActions } from './admission-pipeline-row-actions';
 import { renderPipelineStep, renderPipelineFollowUps } from './admission-pipeline-row-content';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
+  ADMISSION_APPLICATION_STATUS_LABELS,
 } from '../application-status';
 
 export type PipelineRowSelection = {
@@ -27,7 +29,7 @@ export function buildAdmissionPipelineColumns(
   const columns: IColumn[] = [
     {
       id: 'applicantName',
-      label: 'Student Name',
+      label: 'Student name',
       sticky: true,
       stickyOnMobile: false,
       minWidth: 170,
@@ -59,16 +61,20 @@ export function buildAdmissionPipelineColumns(
       ),
     },
     {
+      // Preserve stage-name sorting; the combined summary has no single header predicate.
       id: 'currentStageName',
       label: 'Current step',
       minWidth: 220,
       maxWidth: 280,
       isSort: true,
+      isFilter: false,
       render: (_, row) => renderPipelineStep(row as AdmissionPipelineItem),
     },
     {
+      // Follow-up counts and purpose form a combined summary; no single-field filter.
       id: 'nextFollowUpAt',
       label: 'Follow-ups',
+      isFilter: false,
       minWidth: 210,
       maxWidth: 260,
       render: (_, row) => renderPipelineFollowUps(row as AdmissionPipelineItem),
@@ -90,7 +96,17 @@ export function buildAdmissionPipelineColumns(
     {
       id: 'status',
       label: 'Status',
-      minWidth: 90,
+      stickyOnMobile: false,
+      minWidth: 140,
+      width: 140,
+      sticky: true,
+      stickyPosition: 'right',
+      filterType: 'enum',
+      isFilter: true,
+      enumOptions: PIPELINE_ACTIVE_STATUSES.map((value) => ({
+        value,
+        label: ADMISSION_APPLICATION_STATUS_LABELS[value],
+      })),
       render: (value) => (
         <Label color={getAdmissionApplicationStatusColor(value)}>
           {getAdmissionApplicationStatusLabel(value)}
@@ -100,10 +116,10 @@ export function buildAdmissionPipelineColumns(
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 200,
-      width: 200,
-      headerSx: { width: { xs: 112, sm: 200 }, minWidth: { xs: 112, sm: 200 } },
-      cellSx: { width: { xs: 112, sm: 200 }, minWidth: { xs: 112, sm: 200 } },
+      minWidth: 100,
+      width: 180,
+      align: 'right',
+      headerAlign: 'left',
       sticky: true,
       stickyPosition: 'right',
       isFilter: false,
@@ -179,5 +195,20 @@ export function buildAdmissionPipelineColumns(
       ),
     });
   }
-  return columns.map((column) => ({ isFilter: false, isSort: false, ...column }));
+  const scalar = new Set([
+    'applicantName',
+    'applicationNumber',
+    'inquiryNumber',
+    'standardName',
+    'contactPhone',
+    'contactEmail',
+  ]);
+  return columns.map((column): IColumn => ({
+    isFilter: scalar.has(column.id),
+    isSort: scalar.has(column.id),
+    filterType: 'string' as const,
+    filterOperators: ['contains', 'equals', 'startsWith', 'endsWith'],
+    ...column,
+    headerAlign: 'left',
+  }));
 }

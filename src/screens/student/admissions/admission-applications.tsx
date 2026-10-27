@@ -1,22 +1,25 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { AdmissionApplicationStatus } from 'src/redux/student/admissions/admission-applications-api';
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Stack, Button } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { useRef, useMemo, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Stack, Button, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import { useGetAdmissionApplicationsQuery } from 'src/redux/student/admissions/admission-applications-api';
 
 import { AdmissionQueryError } from './admission-query-error';
+import { getAdmissionApplicationStatusLabel } from './application-status';
+import { serializeQueueColumnFilters } from './admission-queue-column-filters';
 import AdmissionDirectRegistrationDialog from './admission-direct-registration-dialog';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import { getApplicationWorkspaceUrl } from './application-detail/application-return-url';
@@ -66,7 +69,11 @@ export default function AdmissionApplicationsScreen() {
     [pathname, queryString, router]
   );
   const previousYear = useRef(academic.academicYearId);
+  const [scopeLoading, setScopeLoading] = useState(true);
+  const yearChanging = previousYear.current !== academic.academicYearId;
   const skip =
+    scopeLoading ||
+    yearChanging ||
     Boolean(applicationId) ||
     !canView ||
     !academic.academicYearId ||
@@ -77,12 +84,14 @@ export default function AdmissionApplicationsScreen() {
       boardId: academic.boardId || undefined,
       mediumId: academic.mediumId || undefined,
       ...academicClassFilterInput(academic.standardId),
+      status: state.status as AdmissionApplicationStatus | undefined,
       decisionWorkspaceOnly: !activeApplications,
       activeOnly: activeApplications || undefined,
       pendingDecisionOnly: pendingDecisions || undefined,
       divisionId: academic.dashboardScope ? params.get('division') || undefined : undefined,
       maxResultCount: state.rowsPerPage,
       skipCount: state.page * state.rowsPerPage,
+      columnFilters: serializeQueueColumnFilters(state.filters, 'applications') || undefined,
       search: state.search || undefined,
       sorting: state.sorts[0] ? `${state.sorts[0].column} ${state.sorts[0].direction}` : undefined,
     },
@@ -141,8 +150,8 @@ export default function AdmissionApplicationsScreen() {
     ? 'Select an academic year to view Applications'
     : !academic.dashboardScope && (!academic.boardId || !academic.mediumId)
       ? 'Select a Board and Medium to view Applications'
-      : state.search
-        ? 'No applications match your search'
+      : state.search || state.filters.length || state.status !== undefined
+        ? 'No applications match the selected search or filters'
         : academic.standardId
           ? 'No applications match the selected classes'
           : activeApplications
@@ -152,7 +161,16 @@ export default function AdmissionApplicationsScreen() {
               : 'No applications have reached the admission decision phase yet';
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+      }}
+    >
       <CustomBreadcrumbs
         heading="Applications"
         description={
@@ -161,10 +179,16 @@ export default function AdmissionApplicationsScreen() {
             : 'Review admission decisions and finalize approved admissions. Earlier admission work continues in Pipeline.'
         }
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Applications' },
         ]}
+        slotProps={{
+          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
+          heading: {},
+          moreLink: {},
+          breadcrumbs: {},
+        }}
         action={
           canView && canStart ? (
             <Button
@@ -186,33 +210,65 @@ export default function AdmissionApplicationsScreen() {
       ) : (
         <>
           <AdmissionAcademicFilters
+            onLoadingChange={setScopeLoading}
             boardId={academic.boardId}
             mediumId={academic.mediumId}
             standardId={academic.standardId}
             onClear={academic.clear}
             onChange={academic.update}
           />
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-            {data && listQuery.isFetching ? (
-              <LinearProgress
-                aria-label="Refreshing applications"
-                sx={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1 }}
-              />
-            ) : null}
+          {listQuery.isError && !skip && Boolean(data?.items.length) && (
+            <AdmissionQueryError onRetry={() => listQuery.refetch()} />
+          )}
+          <Box
+            sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden', position: 'relative' }}
+          >
             <CustomizableTable
               tableId="admission-applications"
               tableTitle="Admission applications"
               exportLabel="Export"
-              wrapperProps={{ sx: { height: 1 } }}
+              wrapperProps={{ sx: { height: 1, flex: 1, minHeight: 0, minWidth: 0 } }}
               tableContainerProps={{ sx: { height: 1 } }}
               columns={columns}
-              data={skip || listQuery.isError ? [] : (data?.items ?? [])}
-              isLoading={!skip && (listQuery.isLoading || (listQuery.isFetching && !data))}
+              data={skip ? [] : (data?.items ?? [])}
+              isLoading={
+                scopeLoading ||
+                yearChanging ||
+                (!skip &&
+                  !listQuery.isError &&
+                  (listQuery.isLoading || (listQuery.isFetching && !data)))
+              }
+              isRefreshing={!skip && listQuery.isFetching && Boolean(data)}
+              onClearCriteria={() =>
+                update({ search: undefined, filters: undefined, status: undefined })
+              }
+              serverSideFilter
+              filters={[
+                ...state.filters,
+                ...(state.status !== undefined
+                  ? [
+                      {
+                        column: 'status',
+                        type: 'equals',
+                        value: state.status,
+                        valueType: 'enum',
+                        label: 'Status',
+                        displayValue: getAdmissionApplicationStatusLabel(state.status),
+                      },
+                    ]
+                  : []),
+              ]}
+              onServerFilter={(filters) =>
+                update({
+                  filters: serializeQueueColumnFilters(filters, 'applications', false) || undefined,
+                  status: filters.find((filter) => filter.column === 'status')?.value?.toString(),
+                })
+              }
               serverSidePagination
               serverSideSearch
               serverSideSort
               serverSideSortMode="single"
-              totalCount={skip || listQuery.isError ? 0 : (data?.totalCount ?? 0)}
+              totalCount={skip ? 0 : (data?.totalCount ?? 0)}
               searchTerm={state.search}
               sorts={state.sorts}
               page={state.page}
@@ -231,7 +287,7 @@ export default function AdmissionApplicationsScreen() {
                 inputProps: { 'aria-label': 'Search Applications' },
               }}
               errorContent={
-                listQuery.isError && !skip ? (
+                listQuery.isError && !skip && !data?.items.length ? (
                   <AdmissionQueryError
                     onRetry={() => {
                       listQuery.refetch();
@@ -245,6 +301,13 @@ export default function AdmissionApplicationsScreen() {
                   {state.search ? (
                     <Button size="small" onClick={() => update({ search: undefined })}>
                       Clear search
+                    </Button>
+                  ) : state.filters.length || state.status !== undefined ? (
+                    <Button
+                      size="small"
+                      onClick={() => update({ filters: undefined, status: undefined })}
+                    >
+                      Clear filters
                     </Button>
                   ) : academic.standardId ? (
                     <Button size="small" onClick={academic.clear}>

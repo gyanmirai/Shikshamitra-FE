@@ -92,6 +92,7 @@ export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false)
       ...queryScope,
       sessionId: state.sessionId || undefined,
       search: state.search || undefined,
+      columnFilters: state.columnFilters || undefined,
       status: state.status === 'all' ? undefined : state.status,
       sorting: `${state.sort} ${state.direction}`,
       skipCount: state.page * state.size,

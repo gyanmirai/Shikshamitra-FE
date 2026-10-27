@@ -93,6 +93,7 @@ beforeEach(() => {
   state.linking = false;
   state.workspace = {
     caseId: 'case-1',
+    guardianAccessEnabled: true,
     concurrencyStamp: 'stamp-1',
     recipients: [
       {
@@ -136,7 +137,7 @@ it('shows a linked existing parent without a duplicate Send Credentials action o
   expect(screen.getByText('Linked', { exact: true })).toBeVisible();
   expect(screen.getByRole('option', { name: /^Parent$/ })).toBeInTheDocument();
   expect(screen.queryByRole('option', { name: /Guardian/ })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Send Credentials' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Send login details' })).not.toBeInTheDocument();
   expect(state.send).not.toHaveBeenCalled();
 });
 
@@ -149,12 +150,94 @@ it('preserves manual first-parent sending and never sends merely because the wor
     candidates: [],
   };
   renderPanel();
+  fireEvent.click(await screen.findByRole('checkbox', { name: /confirm this person may access/i }));
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Send Credentials' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Send login details' })).toBeEnabled()
   );
   expect(state.send).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Send Credentials' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Send login details' }));
   await waitFor(() => expect(state.send).toHaveBeenCalledOnce());
+});
+
+it('allows a saved guardian beside sibling parents only with an explicit activation access confirmation', async () => {
+  state.workspace!.parentSibling = {
+    ...state.workspace!.parentSibling!,
+    isLinked: false,
+    linkedRelationship: null,
+    status: 'Available',
+  };
+  state.workspace!.recipients.push({
+    accountType: 'guardian',
+    relationship: 'guardian',
+    name: 'Aunt Meera',
+    email: 'meera@example.test',
+    canSend: false,
+    blockedReason: 'Activate the student first.',
+  });
+  renderPanel();
+  fireEvent.change(await screen.findByRole('combobox', { name: 'Recipient' }), {
+    target: { value: 'guardian' },
+  });
+  await waitFor(() =>
+    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('meera@example.test')
+  );
+  expect(state.parent).toHaveBeenLastCalledWith(
+    expect.objectContaining({ blockedReason: expect.any(String) })
+  );
+  fireEvent.click(screen.getByRole('checkbox', { name: /confirm this person may access/i }));
+  await waitFor(() =>
+    expect(state.parent).toHaveBeenLastCalledWith({
+      caseId: 'case-1',
+      loaded: true,
+      guardianAccessSelection: {
+        expectedEmail: 'meera@example.test',
+        confirmRecipientAccess: true,
+      },
+    })
+  );
+  expect(state.send).not.toHaveBeenCalled();
+  expect(state.link).not.toHaveBeenCalled();
+});
+
+it('reconfirms a saved guardian choice after email drift even when sibling candidates disappear', async () => {
+  state.workspace!.parentSibling = {
+    ...state.workspace!.parentSibling!,
+    isLinked: false,
+    linkedRelationship: null,
+    status: 'ReviewRequired',
+    guardianAccessSelected: true,
+    blockedReason: 'The saved guardian changed. Refresh and confirm app access again.',
+    candidates: [],
+  };
+  state.workspace!.recipients = [
+    { ...state.workspace!.recipients[0], hasLinkedAccount: false, canSend: false },
+    {
+      accountType: 'guardian',
+      relationship: 'guardian',
+      name: 'Aunt Meera',
+      email: 'current-meera@example.test',
+      canSend: false,
+      hasLinkedAccount: false,
+    },
+  ];
+  renderPanel();
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Recipient' })).toHaveValue('guardian')
+  );
+  expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('current-meera@example.test');
+  fireEvent.click(screen.getByRole('checkbox', { name: /confirm this person may access/i }));
+  await waitFor(() =>
+    expect(state.parent).toHaveBeenLastCalledWith({
+      caseId: 'case-1',
+      loaded: true,
+      guardianAccessSelection: {
+        expectedEmail: 'current-meera@example.test',
+        confirmRecipientAccess: true,
+      },
+    })
+  );
+  expect(state.send).not.toHaveBeenCalled();
+  expect(state.link).not.toHaveBeenCalled();
 });
 
 it('requires an explicit parent choice when both existing parent accounts are available', async () => {
@@ -244,7 +327,7 @@ it.each([
     await waitFor(() => expect(screen.getByLabelText(/Email/)).toHaveValue(parent.email));
     await screen.findByText('Original parent account setup is pending.');
     expect(state.parent.mock.lastCall?.[0].selection).toBeUndefined();
-    expect(screen.queryByRole('button', { name: 'Send Credentials' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Send login details' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Link parent' })).not.toBeInTheDocument();
     expect(state.send).not.toHaveBeenCalled();
     expect(state.link).not.toHaveBeenCalled();
@@ -301,7 +384,8 @@ it('shows the permission reason instead of asking for an unavailable parent choi
     <StudentOnboardingPortalAccounts student={student} canManage parentValidationAttempt={1} />
   );
   await waitFor(() => expect(screen.getByLabelText('Parent')).toBeDisabled());
-  expect(screen.getByText('Identity update permission is required.')).toBeInTheDocument();
+  expect(screen.getByText('Ask authorized staff to link this parent.')).toBeInTheDocument();
+  expect(screen.queryByText('Identity update permission is required.')).not.toBeInTheDocument();
   expect(screen.queryByText('Choose Father or Mother before activating.')).not.toBeInTheDocument();
 });
 it('restores and locks the saved reviewed parent after access preparation needs recovery', async () => {

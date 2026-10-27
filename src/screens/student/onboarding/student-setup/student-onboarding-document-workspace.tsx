@@ -16,7 +16,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Box, Stack, Button, MenuItem, Typography } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { getDocumentTableFile } from 'src/screens/student/admissions/document-verification/document-table-model';
@@ -28,6 +27,7 @@ import {
   documentStatusLabels,
 } from 'src/screens/student/admissions/document-verification/document-status';
 
+import { getOnboardingErrorMessage } from './student-onboarding-messages';
 import { StudentOnboardingDocumentPreview } from './student-onboarding-document-preview';
 
 type Permissions = ReturnType<typeof useDocumentPermissions>;
@@ -79,12 +79,11 @@ function DocumentWorkspaceActions({
     try {
       await download({ evidenceId: file.id, fileName: file.fileName }).unwrap();
     } catch (failure) {
-      const { detail } = parseApiProblemDetail(failure);
       shikshaMitraToast.error({
-        message:
-          detail && detail !== 'Something went wrong'
-            ? detail
-            : 'Unable to download the document. Please try again.',
+        message: getOnboardingErrorMessage(
+          failure,
+          'The document could not be downloaded. Try again.'
+        ),
       });
     }
   };

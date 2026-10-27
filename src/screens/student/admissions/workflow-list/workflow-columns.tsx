@@ -5,6 +5,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Label } from 'src/components/label';
+import { fNumber } from 'src/utils/format-number';
 
 import { WorkflowRowActions } from './workflow-row-actions';
 import { AdmissionTableText } from '../admission-table-text';
@@ -12,7 +13,7 @@ import { formatWorkflowDateTime, formatWorkflowListDate } from './workflow-list-
 
 import type { WorkflowActionPermissions } from './workflow-row-actions';
 
-const STATUS_LABELS: Record<AdmissionWorkflowStatus, string> = {
+export const STATUS_LABELS: Record<AdmissionWorkflowStatus, string> = {
   0: 'Draft',
   1: 'Published',
   2: 'Archived',
@@ -67,17 +68,21 @@ export function createWorkflowColumns(
       id: 'version',
       label: 'Version',
       filterType: 'number' as const,
+      filterStep: 1,
       minWidth: 90,
       align: 'center',
       isFilter: true,
+      render: (value) => fNumber(Number(value)),
     },
     {
       id: 'offeringCount',
       label: 'Used by offerings',
       filterType: 'number' as const,
+      filterStep: 1,
       minWidth: 150,
       align: 'center',
       isFilter: true,
+      render: (value) => fNumber(Number(value)),
     },
     {
       id: 'lastModificationTime',
@@ -110,7 +115,9 @@ export function createWorkflowColumns(
     },
     {
       id: 'status',
+      originalId: 'statusLabel',
       label: 'Status',
+      stickyOnMobile: false,
       filterType: 'enum' as const,
       enumOptions: Object.entries(STATUS_LABELS).map(([value, label]) => ({
         label,
@@ -132,7 +139,7 @@ export function createWorkflowColumns(
       minWidth: 150,
       headerSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
       cellSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
-      align: 'left',
+      align: 'right',
       sticky: true,
       stickyPosition: 'right',
       isSort: false,

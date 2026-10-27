@@ -6,6 +6,8 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
+import { workflowColumnFilters, serializeWorkflowColumnFilters } from './workflow-column-filters';
+
 export type WorkflowFilters = {
   search: string;
   status: 'all' | AdmissionWorkflowStatus;
@@ -15,6 +17,8 @@ export type WorkflowFilters = {
   createdTo: string;
   page: number;
   rowsPerPage: number;
+  columnFilters?: string;
+  sorting?: string;
 };
 
 const readStatus = (value: string | null): WorkflowFilters['status'] => {
@@ -43,6 +47,12 @@ export function useWorkflowFilters() {
     createdTo: searchParams.get('to') ?? '',
     page: Math.max(Number(searchParams.get('page') ?? 1) - 1, 0),
     rowsPerPage: Number(searchParams.get('size') ?? 10),
+    columnFilters: serializeWorkflowColumnFilters(
+      workflowColumnFilters(searchParams.get('columns') ?? '').filter(
+        (filter) => !searchParams.get('version') || filter.column !== 'version'
+      )
+    ),
+    sorting: searchParams.get('sort') ?? '',
   }));
 
   const commit = (next: WorkflowFilters) => {
@@ -59,12 +69,27 @@ export function useWorkflowFilters() {
       to: next.createdTo,
       page: next.page > 0 ? String(next.page + 1) : '',
       size: next.rowsPerPage !== 10 ? String(next.rowsPerPage) : '',
+      columns: next.columnFilters ?? '',
+      sort: next.sorting ?? '',
     };
     Object.entries(values).forEach(([key, value]) => value && params.set(key, value));
     router.replace(params.size ? `${pathname}?${params}` : pathname, { scroll: false });
   };
   const update = (changes: Partial<WorkflowFilters>) =>
-    commit({ ...filters, ...changes, page: changes.page ?? 0 });
+    commit({
+      ...filters,
+      ...changes,
+      ...(changes.version !== undefined && changes.columnFilters === undefined
+        ? {
+            columnFilters: serializeWorkflowColumnFilters(
+              workflowColumnFilters(filters.columnFilters ?? '').filter(
+                (filter) => filter.column !== 'version'
+              )
+            ),
+          }
+        : {}),
+      page: changes.page ?? 0,
+    });
   const clear = () =>
     commit({
       search: '',
@@ -75,6 +100,8 @@ export function useWorkflowFilters() {
       createdTo: '',
       page: 0,
       rowsPerPage: filters.rowsPerPage,
+      columnFilters: '',
+      sorting: '',
     });
 
   return {

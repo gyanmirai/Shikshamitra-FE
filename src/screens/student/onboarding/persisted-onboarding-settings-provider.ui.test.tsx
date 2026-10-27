@@ -1,5 +1,6 @@
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { act, render, screen, fireEvent, renderHook } from '@testing-library/react';
+import { act, render, screen, renderHook } from '@testing-library/react';
+import { StudentFeedbackProvider } from 'src/components/student-feedback';
 
 import { useOnboardingSettings } from './onboarding-settings-context';
 import { defaultOnboardingSettings } from './onboarding-settings-model';
@@ -12,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   permissions: [] as Array<{ name: string; isGranted: boolean }>,
   save: vi.fn(),
   remove: vi.fn(),
+  error: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({ usePathname: () => mocks.pathname }));
@@ -49,7 +51,7 @@ vi.mock('src/components/toast', () => ({
     info: vi.fn(),
     dismiss: vi.fn(),
     success: vi.fn(),
-    error: vi.fn(),
+    error: mocks.error,
   },
 }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
@@ -78,13 +80,16 @@ function Probe() {
   );
 }
 const view = () => (
-  <PersistedOnboardingSettingsProvider>
-    <Probe />
-  </PersistedOnboardingSettingsProvider>
+  <StudentFeedbackProvider scopeKey={mocks.pathname}>
+    <PersistedOnboardingSettingsProvider>
+      <Probe />
+    </PersistedOnboardingSettingsProvider>
+  </StudentFeedbackProvider>
 );
 
 describe('Persisted onboarding settings year isolation', () => {
   beforeEach(() => {
+    mocks.error.mockClear();
     mocks.permissions = [{ name: 'Students.Onboarding.View', isGranted: true }];
     mocks.save.mockReset().mockReturnValue({ unwrap: async () => record('year-a', false) });
     mocks.remove.mockReset().mockReturnValue({ unwrap: async () => undefined });
@@ -148,7 +153,12 @@ describe('Persisted onboarding settings year isolation', () => {
     mocks.query = { ...mocks.query, currentData: undefined, isError: true, refetch: vi.fn() };
     render(view());
     expect(screen.queryByTestId('saved-settings')).not.toBeInTheDocument();
-    expect(screen.getByText('could not be loaded', { exact: false })).toBeVisible();
+    expect(mocks.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Onboarding settings could not be loaded. Refresh before making changes.',
+      })
+    );
+    expect(screen.queryByText(/could not be loaded/)).not.toBeInTheDocument();
   });
 
   it('inherits saved school rules when the selected year has no override', () => {
@@ -164,7 +174,9 @@ describe('Persisted onboarding settings year isolation', () => {
     render(view());
     expect(screen.queryByTestId('saved-settings')).not.toBeInTheDocument();
     expect(
-      screen.getByText('saved rules have not been replaced with defaults', { exact: false })
+      screen.getByText(
+        'Saved onboarding settings cannot be used. Ask your administrator to review them.'
+      )
     ).toBeVisible();
   });
 
@@ -173,7 +185,7 @@ describe('Persisted onboarding settings year isolation', () => {
     ['/student/onboarding/settings/numbering-placement', 'Onboarding Settings'],
     ['/student/onboarding/settings', 'Onboarding Settings'],
   ])(
-    'keeps the %s page context visible during loading and a retryable error',
+    'keeps the %s page context visible during loading and a standard request error toast',
     (pathname, heading) => {
       mocks.pathname = pathname;
       mocks.query = { ...mocks.query, currentData: undefined, isLoading: true };
@@ -189,10 +201,14 @@ describe('Persisted onboarding settings year isolation', () => {
       mocks.query = { ...mocks.query, isLoading: false, isError: true, refetch };
       rerender(view());
       expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
-      expect(screen.getByText('could not be loaded', { exact: false })).toBeVisible();
+      expect(mocks.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Onboarding settings could not be loaded. Refresh before making changes.',
+        })
+      );
       expect(screen.queryByTestId('saved-settings')).not.toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-      expect(refetch).toHaveBeenCalledOnce();
+      expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+      expect(refetch).not.toHaveBeenCalled();
     }
   );
 });

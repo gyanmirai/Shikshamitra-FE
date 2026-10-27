@@ -5,6 +5,7 @@ import type {
 } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import { mapOnboardingCaseToItem } from './student-onboarding-model';
+import { getOnboardingMessage } from './student-onboarding-messages';
 import { getStudentSetupAssignmentEligibility } from './student-setup-assignment-model';
 
 import type { AssignmentModePolicy } from '../onboarding-settings-model';
@@ -161,7 +162,7 @@ export async function saveQuickAcademic({
   if (grChanged) {
     await refresh();
     if (!['manual', 'automatic'].includes(values.grMode))
-      throw new Error('Choose a GR assignment method.');
+      throw new Error('Select Auto or Manual for the GR number.');
     const requested = values.grValue.trim();
     if (current.grNumber && (values.grMode === 'automatic' || current.grNumber === requested)) {
       onSaved('gr', current);
@@ -174,9 +175,10 @@ export async function saveQuickAcademic({
         values.grMode as 'manual' | 'automatic',
         grPolicy
       );
-      if (!permission.eligible) throw new Error(permission.reason);
+      if (!permission.eligible)
+        throw new Error(getOnboardingMessage(permission.reason, 'Review the GR number settings.'));
       if (current.grNumber && !values.grReason.trim())
-        throw new Error('Enter a reason for changing the GR number.');
+        throw new Error('Explain why this number needs to change.');
       const available = quickAcademicSeries(await services.getSeries(current.id), current);
       const series = values.numberSeriesId
         ? available.find((item) => item.id === values.numberSeriesId)
@@ -186,8 +188,8 @@ export async function saveQuickAcademic({
       if (!series)
         throw new Error(
           available.length
-            ? 'Choose a published GR series.'
-            : 'No published GR series is available.'
+            ? 'Select the GR numbering rule.'
+            : 'No GR numbering rule is available. Ask an administrator to check the settings.'
         );
       current = await services.assignGr({
         id: current.id,
@@ -203,7 +205,7 @@ export async function saveQuickAcademic({
   if (rollChanged) {
     await refresh();
     if (!['manual', 'automatic'].includes(values.rollMode))
-      throw new Error('Choose a Roll assignment method.');
+      throw new Error('Select Auto or Manual for the roll number.');
     const requested = Number(values.rollValue);
     if (
       current.rollNumber &&
@@ -222,9 +224,12 @@ export async function saveQuickAcademic({
         'roll-number',
         values.rollMode as 'manual' | 'automatic'
       );
-      if (!permission.eligible) throw new Error(permission.reason);
+      if (!permission.eligible)
+        throw new Error(
+          getOnboardingMessage(permission.reason, 'Review the roll number settings.')
+        );
       if (current.rollNumber && current.rollChangeReasonRequired && !values.rollReason.trim())
-        throw new Error('Enter a reason for changing the Roll number.');
+        throw new Error('Explain why this number needs to change.');
       // Placement must already be saved: proposals belong to the actual server-side division.
       const preview = await services.previewRoll({
         id: current.id,

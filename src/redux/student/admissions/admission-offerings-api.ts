@@ -131,6 +131,7 @@ export type AdmissionOfferingListInput = {
   availabilityStatus?: AdmissionOfferingAvailabilityStatus;
   configurationStatus?: AdmissionOfferingConfigurationStatus;
   search?: string;
+  columnFilters?: string;
   sorting?: string;
   skipCount?: number;
   maxResultCount?: number;

@@ -73,24 +73,42 @@ export default function StudentCertificateForm({
   certificateLabel,
   onClose,
   onGenerated,
+  initialStudents = [],
+  academicYearId: requestedAcademicYearId,
 }: {
   certificateType: CertificateType;
   certificateLabel: string;
   onClose: () => void;
   onGenerated: () => void;
+  initialStudents?: StudentDirectoryItem[];
+  academicYearId?: string;
 }) {
   const globals = useSelector((state: RootState) => state.globalState);
-  const academicYearId = globals.currentYear?.id;
+  const academicYearId = requestedAcademicYearId ?? globals.currentYear?.id;
+  const sourceYearChanged =
+    !!requestedAcademicYearId && globals.currentYear?.id !== requestedAcademicYearId;
+  const [initialSelection] = useState(() =>
+    initialStudents
+      .filter(
+        (student, index, all) =>
+          !student.maskedFields.includes('Identity') &&
+          (!student.academicYearId || student.academicYearId === academicYearId) &&
+          all.findIndex((item) => item.studentId === student.studentId) === index
+      )
+      .slice(0, 100)
+  );
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const optionsQuery = useGetStudentRecordsDirectoryOptionsQuery(
     { academicYearId },
     { skip: !academicYearId }
   );
-  const [selected, setSelected] = useState<Record<string, StudentDirectoryItem>>({});
+  const [selected, setSelected] = useState<Record<string, StudentDirectoryItem>>(() =>
+    Object.fromEntries(initialSelection.map((student) => [student.studentId, student]))
+  );
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [search, setSearch] = useState('');
-  const [focusedStudent, setFocusedStudent] = useState('');
+  const [focusedStudent, setFocusedStudent] = useState(initialSelection[0]?.studentId ?? '');
   const [previews, setPreviews] = useState<CertificateResponse[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -110,7 +128,7 @@ export default function StudentCertificateForm({
       reason: '',
       particulars: '',
       issueDate: dayjs().toISOString(),
-      studentIds: [] as string[],
+      studentIds: initialSelection.map((student) => student.studentId),
       exitCases: {} as Record<string, string>,
     },
     validationSchema: Yup.object({
@@ -137,6 +155,10 @@ export default function StudentCertificateForm({
       ),
     }),
     onSubmit: async (values) => {
+      if (sourceYearChanged) {
+        setError('The academic year changed. Close this form and select students again.');
+        return;
+      }
       setError('');
       setPreviews([]);
       setBusy(true);
@@ -189,6 +211,7 @@ export default function StudentCertificateForm({
     (item) => item.parentId === values.standardId
   );
   const validSelection =
+    !sourceYearChanged &&
     !!academicYearId &&
     boards.some((item) => item.id === values.boardId) &&
     mediums.some((item) => item.id === values.mediumId) &&
@@ -199,7 +222,11 @@ export default function StudentCertificateForm({
     if (!options || defaultsApplied.current) return;
     defaultsApplied.current = true;
     const availableBoards = options.boards.filter((item) => item.parentId === academicYearId);
+    const selectedStudent = initialSelection[0];
+    const selectedClass = options.standards.find((item) => item.id === selectedStudent?.standardId);
+    const selectedMedium = options.mediums.find((item) => item.id === selectedClass?.parentId);
     const boardId =
+      availableBoards.find((item) => item.id === selectedMedium?.parentId)?.id ||
       availableBoards.find((item) => item.id === globals.currentBoard?.id)?.id ||
       availableBoards.find((item) =>
         options.mediums.some(
@@ -210,13 +237,36 @@ export default function StudentCertificateForm({
       '';
     const availableMediums = options.mediums.filter((item) => item.parentId === boardId);
     const mediumId =
+      availableMediums.find((item) => item.id === selectedMedium?.id)?.id ||
       availableMediums.find((item) => item.id === globals.currentMedium?.id)?.id ||
       availableMediums[0]?.id ||
       '';
     form.resetForm({
-      values: { ...form.values, ...firstAcademicScope(options, boardId, mediumId) },
+      values: {
+        ...form.values,
+        ...firstAcademicScope(
+          options,
+          boardId,
+          mediumId,
+          selectedClass?.stageId ?? undefined,
+          selectedClass?.id ?? undefined
+        ),
+        ...(selectedStudent?.divisionId &&
+        options.divisions.some(
+          (item) => item.id === selectedStudent.divisionId && item.parentId === selectedClass?.id
+        )
+          ? { divisionId: selectedStudent.divisionId }
+          : {}),
+      },
     });
-  }, [options, academicYearId, globals.currentBoard?.id, globals.currentMedium?.id, form]);
+  }, [
+    options,
+    academicYearId,
+    globals.currentBoard?.id,
+    globals.currentMedium?.id,
+    form,
+    initialSelection,
+  ]);
   const directory = useGetStudentRecordsDirectoryQuery(
     {
       academicYearId,
@@ -333,6 +383,10 @@ export default function StudentCertificateForm({
     { id: 'divisionName', label: 'Division', isSort: false, isFilter: false },
   ];
   const generate = async () => {
+    if (sourceYearChanged) {
+      setError('The academic year changed. Close this form and select students again.');
+      return;
+    }
     const fingerprint = JSON.stringify({ certificateType, ...values });
     const key = keys.current[fingerprint] ?? crypto.randomUUID();
     keys.current[fingerprint] = key;
@@ -391,6 +445,11 @@ export default function StudentCertificateForm({
     >
       <DialogScrollContent>
         <Stack spacing={2}>
+          {sourceYearChanged && (
+            <Typography role="alert" variant="body2" color="warning.main">
+              The academic year changed. Close this form and select students again.
+            </Typography>
+          )}
           <Grid container spacing={1}>
             {scopeSelect(
               'Board',
