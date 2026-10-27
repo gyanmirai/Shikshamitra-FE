@@ -51,6 +51,7 @@ import {
   editorSchema,
   initialEditorValues,
   configurationIssues,
+  configurationFeedback,
 } from './salary-template-form-model';
 
 import type { EditorValues } from './salary-template-form-model';
@@ -489,6 +490,12 @@ function SalaryTemplateWorkflow({
     setShowIssues(true);
     await formik.setTouched(setNestedObjectValues(errors, true), false);
     const invalidRules = formik.values.rules.filter((_, index) => getIn(errors, `rules[${index}]`));
+    const basicCandidate = formik.values.rules.some((rule) => rule.semanticType === 'BASIC')
+      ? undefined
+      : formik.values.rules.find((rule) => rule.lineKind === 'EARNING');
+    if (basicCandidate) {
+      setExpanded((current) => new Set(current).add(basicCandidate.componentId));
+    }
     if (invalidRules.length) {
       setExpanded(
         (current) => new Set([...current, ...invalidRules.map((rule) => rule.componentId)])
@@ -501,11 +508,13 @@ function SalaryTemplateWorkflow({
           ? 'salary-statutory-defaults'
           : invalidRules.length
             ? `salary-rule-${invalidRules[0].componentId}`
-            : currentIssues.length
-              ? currentIssues[0].includes('PF')
-                ? 'salary-statutory-defaults'
-                : 'salary-earnings'
-              : null;
+            : basicCandidate
+              ? `salary-rule-purpose-${basicCandidate.componentId}`
+              : currentIssues.length
+                ? currentIssues[0].includes('PF')
+                  ? 'salary-statutory-defaults'
+                  : 'salary-earnings'
+                : null;
     if (target) setPendingFocus(target);
     return Object.keys(errors).length === 0 && currentIssues.length === 0;
   };
@@ -552,7 +561,8 @@ function SalaryTemplateWorkflow({
   };
 
   const busy = createState.isLoading || updateState.isLoading || formik.isSubmitting;
-  const valid = editorSchema.isValidSync(formik.values) && issues.length === 0;
+  const requirements = configurationFeedback(formik.values);
+  const valid = requirements.length === 0;
   useEffect(() => onBusyChange(busy), [busy, onBusyChange]);
   useEffect(() => {
     if (!pendingFocus) return undefined;
@@ -589,12 +599,14 @@ function SalaryTemplateWorkflow({
       : calculationState.isLoading
         ? 'Preparing preview…'
         : !valid
-          ? 'Complete the configuration before previewing.'
+          ? `${requirements[0]}${requirements.length > 1 ? ` ${requirements.length - 1} more ${requirements.length === 2 ? 'requirement' : 'requirements'}. Review configuration to continue.` : ''}`
           : previewCurrent
             ? 'Preview ready'
             : hasPreviewed
-              ? 'Preview needs refresh'
-              : 'Preview required';
+              ? 'Refresh the salary preview before saving.'
+              : previewError
+                ? 'Salary preview failed. Review the preview error and retry.'
+                : 'Configuration ready. Preview salary before creating or saving the template.';
   return (
     <Box
       component="form"
@@ -757,6 +769,34 @@ function SalaryTemplateWorkflow({
               justifyContent: 'flex-end',
             }}
           >
+            {!readOnly && !valid && (
+              <Button
+                size="small"
+                type="button"
+                variant="outlined"
+                disabled={busy || calculationState.isLoading}
+                onClick={validateConfiguration}
+              >
+                Review configuration
+              </Button>
+            )}
+            {!readOnly && valid && !previewCurrent && (
+              <Button
+                size="small"
+                type="button"
+                variant="outlined"
+                disabled={busy || calculationState.isLoading}
+                onClick={runSample}
+              >
+                {hasPreviewed
+                  ? 'Refresh salary preview'
+                  : previewError
+                    ? 'Retry salary preview'
+                    : isCreate
+                      ? 'Preview before creating'
+                      : 'Preview before saving'}
+              </Button>
+            )}
             {!readOnly && (
               <LoadingButton
                 size="small"

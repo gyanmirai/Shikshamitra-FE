@@ -10,6 +10,8 @@ audience: humans-and-agents
 
 ## Onboarding cards and salary setup
 
+The fresh-tenant disabled-Create regression fills a named Basic Salary earning at 50000, an Ordinary deduction at 1000, external ESIC management and reason, and leaves optional description/PF fields empty. It verifies that an Ordinary earning still requires explicit Basic purpose, Review configuration focuses that setting, choosing Basic preserves the fixed amount, and only a successful preview enables creation. Utility cases cover Basic Salary and renamed earning labels without name inference. Include `src/screens/hr/payroll/setting/payroll-calculation-base.test.ts` with the editor/utility suites.
+
 Salary-template creation recovery: run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/payroll/setting/salary-template-editor.test.tsx src/screens/hr/payroll/setting/esi-policy-fields.test.tsx src/utils/api-problem-details.test.ts src/screens/hr/recovery --pool=forks --maxWorkers=1`. Synthetic cases cover duplicate-name rejection followed by successful creation, retained valid preview and form values, separate catalogue denial/empty states, permission-gated same-origin setup links, and successful or failed explicit setup refresh. Browser new-tab return, responsive light/dark layouts and the reported tenant failure require separate acceptance evidence.
 
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/employee-onboarding src/screens/hr/payroll/structure/SalaryStructureBuilder.test.tsx src/screens/hr/payroll/structure/salary-template-setup-state.test.tsx src/components/custom-stepper --pool=forks --maxWorkers=1` on Windows.

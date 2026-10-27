@@ -221,6 +221,76 @@ describe('SalaryTemplateEditor', () => {
 
   afterEach(cleanup);
 
+  it('explains and repairs the fresh-tenant Basic-purpose gate without changing the entered salary', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    mocks.esiEmpty = true;
+    mocks.createTemplate.mockReturnValue({ unwrap: async () => mocks.template });
+    renderEditor(<SalaryTemplateEditor mode="create" onSaved={onSaved} />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'New school salary' },
+    });
+    await user.click(screen.getByRole('combobox', { name: 'ESIC management' }));
+    await user.click(screen.getByRole('option', { name: 'Handled outside ShikshaMitra' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'External management reason' }), {
+      target: { value: 'Synthetic school manages ESIC externally.' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Add Earning' }));
+    await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
+    await user.click(screen.getByRole('option', { name: 'Basic Salary' }));
+    await user.click(screen.getByRole('button', { name: 'Add Component' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Basic Salary amount' }), {
+      target: { value: '50000' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
+    await user.click(screen.getByRole('option', { name: 'Loan Recovery' }));
+    await user.click(screen.getByRole('button', { name: 'Add Component' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Loan Recovery amount' }), {
+      target: { value: '1000' },
+    });
+    expect(screen.getByRole('button', { name: 'Create Template' })).toBeDisabled();
+    expect(document.getElementById('salary-preview-status')).toHaveTextContent(
+      'Choose Basic as the payroll purpose for exactly one earning.'
+    );
+    expect(mocks.calculate).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Review configuration' }));
+    const purpose = await screen.findByRole('combobox', {
+      name: 'Payroll purpose for Basic Salary',
+    });
+    await waitFor(() => expect(purpose).toHaveFocus());
+    await user.click(purpose);
+    await user.click(screen.getByRole('option', { name: 'Basic' }));
+    expect(
+      (screen.getByRole('textbox', { name: 'Basic Salary amount' }) as HTMLInputElement).value
+    ).toContain('50,000');
+    expect(screen.getByRole('button', { name: 'Create Template' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Preview before creating' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Create Template' })).toBeEnabled()
+    );
+    expect(mocks.calculate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rules: expect.arrayContaining([
+          expect.objectContaining({
+            componentId: 'earning-1',
+            semanticType: 'BASIC',
+            formulaType: 'FIXED_AMOUNT',
+            value: 50000,
+          }),
+          expect.objectContaining({
+            componentId: 'deduction-1',
+            semanticType: 'ORDINARY',
+            formulaType: 'FIXED_AMOUNT',
+            value: 1000,
+          }),
+        ]),
+      })
+    );
+    await user.click(screen.getByRole('button', { name: 'Create Template' }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
+  }, 15000);
+
   it('distinguishes denied component access from missing payroll setup', async () => {
     mocks.catalogError = { status: 403, data: { detail: 'Forbidden' } };
     renderEditor(<SalaryTemplateEditor mode="create" />);
@@ -638,7 +708,9 @@ describe('SalaryTemplateEditor', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Remove Basic Salary' }));
     await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
-    expect(screen.getByText('Add exactly one Basic earning.')).toBeVisible();
+    expect(
+      screen.getAllByText('Choose Basic as the payroll purpose for exactly one earning.')[0]
+    ).toBeVisible();
   }, 10000);
 
   it('denies create and direct detail access without their exact permissions', () => {
@@ -662,17 +734,19 @@ describe('SalaryTemplateEditor', () => {
     await user.click(screen.getByRole('textbox', { name: 'Template name' }));
     await user.paste('New template');
     await user.click(screen.getByRole('button', { name: 'Add Earning' }));
-    expect(screen.queryByText('Add exactly one Basic earning.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Complete the configuration before previewing:')
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
     await user.click(screen.getByRole('option', { name: 'Basic Salary' }));
     await user.click(screen.getByRole('button', { name: 'Add Component' }));
     await waitFor(() =>
       expect(screen.getByRole('textbox', { name: 'Basic Salary amount' })).toHaveFocus()
     );
-    await user.click(screen.getByRole('combobox', { name: /Purpose/ }));
+    await user.click(screen.getByRole('combobox', { name: 'Payroll purpose for Basic Salary' }));
     await user.click(screen.getByRole('option', { name: 'Basic' }));
-    await user.clear(screen.getByRole('textbox', { name: 'Basic Salary percent' }));
-    await user.type(screen.getByRole('textbox', { name: 'Basic Salary percent' }), '100');
+    await user.clear(screen.getByRole('textbox', { name: 'Basic Salary amount' }));
+    await user.type(screen.getByRole('textbox', { name: 'Basic Salary amount' }), '50000');
     expect(mocks.createTemplate).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() =>
@@ -682,7 +756,11 @@ describe('SalaryTemplateEditor', () => {
       expect.objectContaining({
         templateId: null,
         rules: expect.arrayContaining([
-          expect.objectContaining({ semanticType: 'BASIC', value: 100 }),
+          expect.objectContaining({
+            semanticType: 'BASIC',
+            formulaType: 'FIXED_AMOUNT',
+            value: 50000,
+          }),
         ]),
       })
     );
@@ -722,10 +800,10 @@ describe('SalaryTemplateEditor', () => {
     await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
     await user.click(screen.getByRole('option', { name: 'Basic Salary' }));
     await user.click(screen.getByRole('button', { name: 'Add Component' }));
-    await user.click(screen.getByRole('combobox', { name: /Purpose/ }));
+    await user.click(screen.getByRole('combobox', { name: 'Payroll purpose for Basic Salary' }));
     await user.click(screen.getByRole('option', { name: 'Basic' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Basic Salary percent' }), {
-      target: { value: '100' },
+    fireEvent.change(screen.getByRole('textbox', { name: 'Basic Salary amount' }), {
+      target: { value: '50000' },
     });
     await user.click(screen.getByRole('button', { name: /Preview salary/ }));
     await waitFor(() =>
@@ -739,7 +817,9 @@ describe('SalaryTemplateEditor', () => {
     ).toBeVisible();
     expect(onSaved).not.toHaveBeenCalled();
     expect(screen.queryByText(/Another administrator changed/)).not.toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Basic Salary percent' })).toHaveValue('100 %');
+    expect(
+      (screen.getByRole('textbox', { name: 'Basic Salary amount' }) as HTMLInputElement).value
+    ).toContain('50,000');
     fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
       target: { value: 'Unique template' },
     });

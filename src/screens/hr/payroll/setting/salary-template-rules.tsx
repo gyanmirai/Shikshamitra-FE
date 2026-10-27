@@ -231,8 +231,7 @@ export default function SalaryTemplateRules({
                       color="text.secondary"
                       sx={{ mt: 0.25, overflowWrap: 'anywhere' }}
                     >
-                      {rule.semanticType !== 'ORDINARY' &&
-                        `${formatRuleLabel(rule.semanticType)} · `}
+                      {`Payroll purpose: ${formatRuleLabel(rule.semanticType)} · `}
                       {formulaSummary(rule, componentNames)}
                     </Typography>
                   </Box>
@@ -281,10 +280,15 @@ export default function SalaryTemplateRules({
                     sx={{ display: 'grid', gap: 1.5, mt: 2 }}
                   >
                     <FormControl fullWidth size="small" disabled={readOnly}>
-                      <InputLabel id={`purpose-${rule.componentId}`}>Purpose</InputLabel>
+                      <InputLabel id={`purpose-${rule.componentId}`}>Payroll purpose</InputLabel>
                       <Select
+                        id={`salary-rule-purpose-${rule.componentId}`}
                         labelId={`purpose-${rule.componentId}`}
-                        label="Purpose"
+                        label="Payroll purpose"
+                        SelectDisplayProps={{
+                          'aria-label': `Payroll purpose for ${name}`,
+                          'aria-labelledby': undefined,
+                        }}
                         name={`${path}.semanticType`}
                         value={rule.semanticType}
                         onChange={(event) => update(applySemanticType(rule, event.target.value))}
@@ -303,6 +307,12 @@ export default function SalaryTemplateRules({
                           </MenuItem>
                         ))}
                       </Select>
+                      {earning && (
+                        <FormHelperText>
+                          Use Basic for exactly one earning. Component names do not set payroll
+                          purpose.
+                        </FormHelperText>
+                      )}
                     </FormControl>
                     <FormControl fullWidth size="small" disabled={readOnly}>
                       <InputLabel id={`formula-${rule.componentId}`}>Calculation</InputLabel>

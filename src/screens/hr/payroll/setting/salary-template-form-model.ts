@@ -34,8 +34,11 @@ export const initialEditorValues = (template?: SalaryTemplate): EditorValues => 
 });
 
 export const editorSchema = Yup.object({
-  name: Yup.string().trim().required('Template name is required.').max(160),
-  description: Yup.string().trim().max(500),
+  name: Yup.string()
+    .trim()
+    .required('Template name is required.')
+    .max(160, 'Template name must be 160 characters or fewer.'),
+  description: Yup.string().trim().max(500, 'Description must be 500 characters or fewer.'),
   defaultSalaryBasis: Yup.string().required(),
   defaultPfRuleId: Yup.string().when('defaultPfApplicable', {
     is: true,
@@ -48,7 +51,7 @@ export const editorSchema = Yup.object({
   }),
   defaultEsiExternalReason: Yup.string()
     .trim()
-    .max(500)
+    .max(500, 'External ESIC management reason must be 500 characters or fewer.')
     .when('defaultEsiManagementMode', {
       is: 'EXTERNAL',
       then: (schema) => schema.required('Enter the external management reason.'),
@@ -102,6 +105,17 @@ export const configurationIssues = (values: EditorValues) => {
       )
       .map(() => 'Choose an existing, different basis component.'),
   ];
+};
+
+export const configurationFeedback = (values: EditorValues) => {
+  let fields: string[] = [];
+  try {
+    editorSchema.validateSync(values, { abortEarly: false });
+  } catch (error) {
+    if (!(error instanceof Yup.ValidationError)) throw error;
+    fields = error.errors;
+  }
+  return [...new Set([...fields, ...configurationIssues(values)])];
 };
 
 export const formulaSummary = (rule: SalaryTemplateRule, names: Map<string, string>) => {

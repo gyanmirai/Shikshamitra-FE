@@ -20,6 +20,22 @@ const component = {
 };
 
 describe('salary template editor utilities', () => {
+  it.each(['Basic Salary', 'Teaching pay'])(
+    'keeps explicit Basic purpose independent of the name %s and preserves a fixed amount',
+    (name) => {
+      const ordinary = createTemplateRule(
+        { ...component, name, calculationType: 'AMOUNT', defaultValue: 50000 },
+        0
+      );
+      expect(ordinary.semanticType).toBe('ORDINARY');
+      expect(applySemanticType(ordinary, 'BASIC')).toMatchObject({
+        componentId: ordinary.componentId,
+        semanticType: 'BASIC',
+        formulaType: 'FIXED_AMOUNT',
+        value: 50000,
+      });
+    }
+  );
   it('rejects an earning based on the remainder but allows a deduction based on it', () => {
     const basic = applySemanticType(createTemplateRule(component, 0), 'BASIC');
     const remainder = applySemanticType(
@@ -28,7 +44,9 @@ describe('salary template editor utilities', () => {
     );
     const dependent: SalaryTemplateRule = {
       ...createTemplateRule({ ...component, componentId: 'dependent' }, 2),
-      formulaType: 'PERCENTAGE_OF_COMPONENT', value: 10, basisComponentId: 'remainder',
+      formulaType: 'PERCENTAGE_OF_COMPONENT',
+      value: 10,
+      basisComponentId: 'remainder',
     };
     expect(getSaveIssues([basic, remainder, dependent])).toContain(
       'An earning cannot depend on the gross remainder because that creates a circular calculation.'
@@ -38,7 +56,10 @@ describe('salary template editor utilities', () => {
 
   it('allows Basic at 100% with PF and no balancing earning', () => {
     const basic = { ...applySemanticType(createTemplateRule(component, 0), 'BASIC'), value: 100 };
-    const pf = applySemanticType(createTemplateRule({ ...component, componentId: 'pf', lineKind: 'DEDUCTION' }, 1), 'EMPLOYEE_PROVIDENT_FUND');
+    const pf = applySemanticType(
+      createTemplateRule({ ...component, componentId: 'pf', lineKind: 'DEDUCTION' }, 1),
+      'EMPLOYEE_PROVIDENT_FUND'
+    );
     expect(getSaveIssues([basic, pf])).toEqual([]);
   });
   it('creates an ordinary fixed rule and applies constrained semantic formulas', () => {
@@ -52,7 +73,7 @@ describe('salary template editor utilities', () => {
       formulaType: 'FIXED_AMOUNT',
       value: 0,
     });
-    expect(basic).toMatchObject({ formulaType: 'PERCENTAGE_OF_GROSS', value: 60 });
+    expect(basic).toMatchObject({ formulaType: 'FIXED_AMOUNT', value: 0 });
     expect(getFormulaOptions(basic)).toContain('FIXED_AMOUNT');
     expect(getFormulaOptions(basic)).toContain('REMAINDER_OF_GROSS');
     expect(balance).toMatchObject({ formulaType: 'REMAINDER_OF_GROSS', value: null });
@@ -71,12 +92,22 @@ describe('salary template editor utilities', () => {
     expect(formulaAcceptsValue(fixed.formulaType)).toBe(true);
   });
 
-  it.each(['EMPLOYEE_PROVIDENT_FUND', 'PROFESSIONAL_TAX'])('makes a derived %s deduction editable when changed to a manual amount', (semanticType) => {
-    const automatic = applySemanticType(createTemplateRule({ ...component, componentId: 'deduction', lineKind: 'DEDUCTION' }, 1), semanticType);
-    const manual = applyFormulaType(automatic, 'FIXED_AMOUNT');
-    expect(manual).toMatchObject({ semanticType: 'ORDINARY', formulaType: 'FIXED_AMOUNT', value: 0 });
-    expect(formulaAcceptsValue(manual.formulaType)).toBe(true);
-  });
+  it.each(['EMPLOYEE_PROVIDENT_FUND', 'PROFESSIONAL_TAX'])(
+    'makes a derived %s deduction editable when changed to a manual amount',
+    (semanticType) => {
+      const automatic = applySemanticType(
+        createTemplateRule({ ...component, componentId: 'deduction', lineKind: 'DEDUCTION' }, 1),
+        semanticType
+      );
+      const manual = applyFormulaType(automatic, 'FIXED_AMOUNT');
+      expect(manual).toMatchObject({
+        semanticType: 'ORDINARY',
+        formulaType: 'FIXED_AMOUNT',
+        value: 0,
+      });
+      expect(formulaAcceptsValue(manual.formulaType)).toBe(true);
+    }
+  );
 
   it('normalizes earnings before deductions and assigns stable display order', () => {
     const rules: SalaryTemplateRule[] = [
@@ -102,7 +133,9 @@ describe('salary template editor utilities', () => {
       'BALANCING_EARNING'
     );
 
-    expect(getSaveIssues([])).toEqual(['Add exactly one Basic earning.']);
+    expect(getSaveIssues([])).toEqual([
+      'Choose Basic as the payroll purpose for exactly one earning.',
+    ]);
     expect(getSaveIssues([basic, balance])).toEqual([]);
     expect(getSaveIssues([basic, balance, { ...balance, componentId: 'another' }])).not.toEqual([]);
   });

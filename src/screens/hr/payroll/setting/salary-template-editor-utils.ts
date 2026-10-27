@@ -24,8 +24,7 @@ export const getFormulaOptions = (rule: SalaryTemplateRule) =>
     ? [...editableFormulas, 'REMAINDER_OF_GROSS']
     : [...editableFormulas, 'EMPLOYEE_PROVIDENT_FUND', 'PROFESSIONAL_TAX'];
 
-export const formulaAcceptsValue = (formulaType: string) =>
-  editableFormulas.includes(formulaType);
+export const formulaAcceptsValue = (formulaType: string) => editableFormulas.includes(formulaType);
 
 export const getAutomaticFormulaSemanticType = (formulaType: string) =>
   automaticFormulaSemanticTypes[formulaType] || null;
@@ -41,12 +40,16 @@ export const createTemplateRule = (
   componentId: component.componentId,
   lineKind: component.lineKind,
   semanticType: 'ORDINARY',
-  formulaType: component.calculationType === 'PERCENTAGE'
-    ? (component.calculationBase === 'GROSS' ? 'PERCENTAGE_OF_GROSS' : 'PERCENTAGE_OF_COMPONENT')
-    : 'FIXED_AMOUNT',
+  formulaType:
+    component.calculationType === 'PERCENTAGE'
+      ? component.calculationBase === 'GROSS'
+        ? 'PERCENTAGE_OF_GROSS'
+        : 'PERCENTAGE_OF_COMPONENT'
+      : 'FIXED_AMOUNT',
   value: component.defaultValue ?? 0,
   basisCode: null,
-  basisComponentId: component.calculationBase === 'GROSS' ? null : component.basisComponentId ?? null,
+  basisComponentId:
+    component.calculationBase === 'GROSS' ? null : (component.basisComponentId ?? null),
   displayOrder,
 });
 
@@ -62,7 +65,9 @@ export const applySemanticType = (
         : semanticType === 'PROFESSIONAL_TAX'
           ? 'PROFESSIONAL_TAX'
           : semanticType === 'BASIC'
-            ? 'PERCENTAGE_OF_GROSS'
+            ? ['FIXED_AMOUNT', 'PERCENTAGE_OF_GROSS'].includes(rule.formulaType)
+              ? rule.formulaType
+              : 'PERCENTAGE_OF_GROSS'
             : 'FIXED_AMOUNT';
   const acceptsValue = [
     'PERCENTAGE_OF_GROSS',
@@ -75,7 +80,11 @@ export const applySemanticType = (
     semanticType,
     formulaType,
     value: acceptsValue
-      ? (semanticType === 'BASIC' ? (rule.formulaType === 'PERCENTAGE_OF_GROSS' ? rule.value : 60) : 0)
+      ? semanticType === 'BASIC'
+        ? ['FIXED_AMOUNT', 'PERCENTAGE_OF_GROSS'].includes(rule.formulaType)
+          ? rule.value
+          : 60
+        : 0
       : null,
     basisCode: null,
     basisComponentId: null,
@@ -94,7 +103,7 @@ export const applyFormulaType = (
     'PROFESSIONAL_TAX',
   ].includes(rule.semanticType);
   const basicSupportsFormula = ['PERCENTAGE_OF_GROSS', 'FIXED_AMOUNT'].includes(formulaType);
-  let {semanticType} = rule;
+  let { semanticType } = rule;
   if (automaticSemanticType) {
     semanticType = automaticSemanticType;
   } else if (
@@ -110,8 +119,7 @@ export const applyFormulaType = (
     formulaType,
     value: acceptsValue ? (rule.value ?? 0) : null,
     basisCode: null,
-    basisComponentId:
-      formulaType === 'PERCENTAGE_OF_COMPONENT' ? rule.basisComponentId : null,
+    basisComponentId: formulaType === 'PERCENTAGE_OF_COMPONENT' ? rule.basisComponentId : null,
   };
 };
 
@@ -130,7 +138,7 @@ export const getSaveIssues = (rules: SalaryTemplateRule[]) => {
   const pfCount = rules.filter((rule) => rule.semanticType === 'EMPLOYEE_PROVIDENT_FUND').length;
   const ptCount = rules.filter((rule) => rule.semanticType === 'PROFESSIONAL_TAX').length;
 
-  if (basicCount !== 1) issues.push('Add exactly one Basic earning.');
+  if (basicCount !== 1) issues.push('Choose Basic as the payroll purpose for exactly one earning.');
   if (balanceCount > 1) issues.push('Keep at most one auto-balancing earning.');
   if (pfCount > 1) issues.push('Only one Staff PF deduction is allowed.');
   if (ptCount > 1) issues.push('Only one Professional Tax deduction is allowed.');
@@ -148,11 +156,17 @@ export const getSaveIssues = (rules: SalaryTemplateRule[]) => {
       issues.push('Choose a basis component for every component percentage formula.');
     }
     if (
-      rule.lineKind === 'EARNING' && rule.formulaType === 'PERCENTAGE_OF_COMPONENT' &&
-      rules.some((candidate) => candidate.componentId === rule.basisComponentId &&
-        candidate.formulaType === 'REMAINDER_OF_GROSS')
+      rule.lineKind === 'EARNING' &&
+      rule.formulaType === 'PERCENTAGE_OF_COMPONENT' &&
+      rules.some(
+        (candidate) =>
+          candidate.componentId === rule.basisComponentId &&
+          candidate.formulaType === 'REMAINDER_OF_GROSS'
+      )
     ) {
-      issues.push('An earning cannot depend on the gross remainder because that creates a circular calculation.');
+      issues.push(
+        'An earning cannot depend on the gross remainder because that creates a circular calculation.'
+      );
     }
   });
 
