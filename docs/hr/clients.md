@@ -10,6 +10,8 @@ audience: humans-and-agents
 
 # Find HR frontend API clients
 
+`employeeOnboardingApi.ts` carries structured `workAssignment` in invite/detail/public/finalization data. `work-assignment-field.tsx` reads `academicOrganizationOptionsApi` directly, using `currentData` and refetch-on-mount to avoid validating with a previous year's response. Summary labels are supplied by the backend. Finalization sends the reviewed assignment and `workAssignmentConfirmed`; role and Academic Permission payloads retain their independent contracts.
+
 TL;DR: use this page to locate RTK Query clients and backend contract ownership for HR screens.
 Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md`.
 

@@ -16,6 +16,8 @@ Authenticated browser acceptance must separately verify new-tab creation/publish
 
 ## Finalize onboarding role lookup
 
+Assignment regression checks: `npx vitest run src/screens/hr/employee-onboarding/work-assignment.test.ts src/screens/hr/employee-onboarding/work-assignment-field.test.tsx src/components/custom-select --pool=threads`. Cover all three modes without role-name restrictions, no setup, multiple specific units, error/retry with preserved drafts, unavailable IDs, explicit year changes, keyboard/search/Escape and legacy text separated from functional department. The onboarding E2E helper confirms the assignment in Review. Full in-app browser, responsive/both-theme and live backend acceptance remain separate gates.
+
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/employee-onboarding/finalize-role-field.test.tsx src/screens/hr/employee/employee-role-options.test.ts src/screens/hr/employee/employee-form-fields/RenderRole.test.tsx src/screens/security/role/employee-onboarding-role.test.ts --pool=forks --maxWorkers=1` on Windows.
 The synthetic transport tests cover the Security endpoint, custom and legacy metadata, reserved/non-employee/group exclusions, every-open refresh, empty results, 403/503 recovery without draft loss, invalid selected IDs and Security mutation cache invalidation.
 They do not establish a tenant's deployed role metadata or authenticated browser acceptance. Backend tenant filtering and assignment authorization remain unchanged and require their existing backend security gates before release.

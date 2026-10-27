@@ -9,7 +9,6 @@ import {
   MenuItem,
   Checkbox,
   Skeleton,
-  TextField,
   IconButton,
   InputLabel,
   Typography,
@@ -154,39 +153,6 @@ const CustomSelect = <T extends string, J extends boolean>({
     }
   };
 
-  const searchHeader = isSearch ? (
-    <ListSubheader>
-      <TextField
-        autoFocus
-        fullWidth
-        size="small"
-        placeholder="Search options"
-        inputProps={{ 'aria-label': `Search ${label || 'options'}` }}
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        onKeyDown={(event) => {
-          // MenuList cannot move from the nested search input to its sibling options.
-          // Keep text editing in the input, but hand arrows to enabled choices.
-          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-            event.preventDefault();
-            event.stopPropagation();
-            const choices = event.currentTarget
-              .closest('[role="listbox"]')
-              ?.querySelectorAll<HTMLElement>(
-                '[role="option"][data-value]:not([aria-disabled="true"])'
-              );
-            const choice = event.key === 'ArrowDown' ? choices?.[0] : choices?.[choices.length - 1];
-            choice?.focus();
-          } else if (event.key !== 'Escape' && event.key !== 'Tab') {
-            event.stopPropagation();
-            if (event.key === 'Enter') event.preventDefault();
-          }
-        }}
-        sx={{ my: 1 }}
-      />
-    </ListSubheader>
-  ) : undefined;
-
   return (
     <FormControl
       size="small"
@@ -275,12 +241,7 @@ const CustomSelect = <T extends string, J extends boolean>({
             })}
             {...props}
             MenuProps={{
-              ...props.MenuProps,
-              ...(isSearch && { autoFocus: false, disableAutoFocusItem: true }),
-              MenuListProps: {
-                ...props.MenuProps?.MenuListProps,
-                ...(isSearch && { subheader: searchHeader }),
-              },
+              ...searchMenu.menuProps,
             }}
             onClose={(event) => {
               setSearch('');

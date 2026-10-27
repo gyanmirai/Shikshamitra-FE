@@ -15,6 +15,10 @@ Backend workflow rules are canonical in `https://github.com/gyanmirai/Shikshamit
 
 ## Core workflows
 
+Staff Onboarding invites use Organization / work assignment: Specific organization(s), School-wide / not tied to an academic organization, or Decide later. The shared searchable multiselect shows full Board–Medium–Stage labels for the visible academic year. Loading, empty scope, failed lookup with Retry, and unavailable saved selections remain distinct; failed reads retain the draft and block specific assignments.
+
+Candidate, application detail/list and HR review show the saved assignment. The Review step lets HR revise it and requires explicit confirmation before continuing/finalizing. Choosing another year clears specific selections only through the explicit Use current year action. Functional Department stays separate; legacy invitation text is labeled and never prefilled into that field. Assignment does not prefill Academic Permission. See the [backend contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#application-work-assignment) for validation and release order.
+
 For register layout, filter composition and synthetic browser checks, see [Attendance register workspace](references/attendance-register-workspace.md).
 
 Use this map to find the first screen and client:
