@@ -113,6 +113,7 @@ import {
 import {
   workAssignmentText,
   emptyWorkAssignment,
+  workAssignmentRequest,
   type EmployeeWorkAssignment,
 } from './work-assignment';
 import {
@@ -362,7 +363,11 @@ export function InviteDialog({ open, onClose }: { open: boolean; onClose: () => 
   const handleCreate = async () => {
     if (!canCreateInvite || isLoading) return;
     try {
-      const result = await createInvite({ ...form, email: form.email.trim() }).unwrap();
+      const result = await createInvite({
+        ...form,
+        email: form.email.trim(),
+        workAssignment: workAssignmentRequest(form.workAssignment),
+      }).unwrap();
       await copyToClipboard(buildPublicLink(result.publicPath), 'Application link');
       showInviteEmailDeliveryToast(
         result.emailDeliverySucceeded,
@@ -1355,7 +1360,7 @@ export function FinalizeDialog({
       const result = await finalizeApplication({
         id: application.id,
         body: {
-          workAssignment,
+          workAssignment: workAssignmentRequest(workAssignment),
           workAssignmentConfirmed,
           personalInfo: {
             firstName: form.firstName,
@@ -1508,41 +1513,21 @@ export function FinalizeDialog({
               {currentStep === 0 && (
                 <Grid container spacing={1} mb={1}>
                   <Grid size={{ xs: 12 }}>
-                    <SectionCard
-                      title="Organization / Work Assignment"
-                      headerContent={
-                        <CustomTooltip title="Organizational context only. Review Academic Permission separately; this choice never grants access.">
-                          <Iconify icon={GlobalIcons.info} tabIndex={0} />
-                        </CustomTooltip>
-                      }
-                    >
-                      {!application.workAssignment && (
-                        <Alert severity="info" sx={{ mb: 2 }}>
-                          {workAssignmentText({ ...application, workAssignment })}. Choose an
-                          explicit work assignment for HR confirmation.
-                        </Alert>
-                      )}
-                      <WorkAssignmentField
-                        value={workAssignment}
-                        currentYear={currentYear}
-                        onChange={updateWorkAssignment}
-                        onValidityChange={setWorkAssignmentValid}
-                        disabled={finalizeSaving || isLoading}
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={workAssignmentConfirmed}
-                            disabled={!workAssignmentValid || finalizeSaving || isLoading}
-                            onChange={(_, checked) => {
-                              setWorkAssignmentConfirmed(checked);
-                              setWorkAssignmentDirty(true);
-                            }}
-                          />
-                        }
-                        label="I confirm this work assignment. Access permissions are reviewed separately."
-                      />
-                    </SectionCard>
+                    <WorkAssignmentField
+                      value={workAssignment}
+                      currentYear={currentYear}
+                      onChange={updateWorkAssignment}
+                      onValidityChange={setWorkAssignmentValid}
+                      disabled={finalizeSaving || isLoading}
+                      legacyDepartment={application.departmentAppliedFor}
+                      confirmation={{
+                        checked: workAssignmentConfirmed,
+                        onChange: (checked) => {
+                          setWorkAssignmentConfirmed(checked);
+                          setWorkAssignmentDirty(true);
+                        },
+                      }}
+                    />
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Card
