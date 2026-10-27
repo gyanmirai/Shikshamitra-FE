@@ -11,25 +11,28 @@ import SalaryTemplateEditor from './salary-template-editor';
 
 vi.mock('src/redux/hr/esi-policy-api', () => ({
   useGetEsiPolicyOptionsQuery: () => ({
-    data: [
-      {
-        id: 'esi-policy-1',
-        name: 'Standard ESIC',
-        code: 'STANDARD_ESIC',
-        isDefault: true,
-        isArchived: false,
-        versions: [
+    data: mocks.esiEmpty
+      ? []
+      : [
           {
-            version: 1,
-            effectiveFrom: '2025-01-01',
-            employeePercentage: 0.75,
-            employerPercentage: 3.25,
+            id: 'esi-policy-1',
+            name: 'Standard ESIC',
+            code: 'STANDARD_ESIC',
+            isDefault: true,
+            isArchived: false,
+            versions: [
+              {
+                version: 1,
+                effectiveFrom: '2025-01-01',
+                employeePercentage: 0.75,
+                employerPercentage: 3.25,
+              },
+            ],
           },
         ],
-      },
-    ],
     isLoading: false,
-    isError: false,
+    isError: mocks.esiError,
+    refetch: mocks.refetchEsi,
   }),
   effectiveEsiPolicyVersion: (policy: any) => policy?.versions[0],
 }));
@@ -42,6 +45,12 @@ const mocks = vi.hoisted(() => ({
   refetch: vi.fn(),
   loading: false,
   catalogLoading: false,
+  catalogEmpty: false,
+  catalogError: undefined as unknown,
+  refetchCatalog: vi.fn(),
+  esiEmpty: false,
+  esiError: false,
+  refetchEsi: vi.fn(),
   failed: false,
   template: {
     id: 'template-1',
@@ -92,10 +101,23 @@ vi.mock('src/routes/components', () => ({
   RouterLink: ({ children, ...props }: React.ComponentProps<'a'>) => <a {...props}>{children}</a>,
 }));
 
-vi.mock('react-redux', () => ({ useDispatch: () => vi.fn(), useSelector: () => [] }));
+vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
+  useSelector: (selector: any) =>
+    selector({
+      auth: { permissions: [], loading: false, permissionsInitialized: true },
+      confirmPopup: { isChanges: false },
+    }),
+}));
 vi.mock('src/utils/permissions', () => ({
-  hasGrantedPermission: (_permissions: unknown, permission: string) =>
-    [...mocks.permissions].some((action) => permission.endsWith(`.${action}`)),
+  hasGrantedPermission: (_permissions: unknown, permission: string | string[]) =>
+    (Array.isArray(permission) ? permission : [permission]).every(
+      (name) =>
+        name.endsWith('.HR') ||
+        ['HR', 'HR.PayrollManagement'].includes(name) ||
+        [...mocks.permissions].some((action) => name.endsWith(`.${action}`))
+    ),
+  hasNavigationPermission: () => true,
 }));
 // Icon assets are unrelated to salary form behavior and must not start network requests.
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -114,17 +136,22 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
     data: { items: [mocks.template.editableVersion] },
   }),
   useGetSalaryTemplateComponentCatalogQuery: () => ({
-    data: mocks.catalogLoading
-      ? undefined
-      : {
-          items: [
-            { componentId: 'earning-1', name: 'Basic Salary', lineKind: 'EARNING' },
-            { componentId: 'earning-2', name: 'Special Allowance', lineKind: 'EARNING' },
-            { componentId: 'deduction-1', name: 'Loan Recovery', lineKind: 'DEDUCTION' },
-          ],
-        },
+    data:
+      mocks.catalogLoading || mocks.catalogError
+        ? undefined
+        : {
+            items: mocks.catalogEmpty
+              ? []
+              : [
+                  { componentId: 'earning-1', name: 'Basic Salary', lineKind: 'EARNING' },
+                  { componentId: 'earning-2', name: 'Special Allowance', lineKind: 'EARNING' },
+                  { componentId: 'deduction-1', name: 'Loan Recovery', lineKind: 'DEDUCTION' },
+                ],
+          },
     isLoading: mocks.catalogLoading,
-    isError: false,
+    isError: Boolean(mocks.catalogError),
+    error: mocks.catalogError,
+    refetch: mocks.refetchCatalog,
   }),
   useCreateSalaryTemplateMutation: () => [mocks.createTemplate, { isLoading: false }],
   useUpdateSalaryTemplateMutation: () => [mocks.updateTemplate, { isLoading: false }],
@@ -144,6 +171,12 @@ describe('SalaryTemplateEditor', () => {
     mocks.permissions = new Set(['View', 'Add', 'Edit']);
     mocks.loading = false;
     mocks.catalogLoading = false;
+    mocks.catalogEmpty = false;
+    mocks.catalogError = undefined;
+    mocks.refetchCatalog.mockResolvedValue({ data: { items: [] } });
+    mocks.esiEmpty = false;
+    mocks.esiError = false;
+    mocks.refetchEsi.mockResolvedValue({ data: [] });
     mocks.failed = false;
     mocks.template.status = 'ACTIVE';
     mocks.calculate.mockReturnValue({
@@ -187,6 +220,87 @@ describe('SalaryTemplateEditor', () => {
   });
 
   afterEach(cleanup);
+
+  it('distinguishes denied component access from missing payroll setup', async () => {
+    mocks.catalogError = { status: 403, data: { detail: 'Forbidden' } };
+    renderEditor(<SalaryTemplateEditor mode="create" />);
+    expect(await screen.findByText(/cannot load salary components/)).toBeVisible();
+    expect(screen.getByText(/Ask your administrator/)).toBeVisible();
+    expect(screen.queryByText('No active earning components')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Unable to load the salary template. Try again.')
+    ).not.toBeInTheDocument();
+    expect(mocks.createTemplate).not.toHaveBeenCalled();
+  });
+
+  it('offers safe component setup and refresh without losing the new template draft', async () => {
+    const user = userEvent.setup();
+    mocks.catalogEmpty = true;
+    renderEditor(<SalaryTemplateEditor mode="create" />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Unsaved salary template' },
+    });
+    expect(screen.getByText('No active earning components')).toBeVisible();
+    const setup = screen.getByRole('link', { name: /Review salary components/ });
+    expect(setup).toHaveAttribute('href', '/hr/payroll/setting/earning-component');
+    expect(setup).toHaveAttribute('target', '_blank');
+    expect(setup).toHaveAttribute('rel', 'noopener noreferrer');
+    await user.click(screen.getByRole('button', { name: 'Refresh setup' }));
+    expect(mocks.refetchCatalog).toHaveBeenCalledOnce();
+    expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue(
+      'Unsaved salary template'
+    );
+    expect(screen.getByRole('button', { name: 'Create Template' })).toBeDisabled();
+    expect(mocks.calculate).not.toHaveBeenCalled();
+    expect(mocks.createTemplate).not.toHaveBeenCalled();
+  });
+
+  it('offers ESIC setup without discarding a draft and keeps failed refreshes actionable', async () => {
+    const user = userEvent.setup();
+    mocks.esiEmpty = true;
+    mocks.refetchEsi.mockResolvedValueOnce({ error: { status: 503 } });
+    renderEditor(<SalaryTemplateEditor mode="create" />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Draft awaiting policy' },
+    });
+    expect(screen.getByText('No active ESIC policies')).toBeVisible();
+    const setup = screen.getByRole('link', { name: /Review statutory setup/ });
+    expect(setup).toHaveAttribute('href', '/hr/payroll/setting/statutory-schemes');
+    expect(setup).toHaveAttribute('target', '_blank');
+    expect(setup).toHaveAttribute('rel', 'noopener noreferrer');
+    await user.click(screen.getByRole('button', { name: 'Refresh setup' }));
+    expect(await screen.findByText(/Setup could not be refreshed/)).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue(
+      'Draft awaiting policy'
+    );
+    expect(screen.getByRole('button', { name: 'Create Template' })).toBeDisabled();
+    expect(mocks.calculate).not.toHaveBeenCalled();
+    expect(mocks.createTemplate).not.toHaveBeenCalled();
+  });
+
+  it('does not treat a failed ESIC read as an empty policy catalogue', () => {
+    mocks.esiEmpty = true;
+    mocks.esiError = true;
+    renderEditor(<SalaryTemplateEditor mode="create" />);
+    expect(screen.getByText('ESIC policies could not be loaded.')).toBeVisible();
+    expect(screen.queryByText('No active ESIC policies')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Create an ESIC policy in Statutory Schemes first.')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Review statutory setup/ })).not.toBeInTheDocument();
+  });
+
+  it('does not offer component setup links without access to the prerequisite page', () => {
+    mocks.permissions = new Set(['Add']);
+    mocks.catalogEmpty = true;
+    renderEditor(<SalaryTemplateEditor mode="create" />);
+    expect(screen.getByText('No active earning components')).toBeVisible();
+    expect(
+      screen.queryByRole('link', { name: /Review salary components/ })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/Ask your HR administrator to review this setup/)).toBeVisible();
+    expect(mocks.createTemplate).not.toHaveBeenCalled();
+  });
 
   it('defaults to CTC and offers only the two supported salary bases', async () => {
     const user = userEvent.setup();
@@ -580,6 +694,67 @@ describe('SalaryTemplateEditor', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Discard unsaved changes?' })
     ).not.toBeInTheDocument();
+  }, 15000);
+
+  it('explains a rejected duplicate name and creates after renaming without losing the preview', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    mocks.createTemplate
+      .mockReturnValueOnce({
+        unwrap: async () =>
+          Promise.reject(
+            Object.assign(new Error('Duplicate template name'), {
+              status: 400,
+              data: {
+                errorCode: 'HR:Payroll:SalaryTemplateNameExists',
+                detail: 'One or more business rules were violated.',
+                data: { name: 'Existing template' },
+              },
+            })
+          ),
+      })
+      .mockReturnValue({ unwrap: async () => mocks.template });
+    renderEditor(<SalaryTemplateEditor mode="create" onSaved={onSaved} />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Existing template' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Add Earning' }));
+    await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
+    await user.click(screen.getByRole('option', { name: 'Basic Salary' }));
+    await user.click(screen.getByRole('button', { name: 'Add Component' }));
+    await user.click(screen.getByRole('combobox', { name: /Purpose/ }));
+    await user.click(screen.getByRole('option', { name: 'Basic' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Basic Salary percent' }), {
+      target: { value: '100' },
+    });
+    await user.click(screen.getByRole('button', { name: /Preview salary/ }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Create Template' })).toBeEnabled()
+    );
+    await user.click(screen.getByRole('button', { name: 'Create Template' }));
+    expect(
+      await screen.findByText(
+        'A salary template already uses this name. Enter a different template name.'
+      )
+    ).toBeVisible();
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Another administrator changed/)).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Basic Salary percent' })).toHaveValue('100 %');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Unique template' },
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Create Template' })).toBeEnabled()
+    );
+    await user.click(screen.getByRole('button', { name: 'Create Template' }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
+    expect(mocks.calculate).toHaveBeenCalledOnce();
+    expect(mocks.createTemplate).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        name: 'Unique template',
+        previewToken: 'preview-proof',
+      })
+    );
   }, 15000);
 
   it('expires a preview and retains form values after a failed save with an idempotent retry', async () => {

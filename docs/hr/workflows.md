@@ -308,6 +308,9 @@ Save changes validates the complete template and atomically creates the next act
 Calculate previews the current rules for new and existing templates before saving.
 Changes to rules, values, dependencies, order, compensation defaults, PF, sample amount, or effective month clear the result and disable Save until another successful calculation.
 Name and description edits retain the preview.
+If creation is rejected because the template name is already used, the editor explains how to rename it, focuses the name, and retains the current unexpired preview and configuration.
+An empty earning catalogue or active ESIC policy list shows its actual prerequisite and the shared permission-gated setup link. Setup opens in a separate tab; explicit Refresh setup keeps the original form values and invalidates the previous preview.
+Catalogue load failures are distinct from successful empty results, and denied salary-component reads explain that salary template View access needs review. Unknown errors do not invent a setup prerequisite.
 Late responses for superseded inputs are ignored, calculation errors remain inline, and the preview expires after 30 minutes.
 Sample Calculation shows the sample earning and deduction breakdown, employer contributions, target difference, and statutory warnings.
 The sample does not establish universal employee eligibility.

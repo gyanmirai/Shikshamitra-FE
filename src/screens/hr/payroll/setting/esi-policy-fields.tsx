@@ -51,11 +51,13 @@ export function EsiPolicyFields({ mode, policyId, reason, month, disabled, onCha
               helperText={
                 isLoading
                   ? 'Loading policies...'
-                  : policyId && !version
-                    ? 'No effective version for this month.'
-                    : !data.length
-                      ? 'Create an ESIC policy in Statutory Schemes first.'
-                      : undefined
+                  : isError
+                    ? undefined
+                    : policyId && !version
+                      ? 'No effective version for this month.'
+                      : !data.length
+                        ? 'Create an ESIC policy in Statutory Schemes first.'
+                        : undefined
               }
               onChange={(event) => onChange({ mode, policyId: event.target.value, reason: '' })}
             >
