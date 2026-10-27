@@ -189,6 +189,14 @@ export const payslipApi = api.injectEndpoints({
       query: () => '/payroll/payslip-settings',
       providesTags: [...tags, instituteSetupType.schoolIdentity],
     }),
+    previewPayslipSettings: builder.mutation<Blob, SalaryDocumentPresentation>({
+      query: (body) => ({
+        url: '/payroll/payslip-settings/preview',
+        method: 'POST',
+        body,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
     savePayslipSettings: builder.mutation<
       PayslipSettings,
       Pick<
@@ -228,6 +236,7 @@ export const {
   useGetPayslipDeliveriesQuery,
   useSendPayslipMutation,
   useGetPayslipSettingsQuery,
+  usePreviewPayslipSettingsMutation,
   useSavePayslipSettingsMutation,
   useRecordPayslipPaymentMutation,
   useReplacePayslipFactsMutation,

@@ -10,6 +10,9 @@ import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-libra
 
 import PayslipSettingsForm from './payslip-settings-form';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('./payslip-settings-preview', () => ({ default: () => <div>Sample preview</div> }));
+
 const originalApiUrl = vi.hoisted(() => {
   const original = process.env.NEXT_PUBLIC_API_URL;
   process.env.NEXT_PUBLIC_API_URL = 'http://payslip-settings-transport.test';

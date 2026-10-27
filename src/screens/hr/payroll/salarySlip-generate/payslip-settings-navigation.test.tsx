@@ -3,6 +3,9 @@ import { act, render, screen, cleanup, fireEvent } from '@testing-library/react'
 
 import PayslipSettingsForm from './payslip-settings-form';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('./payslip-settings-preview', () => ({ default: () => <div>Sample preview</div> }));
+
 const state = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: state.push }) }));
 vi.mock('@mui/icons-material', () => ({ Close: () => null, DeleteOutline: () => null }));

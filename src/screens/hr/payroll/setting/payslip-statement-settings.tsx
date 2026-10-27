@@ -29,7 +29,7 @@ export default function PayslipStatementSettings() {
         description="Set payslip appearance, statement columns and delivery defaults for new documents."
         sx={{
           '& .MuiBreadcrumbs-root': { minWidth: 0 },
-          '& .MuiBreadcrumbs-li': { flexShrink: 0, whiteSpace: 'nowrap' },
+          '& .MuiBreadcrumbs-li': { minWidth: 0, overflowWrap: 'anywhere' },
         }}
         links={[
           { name: 'Payroll Management', href: hrPaths.payroll.root },
@@ -39,8 +39,10 @@ export default function PayslipStatementSettings() {
       {canView ? (
         <Card
           sx={{
-            p: { xs: 2, md: 3 },
-            maxWidth: 1000,
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 2,
+            overflow: 'hidden',
             flex: 1,
             minHeight: 0,
             display: 'flex',
@@ -48,7 +50,7 @@ export default function PayslipStatementSettings() {
           }}
         >
           {!canEdit && (
-            <HrNotice role="alert" severity="info" sx={{ mb: 2 }}>
+            <HrNotice role="alert" severity="info" sx={{ m: 2 }}>
               You can view these settings. Editing requires payslip and statement settings access.
             </HrNotice>
           )}
@@ -59,7 +61,9 @@ export default function PayslipStatementSettings() {
           </Box>
         </Card>
       ) : (
-        <HrNotice role="alert" severity="info">You do not have access to payslip and statement settings.</HrNotice>
+        <HrNotice role="alert" severity="info">
+          You do not have access to payslip and statement settings.
+        </HrNotice>
       )}
     </Stack>
   );
