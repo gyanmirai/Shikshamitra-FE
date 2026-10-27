@@ -119,4 +119,19 @@ describe('HR policy UI utilities', () => {
       )
     ).toBe('ID: Linked record; Name: Annual day');
   });
+
+  it('provides complete redacted collection values when inspection is requested', () => {
+    const reference = '297f91e4-1d0c-4c6e-b823-7df6f0c8f9a7';
+    const value = JSON.stringify(Array.from({ length: 8 }, (_, index) => ({
+      name: `Synthetic holiday ${index}`, sourcePolicyId: reference,
+      notes: index === 7 ? 'Changed final entry remains inspectable' : 'Earlier unchanged entry',
+    })));
+    const complete = cleanVersionDisplayValue(value, { full: true });
+    expect(complete).toContain('Synthetic holiday 7');
+    expect(complete).toContain('Changed final entry remains inspectable');
+    expect(complete).toContain('Linked record');
+    expect(complete).not.toContain(reference);
+    expect(complete).not.toContain('...');
+    expect(cleanVersionDisplayValue(value)).not.toContain('Synthetic holiday 7');
+  });
 });

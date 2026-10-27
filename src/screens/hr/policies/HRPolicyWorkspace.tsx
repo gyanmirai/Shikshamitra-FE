@@ -35,6 +35,7 @@ import { ManualHolidayDialog } from './components/ManualHolidayDialog';
 import { PayrollPolicyDrawer } from './components/PayrollPolicyDrawer';
 import { PolicyOperationOverlay } from './components/HRPolicySharedUI';
 import { CalendarPolicyDrawer } from './components/CalendarPolicyDrawer';
+import { HRSetupReviewChecklist } from './components/HRSetupReviewChecklist';
 import { AttendancePolicyDrawer } from './components/AttendancePolicyDrawer';
 import { AssignmentPolicyDrawer } from './components/AssignmentPolicyDrawer';
 
@@ -150,6 +151,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       {isLoading ? <LinearProgress /> : null}
       {academicYearId && !drawer ? (
         <Box sx={{ flexShrink: 0 }}>
+          <HRSetupReviewChecklist academicYearId={academicYearId} />
           <PolicySetupAlert
             state={ctx.leaveSetupState}
             policy="leave"
