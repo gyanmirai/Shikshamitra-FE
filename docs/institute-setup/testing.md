@@ -14,6 +14,8 @@ audience: humans-and-agents
 
 Run the focused settings, preview, and API tests with `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/components/academic-setup/academic-field-formatting-popover.test.tsx src/components/academic-setup/academic-field-formatting-model.test.ts src/redux/InstituteSetup/academic-field-formatting-api.test.ts --pool=threads --maxWorkers=1`.
 Check all-Default initialization, fresh settings on reopen, preview-only create formatting, exact edit-name preservation, failed-save drafts, dirty-close confirmation, and permission hiding.
+
+Batch regressions: run `src/components/academic-setup/academic-formatting-batch.test.tsx`, `src/components/institute-field-formatting/institute-formatting-batch.test.tsx`, and `src/components/custom-select/select-all.test.tsx` with the same Vitest command. Cover checkbox and bulk selection, mixed/empty selections, unchanged unselected rules, official board exclusion, one-request saves and retained drafts after failure. Both formatting Playwright suites include batch checks across desktop, tablet and phone; finish with a Codex in-app browser smoke test.
 Uppercase coverage checks ASCII and authoritative Unicode previews, saved mode 4, and preservation of existing names across desktop, tablet, and phone widths.
 The synthetic production-screen fixture under `e2e/fixtures/academic-field-formatting/` supports responsive and theme checks without accessing school data.
 Run its focused Playwright configuration, then perform the final smoke in the Codex in-app browser.

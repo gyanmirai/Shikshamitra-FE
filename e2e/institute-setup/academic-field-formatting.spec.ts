@@ -59,6 +59,27 @@ import { test, expect } from '@playwright/test';
   });
 });
 
+test('Select All formats editable academic fields while official board codes stay fixed', async ({
+  page,
+  request,
+}) => {
+  await request.post('/fixture/reset');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
+  await dialog.getByRole('combobox', { name: 'Field', exact: true }).click();
+  await expect(page.getByRole('option', { name: /Board name/ })).toBeDisabled();
+  await page.getByRole('option', { name: 'Select All', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(dialog.getByRole('button', { name: 'Submit', exact: true })).toBeDisabled();
+  await dialog.getByRole('radio', { name: /^PascalCase/ }).check();
+  await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  const state = await (await request.get('/fixture/state')).json();
+  expect(state.rules).toEqual({ board: 0, medium: 3, stage: 3, standard: 3, division: 3 });
+  expect(state.writes).toHaveLength(1);
+});
+
 test('view-only school user does not receive the settings action', async ({ page, request }) => {
   await request.post('/fixture/reset');
   await page.goto('/?access=view');
