@@ -26,6 +26,18 @@ export function SearchHeader({ label, placeholder, value, onChange }: Props) {
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
+          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            event.stopPropagation();
+            const choices = event.currentTarget
+              .closest('[role="listbox"]')
+              ?.querySelectorAll<HTMLElement>(
+                '[role="option"][data-value]:not([aria-disabled="true"])'
+              );
+            const choice = event.key === 'ArrowDown' ? choices?.[0] : choices?.[choices.length - 1];
+            choice?.focus();
+            return;
+          }
           if (event.key === 'Enter') event.preventDefault();
           if (event.key !== 'Escape' && event.key !== 'Tab') event.stopPropagation();
         }}

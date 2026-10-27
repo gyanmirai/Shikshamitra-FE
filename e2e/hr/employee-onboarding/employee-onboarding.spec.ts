@@ -511,7 +511,7 @@ async function createInviteThroughUi(page: Page, candidate: CandidateFixture) {
   await fillField(dialog, 'Email', candidate.email);
   await fillField(dialog, 'Primary Contact No.', candidate.mobileNo);
   await fillField(dialog, 'Position', candidate.positionAppliedFor);
-  await fillField(dialog, 'Department', candidate.departmentAppliedFor);
+  await expect(dialog.getByRole('radio', { name: 'Decide later' })).toBeChecked();
 
   const createResponsePromise = page.waitForResponse(
     (response) =>
@@ -802,6 +802,7 @@ async function finalizeApplication(
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText(candidate.email);
   await expect(dialog).toContainText(candidate.mobileNo);
+  await dialog.getByRole('checkbox', { name: /I confirm this work assignment/ }).check();
 
   await clickStepperNext(dialog);
   await expect(dialog.getByLabel('First name', { exact: false })).toHaveValue(candidate.firstName);

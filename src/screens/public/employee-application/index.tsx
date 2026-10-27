@@ -18,6 +18,10 @@ import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import {
+  workAssignmentText,
+  type EmployeeWorkAssignment,
+} from 'src/screens/hr/employee-onboarding/work-assignment';
+import {
   Box,
   Chip,
   Grid,
@@ -77,6 +81,7 @@ type PublicApplication = {
   mobileNo?: string;
   positionAppliedFor?: string;
   departmentAppliedFor?: string;
+  workAssignment?: EmployeeWorkAssignment | null;
   tokenExpiresAt: string;
   canSubmit: boolean;
   isExpired: boolean;
@@ -1897,6 +1902,13 @@ export default function PublicEmployeeApplicationScreen({ token }: { token: stri
                 variant="outlined"
                 sx={{ alignSelf: 'flex-start' }}
               />
+              <Typography variant="subtitle2">Organization / work assignment</Typography>
+              <Typography variant="body2">
+                {application ? workAssignmentText(application) : 'Not recorded'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                HR will confirm this assignment. It does not grant access permissions.
+              </Typography>
               <Divider />
               <Alert severity="info" variant="outlined">
                 Aadhaar, PAN, BPL card, bank, payroll, login, and policy details are completed by

@@ -140,7 +140,7 @@ export const createEmployeeApplicationInitialValues = (
     maritalStatus: '',
     bloodGroup: '',
     isTeaching: true,
-    department: application?.departmentAppliedFor || '',
+    department: '',
     designation: application?.positionAppliedFor || '',
     qualification: '',
     identificationMark1: '',

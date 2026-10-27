@@ -52,19 +52,8 @@ import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-gr
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
 import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import { shouldClearEmployeeRoleSelection } from 'src/screens/hr/employee/employee-role-options';
-import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
+import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   Box,
   Card,
@@ -97,8 +86,21 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
 
 import { getOnboardingErrorMessage } from './error-message';
+import { WorkAssignmentField } from './work-assignment-field';
+import { useFinalizeRoles, FinalizeRoleField } from './finalize-role-field';
 import { statutoryProfileSchema } from '../employee/statutory-profile-fields';
 import { SalaryStructureBuilder } from '../payroll/structure/SalaryStructureBuilder';
 import { getLocalMonthKey } from '../payroll/structure/salary-structure-builder-utils';
@@ -107,6 +109,11 @@ import {
   finalizeEmployeeFieldsSchema,
   applyFinalizeEmployeeValidation,
 } from './finalize-validation';
+import {
+  workAssignmentText,
+  emptyWorkAssignment,
+  type EmployeeWorkAssignment,
+} from './work-assignment';
 import {
   isOnboardingAcademicPermissionStepValid,
   buildOnboardingAcademicPermissionScopeRows,
@@ -125,7 +132,6 @@ import {
 } from './status';
 
 import type { FinalizeFormState } from './finalize-validation';
-import { FinalizeRoleField, useFinalizeRoles } from './finalize-role-field';
 
 type InviteFormState = {
   firstName: string;
@@ -134,7 +140,7 @@ type InviteFormState = {
   email: string;
   mobileNo: string;
   positionAppliedFor: string;
-  departmentAppliedFor: string;
+  workAssignment: EmployeeWorkAssignment;
 };
 
 type EmployeeOnboardingListParams = {
@@ -157,7 +163,7 @@ const defaultInviteForm: InviteFormState = {
   email: '',
   mobileNo: '',
   positionAppliedFor: '',
-  departmentAppliedFor: '',
+  workAssignment: emptyWorkAssignment(),
 };
 
 // const onboardingBreadcrumbSx = {
@@ -292,7 +298,7 @@ const buildFinalizeInitialValues = (application: EmployeeApplication): FinalizeF
     adharNo: '',
     doj: dayjs().format('YYYY-MM-DD'),
     isTeaching: personalInfo?.isTeaching ?? true,
-    department: personalInfo?.department || application.departmentAppliedFor || '',
+    department: personalInfo?.department || '',
     designation: personalInfo?.designation || application.positionAppliedFor || '',
     qualification: personalInfo?.qualification || application.qualificationSummary || '',
     identificationMark1: personalInfo?.identificationMark1 || '',
@@ -341,16 +347,19 @@ function StatusChip({ status }: { status: EmployeeApplication['status'] }) {
   );
 }
 
-function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [form, setForm] = useState<InviteFormState>(defaultInviteForm);
   const [createInvite, { isLoading }] = useCreateEmployeeApplicationInviteMutation();
   const emailError = Boolean(form.email) && !isValidEmail(form.email);
-  const canCreateInvite = isValidEmail(form.email);
+  const [workAssignmentValid, setWorkAssignmentValid] = useState(true);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const canCreateInvite = isValidEmail(form.email) && workAssignmentValid;
 
-  const updateField = (field: keyof InviteFormState, value: string) =>
+  const updateField = (field: keyof InviteFormState, value: string | EmployeeWorkAssignment) =>
     setForm((current) => ({ ...current, [field]: value }));
 
   const handleCreate = async () => {
+    if (!canCreateInvite || isLoading) return;
     try {
       const result = await createInvite({ ...form, email: form.email.trim() }).unwrap();
       await copyToClipboard(buildPublicLink(result.publicPath), 'Application link');
@@ -475,19 +484,13 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
               onChange={(event) => updateField('positionAppliedFor', event.target.value)}
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Department"
-              value={form.departmentAppliedFor}
-              onChange={(e) => {
-                const val = e.target.value;
-                const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
-                if (/^[A-Za-z ]*$/.test(newName)) {
-                  updateField('departmentAppliedFor', newName);
-                }
-              }}
+          <Grid size={{ xs: 12 }}>
+            <WorkAssignmentField
+              value={form.workAssignment}
+              currentYear={currentYear}
+              disabled={isLoading}
+              onChange={(value) => updateField('workAssignment', value)}
+              onValidityChange={setWorkAssignmentValid}
             />
           </Grid>
         </Grid>
@@ -614,10 +617,7 @@ function EmployeeOnboardingDetailView({
         <CustomBreadcrumbs
           heading="Staff Onboarding"
           description="Review candidate information and complete staff enrollment."
-          links={[
-            { name: 'Staff Onboarding', onClick: onBack },
-            { name: 'Application details' },
-          ]}
+          links={[{ name: 'Staff Onboarding', onClick: onBack }, { name: 'Application details' }]}
           // sx={onboardingBreadcrumbSx}
           // slotProps={onboardingBreadcrumbSlotProps}
           isBack
@@ -653,7 +653,7 @@ function EmployeeOnboardingDetailView({
   const candidateSecondaryMobile =
     submittedPersonal?.secondaryMobileNo || application.secondaryMobileNo;
   const submittedPosition = submittedPersonal?.designation || application.positionAppliedFor;
-  const submittedDepartment = submittedPersonal?.department || application.departmentAppliedFor;
+  const submittedDepartment = submittedPersonal?.department;
   const submittedQualification =
     submittedPersonal?.qualification || application.qualificationSummary;
   const submittedIdentificationMark = submittedPersonal?.identificationMark1;
@@ -814,7 +814,11 @@ function EmployeeOnboardingDetailView({
                       <DetailField label="Position" value={submittedPosition} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <DetailField label="Department" value={submittedDepartment} />
+                      <DetailField label="Functional department" value={submittedDepartment} />
+                      <DetailField
+                        label="Organization / work assignment"
+                        value={workAssignmentText(application)}
+                      />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <DetailField label="Submitted" value={formatDate(application.submittedAt)} />
@@ -1097,6 +1101,15 @@ export function FinalizeDialog({
   const [step, setStep] = useState(0);
   const [maxStepVisited, setMaxStepVisited] = useState(0);
   const [academicTouched, setAcademicTouched] = useState(false);
+  const [workAssignment, setWorkAssignment] = useState<EmployeeWorkAssignment>(emptyWorkAssignment);
+  const [workAssignmentValid, setWorkAssignmentValid] = useState(false);
+  const [workAssignmentConfirmed, setWorkAssignmentConfirmed] = useState(false);
+  const [workAssignmentDirty, setWorkAssignmentDirty] = useState(false);
+  const updateWorkAssignment = (value: EmployeeWorkAssignment) => {
+    setWorkAssignment(value);
+    setWorkAssignmentConfirmed(false);
+    setWorkAssignmentDirty(true);
+  };
   const [finalizeSaving, setFinalizeSaving] = useState(false);
   const [salary, setSalary] = useState<SaveEmployeeCompensation | null>(null);
   const [salaryEditor, setSalaryEditor] = useState({ dirty: false, busy: false });
@@ -1138,7 +1151,7 @@ export function FinalizeDialog({
   });
 
   const navigation = useUnsavedNavigation(
-    open && (formik.dirty || statutoryForm.dirty || salaryEditor.dirty),
+    open && (formik.dirty || statutoryForm.dirty || salaryEditor.dirty || workAssignmentDirty),
     {
       blockNavigation: finalizeSaving || isLoading || salaryEditor.busy,
       description:
@@ -1173,6 +1186,9 @@ export function FinalizeDialog({
       setStep(0);
       setMaxStepVisited(0);
       setAcademicTouched(false);
+      setWorkAssignment(application.workAssignment || emptyWorkAssignment());
+      setWorkAssignmentConfirmed(false);
+      setWorkAssignmentDirty(false);
       setFinalizeSaving(false);
       setSalary(null);
       setSalaryEditor({ dirty: false, busy: false });
@@ -1234,6 +1250,12 @@ export function FinalizeDialog({
     formikInstance: any,
     setIsLoading: (val: boolean) => void
   ) => {
+    if (step === 0 && (!workAssignmentValid || !workAssignmentConfirmed)) {
+      shikshaMitraToast.warning({
+        message: 'Review and confirm the organization / work assignment.',
+      });
+      return;
+    }
     if (step === 1) {
       if (!(await validateEmployeeFields())) return;
     }
@@ -1257,6 +1279,10 @@ export function FinalizeDialog({
   const isStepClickable = (index: number) => index <= maxStepVisited;
   const handleStepClick = async (index: number) => {
     if (finalizationPending.current || salaryEditor.busy) return;
+    if (index > 0 && (!workAssignmentValid || !workAssignmentConfirmed)) {
+      setStep(0);
+      return;
+    }
     if (index > step && index > 1 && !(await validateEmployeeFields())) {
       return;
     }
@@ -1271,6 +1297,8 @@ export function FinalizeDialog({
   };
 
   const canSubmit =
+    workAssignmentValid &&
+    workAssignmentConfirmed &&
     roleLookup.ready &&
     !roleLookup.selectionError &&
     finalizeEmployeeFieldsSchema.isValidSync(form, { abortEarly: false }) &&
@@ -1280,6 +1308,13 @@ export function FinalizeDialog({
     !salaryEditor.busy;
 
   const handleFinalize = async () => {
+    if (!workAssignmentValid || !workAssignmentConfirmed) {
+      setStep(0);
+      shikshaMitraToast.warning({
+        message: 'Review and confirm the organization / work assignment.',
+      });
+      return;
+    }
     if (finalizationPending.current || salaryEditor.busy) return;
     if (!(await validateEmployeeFields())) {
       return;
@@ -1320,6 +1355,8 @@ export function FinalizeDialog({
       const result = await finalizeApplication({
         id: application.id,
         body: {
+          workAssignment,
+          workAssignmentConfirmed,
           personalInfo: {
             firstName: form.firstName,
             middleName: form.middleName,
@@ -1470,6 +1507,43 @@ export function FinalizeDialog({
             <Box sx={{ p: 2 }}>
               {currentStep === 0 && (
                 <Grid container spacing={1} mb={1}>
+                  <Grid size={{ xs: 12 }}>
+                    <SectionCard
+                      title="Organization / Work Assignment"
+                      headerContent={
+                        <CustomTooltip title="Organizational context only. Review Academic Permission separately; this choice never grants access.">
+                          <Iconify icon={GlobalIcons.info} tabIndex={0} />
+                        </CustomTooltip>
+                      }
+                    >
+                      {!application.workAssignment && (
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                          {workAssignmentText({ ...application, workAssignment })}. Choose an
+                          explicit work assignment for HR confirmation.
+                        </Alert>
+                      )}
+                      <WorkAssignmentField
+                        value={workAssignment}
+                        currentYear={currentYear}
+                        onChange={updateWorkAssignment}
+                        onValidityChange={setWorkAssignmentValid}
+                        disabled={finalizeSaving || isLoading}
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={workAssignmentConfirmed}
+                            disabled={!workAssignmentValid || finalizeSaving || isLoading}
+                            onChange={(_, checked) => {
+                              setWorkAssignmentConfirmed(checked);
+                              setWorkAssignmentDirty(true);
+                            }}
+                          />
+                        }
+                        label="I confirm this work assignment. Access permissions are reviewed separately."
+                      />
+                    </SectionCard>
+                  </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Card
                       variant="outlined"
@@ -1625,10 +1699,10 @@ export function FinalizeDialog({
                             </Box>
                             <Stack spacing={0.25}>
                               <Typography variant="caption" color="text.secondary">
-                                Department
+                                Organization / work assignment
                               </Typography>
                               <Typography variant="body2" fontWeight={600}>
-                                {application.departmentAppliedFor || '-'}
+                                {workAssignmentText({ ...application, workAssignment })}
                               </Typography>
                             </Stack>
                           </Stack>
@@ -3024,7 +3098,7 @@ export default function EmployeeOnboardingScreen() {
                 {application.positionAppliedFor || '-'}
               </Typography>
               <Typography variant="caption" color="text.secondary" noWrap>
-                {application.departmentAppliedFor || '-'}
+                {workAssignmentText(application)}
               </Typography>
             </Stack>
           );
@@ -3210,9 +3284,7 @@ export default function EmployeeOnboardingScreen() {
     >
       <CustomBreadcrumbs
         heading="Staff Onboarding"
-        links={[
-          { name: 'Staff Onboarding' },
-        ]}
+        links={[{ name: 'Staff Onboarding' }]}
         // sx={onboardingBreadcrumbSx}
         // slotProps={onboardingBreadcrumbSlotProps}
         action={

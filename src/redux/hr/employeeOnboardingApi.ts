@@ -89,6 +89,9 @@ export type EmployeeApplication = {
   secondaryMobileNo?: string;
   positionAppliedFor?: string;
   departmentAppliedFor?: string;
+  workAssignment?:
+    import('src/screens/hr/employee-onboarding/work-assignment').EmployeeWorkAssignment | null;
+  workAssignmentDisplay?: string;
   dateOfBirth?: string | null;
   gender?: number | null;
   religion?: string | null;
@@ -152,6 +155,9 @@ export type PublicEmployeeApplication = {
   mobileNo?: string;
   positionAppliedFor?: string;
   departmentAppliedFor?: string;
+  workAssignment?:
+    import('src/screens/hr/employee-onboarding/work-assignment').EmployeeWorkAssignment | null;
+  workAssignmentDisplay?: string;
   tokenExpiresAt: string;
   canSubmit: boolean;
   isExpired: boolean;
