@@ -2,32 +2,22 @@ import type { PayslipSettings } from 'src/redux/hr/payslip-api';
 
 import { useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
-import { RouterLink } from 'src/routes/components';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import { instituteSetupPaths } from 'src/constants/institute-setup';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 import {
   useGetPayslipSettingsQuery,
   useSavePayslipSettingsMutation,
   defaultSalaryDocumentPresentation,
 } from 'src/redux/hr/payslip-api';
-import {
-  Box,
-  Stack,
-  Alert,
-  Switch,
-  Button,
-  Divider,
-  MenuItem,
-  Skeleton,
-  TextField,
-  Typography,
-  FormControlLabel,
-} from '@mui/material';
 
 import { payslipActionError } from './payslip-action-error';
-import { salaryDocumentFields } from './salary-document-fields';
+import PayslipSettingsFields from './payslip-settings-fields';
+import PayslipSettingsPreview from './payslip-settings-preview';
 
 export default function PayslipSettingsForm({ canEdit }: { canEdit: boolean }) {
   const query = useGetPayslipSettingsQuery();
@@ -68,11 +58,34 @@ export default function PayslipSettingsForm({ canEdit }: { canEdit: boolean }) {
       </Alert>
     );
   return (
-    <Stack spacing={1} aria-busy="true" aria-label="Loading payslip settings">
-      <Skeleton variant="rounded" height={40} />
-      <Skeleton variant="rounded" height={80} />
-      <Skeleton width={220} height={36} />
-      <Stack direction="row" justifyContent="flex-end" spacing={1}>
+    <Stack sx={{ flex: 1, minHeight: 0 }} aria-busy="true" aria-label="Loading payslip settings">
+      <Box
+        sx={{
+          flex: 1,
+          overflow: 'auto',
+          p: { xs: 1.5, sm: 2 },
+          display: 'grid',
+          gap: 2,
+          gridTemplateColumns: {
+            xs: 'minmax(0, 1fr)',
+            lg: 'minmax(320px, 0.85fr) minmax(0, 1.15fr)',
+          },
+          alignItems: 'start',
+        }}
+      >
+        <Stack spacing={2}>
+          <Skeleton variant="rounded" height={140} />
+          <Skeleton variant="rounded" height={280} />
+          <Skeleton variant="rounded" height={160} />
+        </Stack>
+        <Skeleton variant="rounded" sx={{ aspectRatio: '210 / 297', height: 'auto' }} />
+      </Box>
+      <Stack
+        direction="row"
+        justifyContent="flex-end"
+        spacing={1}
+        sx={{ flexShrink: 0, px: 2, py: 1.5, borderTop: 1, borderColor: 'divider' }}
+      >
         <Button disabled size="small">
           Cancel
         </Button>
@@ -109,6 +122,7 @@ function SettingsForm({
   const form = useFormik({
     initialValues: initial,
     onSubmit: async (values, helpers) => {
+      if (!canEdit || saving.isLoading) return;
       const settings = {
         presentation: values.presentation,
         automaticEmail: values.automaticEmail,
@@ -144,142 +158,66 @@ function SettingsForm({
     baseline.current = initial;
     if (!dirty) resetForm({ values: initial });
   }, [initial, readRequestId, canApplyRead, dirty, isSubmitting, resetForm]);
-  const guard = useUnsavedNavigation(form.dirty, { push: router.push });
+  const guard = useUnsavedNavigation(form.dirty, {
+    push: router.push,
+    blockNavigation: saving.isLoading || form.isSubmitting,
+  });
   return (
     <>
       <Stack
         component="form"
-        sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+        sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}
         onSubmit={form.handleSubmit}
         noValidate
       >
-        <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflow: 'auto', pr: 0.5, pb: 2 }}>
-          {error && <Alert severity="error">{error}</Alert>}
-          <Box component="section" aria-labelledby="payroll-school-details">
-            <Typography id="payroll-school-details" variant="subtitle2" sx={{ mb: 1 }}>
-              School details
-            </Typography>
-            <Typography variant="body2">
-              {initial.schoolName || 'School name not configured'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
-              {initial.schoolAddress ||
-                'Add your school address in Institute Setup before issuing documents.'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
-              School name, address and logo come from Institute Setup. Already-issued documents keep
-              their original details.
-            </Typography>
-            <Button
-              component={RouterLink}
-              href={instituteSetupPaths.schoolIdentity}
-              size="small"
-              sx={{ mt: 0.5 }}
-            >
-              Open Institute Setup
-            </Button>
-          </Box>
-          <Divider />
-          <Typography variant="subtitle2">Payslip appearance</Typography>
-          <Box
-            sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: { xs: 1.5, sm: 2 } }}>
+          <FormBusyRegion
+            busy={saving.isLoading || form.isSubmitting}
+            label="Saving payslip settings"
           >
-            <TextField
-              select
-              size="small"
-              label="Layout"
-              value={presentation.layout}
-              disabled={!canEdit || saving.isLoading}
-              onChange={(event) => updatePresentation('layout', event.target.value)}
-            >
-              <MenuItem value="Compact">Compact</MenuItem>
-              <MenuItem value="Detailed">Detailed</MenuItem>
-            </TextField>
-          </Box>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
-              columnGap: 2,
-              '& .MuiFormControlLabel-root': { m: 0, minWidth: 0, minHeight: 44 },
-            }}
-          >
-            {(
-              [
-                ['showStaffDetails', 'Staff details'],
-                ['showBankDetails', 'Bank details'],
-                ['showAttendance', 'Attendance and leave'],
-                ['showEarningsBreakdown', 'Earnings breakdown'],
-                ['showZeroDeductions', 'Zero-value deductions'],
-              ] as const
-            ).map(([key, label]) => (
-              <FormControlLabel
-                key={key}
-                label={label}
-                control={
-                  <Switch
-                    size="small"
-                    checked={presentation[key]}
-                    disabled={!canEdit || saving.isLoading}
-                    onChange={(_, checked) => updatePresentation(key, checked)}
+            <Stack spacing={2}>
+              {error && <Alert severity="error">{error}</Alert>}
+              <Box role="status">
+                <Typography variant="caption" color="text.secondary">
+                  {form.dirty
+                    ? 'Unsaved changes | Preview reflects your draft'
+                    : 'Saved settings | Changes apply to new documents'}
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: 'minmax(0, 1fr)',
+                    lg: 'minmax(320px, 0.85fr) minmax(0, 1.15fr)',
+                  },
+                  gap: 2,
+                  alignItems: 'start',
+                }}
+              >
+                <PayslipSettingsFields
+                  initial={initial}
+                  presentation={presentation}
+                  automaticEmail={form.values.automaticEmail}
+                  disabled={!canEdit || saving.isLoading || form.isSubmitting}
+                  update={updatePresentation}
+                  onEmailChange={(checked) => form.setFieldValue('automaticEmail', checked)}
+                />
+                <Box sx={{ minWidth: 0, position: { lg: 'sticky' }, top: 0 }}>
+                  <PayslipSettingsPreview
+                    presentation={presentation}
+                    brandingKey={JSON.stringify([
+                      initial.schoolName,
+                      initial.schoolAddress,
+                      initial.presentationVersionId,
+                      readRequestId,
+                    ])}
                   />
-                }
-              />
-            ))}
-          </Box>
-          <Typography variant="caption" color="text.secondary">
-            Employee identity, period, totals, and every nonzero deduction always appear. Changes
-            apply to newly issued documents.
-          </Typography>
-          <Divider />
-          <Typography variant="subtitle2">Statements and register</Typography>
-          {(
-            [
-              ['statementColumns', 'Employee statement columns'],
-              ['registerColumns', 'School register columns'],
-            ] as const
-          ).map(([key, label]) => (
-            <TextField
-              key={key}
-              select
-              size="small"
-              label={label}
-              value={presentation[key]}
-              disabled={!canEdit || saving.isLoading}
-              SelectProps={{ multiple: true }}
-              onChange={(event) =>
-                updatePresentation(
-                  key,
-                  typeof event.target.value === 'string'
-                    ? event.target.value.split(',')
-                    : event.target.value
-                )
-              }
-              helperText="An empty selection uses the standard columns. Identity and totals remain included."
-            >
-              {salaryDocumentFields.map(([id, name]) => (
-                <MenuItem key={id} value={id}>
-                  {name}
-                </MenuItem>
-              ))}
-            </TextField>
-          ))}
-          <Divider />
-          <Typography variant="subtitle2">Delivery</Typography>
-          <FormControlLabel
-            label="Email each employee after payroll finalization"
-            sx={{ m: 0, minWidth: 0, minHeight: 44 }}
-            control={
-              <Switch
-                size="small"
-                name="automaticEmail"
-                checked={form.values.automaticEmail}
-                onChange={form.handleChange}
-                disabled={!canEdit || saving.isLoading}
-              />
-            }
-          />
-        </Stack>
+                </Box>
+              </Box>
+            </Stack>
+          </FormBusyRegion>
+        </Box>
         <Stack
           direction="row"
           spacing={1}
@@ -287,15 +225,37 @@ function SettingsForm({
           sx={{
             flexShrink: 0,
             bgcolor: 'background.paper',
+            px: { xs: 1.5, sm: 2 },
             py: 1.5,
             borderTop: 1,
             borderColor: 'divider',
-            zIndex: 1,
+            flexWrap: 'wrap',
+            rowGap: 1,
           }}
         >
           <Button
             size="small"
-            disabled={!canEdit || saving.isLoading || !form.dirty}
+            sx={{ mr: 'auto' }}
+            disabled={!canEdit || saving.isLoading || form.isSubmitting}
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+            onClick={() => {
+              form.setFieldValue('presentation', {
+                ...defaultSalaryDocumentPresentation,
+                statementColumns: [],
+                registerColumns: [],
+              });
+              form.setFieldValue('automaticEmail', false);
+              request.current = null;
+              setError(null);
+            }}
+          >
+            Reset defaults
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            disabled={!canEdit || saving.isLoading || form.isSubmitting || !form.dirty}
             onClick={() =>
               guard.requestNavigation(() => {
                 form.resetForm({ values: baseline.current });
@@ -310,7 +270,9 @@ function SettingsForm({
             type="submit"
             variant="contained"
             size="small"
-            disabled={!canEdit || saving.isLoading || !form.dirty}
+            loading={saving.isLoading || form.isSubmitting}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            disabled={!canEdit || saving.isLoading || form.isSubmitting || !form.dirty}
           >
             Save
           </Button>

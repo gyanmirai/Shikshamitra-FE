@@ -10,6 +10,8 @@ audience: humans-and-agents
 
 ## Payslip & statement settings regression
 
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/payroll/salarySlip-generate/payslip-settings --pool=forks --maxWorkers=1` on Windows. The preview tests cover debounce, stale response suppression, cancellation, retry and identical viewer/download URLs; settings tests cover draft reset/cancel, save recovery and navigation. Browser acceptance must additionally check 390/768/1440px, both themes, keyboard focus and live PDF layout; automated component tests alone do not certify these states.
+
 For HR keyboard coverage, the route/component inventory, synthetic browser procedure, and remaining authenticated acceptance limits, see [Keyboard usability](references/keyboard-usability.md).
 
 `e2e/hr/payroll-document-settings.guest.spec.ts` verifies the settings link, removal of the embedded form, save/reload, view-only controls and contained widths at 390, 768 and 1440 pixels.

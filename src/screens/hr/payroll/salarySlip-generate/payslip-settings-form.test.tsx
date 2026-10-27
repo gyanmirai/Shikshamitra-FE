@@ -3,6 +3,9 @@ import { act, render, screen, waitFor, cleanup, fireEvent } from '@testing-libra
 
 import PayslipSettingsForm from './payslip-settings-form';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('./payslip-settings-preview', () => ({ default: () => <div>Sample preview</div> }));
+
 const state = vi.hoisted(() => ({
   query: {
     data: {
@@ -159,6 +162,18 @@ describe('payroll document settings', () => {
   it('disables every editable setting for view-only access', () => {
     render(<PayslipSettingsForm canEdit={false} />);
     screen.getAllByRole('switch').forEach((control) => expect(control).toBeDisabled());
+    expect(save()).toBeDisabled();
+  });
+
+  it('resets defaults as an unsaved draft and cancel restores the saved baseline', async () => {
+    state.query.data = { ...state.query.data, automaticEmail: true };
+    render(<PayslipSettingsForm canEdit />);
+    fireEvent.click(screen.getByRole('button', { name: 'Reset defaults' }));
+    await waitFor(() => expect(email()).not.toBeChecked());
+    expect(state.save).not.toHaveBeenCalled();
+    expect(save()).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(email()).toBeChecked());
     expect(save()).toBeDisabled();
   });
 });
