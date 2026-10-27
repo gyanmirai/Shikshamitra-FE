@@ -2,11 +2,11 @@
 
 import type { Board } from 'src/types/school';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
-import { useGetBoardsQuery } from 'src/redux/board/boardApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetAcademicHierarchyQuery } from 'src/redux/board/boardApi';
 
+import { getHierarchyCounts } from './academic-setup-progress-model';
 import { expandAcademicSetupAncestors } from './academic-setup-tree-utils';
 import { findHierarchyNode, buildHierarchyTree } from './academic-setup-model';
 
@@ -17,21 +17,12 @@ import type {
 } from './academic-setup-model';
 
 type Selection = { id: string; type: AcademicSetupNodeType };
+const EMPTY_BOARDS: Board[] = [];
+const EMPTY_YEARS: AcademicYearRecord[] = [];
 
 export const useAcademicSetupWorkspace = (initialYearId = '') => {
-  const yearQuery = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetYearQuery,
-    options: { refetchOnMountOrArgChange: true },
-    popupConfig: { error: false },
-  });
-  const boardQuery = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBoardsQuery,
-    popupConfig: { error: false },
-  });
-  const years = (yearQuery.data?.items ?? []) as AcademicYearRecord[];
-  const allBoards = (boardQuery.data?.items ?? []) as Board[];
+  const yearQuery = useGetYearQuery(undefined);
+  const years: AcademicYearRecord[] = yearQuery.data?.items ?? EMPTY_YEARS;
   const [selectedYearId, setSelectedYearId] = useState(initialYearId);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
@@ -39,10 +30,12 @@ export const useAcademicSetupWorkspace = (initialYearId = '') => {
   const firstYearId = years[0]?.id;
   const validSelectedYear = years.some((year) => year.id === selectedYearId);
   const currentYear = years.find((year) => year.id === selectedYearId) ?? years[0];
-  const boards = currentYear
-    ? allBoards.filter((board) => board.academicYearId === currentYear.id)
-    : [];
-  const tree = currentYear ? buildHierarchyTree(boards, currentYear) : [];
+  const boardQuery = useGetAcademicHierarchyQuery(currentYear?.id ?? '', { skip: !currentYear });
+  const boards = boardQuery.currentData?.items ?? EMPTY_BOARDS;
+  // Expansion and selection reuse the same year graph until its source data changes.
+  const tree = useMemo(() => currentYear ? buildHierarchyTree(boards, currentYear) : [], [boards, currentYear]);
+  // Counts traverse the full graph and should not repeat for sidebar interactions.
+  const counts = useMemo(() => getHierarchyCounts(boards), [boards]);
   const yearNode: AcademicSetupNode | undefined = currentYear
     ? {
         id: currentYear.id,
@@ -84,18 +77,19 @@ export const useAcademicSetupWorkspace = (initialYearId = '') => {
   const collapseAll = () => setExpandedNodes({});
   const retry = () => {
     yearQuery.refetch();
-    boardQuery.refetch();
+    if (currentYear) boardQuery.refetch();
   };
 
   return {
     years,
     boards,
     tree,
+    counts,
     currentYear,
-    selectedYearId,
+    selectedYearId: currentYear?.id ?? '',
     selectedNode,
     expandedNodes,
-    isLoading: yearQuery.isLoading || boardQuery.isLoading,
+    isLoading: yearQuery.isLoading || boardQuery.isFetching,
     isError: yearQuery.isError || boardQuery.isError,
     selectYear,
     selectNode,

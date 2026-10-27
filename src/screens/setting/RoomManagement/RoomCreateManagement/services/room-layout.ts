@@ -4,7 +4,7 @@ import type { IRoom } from '../types';
 import type { RoomFormValues } from '../types/room-form';
 
 export function getInitialColumnRows(room?: IRoom | null): number[] {
-  if (room?.columnRows?.length) return [...room.columnRows];
+  if (room?.columnRows) return [...room.columnRows];
   if (!room?.benchesPerColumn) return [];
   // Legacy partial grids fill benches from the front, row by row.
   const columns = Math.min(50, room.benchesPerColumn);
@@ -21,20 +21,20 @@ export function getRoomFormValues(room?: IRoom | null): RoomFormValues {
     building: room?.buildingId ?? '',
     floor: room?.floorId ?? '',
     roomType: room?.roomTypeId ?? '',
-    columns: columnRows.length || '',
+    columns: room ? columnRows.length : '',
     columnRows,
-    benchCapacity: room?.benchCapacity || '',
+    benchCapacity: room?.benchCapacity ?? '',
     features: room?.features ?? [],
     imageFile: null,
     removeImage: false,
   };
 }
 
-const positiveInteger = (label: string, max: number) =>
+const boundedInteger = (label: string, min: number, max: number) =>
   Yup.number()
     .typeError(`${label} is required`)
     .integer(`${label} must be a whole number`)
-    .min(1, `${label} must be at least 1`)
+    .min(min, `${label} must be at least ${min}`)
     .max(max, `${label} cannot exceed ${max}`)
     .required(`${label} is required`);
 
@@ -43,16 +43,15 @@ export const roomFormSchema = Yup.object({
   building: Yup.string().required('Building is required'),
   floor: Yup.string().required('Floor is required'),
   roomType: Yup.string().required('Room type is required'),
-  columns: positiveInteger('Columns', 50),
+  columns: boundedInteger('Columns', 0, 50),
   columnRows: Yup.array()
-    .of(positiveInteger('Rows', 100))
-    .min(1, 'Add at least one column')
+    .of(boundedInteger('Rows', 1, 100))
     .test('column-count', 'Enter rows for every column', function validateCount(value) {
       return value?.length === Number(this.parent.columns);
     }),
-  benchCapacity: positiveInteger('Students per bench', 20),
+  benchCapacity: boundedInteger('Students per bench', 0, 20),
   features: Yup.array().of(Yup.string().required()),
 });
 
-export const totalRoomBenches = (rows: (number | '')[]) =>
-  rows.reduce<number>((sum, count) => sum + Number(count), 0);
+export const totalRoomBenches = (rows: (number | '')[], benchCapacity: number | '') =>
+  Number(benchCapacity) === 0 ? 0 : rows.reduce<number>((sum, count) => sum + Number(count), 0);

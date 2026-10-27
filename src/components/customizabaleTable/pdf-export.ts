@@ -111,7 +111,7 @@ export async function createUnicodeTablePdf({
   return doc;
 }
 
-export async function saveUnicodeTablePdf(data: PdfTableData): Promise<void> {
+export async function saveUnicodeTablePdf(data: PdfTableData, beforeDownload?: () => void): Promise<void> {
   if (
     [data.title, ...(data.context || []), ...data.head, ...data.body.flat()].some((value) =>
       /[\u0900-\u097f\u0a80-\u0aff\ua8e0-\ua8ff]/u.test(value)
@@ -119,6 +119,7 @@ export async function saveUnicodeTablePdf(data: PdfTableData): Promise<void> {
   ) {
     const { createIndicTablePdfBlob } = await import('./indic-pdf-export');
     const blob = await createIndicTablePdfBlob(data);
+    beforeDownload?.();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -129,5 +130,6 @@ export async function saveUnicodeTablePdf(data: PdfTableData): Promise<void> {
     return;
   }
   const doc = await createUnicodeTablePdf(data);
+  beforeDownload?.();
   doc.save(`${data.title}.pdf`);
 }

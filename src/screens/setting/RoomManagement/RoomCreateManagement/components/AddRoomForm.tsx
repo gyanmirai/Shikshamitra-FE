@@ -42,13 +42,25 @@ export default function RoomForm({ open, onClose, editData }: IRoomFormProps) {
   } = useRoomForm(editData, onClose);
   const buildingEditor = useBoolean();
   const bodyRef = useRef<HTMLDivElement>(null);
+  const focusedSubmission = useRef(0);
   const [featureBusy, setFeatureBusy] = useState(false);
   const saving = roomSaving || featureBusy;
   const submitDisabled = loadingOptions || optionsError || capacityBlocked || buildingEditor.value;
 
   useEffect(() => {
-    if (!formik.submitCount || formik.isSubmitting || formik.isValidating || formik.isValid) return;
-    bodyRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]:not(:disabled)')?.focus();
+    if (!formik.submitCount) {
+      focusedSubmission.current = 0;
+      return;
+    }
+    if (
+      formik.isSubmitting ||
+      formik.isValidating ||
+      focusedSubmission.current === formik.submitCount
+    )
+      return;
+    focusedSubmission.current = formik.submitCount;
+    if (!formik.isValid)
+      bodyRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]:not(:disabled)')?.focus();
   }, [formik.submitCount, formik.isSubmitting, formik.isValidating, formik.isValid]);
 
   const { requestClose, confirmation } = useRoomDiscardGuard(
@@ -108,6 +120,7 @@ export default function RoomForm({ open, onClose, editData }: IRoomFormProps) {
                       floor={capacity.floor}
                       disabled={saving || loadingOptions || optionsError}
                       onEdit={buildingEditor.onTrue}
+                      onRefresh={refreshBuildings}
                     />
                   )}
                   <RoomBenchDetails formik={formik} />

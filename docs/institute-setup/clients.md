@@ -3,7 +3,7 @@ module: institute-setup
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-10-27
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -37,7 +37,7 @@ The [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/ap
 
 ## Reports client
 
-`src/redux/InstituteSetup/instituteReportsApi.ts` injects typed catalogue, preview, history, generation, AI and authenticated blob-download calls into the shared RTK Query API. The screen keeps its request form mounted across preview errors, clears dependent selections when parents change, and polls history only while jobs are queued/processing. Download object URLs are revoked after use.
+`src/redux/InstituteSetup/instituteReportsApi.ts` injects typed catalogue, preview, history, generation, AI and authenticated blob-download calls into the shared RTK Query API. The screen keeps its request form mounted across preview errors, clears dependent selections when parents change, and polls compact statuses only for pending jobs. Download object URLs are revoked after use.
 
 Definitions carry backend-owned `requiredPermissions`; `report-source-permissions.ts` requires every exact source grant plus Reports View. The workspace filters choices and cached history and guards preview/generate/download actions. AI approval hides stale previews and disables approval when the planned dataset is no longer permitted. Document category and identity scope selectors use server `values`; identity context selectors are optional and stop at organization. The signature configuration dataset requires both School Identity View and AccessSignature. No automatic grants are added.
 
@@ -51,11 +51,40 @@ Saved previews use `DocumentPreviewDialog` with `directUrl` against the owning a
 
 The shared preview loads the installed PDF.js renderer lazily, with bounded canvas dimensions, page navigation, fit/zoom and selectable extracted page text. It works without a browser PDF plugin. Protected preview requests reject foreign origins and discard responses when the authentication session changes.
 
+## Building client
+
+`src/screens/setting/RoomManagement/BuildingManagement/components/use-building-form.ts` refreshes building details when editing and uses floor room counts for inline capacity validation.
+Building writes await RTK Query completion, omit read-only room counts from commands and retain drafts on failure.
+Capacity conflicts map to the affected floor by ID; refreshing room counts updates validation without replacing entered building or floor values.
+
 ## Room client
 
 Building options include each floor's configured `totalRoom` and server `roomCount`. `useRoomForm.ts` uses these for the full-floor warning and recognizes the server capacity conflict if another room takes the remaining space. Room create/update/delete invalidate both Rooms and Buildings tags so counts refresh. `RoomBuildingEditor.tsx` reuses the existing building editor and refreshes options after a successful save without resetting the room form. Backend contracts and errors remain owned by the [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families).
 
-`src/redux/InstituteSetup/RoomApi/RoomApi.ts` keeps room CRUD under `/app/room` and adds typed feature-catalogue GET/POST calls under `/institute-setup/rooms/features`. Catalogue writes invalidate the existing Rooms tag. `useRoomForm.ts` submits ordered `columnRows` along with the existing layout totals, and waits for `.unwrap()` before closing. Server contracts, defaults and migration requirements are owned by the [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families).
+`src/redux/InstituteSetup/RoomApi/RoomApi.ts` reads paged rooms under `/app/room` and submits multipart commands under `/institute-setup/rooms`.
+`useRoomTable.ts` sends search, building/floor filters, column filters, sorting and page criteria to the server; the shared table uses the returned total rather than filtering a downloaded batch.
+Room forms send JSON metadata in `input` and an optional binary `image`; saved photos use authenticated Blob responses at `/institute-setup/rooms/{id}/image/file` and release object URLs.
+Metadata retains ordered `columnRows` and the layout totals; the editor closes only after `.unwrap()` succeeds.
+Reusable features use GET/POST calls under `/institute-setup/rooms/features`.
+Catalogue, list, detail and image tags are separate; building and room-type changes refresh dependent room reads, while room writes also refresh floor counts.
+Optimistic deletion patches matching parameterized lists and their totals, and concurrent Undo operations retain independent timers.
+Server contracts, validation limits and migration requirements are owned by the [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families).
+
+## Academic hierarchy and cache freshness
+
+`useAcademicSetupWorkspace` requests the selected year's complete scoped hierarchy through `useGetAcademicHierarchyQuery`, rather than filtering a generic board page.
+Tree nodes and summary counts retain their identities across expansion and selection changes.
+School Identity and its copy dialog load their own selected-year hierarchy; board-only deep links resolve the board's year through the scoped detail endpoint.
+Stable setup reads reuse cached responses on warm navigation, while mutation invalidation and session-transition cache resets remain active.
+
+## Bounded report history
+
+The reports client reads compact paged `/history` rows and polls only pending IDs through `/statuses`.
+History search, sorting and column filters run on the server. Search drafts remain visible when sorting before the search debounce completes; changing criteria resets pagination to the first page.
+The client supplies its browser timezone for displayed-date searches. History-list exports fetch matching compact rows in bounded pages only when explicitly requested, using the selected criteria/columns and cancelling on a session or school change.
+Preview and regeneration fetch a job's full request on demand.
+Manual and AI exports invalidate cached history pages so returning to the first page shows newly queued work.
+Polling pauses while the document is unfocused.
 
 TL;DR: `schoolIdentityApi.ts` injects typed endpoints into the existing authenticated RTK Query API. [Backend API documentation](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md) owns contracts, access rules and errors.
 

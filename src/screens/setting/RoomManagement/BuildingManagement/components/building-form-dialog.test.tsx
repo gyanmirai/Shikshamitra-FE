@@ -88,6 +88,7 @@ describe('building form dialog', () => {
     const onClose = renderDialog(buildingFixture);
     const name = screen.getByRole('textbox', { name: /Building name/i });
     fireEvent.change(name, { target: { value: 'Updated Block' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(finish).toBeDefined());
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();

@@ -1,4 +1,7 @@
 import { useFormik } from 'formik';
+import { mswServer } from 'src/test/mswServer';
+import { _api as iconifyApi } from '@iconify/react';
+import { iconApiHandlers } from 'src/test/icon-api-handlers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
@@ -30,6 +33,8 @@ function DateFieldsForm() {
 
 describe('academic year date selection', () => {
   beforeEach(() => {
+    iconifyApi.setFetch((...args) => fetch(...args));
+    mswServer.use(...iconApiHandlers);
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-14T10:00:00'));
     vi.stubGlobal('matchMedia', (query: string) => ({

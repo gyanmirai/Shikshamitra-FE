@@ -53,8 +53,33 @@ const BuildingForm = (props: IBuildingFormProps) => {
             <DialogScrollContent>
               <FormBusyRegion busy={formik.isSubmitting} label="Saving building...">
                 <Stack spacing={2}>
+                  {formik.usageError && (
+                    <Alert
+                      severity="error"
+                      action={
+                        <Button disabled={formik.loadingUsage} onClick={formik.refreshUsage}>
+                          Retry
+                        </Button>
+                      }
+                    >
+                      Room counts could not be loaded. Retry before updating this building.
+                    </Alert>
+                  )}
                   <BuildingDetailsSection formik={formik} isEditing={Boolean(editData)} />
                   <BuildingFloorsSection formik={formik} onDraggingChange={setIsDragging} />
+                  {editData && (
+                    <Box>
+                      <Button
+                        type="button"
+                        size="small"
+                        disabled={formik.loadingUsage}
+                        onClick={formik.refreshUsage}
+                        startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                      >
+                        Refresh room counts
+                      </Button>
+                    </Box>
+                  )}
                   {formik.status && (
                     <Alert severity="error">
                       {formik.status}
@@ -77,7 +102,8 @@ const BuildingForm = (props: IBuildingFormProps) => {
                 Cancel
               </Button>
               <SubmitButton
-                loading={formik.isSubmitting}
+                loading={formik.isSubmitting || formik.loadingUsage}
+                disabled={formik.usageError}
                 startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
               />
             </DialogActions>

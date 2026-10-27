@@ -46,7 +46,7 @@ export function createRoomFixture() {
         building = { ...building, floors: floors.map((floor) => ({ ...floor, roomCount: 1 })) };
         return { status: 200, json: building };
       }
-      if (method === 'POST' && path === '/api/app/room') {
+      if (method === 'POST' && path === '/api/institute-setup/rooms') {
         writes.push({ method, path, body });
         return { status: 200, json: { ...body, id: 'synthetic-created-room' } };
       }

@@ -42,8 +42,9 @@ async function choose(file: File) {
 
 it('previews a selected photo, preserves it after failure, and submits its content on retry', async () => {
   let saved: Record<string, unknown> | undefined;
+  let photo: File | undefined;
   mswServer.use(
-    http.put('*/api/app/room/room-a', () =>
+    http.put('*/api/institute-setup/rooms/room-a', () =>
       HttpResponse.json({ detail: 'Try saving again.' }, { status: 500 })
     )
   );
@@ -55,34 +56,40 @@ it('previews a selected photo, preserves it after failure, and submits its conte
   expect(await screen.findByText('Try saving again.')).toBeInTheDocument();
   expect(screen.getByAltText('Room image preview')).toBeInTheDocument();
   mswServer.use(
-    http.put('*/api/app/room/room-a', async ({ request }) => {
-      saved = (await request.json()) as Record<string, unknown>;
+    http.put('*/api/institute-setup/rooms/room-a', async ({ request }) => {
+      const form = await request.formData();
+      saved = JSON.parse(String(form.get('input'))) as Record<string, unknown>;
+      photo = form.get('image') as File;
       return HttpResponse.json(saved);
     })
   );
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
-  expect(saved).toMatchObject({
-    image: { fileName: 'room.png', content: btoa('photo bytes') },
-    removeImage: false,
-  });
+  expect(saved).toMatchObject({ removeImage: false });
+  expect(saved).not.toHaveProperty('image');
+  expect(photo?.name).toBe('room.png');
+  expect(await photo?.text()).toBe('photo bytes');
 });
 
 it('loads an existing photo and saves explicit removal', async () => {
   let saved: Record<string, unknown> | undefined;
   mswServer.use(
-    http.get('*/api/institute-setup/rooms/room-a/image', () =>
-      HttpResponse.json({ contentType: 'image/png', content: 'cGhvdG8=' })
+    http.get(
+      '*/api/institute-setup/rooms/room-a/image/file',
+      () => new HttpResponse('photo', { headers: { 'Content-Type': 'image/png' } })
     ),
-    http.put('*/api/app/room/room-a', async ({ request }) => {
-      saved = (await request.json()) as Record<string, unknown>;
+    http.put('*/api/institute-setup/rooms/room-a', async ({ request }) => {
+      saved = JSON.parse(String((await request.formData()).get('input'))) as Record<
+        string,
+        unknown
+      >;
       return HttpResponse.json(saved);
     })
   );
   render(<Harness hasImage />, createRoomTestWrapper());
   expect(await screen.findByAltText('Room image preview')).toHaveAttribute(
     'src',
-    'data:image/png;base64,cGhvdG8='
+    expect.stringMatching(/^blob:/)
   );
   fireEvent.click(screen.getByRole('button', { name: 'Remove room image' }));
   expect(screen.queryByAltText('Room image preview')).not.toBeInTheDocument();

@@ -146,7 +146,7 @@ it('uses the server-formatted feature even when the entered name matches an exis
 
 it('keeps values after failed submission, then saves the layout on retry', async () => {
   mswServer.use(
-    http.put('*/api/app/room/room-a', () =>
+    http.put('*/api/institute-setup/rooms/room-a', () =>
       HttpResponse.json({ detail: 'Room save failed.' }, { status: 500 })
     )
   );
@@ -158,8 +158,11 @@ it('keeps values after failed submission, then saves the layout on retry', async
   expect(screen.getByLabelText(/^Column 2 rows/)).toHaveValue(2);
   let saved: Record<string, unknown> | undefined;
   mswServer.use(
-    http.put('*/api/app/room/room-a', async ({ request }) => {
-      saved = (await request.json()) as Record<string, unknown>;
+    http.put('*/api/institute-setup/rooms/room-a', async ({ request }) => {
+      saved = JSON.parse(String((await request.formData()).get('input'))) as Record<
+        string,
+        unknown
+      >;
       return HttpResponse.json({ ...saved, id: room.id });
     })
   );

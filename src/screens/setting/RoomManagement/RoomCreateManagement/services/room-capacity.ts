@@ -13,10 +13,14 @@ export function getRoomFloorCapacity(
   if (!building || !floor) return undefined;
   const needsSpace = room?.buildingId !== building.id || room?.floorId !== floor.id;
   const hasCounts = Number.isInteger(floor.totalRoom) && Number.isInteger(floor.roomCount);
+  const remaining = hasCounts
+    ? floor.totalRoom! - floor.roomCount! + (needsSpace ? 0 : 1)
+    : undefined;
   return {
     building,
     floor,
     hasCounts,
+    remaining,
     isFull: needsSpace && hasCounts && floor.roomCount! >= floor.totalRoom!,
   };
 }

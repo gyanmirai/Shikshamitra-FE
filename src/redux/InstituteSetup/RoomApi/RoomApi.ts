@@ -1,63 +1,88 @@
+import type { IRoom } from 'src/screens/setting/RoomManagement/RoomCreateManagement/types';
+
 import { instituteSetupType } from 'src/redux/tagTypes';
 
+import { roomFormData } from './room-contracts';
 import { instituteSetupApi } from '../instituteSetupApi';
+
+import type { RoomPage, RoomSaveInput, RoomListParams } from './room-contracts';
 
 export const roomsApi = instituteSetupApi.injectEndpoints({
   endpoints: (builder) => ({
-    getRoomImage: builder.query<{ contentType: string; content: string } | null, string>({
-      query: (id) => `/institute-setup/rooms/${id}/image`,
-      providesTags: [instituteSetupType.rooms],
+    getRoomImage: builder.query<Blob, string>({
+      query: (id) => ({
+        url: `/institute-setup/rooms/${id}/image/file`,
+        responseHandler: async (response) => (response.ok ? response.blob() : response.json()),
+      }),
+      providesTags: (_result, _error, id) => [{ type: instituteSetupType.roomImages, id }],
       keepUnusedDataFor: 0,
     }),
     getRoomFeatures: builder.query<{ items: { id: string; name: string }[] }, void>({
       query: () => '/institute-setup/rooms/features',
-      providesTags: [instituteSetupType.rooms],
+      providesTags: [instituteSetupType.roomFeatures],
     }),
     addRoomFeature: builder.mutation<{ id: string; name: string }, { name: string }>({
       query: (body) => ({ url: '/institute-setup/rooms/features', method: 'POST', body }),
-      invalidatesTags: [instituteSetupType.rooms],
+      invalidatesTags: (_result, error) => (error ? [] : [instituteSetupType.roomFeatures]),
     }),
-    getRooms: builder.query({
+    getRooms: builder.query<RoomPage, RoomListParams | void>({
       query: (params) => ({
         url: '/app/room',
         method: 'GET',
-        params,
+        params: params || undefined,
       }),
       providesTags: [instituteSetupType.rooms],
     }),
 
-    addRoom: builder.mutation({
+    addRoom: builder.mutation<IRoom, RoomSaveInput>({
       query: (data) => ({
-        url: '/app/room',
+        url: '/institute-setup/rooms',
         method: 'POST',
-        data,
+        body: roomFormData(data),
       }),
-      invalidatesTags: [instituteSetupType.rooms, instituteSetupType.buildings],
+      invalidatesTags: (_result, error) =>
+        error ? [] : [instituteSetupType.rooms, instituteSetupType.buildings],
     }),
 
-    getRoomById: builder.query({
+    getRoomById: builder.query<IRoom, string>({
       query: (id) => ({
         url: `/app/room/${id}`,
         method: 'GET',
       }),
-      providesTags: [instituteSetupType.rooms],
+      providesTags: (_result, _error, id) => [{ type: instituteSetupType.roomDetails, id }],
     }),
 
-    updateRoom: builder.mutation({
+    updateRoom: builder.mutation<IRoom, { id: string; body: RoomSaveInput }>({
       query: ({ id, body }) => ({
-        url: `/app/room/${id}`,
+        url: `/institute-setup/rooms/${id}`,
         method: 'PUT',
-        body,
+        body: roomFormData(body),
       }),
-      invalidatesTags: [instituteSetupType.rooms, instituteSetupType.buildings],
+      invalidatesTags: (_result, error, { id }) =>
+        error
+          ? []
+          : [
+              instituteSetupType.rooms,
+              instituteSetupType.buildings,
+              { type: instituteSetupType.roomDetails, id },
+              { type: instituteSetupType.roomImages, id },
+            ],
     }),
 
-    deleteRoom: builder.mutation({
+    deleteRoom: builder.mutation<void, string>({
       query: (id) => ({
         url: `/app/room/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [instituteSetupType.rooms, instituteSetupType.buildings],
+      invalidatesTags: (_result, error, id) =>
+        error
+          ? []
+          : [
+              instituteSetupType.rooms,
+              instituteSetupType.buildings,
+              { type: instituteSetupType.roomDetails, id },
+              { type: instituteSetupType.roomImages, id },
+            ],
     }),
   }),
   overrideExisting: false,

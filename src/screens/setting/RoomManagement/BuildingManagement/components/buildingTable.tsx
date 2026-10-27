@@ -23,6 +23,7 @@ const BuildingTable = ({ onAddBuilding, onDelete, onEdit }: IBuildingTableProps)
     type: 'query',
     currentQueryAndMutation: useGetBuildingsQuery,
     popupConfig: { error: false },
+    options: { refetchOnMountOrArgChange: false },
   });
   return (
     <CustomizableTable

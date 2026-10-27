@@ -1,9 +1,18 @@
+import type { Board } from 'src/types/school';
+
 import { boardType, organizationType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
 export const boardApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getAcademicHierarchy: builder.query<{ items: Board[] }, string>({
+      query: (academicYearId) => ({
+        url: '/app/education-board/hierarchy',
+        params: { academicYearId },
+      }),
+      providesTags: [boardType.board],
+    }),
     getBoardOptions: builder.query<{ value: number; label: string }[], void>({
       query: () => ({ url: '/app/education-board/options' }),
     }),
@@ -42,6 +51,7 @@ export const boardApi = api.injectEndpoints({
 });
 
 export const {
+  useGetAcademicHierarchyQuery,
   useGetBoardOptionsQuery,
   useAddBoardMutation,
   useDeleteBoardMutation,

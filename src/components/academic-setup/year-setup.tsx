@@ -10,19 +10,15 @@ import { AcademicSetupSidebar } from './academic-setup-sidebar';
 import { AcademicSetupDetails } from './academic-setup-details';
 import { AcademicSetupDialogs } from './academic-setup-dialogs';
 import { AcademicSetupProgress } from './academic-setup-progress';
-import { getHierarchyCounts } from './academic-setup-progress-model';
 import { useAcademicSetupWorkspace } from './use-academic-setup-workspace';
 
 import type { AcademicYearRecord } from './academic-setup-model';
-
-const EMPTY_COUNTS = { boards: 0, mediums: 0, stages: 0, standards: 0, divisions: 0 };
 
 const YearSetup = ({ initialYearId }: { initialYearId?: string } = {}) => {
   const workspace = useAcademicSetupWorkspace(initialYearId);
   const yearDialog = useBoolean();
   const boardDialog = useBoolean();
   const [editYear, setEditYear] = useState<AcademicYearRecord | null>(null);
-  const counts = workspace.currentYear ? getHierarchyCounts(workspace.boards) : EMPTY_COUNTS;
 
   const openCreateYear = () => {
     setEditYear(null);
@@ -61,7 +57,7 @@ const YearSetup = ({ initialYearId }: { initialYearId?: string } = {}) => {
         onAddBoard={boardDialog.onTrue}
       />
 
-      <AcademicSetupProgress counts={counts} isLoading={workspace.isLoading} />
+      <AcademicSetupProgress counts={workspace.counts} isLoading={workspace.isLoading} />
 
       <Box data-testid="academic-hierarchy-workspace" sx={{ flex: 1, minHeight: 0 }}>
         {workspace.isError ? (

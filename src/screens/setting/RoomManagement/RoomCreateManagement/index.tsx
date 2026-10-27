@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
@@ -8,36 +8,24 @@ import { Iconify } from 'src/components/iconify';
 import { Box, Stack, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { instituteSetupPaths } from 'src/constants/institute-setup';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { roomsApi, useDeleteRoomMutation } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { InstituteFieldFormattingPopover } from 'src/components/institute-field-formatting/institute-field-formatting-popover';
 
 import RoomTable from './components/roomTable';
 import RoomForm from './components/AddRoomForm';
+import { useRoomDeletion } from './hooks/use-room-deletion';
 
 import type { IRoom } from './types';
 
-const RoomCreateManagement = () => {
-  // Dialog control hooks for add/edit and delete room modals
-  const addRoomDialog = useBoolean();
-  const deleteRoomDialog = useBoolean();
-  const [deleteRoom, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteRoomMutation,
-  });
-  const { confirmWithUndo } = useConfirmWithUndo();
-
-  // State for managing selected room and room data
+export default function RoomCreateManagement() {
+  const form = useBoolean();
+  const deletion = useRoomDeletion();
   const [selectedRoom, setSelectedRoom] = useState<IRoom | null>(null);
-
   const handleClose = () => {
-    addRoomDialog.onFalse();
+    form.onFalse();
     setSelectedRoom(null);
   };
-
   return (
     <Box
       sx={{
@@ -62,7 +50,7 @@ const RoomCreateManagement = () => {
             <InstituteFieldFormattingPopover scope="rooms" />
             <Button
               variant="contained"
-              onClick={addRoomDialog.onTrue}
+              onClick={form.onTrue}
               startIcon={<Add />}
               size="small"
               sx={{
@@ -74,78 +62,33 @@ const RoomCreateManagement = () => {
           </Stack>
         }
       />
-
-      {addRoomDialog.value && (
-        <RoomForm open={addRoomDialog} onClose={handleClose} editData={selectedRoom} />
-      )}
-
+      {form.value && <RoomForm open={form} onClose={handleClose} editData={selectedRoom} />}
       <RoomTable
-        onDelete={(data) => {
-          setSelectedRoom(data);
-          deleteRoomDialog.onTrue();
-        }}
-        onEdit={(data) => {
-          setSelectedRoom(data);
-          addRoomDialog.onTrue();
+        onDelete={deletion.requestDelete}
+        onEdit={(room) => {
+          setSelectedRoom(room);
+          form.onTrue();
         }}
       />
-
       <ConfirmDialog
-        open={deleteRoomDialog.value}
+        open={Boolean(deletion.selection)}
         disableBackdropClick
-        onClose={() => {
-          setSelectedRoom(null);
-          deleteRoomDialog.onFalse();
-        }}
+        onClose={deletion.close}
         title="Delete Room?"
         content={
           <>
-            Are you sure you want to delete room <strong>{selectedRoom?.roomName}</strong>?
+            Are you sure you want to delete room{' '}
+            <strong>{deletion.selection?.room.roomName}</strong>?
           </>
         }
         action={
           <LoadingButton
-            loading={isDeleteLoading}
+            loading={deletion.isLoading}
             variant="contained"
             color="error"
             size="small"
             startIcon={<Iconify icon={GlobalIcons.delete} />}
-            onClick={async () => {
-              const roomToDelete = selectedRoom;
-              let deletedRoomIndex = -1;
-
-              confirmWithUndo({
-                item: roomToDelete,
-                message: `Room "${roomToDelete?.roomName}" deleted successfully`,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    roomsApi.util.updateQueryData('getRooms', undefined, (draft: any) => {
-                      const targetArray = Array.isArray(draft) ? draft : draft?.items;
-                      if (!targetArray) return;
-                      const index = targetArray.findIndex(
-                        (item: any) => item.id === roomToDelete?.id
-                      );
-                      deletedRoomIndex = index;
-                      setDeleteIndex(index);
-                      if (index !== -1) {
-                        targetArray.splice(index, 1);
-                      }
-                    })
-                  ),
-                onUndoRestore: (dispatchFn) => {
-                  dispatchFn(
-                    roomsApi.util.updateQueryData('getRooms', undefined, (draft: any) => {
-                      const targetArray = Array.isArray(draft) ? draft : draft?.items;
-                      if (!targetArray || deletedRoomIndex === -1 || !roomToDelete) return;
-                      targetArray.splice(deletedRoomIndex, 0, roomToDelete);
-                    })
-                  );
-                },
-                onCommit: () => deleteRoom(roomToDelete?.id),
-              });
-              deleteRoomDialog.onFalse();
-              setSelectedRoom(null);
-            }}
+            onClick={deletion.remove}
           >
             Delete room
           </LoadingButton>
@@ -153,6 +96,4 @@ const RoomCreateManagement = () => {
       />
     </Box>
   );
-};
-
-export default RoomCreateManagement;
+}

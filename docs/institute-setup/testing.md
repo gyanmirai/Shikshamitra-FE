@@ -3,7 +3,7 @@ module: institute-setup
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-10-27
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -18,6 +18,14 @@ Uppercase coverage checks ASCII and authoritative Unicode previews, saved mode 4
 The synthetic production-screen fixture under `e2e/fixtures/academic-field-formatting/` supports responsive and theme checks without accessing school data.
 Run its focused Playwright configuration, then perform the final smoke in the Codex in-app browser.
 The [backend testing guide](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md#academic-field-formatting) owns tenant, permission, and authoritative create-time tests.
+
+## Performance regressions
+
+Run the focused Vitest suites under `RoomCreateManagement`, `basic-information`, `school-identity/hooks`, `reports/hooks`, `redux/InstituteSetup`, and `use-academic-setup-workspace.test.tsx`.
+They exercise real RTK Query cache behavior, page/search/filter arguments, independent Undo operations, multipart and Blob transport, failed-save drafts, selected-year hierarchy and pending-only report polling.
+Run `npm run ts` and zero-warning ESLint over changed source files.
+The ignored `.artifacts/institute-setup-performance/browser` fixture uses production screens and generated data, including 1,201 rooms; its smoke checks establish local frontend behavior only.
+Finish interactive verification in the Codex in-app browser and keep screenshots and logs out of commits.
 
 ## Reports
 
@@ -105,6 +113,21 @@ The existing shift form emits React warnings about nested block elements inside 
 
 Capacity regressions in `room-capacity.test.tsx` and `room-capacity-race.test.tsx` use the real forms, Redux and RTK Query with controlled HTTP responses. They cover immediate full-floor feedback, blocked native submission, permission-aware building editing, save/cancel/failure recovery, retained room details, same-floor room edits, unchanged full limits, refresh retry and server conflicts. Start the synthetic browser fixture with `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vite/bin/vite.js --config e2e/fixtures/room-capacity/vite.config.mts`; it uses synthetic HTTP data and never writes school records. Run the focused Playwright spec in `e2e/institute-setup/room-capacity.spec.ts`, then finish with the Codex in-app browser. Keep evidence in ignored `.artifacts/room-capacity/`. This does not establish deployed backend acceptance.
 
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/setting/RoomManagement/BuildingManagement --pool=threads` for building-floor validation, exact-capacity and unused-capacity reductions, rejected-save draft retention, successful retry, supported error envelopes and recovery after refreshing room counts.
+Final Codex browser acceptance should cover invalid reductions without a write, a capacity conflict after opening the form, failed and successful usage refresh, retained values, corrected submission and interaction locking during a pending save.
+Use controlled sample responses or disposable data and keep browser evidence in ignored `.artifacts/`; these UI checks do not establish staging deployment.
+
 Run `node node_modules/vitest/vitest.mjs run src/screens/setting/RoomManagement/RoomCreateManagement` for layout validation, legacy partial grids, dynamic column fields, per-column stepper limits, separate preview dialogs, zoom, Escape, draft/focus restoration, reusable feature creation, failed-save preservation and successful retry. The tests use real components and RTK Query with controlled network responses.
+
+Focused room-layout regressions live in these suites under `src/screens/setting/RoomManagement/RoomCreateManagement/`:
+
+| Test path | Coverage |
+| --- | --- |
+| `src/screens/setting/RoomManagement/RoomCreateManagement/services/room-layout.test.ts` | Zero values, explicit empty layouts, retained rows, derived totals and invalid numeric inputs |
+| `src/screens/setting/RoomManagement/RoomCreateManagement/components/room-zero-layout.test.tsx` | Zero-column saves, zero-student previews, positive restoration and reopening a saved zero-value room |
+| `src/screens/setting/RoomManagement/RoomCreateManagement/components/room-form-preview-focus.test.tsx` | First-error focus once per invalid attempt, usable preview after validation and focus on resubmission |
+
+Final Codex browser acceptance should save and reopen zero values through Add Room and Update Room, check the no-seating preview, restore positive seating, and open the preview after an invalid submission before retrying.
+Use disposable or controlled sample data and keep evidence in ignored `.artifacts/`; the [backend layout checks](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md#room-layout-and-features) own HTTP and persistence acceptance.
 
 The final Codex browser smoke used the production form with labelled sample data and a temporary sample API because the local authenticated API was unavailable. It verified column fields, calculated capacity, visual benches/seats, feature selection/reuse, submission, scrolling, light/dark themes and phone/tablet/desktop widths. This is UI evidence only; the [backend testing guide](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md#room-layout-and-features) owns database acceptance. Evidence stays in ignored `.codex/room-preview/`.

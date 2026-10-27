@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { UndoToast } from 'src/components/UndoToast';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -19,7 +19,6 @@ type UndoConfig<T> = {
 
 export function useConfirmWithUndo<T>() {
   const dispatch = useDispatch();
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [deleteIndex, setDeleteIndex] = useState<number>(-1);
 
   const confirmWithUndo = ({
@@ -37,7 +36,7 @@ export function useConfirmWithUndo<T>() {
 
     onOptimisticRemove(dispatch, customSetDeleteIndex);
 
-    timerRef.current = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
         const response = (await onCommit()) as any;
         if (response && response.error) {
@@ -58,7 +57,7 @@ export function useConfirmWithUndo<T>() {
           duration={duration}
           message={message}
           onUndo={() => {
-            if (timerRef.current) clearTimeout(timerRef.current);
+            clearTimeout(timer);
             onUndoRestore(dispatch, localDeleteIndex);
             setDeleteIndex(-1);
             toast.dismiss(t);

@@ -42,8 +42,8 @@ it.each([
     network.roomCount = 0;
     let attempts = 0;
     mswServer.use(
-      http.post('*/api/app/room', async ({ request }) => {
-        const body = (await request.json()) as Record<string, unknown>;
+      http.post('*/api/institute-setup/rooms', async ({ request }) => {
+        const body = JSON.parse(String((await request.formData()).get('input')));
         network.roomWrites.push(body);
         attempts += 1;
         if (attempts === 1) {
@@ -97,8 +97,8 @@ it('clears the full-floor warning when a floor with capacity is selected', async
 it('allows retry when refreshing a capacity rejection finds an available slot', async () => {
   network.roomCount = 0;
   mswServer.use(
-    http.post('*/api/app/room', async ({ request }) => {
-      const body = (await request.json()) as Record<string, unknown>;
+    http.post('*/api/institute-setup/rooms', async ({ request }) => {
+      const body = JSON.parse(String((await request.formData()).get('input')));
       network.roomWrites.push(body);
       return network.roomWrites.length === 1
         ? HttpResponse.json(

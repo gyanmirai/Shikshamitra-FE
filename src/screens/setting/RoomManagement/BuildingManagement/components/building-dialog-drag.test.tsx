@@ -4,10 +4,16 @@ import { act, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { renderBuildingForm, createBuildingFormStore } from './building-form-test-utils';
 
+vi.hoisted(() => {
+  process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
+});
+
 let store: ReturnType<typeof createBuildingFormStore>;
 beforeEach(() => {
   store = createBuildingFormStore();
-  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function rect(this: Element) {
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function rect(
+    this: Element
+  ) {
     const row = this.closest('[role="listitem"]');
     const index = row ? [...document.querySelectorAll('[role="listitem"]')].indexOf(row) : 0;
     const top = index * 160;

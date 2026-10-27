@@ -59,6 +59,7 @@ describe('building floor entry', () => {
         .getAllByRole('textbox', { name: /Floor name/i })
         .map((field) => (field as HTMLInputElement).value)
     ).toEqual(['First', 'Ground']);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledWith(null, true));
     expect(saved).toMatchObject({
@@ -83,6 +84,7 @@ describe('building floor entry', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove floor 1' }));
     const confirmation = screen.queryByRole('button', { name: 'Remove floor' });
     if (confirmation) fireEvent.click(confirmation);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledWith(null, true));
     expect(saved).toMatchObject({ totalFloors: 1, floorIdsToDelete: ['floor-a'] });
@@ -109,6 +111,7 @@ describe('building floor entry', () => {
     fireEvent.change(screen.getByRole('textbox', { name: /Building name/i }), {
       target: { value: 'Updated Block' },
     });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(finish).toBeDefined());
     expect(onClose).not.toHaveBeenCalled();
@@ -118,6 +121,7 @@ describe('building floor entry', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
     expect(screen.getByRole('textbox', { name: /Building name/i })).toHaveValue('Updated Block');
     expect(onClose).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledWith(null, true));
     expect(attempts).toBe(2);

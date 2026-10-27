@@ -104,8 +104,8 @@ it('allows editing a room that already occupies its full floor', async () => {
   fireEvent.change(screen.getByLabelText(/^Room name/), { target: { value: 'A101 revised' } });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  expect(network.roomWritePaths).toEqual(['/api/institute-setup/rooms/room-a']);
   expect(network.roomWrites[0]).toMatchObject({
-    id: 'room-a',
     roomName: 'A101 revised',
     floorId: 'floor-a',
   });

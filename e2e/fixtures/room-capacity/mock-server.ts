@@ -23,8 +23,22 @@ export function syntheticRoomServer(): Plugin {
         request.on('data', (chunk) => {
           raw += chunk;
         });
-        request.on('end', () => {
-          const result = fixture.respond(request.method ?? 'GET', path, raw ? JSON.parse(raw) : {});
+        request.on('end', async () => {
+          const contentType = request.headers['content-type'] ?? '';
+          const body = contentType.includes('multipart/form-data')
+            ? JSON.parse(
+                String(
+                  (
+                    await new Request('http://127.0.0.1:4326', {
+                      method: 'POST',
+                      headers: { 'content-type': contentType },
+                      body: raw,
+                    }).formData()
+                  ).get('input')
+                )
+              )
+            : raw ? JSON.parse(raw) : {};
+          const result = fixture.respond(request.method ?? 'GET', path, body);
           response.statusCode = result.status;
           response.end(JSON.stringify(result.json));
         });

@@ -33,7 +33,7 @@ export default function InstituteReportsScreen() {
       </Box>
       {preview && options.data?.reportTypes.some((definition) => definition.id === preview.reportType) && <ReportPreviewDrawer request={preview} onClose={() => workspace.setPreview(null)} onGenerate={workspace.generate} busy={exporting} canAdd={canAdd} />}
       {mode === 'ai' && canAdd && <InstituteAiDrawer permittedReportTypes={options.data?.reportTypes.map((definition) => definition.id) ?? []}
-        onClose={() => workspace.setMode('history')} onQueued={() => { workspace.history.refetch(); workspace.setMode('history'); }} />}
+        onClose={() => workspace.setMode('history')} onQueued={workspace.onQueued} />}
     </>}
   </Box>;
 }
