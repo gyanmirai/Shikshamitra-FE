@@ -53,6 +53,8 @@ export function PaginatedSearchSelect<
   FreeSolo extends boolean | undefined = undefined,
 >({
   label,
+  inputAriaLabelledBy,
+  inputAriaDescribedBy,
   name,
   required,
   fetchOptions,
@@ -206,6 +208,18 @@ export function PaginatedSearchSelect<
       renderInput={(params) => (
         <TextField
           {...params}
+          inputProps={{
+            ...params.inputProps,
+            'aria-labelledby': inputAriaLabelledBy ?? params.inputProps['aria-labelledby'],
+            'aria-describedby':
+              [
+                inputAriaDescribedBy,
+                params.inputProps['aria-describedby'],
+                searchError || helperText ? `${params.id}-helper-text` : undefined,
+              ]
+                .filter(Boolean)
+                .join(' ') || undefined,
+          }}
           label={label}
           name={name}
           required={required}

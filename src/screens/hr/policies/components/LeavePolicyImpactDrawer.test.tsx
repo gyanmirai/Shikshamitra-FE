@@ -34,11 +34,11 @@ const review: LeavePolicyImpactReview = {
   policyName: 'Annual leave',
   action: 'update',
   bucketSummary: 'Paid',
-  affectedEmployeeCount: 4,
-  affectedRequestCount: 3,
-  balanceImpactCount: 2,
-  payrollMonthRiskCount: 1,
-  assignmentConflictCount: 0,
+  affectedEmployeeCount: null,
+  affectedRequestCount: null,
+  balanceImpactCount: null,
+  payrollMonthRiskCount: null,
+  assignmentConflictCount: null,
   risks: [],
   requiresConfirmation: false,
 };
@@ -48,10 +48,11 @@ describe('Leave policy impact request feedback', () => {
     const onClose = vi.fn();
     render(<LeavePolicyImpactDrawer open review={review} archiving={false} onClose={onClose} />);
     expect(screen.getByText('Annual leave')).toBeInTheDocument();
-    expect(screen.getByText('4 staff')).toBeInTheDocument();
-    expect(screen.getByText('3 requests')).toBeInTheDocument();
-    expect(screen.getByText('2 balances')).toBeInTheDocument();
-    expect(screen.getByText('1 payroll risks')).toBeInTheDocument();
+    expect(screen.getByText('Staff: Not calculated')).toBeInTheDocument();
+    expect(screen.getByText('Requests: Not calculated')).toBeInTheDocument();
+    expect(screen.getByText('Balances: Not calculated')).toBeInTheDocument();
+    expect(screen.getByText('Payroll risks: Not calculated')).toBeInTheDocument();
+    expect(screen.getByText('Assignment conflicts: Not calculated')).toBeInTheDocument();
     expect(
       screen.queryByText(/Loading leave policy impact|Archiving leave policy/)
     ).not.toBeInTheDocument();
@@ -68,7 +69,7 @@ describe('Leave policy impact request feedback', () => {
     expect(screen.getByText('Archiving leave policy...').closest('[role="status"]')).toBeTruthy();
     expect(screen.queryByText(/Loading leave policy impact/)).not.toBeInTheDocument();
     expect(screen.getByText('Annual leave')).toBeInTheDocument();
-    expect(screen.getByText('4 staff')).toBeInTheDocument();
+    expect(screen.getByText('Staff: Not calculated')).toBeInTheDocument();
     expect(screen.getAllByRole('progressbar', { hidden: true })).toHaveLength(1);
     expect(screen.getByRole('button', { name: 'Close policy impact' })).toBeDisabled();
     expect(screen.getByRole('button', { name: /^Close$/ })).toBeDisabled();

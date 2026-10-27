@@ -153,6 +153,13 @@ Failures retain a Retry action, and navigation or changing month/year clears pen
 Policy workspaces show page-specific guidance, keep save errors next to the submit action, and search employee assignment targets through the server after two characters.
 Work calendars prevent all seven days from becoming weekly offs and constrain effective-date years to 1900 through 2100 before submission.
 The leave-policy impact drawer is read-only, and archive confirmation is a separate explicit action.
+Attendance advanced-rule disclosure preserves both draft values and the save payload; a separate cancelable reset lists the values it will replace with existing form defaults.
+Changing the selected work calendar preserves the explicit default-policy choice.
+Dirty policy drawers and the leave editor use Keep editing / Discard changes for local dismissal while retaining existing navigation guards and save locks.
+Saved leave rules open separately from the qualitative impact checklist, whose affected-record measures remain Not calculated until an authoritative server assessment exists.
+Leave create/duplicate, edit, set-default and archive/restore controls use their exact existing action grants.
+Assignment previews distinguish server-resolved current policies from selected proposed values; the proposed winner is not calculated in this panel.
+Blocking impact warnings and all returned assignment conflicts open immediately, with exact returned payroll and attendance-evaluation periods available for review.
 Policy tables query current and archived records independently with server-side search, count, and pagination.
 The leave-policy workspace can restore an archived policy as a draft, while employee and assignment selectors continue to request active policies only.
 Policy audit entries omit unchanged values and missing editor metadata, render weekly-off numbers as weekday names, and show semantic holiday changes and real holiday-summary counts.

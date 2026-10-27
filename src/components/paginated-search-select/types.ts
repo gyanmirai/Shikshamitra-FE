@@ -15,6 +15,8 @@ export type PaginatedSearchSelectProps<
   'options' | 'loading' | 'renderInput' | 'onInputChange'
 > & {
   label: string;
+  inputAriaLabelledBy?: string;
+  inputAriaDescribedBy?: string;
   name?: string;
   required?: boolean;
   placeholder?: string;

@@ -28,7 +28,18 @@ vi.mock('./components/LeavePoliciesPanel', () => ({ LeavePoliciesPanel: () => nu
 vi.mock('./components/PolicyVersionDrawer', () => ({ PolicyVersionDrawer: () => null }));
 vi.mock('./components/ManualHolidayDialog', () => ({ ManualHolidayDialog: () => null }));
 vi.mock('./components/PayrollPolicyDrawer', () => ({ PayrollPolicyDrawer: () => null }));
-vi.mock('./components/CalendarPolicyDrawer', () => ({ CalendarPolicyDrawer: () => null }));
+vi.mock('./components/CalendarPolicyDrawer', () => ({
+  CalendarPolicyDrawer: ({ ctx }: any) => (
+    <>
+      <button type="button" onClick={ctx.closeDrawer}>
+        Header close
+      </button>
+      <button type="button" onClick={ctx.closeDrawer}>
+        Footer cancel
+      </button>
+    </>
+  ),
+}));
 vi.mock('./components/AttendancePolicyDrawer', () => ({ AttendancePolicyDrawer: () => null }));
 vi.mock('./components/AssignmentPolicyDrawer', () => ({ AssignmentPolicyDrawer: () => null }));
 
@@ -90,6 +101,53 @@ beforeEach(() => {
 });
 
 describe('policy workspace draft navigation', () => {
+  it.each(['Header close', 'Footer cancel', 'Escape', 'Backdrop'])(
+    'protects dirty drafts through %s and only discards explicitly',
+    async (route) => {
+      const { rerender, store } = setup('calendar');
+      mocks.ctx.calendarForm = { name: 'Changed' };
+      rerender();
+      const dismiss = () => {
+        if (route === 'Escape')
+          fireEvent.keyDown(document.querySelector('.MuiDrawer-root')!, {
+            key: 'Escape',
+            code: 'Escape',
+          });
+        else if (route === 'Backdrop')
+          fireEvent.click(document.querySelector('.MuiDrawer-root .MuiBackdrop-root')!);
+        else fireEvent.click(screen.getByRole('button', { name: route }));
+      };
+      dismiss();
+      expect(mocks.ctx.closeDrawer).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+      await waitFor(() =>
+        expect(
+          screen.queryByRole('dialog', { name: 'Discard Unsaved Changes?' })
+        ).not.toBeInTheDocument()
+      );
+      expect(mocks.ctx.calendarForm.name).toBe('Changed');
+      expect(store.getState().confirmPopup.isChanges).toBe(true);
+      dismiss();
+      fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+      expect(mocks.ctx.closeDrawer).toHaveBeenCalledOnce();
+      mocks.ctx.drawer = null;
+      rerender();
+      expect(store.getState().confirmPopup.isChanges).toBe(false);
+    }
+  );
+
+  it('closes a clean draft without prompting and locks every close during operations', () => {
+    const { rerender } = setup('calendar');
+    fireEvent.click(screen.getByRole('button', { name: 'Header close' }));
+    expect(mocks.ctx.closeDrawer).toHaveBeenCalledOnce();
+    mocks.ctx.closeDrawer.mockClear();
+    mocks.ctx.calendarForm = { name: 'Changed' };
+    mocks.ctx.isPolicyOperationActive = true;
+    rerender();
+    fireEvent.click(screen.getByRole('button', { name: 'Footer cancel' }));
+    expect(mocks.ctx.closeDrawer).not.toHaveBeenCalled();
+    expect(screen.queryByText('Discard Unsaved Changes?')).not.toBeInTheDocument();
+  });
   it.each(['calendar', 'attendance', 'payroll', 'assignment'])(
     'retains a changed %s draft when leaving is declined',
     async (kind) => {

@@ -295,11 +295,12 @@ describe('PolicyImpactDrawer summary rendering', () => {
     expect(screen.getByText(/Keyur Siddhapura/)).toBeInTheDocument();
     expect(screen.getByText(/Reference ID: ASSIGNME/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'View conflict' }));
-    expect(closeImpactDrawer).toHaveBeenCalledOnce();
-    expect(openAssignmentDrawer).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'assignment-1', targetDisplayName: 'Keyur Siddhapura' }),
-      'view'
+    expect(closeImpactDrawer).not.toHaveBeenCalled();
+    expect(openAssignmentDrawer).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog', { name: 'Conflicting assignment' })).toHaveTextContent(
+      'Keyur Siddhapura'
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Return to impact' }));
   });
 
   it('formats effective assignment conflict candidate reasons for admins', () => {

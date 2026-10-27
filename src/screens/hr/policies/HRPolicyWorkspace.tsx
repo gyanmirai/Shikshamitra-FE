@@ -12,13 +12,14 @@
 import type { RootState } from 'src/redux/store';
 
 import { useRouter } from 'src/routes/hooks';
-import React, { useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import React, { useRef, useState, useEffect } from 'react';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { hasNavigationPermission } from 'src/utils/permissions';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { Box, Alert, Drawer, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Alert, Button, Drawer, LinearProgress } from '@mui/material';
 
 import { PolicyTable } from './components/PolicyTable';
 import { CalendarsTab } from './components/CalendarsTab';
@@ -64,6 +65,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       hasNavigationPermission(permissions, destinations[item.value].permission)
   );
   const ctx = useHRPolicyWorkspace({ focus, tabs });
+  const [discardOpen, setDiscardOpen] = useState(false);
   const dispatch = useDispatch();
   const draftForms = {
     calendar: ctx.calendarForm,
@@ -76,10 +78,23 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     drawer: typeof ctx.drawer;
     snapshot: string | undefined;
   } | null>(null);
+  const isDirty = Boolean(
+    ctx.drawer &&
+    ctx.drawer.mode !== 'view' &&
+    draftBaseline.current?.drawer === ctx.drawer &&
+    draftBaseline.current.snapshot !== draftSnapshot
+  );
+  const requestClose = () => {
+    if (ctx.isPolicyOperationActive) return;
+    if (isDirty) setDiscardOpen(true);
+    else ctx.closeDrawer();
+  };
+  const drawerContext = { ...ctx, closeDrawer: requestClose };
 
   // Register drafts with the existing tab, link, refresh and browser-back guards.
   useEffect(() => {
     if (!ctx.drawer || ctx.drawer.mode === 'view') {
+      setDiscardOpen(false);
       if (draftBaseline.current) dispatch(setIsChanges(false));
       draftBaseline.current = null;
       return;
@@ -100,7 +115,6 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const {
     tab,
     drawer,
-    closeDrawer,
     isLoading,
     academicYearId,
     activePolicyOperation,
@@ -180,15 +194,43 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       <Drawer
         anchor="right"
         open={Boolean(drawer)}
-        onClose={closeDrawer}
+        onClose={requestClose}
         transitionDuration={drawerTransitionDuration}
         PaperProps={{ sx: { width: { xs: '100%', sm: 'min(1180px, 92vw)' }, maxWidth: '100%' } }}
       >
-        {drawer?.kind === 'calendar' ? <CalendarPolicyDrawer ctx={ctx} /> : null}
-        {drawer?.kind === 'payroll' ? <PayrollPolicyDrawer ctx={ctx} /> : null}
-        {drawer?.kind === 'attendance' ? <AttendancePolicyDrawer ctx={ctx} /> : null}
-        {drawer?.kind === 'assignment' ? <AssignmentPolicyDrawer ctx={ctx} /> : null}
+        {drawer?.kind === 'calendar' ? <CalendarPolicyDrawer ctx={drawerContext} /> : null}
+        {drawer?.kind === 'payroll' ? <PayrollPolicyDrawer ctx={drawerContext} /> : null}
+        {drawer?.kind === 'attendance' ? <AttendancePolicyDrawer ctx={drawerContext} /> : null}
+        {drawer?.kind === 'assignment' ? <AssignmentPolicyDrawer ctx={drawerContext} /> : null}
       </Drawer>
+      <ConfirmDialog
+        open={discardOpen}
+        title="Discard Unsaved Changes?"
+        content="Your policy changes have not been saved. Discarding them closes this editor."
+        icon="warning"
+        cancelText="Keep editing"
+        disableBackdropClick
+        disableCancel={ctx.isPolicyOperationActive}
+        disableEscapeKeyDown={ctx.isPolicyOperationActive}
+        onClose={() => {
+          if (!ctx.isPolicyOperationActive) setDiscardOpen(false);
+        }}
+        action={
+          <Button
+            size="small"
+            variant="contained"
+            color="error"
+            disabled={ctx.isPolicyOperationActive}
+            onClick={() => {
+              if (ctx.isPolicyOperationActive) return;
+              setDiscardOpen(false);
+              ctx.closeDrawer();
+            }}
+          >
+            Discard changes
+          </Button>
+        }
+      />
 
       {/* Dialogs and overlay drawers */}
       <ManualHolidayDialog ctx={ctx} />

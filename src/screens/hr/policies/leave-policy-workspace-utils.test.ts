@@ -9,6 +9,20 @@ import {
 } from './leave-policy-workspace-utils';
 
 describe('leave policy workspace adapter', () => {
+  it.each([0, 1, 80])(
+    'never derives affected populations from a %i-day entitlement',
+    (leaveCount) => {
+      const review = buildLeavePolicyImpactReview(
+        { id: 'policy-1', rules: [{ paidType: 'Paid', leaveCount, encashmentAllowed: true }] },
+        'archive'
+      );
+      expect(review.affectedEmployeeCount).toBeNull();
+      expect(review.affectedRequestCount).toBeNull();
+      expect(review.balanceImpactCount).toBeNull();
+      expect(review.payrollMonthRiskCount).toBeNull();
+      expect(review.assignmentConflictCount).toBeNull();
+    }
+  );
   it('maps leave policy names and paid buckets for the policy workspace', () => {
     expect(getLeavePolicyTitle({ policyTitle: 'Annual casual leave' } as any)).toBe(
       'Annual casual leave'

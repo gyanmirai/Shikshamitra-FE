@@ -1,6 +1,6 @@
 'use client';
 
-import type { HrPolicyAssignment, HrPolicyAssignmentConflict } from 'src/redux/hr/hr-policy-api';
+import type { HrPolicyAssignmentConflict } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
 import { GlobalIcons } from 'src/utils/icons';
@@ -14,11 +14,15 @@ import {
   Stack,
   Button,
   Drawer,
+  Dialog,
   Divider,
   TableRow,
   TableCell,
   Accordion,
   Typography,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -43,30 +47,16 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     previewPolicyAssignmentImpactState,
     closeImpactDrawer,
     confirmPendingImpactAction,
-    openAssignmentDrawer,
   } = ctx;
 
-  const openConflictingAssignment = (conflict: HrPolicyAssignmentConflict) => {
-    closeImpactDrawer();
-    openAssignmentDrawer(
-      {
-        id: conflict.assignmentId,
-        academicYearId: impactPreview?.academicYearId || '',
-        targetType: conflict.targetType,
-        targetKey: conflict.targetKey,
-        targetDisplayName: conflict.targetDisplayName,
-        payrollPolicyId: conflict.payrollPolicyId,
-        attendancePolicyId: conflict.attendancePolicyId,
-        leavePolicyId: conflict.leavePolicyId || '',
-        effectiveFrom: conflict.effectiveFrom,
-        effectiveTo: conflict.effectiveTo,
-        priority: conflict.priority,
-        isActive: true,
-        assignmentReason: null,
-      } as HrPolicyAssignment,
-      'view'
-    );
-  };
+  const [selectedConflict, setSelectedConflict] = React.useState<HrPolicyAssignmentConflict | null>(
+    null
+  );
+  const openConflictingAssignment = (conflict: HrPolicyAssignmentConflict) =>
+    setSelectedConflict(conflict);
+  React.useEffect(() => {
+    if (!impactDrawerOpen) setSelectedConflict(null);
+  }, [impactDrawerOpen]);
 
   const displayedWarnings = [
     ...(impactPreview?.warnings ?? []),
@@ -108,7 +98,17 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       <Divider />
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
         {/* -- Sticky top: alerts + chips + accordions -- */}
-        <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5, flexShrink: 0 }}>
+        <Box
+          sx={{
+            px: 2.5,
+            pt: 2.5,
+            pb: 1.5,
+            minHeight: 0,
+            overflow: 'auto',
+            flexShrink: 1,
+            maxHeight: impactPreview ? '55%' : undefined,
+          }}
+        >
           <Stack spacing={1.5}>
             {impactPreviewError ? <Alert severity="error">{impactPreviewError}</Alert> : null}
             {isPreviewLoading ? (
@@ -155,6 +155,8 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                 {/* Warnings & Errors accordion */}
                 {warningCount > 0 ? (
                   <Accordion
+                    key={`warnings-${impactPreview.confirmationToken || impactPreview.action}-${hasBlockingWarnings}`}
+                    defaultExpanded={hasBlockingWarnings}
                     disableGutters
                     elevation={0}
                     sx={{
@@ -241,6 +243,8 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                 {/* Effective assignment conflicts accordion */}
                 {conflictCount > 0 ? (
                   <Accordion
+                    key={`conflicts-${impactPreview.confirmationToken || impactPreview.action}`}
+                    defaultExpanded
                     disableGutters
                     elevation={0}
                     sx={{
@@ -271,39 +275,37 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                     </AccordionSummary>
                     <AccordionDetails sx={{ pt: 0, pb: 1.5, px: 2 }}>
                       <Stack spacing={1}>
-                        {(impactPreview.effectiveAssignmentConflicts ?? [])
-                          .slice(0, 5)
-                          .map((conflict) => (
-                            <Box
-                              key={`${conflict.employeeId}-${conflict.date}`}
-                              sx={{
-                                p: 1.25,
-                                borderRadius: 1,
-                                bgcolor: 'background.paper',
-                                border: (theme) =>
-                                  `1px solid ${(theme.vars || theme).palette.divider}`,
-                              }}
-                            >
-                              <Typography variant="body2" fontWeight={600} color="text.primary">
-                                {conflict.employeeName || conflict.employeeId}
-                              </Typography>
-                              <Typography variant="caption" display="block" color="text.secondary">
-                                Winner:{' '}
-                                {conflict.winningAssignment?.targetDisplayName ||
-                                  conflict.winningAssignment?.targetKey ||
-                                  '-'}
-                              </Typography>
-                              <Typography variant="caption" display="block" color="text.secondary">
-                                Candidates:{' '}
-                                {conflict.candidateAssignments
-                                  .map(
-                                    (candidate) =>
-                                      `${candidate.targetDisplayName || candidate.targetKey} (${toLabel(candidate.status)}: ${toLabel(candidate.skipReason)})`
-                                  )
-                                  .join(', ')}
-                              </Typography>
-                            </Box>
-                          ))}
+                        {(impactPreview.effectiveAssignmentConflicts ?? []).map((conflict) => (
+                          <Box
+                            key={`${conflict.employeeId}-${conflict.date}`}
+                            sx={{
+                              p: 1.25,
+                              borderRadius: 1,
+                              bgcolor: 'background.paper',
+                              border: (theme) =>
+                                `1px solid ${(theme.vars || theme).palette.divider}`,
+                            }}
+                          >
+                            <Typography variant="body2" fontWeight={600} color="text.primary">
+                              {conflict.employeeName || conflict.employeeId}
+                            </Typography>
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Winner:{' '}
+                              {conflict.winningAssignment?.targetDisplayName ||
+                                conflict.winningAssignment?.targetKey ||
+                                '-'}
+                            </Typography>
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Candidates:{' '}
+                              {conflict.candidateAssignments
+                                .map(
+                                  (candidate) =>
+                                    `${candidate.targetDisplayName || candidate.targetKey} (${toLabel(candidate.status)}: ${toLabel(candidate.skipReason)})`
+                                )
+                                .join(', ')}
+                            </Typography>
+                          </Box>
+                        ))}
                       </Stack>
                     </AccordionDetails>
                   </Accordion>
@@ -318,6 +320,46 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           <>
             <Divider />
             <Box sx={{ flex: 1, overflow: 'auto', px: 2.5, py: 2 }}>
+              <Stack spacing={1.5} sx={{ mb: 2 }}>
+                {[
+                  [
+                    'Affected Payroll Periods',
+                    impactPreview.affectedPayrollMonths,
+                    'Review and recompute required where indicated',
+                  ],
+                  [
+                    'Locked Payroll Periods',
+                    impactPreview.lockedPayrollMonths,
+                    'Blocked: locked payroll must remain unchanged',
+                  ],
+                  [
+                    'Attendance Evaluation Periods',
+                    impactPreview.affectedAttendanceEvaluationMonths,
+                    'Attendance evaluation may need recomputation',
+                  ],
+                ].map(([title, periods, description]) => (
+                  <Box key={String(title)}>
+                    <Typography variant="subtitle2">{String(title)}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {String(description)}
+                    </Typography>
+                    {Array.isArray(periods) && periods.length ? (
+                      periods.map((period) => (
+                        <Typography
+                          variant="body2"
+                          key={`${period.year}-${period.month}-${period.status}`}
+                        >
+                          {period.label ||
+                            `${period.year}-${String(period.month).padStart(2, '0')}`}{' '}
+                          — {period.status || 'Status unavailable'} ({period.count} records)
+                        </Typography>
+                      ))
+                    ) : (
+                      <Typography variant="body2">None reported by this preview.</Typography>
+                    )}
+                  </Box>
+                ))}
+              </Stack>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Affected Staff&nbsp;
                 <Typography component="span" variant="caption" color="text.secondary">
@@ -390,6 +432,50 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           </>
         ) : null}
       </Box>
+      <Dialog
+        open={Boolean(selectedConflict)}
+        onClose={() => setSelectedConflict(null)}
+        aria-labelledby="assignment-conflict-title"
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle id="assignment-conflict-title">Conflicting assignment</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1}>
+            <Typography>
+              {selectedConflict?.targetDisplayName || selectedConflict?.targetKey}
+            </Typography>
+            <Typography>Scope: {toLabel(selectedConflict?.targetType || '')}</Typography>
+            <Typography>
+              Effective: {formatDate(selectedConflict?.effectiveFrom)} —{' '}
+              {selectedConflict?.effectiveTo
+                ? formatDate(selectedConflict.effectiveTo)
+                : 'No end date'}
+            </Typography>
+            <Typography>Priority: {selectedConflict?.priority}</Typography>
+            <Typography>
+              Payroll: {selectedConflict?.payrollPolicyName || selectedConflict?.payrollPolicyId}
+            </Typography>
+            <Typography>
+              Attendance:{' '}
+              {selectedConflict?.attendancePolicyName || selectedConflict?.attendancePolicyId}
+            </Typography>
+            <Typography>
+              Leave:{' '}
+              {selectedConflict?.leavePolicyName ||
+                selectedConflict?.leavePolicyId ||
+                'Default fallback'}
+            </Typography>
+            <Typography variant="body2">
+              Your proposed changes remain in the editor. Return to the impact preview to continue
+              reviewing them.
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedConflict(null)}>Return to impact</Button>
+        </DialogActions>
+      </Dialog>
     </Drawer>
   );
 }

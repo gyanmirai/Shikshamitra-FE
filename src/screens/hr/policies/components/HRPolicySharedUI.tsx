@@ -22,6 +22,7 @@ import {
   Divider,
   Backdrop,
   TableRow,
+  TextField,
   TableCell,
   Typography,
   IconButton,
@@ -117,23 +118,14 @@ export function PolicyName({
 export function InfoTooltipIcon({ title, label }: { title: string; label?: string }) {
   return (
     <CustomTooltip arrow placement="right" sx={{ textAlign: 'justify' }} title={title}>
-      {label ? (
-        <IconButton
-          size="small"
-          aria-label={label}
-          sx={{ p: 0.5, color: 'info.main', flexShrink: 0 }}
-        >
-          <Iconify icon="lucide:info" width={16} height={16} aria-hidden />
-        </IconButton>
-      ) : (
-        <Iconify
-          icon="lucide:info"
-          sx={{ cursor: 'pointer' }}
-          color="info.main"
-          width={16}
-          height={16}
-        />
-      )}
+      <IconButton
+        type="button"
+        size="small"
+        aria-label={label || `Help: ${title}`}
+        sx={{ p: 0.5, color: 'info.main', flexShrink: 0 }}
+      >
+        <Iconify icon="lucide:info" width={16} height={16} aria-hidden />
+      </IconButton>
     </CustomTooltip>
   );
 }
@@ -423,26 +415,61 @@ export function DrawerField({
   help,
   helperText,
   children,
+  inputId,
 }: {
   label: React.ReactNode;
   help?: string;
   helperText?: React.ReactNode;
   children: React.ReactNode;
+  inputId?: string;
 }) {
+  const generatedId = React.useId();
+  const id = inputId || generatedId;
+  const labelId = `${id}-label`;
+  const descriptionId = helperText || help ? `${id}-description` : undefined;
+  const fields = React.Children.map(children, (child) => {
+    if (!React.isValidElement(child) || child.type !== TextField) return child;
+    const field = child as React.ReactElement<React.ComponentProps<typeof TextField>>;
+    return React.cloneElement(field, {
+      id,
+      inputProps: {
+        ...field.props.inputProps,
+        'aria-labelledby': labelId,
+        'aria-describedby':
+          [
+            descriptionId,
+            field.props.helperText ? `${id}-helper-text` : undefined,
+            field.props.inputProps?.['aria-describedby'],
+          ]
+            .filter(Boolean)
+            .join(' ') || undefined,
+      },
+    });
+  });
   return (
     <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-      <Typography
-        component="label"
-        variant="caption"
-        color="text.secondary"
-        sx={{ lineHeight: 1.2 }}
-      >
-        <FieldLabel label={label} help={help} />
-      </Typography>
-      {children}
-      {helperText ? (
-        <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.35 }}>
-          {helperText}
+      <Stack direction="row" spacing={0.5} alignItems="center">
+        <Typography
+          component="label"
+          id={labelId}
+          htmlFor={id}
+          variant="caption"
+          color="text.secondary"
+          sx={{ lineHeight: 1.2 }}
+        >
+          {label}
+        </Typography>
+        {help ? <InfoTooltipIcon title={help} /> : null}
+      </Stack>
+      {fields}
+      {helperText || help ? (
+        <Typography
+          id={descriptionId}
+          variant="caption"
+          color="text.secondary"
+          sx={{ lineHeight: 1.35 }}
+        >
+          {helperText || help}
         </Typography>
       ) : null}
     </Stack>
@@ -466,10 +493,17 @@ export function DrawerSelectField({
   children: React.ReactNode;
   disabled?: boolean;
 }) {
+  const id = React.useId();
   return (
-    <DrawerField label={label} help={help}>
+    <DrawerField label={label} help={help} inputId={id}>
       <FormControl fullWidth size="small" disabled={disabled}>
-        <Select value={value} onChange={onChange}>
+        <Select
+          id={id}
+          labelId={`${id}-label`}
+          inputProps={{ 'aria-describedby': help ? `${id}-description` : undefined }}
+          value={value}
+          onChange={onChange}
+        >
           {children}
         </Select>
       </FormControl>
@@ -511,8 +545,9 @@ export function DrawerSwitchField({
             onChange={(event) => onChange(event.target.checked)}
           />
         }
-        label={<FieldLabel label={label} help={help} />}
+        label={label}
       />
+      {help ? <InfoTooltipIcon title={help} /> : null}
     </Box>
   );
 }

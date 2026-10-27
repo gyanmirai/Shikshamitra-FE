@@ -57,7 +57,7 @@ function getLeavePolicyName(item: any): string {
 
 // --- AssignmentPreviewPanel ----------------------------------------------------
 
-function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
+export function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
     assignmentForm,
     assignmentPreview,
@@ -102,6 +102,12 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             {formatRange(assignmentForm.effectiveFrom, assignmentForm.effectiveTo)}
           </Typography>
         </Box>
+        <Typography variant="subtitle2">After this assignment (proposal)</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Selected {toLabel(assignmentForm.targetType)} assignment, priority{' '}
+          {assignmentForm.priority || '0'}. The effective winner after saving is not calculated
+          here. Use Preview impact to review conflicts.
+        </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap">
           <Chip
             size="small"
@@ -132,27 +138,47 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         </Stack>
         <Box>
           <Typography variant="caption" color="text.secondary">
-            Current effective policy
+            Currently effective on {assignmentForm.effectiveFrom || 'selected date'}
           </Typography>
-          <Typography variant="body2" fontWeight={700}>
-            {assignmentPreview?.policySource
-              ? `${toLabel(assignmentPreview.policySource)} scope`
-              : `${toLabel(assignmentForm.targetType)} scope`}
-            {assignmentPreview?.matchedPriority != null
-              ? ` - Priority ${assignmentPreview.matchedPriority}`
-              : assignmentForm.priority
-                ? ` - Priority ${assignmentForm.priority}`
-                : ''}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {assignmentPreview?.matchedTargetDisplayName ||
-              assignmentPreview?.matchedTargetKey ||
-              assignmentForm.targetDisplayName ||
-              assignmentForm.targetKey ||
-              'No matching scope selected yet'}
-          </Typography>
+          {assignmentPreviewLoading ? (
+            <Typography variant="body2">Resolving current policies...</Typography>
+          ) : assignmentPreviewError ? (
+            <Typography variant="body2">Current policies unavailable.</Typography>
+          ) : !assignmentPreview ? (
+            <Typography variant="body2">Current policies not resolved.</Typography>
+          ) : (
+            <>
+              <Typography variant="body2">
+                Payroll: {assignmentPreview.payrollPolicy?.name || 'Unknown'}
+              </Typography>
+              <Typography variant="body2">
+                Attendance: {assignmentPreview.attendancePolicy?.name || 'Unknown'}
+              </Typography>
+              <Typography variant="body2">
+                Leave:{' '}
+                {assignmentPreview.leavePolicy
+                  ? getLeavePolicyName(assignmentPreview.leavePolicy)
+                  : 'Unknown'}
+              </Typography>
+              <Typography variant="body2" fontWeight={700}>
+                {assignmentPreview?.policySource
+                  ? `${toLabel(assignmentPreview.policySource)} scope`
+                  : 'Unknown source'}
+                {assignmentPreview?.matchedPriority != null
+                  ? ` - Priority ${assignmentPreview.matchedPriority}`
+                  : ''}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {assignmentPreview?.matchedTargetDisplayName ||
+                  assignmentPreview?.matchedTargetKey ||
+                  'Default policy fallback'}
+              </Typography>
+            </>
+          )}
         </Box>
-        {assignmentPreview?.resolutionSteps?.length ? (
+        {!assignmentPreviewLoading &&
+        !assignmentPreviewError &&
+        assignmentPreview?.resolutionSteps?.length ? (
           <Box>
             <SectionTable
               tableId="hr-assignment-resolution"
@@ -183,6 +209,11 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         <Typography variant="caption" color="text.secondary">
           Precedence: Staff &gt; Group &gt; Default
         </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Priority applies within the same scope: higher numbers win, then the later effective start
+          date. A staff assignment takes precedence over group assignments regardless of their
+          priority.
+        </Typography>
       </Stack>
     </Paper>
   );
@@ -198,6 +229,7 @@ function AssignmentTargetPicker({
   disabled?: boolean;
 }) {
   const { assignmentForm, setAssignmentForm, employeeOptions, groupOptions } = ctx;
+  const targetId = React.useId();
 
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
@@ -225,8 +257,10 @@ function AssignmentTargetPicker({
 
   if (assignmentForm.targetType === 'employee') {
     return (
-      <DrawerField label="Staff *">
+      <DrawerField label="Staff *" inputId={targetId}>
         <PaginatedSearchSelect
+          id={targetId}
+          inputAriaLabelledBy={`${targetId}-label`}
           label=""
           placeholder="Search staff..."
           fetchOptions={async (query, page) => {
@@ -279,8 +313,9 @@ function AssignmentTargetPicker({
   }
 
   return (
-    <DrawerField label="Group *">
+    <DrawerField label="Group *" inputId={targetId}>
       <Autocomplete
+        id={targetId}
         key="group-target-autocomplete"
         options={groupOptions}
         getOptionLabel={optionLabel}
@@ -302,7 +337,12 @@ function AssignmentTargetPicker({
           );
         }}
         renderInput={(params) => (
-          <TextField {...params} size="small" placeholder="Select group..." />
+          <TextField
+            {...params}
+            size="small"
+            placeholder="Select group..."
+            inputProps={{ ...params.inputProps, 'aria-labelledby': `${targetId}-label` }}
+          />
         )}
       />
     </DrawerField>
@@ -340,6 +380,8 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
   } = ctx;
 
   const originalForm = React.useRef(JSON.stringify(assignmentForm));
+  const fromId = React.useId();
+  const toId = React.useId();
   const router = useRouter();
   const [confirmDiscard, setConfirmDiscard] = React.useState(false);
   const openLeavePolicies = () => {
@@ -348,8 +390,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
       setConfirmDiscard(true);
       return;
     }
-    closeDrawer();
-    router.push(hrPaths.policies.leavePolicies);
+    if (ctx.discardDrawer()) router.push(hrPaths.policies.leavePolicies);
   };
 
   if (!drawer || drawer.kind !== 'assignment') return null;
@@ -462,7 +503,11 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               ))}
             </DrawerSelectField>
             <DrawerFormGrid>
-              <DrawerField label="Effective From *">
+              <DrawerField
+                label="Effective From *"
+                inputId={fromId}
+                helperText={assignmentDateError || undefined}
+              >
                 <DatePicker
                   value={assignmentForm.effectiveFrom ? dayjs(assignmentForm.effectiveFrom) : null}
                   onChange={(val) => {
@@ -475,6 +520,13 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   format="DD/MM/YYYY"
                   slotProps={{
                     textField: {
+                      id: fromId,
+                      InputProps: {
+                        'aria-labelledby': `${fromId}-label`,
+                        'aria-describedby': assignmentDateError
+                          ? `${fromId}-description`
+                          : undefined,
+                      },
                       size: 'small',
                       fullWidth: true,
                       error: Boolean(assignmentDateError),
@@ -485,6 +537,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               </DrawerField>
               <DrawerField
                 label="Effective To (optional)"
+                inputId={toId}
                 helperText={assignmentDateError || 'Leave blank for no end date.'}
               >
                 <DatePicker
@@ -499,6 +552,11 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   format="DD/MM/YYYY"
                   slotProps={{
                     textField: {
+                      id: toId,
+                      InputProps: {
+                        'aria-labelledby': `${toId}-label`,
+                        'aria-describedby': `${toId}-description`,
+                      },
                       size: 'small',
                       fullWidth: true,
                       placeholder: 'No end date',
@@ -653,8 +711,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
             disabled={isPolicyOperationActive}
             onClick={() => {
               setConfirmDiscard(false);
-              closeDrawer();
-              router.push(hrPaths.policies.leavePolicies);
+              if (ctx.discardDrawer()) router.push(hrPaths.policies.leavePolicies);
             }}
           >
             Discard and open Leave Policies

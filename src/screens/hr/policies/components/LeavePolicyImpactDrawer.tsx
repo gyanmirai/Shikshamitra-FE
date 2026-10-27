@@ -2,15 +2,7 @@
 
 import React from 'react';
 import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
-import {
-  Box,
-  Chip,
-  Stack,
-  Button,
-  Drawer,
-  Divider,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Stack, Button, Drawer, Divider, Typography } from '@mui/material';
 
 import { DrawerHeader } from './HRPolicySharedUI';
 
@@ -31,7 +23,9 @@ export function LeavePolicyImpactDrawer({
     <Drawer
       anchor="right"
       open={open}
-      onClose={onClose}
+      onClose={() => {
+        if (!archiving) onClose();
+      }}
       PaperProps={{ sx: { width: { xs: '100%', md: 560 } } }}
     >
       <DrawerHeader
@@ -52,15 +46,17 @@ export function LeavePolicyImpactDrawer({
               <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                 <Chip size="small" label="Leave policy" color="primary" variant="outlined" />
                 <Chip size="small" label={review.action.replaceAll('-', ' ')} variant="outlined" />
-                <Chip size="small" label={`${review.affectedEmployeeCount} staff`} />
-                <Chip size="small" label={`${review.affectedRequestCount} requests`} />
-                <Chip size="small" label={`${review.balanceImpactCount} balances`} />
-                <Chip
-                  size="small"
-                  label={`${review.payrollMonthRiskCount} payroll risks`}
-                  color={review.payrollMonthRiskCount ? 'warning' : 'default'}
-                />
+                <Chip size="small" label="Staff: Not calculated" />
+                <Chip size="small" label="Requests: Not calculated" />
+                <Chip size="small" label="Balances: Not calculated" />
+                <Chip size="small" label="Payroll risks: Not calculated" />
+                <Chip size="small" label="Assignment conflicts: Not calculated" />
               </Stack>
+              <HrNotice severity="info">
+                Affected records have not been calculated. This checklist describes configured rules
+                only; it does not establish how many staff, requests, balances or payroll periods
+                would be affected, or whether assignments are safe to archive.
+              </HrNotice>
 
               <Box>
                 <Typography variant="subtitle2">{review.policyName}</Typography>
@@ -70,6 +66,7 @@ export function LeavePolicyImpactDrawer({
               </Box>
 
               <Stack spacing={1}>
+                <Typography variant="subtitle2">Rule checklist</Typography>
                 {review.risks.map((risk) => (
                   <HrNotice
                     key={`${risk.label}-${risk.message}`}

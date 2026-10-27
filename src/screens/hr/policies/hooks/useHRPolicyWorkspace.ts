@@ -180,14 +180,6 @@ function resolveInitialTab(
 
 // --- Attendance advanced helpers ----------------------------------------------
 
-function applyAttendanceAdvancedDefaults(form: AttendanceForm): AttendanceForm {
-  const defaults = defaultAttendanceForm(form.workCalendarPolicyId);
-  return ATTENDANCE_ADVANCED_KEYS.reduce(
-    (current, key) => ({ ...current, [key]: defaults[key] }),
-    form
-  );
-}
-
 function hasCustomAttendanceAdvancedSettings(form: AttendanceForm): boolean {
   const defaults = defaultAttendanceForm(form.workCalendarPolicyId);
   return ATTENDANCE_ADVANCED_KEYS.some((key) => form[key] !== defaults[key]);
@@ -478,7 +470,7 @@ export function useHRPolicyWorkspace({
   );
 
   const {
-    data: assignmentPreview,
+    currentData: assignmentPreview,
     isFetching: assignmentPreviewLoading,
     error: assignmentPreviewError,
   } = useGetPolicyAssignmentPreviewQuery(
@@ -701,14 +693,7 @@ export function useHRPolicyWorkspace({
         reason: item.assignmentReason || '-',
       };
     });
-  }, [
-    assignments?.items,
-    attendance,
-    defaultLeavePolicy,
-    employeeOptions,
-    leavePolicies,
-    payroll,
-  ]);
+  }, [assignments?.items, attendance, defaultLeavePolicy, employeeOptions, leavePolicies, payroll]);
 
   // --- Permissions -----------------------------------------------------------
   const canCreatePolicy = hasGrantedPermission(permissions, hrPermissions.policyActions.create);
@@ -789,9 +774,7 @@ export function useHRPolicyWorkspace({
 
   const buildAttendancePayload = useCallback((): CreateUpdateAttendancePolicy | null => {
     if (!academicYearId) return null;
-    const formToSave = attendanceAdvancedMode
-      ? attendanceForm
-      : applyAttendanceAdvancedDefaults(attendanceForm);
+    const formToSave = attendanceForm;
     const penaltyDeductionAmount =
       formToSave.penaltyType === 'salary_deduction'
         ? numberOrNull(formToSave.penaltyDeductionAmount)
@@ -821,7 +804,7 @@ export function useHRPolicyWorkspace({
       holidayWorkBehavior: formToSave.holidayWorkBehavior,
       payrollPreviewEnabled: formToSave.payrollPreviewEnabled,
     };
-  }, [academicYearId, attendanceAdvancedMode, attendanceForm]);
+  }, [academicYearId, attendanceForm]);
 
   // --- Diff checks ----------------------------------------------------------
   const calendarPayload = buildCalendarPayload();
@@ -872,10 +855,16 @@ export function useHRPolicyWorkspace({
     setAssignmentConflict(null);
   }, []);
 
-  const closeDrawer = useCallback(() => {
-    if (isPolicyOperationActive) return;
+  // Used only after explicit discard consent (or a verified clean editor), so a
+  // navigation action can await successful closure without opening a second prompt.
+  const discardDrawer = useCallback(() => {
+    if (isPolicyOperationActive) return false;
     clearDrawer();
+    return true;
   }, [clearDrawer, isPolicyOperationActive]);
+  const closeDrawer = useCallback(() => {
+    discardDrawer();
+  }, [discardDrawer]);
 
   const openCalendarDrawer = useCallback(
     async (item?: WorkCalendarPolicy) => {
@@ -1479,9 +1468,7 @@ export function useHRPolicyWorkspace({
   ]);
 
   const saveAttendance = useCallback(async () => {
-    const formToSave = attendanceAdvancedMode
-      ? attendanceForm
-      : applyAttendanceAdvancedDefaults(attendanceForm);
+    const formToSave = attendanceForm;
     const full = Number(formToSave.fullDayThresholdPercentage);
     const half = Number(formToSave.halfDayThresholdPercentage);
     const absent = Number(formToSave.absentThresholdPercentage);
@@ -2191,6 +2178,7 @@ export function useHRPolicyWorkspace({
     openAttendanceDrawer,
     openAssignmentDrawer,
     closeDrawer,
+    discardDrawer,
 
     // Operation overlay
     activePolicyOperation,

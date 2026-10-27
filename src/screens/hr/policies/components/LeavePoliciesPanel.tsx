@@ -4,20 +4,27 @@ import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { Add } from '@mui/icons-material';
-import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { hrPaths } from 'src/constants/hr-menus';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { formatHrAuditDateTime } from 'src/utils/hr-audit-format';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useMemo, useState, useCallback } from 'react';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import {
+  hrLeavePolicyPermissions,
+  hrPolicyActionPermissions,
+} from 'src/constants/hr-policy-permissions';
 import {
   useGetLeavePoliciesQuery,
   useDeleteLeavePolicyMutation,
@@ -29,6 +36,7 @@ import { LeavePolicyForm } from './LeavePolicyForm';
 import { InfoTooltipIcon } from './HRPolicySharedUI';
 import { getErrorMessage } from '../hr-policy-workspace-utils';
 import { LeavePolicyImpactDrawer } from './LeavePolicyImpactDrawer';
+import { LeavePolicyDetailsDrawer } from './LeavePolicyDetailsDrawer';
 import { LeaveYearEndSettlementsPanel } from './LeaveYearEndSettlementsPanel';
 import {
   getLeavePolicyTitle,
@@ -55,7 +63,23 @@ const formatRuleEntitlement = (rule?: ILeavePolicyRule) => {
 };
 
 export function LeavePoliciesPanel() {
+  const dispatch = useDispatch();
+  const formCloseState = useRef({ dirty: false, busy: false });
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [formBusy, setFormBusy] = useState(false);
+  const updateCloseState = useCallback((state: { dirty: boolean; busy: boolean }) => {
+    formCloseState.current = state;
+    setFormBusy(state.busy);
+  }, []);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canCreate = hasGrantedPermission(permissions, hrLeavePolicyPermissions.create);
+  const canEdit = hasGrantedPermission(permissions, hrLeavePolicyPermissions.edit);
+  const canArchive = hasGrantedPermission(permissions, hrLeavePolicyPermissions.archive);
+  const canSetDefault = hasGrantedPermission(permissions, hrLeavePolicyPermissions.setDefault);
+  const canViewAssignments = hasGrantedPermission(permissions, hrPolicyActionPermissions.view);
+  const [viewPolicy, setViewPolicy] = useState<ILeavePolicy | null>(null);
+  const [archiveError, setArchiveError] = useState('');
   const [editData, setEditData] = useState<ILeavePolicy | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [impactReview, setImpactReview] = useState<LeavePolicyImpactReview | null>(null);
@@ -128,49 +152,70 @@ export function LeavePoliciesPanel() {
   const archivedCount = archivedSummary?.totalCount || 0;
 
   const openCreateDialog = () => {
+    if (!canCreate) return;
     setEditData(null);
     setDialogOpen(true);
   };
 
-  const openEditDialog = (policy: ILeavePolicy) => {
-    setEditData(policy);
-    setDialogOpen(true);
-  };
+  const openEditDialog = useCallback(
+    (policy: ILeavePolicy) => {
+      if (!canEdit) return;
+      setEditData(policy);
+      setDialogOpen(true);
+    },
+    [canEdit]
+  );
 
-  const openDuplicateDialog = (policy: ILeavePolicy) => {
-    // Strip the id so the form treats it as a brand-new creation (same pattern as FeeHeadForm).
-    // Pre-fill all fields from the source policy; prefix the title so the user can distinguish it.
-    setEditData({
-      ...policy,
-      id: undefined as any,
-      policyTitle: `Copy of ${policy.policyTitle || policy.title || ''}`.trim(),
-      title: `Copy of ${policy.policyTitle || policy.title || ''}`.trim(),
-      isDefault: false,
-    });
-    setDialogOpen(true);
-  };
+  const openDuplicateDialog = useCallback(
+    (policy: ILeavePolicy) => {
+      if (!canCreate) return;
+      // Strip the id so the form treats it as a brand-new creation (same pattern as FeeHeadForm).
+      // Pre-fill all fields from the source policy; prefix the title so the user can distinguish it.
+      setEditData({
+        ...policy,
+        id: undefined as any,
+        policyTitle: `Copy of ${policy.policyTitle || policy.title || ''}`.trim(),
+        title: `Copy of ${policy.policyTitle || policy.title || ''}`.trim(),
+        isDefault: false,
+      });
+      setDialogOpen(true);
+    },
+    [canCreate]
+  );
 
   const closeDialog = (_e?: unknown, isSubmit?: boolean) => {
+    if (!isSubmit && formCloseState.current.busy) return;
+    if (!isSubmit && formCloseState.current.dirty) {
+      setDiscardOpen(true);
+      return;
+    }
+    formCloseState.current = { dirty: false, busy: false };
+    dispatch(setIsChanges(false));
     setDialogOpen(false);
-    window.setTimeout(() => setEditData(null), 200);
+    setEditData(null);
     if (isSubmit) {
       refetch();
     }
   };
 
-  const previewArchive = (policy: ILeavePolicy) => {
-    if (policy.isDefault) {
-      shikshaMitraToast.error({
-        message: 'Choose another default before archiving',
-      });
-      return;
-    }
-    setArchiveTarget(policy);
-  };
+  const previewArchive = useCallback(
+    (policy: ILeavePolicy) => {
+      if (!canArchive) return;
+      setArchiveError('');
+      if (policy.isDefault) {
+        shikshaMitraToast.error({
+          message: 'Choose another default before archiving',
+        });
+        return;
+      }
+      setArchiveTarget(policy);
+    },
+    [canArchive]
+  );
 
   const confirmSetDefault = useCallback(
     async (policy: ILeavePolicy) => {
-      if (!policy.id || policy.isDefault) {
+      if (!canSetDefault || !policy.id || policy.isDefault) {
         return;
       }
 
@@ -185,7 +230,7 @@ export function LeavePoliciesPanel() {
         shikshaMitraToast.error({ message: 'Failed to set default leave policy' });
       }
     },
-    [refetch, setDefaultLeavePolicy]
+    [canSetDefault, refetch, setDefaultLeavePolicy]
   );
 
   const closeImpact = () => {
@@ -198,7 +243,7 @@ export function LeavePoliciesPanel() {
   };
 
   const confirmArchive = async () => {
-    if (!archiveTarget?.id) {
+    if (!canArchive || !archiveTarget?.id || archiveState.isLoading) {
       return;
     }
 
@@ -209,15 +254,20 @@ export function LeavePoliciesPanel() {
       });
       setArchiveTarget(null);
       refetch();
-    } catch (archiveError) {
-      console.error('Failed to archive leave policy:', archiveError);
-      shikshaMitraToast.error({ message: 'Failed to archive leave policy' });
+    } catch (archiveFailure) {
+      console.error('Failed to archive leave policy:', archiveFailure);
+      setArchiveError(
+        getErrorMessage(
+          archiveFailure,
+          'Failed to archive leave policy. Resolve active policy assignments before retrying.'
+        )
+      );
     }
   };
 
   const confirmUnarchive = useCallback(
     async (policy: ILeavePolicy) => {
-      if (!policy.id) {
+      if (!canArchive || !policy.id) {
         return;
       }
 
@@ -234,7 +284,7 @@ export function LeavePoliciesPanel() {
         });
       }
     },
-    [refetch, unarchiveLeavePolicy]
+    [canArchive, refetch, unarchiveLeavePolicy]
   );
 
   const columns: IColumn[] = useMemo(
@@ -395,14 +445,22 @@ export function LeavePoliciesPanel() {
               moreLabel={`More actions for ${String(row.policyTitle || row.id)}`}
               showViewIcon
               handleViewClick={() => {
-                setImpactReview(buildLeavePolicyImpactReview(policy, 'update'));
-                setImpactOpen(true);
+                setViewPolicy(policy);
               }}
-              showEditIcon={!isArchived}
+              showEditIcon={!isArchived && canEdit}
               handleEditClick={() => openEditDialog(policy)}
               actions={({ popover }) => (
                 <MenuList>
-                  {isArchived ? (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      setImpactReview(buildLeavePolicyImpactReview(policy, 'update'));
+                      setImpactOpen(true);
+                    }}
+                  >
+                    Review impact checklist
+                  </MenuItem>
+                  {isArchived && canArchive ? (
                     <MenuItem
                       disabled={unarchiveState.isLoading}
                       onClick={() => {
@@ -414,9 +472,16 @@ export function LeavePoliciesPanel() {
                       Restore as draft
                     </MenuItem>
                   ) : null}
-                  {!isArchived && !policy.isDefault ? (
+                  {!isArchived && !policy.isDefault && canSetDefault ? (
                     <MenuItem
-                      disabled={defaultState.isLoading}
+                      disabled={
+                        defaultState.isLoading || String(policy.status).toLowerCase() !== 'active'
+                      }
+                      title={
+                        String(policy.status).toLowerCase() !== 'active'
+                          ? 'Only an active policy can be the default.'
+                          : undefined
+                      }
                       onClick={() => {
                         popover.onClose();
                         confirmSetDefault(policy);
@@ -426,7 +491,7 @@ export function LeavePoliciesPanel() {
                       Set as default
                     </MenuItem>
                   ) : null}
-                  {!isArchived ? (
+                  {!isArchived && canCreate ? (
                     <MenuItem
                       onClick={() => {
                         popover.onClose();
@@ -437,7 +502,7 @@ export function LeavePoliciesPanel() {
                       Duplicate
                     </MenuItem>
                   ) : null}
-                  {!isArchived ? (
+                  {!isArchived && canArchive ? (
                     <MenuItem
                       disabled={policy.isDefault}
                       onClick={() => {
@@ -456,7 +521,19 @@ export function LeavePoliciesPanel() {
         },
       },
     ],
-    [confirmSetDefault, confirmUnarchive, defaultState.isLoading, unarchiveState.isLoading]
+    [
+      canCreate,
+      canEdit,
+      canArchive,
+      canSetDefault,
+      confirmSetDefault,
+      confirmUnarchive,
+      defaultState.isLoading,
+      unarchiveState.isLoading,
+      openEditDialog,
+      openDuplicateDialog,
+      previewArchive,
+    ]
   );
 
   const rows = tableData.map((policy) => ({
@@ -497,7 +574,7 @@ export function LeavePoliciesPanel() {
               </Button>
             </Stack>
           </Stack>
-          {archiveView === 'current' ? (
+          {archiveView === 'current' && canCreate ? (
             <Button
               variant="contained"
               startIcon={<Add />}
@@ -578,10 +655,44 @@ export function LeavePoliciesPanel() {
           </Stack>
         }
         open={dialogOpen}
+        guardUnsavedChanges={false}
+        disableClose={formBusy}
         handleClose={() => closeDialog()}
       >
-        <LeavePolicyForm handleClose={closeDialog} editData={editData} />
+        <LeavePolicyForm
+          handleClose={closeDialog}
+          editData={editData}
+          onCloseStateChange={updateCloseState}
+        />
       </CustomDialog>
+      <ConfirmDialog
+        open={discardOpen}
+        title="Discard Unsaved Changes?"
+        content="Your leave policy changes have not been saved. Discarding them closes this editor."
+        icon="warning"
+        cancelText="Keep editing"
+        disableCancel={formBusy}
+        disableEscapeKeyDown={formBusy}
+        onClose={() => {
+          if (!formBusy) setDiscardOpen(false);
+        }}
+        action={
+          <Button
+            size="small"
+            variant="contained"
+            color="error"
+            disabled={formBusy}
+            onClick={() => {
+              if (formCloseState.current.busy) return;
+              formCloseState.current.dirty = false;
+              setDiscardOpen(false);
+              closeDialog();
+            }}
+          >
+            Discard changes
+          </Button>
+        }
+      />
 
       <LeavePolicyImpactDrawer
         open={impactOpen}
@@ -589,12 +700,33 @@ export function LeavePoliciesPanel() {
         archiving={archiveState.isLoading}
         onClose={closeImpact}
       />
+      <LeavePolicyDetailsDrawer policy={viewPolicy} onClose={() => setViewPolicy(null)} />
       <ConfirmDialog
         open={Boolean(archiveTarget)}
-        onClose={() => setArchiveTarget(null)}
+        onClose={() => {
+          if (!archiveState.isLoading) setArchiveTarget(null);
+        }}
+        disableCancel={archiveState.isLoading}
+        disableEscapeKeyDown={archiveState.isLoading}
+        disableBackdropClick
         title="Archive leave policy?"
         icon="warning"
-        content={`Archive "${archiveTarget ? getLeavePolicyTitle(archiveTarget) : 'this leave policy'}"? Historical requests keep their policy and reporting context.`}
+        content={
+          <Stack spacing={1}>
+            <Typography variant="body2">
+              Archive &quot;
+              {archiveTarget ? getLeavePolicyTitle(archiveTarget) : 'this leave policy'}&quot;?
+              Historical requests keep their policy and reporting context. Active current or future
+              assignments must be resolved first.
+            </Typography>
+            {archiveError ? <Alert severity="error">{archiveError}</Alert> : null}
+            {canViewAssignments ? (
+              <Button component="a" href={hrPaths.policies.assignments} size="small">
+                Review policy assignments
+              </Button>
+            ) : null}
+          </Stack>
+        }
         action={
           <Button
             color="warning"
