@@ -1209,9 +1209,15 @@ export function FinalizeDialog({
   const validateEmployeeFields = async () => {
     const errors = await applyFinalizeEmployeeValidation(formik);
     if (roleLookup.selectionError) {
-      errors.roleId = roleLookup.selectionError;
-      formik.setErrors(errors);
-      formik.setFieldTouched('roleId', true, false);
+      // Query feedback is live on the field; do not persist a temporary failure
+      // in Formik after a successful retry restores the selected role.
+      if (roleLookup.ready) {
+        errors.roleId = roleLookup.selectionError;
+        formik.setErrors(errors);
+      }
+      setStep(1);
+      focusFirstFormikError({ ...errors, roleId: roleLookup.selectionError });
+      return false;
     }
     if (Object.keys(errors).length > 0) {
       setStep(1);
