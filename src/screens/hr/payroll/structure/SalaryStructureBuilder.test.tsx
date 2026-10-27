@@ -309,10 +309,14 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     view.rerender(content());
     expect(screen.getByText('Salary template access unavailable')).toBeVisible();
     expect(screen.getByLabelText('UAN')).toHaveValue('123456789012');
-    expect(screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })
+    ).toBeDisabled();
     mocks.templatesError = false;
     view.rerender(content());
-    expect(screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })
+    ).toBeEnabled();
     expect(mocks.saveSalary).not.toHaveBeenCalled();
     expect(mocks.activate).not.toHaveBeenCalled();
   });
@@ -524,7 +528,9 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     const optOut = screen.getByRole('radio', { name: 'Opt out of PF' });
     expect(optIn).not.toBeChecked();
     expect(optOut).not.toBeChecked();
-    expect(screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })
+    ).toBeDisabled();
     expect(screen.getByRole('combobox', { name: 'PF rule' })).toHaveAttribute(
       'aria-disabled',
       'true'
@@ -576,7 +582,9 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.type(amount, '25001');
     expect(screen.getByRole('radio', { name: 'Opt in to PF' })).not.toBeChecked();
     expect(screen.getByRole('radio', { name: 'Opt out of PF' })).not.toBeChecked();
-    expect(screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })
+    ).toBeDisabled();
     await user.click(screen.getByRole('radio', { name: 'Opt out of PF' }));
     await user.click(screen.getByLabelText('Reason for turning PF off'));
     await user.paste('Employee selected opt-out');
@@ -745,12 +753,16 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.tab();
     expect(amount).toHaveAttribute('aria-invalid', 'true');
     expect(amount).toHaveAccessibleDescription('Enter an amount greater than zero.');
-    expect(screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })
+    ).toBeDisabled();
     expect(mocks.calculate).not.toHaveBeenCalled();
     await user.clear(amount);
     await user.type(amount, '10000');
     expect(amount).toHaveAttribute('aria-invalid', 'false');
-    expect(screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })
+    ).toBeEnabled();
   });
 
   it('focuses the missing customization reason and preserves the draft', async () => {
@@ -917,7 +929,9 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
     await user.click(screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ }));
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })).toBeEnabled()
+      expect(
+        screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })
+      ).toBeEnabled()
     );
     expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 10,000');
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
@@ -1018,7 +1032,9 @@ describe('SalaryStructureBuilder initialization and activation', () => {
   it('does not calculate or save without the compensation Manage permission', () => {
     mocks.canManageSalary = false;
     renderBuilder();
-    expect(screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ })
+    ).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
     expect(mocks.calculate).not.toHaveBeenCalled();
     expect(
