@@ -7,7 +7,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { CustomPopover } from 'src/components/custom-popover';
 import { FormSectionHeader } from 'src/components/form-section-card/section-header';
-import { Box, Alert, Stack, Button, Typography, IconButton, DialogActions } from '@mui/material';
+import { Box, Alert, Stack, Button, IconButton, DialogActions } from '@mui/material';
 import { AcademicFieldFormattingFields } from 'src/components/academic-setup/academic-field-formatting-fields';
 import { AcademicFieldFormattingPreview } from 'src/components/academic-setup/academic-field-formatting-preview';
 
@@ -74,29 +74,23 @@ export function InstituteFormattingForm({ id, scope, anchorEl, settings, onClose
             {editor.error && <Alert severity="error">{editor.error}</Alert>}
             <AcademicFieldFormattingFields
               fields={INSTITUTE_FORMATTING_CONFIG[scope].fields}
-              field={editor.field}
-              mode={editor.formik.values[editor.field]}
+              selectedFields={editor.selectedFields}
+              mode={editor.mode}
               disabled={editor.isSaving}
-              onFieldChange={editor.selectField}
-              onModeChange={(mode) => editor.formik.setFieldValue(editor.field, mode)}
+              onFieldsChange={editor.selectFields}
+              onModeChange={editor.applyMode}
             />
-            <AcademicFieldFormattingPreview
-              scope={scope}
-              value={editor.example}
-              mode={editor.formik.values[editor.field]}
-              disabled={editor.isSaving}
-              onChange={editor.setExample}
-            />
-            <Typography variant="caption" color="text.secondary">
-              Applies to new entries after saving. Existing saved values keep their current format.
-              {scope === 'schoolIdentity' &&
-                ' New or changed signature details use the selected format.'}
-            </Typography>
+            {editor.mode !== null && (
+              <AcademicFieldFormattingPreview
+                scope={scope}
+                value={editor.example}
+                mode={editor.mode}
+                disabled={editor.isSaving}
+                onChange={editor.setExample}
+              />
+            )}
           </Stack>
           <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ mr: 'auto' }}>
-              {editor.formik.dirty ? 'Unsaved changes' : 'Current school settings'}
-            </Typography>
             <Button
               type="button"
               size="small"

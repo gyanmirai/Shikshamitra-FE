@@ -35,7 +35,10 @@ test.beforeEach(async ({ request }) => {
     await expect(dialog.getByRole('radio', { name: /^Uppercase/ })).toBeChecked();
     if (scope === 'rooms') {
       await dialog.getByRole('combobox', { name: 'Field', exact: true }).click();
+      await page.getByRole('option', { name: 'Room name/no.', exact: true }).click();
       await page.getByRole('option', { name: 'Extra feature', exact: true }).click();
+      await page.getByRole('listbox').press('Escape');
+      await expect(page.getByRole('listbox')).toBeHidden();
       await expect(dialog.getByRole('radio', { name: /^Default/ })).toBeChecked();
       await dialog.getByRole('radio', { name: /PascalCase/ }).check();
       await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
@@ -114,7 +117,10 @@ test('secondary fields save independently from the main name field', async ({ pa
   await page.getByRole('button', { name: 'Field settings', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
   await dialog.getByRole('combobox', { name: 'Field', exact: true }).click();
+  await page.getByRole('option', { name: 'Building name', exact: true }).click();
   await page.getByRole('option', { name: 'Floor name', exact: true }).click();
+  await page.getByRole('listbox').press('Escape');
+  await expect(page.getByRole('listbox')).toBeHidden();
   await dialog.getByRole('radio', { name: /^Uppercase/ }).check();
   await expect(dialog.getByLabel('New entry will be saved as', { exact: true })).toHaveText(
     'GROUND FLOOR'
@@ -123,6 +129,85 @@ test('secondary fields save independently from the main name field', async ({ pa
   await expect(dialog).toHaveCount(0);
   const state = await (await request.get('/fixture/state')).json();
   expect(state.rules.buildings).toEqual({ buildingName: 0, floorName: 4, description: 0 });
+});
+
+test('checkbox batch selection saves all fields once and reloads each rule', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/?scope=buildings&theme=dark');
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
+  const field = dialog.getByRole('combobox', { name: 'Field', exact: true });
+  await field.click();
+  await page.getByRole('option', { name: 'Select All', exact: true }).click();
+  await Promise.all(
+    ['Building name', 'Floor name', 'Description'].map((name) =>
+      expect(page.getByRole('option', { name, exact: true })).toHaveAttribute('aria-selected', 'true')
+    )
+  );
+  await page.getByRole('option', { name: 'Deselect All', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(dialog.getByRole('radio', { name: /^Uppercase/ })).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'Submit', exact: true })).toBeDisabled();
+  await field.press('Space');
+  await page.getByRole('option', { name: 'Select All', exact: true }).press('Enter');
+  await page.getByRole('option', { name: 'Deselect All', exact: true }).press('Tab');
+  await expect(page.getByRole('listbox')).toBeHidden();
+  await expect(field).toContainText('Building name');
+  await expect(field).toContainText('Floor name');
+  await expect(field).toContainText('Description');
+  await dialog.getByRole('radio', { name: /^Uppercase/ }).check();
+  await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  const state = await (await request.get('/fixture/state')).json();
+  expect(state.rules.buildings).toEqual({ buildingName: 4, floorName: 4, description: 4 });
+  expect(state.rules.roomTypes).toEqual({ roomTypeName: 0, shortName: 0 });
+  expect(state.writes).toHaveLength(1);
+  await page.reload();
+  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await field.click();
+  await page.getByRole('option', { name: 'Select All', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(dialog.getByRole('radio', { name: /^Uppercase/ })).toBeChecked();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true
+  );
+  await field.press('ArrowDown');
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await page.screenshot({
+    path: test.info().outputPath('batch-formatting.png'),
+    fullPage: true,
+    animations: 'disabled',
+  });
+  expect(errors).toEqual([]);
+});
+
+test('mixed batch drafts survive a save failure and preserve the unselected field', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/?scope=buildings');
+  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
+  await dialog.getByRole('radio', { name: /^Uppercase/ }).check();
+  await dialog.getByRole('combobox', { name: 'Field', exact: true }).click();
+  await page.getByRole('option', { name: 'Floor name', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+  await expect(dialog.getByRole('status')).toContainText('different formats');
+  await dialog.getByRole('radio', { name: /^PascalCase/ }).check();
+  await request.post('/fixture/fail-next-save');
+  await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Could not save');
+  await expect(dialog.getByRole('radio', { name: /^PascalCase/ })).toBeChecked();
+  await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  const state = await (await request.get('/fixture/state')).json();
+  expect(state.rules.buildings).toEqual({ buildingName: 3, floorName: 3, description: 0 });
+  expect(state.writes).toHaveLength(1);
 });
 
 test('keyboard dismissal protects dirty changes and restores trigger focus', async ({

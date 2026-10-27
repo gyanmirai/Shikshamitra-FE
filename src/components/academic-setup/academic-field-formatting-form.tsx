@@ -63,18 +63,20 @@ export function AcademicFieldFormattingForm({ anchorEl, settings, onClose }: Pro
           <Stack spacing={2} sx={{ p: 2, overflowY: 'auto', minHeight: 0 }}>
             {editor.error && <Alert severity="error">{editor.error}</Alert>}
             <AcademicFieldFormattingFields
-              field={editor.field}
-              mode={editor.formik.values[editor.field]}
+              selectedFields={editor.selectedFields}
+              mode={editor.mode}
               disabled={editor.isSaving}
-              onFieldChange={editor.selectField}
-              onModeChange={(mode) => editor.formik.setFieldValue(editor.field, mode)}
+              onFieldsChange={editor.selectFields}
+              onModeChange={editor.applyMode}
             />
-            <AcademicFieldFormattingPreview
-              value={editor.example}
-              mode={editor.formik.values[editor.field]}
-              disabled={editor.isSaving}
-              onChange={editor.setExample}
-            />
+            {editor.mode !== null && (
+              <AcademicFieldFormattingPreview
+                value={editor.example}
+                mode={editor.mode}
+                disabled={editor.isSaving}
+                onChange={editor.setExample}
+              />
+            )}
             <Typography variant="caption" color="text.secondary">
               Applies to new entries after saving. Existing saved values keep their current format.
             </Typography>

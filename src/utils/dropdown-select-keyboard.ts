@@ -34,6 +34,7 @@ export function handleSelectKeyDown(event: KeyboardEvent<HTMLElement>): void {
       !event.shiftKey &&
       option &&
       options.includes(option) &&
+      !option.hasAttribute('data-select-all') &&
       option.getAttribute('aria-selected') !== 'true'
     )
       option.click();

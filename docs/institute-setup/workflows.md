@@ -3,7 +3,7 @@ module: institute-setup
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-10-27
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,14 +12,16 @@ audience: humans-and-agents
 
 ## Institute form field formatting
 
-Open **Field settings** in the header of Buildings, Room Types, Rooms, Shift Management, School Identity or School Documents. Choose a text field, select its case and try an example before submitting. Settings load afresh when the popover opens; failed saves keep the draft, and closing a changed draft asks whether to keep editing or discard it. The control requires the owning form's configuration permissions.
+Open **Field settings** in the header of Buildings, Room Types, Rooms, Shift Management, School Identity or School Documents. Check one or more fields, or use **Select All** in the Field menu, then choose a case to apply to the selected fields together. **Deselect All** clears only the selection. Selecting fields preserves the draft; Submit saves all field rules in one request and keeps unselected rules unchanged. Settings load afresh when the popover opens; failed saves keep the draft, and closing a changed draft asks whether to keep editing or discard it. The control requires the owning form's configuration permissions.
+
+Selections with different rules show no selected case until a case is chosen. Empty selections disable the case controls. A common rule enables the live example; it never rewrites the entered sample.
 
 New-entry fields show the expected saved value without changing the text being typed. The same settings apply to new floors added while editing a building, new room features and new or changed School Identity signature details. Existing saved entries keep their case. Numeric fields, dates, dropdown choices and uploaded files are unaffected. See [clients](./clients.md#institute-form-field-formatting) for frontend ownership and the [backend rules](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#institute-form-field-formatting) for saved behavior.
 
 ## Academic field formatting
 
 Open **Field settings** in Academic Setup to configure the school's new academic names in an anchored popover.
-Select a field, choose Default, Capitalize each word, camelCase, PascalCase, or Uppercase, and review the live example before Submit.
+Check one or more fields, choose Default, Capitalize each word, camelCase, PascalCase, or Uppercase, and review the live example before Submit. Select All includes only editable fields; official board codes remain disabled and are excluded from batch changes.
 Uppercase changes letters to capitals without removing spaces or punctuation.
 Default starts selected and keeps entered casing; official board codes are read-only and keep their spelling.
 Changing fields preserves other draft choices, failed submissions retain the draft, and Cancel, Close, Escape, or click-away protect unsaved changes.

@@ -9,6 +9,7 @@ import {
   MenuItem,
   Checkbox,
   Skeleton,
+  TextField,
   IconButton,
   InputLabel,
   Typography,
@@ -17,7 +18,6 @@ import {
   ListSubheader,
   InputAdornment,
   FormHelperText,
-  TextField,
 } from '@mui/material';
 
 import { SearchHeader } from './search-header';
@@ -30,6 +30,7 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   options: { [K in NoInfer<T>]: string | number }[];
   label?: string;
   multiple?: J;
+  allowSelectAll?: boolean;
   value: J extends true ? string[] | number[] : string | number;
   onChange: (value: J extends true ? string[] | number[] : string | number) => void;
   error?: boolean;
@@ -58,6 +59,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   options,
   label,
   multiple = false as J,
+  allowSelectAll = false,
   value,
   onChange,
   error = false,
@@ -99,6 +101,16 @@ const CustomSelect = <T extends string, J extends boolean>({
   const helperId = helperTextProps?.id ?? `${generatedId}-helper`;
   const selectedOption = options.find((option) => option[valueKey] === value);
   const selectedDescription = optionDescriptionKey && selectedOption?.[optionDescriptionKey];
+  const selectedValues: (string | number)[] = Array.isArray(value) ? value : [];
+  const enabledValues =
+    multiple && allowSelectAll
+      ? options
+          .map((option) => option[valueKey])
+          .filter((optionValue) => !disabledValues.includes(optionValue))
+      : [];
+  const allSelected =
+    enabledValues.length > 0 && enabledValues.every((item) => selectedValues.includes(item));
+  const someSelected = enabledValues.some((item) => selectedValues.includes(item));
   const optionInfo = (description: string | number, optionLabel: string | number) => (
     <Tooltip title={String(description)} arrow>
       <IconButton
@@ -116,7 +128,20 @@ const CustomSelect = <T extends string, J extends boolean>({
     </Tooltip>
   );
 
-  const handleChange = (event: any) => {
+  const handleChange = (event: any, child: React.ReactNode) => {
+    if (
+      multiple &&
+      allowSelectAll &&
+      React.isValidElement<{ 'data-select-all'?: boolean }>(child) &&
+      child.props['data-select-all']
+    ) {
+      if (disabled || enabledValues.length === 0) return;
+      const nextValues = allSelected
+        ? selectedValues.filter((item) => !enabledValues.includes(item))
+        : [...selectedValues, ...enabledValues.filter((item) => !selectedValues.includes(item))];
+      onChange(nextValues as J extends true ? string[] | number[] : string | number);
+      return;
+    }
     const selectedValue: J extends true ? string[] | number[] : string | number =
       event.target.value;
     onChange(selectedValue);
@@ -269,6 +294,23 @@ const CustomSelect = <T extends string, J extends boolean>({
                 value={search}
                 onChange={setSearch}
               />
+            )}
+            {multiple && allowSelectAll && (
+              <MenuItem
+                value={`${generatedId}-select-all`}
+                data-select-all
+                disabled={disabled || enabledValues.length === 0}
+                aria-checked={someSelected && !allSelected ? 'mixed' : allSelected}
+              >
+                <Checkbox
+                  tabIndex={-1}
+                  inputProps={{ 'aria-hidden': true }}
+                  checked={allSelected}
+                  indeterminate={someSelected && !allSelected}
+                  disabled={disabled || enabledValues.length === 0}
+                />
+                <ListItemText primary={allSelected ? 'Deselect All' : 'Select All'} />
+              </MenuItem>
             )}
             {filteredOptions.length === 0 ? (
               <MenuItem

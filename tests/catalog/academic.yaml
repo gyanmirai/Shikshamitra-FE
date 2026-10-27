@@ -1,6 +1,20 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: INS-UI-20261027-FIELD-FORMATTING-BATCH
+    module: InstituteSetup
+    submodule: AcademicSetup
+    title: Batch field formatting preserves unselected rules and excludes official board codes
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/academic-setup]
+    automated: true
+    automationFile: e2e/institute-setup/academic-field-formatting.spec.ts
+    status: automated
+    tags: ['@module-institute-setup', '@submodule-academic-setup', '@regression', '@responsive']
   - id: INS-UI-20261026-ACADEMIC-FIELD-FORMATTING-UPPERCASE
     module: InstituteSetup
     submodule: AcademicSetup

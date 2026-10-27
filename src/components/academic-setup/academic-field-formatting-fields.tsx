@@ -1,13 +1,5 @@
 import CustomSelect from 'src/components/custom-select';
-import {
-  Box,
-  Radio,
-  Alert,
-  Typography,
-  RadioGroup,
-  FormControl,
-  FormControlLabel,
-} from '@mui/material';
+import { Box, Radio, Typography, RadioGroup, FormControl, FormControlLabel } from '@mui/material';
 
 import {
   formatAcademicName,
@@ -18,10 +10,10 @@ import {
 import type { AcademicTextCase, AcademicFieldFormatting } from './academic-field-formatting-model';
 
 type Props<T extends string> = {
-  field: T;
-  mode: AcademicTextCase;
+  selectedFields: T[];
+  mode: AcademicTextCase | null;
   disabled: boolean;
-  onFieldChange: (value: T) => void;
+  onFieldsChange: (value: T[]) => void;
   onModeChange: (value: AcademicTextCase) => void;
   fields?: readonly {
     key: T;
@@ -33,34 +25,50 @@ type Props<T extends string> = {
 };
 
 export function AcademicFieldFormattingFields<T extends string = keyof AcademicFieldFormatting>({
-  field,
+  selectedFields,
   mode,
   disabled,
-  onFieldChange,
+  onFieldsChange,
   onModeChange,
   fields,
 }: Props<T>) {
   const available = fields ?? ACADEMIC_FORMAT_FIELDS;
-  const selected = available.find((item) => item.key === field)!;
+  const selected = available.find((item) => item.key === selectedFields[0]);
+  const fixed = available.filter((item) => item.fixedDisabled);
   return (
     <>
       <CustomSelect
         label="Field"
-        value={field}
+        multiple
+        allowSelectAll
+        value={selectedFields}
         options={available.map((item) => ({ value: item.key, label: item.label }))}
-        onChange={(value) => onFieldChange(value as T)}
+        onChange={(value) => onFieldsChange(value as T[])}
+        disabledValues={fixed.map((item) => item.key)}
+        disabledLabel="Keeps its standard format"
         disabled={disabled}
         size="small"
         autoFocus
       />
-      {selected.fixedDisabled && <Alert severity="info">{selected.explanation}</Alert>}
-      <FormControl component="fieldset" disabled={disabled || selected.fixedDisabled} fullWidth>
+      {fixed.map((item) => (
+        <Typography key={item.key} variant="caption" color="text.secondary">
+          {item.explanation}
+        </Typography>
+      ))}
+      {mode === null && (
+        <Typography variant="caption" color="text.secondary" role="status">
+          {selectedFields.length
+            ? 'Selected fields have different formats. Choose a text case to apply to all of them.'
+            : 'Select at least one field to choose a text case.'}
+        </Typography>
+      )}
+      <FormControl component="fieldset" disabled={disabled || !selected} fullWidth>
         <Typography component="legend" variant="caption" sx={{ mb: 1, fontWeight: 600 }}>
           Text case
         </Typography>
         <RadioGroup
           aria-label="Text case"
-          value={mode}
+          value={mode ?? ''}
           onChange={(event) => onModeChange(Number(event.target.value) as AcademicTextCase)}
           sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}
         >
@@ -89,7 +97,7 @@ export function AcademicFieldFormattingFields<T extends string = keyof AcademicF
                     color={mode === option.value ? 'text.primary' : 'text.secondary'}
                     display="block"
                   >
-                    {formatAcademicName(selected.example, option.value)}
+                    {formatAcademicName(selected?.example ?? '', option.value)}
                   </Typography>
                 </Box>
               }

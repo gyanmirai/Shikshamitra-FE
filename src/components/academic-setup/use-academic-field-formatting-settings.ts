@@ -9,6 +9,7 @@ import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-
 import { useUpdateAcademicFieldFormattingMutation } from 'src/redux/InstituteSetup/academic-field-formatting-api';
 
 import { ACADEMIC_FORMAT_FIELDS } from './academic-field-formatting-model';
+import { useFieldFormattingSelection } from './use-field-formatting-selection';
 
 export function useAcademicFieldFormattingSettings(
   initialSettings: AcademicFieldFormatting,
@@ -17,8 +18,6 @@ export function useAcademicFieldFormattingSettings(
   const router = useRouter();
   const saving = useRef(false);
   const [error, setError] = useState('');
-  const [field, setField] = useState<keyof AcademicFieldFormatting>('stage');
-  const [example, setExample] = useState('secondary stage');
   const [update, mutation] = useUpdateAcademicFieldFormattingMutation();
   const formik = useFormik<AcademicFieldFormatting>({
     initialValues: initialSettings,
@@ -48,16 +47,15 @@ export function useAcademicFieldFormattingSettings(
   const close = () => {
     if (!saving.current) requestNavigation(onClose);
   };
-  const selectField = (value: keyof AcademicFieldFormatting) => {
-    setField(value);
-    setExample(ACADEMIC_FORMAT_FIELDS.find((item) => item.key === value)?.example ?? '');
-  };
+  const selection = useFieldFormattingSelection(
+    ACADEMIC_FORMAT_FIELDS,
+    formik.values,
+    formik.setValues,
+    'stage'
+  );
   return {
     formik,
-    field,
-    selectField,
-    example,
-    setExample,
+    ...selection,
     error,
     close,
     confirmation,
