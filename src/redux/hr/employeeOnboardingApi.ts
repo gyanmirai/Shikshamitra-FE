@@ -265,6 +265,7 @@ export const {
   useGetEmployeeApplicationsQuery,
   useCreateEmployeeApplicationInviteMutation,
   useGetEmployeeApplicationQuery,
+  useLazyGetEmployeeApplicationQuery,
   useUpdateEmployeeApplicationStatusMutation,
   useRegenerateEmployeeApplicationLinkMutation,
   useFinalizeEmployeeApplicationMutation,

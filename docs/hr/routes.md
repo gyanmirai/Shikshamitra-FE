@@ -3,7 +3,7 @@ module: hr
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-10-27
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -21,6 +21,7 @@ The route map is frontend integration truth, not backend product truth:
 | ------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | Dashboard                 | `/hr/dashboard`                                                                                         | `HR.Dashboard.View`                                                             |
 | Staff Directory           | `/hr/employee`                                                                                          | `HR.Employee.EmployeeList`                                                 |
+| Staff finalization | `/hr/employee/onboarding/{applicationId}/finalize` | Inherits HR/Staff Directory navigation guards; application reads require `HR.Employee.EmployeeOnboarding.View`, and the page requires the existing `.Finalize` action. Salary/statutory write gates remain independent. |
 | I-card                    | `/hr/i-card`                                                                                            | `HR.Employee.ICard.View`                                                   |
 | Document settings         | `/hr/setting`                                                                                           | `HR.Employee.Setting.DocumentTypes`                                        |
 | Payroll overview          | `/hr/payroll`                                                                                           | `HR.PayrollManagement.Overview`                                            |
@@ -130,3 +131,5 @@ Keep reporting library, designer, generation and fixed result routes separate.
 School settings and ESIC Policies are URL-backed tabs gated by exact Statutory Schemes View permission.
 Policy writes additionally require Edit, Activate, ConfigureCalculation and school-wide scope.
 Template and salary editors use the selection catalogue through their own permissions without exposing policy management.
+
+Finalize actions in Staff Onboarding list/detail navigate to the application-specific subpage. Its thin App Router entry lives in `src/app/(auth-route)/hr/(Employee)/employee/onboarding/[applicationId]/finalize/page.tsx`; the owning reader is `src/screens/hr/employee-onboarding/finalize-page.tsx`, and `FinalizeWorkflow` in the existing screen file owns the single form implementation. There is no additional sidebar destination. Return links accept only the same-origin Staff Onboarding path and known list/detail query fields; they never carry staff, statutory or salary draft values. The selected academic year stays in the existing global scope store; page navigation does not change it.

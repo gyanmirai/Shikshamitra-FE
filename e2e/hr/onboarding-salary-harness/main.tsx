@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import { Toaster } from 'sonner';
 import { Provider } from 'react-redux';
+import React, { useState } from 'react';
+import { api } from 'src/redux/service';
+import { createRoot } from 'react-dom/client';
 import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, Alert } from '@mui/material';
+import { createTheme } from 'src/theme/create-theme';
+import { hrPermissions } from 'src/constants/hr-menus';
+import { Box, Alert, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { FinalizeDialog } from 'src/screens/hr/employee-onboarding';
-import { createTheme } from 'src/theme/create-theme';
+import { FinalizeWorkflow } from 'src/screens/hr/employee-onboarding';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { hrPermissions } from 'src/constants/hr-menus';
-import { Toaster } from 'sonner';
 
 const state = {
   auth: {
@@ -22,7 +23,15 @@ const state = {
   globalState: {},
   confirmPopup: { isChanges: false },
 };
-const store = configureStore({ reducer: (current = state) => current });
+const store = configureStore({
+  reducer: {
+    auth: (current = state.auth) => current,
+    globalState: (current = state.globalState) => current,
+    confirmPopup: (current = state.confirmPopup) => current,
+    [api.reducerPath]: api.reducer,
+  },
+  middleware: (getDefault) => getDefault().concat(api.middleware),
+});
 const application: any = {
   id: 'synthetic-onboarding',
   applicationNumber: 'QA-ONLY',
@@ -34,6 +43,7 @@ const application: any = {
   hasPhoto: true,
   hasResume: false,
   status: 'Applied',
+  workAssignment: { mode: 'decideLater', academicYearId: null, organizationIds: [] },
   personalInfo: {
     firstName: 'Synthetic',
     lastName: 'Staff',
@@ -59,22 +69,28 @@ function Harness() {
       <CssBaseline />
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Provider store={store}>
-          <Alert severity="info">
-            Synthetic local test only. No staff or tenant records are changed.
-          </Alert>
-          {done && (
-            <Alert severity="success">Staff and salary saved. Staff remains inactive.</Alert>
-          )}
-          <FinalizeDialog
-            application={application}
-            open={open}
-            onClose={() => setOpen(false)}
-            onFinalized={() => {
-              setOpen(false);
-              setDone(true);
-            }}
-          />
-          <Toaster />
+          <Box sx={{ height: '100dvh', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <Alert severity="info">
+              Synthetic local test only. No staff or tenant records are changed.
+            </Alert>
+            {done && (
+              <Alert severity="success">Staff and salary saved. Staff remains inactive.</Alert>
+            )}
+            {open && (
+              <FinalizeWorkflow
+                application={application}
+                returnHref="/"
+                readReady
+                readError={false}
+                onRetry={() => {}}
+                onFinalized={() => {
+                  setOpen(false);
+                  setDone(true);
+                }}
+              />
+            )}
+            <Toaster />
+          </Box>
         </Provider>
       </LocalizationProvider>
     </ThemeProvider>

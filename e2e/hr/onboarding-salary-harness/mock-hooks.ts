@@ -1,6 +1,16 @@
 import { useState } from 'react';
+
+export const useRouter = () => ({
+  push: (href: string) => window.history.pushState({}, '', href),
+  replace: (href: string) => window.history.replaceState({}, '', href),
+});
 const empty = () => ({ data: { items: [] }, isLoading: false });
 export const useGetRolesQuery = () => ({
+  isSuccess: true,
+  isFetching: false,
+  isError: false,
+  isUninitialized: false,
+  refetch: () => Promise.resolve({}),
   data: {
     items: [
       {
@@ -46,10 +56,10 @@ export const useFinalizeEmployeeApplicationMutation = () => {
         setLoading(false);
         if (qa.failNextFinalize) {
           qa.failNextFinalize = false;
-          throw {
+          throw Object.assign(new Error('Synthetic salary save failed. Retry finalization.'), {
             status: 500,
             data: { detail: 'Synthetic salary save failed. Retry finalization.' },
-          };
+          });
         }
         return {
           application: { finalizedEmployeeId: 'synthetic-staff' },

@@ -23,6 +23,8 @@ export const hrPaths = {
     root: '',
     list: '/hr/employee',
     onboarding: '/hr/employee/onboarding',
+    onboardingFinalize: (applicationId: string) =>
+      `/hr/employee/onboarding/${encodeURIComponent(applicationId)}/finalize`,
     iCard: '/hr/i-card',
     setting: {
       root: '/hr/setting',

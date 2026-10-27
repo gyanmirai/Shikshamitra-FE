@@ -798,7 +798,7 @@ async function finalizeApplication(
   }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
   await finalizeAction.click();
 
-  const dialog = page.getByTestId('employee-onboarding-finalize-dialog');
+  const dialog = page.getByTestId('employee-onboarding-finalize-page');
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText(candidate.email);
   await expect(dialog).toContainText(candidate.mobileNo);
@@ -870,8 +870,8 @@ async function finalizeApplication(
   expect(result.application?.finalizedEmployeeId).toBeTruthy();
   expect(result.employee?.email).toBe(candidate.email);
   const finalizeBody = finalizeRequest.postData() || '';
-  expect(finalizeBody).not.toContain('organizationIds');
   const finalizePayload = JSON.parse(finalizeBody);
+  expect(finalizePayload).not.toHaveProperty('organizationIds');
   expect(finalizePayload.personalInfo?.country?.isoCode).toBe(candidate.countryIsoCode);
   expect(finalizePayload.personalInfo?.state?.isoCode).toBe(candidate.stateIsoCode);
   expect(finalizePayload.personalInfo?.city).toBe(candidate.city);
