@@ -1,11 +1,8 @@
 import { useFormik } from 'formik';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { ThemeProvider } from '@mui/material/styles';
-import { createTheme } from 'src/theme/create-theme';
-import { renderWithProviders } from 'src/test/test-utils';
 import { it, vi, expect, afterEach, beforeEach } from 'vitest';
-import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { act, screen, render, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { createRoomTestWrapper } from 'src/components/timetable/room-defaults-test-fixture';
 
 import RoomForm from './AddRoomForm';
 import { getRoomFormValues } from '../services/room-layout';
@@ -43,11 +40,7 @@ function Fixture({ onClose }: { onClose: () => void }) {
 
 function setup() {
   const close = vi.fn();
-  renderWithProviders(
-    <ThemeProvider theme={createTheme(defaultSettings)}>
-      <Fixture onClose={close} />
-    </ThemeProvider>
-  );
+  render(<Fixture onClose={close} />, createRoomTestWrapper());
   return close;
 }
 

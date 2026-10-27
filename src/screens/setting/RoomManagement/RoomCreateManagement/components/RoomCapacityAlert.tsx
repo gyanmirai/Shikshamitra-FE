@@ -14,9 +14,10 @@ interface Props {
   floor: FloorOption;
   disabled: boolean;
   onEdit: () => void;
+  onRefresh: () => void;
 }
 
-export function RoomCapacityAlert({ building, floor, disabled, onEdit }: Props) {
+export function RoomCapacityAlert({ building, floor, disabled, onEdit, onRefresh }: Props) {
   const permissions = useSelector((state: RootState) => state.auth?.permissions);
   const canEdit = hasGrantedPermission(
     permissions,
@@ -34,6 +35,9 @@ export function RoomCapacityAlert({ building, floor, disabled, onEdit }: Props) 
             : 'has reached its room limit.'}{' '}
           Increase Total rooms for this floor to add another room, or choose a different floor.
         </span>
+        <Button type="button" size="small" color="inherit" disabled={disabled} onClick={onRefresh}>
+          Refresh capacity
+        </Button>
         {canEdit ? (
           <Button
             type="button"

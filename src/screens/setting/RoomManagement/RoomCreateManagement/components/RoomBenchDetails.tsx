@@ -7,7 +7,7 @@ import { totalRoomBenches } from '../services/room-layout';
 import type { RoomFormik } from '../types/room-form';
 
 export function RoomBenchDetails({ formik }: { formik: RoomFormik }) {
-  const total = totalRoomBenches(formik.values.columnRows);
+  const total = totalRoomBenches(formik.values.columnRows, formik.values.benchCapacity);
   return (
     <FormSectionCard
       title="Bench Layout"
@@ -24,7 +24,7 @@ export function RoomBenchDetails({ formik }: { formik: RoomFormik }) {
             label="Columns"
             name="columns"
             value={formik.values.columns}
-            inputProps={{ min: 1, max: 50, step: 1 }}
+            inputProps={{ min: 0, max: 50, step: 1 }}
             onBlur={formik.handleBlur}
             error={Boolean(formik.touched.columns && formik.errors.columns)}
             helperText={formik.touched.columns && formik.errors.columns}
@@ -32,7 +32,7 @@ export function RoomBenchDetails({ formik }: { formik: RoomFormik }) {
               const count = event.target.value === '' ? '' : Number(event.target.value);
               formik.setFieldValue('columns', count);
               if (count === '') formik.setFieldValue('columnRows', []);
-              else if (Number.isInteger(count) && count >= 1 && count <= 50) {
+              else if (Number.isInteger(count) && count >= 0 && count <= 50) {
                 formik.setFieldValue(
                   'columnRows',
                   Array.from({ length: count }, (_, index) => formik.values.columnRows[index] ?? '')
@@ -50,7 +50,7 @@ export function RoomBenchDetails({ formik }: { formik: RoomFormik }) {
             label="Students per bench"
             name="benchCapacity"
             value={formik.values.benchCapacity}
-            inputProps={{ min: 1, max: 20, step: 1 }}
+            inputProps={{ min: 0, max: 20, step: 1 }}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             error={Boolean(formik.touched.benchCapacity && formik.errors.benchCapacity)}

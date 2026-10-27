@@ -1,15 +1,27 @@
+import { Provider } from 'react-redux';
+import { api } from 'src/redux/service';
 import { addIcon } from '@iconify/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { useFormik, FormikProvider } from 'formik';
-import { it, vi, expect, afterEach } from 'vitest';
+import { it, vi, expect, afterEach, beforeEach } from 'vitest';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { act, screen, render, waitFor, fireEvent } from '@testing-library/react';
 
 import { BuildingFloorsSection } from './building-floors-section';
+import { createBuildingFormStore } from './building-form-test-utils';
 
 import type { IBuildingFormValues } from '../types';
 
+vi.hoisted(() => {
+  process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
+});
+
 Object.values(GlobalIcons).forEach((icon) => addIcon(icon, { body: '<path />' }));
+
+let store: ReturnType<typeof createBuildingFormStore>;
+beforeEach(() => {
+  store = createBuildingFormStore();
+});
 
 const initialValues: IBuildingFormValues = {
   buildingName: 'North',
@@ -23,14 +35,16 @@ const initialValues: IBuildingFormValues = {
 function FloorHarness({ onSubmit }: { onSubmit: (values: IBuildingFormValues) => void }) {
   const formik = useFormik({ initialValues, onSubmit });
   return (
-    <ThemeProvider theme={createTheme()}>
-      <FormikProvider value={formik}>
-        <form onSubmit={formik.handleSubmit}>
-          <BuildingFloorsSection formik={formik} />
-          <button type="submit">Save floors</button>
-        </form>
-      </FormikProvider>
-    </ThemeProvider>
+    <Provider store={store}>
+      <ThemeProvider theme={createTheme()}>
+        <FormikProvider value={formik}>
+          <form onSubmit={formik.handleSubmit}>
+            <BuildingFloorsSection formik={formik} />
+            <button type="submit">Save floors</button>
+          </form>
+        </FormikProvider>
+      </ThemeProvider>
+    </Provider>
   );
 }
 
@@ -55,7 +69,10 @@ function mockRowGeometry() {
   });
 }
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  store.dispatch(api.util.resetApiState());
+  vi.restoreAllMocks();
+});
 
 it('reorders with the drag handle keyboard sensor while preserving persisted IDs and room counts', async () => {
   mockRowGeometry();

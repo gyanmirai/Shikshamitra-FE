@@ -1,9 +1,12 @@
 import { Provider } from 'react-redux';
-import { vi, it, expect, describe } from 'vitest';
+import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from 'src/redux/auth/authSlice';
+import { _api as iconifyApi } from '@iconify/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { iconApiHandlers } from 'src/test/icon-api-handlers';
+import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 
@@ -33,6 +36,10 @@ const renderWithTheme = (node: React.ReactNode, grants = ['Add', 'Edit', 'Delete
 };
 
 describe('academic setup states and actions', () => {
+  beforeEach(() => {
+    iconifyApi.setFetch((...args) => fetch(...args));
+    mswServer.use(...iconApiHandlers);
+  });
   it('shows readable progress and the next best action', () => {
     renderWithTheme(
       <AcademicSetupProgress
@@ -64,7 +71,7 @@ describe('academic setup states and actions', () => {
     );
 
     expect(screen.getAllByLabelText(/Loading .* count/)).toHaveLength(5);
-    expect(screen.getByRole('region', { name: 'Setup progress' })).toHaveAttribute(
+    expect(screen.getByRole('region', { name: 'Setup Progress' })).toHaveAttribute(
       'aria-busy',
       'true'
     );

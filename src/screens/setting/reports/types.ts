@@ -45,6 +45,16 @@ export interface ReportJob {
   request: InstituteReportRequest;
   isDynamic: boolean;
 }
+export type ReportHistoryRow = Omit<ReportJob, 'request'> & { reportTypeId: string };
+export interface ReportHistoryPage { items: ReportHistoryRow[]; totalCount: number }
+export interface ReportHistoryParams {
+  skipCount: number;
+  maxResultCount: number;
+  filter?: string;
+  sorting?: string;
+  columnFilters?: string;
+  timeZone?: string;
+}
 export interface AiPlanInput {
   prompt: string;
   academicYearId?: string;

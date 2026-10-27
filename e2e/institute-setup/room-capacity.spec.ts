@@ -9,10 +9,18 @@ import { createRoomFixture } from '../fixtures/room-capacity/mock-state';
     page.on('pageerror', (error) => errors.push(error.message));
     await page.route('**/api/**', async (route) => {
       const request = route.request();
+      const contentType = request.headers()['content-type'] ?? '';
+      const body = contentType.includes('multipart/form-data')
+        ? JSON.parse(String((await new Request(request.url(), {
+            method: request.method(),
+            headers: { 'content-type': contentType },
+            body: request.postData(),
+          }).formData()).get('input')))
+        : request.postDataJSON() ?? {};
       const result = fixture.respond(
         request.method(),
         new URL(request.url()).pathname,
-        request.postDataJSON() ?? {}
+        body
       );
       await route.fulfill(result);
     });
@@ -82,7 +90,7 @@ import { createRoomFixture } from '../fixtures/room-capacity/mock-state';
     expect(fixture.writes.filter((write) => write.method === 'POST')).toEqual([
       {
         method: 'POST',
-        path: '/api/app/room',
+        path: '/api/institute-setup/rooms',
         body: {
           roomName: 'Test Room 102',
           capacity: 14,

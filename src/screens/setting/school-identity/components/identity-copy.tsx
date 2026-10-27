@@ -1,77 +1,45 @@
-import type { Board, AcademicYear } from 'src/types/school';
+import type { AcademicYear } from 'src/types/school';
 
-import { useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import DialogActions from '@mui/material/DialogActions';
-import { shikshaMitraToast } from 'src/components/toast';
 import { FormSectionCard } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  useGetSchoolIdentityQuery,
-  useCopySchoolIdentityMutation,
-} from 'src/redux/InstituteSetup/schoolIdentityApi';
 
-import { identityError } from '../identity-form';
 import { IdentityAssets } from './identity-assets';
+import { useIdentityCopy } from '../hooks/use-identity-copy';
 import { IdentityContextFields } from './identity-context-fields';
 
 import type { IdentityContext } from '../types';
 
 export function IdentityCopyDialog({
   years,
-  boards,
   targetYearId,
   target,
   stamp,
   onClose,
 }: {
   years: AcademicYear[];
-  boards: Board[];
   targetYearId: string;
   target: IdentityContext;
   stamp: string;
   onClose: () => void;
 }) {
-  const [year, setYear] = useState('');
-  const [board, setBoard] = useState('');
-  const [medium, setMedium] = useState('');
-  const [organization, setOrganization] = useState('');
-  const [error, setError] = useState('');
-  const [copy, copying] = useCopySchoolIdentityMutation();
-  const context = {
-    boardId: board || undefined,
-    mediumId: medium || undefined,
-    organizationId: organization || undefined,
-  };
-  const query = useGetSchoolIdentityQuery(context, { skip: !board });
-  const compatible = Boolean(
-    board &&
-    target.boardId &&
-    Boolean(medium) === Boolean(target.mediumId) &&
-    Boolean(organization) === Boolean(target.organizationId)
-  );
-  const copySource = async () => {
-    if (!target.boardId || !compatible) return;
-    try {
-      await copy({
-        sourceBoardId: board,
-        sourceMediumId: medium || undefined,
-        sourceOrganizationId: organization || undefined,
-        targetBoardId: target.boardId,
-        targetMediumId: target.mediumId,
-        targetOrganizationId: target.organizationId,
-        targetConcurrencyStamp: stamp,
-      }).unwrap();
-      shikshaMitraToast.success({ message: 'School Identity overrides copied.' });
-      onClose();
-    } catch (failure) {
-      setError(identityError(failure));
-    }
-  };
+  const {
+    selection: { year, board, medium, organization },
+    error,
+    copying,
+    sourceHierarchy,
+    boards,
+    context,
+    query,
+    compatible,
+    copySource,
+    selectSource,
+  } = useIdentityCopy(target, stamp, onClose);
   return (
     <CustomDialog
       open
@@ -97,16 +65,18 @@ export function IdentityCopyDialog({
               boardId={board}
               mediumId={medium}
               organizationId={organization}
-              disabled={copying.isLoading}
-              onChange={(nextYear, nextBoard, nextMedium, nextOrganization = '') => {
-                setYear(nextYear);
-                setBoard(nextBoard);
-                setMedium(nextMedium);
-                setOrganization(nextOrganization);
-                setError('');
-              }}
+              disabled={copying.isLoading || sourceHierarchy.isFetching}
+              onChange={selectSource}
             />
           </FormSectionCard>
+          {sourceHierarchy.isError && (
+            <Alert
+              severity="error"
+              action={<Button onClick={() => sourceHierarchy.refetch()}>Retry</Button>}
+            >
+              Source academic options could not be loaded.
+            </Alert>
+          )}
           {board && !compatible && (
             <Alert severity="warning">
               Choose{' '}
@@ -147,7 +117,9 @@ export function IdentityCopyDialog({
             !compatible ||
             !query.currentData?.id ||
             !query.currentData.canManage ||
-            query.isFetching
+            query.isFetching ||
+            sourceHierarchy.isFetching ||
+            sourceHierarchy.isError
           }
           onClick={copySource}
           startIcon={<Iconify icon={GlobalIcons.copy} />}

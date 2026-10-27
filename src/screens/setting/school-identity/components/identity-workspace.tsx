@@ -19,18 +19,8 @@ import { useIdentityWorkspaceDialog } from '../hooks/use-identity-workspace-dial
 import type { SchoolIdentityWorkspace } from '../hooks/use-school-identity';
 
 export function IdentityWorkspace({ workspace }: { workspace: SchoolIdentityWorkspace }) {
-  const {
-    query,
-    context,
-    canManage,
-    years,
-    boards,
-    selectedYear,
-    tab,
-    valid,
-    yearsQuery,
-    boardsQuery,
-  } = workspace;
+  const { query, context, canManage, years, selectedYear, tab, valid, yearsQuery, boardsQuery } =
+    workspace;
   const { dialog, open, close, error, saving, resetOverride } =
     useIdentityWorkspaceDialog(workspace);
   const optionsReady =
@@ -108,7 +98,6 @@ export function IdentityWorkspace({ workspace }: { workspace: SchoolIdentityWork
       {dialog?.kind === 'copy' && dialog.profile && (
         <IdentityCopyDialog
           years={years}
-          boards={boards}
           targetYearId={selectedYear}
           target={context}
           stamp={dialog.profile.concurrencyStamp}

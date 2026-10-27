@@ -1,8 +1,10 @@
 import type { PropsWithChildren } from 'react';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
 import { http, HttpResponse } from 'msw';
+import auth from 'src/redux/auth/authSlice';
 import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '@mui/material/styles';
@@ -10,6 +12,7 @@ import { createTheme } from 'src/theme/create-theme';
 import globalState from 'src/redux/globalState/globalSlice';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 import type { TimeSlot, DayOfWeek, SlotSubject } from './types';
 
@@ -66,14 +69,25 @@ export function prepareRoomNetwork() {
   );
 }
 export function createRoomTestWrapper() {
+  const router: AppRouterInstance = {
+    back: () => undefined,
+    forward: () => undefined,
+    refresh: () => undefined,
+    push: () => undefined,
+    replace: () => undefined,
+    prefetch: () => undefined,
+    bfcacheId: 'room-defaults-test',
+  };
   const store = configureStore({
-    reducer: { confirmPopup, globalState, [api.reducerPath]: api.reducer },
+    reducer: { auth, confirmPopup, globalState, [api.reducerPath]: api.reducer },
     middleware: (defaults) => defaults().concat(api.middleware),
   });
   function Wrapper({ children }: PropsWithChildren) {
     return (
       <Provider store={store}>
-        <ThemeProvider theme={createTheme(defaultSettings)}>{children}</ThemeProvider>
+        <AppRouterContext.Provider value={router}>
+          <ThemeProvider theme={createTheme(defaultSettings)}>{children}</ThemeProvider>
+        </AppRouterContext.Provider>
       </Provider>
     );
   }

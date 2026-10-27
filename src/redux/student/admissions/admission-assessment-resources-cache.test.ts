@@ -53,11 +53,11 @@ afterEach(() => {
 it('refreshes subscribed room choices after Institute Setup room creation, capacity changes and deletion', async () => {
   const updatedRoom = { ...room, roomName: 'A002', capacity: 30 };
   mswServer.use(
-    http.post('*/api/app/room', () => {
+    http.post('*/api/institute-setup/rooms', () => {
       rooms = [room];
       return HttpResponse.json(room);
     }),
-    http.put('*/api/app/room/room-1', () => {
+    http.put('*/api/institute-setup/rooms/room-1', () => {
       rooms = [updatedRoom];
       return HttpResponse.json(updatedRoom);
     }),
@@ -125,7 +125,7 @@ it.each(['create', 'update', 'delete'] as const)(
 
 it('reloads an unused empty resource cache on drawer reopen after a room is added', async () => {
   mswServer.use(
-    http.post('*/api/app/room', () => {
+    http.post('*/api/institute-setup/rooms', () => {
       rooms = [room];
       return HttpResponse.json(room);
     })

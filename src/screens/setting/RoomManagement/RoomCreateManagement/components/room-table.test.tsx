@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
+import { _api as iconifyApi } from '@iconify/react';
 import { vi, it, expect, beforeEach } from 'vitest';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 import { createRoomTestWrapper } from 'src/components/timetable/room-defaults-test-fixture';
@@ -27,12 +28,20 @@ const buildings = [
   },
 ];
 beforeEach(() => {
+  iconifyApi.setFetch((...args) => fetch(...args));
   mswServer.use(
     http.get('*/api/auth/session', () => HttpResponse.json(null)),
     http.get('*/api/institute-setup/buildings', () => HttpResponse.json(buildings)),
-    http.get('*/api/app/room', () => HttpResponse.json({ items: [room], totalCount: 1 })),
-    http.get('https://api.iconify.design/:collection', () =>
-      HttpResponse.json({ icons: {}, not_found: [] })
+    http.get('*/api/app/room', ({ request }) => {
+      const filtered = Boolean(new URL(request.url).searchParams.get('filter'));
+      return HttpResponse.json({ items: filtered ? [] : [room], totalCount: filtered ? 0 : 1 });
+    }),
+    http.get('https://api.iconify.design/:collection', ({ request, params }) =>
+      HttpResponse.json({
+        prefix: String(params.collection).replace('.json', ''),
+        icons: {},
+        not_found: new URL(request.url).searchParams.get('icons')?.split(',') ?? [],
+      })
     )
   );
 });
@@ -49,7 +58,10 @@ it('names the table and row actions, searches rendered room values, and clears n
   fireEvent.click(await screen.findByRole('button', { name: 'Edit room A101' }));
   fireEvent.click(screen.getByRole('button', { name: 'Delete room A101' }));
   expect(onEdit).toHaveBeenCalledWith(room);
-  expect(onDelete).toHaveBeenCalledWith(room);
+  expect(onDelete).toHaveBeenCalledWith(
+    room,
+    expect.objectContaining({ maxResultCount: 25, skipCount: 0 })
+  );
   fireEvent.change(screen.getByRole('textbox', { name: 'Search rooms' }), {
     target: { value: 'missing-room' },
   });
@@ -119,4 +131,32 @@ it('retains the room list when building filters fail and recovers their controls
     expect(screen.getByRole('combobox', { name: 'Building' })).not.toHaveAttribute('aria-disabled')
   );
   expect(screen.getByText('A101')).toBeInTheDocument();
+});
+
+it('sends shared-table pagination, numeric column filters and sorting to the server', async () => {
+  const requests: URL[] = [];
+  mswServer.use(
+    http.get('*/api/app/room', ({ request }) => {
+      requests.push(new URL(request.url));
+      return HttpResponse.json({ items: [room], totalCount: 1201 });
+    })
+  );
+  renderTable();
+  await screen.findByText('A101');
+  fireEvent.click(screen.getByRole('button', { name: 'Go to next page' }));
+  await waitFor(() => expect(requests.at(-1)?.searchParams.get('skipCount')).toBe('25'));
+  fireEvent.click(screen.getByRole('button', { name: 'Filter Capacity' }));
+  const filter = screen.getByRole('dialog', { name: 'Filter Capacity' });
+  fireEvent.mouseDown(within(filter).getByRole('combobox', { name: /Filter Type/ }));
+  fireEvent.click(screen.getByRole('option', { name: 'Greater Than' }));
+  fireEvent.change(within(filter).getByLabelText(/^Capacity/), { target: { value: '20' } });
+  fireEvent.click(within(filter).getByRole('button', { name: 'Apply' }));
+  await waitFor(() =>
+    expect(JSON.parse(requests.at(-1)?.searchParams.get('columnFilters') ?? '[]')).toEqual([
+      { column: 'capacity', type: 'greaterThan', value: 20 },
+    ])
+  );
+  expect(requests.at(-1)?.searchParams.get('skipCount')).toBe('0');
+  fireEvent.click(screen.getByRole('button', { name: 'Sort by Capacity' }));
+  await waitFor(() => expect(requests.at(-1)?.searchParams.get('sorting')).toBe('capacity asc'));
 });

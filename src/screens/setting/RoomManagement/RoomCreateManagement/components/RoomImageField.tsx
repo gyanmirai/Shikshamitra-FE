@@ -12,6 +12,7 @@ import type { RoomFormik } from '../types/room-form';
 export function RoomImageField({ formik, room }: { formik: RoomFormik; room?: IRoom | null }) {
   const saved = useGetRoomImageQuery(room?.id ?? '', { skip: !room?.hasImage });
   const [preview, setPreview] = useState('');
+  const [savedPreview, setSavedPreview] = useState('');
   const [error, setError] = useState('');
   const file = formik.values.imageFile;
   useEffect(() => {
@@ -20,10 +21,16 @@ export function RoomImageField({ formik, room }: { formik: RoomFormik; room?: IR
     setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+  useEffect(() => {
+    if (!saved.currentData) return undefined;
+    const url = URL.createObjectURL(saved.currentData);
+    setSavedPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [saved.currentData]);
   const image = file
     ? preview
     : !formik.values.removeImage && saved.currentData
-      ? `data:${saved.currentData.contentType};base64,${saved.currentData.content}`
+      ? savedPreview
       : '';
   const hasImage = !!file || (!!room?.hasImage && !formik.values.removeImage);
 

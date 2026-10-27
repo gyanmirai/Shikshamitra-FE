@@ -30,9 +30,9 @@ export function toSeatingRoomLayout(
   roomName: string
 ): SeatingRoomLayout {
   const source = response?.room;
-  const columnRows = source?.columnRows?.length ? [...source.columnRows] : undefined;
+  const columnRows = source?.columnRows ? [...source.columnRows] : undefined;
   const rawBenchCapacity = source?.benchCapacity ?? 1;
-  const benchCapacity = Math.max(1, rawBenchCapacity);
+  const benchCapacity = Math.max(columnRows ? 0 : 1, rawBenchCapacity);
   const totalBenches = source?.totalBenches ?? 0;
   const capacity = columnRows
     ? columnRows.reduce((total, rows) => total + rows, 0) * benchCapacity
@@ -40,7 +40,7 @@ export function toSeatingRoomLayout(
   const columns =
     columnRows?.length ?? Math.max(capacity > 0 ? 1 : 0, source?.benchesPerColumn ?? 0);
   const rows = columnRows
-    ? Math.max(...columnRows)
+    ? Math.max(0, ...columnRows)
     : Math.max(
         source?.benchesPerRow ?? 0,
         columns ? Math.ceil(capacity / (columns * benchCapacity)) : 0

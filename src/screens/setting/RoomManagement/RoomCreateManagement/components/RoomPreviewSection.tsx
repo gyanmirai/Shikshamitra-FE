@@ -42,7 +42,7 @@ export function RoomPreviewSection({
           hasUnsavedChanges={false}
         >
           <DialogScrollContent>
-            {values.columnRows.length === Number(values.columns) ? (
+            {values.columns !== '' && values.columnRows.length === Number(values.columns) ? (
               <RoomLayoutPreview rows={values.columnRows} benchCapacity={values.benchCapacity} />
             ) : (
               <Alert severity="info">Enter a valid column count to preview the room.</Alert>

@@ -15,11 +15,11 @@ export function RoomLayoutPreview({
   const columns = rows.map(Number);
   const students = Number(benchCapacity);
   if (
-    !columns.length ||
+    benchCapacity === '' ||
     columns.length > 50 ||
     columns.some((count) => !Number.isInteger(count) || count < 1 || count > 100) ||
     !Number.isInteger(students) ||
-    students < 1 ||
+    students < 0 ||
     students > 20
   ) {
     return (
@@ -28,11 +28,19 @@ export function RoomLayoutPreview({
       </Alert>
     );
   }
-  const total = totalRoomBenches(rows);
+  const total = totalRoomBenches(rows, benchCapacity);
+  if (total === 0) return <Alert severity="info">This room has no bench seating.</Alert>;
   const scale = zoom === 'fit' ? 1 : zoom;
   return (
     <Stack spacing={2}>
-      <Box aria-live="polite" sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
+      <Box
+        aria-live="polite"
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' },
+          gap: 1.5,
+        }}
+      >
         {[
           ['Columns', columns.length],
           ['Benches', total],

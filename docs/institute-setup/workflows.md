@@ -3,7 +3,7 @@ module: institute-setup
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-10-27
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -26,6 +26,14 @@ Changing fields preserves other draft choices, failed submissions retain the dra
 New create forms show the result beside the raw name input; existing names and edit forms keep their saved format.
 The popover is available to users with Academic Setup Edit and reuses the shared popover, select, confirmation, and toast components.
 See the [backend rules](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md#academic-field-formatting) for persistence and create behavior.
+
+## Building floor capacity
+
+Open the existing building form and adjust a floor's total room capacity.
+The form loads current room counts, places an invalid reduction below its floor field and retains entered values after a rejected save.
+After deleting or reassigning rooms in the room workflow, choose `Refresh room counts` to validate the current draft against refreshed usage, then submit again.
+A failed refresh keeps the previous validation state and offers `Retry`; saving remains blocked until counts load.
+The [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families) owns the room-capacity rule and error contract.
 
 ## Reports
 
@@ -90,8 +98,28 @@ Template controls use the same upload/editor rules. Existing custom values have 
 
 ## Room configuration
 
-At `/setting/room`, Add Room and Update Room use shared section cards for location, bench layout and features. Enter a column count to show one labelled group per column, with a row-count field, bounded plus/minus controls and a bench/student subtotal. Changing the count preserves the remaining column values. Totals are read-only and update from those rows and students per bench. Legacy partial grids open with their existing bench count distributed in row order.
+Room search and column filters apply to the full server dataset.
+Changing criteria resets pagination; deletion updates the visible row immediately, offers Undo, and clamps a now-empty last page only after a confirmed server response.
+The room form warns when a floor has reached its configured room limit and retains the draft when a concurrent save takes its remaining place.
+Basic Information likewise retains editable values after failed saves and closes only after a successful response.
 
 Selecting a full floor shows **Room Limit Reached** with the building, floor, existing room count and configured limit. **Edit building** opens that building's existing editor for users with building write access. Increase **Total rooms** for the selected floor and submit, then continue the retained room draft. The form refreshes building options and removes the warning only when space is available; cancellation, failed saves and unchanged limits retain it. A failed refresh offers Retry and keeps submission blocked. Switching to another available floor also allows the draft to continue. Editing a room already on the same full floor remains available. The [backend room rules](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families) enforce the limit at save time.
 
-Preview room opens a separate read-only dialog showing unequal columns, illustrated desks/benches, seated student figures and total capacity. Fit room shows the complete layout; zoom controls allow closer inspection in a keyboard-scrollable canvas. Student figures indicate capacity. Back to form, Close and Escape dismiss only the preview and restore the draft and trigger focus. Extra feature saves a reusable catalogue choice immediately and selects it for this room; cancelling the room does not remove that catalogue choice. Submit waits for success, locks closing while a write is pending, and retains the draft after failure.
+At `/setting/room`, Add Room and Update Room use shared section cards for location, bench layout and features.
+Enter a column count to show one labelled group per column, with a row-count field, bounded plus/minus controls and a bench/student subtotal.
+Changing the count preserves the remaining column values.
+Totals are read-only and update from those rows and students per bench.
+Legacy partial grids open with their existing bench count distributed in row order.
+
+Columns and Students per bench accept zero, and saving then reopening the room retains those values.
+Zero columns removes the column groups; zero students per bench keeps configured rows available for restoring seating with a positive value.
+The totals show zero and Preview room displays `This room has no bench seating.` without a seating diagram.
+The [backend room layout contract](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families) owns the saved bounds and derived totals.
+
+Preview room opens a separate read-only dialog showing unequal columns, illustrated desks/benches, seated student figures and total capacity.
+Fit room shows the complete layout; zoom controls allow closer inspection in a keyboard-scrollable canvas.
+Student figures indicate capacity.
+Back to form, Close and Escape dismiss only the preview and restore the draft and trigger focus.
+Each invalid submission focuses the first invalid field once for that attempt, leaving the other fields and preview usable; submitting again focuses the first remaining error.
+Extra feature saves a reusable catalogue choice immediately and selects it for this room; cancelling the room does not remove that catalogue choice.
+Submit waits for success, locks closing while a write is pending, and retains the draft after failure.

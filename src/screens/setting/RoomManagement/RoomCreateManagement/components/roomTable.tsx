@@ -11,10 +11,13 @@ import RoomTableFeedback from './RoomTableFeedback';
 import { useRoomTable } from '../hooks/useRoomTable';
 import { ALL_ROOMS_FILTER } from '../types/room-table';
 import { getRoomTableColumns } from './roomTableColumns';
+import { useRoomTableControls } from '../hooks/use-room-table-controls';
 
 import type { RoomTableActions } from '../types/room-table';
 
 export default function RoomTable(actions: RoomTableActions) {
+  const { onDelete } = actions;
+  const workspace = useRoomTable();
   const {
     roomsQuery,
     buildingsQuery,
@@ -24,9 +27,13 @@ export default function RoomTable(actions: RoomTableActions) {
     floorId,
     changeBuilding,
     setFloorId,
-    clearFilters,
-  } = useRoomTable();
-  const hasFilters = buildingId !== ALL_ROOMS_FILTER;
+    params,
+    search,
+    filters,
+  } = workspace;
+  const controls = useRoomTableControls(workspace);
+  const hasFilters = buildingId !== ALL_ROOMS_FILTER || Boolean(search) || filters.length > 0;
+  const clearCriteria = controls.onClearCriteria;
   const refreshing = roomsQuery.isFetching && Boolean(roomsQuery.currentData);
 
   return (
@@ -40,7 +47,7 @@ export default function RoomTable(actions: RoomTableActions) {
         disabled={buildingsQuery.isLoading || buildingsQuery.isError}
         onBuildingChange={changeBuilding}
         onFloorChange={setFloorId}
-        onClear={clearFilters}
+        onClear={clearCriteria}
       />
       {buildingsQuery.isError && (
         <Alert
@@ -69,11 +76,13 @@ export default function RoomTable(actions: RoomTableActions) {
           {refreshing && <LinearProgress aria-label="Refreshing rooms" sx={{ height: 1 }} />}
         </Box>
         <CustomizableTable
+          {...controls}
           tableId="room-data-table"
           tableTitle="Rooms"
           isLoading={roomsQuery.isFetching && !roomsQuery.currentData}
-          columns={getRoomTableColumns(actions)}
+          columns={getRoomTableColumns({ ...actions, onDelete: (room) => onDelete(room, params) })}
           data={rooms}
+          exportScope="loaded"
           wrapperProps={{
             sx: {
               height: 1,
@@ -93,7 +102,7 @@ export default function RoomTable(actions: RoomTableActions) {
             placeholder: 'Search rooms...',
             inputProps: { 'aria-label': 'Search rooms' },
           }}
-          noDataText={<RoomTableFeedback filtered={hasFilters} onAction={clearFilters} />}
+          noDataText={<RoomTableFeedback filtered={hasFilters} onAction={clearCriteria} />}
           errorContent={
             roomsQuery.isError && (
               <RoomTableFeedback

@@ -6,7 +6,10 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import type { IRoom } from '../types';
 import type { RoomTableActions } from '../types/room-table';
 
-export function getRoomTableColumns({ onEdit, onDelete }: RoomTableActions): IColumn[] {
+export function getRoomTableColumns({
+  onEdit,
+  onDelete,
+}: Omit<RoomTableActions, 'onDelete'> & { onDelete: (room: IRoom) => void }): IColumn[] {
   const textCell = { typography: 'body2', whiteSpace: 'normal', overflowWrap: 'anywhere' } as const;
   return [
     {
@@ -20,6 +23,7 @@ export function getRoomTableColumns({ onEdit, onDelete }: RoomTableActions): ICo
       id: 'capacity',
       label: 'Capacity',
       filterType: 'number',
+      filterStep: 1,
       align: 'right',
       minWidth: 100,
       cellSx: { typography: 'body2' },
@@ -45,6 +49,7 @@ export function getRoomTableColumns({ onEdit, onDelete }: RoomTableActions): ICo
       id: 'totalBenches',
       label: 'Total Benches',
       filterType: 'number',
+      filterStep: 1,
       align: 'right',
       minWidth: 140,
       cellSx: { typography: 'body2' },
@@ -52,6 +57,7 @@ export function getRoomTableColumns({ onEdit, onDelete }: RoomTableActions): ICo
     },
     {
       id: 'features',
+      isSort: false,
       label: 'Features',
       filterType: 'string',
       minWidth: 220,

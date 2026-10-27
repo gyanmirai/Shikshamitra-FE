@@ -32,6 +32,36 @@ let jobs = [];
 let failPreview = false;
 let failDownload = false;
 const requestPlan = (type = 'rooms-inventory') => ({ reportType: type, format: 'pdf', page: 1, pageSize: 25, filters: ['academic-hierarchy', 'class-division-summary'].includes(type) ? { academicYearId: year } : {}, columns: [], conditions: type === 'class-division-summary' ? [{ field: 'divisionCount', operator: 'eq', value: '1' }] : [], descending: false });
+const currentJob = (job) => ({ ...job, status: Date.now() - job.started > 1500 ? 'Completed' : 'Processing', completedAt: new Date().toISOString() });
+const compactJob = (job) => { const row = currentJob(job); delete row.request; delete row.started; return { ...row, reportTypeId: job.request.reportType }; };
+const historyPage = (params) => {
+  let rows = jobs.map(compactJob);
+  const search = (params.get('filter') ?? '').toLowerCase();
+  if (search) rows = rows.filter((row) => Object.values(row).some((value) => String(value ?? '').toLowerCase().includes(search)));
+  const criteria = JSON.parse(params.get('columnFilters') ?? '[]');
+  const columns = [...new Set(criteria.map((item) => item.column))];
+  rows = rows.filter((row) => columns.every((column) => criteria.filter((item) => item.column === column).some((item) => {
+    if (['creationTime', 'completedAt', 'expiresAt'].includes(column)) {
+      if (!row[column]) return false;
+      const actual = Math.floor(Date.parse(row[column]) / 60000);
+      const expected = Math.floor(Date.parse(item.value) / 60000);
+      return item.type === 'after' ? actual >= expected : item.type === 'before' ? actual <= expected : actual === expected;
+    }
+    const actual = String(row[column] ?? 'Not available').toLowerCase(); const expected = String(item.value).toLowerCase();
+    return item.type === 'equals' ? actual === expected : item.type === 'startsWith' ? actual.startsWith(expected) : item.type === 'endsWith' ? actual.endsWith(expected) : actual.includes(expected);
+  })));
+  const sorts = (params.get('sorting') ?? 'creationTime desc').split(',').map((part) => part.trim().split(' '));
+  rows.sort((left, right) => {
+    for (const [column, direction] of sorts) {
+      const a = left[column] ?? ''; const b = right[column] ?? ''; const compare = a < b ? -1 : a > b ? 1 : 0;
+      if (compare) return direction === 'desc' ? -compare : compare;
+    }
+    return 0;
+  });
+  const skip = Math.max(0, Number(params.get('skipCount') ?? 0));
+  const size = Math.min(100, Math.max(1, Number(params.get('maxResultCount') ?? 10)));
+  return { items: rows.slice(skip, skip + size), totalCount: rows.length };
+};
 const moduleRows = (request) => {
   const { reportType, filters } = request;
   if (reportType === 'school-document-counts') {
@@ -68,7 +98,16 @@ export function reportFixtureApi() {
       if (path === '/fixture/fail-download') { failDownload = true; return send({}); }
       const route = path.replace('/api/app/institute-setup-report', '');
       if (route === '/options') return send({ reportTypes, choices, values });
-      if (route === '/exports' && req.method === 'GET') return send(jobs.map((job) => ({ ...job, status: Date.now() - job.started > 1500 ? 'Completed' : 'Processing', completedAt: new Date().toISOString() })));
+      if (route === '/exports' && req.method === 'GET') return send(jobs.map(currentJob));
+      if (route === '/history') {
+        const params = new URL(req.url, 'http://fixture').searchParams;
+        return send(historyPage(params));
+      }
+      if (route === '/statuses' && req.method === 'POST') return send(jobs.filter((job) => body.includes(job.id)).map(compactJob));
+      if (/^\/exports\/[^/]+$/.test(route) && req.method === 'GET') {
+        const job = jobs.find((item) => item.id === route.split('/')[2]);
+        return job ? send(currentJob(job)) : send({}, 404);
+      }
       if (route === '/preview' || route === '/ai/preview') {
         if (failPreview) { failPreview = false; return send({ error: { message: 'Synthetic preview failure. Please retry.' } }, 503); }
         return send(preview(body.plan ?? body));

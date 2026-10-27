@@ -3,8 +3,8 @@ import { it, vi, expect, describe } from 'vitest';
 import { arrayBufferToBase64 } from './pdf-export';
 import {
   exportTable,
-  formatExportTimestamp,
   formatCellValue,
+  formatExportTimestamp,
   getCellValueForExport,
   getTypedCellValueForExport,
 } from './table-export';
@@ -12,6 +12,14 @@ import {
 import type { IData, IColumn } from './types';
 
 describe('table export', () => {
+  it('rechecks the session before saving after asynchronous Excel preparation', async () => {
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const beforeDownload = vi.fn().mockImplementationOnce(() => {}).mockImplementation(() => { throw new Error('Session changed'); });
+    try {
+      await expect(exportTable({ format: 'excel', tableTitle: 'History', columns: [{ id: 'name', label: 'Name' }], columnVisibility: { name: true }, rows: [{ name: 'School A' }], beforeDownload })).rejects.toThrow('Session changed');
+      expect(click).not.toHaveBeenCalled();
+    } finally { click.mockRestore(); }
+  });
   it('labels generated timestamps in IST with a consistent date and minute precision', () => {
     expect(formatExportTimestamp(new Date('2026-10-21T09:16:37Z'))).toBe(
       '21 Oct 2026, 2:46 PM IST'

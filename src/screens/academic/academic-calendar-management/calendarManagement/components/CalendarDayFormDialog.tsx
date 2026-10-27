@@ -263,7 +263,7 @@ const CalendarDayFormDialog = ({
   );
   const selectedExam = exams.find((exam) => exam.id === formik.values.linkedExamId);
   const persistedLinkedExamId = editData?.linkedExamId || getSyncedExamId(editData?.description);
-  const rooms = roomsResponse?.items ?? roomsResponse ?? [];
+  const rooms = Array.isArray(roomsResponse) ? roomsResponse : roomsResponse?.items ?? [];
   const roomOptions = rooms.map((room: any) => {
     const labelParts = [room.buildingName, room.floorName, room.roomName || room.name].filter(
       Boolean

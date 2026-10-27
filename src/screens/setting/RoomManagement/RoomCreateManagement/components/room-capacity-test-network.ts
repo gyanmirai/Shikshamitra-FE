@@ -13,6 +13,7 @@ export function capacityNetwork() {
     buildingReads: 0,
     buildingWrites: [] as Record<string, unknown>[],
     roomWrites: [] as Record<string, unknown>[],
+    roomWritePaths: [] as string[],
   };
   const building = () => ({
     id: 'building-a',
@@ -51,14 +52,16 @@ export function capacityNetwork() {
       state.totalRoom = floors[0].totalRoom;
       return HttpResponse.json(building());
     }),
-    http.post('*/api/app/room', async ({ request }) => {
-      const body = (await request.json()) as Record<string, unknown>;
+    http.post('*/api/institute-setup/rooms', async ({ request }) => {
+      const body = JSON.parse(String((await request.formData()).get('input')));
       state.roomWrites.push(body);
+      state.roomWritePaths.push(new URL(request.url).pathname);
       return HttpResponse.json({ ...body, id: 'new-room' });
     }),
-    http.put('*/api/app/room/room-a', async ({ request }) => {
-      const body = (await request.json()) as Record<string, unknown>;
+    http.put('*/api/institute-setup/rooms/room-a', async ({ request }) => {
+      const body = JSON.parse(String((await request.formData()).get('input')));
       state.roomWrites.push(body);
+      state.roomWritePaths.push(new URL(request.url).pathname);
       return HttpResponse.json({ ...body, id: 'room-a' });
     })
   );

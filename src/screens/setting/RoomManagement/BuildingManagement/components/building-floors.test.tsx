@@ -47,6 +47,7 @@ describe('building floor removal recovery', () => {
         .getAllByRole('textbox', { name: /Floor name/i })
         .map((field) => (field as HTMLInputElement).value)
     ).toEqual(['Ground', 'First']);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledWith(null, true));
     expect(saved).toMatchObject({
@@ -63,6 +64,7 @@ describe('building floor removal recovery', () => {
     renderBuildingForm(store, onClose);
     fireEvent.click(screen.getByRole('button', { name: 'Remove floor 1' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove floor 1' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByText(/Add at least one floor/i)).toBeVisible();
     expect(save).not.toHaveBeenCalled();

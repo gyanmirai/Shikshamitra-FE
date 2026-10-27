@@ -24,6 +24,7 @@ export function RoomBuildingEditor({ open, building, onSaved }: Props) {
           floorName: floor.floorName,
           floorNo: floor.floorNo ?? index + 1,
           totalRoom: floor.totalRoom ?? '',
+          roomCount: floor.roomCount,
         })),
       }}
       onClose={(_, saved) => {

@@ -6,6 +6,42 @@ import { validateSeatingDraft } from './validate';
 import { getUsableSeatCount, toSeatingRoomLayout } from './room-layout';
 
 describe('saved room layouts in seating allocation', () => {
+  it.each([
+    { label: 'zero columns', columnRows: [], benchCapacity: 2, rows: 0, columns: 0 },
+    { label: 'zero columns and students', columnRows: [], benchCapacity: 0, rows: 0, columns: 0 },
+    {
+      label: 'zero students with saved rows',
+      columnRows: [3, 2],
+      benchCapacity: 0,
+      rows: 3,
+      columns: 2,
+    },
+  ])(
+    'keeps $label empty despite stale aggregate values',
+    ({ columnRows, benchCapacity, rows, columns }) => {
+      const room = toSeatingRoomLayout(
+        {
+          room: {
+            columnRows,
+            benchCapacity,
+            capacity: 198,
+            totalBenches: 99,
+            benchesPerRow: 11,
+            benchesPerColumn: 9,
+          },
+        },
+        'room-a',
+        'Activity Hall'
+      );
+      expect(room).toMatchObject({ capacity: 0, columnRows, benchCapacity, rows, columns });
+      expect(room.seats).toEqual([]);
+      expect(getUsableSeatCount(room)).toBe(0);
+      expect(
+        [room.capacity, room.rows, room.columns, room.benchCapacity].every(Number.isFinite)
+      ).toBe(true);
+    }
+  );
+
   it('uses unequal column counts without creating phantom benches', () => {
     const room = toSeatingRoomLayout(
       { room: { columnRows: [3, 1, 2], benchCapacity: 2, capacity: 999 } },

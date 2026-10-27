@@ -22,6 +22,7 @@ const RoomTypeTable: React.FC<IRoomTypeTableProps> = ({ onEdit, onDelete }) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRoomTypesQuery,
+    options: { refetchOnMountOrArgChange: false },
   });
 
   return (

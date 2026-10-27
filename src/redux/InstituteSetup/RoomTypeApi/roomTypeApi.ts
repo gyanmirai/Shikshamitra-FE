@@ -34,7 +34,14 @@ export const roomTypeApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [instituteSetupType.roomTypes],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              instituteSetupType.roomTypes,
+              instituteSetupType.rooms,
+              instituteSetupType.roomDetails,
+            ],
     }),
 
     deleteRoomType: builder.mutation({
@@ -42,7 +49,14 @@ export const roomTypeApi = api.injectEndpoints({
         url: `/app/room-type/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [instituteSetupType.roomTypes],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              instituteSetupType.roomTypes,
+              instituteSetupType.rooms,
+              instituteSetupType.roomDetails,
+            ],
     }),
   }),
   overrideExisting: false,

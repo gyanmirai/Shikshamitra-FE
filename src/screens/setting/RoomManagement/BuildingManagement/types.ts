@@ -3,6 +3,7 @@ export interface IFloor {
   floorNo: number;
   floorName: string;
   totalRoom: number | string;
+  roomCount?: number;
 }
 
 export interface IBuildingFloorValue extends IFloor {

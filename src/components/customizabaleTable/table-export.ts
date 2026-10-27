@@ -14,6 +14,7 @@ type TableExportArgs = {
   rows: IData[];
   tableTitle: ReactNode;
   context?: string[];
+  beforeDownload?: () => void;
 };
 
 export function formatExportTimestamp(date = new Date()): string {
@@ -119,7 +120,9 @@ export async function exportTable({
   rows,
   tableTitle,
   context = [],
+  beforeDownload,
 }: TableExportArgs): Promise<void> {
+  beforeDownload?.();
   if (format === 'print') {
     window.print();
     return;
@@ -145,7 +148,7 @@ export async function exportTable({
   ];
 
   if (format === 'pdf') {
-    await saveUnicodeTablePdf({ title, head, body, context: details });
+    await saveUnicodeTablePdf({ title, head, body, context: details }, beforeDownload);
     return;
   }
 
@@ -198,6 +201,7 @@ export async function exportTable({
       )
     );
     const bytes = new Uint8Array(XLSX.CFB.write(archive, { type: 'array', fileType: 'zip' }));
+    beforeDownload?.();
     const href = URL.createObjectURL(
       new Blob([bytes], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

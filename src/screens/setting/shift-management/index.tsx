@@ -31,6 +31,7 @@ const ShiftManageMentScreen = () => {
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetShiftsQuery,
+    options: { refetchOnMountOrArgChange: false },
   });
   const [deleteShift, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
