@@ -390,6 +390,7 @@ function SalaryTemplateWorkflow({
     const timer = setTimeout(
       () => {
         setPreview(null);
+        setPreviewFields([]);
         setPreviewError('The salary preview expired. Refresh preview before saving.');
       },
       Math.max(0, Date.parse(preview.result.expiresAt) - Date.now())
@@ -552,6 +553,7 @@ function SalaryTemplateWorkflow({
         sampleAmount > 100000000 ||
         !/^\d{4}-(0[1-9]|1[0-2])$/.test(effectiveMonth)
       ) {
+        setPreviewFields([]);
         setPreviewError('Enter a sample amount greater than zero and a valid effective month.');
         setPendingFocus('salary-sample-calculation');
         return;
@@ -568,10 +570,12 @@ function SalaryTemplateWorkflow({
     const signature = inputSignature;
     setPreview(null);
     setPreviewError('');
+    setPreviewFields([]);
     setServerError('');
     try {
       const result = await calculate(previewInput).unwrap();
       if (sequence === requestSequence.current && signature === latestSignature.current) {
+        setPreviewFields([]);
         setPreview({ signature, result });
         setHasPreviewed(true);
       }

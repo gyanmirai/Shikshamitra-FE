@@ -169,6 +169,56 @@ const renderEditor = (ui: React.ReactNode) =>
 const originalTemplate = structuredClone(mocks.template);
 
 describe('SalaryTemplateEditor', () => {
+  it('does not reuse PF correction targets after an unchanged-input retry succeeds and expires', async () => {
+    vi.useFakeTimers();
+    try {
+      const success = await mocks.calculate().unwrap();
+      mocks.calculate.mockClear();
+      mocks.calculate
+        .mockReturnValueOnce({
+          unwrap: vi.fn().mockRejectedValue({
+            status: 400,
+            data: {
+              errorCode: 'HR:Payroll:PfRuleNotEffective',
+              detail: 'One or more business rules were violated.',
+            },
+          }),
+        })
+        .mockReturnValueOnce({
+          unwrap: vi
+            .fn()
+            .mockResolvedValue({
+              ...success,
+              expiresAt: new Date(Date.now() + 1000).toISOString(),
+            }),
+        });
+      renderEditor(<SalaryTemplateEditor templateId="template-1" />);
+      await act(async () =>
+        fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }))
+      );
+      expect(screen.getByRole('button', { name: 'Review PF rule' })).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Review preview month' })).toBeVisible();
+      await act(async () =>
+        fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }))
+      );
+      expect(mocks.calculate.mock.calls[1][0]).toEqual(mocks.calculate.mock.calls[0][0]);
+      expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled();
+      await act(async () => vi.advanceTimersByTimeAsync(1000));
+      expect(
+        screen.getByText('The salary preview expired. Refresh preview before saving.')
+      ).toBeVisible();
+      expect(screen.queryByRole('button', { name: 'Review PF rule' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Review preview month' })
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+      expect(mocks.updateTemplate).not.toHaveBeenCalled();
+    } finally {
+      cleanup();
+      vi.useRealTimers();
+    }
+  });
+
   it('focuses the visible month control for an ineffective PF rule', async () => {
     const user = userEvent.setup();
     mocks.calculate.mockReturnValueOnce({
