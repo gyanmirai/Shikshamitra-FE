@@ -118,6 +118,14 @@ export type ClassTeacherAssignmentHistory = {
 
 export const classTeacherAssignmentApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({
+    getClassTeacherWorkspace: builder.query<{
+      items: ClassTeacherAssignmentRowDto[];
+      summary: ClassTeacherSummary;
+      eligibleTeachers: ClassTeacherEligibleTeacher[];
+    }, { organizationId: string }>({
+      query: (params) => ({ url: 'class-management/class-teacher-assignments/workspace', method: 'GET', params }),
+      providesTags: [classManagementType.classTeacherAssignment],
+    }),
     getClassTeacherAssignments: builder.query<
       ClassTeacherAssignmentRowDto[],
       { organizationId: string }
@@ -181,6 +189,7 @@ export const classTeacherAssignmentApi = classManagementApi.injectEndpoints({
 });
 
 export const {
+  useGetClassTeacherWorkspaceQuery,
   useGetClassTeacherAssignmentsQuery,
   useGetClassTeacherAssignmentSummaryQuery,
   useGetClassTeacherEligibleTeachersQuery,

@@ -28,7 +28,7 @@ import DocumentPreviewDialog from 'src/components/preview-document/DocumentPrevi
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
-import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { useGetChapterLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
@@ -342,7 +342,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     isFetching: isChapterFetching,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    currentQueryAndMutation: useGetChapterLookupQuery,
     params: {
       standardId: formik.values.classId || formik.values.class,
       subjectId: formik.values.subjectId,
@@ -380,6 +380,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !(medium as Medium)?.id,
+      refetchOnMountOrArgChange: 60,
     },
   });
 

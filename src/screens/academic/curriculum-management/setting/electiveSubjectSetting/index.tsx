@@ -14,7 +14,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Alert, Button, TextField } from '@mui/material';
 import { academicPermissions } from 'src/constants/academic-menu';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { AcademicSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/academic/setup/embedding';
 import { useGetElectiveGroupUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
@@ -69,7 +69,7 @@ const ElectiveSubjectSetting = () => {
   );
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box height="100%" minHeight={0} display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Elective Group Creation"
         description="Manage reusable elective subject groups used during class-wise subject allocation."

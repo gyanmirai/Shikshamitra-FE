@@ -16,6 +16,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AcademicDatePicker } from 'src/components/academic-date-picker';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import { Box, Tab, Chip, Paper, Stack, Alert, Button, Tooltip, IconButton } from '@mui/material';
+import { useGetReservationSummaryQuery } from 'src/redux/academicAPI/timetableApi/roomAvailabilityApi';
 
 // Removed MOCK_SUMMARY
 import { RoomDetailDrawer } from './components/RoomDetailDrawer';
@@ -106,11 +107,12 @@ const RoomAvailabilityScreen = () => {
     return [{ value: 'all', label: 'All Floors' }, ...list];
   }, [buildings, filters.building]);
 
-  const availability = useRoomAvailability(filters);
+  const availability = useRoomAvailability(filters, { skip: activeTab !== 'availability' });
   const reservationsHook = useRoomReservations({
     isApprovalView: activeTab === 'approvals',
     createdDate: reservationDateFilter || undefined,
-  });
+  }, { skip: activeTab === 'availability' });
+  const reservationSummary = useGetReservationSummaryQuery({ isApprovalView: activeTab === 'approvals', createdDate: reservationDateFilter || undefined });
 
   useEffect(() => {
     if (!isApprover && activeTab === 'approvals') {
@@ -231,10 +233,7 @@ const RoomAvailabilityScreen = () => {
     reservationsHook.isLoading || reservationsHook.isFetching || reservationsHook.isMutationLoading;
 
   // ── Pending count for approval badge ──────────────────────────────────────
-  const pendingCount = useMemo(
-    () => reservationsHook.data.filter((r) => r.approvalStatus === 'pending').length,
-    [reservationsHook.data]
-  );
+  const pendingCount = reservationSummary.currentData?.statusCounts.pendingApproval ?? 0;
 
   return (
     <Box
@@ -447,6 +446,10 @@ const RoomAvailabilityScreen = () => {
         {/* Reservations Tab */}
         {activeTab === 'reservations' && (
           <RoomReservationsTab
+            tableProps={reservationsHook.tableProps}
+            selectedStatus={reservationsHook.status}
+            onStatusChange={reservationsHook.setStatus}
+            counts={reservationsHook.counts}
             reservations={reservationsHook.data}
             canApprove={isApprover}
             isLoading={isReservationLoading}
@@ -461,6 +464,7 @@ const RoomAvailabilityScreen = () => {
         {/* Approvals Tab */}
         {isApprover && activeTab === 'approvals' && (
           <RoomApprovalQueue
+            tableProps={reservationsHook.tableProps}
             reservations={reservationsHook.data}
             isLoading={isReservationLoading}
             pendingAction={pendingAction}

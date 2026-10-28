@@ -1,6 +1,7 @@
 import type { GrantedPermission } from 'src/utils/permissions';
 
 import React from 'react';
+import { api } from 'src/redux/service';
 import { createRoot } from 'react-dom/client';
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider, useSelector } from 'react-redux';
@@ -21,9 +22,10 @@ const seating = [root, `${root}.Examination`, 'Academics.Examination.SeatAllocat
 const asGrants = (names: string[]): GrantedPermission[] => names.map((name) => ({ name, isGranted: true }));
 const initialState = { permissions: asGrants(calendar), permissionsInitialized: true, loading: false };
 const store = configureStore({ reducer: {
+  [api.reducerPath]: api.reducer,
   auth: (state: typeof initialState | undefined, action: { type: string; payload?: typeof initialState }) =>
     action.type === 'fixture/permissions' ? action.payload! : state ?? initialState,
-} });
+}, middleware: (defaults) => defaults().concat(api.middleware) });
 const setPermissions = (names: string[], loading = false) => store.dispatch({
   type: 'fixture/permissions',
   payload: { permissions: asGrants(names), loading, permissionsInitialized: !loading },

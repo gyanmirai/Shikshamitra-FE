@@ -1,25 +1,25 @@
 'use client';
 
+import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
+
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
-import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
+import { LoadingButton } from '@mui/lab';
 import Tooltip from '@mui/material/Tooltip';
+import { GlobalIcons } from 'src/utils/icons';
 import TextField from '@mui/material/TextField';
+import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import DialogActions from '@mui/material/DialogActions';
-
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
+import CancelButton from 'src/components/cancel-button';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import CancelButton from 'src/components/cancel-button';
 
 import { ApprovalStatusChip, ConflictSeverityChip } from './RoomStatusChip';
 
@@ -28,6 +28,7 @@ import type { RoomReservation } from '../types';
 type PendingAction = { id: string; type: 'approve' | 'reject' } | null;
 
 interface RoomApprovalQueueProps {
+  tableProps?: Partial<ICustomizableTableProps>;
   reservations: RoomReservation[];
   isLoading?: boolean;
   pendingAction?: PendingAction;
@@ -36,6 +37,7 @@ interface RoomApprovalQueueProps {
 }
 
 export const RoomApprovalQueue = ({
+  tableProps,
   reservations,
   isLoading = false,
   pendingAction,
@@ -83,6 +85,7 @@ export const RoomApprovalQueue = ({
     <>
       <Stack sx={{ height: '100%' }}>
         <CustomizableTable
+          {...tableProps}
           tableContainerProps={{ sx: { height: '100%' } }}
           tableId="room-approval-queue"
           tableTitle="Pending Approvals"

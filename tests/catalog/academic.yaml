@@ -1,6 +1,104 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-DASHBOARD-EMPTY-AFTER-SETUP-001
+    module: Academic
+    submodule: Dashboard
+    title: Save and exit from the setup guide opens the empty Academic dashboard with a zero score, Needs Attention status, and no NaN or application errors
+    risk: high
+    priority: P1
+    type: [functional, regression, workflow, resilience]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/setup, /academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-module-setup.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-setup', '@submodule-dashboard', '@critical', '@regression']
+  - id: ACM-DASHBOARD-MALFORMED-SECTION-RETRY-001
+    module: Academic
+    submodule: Dashboard
+    title: A malformed successful curriculum response makes Academic health unavailable and the section retry recovers valid zero data
+    risk: high
+    priority: P1
+    type: [functional, regression, resilience]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-module-setup.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-setup', '@submodule-dashboard', '@critical', '@regression']
+  - id: ACM-SETUP-GUIDE-STABLE-TABS-001
+    module: Academic
+    submodule: Setup Guide
+    title: Peer setting tabs preserve stage heading, tab row, and footer positions while progress saves and after navigation in all four stage families
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/setup]
+    automated: true
+    automationFile: e2e/academic/academic-module-setup.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-setup', '@critical', '@regression']
+  - id: ACM-SETUP-GUIDE-ENTRY-001
+    module: Academic
+    submodule: Setup Guide
+    title: School-wide first visit opens the guide once, direct configuration records its key, subsequent visitors continue normally, and stale automatic links return safely
+    risk: critical
+    priority: P0
+    type: [functional, regression, workflow, resilience]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/setup, /academic/dashboard, /academic/curriculumSetting/subjectCreation]
+    automated: true
+    automationFile: e2e/academic/academic-module-setup.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-setup', '@critical', '@regression']
+  - id: ACM-SETUP-GUIDE-PROGRESS-001
+    module: Academic
+    submodule: Setup Guide
+    title: Manual setup resumes its cursor and deferrals, review persists, and navigation waits for dirty inline forms and busy guide saves
+    risk: critical
+    priority: P0
+    type: [functional, regression, workflow, resilience]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/setup]
+    automated: true
+    automationFile: e2e/academic/academic-module-setup.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-setup', '@critical', '@regression']
+  - id: ACM-SETUP-GUIDE-MANAGERS-001
+    module: Academic
+    submodule: Setup Guide
+    title: The nine existing configuration managers load in their owning stages and Subject creation submits its production API payload
+    risk: critical
+    priority: P0
+    type: [functional, regression, workflow]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/setup]
+    automated: true
+    automationFile: e2e/academic/academic-module-setup.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-setup', '@critical', '@regression']
+  - id: ACM-SETUP-GUIDE-RESPONSIVE-001
+    module: Academic
+    submodule: Setup Guide
+    title: Guided Academic setup contains scrolling and keeps footer actions reachable at 390x844, 768x1024 and 1440x900 in both themes
+    risk: high
+    priority: P1
+    type: [responsive, accessibility, regression]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/setup]
+    automated: true
+    automationFile: e2e/academic/academic-module-setup.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-setup', '@responsive', '@regression']
   - id: INS-UI-20261027-FIELD-FORMATTING-BATCH
     module: InstituteSetup
     submodule: AcademicSetup
@@ -820,7 +918,7 @@ scenarios:
     type: [functional, workflow, e2e]
     roles: [academic-admin]
     tenants: [school]
-    routes: [/academic/seatallocation/[examId]/setup]
+    routes: ['/academic/seatallocation/[examId]/setup']
     automated: true
     automationFile: e2e/academic/academic-seating-guided.spec.ts
     status: automated
@@ -848,7 +946,7 @@ scenarios:
     type: [functional, workflow, accessibility, e2e]
     roles: [academic-admin]
     tenants: [school]
-    routes: [/academic/seatallocation/[examId]/setup]
+    routes: ['/academic/seatallocation/[examId]/setup']
     automated: true
     automationFile: e2e/academic/academic-seating-guided.spec.ts
     status: automated
@@ -862,7 +960,7 @@ scenarios:
     type: [functional, workflow, accessibility, negative, e2e]
     roles: [academic-admin]
     tenants: [school]
-    routes: [/academic/seatallocation/[examId]/setup]
+    routes: ['/academic/seatallocation/[examId]/setup']
     automated: true
     automationFile: e2e/academic/academic-seating-guided.spec.ts
     status: automated
@@ -876,7 +974,7 @@ scenarios:
     type: [responsive, e2e]
     roles: [academic-admin]
     tenants: [school]
-    routes: [/academic/seatallocation/[examId]/setup]
+    routes: ['/academic/seatallocation/[examId]/setup']
     automated: true
     automationFile: e2e/academic/academic-seating-guided.spec.ts
     status: automated
@@ -890,7 +988,7 @@ scenarios:
     type: [accessibility, workflow, e2e]
     roles: [academic-admin]
     tenants: [school]
-    routes: [/academic/seatallocation/[examId]/setup]
+    routes: ['/academic/seatallocation/[examId]/setup']
     automated: true
     automationFile: e2e/academic/academic-seating-guided.spec.ts
     status: automated

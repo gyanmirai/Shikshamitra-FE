@@ -19,11 +19,14 @@ import { Box, Stack, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { academicPaths, academicPermissions } from 'src/constants/academic-menu';
 import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import { useAcademicDiscardGuard } from 'src/screens/academic/components/useAcademicDiscardGuard';
+import {
+  useAcademicSetupFormState,
+  AcademicSetupManagerHeader as CustomBreadcrumbs,
+} from 'src/screens/academic/setup/embedding';
 import {
   gradeScalingApi,
   useGetGradeScalingsQuery,
@@ -116,6 +119,10 @@ const GradingScale = () => {
       skip: !(currentMedium as Medium)?.id,
     },
   });
+  useAcademicSetupFormState({
+    dirty: addGradeScalingDialog.value && formState.dirty,
+    busy: formState.busy || isDeleteLoading || isArchiveLoading || isRestoreLoading,
+  });
 
   // -------------------------------------------------------------------------
   // Derived stats
@@ -189,7 +196,7 @@ const GradingScale = () => {
   // -------------------------------------------------------------------------
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box height="100%" minHeight={0} display="flex" flexDirection="column">
       {discardGuard.confirmation}
       {/* ------------------------------------------------------------------- */}
       {/* Page header                                                          */}

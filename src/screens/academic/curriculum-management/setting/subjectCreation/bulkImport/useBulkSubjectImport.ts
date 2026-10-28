@@ -10,8 +10,8 @@ import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
+  useGetSubjectLookupQuery,
   useBulkAddSubjectsMutation,
-  useGetCoreSubjectsByMediumQuery,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import { parseSubjectImportFile } from './parser';
@@ -36,9 +36,9 @@ export const useBulkSubjectImport = (onClose: () => void) => {
   const mediumId = (currentMedium as Medium)?.id;
   const { data: existingSubjects = [] } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    currentQueryAndMutation: useGetSubjectLookupQuery,
     params: { academicMediumId: mediumId },
-    options: { skip: !mediumId },
+    options: { skip: !mediumId, refetchOnMountOrArgChange: 60 },
   });
   const [bulkAddSubjects, { isLoading: isSaving }] = useQueryAndMutation({
     type: 'mutation',

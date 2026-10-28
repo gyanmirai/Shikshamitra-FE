@@ -96,6 +96,8 @@ export type Academic360LearningTask = {
 };
 
 export type Academic360LearningTasks = {
+  filteredTotalCount?: number;
+  subjectNames?: string[];
   totalAssigned?: number;
   submitted?: number;
   pending?: number;
@@ -209,6 +211,8 @@ export type Academic360Permissions = {
 };
 
 export type Academic360Response = {
+  examTotalCount?: number;
+  examSummary?: { total: number; upcoming: number; completed: number; average: number | null };
   student?: Academic360StudentRow;
   academicHealth?: Academic360Health | null;
   kpis?: Academic360Kpi[];

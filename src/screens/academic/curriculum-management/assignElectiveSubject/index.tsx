@@ -156,6 +156,7 @@ const AssignElectiveSubject = () => {
       classId: classes,
       divisionId: division,
       electiveGroupId,
+      includeSelectableSubjects: false,
     },
     options: {
       skip: !canView || !medium?.id || !classes || !division || !electiveGroupId,

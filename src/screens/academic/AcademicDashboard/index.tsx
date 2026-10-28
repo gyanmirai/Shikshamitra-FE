@@ -51,6 +51,8 @@ const AcademicDashboardScreen = () => {
         curriculum={curriculum.data}
         timetable={timetable.data}
         assessment={assessment.data}
+        hasError={curriculum.isError || timetable.isError || assessment.isError}
+        onRetry={refetchAll}
       />
 
       <Grid container spacing={1}>

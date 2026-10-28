@@ -8,6 +8,7 @@ const defaultAcademicPermissionName = 'Academics.';
 
 export const academicPaths = {
   dashboard: '/academic/dashboard',
+  setup: '/academic/setup',
   classTeacherAssignment: '/academic/assignClassTeacher',
   studentAcademic360: '/academic/studentAcademic360',
   academicCalendar: {
@@ -202,6 +203,18 @@ export const academicActionPermissions = {
   studentAcademic360: 'Academics.Dashboard.View',
   notification: 'Academics.Notification.View',
 };
+
+export const academicSetupViewPermissions = [
+  `${academicPermissions.curriculum.settings.subjectsCreation}.View`,
+  `${academicPermissions.curriculum.settings.electiveGroupCreation}.View`,
+  `${academicPermissions.timetable.settings.weeklyLectures}.View`,
+  `${academicPermissions.timetable.settings.lectureSlots}.View`,
+  `${academicPermissions.homework.settings.homeworkTypes}.View`,
+  `${academicPermissions.homework.settings.assignmentTypes}.View`,
+  `${academicPermissions.homework.settings.rubricConfig}.View`,
+  `${academicPermissions.examination.settings.gradeScaling}.View`,
+  `${academicPermissions.examination.settings.examTypes}.View`,
+];
 
 const academicModule = () => ({
   [academicPath]: [
@@ -845,6 +858,13 @@ const academicModule = () => ({
           permissionName: academicActionPermissions.notification,
           visibilityPermissionName: academicPermissions.notification,
           icon: menuIconView('mdi:bell-outline'),
+        },
+        {
+          title: 'Setup guide',
+          path: academicPaths.setup,
+          _action: 'academic-setup',
+          permissionName: academicSetupViewPermissions,
+          icon: menuIconView('mdi:clipboard-check-outline'),
         },
       ],
     },

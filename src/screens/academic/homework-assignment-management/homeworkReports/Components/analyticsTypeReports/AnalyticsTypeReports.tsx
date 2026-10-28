@@ -17,7 +17,7 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
-import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useGetSubjectLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import CurriculumReportPreviewDrawer from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewDrawer';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -229,7 +229,7 @@ const HomeworkAssignmentAnalyticsReports = ({
   // ── Subject API ──────────────────────────────────────────────────────────────
   const { data: coreSubjectData, isLoading: isCoreSubjectLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    currentQueryAndMutation: useGetSubjectLookupQuery,
     params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !showField('subjects') || !(medium as Medium)?.id || !!classId,

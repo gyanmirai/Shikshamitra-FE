@@ -12,7 +12,7 @@ beforeEach(prepareReviewNetwork);
 
 describe('review comment requirements remain unchanged', () => {
   it.each([
-    ['Change', 'Submit Request', 'Please describe the changes required.'],
+    ['Request changes', 'Submit Request', 'Please describe the changes required.'],
     ['Reject', 'Confirm Reject', 'Rejection reason is required.'],
   ])('%s still requires a non-whitespace comment', async (action, submitLabel, requiredMessage) => {
     const mutation = vi.fn(() => HttpResponse.json({}));

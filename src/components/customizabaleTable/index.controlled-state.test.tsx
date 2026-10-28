@@ -38,6 +38,19 @@ const renderTable = (table: ReactElement) =>
   renderWithProviders(<ThemeProvider theme={createTheme(defaultSettings)}>{table}</ThemeProvider>);
 
 describe('CustomizableTable controlled server state', () => {
+  it('reports only visible data columns to the owning server search', () => {
+    const visible = vi.fn();
+    const table = renderTable(<CustomizableTable tableId="academic-visible-server-search" columns={[
+      { id: 'roomName', label: 'Room' }, { id: 'purpose', label: 'Purpose', defaultHidden: true },
+      { id: 'actions', label: 'Actions' },
+    ]} data={[]} onVisibleColumnsChange={visible} />);
+    expect(visible).toHaveBeenLastCalledWith(['roomName']);
+    table.rerender(<ThemeProvider theme={createTheme(defaultSettings)}><CustomizableTable tableId="academic-visible-server-search" columns={[
+      { id: 'roomName', label: 'Room' }, { id: 'date', label: 'Date' }, { id: 'actions', label: 'Actions' },
+    ]} data={[]} onVisibleColumnsChange={visible} /></ThemeProvider>);
+    expect(visible).toHaveBeenLastCalledWith(['roomName', 'date']);
+  });
+
   it('retains categorical options and supported operators with operational field metadata', async () => {
     const filter = vi.fn();
     renderTable(

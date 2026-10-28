@@ -4,12 +4,12 @@ import type { Theme } from '@mui/material/styles';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import { varAlpha, stylesMode, getSemanticTextStyles } from 'src/theme/styles';
-import { Box, Chip, Alert, Stack, Button, Collapse, Skeleton, Typography } from '@mui/material';
+import { Box, Chip, Alert, Stack, Button, Collapse, Skeleton, Typography, TablePagination } from '@mui/material';
 
 import { useRoomAuditLogs } from '../roomAvailability.hooks';
 
@@ -379,14 +379,9 @@ export const RoomAuditLogPanel = ({
   showRoomChip = false,
   emptyMessage = 'No audit trail entries found',
 }: RoomAuditLogPanelProps) => {
-  const { data, isLoading, isFetching, error, fetch } = useRoomAuditLogs(roomId, {
+  const { data, totalCount, page, setPage, isLoading, isFetching, error } = useRoomAuditLogs(roomId, {
     skip: Boolean(externalLogs),
   });
-
-  useEffect(() => {
-    if (!externalLogs) fetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, externalLogs]);
 
   const logs = externalLogs || data;
 
@@ -424,6 +419,7 @@ export const RoomAuditLogPanel = ({
           showRoomChip={showRoomChip}
         />
       ))}
+      {!externalLogs && <TablePagination component="div" count={totalCount} page={page} rowsPerPage={20} rowsPerPageOptions={[20]} onPageChange={(_, value) => setPage(value)} />}
     </Stack>
   );
 };

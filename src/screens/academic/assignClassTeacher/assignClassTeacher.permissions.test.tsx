@@ -20,9 +20,9 @@ vi.mock('react-redux', () => ({
   }),
 }));
 vi.mock('src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssignmentApi', () => ({
-  useGetClassTeacherAssignmentsQuery: (...args: unknown[]) => {
+  useGetClassTeacherWorkspaceQuery: (...args: unknown[]) => {
     fixture.query(...args);
-    return { data: fixture.rows, refetch: vi.fn() };
+    return { data: { items: fixture.rows, eligibleTeachers: fixture.rows }, refetch: vi.fn() };
   },
   useGetClassTeacherAssignmentSummaryQuery: () => ({}),
   useGetClassTeacherEligibleTeachersQuery: () => ({ data: fixture.rows }),
@@ -31,6 +31,9 @@ vi.mock('src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssi
   useUpdateClassTeacherAssignmentsMutation: () => [vi.fn(), {}],
 }));
 vi.mock('src/components/custom-breadcrumbs', () => ({ CustomBreadcrumbs: () => null }));
+vi.mock('src/screens/academic/components/AcademicContextContent', () => ({
+  AcademicContextContent: ({ children }: { children: ReactNode }) => children,
+}));
 vi.mock('src/components/custom-select', () => ({ default: () => null }));
 vi.mock('src/components/customizabaleTable', () => ({ default: () => null }));
 vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));

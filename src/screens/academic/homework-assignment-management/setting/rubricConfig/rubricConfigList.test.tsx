@@ -9,8 +9,8 @@ import { configureStore } from '@reduxjs/toolkit';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { render, screen, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import RubricConfigTable from './rubricConfigTable';
 import { useRubricTemplateList } from './hooks/useRubricTemplateList';
@@ -48,6 +48,7 @@ function List() {
   const list = useRubricTemplateList();
   return (
     <RubricConfigTable
+      serverProps={list.tableProps}
       data={list.tableData}
       isLoading={list.isLoading}
       isError={list.isError}
@@ -99,21 +100,18 @@ describe('Rubric template list request states', () => {
   it('shows an error and retries the failed request, then displays templates and usage', async () => {
     const requests: URL[] = [];
     mswServer.use(
-      http.get('http://localhost:4197/api/academic/rubrics', ({ request }) => {
+      http.get('http://localhost:4197/api/academic/rubrics/templates/paged', ({ request }) => {
         requests.push(new URL(request.url));
         return requests.length === 1
           ? HttpResponse.json({ title: 'Request failed', status: 500 }, { status: 500 })
-          : HttpResponse.json([
-              template,
-              { ...template, id: 'task-one', isTemplate: false, sourceTemplateId: template.id },
-            ]);
+          : HttpResponse.json({ items: [{ ...template, criteriaCount: 1, usageCount: 1 }], totalCount: 1,
+              page: 1, pageSize: 10, summary: { total: 1, published: 0, draft: 1, archived: 0, linked: 1 } });
       })
     );
     const user = setup();
     expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load rubric templates');
     expect(screen.queryByText('No Rubric Templates Found')).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText('Search...')).toBeVisible();
-    fireEvent.change(screen.getByPlaceholderText('Search...'), { target: { value: 'Writing' } });
     expect(screen.getByRole('alert')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(await screen.findByText('Writing rubric')).toBeVisible();
@@ -121,12 +119,13 @@ describe('Rubric template list request states', () => {
     expect(await screen.findByText('1 times')).toBeVisible();
     expect(requests).toHaveLength(2);
     expect(requests[0].searchParams.get('academicMediumId')).toBe('medium-one');
-    expect(requests[0].searchParams.has('isTemplate')).toBe(false);
+    expect(requests[0].searchParams.get('pageSize')).toBe('10');
   }, 10000);
 
   it('shows the empty state only after a successful empty response', async () => {
     mswServer.use(
-      http.get('http://localhost:4197/api/academic/rubrics', () => HttpResponse.json([]))
+      http.get('http://localhost:4197/api/academic/rubrics/templates/paged', () => HttpResponse.json({ items: [], totalCount: 0,
+        page: 1, pageSize: 10, summary: { total: 0, published: 0, draft: 0, archived: 0, linked: 0 } }))
     );
     setup();
     expect(await screen.findByText('No Rubric Templates Found')).toBeVisible();
@@ -136,7 +135,7 @@ describe('Rubric template list request states', () => {
   it('shows a prerequisite and sends no request when no medium is selected', async () => {
     let requests = 0;
     mswServer.use(
-      http.get('http://localhost:4197/api/academic/rubrics', () => {
+      http.get('http://localhost:4197/api/academic/rubrics/templates/paged', () => {
         requests += 1;
         return HttpResponse.json([]);
       })

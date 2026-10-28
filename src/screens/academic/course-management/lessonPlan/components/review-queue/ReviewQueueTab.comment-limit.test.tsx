@@ -20,7 +20,7 @@ describe('review queue comment length', () => {
       })
     );
     renderReviewQueue();
-    fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Request changes' }));
     const dialog = within(await screen.findByRole('dialog', { name: 'Request Changes' }));
     const comment = dialog.getByRole('textbox', { name: 'Review Remarks / Comments' });
     expect(comment).toHaveAttribute('maxlength', '1024');
@@ -34,7 +34,7 @@ describe('review queue comment length', () => {
   });
 
   it.each([
-    ['Change', 'Submit Request', 'request-changes'],
+    ['Request changes', 'Submit Request', 'request-changes'],
     ['Approve', 'Confirm Approve', 'approve'],
     ['Reject', 'Confirm Reject', 'reject'],
   ])(
@@ -74,7 +74,7 @@ describe('review queue comment length', () => {
       })
     );
     renderReviewQueue();
-    fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Request changes' }));
     const dialog = within(await screen.findByRole('dialog'));
     const comment = dialog.getByRole('textbox', { name: 'Review Remarks / Comments' });
     const completeEmoji = `${'a'.repeat(1022)}😀`;

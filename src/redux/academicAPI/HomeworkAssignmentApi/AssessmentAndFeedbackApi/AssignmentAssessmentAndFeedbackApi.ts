@@ -17,7 +17,8 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
           AssignmentId,
         },
       }),
-      providesTags: [academicType.assignmentSubmissions],
+      providesTags: (_result, _error, input) => [academicType.assignmentSubmissions,
+        { type: academicType.assignmentSubmissions, id: input.AssignmentId || 'LIST' }],
     }),
 
     // Bulk update assessment status and feedback

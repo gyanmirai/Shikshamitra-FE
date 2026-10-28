@@ -6,6 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { Grid, Alert, Stack, Button, Skeleton } from '@mui/material';
+import { useAcademicSetupStandard } from 'src/screens/academic/setup/embedding';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { CapacityBanner } from './components/CapacityBanner';
@@ -50,6 +51,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   const handleSubmit = () => formik.handleSubmit();
 
   const { classId } = formik.values;
+  useAcademicSetupStandard(classId);
   const hasClass = !!classId;
 
   return (

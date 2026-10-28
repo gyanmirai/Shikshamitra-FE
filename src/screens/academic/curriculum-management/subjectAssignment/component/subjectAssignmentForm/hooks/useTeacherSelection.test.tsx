@@ -1,5 +1,5 @@
-import { act, waitFor, renderHook } from '@testing-library/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { act, waitFor, renderHook } from '@testing-library/react';
 
 import { useTeacherSelection } from './useTeacherSelection';
 
@@ -64,8 +64,8 @@ describe('useTeacherSelection', () => {
 
     await waitFor(() => expect(result.current.teacherObjs).toHaveLength(2));
 
-    expect(getEmployeeById).toHaveBeenCalledWith('teacher-1');
-    expect(getEmployeeById).toHaveBeenCalledWith('teacher-2');
+    expect(getEmployeeById).toHaveBeenCalledWith('teacher-1', true);
+    expect(getEmployeeById).toHaveBeenCalledWith('teacher-2', true);
     expect(result.current.teacherObjs[0].label).toBe('TEA150001 - Jay Dalia');
   });
 });

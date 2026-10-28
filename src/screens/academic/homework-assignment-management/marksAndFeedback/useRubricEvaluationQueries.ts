@@ -1,7 +1,7 @@
 import {
   RubricStatus,
   useGetRubricsQuery,
-  useGetRubricEvaluationsQuery,
+  useGetSubmissionRubricEvaluationQuery,
   useGetStudentAssignmentEvaluationQuery,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
@@ -30,19 +30,20 @@ export const useRubricEvaluationQueries = ({
       : { standardId, subjectId, assignmentId: taskId };
   const rubricsQuery = useGetRubricsQuery(params, { skip: !standardId || !subjectId || !taskId });
   const activeRubric =
-    rubricsQuery.data?.find((item) => item.status === RubricStatus.Published) ??
-    rubricsQuery.data?.[0];
+    rubricsQuery.currentData?.find((item) => item.status === RubricStatus.Published) ??
+    rubricsQuery.currentData?.[0];
   const assignmentQuery = useGetStudentAssignmentEvaluationQuery(
     { studentId: studentId ?? '', assignmentId: taskId },
     { skip: mode !== 'assignment' || !studentId || !taskId }
   );
-  const homeworkQuery = useGetRubricEvaluationsQuery(activeRubric?.id ?? '', {
-    skip: mode !== 'homework' || !activeRubric?.id,
-  });
+  const homeworkQuery = useGetSubmissionRubricEvaluationQuery(
+    { rubricId: activeRubric?.id ?? '', submissionId: submissionId ?? '', studentId: studentId ?? '' },
+    { skip: mode !== 'homework' || !activeRubric?.id || !submissionId || !studentId || submissionId.startsWith('00000000') }
+  );
   const currentEvaluation =
     mode === 'assignment'
-      ? assignmentQuery.data
-      : homeworkQuery.data?.find((item) => item.studentSubmissionId === submissionId);
+      ? assignmentQuery.currentData
+      : homeworkQuery.currentData;
   const hasEvaluationError =
     rubricsQuery.isError ||
     (mode === 'assignment'

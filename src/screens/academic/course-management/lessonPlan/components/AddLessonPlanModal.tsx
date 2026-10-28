@@ -14,7 +14,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Stack, Alert, Button, Divider, Typography } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { useGetChapterLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { todayIso } from '../lessonPlanData';
 import { LessonPlanTextInput } from './LessonPlanTextInput';
@@ -153,7 +153,7 @@ const AddLessonPlanModal = ({
   const [showValidation, setShowValidation] = useState(false);
   const { subjectId } = form;
   const { standardId } = form;
-  const { data: chaptersData } = useGetChaptersByStandardQuery(
+  const { data: chaptersData } = useGetChapterLookupQuery(
     { standardId: standardId || '', subjectId: subjectId || '' },
     {
       skip: !subjectId || !standardId || subjectId === 'undefined' || subjectId === 'null',

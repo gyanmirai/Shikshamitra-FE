@@ -20,7 +20,7 @@ import {
   CurriculumReportApiTypeMap,
   CurriculumReportTitleOptions,
 } from 'src/enums/curriuculum-reports';
-import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { useGetChapterLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import CurriculumReportPreviewDrawer from './CurriculumReportPreviewDrawer';
@@ -281,7 +281,7 @@ const CurriculumReportForm = ({
     isFetching: isChapterFetching,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    currentQueryAndMutation: useGetChapterLookupQuery,
     params: { standardId: classId, subjectId },
     options: {
       // Only fetch chapters for reports that actually show the chapter filter,

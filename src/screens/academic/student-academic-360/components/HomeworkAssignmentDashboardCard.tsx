@@ -33,11 +33,14 @@ import { Academic360EmptyState } from './Academic360EmptyState';
 import { Academic360SectionHeader } from './Academic360SectionHeader';
 
 import type { Academic360LearningTask, Academic360LearningTasks } from '../types';
+import type { Academic360DetailFilters } from '../hooks/useStudentAcademic360Detail';
 
 type HomeworkAssignmentDashboardCardProps = {
   learningTasks?: Academic360LearningTasks;
   isLoading?: boolean;
   onViewAll?: () => void;
+  filters?: Academic360DetailFilters;
+  onFilterChange?: (filters: Partial<Academic360DetailFilters>) => void;
 };
 
 type TaskStatusCategory =
@@ -177,11 +180,19 @@ export function HomeworkAssignmentDashboardCard({
   learningTasks,
   isLoading = false,
   onViewAll,
+  filters,
+  onFilterChange,
 }: HomeworkAssignmentDashboardCardProps) {
   const router = useRouter();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  const [selectedFilter, setSelectedFilter] = useState<TaskStatusCategory>('ALL');
-  const [selectedSubject, setSelectedSubject] = useState<string>('ALL');
+  const [localFilter, setLocalFilter] = useState<TaskStatusCategory>('ALL');
+  const [localSubject, setLocalSubject] = useState<string>('ALL');
+  const selectedFilter = filters?.taskStatus ?? localFilter;
+  const selectedSubject = filters?.taskSubject ?? localSubject;
+  const setSelectedFilter = (taskStatus: TaskStatusCategory) => onFilterChange
+    ? onFilterChange({ taskStatus }) : setLocalFilter(taskStatus);
+  const setSelectedSubject = (taskSubject: string) => onFilterChange
+    ? onFilterChange({ taskSubject }) : setLocalSubject(taskSubject);
   const [selectedTask, setSelectedTask] = useState<Academic360LearningTask | null>(null);
   const [viewHomeworkId, setViewHomeworkId] = useState<string | null>(null);
   const [viewAssignmentId, setViewAssignmentId] = useState<string | null>(null);
@@ -242,12 +253,13 @@ export function HomeworkAssignmentDashboardCard({
   );
 
   const subjects = useMemo(() => {
+    if (learningTasks?.subjectNames) return learningTasks.subjectNames;
     const set = new Set<string>();
     tasks.forEach((t) => {
       if (t.subjectName) set.add(t.subjectName);
     });
     return Array.from(set);
-  }, [tasks]);
+  }, [tasks, learningTasks?.subjectNames]);
 
   const metrics = useMemo(() => {
     const total = learningTasks?.totalAssigned ?? tasks.length;
@@ -293,12 +305,12 @@ export function HomeworkAssignmentDashboardCard({
       .sort((a, b) => normalizeStatus(a).priority - normalizeStatus(b).priority)
       .slice(0, 3), [tasks]);
 
-  const filteredTasks = useMemo(() => tasks.filter((t) => {
+  const filteredTasks = useMemo(() => filters ? tasks : tasks.filter((t) => {
       const st = normalizeStatus(t).key;
       const matchFilter = selectedFilter === 'ALL' || st === selectedFilter;
       const matchSubject = selectedSubject === 'ALL' || t.subjectName === selectedSubject;
       return matchFilter && matchSubject;
-    }), [tasks, selectedFilter, selectedSubject]);
+    }), [tasks, selectedFilter, selectedSubject, filters]);
 
   const upcomingTasks = useMemo(() => tasks.filter((t) => {
       const st = normalizeStatus(t).key;

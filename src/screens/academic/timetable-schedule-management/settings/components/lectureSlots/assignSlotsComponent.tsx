@@ -14,10 +14,12 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { Box, Chip, Stack, Button, Typography } from '@mui/material';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useAcademicSetupFormState, useAcademicSetupEmbedding } from 'src/screens/academic/setup/embedding';
 import {
   useGetLectureSlotsQuery,
   useAssignLectureSlotToClassesMutation,
@@ -27,11 +29,14 @@ interface AssignSlotsProps {
   onClose: (e: any, isSubmit: boolean) => void;
   lectureSlotId?: string;
   sourceClassName?: string;
+  onStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 }
 
 const hasClassShift = (standard: Standards) => Boolean(standard.shiftId);
 
-const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsProps) => {
+const AssignSlots = ({ onClose, lectureSlotId, sourceClassName, onStateChange }: AssignSlotsProps) => {
+  const { embedded } = useAcademicSetupEmbedding();
+  const Content = embedded ? Box : Scrollbar;
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -95,12 +100,16 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
       }
     },
   });
+  useAcademicSetupFormState({ dirty: formik.dirty, busy: isLoading || formik.isSubmitting }, onStateChange);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: embedded ? 'auto' : '100%', minHeight: 0, position: 'relative' }}>
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        {null}
+      </BackPopUpChecked>
       {/* Scrollable content area */}
-      <Scrollbar sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-        <Box sx={{ px: { xs: 2, sm: 3 }, pt: 2.5, pb: 14 }}>
+      <Content sx={{ flex: 1, overflowY: embedded ? 'visible' : 'auto', overflowX: embedded ? 'visible' : 'hidden' }}>
+        <Box sx={{ px: { xs: 2, sm: 3 }, pt: 2.5, pb: embedded ? 2 : 14 }}>
           {/* From → To flow indicator */}
           {sourceClassName && (
             <Box
@@ -286,12 +295,13 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
             </Stack>
           </Box>
         </Box>
-      </Scrollbar>
+      </Content>
 
       {/* Sticky footer — same pattern as FormFooter */}
       <Box
         sx={{
-          position: 'absolute',
+          position: embedded ? 'static' : 'absolute',
+          flexShrink: 0,
           bottom: 0,
           left: 0,
           right: 0,

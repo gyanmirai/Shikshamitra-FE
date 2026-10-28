@@ -4,6 +4,14 @@ import { academicApi } from '../../academicApi';
 
 export const subjectsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
+    getSubjectLookup: builder.query({
+      query: ({ academicMediumId, searchTerm, includeArchived = false }) => ({
+        url: `/academic-mediums/${academicMediumId}/subjects/lookup`,
+        method: 'GET',
+        params: { searchTerm, includeArchived },
+      }),
+      providesTags: [academicType.subject],
+    }),
     // Get all subjects under academic medium
     getCoreSubjectsByMedium: builder.query({
       query: ({ academicMediumId, searchTerm, includeArchived = false }) => ({
@@ -107,6 +115,7 @@ export const subjectsApi = academicApi.injectEndpoints({
 
 // RTK query hooks
 export const {
+  useGetSubjectLookupQuery,
   useGetCoreSubjectsByMediumQuery,
   useGetSubjectByIdQuery,
   useAddSubjectMutation,

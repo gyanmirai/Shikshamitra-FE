@@ -1,6 +1,7 @@
 import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from './academicApi';
+import { readAdminDashboardSection } from './admin-dashboard-response';
 
 export type AcademicDashboardMode = 'admin' | 'leadership' | 'classTeacher' | 'teacher' | 'common';
 
@@ -961,7 +962,7 @@ export const academicDashboardApi = academicApi.injectEndpoints({
             ? { data: mockAdminCurriculumData }
             : { error: result.error };
         }
-        return { data: result.data as AdminAcademicDashboardCurriculumData };
+        return readAdminDashboardSection('curriculum', result.data);
       },
       providesTags: [academicType.academicReport],
     }),
@@ -977,7 +978,7 @@ export const academicDashboardApi = academicApi.injectEndpoints({
             ? { data: mockAdminTimetableData }
             : { error: result.error };
         }
-        return { data: result.data as AdminAcademicDashboardTimetableData };
+        return readAdminDashboardSection('timetable', result.data);
       },
       providesTags: [academicType.timetableManagement],
     }),
@@ -993,7 +994,7 @@ export const academicDashboardApi = academicApi.injectEndpoints({
             ? { data: mockAdminAssessmentData }
             : { error: result.error };
         }
-        return { data: result.data as AdminAcademicDashboardAssessmentData };
+        return readAdminDashboardSection('assessment', result.data);
       },
       providesTags: [academicType.academicReport],
     }),

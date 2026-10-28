@@ -13,6 +13,38 @@
       "module": "Academic",
       "submodules": [
         {
+          "name": "Setup Guide",
+          "routes": ["/academic/setup"],
+          "apis": [
+            "/api/academics/setup/visit-status",
+            "/api/academics/setup/visit",
+            "/api/academics/setup/{academicYearId}",
+            "/api/academics/setup/{academicYearId}/progress"
+          ],
+          "roles": ["academic-admin"],
+          "permissions": [
+            "ShikshaMitra.Module.Academics",
+            "Academics.CurriculumManagement.Settings.SubjectCreation.View",
+            "Academics.CurriculumManagement.Settings.ElectiveGroupCreation.View",
+            "Academics.Timetable.Settings.WeeklyLectures.View",
+            "Academics.Timetable.Settings.LectureSlots.View",
+            "Academics.HomeworkAndAssignment.Settings.HomeworkTypes.View",
+            "Academics.HomeworkAndAssignment.Settings.AssignmentTypes.View",
+            "Academics.HomeworkAndAssignment.Settings.RubricConfig.View",
+            "Academics.Examination.Settings.GradeScaling.View",
+            "Academics.Examination.Settings.ExamTypes.View"
+          ],
+          "forms": ["existing Academic configuration managers"],
+          "businessActions": [
+            "open before the first school-wide configuration visit",
+            "resume saved academic-year progress",
+            "defer configuration",
+            "review setup"
+          ],
+          "risk": "critical",
+          "status": "confirmed"
+        },
+        {
           "name": "Dashboard",
           "routes": ["/academic/dashboard"],
           "apis": ["/api/academic/dashboard"],

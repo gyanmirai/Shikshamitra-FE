@@ -14,7 +14,7 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 beforeEach(() => {
   mswServer.use(
     http.get('*/api/auth/session', () => HttpResponse.json(null)),
-    http.get('*/api/academic/curriculum/chapters', () =>
+    http.get('*/api/academic/curriculum/chapters/lookup', () =>
       HttpResponse.json([{ id: 'chapter-one', chapterName: 'Core Maths ONE' }])
     ),
     http.get(progressUrl, () => HttpResponse.json({ minimumCompletionPercentage: 0 }))

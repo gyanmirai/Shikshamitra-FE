@@ -8,6 +8,7 @@ import type { TeacherOption } from '../teacherOptions';
 interface UseTeacherSelectionParams {
   teacherIds: string[];
   standardId?: string;
+  initialTeachers?: { id: string; name: string; employeeCode?: string | null }[];
 }
 
 interface EmployeeResult {
@@ -16,15 +17,20 @@ interface EmployeeResult {
   employeeIdentifier?: string | null;
 }
 
-export function useTeacherSelection({ teacherIds, standardId }: UseTeacherSelectionParams) {
+export function useTeacherSelection({ teacherIds, standardId, initialTeachers }: UseTeacherSelectionParams) {
   const [getTeacherOptions] = useLazyGetEmployeeQuery();
   const [getEmployeeById] = useLazyGetEmployeeByIdQuery();
   const [teacherObjs, setTeacherObjs] = useState<TeacherOption[]>([]);
   const teacherIdsKey = teacherIds.join(',');
+  const initialTeacherOptionsKey = JSON.stringify((initialTeachers ?? [])
+    .filter((teacher) => teacher.name.trim())
+    .map(toTeacherOption));
 
   useEffect(() => {
     let isActive = true;
     const selectedTeacherIds = teacherIdsKey ? teacherIdsKey.split(',') : [];
+    const suppliedTeachers = new Map((JSON.parse(initialTeacherOptionsKey) as TeacherOption[])
+      .map((teacher) => [teacher.id, teacher]));
 
     if (selectedTeacherIds.length === 0) {
       setTeacherObjs([]);
@@ -34,12 +40,15 @@ export function useTeacherSelection({ teacherIds, standardId }: UseTeacherSelect
     }
 
     Promise.all(
-      selectedTeacherIds.map((id) =>
-        getEmployeeById(id)
-          .unwrap()
-          .then((employee: EmployeeResult) => toTeacherOption(employee))
-          .catch(() => null)
-      )
+      selectedTeacherIds.map((id) => {
+        const supplied = suppliedTeachers.get(id);
+        return supplied
+          ? Promise.resolve(supplied)
+          : getEmployeeById(id, true)
+            .unwrap()
+            .then((employee: EmployeeResult) => toTeacherOption(employee))
+            .catch(() => null);
+      })
     ).then((results) => {
       if (isActive) {
         setTeacherObjs(results.filter((teacher): teacher is TeacherOption => Boolean(teacher)));
@@ -49,7 +58,7 @@ export function useTeacherSelection({ teacherIds, standardId }: UseTeacherSelect
     return () => {
       isActive = false;
     };
-  }, [getEmployeeById, teacherIdsKey]);
+  }, [getEmployeeById, teacherIdsKey, initialTeacherOptionsKey]);
 
   /**
    * Memoization Justification:

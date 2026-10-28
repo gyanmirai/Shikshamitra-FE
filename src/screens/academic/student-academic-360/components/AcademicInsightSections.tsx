@@ -1,19 +1,20 @@
 'use client';
 
-import { Iconify } from 'src/components/iconify';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Box, Stack, Typography } from '@mui/material';
 
 import { SubjectPerformanceCard } from './SubjectPerformanceCard';
 import { ExamsResultsDashboardCard } from './ExamsResultsDashboardCard';
 import { HomeworkAssignmentDashboardCard } from './HomeworkAssignmentDashboardCard';
 
+import type { Academic360DetailFilters } from '../hooks/useStudentAcademic360Detail';
 import type {
+  Academic360Alert,
   Academic360ExamResult,
+  Academic360StudentRow,
   Academic360LearningTasks,
   Academic360SubjectPerformance,
-  Academic360StudentRow,
-  Academic360Alert,
 } from '../types';
 
 type AcademicInsightSectionsProps = {
@@ -25,6 +26,8 @@ type AcademicInsightSectionsProps = {
   showExams?: boolean;
   showHomework?: boolean;
   showSubjectPerformance?: boolean;
+  filters?: Academic360DetailFilters;
+  onFilterChange?: (filters: Partial<Academic360DetailFilters>) => void;
 };
 
 export function SectionHeader({ icon, title, badge }: { icon: string; title: string; badge?: string }) {
@@ -53,14 +56,18 @@ export function AcademicInsightSections({
   learningTasks,
   exams = [],
   subjectPerformance = [],
+  alerts: _alerts,
   student,
   showExams = true,
   showHomework = true,
   showSubjectPerformance = false,
+  filters,
+  onFilterChange,
 }: AcademicInsightSectionsProps) {
   return (
     <Stack spacing={1}>
-      {showHomework && <HomeworkAssignmentDashboardCard learningTasks={learningTasks} />}
+      {showHomework && <HomeworkAssignmentDashboardCard learningTasks={learningTasks}
+        filters={filters} onFilterChange={onFilterChange} />}
       {showExams && <ExamsResultsDashboardCard exams={exams} student={student} />}
       {showSubjectPerformance && (
         <SubjectPerformanceCard subjectPerformance={subjectPerformance} />

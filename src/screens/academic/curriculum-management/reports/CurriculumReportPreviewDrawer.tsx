@@ -5,6 +5,11 @@ import { Iconify } from 'src/components/iconify';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
+  usePreviewAcademicReportMutation,
+  useCreateAcademicReportExportMutation,
+  useLazyGetAcademicReportExportJobQuery,
+} from 'src/redux/academicAPI/AcademicReportApi';
+import {
   Box,
   Chip,
   Button,
@@ -17,11 +22,6 @@ import {
   TablePagination,
   CircularProgress,
 } from '@mui/material';
-import {
-  usePreviewAcademicReportMutation,
-  useCreateAcademicReportExportMutation,
-  useLazyGetAcademicReportExportJobQuery,
-} from 'src/redux/academicAPI/AcademicReportApi';
 
 import { startAcademicReportDownload } from './ai-report-utils';
 import { CurriculumReportPreviewTable } from './CurriculumReportPreviewTable';
@@ -44,7 +44,7 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 type DownloadPhase = 'idle' | 'creating' | 'polling' | 'downloading';
 
-const CurriculumReportPreviewDrawer = ({
+const CurriculumReportPreviewDrawerContent = ({
   open,
   onClose,
   reportRequest,
@@ -313,5 +313,8 @@ const CurriculumReportPreviewDrawer = ({
     </Drawer>
   );
 };
+
+const CurriculumReportPreviewDrawer = ({ open, reportRequest, ...props }: CurriculumReportPreviewDrawerProps) =>
+  open ? <CurriculumReportPreviewDrawerContent key={JSON.stringify(reportRequest)} open={open} reportRequest={reportRequest} {...props} /> : null;
 
 export default CurriculumReportPreviewDrawer;

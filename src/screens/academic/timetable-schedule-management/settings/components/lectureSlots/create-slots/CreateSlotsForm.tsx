@@ -4,6 +4,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useAcademicSetupStandard, useAcademicSetupFormState, useAcademicSetupEmbedding } from 'src/screens/academic/setup/embedding';
 
 import { useSlotForm } from './useSlotForm';
 import FormFooter from './components/FormFooter';
@@ -18,7 +19,9 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   disabled,
   isEdit,
   data,
+  onStateChange,
 }) => {
+  const { embedded } = useAcademicSetupEmbedding();
   const slotForm = useSlotForm({ isEdit, data, handleClose });
   const {
     formik,
@@ -28,6 +31,8 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
     isSubmitting,
     handleAddSlotConfiguration,
   } = slotForm;
+  useAcademicSetupFormState({ dirty: formik.dirty, busy: isSubmitting || formik.isSubmitting }, onStateChange);
+  useAcademicSetupStandard(formik.values.className);
 
   if (isLectureSlotsLoading) {
     return <FormSkeleton />;
@@ -40,16 +45,17 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          height: '100%',
+          height: embedded ? 'auto' : '100%',
+          minHeight: 0,
           position: 'relative',
-          overflow: 'hidden',
+          overflow: embedded ? 'visible' : 'hidden',
         }}
       >
         <Box
           sx={{
-            height: '100%',
-            overflowY: 'auto',
-            overflowX: 'hidden',
+            height: embedded ? 'auto' : '100%',
+            overflowY: embedded ? 'visible' : 'auto',
+            overflowX: embedded ? 'visible' : 'hidden',
             scrollbarGutter: 'stable',
             scrollbarWidth: 'thin',
             scrollbarColor: (theme) => `${alpha(theme.palette.text.primary, 0.2)} transparent`,
@@ -68,7 +74,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
             sx={{
               px: { xs: 2, sm: 3 },
               pt: 2,
-              pb: 12,
+              pb: embedded ? 2 : 12,
               display: 'flex',
               flexDirection: 'column',
               gap: 1,

@@ -1,3 +1,4 @@
+import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
 import type {
   RubricStatus,
   RubricWorkType,
@@ -44,6 +45,7 @@ export type RubricConfigFormProps = {
 };
 
 export type RubricConfigTableProps = {
+  serverProps?: Partial<ICustomizableTableProps>;
   data: Array<AssessmentRubricDto & { usageCount?: number }>;
   isLoading: boolean;
   isError?: boolean;

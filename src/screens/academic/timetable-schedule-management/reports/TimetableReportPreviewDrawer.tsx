@@ -5,6 +5,7 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { saveAcademicStandardReportFile as saveFile } from 'src/screens/academic/curriculum-management/reports/ai-report-utils';
 import {
   usePreviewAcademicReportMutation,
   useLazyDownloadAcademicReportQuery,
@@ -72,7 +73,7 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 type DownloadPhase = 'idle' | 'creating' | 'polling' | 'downloading';
 
-const TimetableReportPreviewDrawer = ({
+const TimetableReportPreviewDrawerContent = ({
   open,
   onClose,
   reportRequest,
@@ -129,25 +130,6 @@ const TimetableReportPreviewDrawer = ({
     }
   }, [open, reportRequest, stopPolling]);
 
-  const saveFile = useCallback(
-    (data: { bytes: string; contentType?: string | null; fileName?: string | null }) => {
-      const byteChars = atob(data.bytes);
-      const byteArr = new Uint8Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i += 1) {
-        byteArr[i] = byteChars.charCodeAt(i);
-      }
-      const blob = new Blob([byteArr], { type: data.contentType || 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = data.fileName || 'report.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    },
-    []
-  );
 
   const handleDownload = useCallback(async () => {
     if (!reportRequest || downloadPhase !== 'idle') return;
@@ -178,7 +160,7 @@ const TimetableReportPreviewDrawer = ({
           setDownloadPhase('downloading');
           try {
             const dlResult = await triggerDownload({ jobId }, false);
-            if ('data' in dlResult && dlResult.data?.bytes) {
+            if ('data' in dlResult && dlResult.data?.blob) {
               saveFile(dlResult.data);
             }
           } catch {
@@ -206,7 +188,6 @@ const TimetableReportPreviewDrawer = ({
     pollJobStatus,
     triggerDownload,
     stopPolling,
-    saveFile,
   ]);
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
@@ -435,5 +416,8 @@ const TimetableReportPreviewDrawer = ({
     </Drawer>
   );
 };
+
+const TimetableReportPreviewDrawer = ({ open, reportRequest, ...props }: TimetableReportPreviewDrawerProps) =>
+  open ? <TimetableReportPreviewDrawerContent key={JSON.stringify(reportRequest)} open={open} reportRequest={reportRequest} {...props} /> : null;
 
 export default TimetableReportPreviewDrawer;

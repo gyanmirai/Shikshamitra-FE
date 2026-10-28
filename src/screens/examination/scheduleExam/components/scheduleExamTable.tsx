@@ -4,8 +4,6 @@ import type { LabelColor } from 'src/components/label';
 import type { Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
@@ -219,6 +217,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       const subjects = apiSubjects.length
         ? mergeTimetableSubjects(apiSubjects, fallbackSubjects)
         : fallbackSubjects;
+      const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable'),
+      ]);
       // eslint-disable-next-line new-cap
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const title = row.examName || 'Exam Timetable';

@@ -17,7 +17,8 @@ export const homeworkAssessmentAndFeedbackApi = academicApi.injectEndpoints({
           ...(HomeworkId && { HomeworkId }),
         },
       }),
-      providesTags: [academicType.homeworkSubmissions],
+      providesTags: (_result, _error, input) => [academicType.homeworkSubmissions,
+        { type: academicType.homeworkSubmissions, id: input.HomeworkId || 'LIST' }],
     }),
 
     // Bulk update assessment status and feedback

@@ -9,7 +9,6 @@ import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Card, Button } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -19,9 +18,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
+import { useGetSubjectLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
-import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import CurriculumReportPreviewDrawer from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewDrawer';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -292,7 +292,7 @@ const AssignmentManagementReports = ({
   // ── Subject API ──────────────────────────────────────────────────────────────
   const { data: coreSubjectData, isLoading: isCoreSubjectLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    currentQueryAndMutation: useGetSubjectLookupQuery,
     params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !showField('subjects') || !(medium as Medium)?.id || !!classId,

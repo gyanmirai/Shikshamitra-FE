@@ -6,6 +6,10 @@ import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
+  startAcademicReportDownload,
+  saveAcademicStandardReportFile as saveFile,
+} from 'src/screens/academic/curriculum-management/reports/ai-report-utils';
+import {
   usePreviewAcademicReportMutation,
   useLazyDownloadAcademicReportQuery,
   useCreateAcademicReportExportMutation,
@@ -73,17 +77,19 @@ interface ExaminationReportPreviewDrawerProps {
   onClose: () => void;
   reportRequest: AcademicReportRequestDto | null;
   reportTitle: string;
+  existingExportJobId?: string | null;
 }
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 type DownloadPhase = 'idle' | 'creating' | 'polling' | 'downloading';
 
-const ExaminationReportPreviewDrawer = ({
+const ExaminationReportPreviewDrawerContent = ({
   open,
   onClose,
   reportRequest,
   reportTitle,
+  existingExportJobId,
 }: ExaminationReportPreviewDrawerProps) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -136,28 +142,18 @@ const ExaminationReportPreviewDrawer = ({
     }
   }, [open, reportRequest, stopPolling]);
 
-  const saveFile = useCallback(
-    (data: { bytes: string; contentType?: string | null; fileName?: string | null }) => {
-      const byteChars = atob(data.bytes);
-      const byteArr = new Uint8Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i += 1) {
-        byteArr[i] = byteChars.charCodeAt(i);
-      }
-      const blob = new Blob([byteArr], { type: data.contentType || 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = data.fileName || 'report.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    },
-    []
-  );
 
   const handleDownload = useCallback(async () => {
     if (!reportRequest || downloadPhase !== 'idle') return;
+
+    if (existingExportJobId) {
+      try {
+        startAcademicReportDownload(existingExportJobId);
+      } catch {
+        shikshaMitraToast.error({ message: 'Download failed. Please try again.' });
+      }
+      return;
+    }
 
     setDownloadPhase('creating');
     setJobStatusLabel('');
@@ -185,7 +181,7 @@ const ExaminationReportPreviewDrawer = ({
           setDownloadPhase('downloading');
           try {
             const dlResult = await triggerDownload({ jobId }, false);
-            if ('data' in dlResult && dlResult.data?.bytes) {
+            if ('data' in dlResult && dlResult.data?.blob) {
               saveFile(dlResult.data);
             }
           } catch {
@@ -208,12 +204,12 @@ const ExaminationReportPreviewDrawer = ({
     }, 2000);
   }, [
     reportRequest,
+    existingExportJobId,
     downloadPhase,
     createExport,
     pollJobStatus,
     triggerDownload,
     stopPolling,
-    saveFile,
   ]);
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
@@ -442,5 +438,8 @@ const ExaminationReportPreviewDrawer = ({
     </Drawer>
   );
 };
+
+const ExaminationReportPreviewDrawer = ({ open, reportRequest, ...props }: ExaminationReportPreviewDrawerProps) =>
+  open ? <ExaminationReportPreviewDrawerContent key={JSON.stringify(reportRequest)} open={open} reportRequest={reportRequest} {...props} /> : null;
 
 export default ExaminationReportPreviewDrawer;

@@ -4,12 +4,32 @@ import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { it, expect, afterEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
-import { act, renderHook } from '@testing-library/react';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
+import { act, waitFor, renderHook } from '@testing-library/react';
 
 import { useTeacherSelection } from './useTeacherSelection';
 
 afterEach(() => clearCachedAuthSession());
+
+it('reuses teacher identities already supplied by the allocation rather than fetching each employee again', async () => {
+  let employeeReads = 0;
+  mswServer.use(
+    http.get('*/api/auth/session', () => HttpResponse.json(null)),
+    http.get('*/api/employees/:id', () => {
+      employeeReads += 1;
+      return HttpResponse.json({ id: 'teacher-1', fullName: 'Alice', employeeIdentifier: 'TEA001' });
+    }),
+  );
+  const store = configureStore({ reducer: { [api.reducerPath]: api.reducer }, middleware: (defaults) => defaults().concat(api.middleware) });
+  const probe = renderHook(() => useTeacherSelection({
+    teacherIds: ['teacher-1'], standardId: 'class-1',
+    initialTeachers: [{ id: 'teacher-1', name: 'Alice', employeeCode: 'TEA001' }],
+  }), { wrapper: ({ children }) => <Provider store={store}>{children}</Provider> });
+  try {
+    await waitFor(() => expect(probe.result.current.teacherObjs[0]?.label).toBe('TEA001 - Alice'));
+    expect(employeeReads).toBe(0);
+  } finally { probe.unmount(); store.dispatch(api.util.resetApiState()); }
+});
 
 it('queries the selected class after class changes and skips an empty class', async () => {
   clearCachedAuthSession();

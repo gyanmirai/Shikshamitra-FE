@@ -1,15 +1,15 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { useMemo, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { MOCK_AI_PARSE_RESULT } from './roomAvailability.mock';
+import { useRoomReservationPage } from './useRoomReservationPage';
 import { buildRoomSuggestionRequest } from './services/roomSuggestionSearch';
 import {
-  useGetReservationsQuery,
   useGetRoomScheduleQuery,
-  useGetRoomAuditLogsQuery,
+  useGetRoomAuditPageQuery,
   useGetRoomUsageReportQuery,
   useGetRoomAvailabilityQuery,
   useCheckRoomConflictsMutation,
@@ -67,7 +67,10 @@ const REVERSE_RESERVATION_TYPE_MAP: Record<number | string, string> = {
 };
 
 // ─── useRoomAvailability ──────────────────────────────────────────────────────
-export function useRoomAvailability(filters?: Partial<RoomAvailabilityFilters>) {
+export function useRoomAvailability(
+  filters?: Partial<RoomAvailabilityFilters>,
+  options?: { skip?: boolean }
+) {
   const params = {
     date: filters?.date,
     startTime: filters?.startTime,
@@ -83,15 +86,17 @@ export function useRoomAvailability(filters?: Partial<RoomAvailabilityFilters>) 
     type: 'query',
     currentQueryAndMutation: useGetRoomAvailabilityQuery,
     params,
+    options,
   });
   const roomAvailabilityData = (data || []) as RoomAvailabilityItem[];
+  const refresh = () => options?.skip ? undefined : refetch();
 
   return {
     data: roomAvailabilityData,
     isLoading,
     error: isError ? 'Failed to load room availability.' : null,
-    refetch,
-    fetch: refetch,
+    refetch: refresh,
+    fetch: refresh,
     isFetching,
   };
 }
@@ -144,12 +149,9 @@ export function useRoomDetails(roomId: string | null) {
 }
 
 // ─── useRoomReservations ──────────────────────────────────────────────────────
-export function useRoomReservations(params?: GetReservationsParams) {
-  const { data, isLoading, isFetching, isError, refetch } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetReservationsQuery,
-    params: params || {},
-  });
+export function useRoomReservations(params?: GetReservationsParams, options?: { skip?: boolean }) {
+  const page = useRoomReservationPage(params || {}, Boolean(options?.skip));
+  const { isLoading, isFetching, refetch } = page;
   const [cancelReservation, { isLoading: isCancelLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCancelRoomReservationMutation,
@@ -167,13 +169,13 @@ export function useRoomReservations(params?: GetReservationsParams) {
     async (id: string, reason?: string) => {
       try {
         await cancelReservation({ id, reason: reason || 'Cancelled by user' }).unwrap();
-        refetch();
+        if (!options?.skip) refetch();
         return true;
       } catch {
         return false;
       }
     },
-    [cancelReservation, refetch]
+    [cancelReservation, refetch, options?.skip]
   );
 
   const handleUpdate = useCallback(
@@ -186,69 +188,28 @@ export function useRoomReservations(params?: GetReservationsParams) {
         } else {
           return false;
         }
-        refetch();
+        if (!options?.skip) refetch();
         return true;
       } catch {
         return false;
       }
     },
-    [approveReservation, rejectReservation, refetch]
+    [approveReservation, rejectReservation, refetch, options?.skip]
   );
 
-  const mapped = useMemo<RoomReservation[]>(() => {
-    if (!data) return [];
-    return data.map((r: any) => ({
-      id: r.id,
-      roomId: r.roomId,
-      roomName: r.roomName || '',
-      buildingName: r.buildingName || '',
-      date: r.date ? r.date.split('T')[0] : '',
-      startTime: r.startTime ? r.startTime.substring(0, 5) : '',
-      endTime: r.endTime ? r.endTime.substring(0, 5) : '',
-      purpose: r.purpose || '',
-      reservationType: (REVERSE_RESERVATION_TYPE_MAP[r.reservationType] as any) || 'other',
-      requestedBy: r.requestedBy || '',
-      status:
-        r.status === 1
-          ? 'draft'
-          : r.status === 2
-            ? 'pendingApproval'
-            : r.status === 7
-              ? 'cancelled'
-              : r.status === 8
-                ? 'rejected'
-                : 'active',
-      approvalStatus:
-        r.status === 3 || r.status === 4
-          ? 'approved'
-          : r.status === 8
-            ? 'rejected'
-            : r.status === 2
-              ? 'pending'
-              : r.status === 7
-                ? 'cancelled'
-                : 'none',
-      createdAt: r.creationTime || '',
-      creatorId: r.creatorId || undefined,
-      canReview: r.canReview === true,
-      remarks: r.remarks,
-      isRecurring: r.isRecurring,
-      recurringUntilDate: r.recurringUntilDate ? r.recurringUntilDate.split('T')[0] : undefined,
-    }));
-  }, [data]);
+  const refresh = () => options?.skip ? undefined : refetch();
 
   return {
-    data: mapped,
+    ...page,
     isLoading,
     isFetching,
     isCancelLoading,
     isApproveLoading,
     isRejectLoading,
     isMutationLoading: isCancelLoading || isApproveLoading || isRejectLoading,
-    error: isError ? 'Failed to load reservations.' : null,
-    refetch,
-    fetch: refetch,
-    addReservation: (res?: any) => refetch(),
+    refetch: refresh,
+    fetch: refresh,
+    addReservation: (_reservation?: RoomReservation) => refresh(),
     updateReservation: handleUpdate,
     cancelReservation: handleCancel,
   };
@@ -273,16 +234,19 @@ export function useRoomUsageReport() {
 }
 
 // ─── useRoomAuditLogs ─────────────────────────────────────────────────────────
-export function useRoomAuditLogs(roomId?: string | null, options?: { skip?: boolean }) {
-  const { data, isLoading, isFetching, isError, refetch } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRoomAuditLogsQuery,
-    params: roomId || undefined,
-    options: { skip: options?.skip },
-  });
+export function useRoomAuditLogs(roomId?: string | null, options?: { skip?: boolean; searchTerm?: string }) {
+  const scope = `${roomId || ''}\u001f${options?.searchTerm || ''}`;
+  const [paging, setPaging] = useState({ scope, page: 0 });
+  const page = paging.scope === scope ? paging.page : 0;
+  const { currentData, isLoading, isFetching, isError, refetch } = useGetRoomAuditPageQuery({
+    roomId: roomId || undefined, searchTerm: options?.searchTerm, skipCount: page * 20, maxResultCount: 20,
+  }, { skip: options?.skip, refetchOnMountOrArgChange: true });
 
   return {
-    data: (data || []) as AuditLogEntry[],
+    data: (currentData?.items || []) as AuditLogEntry[],
+    totalCount: currentData?.totalCount ?? 0,
+    page,
+    setPage: (value: number) => setPaging({ scope, page: value }),
     isLoading,
     isFetching,
     error: isError ? 'Failed to load audit logs.' : null,

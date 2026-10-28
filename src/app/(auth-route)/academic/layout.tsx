@@ -7,6 +7,7 @@ import { View403 } from 'src/sections/error';
 import { usePathname } from 'next/navigation';
 import { SplashScreen } from 'src/components/loading-screen';
 import { canAccessAcademicRoute } from 'src/utils/academic-navigation-access';
+import AcademicSetupEntry from 'src/screens/academic/setup/AcademicSetupEntry';
 import { AcademicModuleUiProvider } from 'src/screens/academic/components/AcademicModuleUiProvider';
 
 const AcademicLayout: React.FC<{ children: React.ReactNode }> = ({
@@ -23,7 +24,9 @@ const AcademicLayout: React.FC<{ children: React.ReactNode }> = ({
 
   if (loading || !permissionsInitialized) return <SplashScreen />;
   return hasPermission ? (
-    <AcademicModuleUiProvider>{children}</AcademicModuleUiProvider>
+    <AcademicModuleUiProvider>
+      <AcademicSetupEntry>{children}</AcademicSetupEntry>
+    </AcademicModuleUiProvider>
   ) : (
     <View403 />
   );

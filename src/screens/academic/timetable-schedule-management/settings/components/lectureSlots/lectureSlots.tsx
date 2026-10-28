@@ -12,7 +12,6 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
@@ -20,6 +19,13 @@ import { useGetLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/lect
 import { TimetableStatusChip } from 'src/components/timetable-status-chip/TimetableStatusChip';
 import { TIMETABLE_STATUS_LABEL, normalizeTimetableStatus } from 'src/utils/timetable-capacity';
 import { TimetableSettingsSummaryCards } from 'src/screens/academic/components/AcademicSummaryInsights';
+import { useLectureSlotsNavigation } from 'src/screens/academic/setup/embedding/useLectureSlotsNavigation';
+import { lectureSlotActionLocation } from 'src/screens/academic/setup/embedding/lecture-slot-action-location';
+import {
+  useAcademicSetupStandard,
+  useAcademicSetupEmbedding,
+  AcademicSetupManagerHeader as CustomBreadcrumbs,
+} from 'src/screens/academic/setup/embedding';
 
 import ViewCreateSlots from './ViewCreateSlots';
 import AssignSlots from './assignSlotsComponent';
@@ -33,8 +39,12 @@ const LectureSlots = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { embedded } = useAcademicSetupEmbedding();
+  const [formState, setFormState] = useState({ dirty: false, busy: false });
+  const navigation = useLectureSlotsNavigation(formState, router.push);
 
   const [editData, setEditData] = useState<any>(null);
+  useAcademicSetupStandard(editData?.standardId);
   const [disabled, setDisabled] = useState(false);
   const addLectureSlotDialog = useBoolean(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -151,24 +161,20 @@ const LectureSlots = () => {
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
+      addLectureSlotDialog.onFalse();
+      assignSlotsDialog.onFalse();
+      viewSlotsDialog.onFalse();
       setIsEdit(false);
       setDisabled(false);
       setEditData(null);
+      setFormState({ dirty: false, busy: false });
       dispatch(setIsChanges(false));
-      router.push(pathname);
+      router.push(lectureSlotActionLocation(pathname, searchParams.toString()));
     };
 
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addLectureSlotDialog.onFalse();
-      assignSlotsDialog.onFalse();
-      viewSlotsDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addLectureSlotDialog.onFalse();
-      assignSlotsDialog.onFalse();
-      viewSlotsDialog.onFalse();
-      resetState();
-    }
+    if (isSubmit) resetState();
+    else if (embedded) navigation.requestNavigation(resetState);
+    else if (!isChanges || window.confirm('Are you sure you want to leave this page?')) resetState();
   };
 
   // Mock data with proper structure
@@ -304,7 +310,7 @@ const LectureSlots = () => {
                       setDisabled(true);
                       setIsEdit(false);
                       setEditData(row as any);
-                      router.push(`${pathname}?action=view`);
+                      router.push(lectureSlotActionLocation(pathname, searchParams.toString(), 'view'));
                     },
                   },
                 ]
@@ -320,7 +326,7 @@ const LectureSlots = () => {
                       setIsEdit(true);
                       setEditData(row as any);
                       addLectureSlotDialog.onTrue();
-                      router.push(`${pathname}?action=edit`);
+                      router.push(lectureSlotActionLocation(pathname, searchParams.toString(), 'edit'));
                     },
                   },
                   {
@@ -330,7 +336,7 @@ const LectureSlots = () => {
                     onClick: () => {
                       setEditData(row);
                       assignSlotsDialog.onTrue();
-                      router.push(`${pathname}?action=assign`);
+                      router.push(lectureSlotActionLocation(pathname, searchParams.toString(), 'assign'));
                     },
                   },
                 ]
@@ -348,10 +354,11 @@ const LectureSlots = () => {
         },
       },
     ],
-    [addLectureSlotDialog, assignSlotsDialog, viewSlotsDialog, canAdd, canView, router, pathname]
+    [addLectureSlotDialog, assignSlotsDialog, viewSlotsDialog, canAdd, canView, router, pathname, searchParams]
   );
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      {navigation.confirmation}
       {/* Conditional Breadcrumbs */}
       {viewSlotsDialog.value ? (
         <CustomBreadcrumbs
@@ -421,7 +428,7 @@ const LectureSlots = () => {
                     setEditData(null);
                     setIsEdit(false);
                     addLectureSlotDialog.onTrue();
-                    router.push(`${pathname}?action=add`);
+                    router.push(lectureSlotActionLocation(pathname, searchParams.toString(), 'add'));
                   }}
                   variant="contained"
                   size="small"
@@ -436,24 +443,26 @@ const LectureSlots = () => {
 
       {/* Conditional Card/Table Rendering */}
       {addLectureSlotDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ flex: 1, minHeight: 0, overflow: 'hidden', boxShadow: 'var(--shadows-4)' }}>
           <CreateSlotsForm
             disabled={disabled}
             handleClose={handleClose}
             data={editData}
             isEdit={isEdit}
+            onStateChange={setFormState}
           />
         </Card>
       ) : viewSlotsDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ flex: 1, minHeight: 0, overflow: 'auto', boxShadow: 'var(--shadows-4)' }}>
           <ViewCreateSlots data={editData} />
         </Card>
       ) : assignSlotsDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ flex: 1, minHeight: 0, overflow: 'auto', boxShadow: 'var(--shadows-4)' }}>
           <AssignSlots
             onClose={handleClose}
             lectureSlotId={editData?.id}
             sourceClassName={editData?.standardName}
+            onStateChange={setFormState}
           />
         </Card>
       ) : (
@@ -467,6 +476,7 @@ const LectureSlots = () => {
                 <Box
                   onClick={() => {
                     addLectureSlotDialog.onTrue();
+                    router.push(lectureSlotActionLocation(pathname, searchParams.toString(), 'add'));
                   }}
                   color="primary.main"
                   fontWeight={600}

@@ -10,7 +10,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetClassQuery } from 'src/redux/class/classApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -92,11 +91,6 @@ const Subjects = () => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [createQuestionChapter, setCreateQuestionChapter] = useState<IChapter | null>(null);
   const [viewQuestionsChapter, setViewQuestionsChapter] = useState<IChapter | null>(null);
-
-  useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();

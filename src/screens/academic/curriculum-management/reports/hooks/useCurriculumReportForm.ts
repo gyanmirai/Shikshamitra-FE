@@ -9,8 +9,8 @@ import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CurriculumReportTitle } from 'src/enums/curriuculum-reports';
-import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
-import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { useGetSubjectLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useGetChapterLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { getCurriculumValidationSchema } from '../getCurriculumReportsValidationSchema';
 
@@ -135,10 +135,11 @@ export const useCurriculumReportForm = (report: CurriculumReportTitle) => {
 
   const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    currentQueryAndMutation: useGetSubjectLookupQuery,
     params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !(medium as Medium)?.id,
+      refetchOnMountOrArgChange: 60,
     },
   });
 
@@ -189,7 +190,7 @@ export const useCurriculumReportForm = (report: CurriculumReportTitle) => {
     isFetching: isChapterFetching,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    currentQueryAndMutation: useGetChapterLookupQuery,
     params: { standardId: classId, subjectId },
     options: {
       skip: !currentFields.includes('chapters') || !classId || !subjectId,

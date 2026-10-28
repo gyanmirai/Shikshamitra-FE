@@ -54,10 +54,8 @@ import {
   LinearProgress,
 } from '@mui/material';
 import {
-  useGetClassTeacherAssignmentsQuery,
-  useGetClassTeacherEligibleTeachersQuery,
+  useGetClassTeacherWorkspaceQuery,
   useGetClassTeacherAssignmentHistoryQuery,
-  useGetClassTeacherAssignmentSummaryQuery,
   useUpdateClassTeacherAssignmentsMutation,
   useValidateClassTeacherAssignmentsMutation,
 } from 'src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssignmentApi';
@@ -78,6 +76,7 @@ type AssignmentTableRow = ClassTeacherAssignmentRowDto & {
   changeReasonDraft: string;
 };
 
+const EMPTY_ELIGIBLE_TEACHERS: ClassTeacherEligibleTeacher[] = [];
 const assignmentTypes = ['Permanent', 'Temporary', 'Acting', 'Replacement'];
 const changeReasons = [
   'New Academic Year',
@@ -534,24 +533,18 @@ const ClassTeacherAssignment = () => {
   }, [medium, organization]);
 
   const {
-    data: assignmentsData,
+    data: workspace,
     refetch: refetchAssignments,
     isLoading: isClassAssignmentLoading,
     isFetching: isClassAssignmentFetching,
-  } = useGetClassTeacherAssignmentsQuery(
+  } = useGetClassTeacherWorkspaceQuery(
     { organizationId: organization },
     { skip: !canView || !organization }
   );
 
-  const { data: apiSummary } = useGetClassTeacherAssignmentSummaryQuery(
-    { organizationId: organization },
-    { skip: !canView || !organization }
-  );
-
-  const { data: eligibleTeachers = [] } = useGetClassTeacherEligibleTeachersQuery(
-    { organizationId: organization },
-    { skip: !canView || !organization }
-  );
+  const assignmentsData = workspace?.items;
+  const apiSummary = workspace?.summary;
+  const eligibleTeachers = workspace?.eligibleTeachers ?? EMPTY_ELIGIBLE_TEACHERS;
 
   const {
     currentData: history = [],
