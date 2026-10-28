@@ -7,7 +7,7 @@ import { hrPermissions } from 'src/constants/hr-menus';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
-import { FinalizeWorkflow } from './index';
+import { FinalizeWorkflow } from './finalize-workflow';
 import { getLocalMonthKey } from '../payroll/structure/salary-structure-builder-utils';
 
 const mocks = vi.hoisted(() => ({

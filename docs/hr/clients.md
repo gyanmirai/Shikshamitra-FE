@@ -18,6 +18,8 @@ The [backend readiness contract](https://github.com/gyanmirai/Shikshamitra-BE/bl
 
 `employeeOnboardingApi.ts` carries structured `workAssignment` in invite/detail/public/finalization data. `work-assignment-field.tsx` reads `academicOrganizationOptionsApi` directly, using `currentData` and refetch-on-mount to avoid validating with a previous year's response. Summary labels are supplied by the backend. Finalization sends the reviewed assignment and `workAssignmentConfirmed`; role and Academic Permission payloads retain their independent contracts.
 
+The onboarding list (`src/screens/hr/employee-onboarding/index.tsx`) initially requests only the paged application list. Detail reads require a selected application; operational column filters/sorts use the existing table-query reader. `finalize-page.tsx` imports the separate `finalize-workflow.tsx` module so the initial list does not load the salary/statutory wizard and its address/stepper dependencies. Keep the wizard out of list-module re-exports; its route owns those imports and lookup requests.
+
 TL;DR: use this page to locate RTK Query clients and backend contract ownership for HR screens.
 Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md`.
 
