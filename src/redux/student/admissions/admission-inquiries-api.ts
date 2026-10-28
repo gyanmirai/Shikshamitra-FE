@@ -41,6 +41,16 @@ export type AdmissionInquiryCaptureCatalogue = {
   offerings: AdmissionOfferingListItem[];
 };
 
+export type AdmissionInquiryCaptureCatalogueQuery = {
+  academicYearId?: string;
+  // Separate class checks in the RTK cache without expanding the server contract.
+  admissionCycleId?: string;
+  boardId?: string;
+  mediumId?: string;
+  standardId?: string;
+  availabilityCheckId?: string;
+};
+
 export type AdmissionInquiryStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type AdmissionInquirySource = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionInquiryWorkQueue = 1 | 2 | 3 | 4;
@@ -265,11 +275,11 @@ export const admissionInquiriesApi = api.injectEndpoints({
     }),
     getAdmissionInquiryCaptureCatalogue: builder.query<
       AdmissionInquiryCaptureCatalogue,
-      { academicYearId?: string }
+      AdmissionInquiryCaptureCatalogueQuery
     >({
-      query: (params) => ({
+      query: ({ academicYearId }) => ({
         url: '/student/enrollment/admissions/inquiries/capture-catalogue',
-        params,
+        params: { academicYearId },
       }),
       transformResponse: (
         response: Result<AdmissionInquiryCaptureCatalogue> | AdmissionInquiryCaptureCatalogue
@@ -441,6 +451,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
 export const {
   useGetAdmissionInquiryCaptureContextQuery,
   useGetAdmissionInquiryCaptureCatalogueQuery,
+  useLazyGetAdmissionInquiryCaptureCatalogueQuery,
   useGetAdmissionInquiryQuery,
   useGetAdmissionInquiriesQuery,
   useLazyExportAdmissionInquiriesQuery,

@@ -11,6 +11,10 @@ import { assessmentScopeKey } from './assessment-utils';
 import { useAssessmentScope } from './use-assessment-scope';
 import { useAssessmentWorkbench } from './use-assessment-workbench';
 import { useAdmissionAcademicFilters } from '../admission-academic-filters';
+import {
+  readAssessmentColumnFilters,
+  serializeAssessmentColumnFilters,
+} from './assessment-column-filters';
 
 export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false) {
   const academic = useAdmissionAcademicFilters();
@@ -92,7 +96,9 @@ export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false)
       ...queryScope,
       sessionId: state.sessionId || undefined,
       search: state.search || undefined,
-      columnFilters: state.columnFilters || undefined,
+      columnFilters: serializeAssessmentColumnFilters(
+        readAssessmentColumnFilters(state.columnFilters)
+      ),
       status: state.status === 'all' ? undefined : state.status,
       sorting: `${state.sort} ${state.direction}`,
       skipCount: state.page * state.size,

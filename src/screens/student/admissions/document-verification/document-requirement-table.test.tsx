@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 import {
+  documentPath,
   documentSummary,
   documentEvidence,
   documentStagePath,
@@ -128,7 +129,7 @@ describe('admission document table', { timeout: 15000 }, () => {
     expect(screen.queryByText(/Complete these pending documents/)).not.toBeInTheDocument();
   });
 
-  it('keeps only an icon-only View action and opens collection inside the review dialog', async () => {
+  it('opens upload directly from the table and disables View until evidence exists', async () => {
     renderTable();
     const table = await screen.findByRole('table');
     ['Document Name', 'Format', 'Status', 'Actions'].forEach((name) =>
@@ -137,20 +138,25 @@ describe('admission document table', { timeout: 15000 }, () => {
     expect(within(table).queryByText('Accepted: PDF')).not.toBeInTheDocument();
     expect(within(table).getByText('Missing')).toBeInTheDocument();
     const view = screen.getByRole('button', { name: 'View document for Birth certificate' });
-    expect(view).toBeEnabled();
+    expect(view).toBeDisabled();
     expect(view).toHaveTextContent('');
+    const upload = screen.getByRole('button', { name: 'Upload document for Birth certificate' });
+    expect(upload).toBeEnabled();
+    expect(upload).toHaveTextContent('');
     const row = within(table).getAllByRole('row')[1];
-    expect(within(row).getAllByRole('button')).toEqual([view]);
-    await userEvent.hover(view);
+    expect(within(row).getAllByRole('button')).toEqual([
+      view,
+      upload,
+      screen.getByRole('button', { name: 'More actions for Birth certificate' }),
+    ]);
+    await userEvent.hover(upload);
     expect(
-      await screen.findByRole('tooltip', { name: 'View document for Birth certificate' })
+      await screen.findByRole('tooltip', { name: 'Upload document for Birth certificate' })
     ).toBeVisible();
-    await userEvent.click(view);
+    await userEvent.click(upload);
     const dialog = await screen.findByRole('dialog', {
-      name: 'Birth certificate · Document Review',
+      name: 'Upload document',
     });
-    expect(within(dialog).getByText('No document uploaded')).toBeVisible();
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Upload document' }));
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(within(dialog).getByText('PDF · Maximum 10 MB')).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Upload document' }));
@@ -167,11 +173,12 @@ describe('admission document table', { timeout: 15000 }, () => {
     const dialog = await screen.findByRole('dialog', {
       name: 'Birth certificate · Document Review',
     });
-    expect(within(dialog).getByText('Latest evidence · Version 2')).toBeInTheDocument();
+    expect(within(dialog).getByText('Physical original recorded · Version 2')).toBeInTheDocument();
+    expect(within(dialog).getByText('birth-certificate.pdf · Copy version 1')).toBeVisible();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Evidence history (2)' }));
     expect(within(dialog).getByText('Version 2 · Latest')).toBeInTheDocument();
     expect(within(dialog).getByText('birth-certificate.pdf')).toBeInTheDocument();
-    expect(within(dialog).getAllByText('Physical original recorded')).toHaveLength(2);
+    expect(within(dialog).getAllByText(/Physical original recorded/)).toHaveLength(2);
   });
 
   it('opens actual uploaded bytes on View instead of evidence history and restores focus on Close', async () => {
@@ -190,7 +197,7 @@ describe('admission document table', { timeout: 15000 }, () => {
     expect(
       await screen.findByRole('img', { name: 'Birth certificate document preview' })
     ).toHaveAttribute('src', 'blob:uploaded-copy');
-    expect(screen.getAllByText('Physical original recorded')[0]).toBeVisible();
+    expect(screen.getByText('Physical original recorded · Version 2')).toBeVisible();
     await userEvent.click(screen.getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(view).toHaveFocus();
@@ -206,8 +213,9 @@ describe('admission document table', { timeout: 15000 }, () => {
     expect(within(dialog).getByRole('button', { name: 'Reject' })).toBeEnabled();
     expect(within(dialog).getByRole('button', { name: 'Record physical original' })).toBeEnabled();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Waive requirement' }));
+    const waiverDialog = await screen.findByRole('dialog', { name: 'Waive requirement' });
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(within(dialog).getByRole('textbox', { name: 'Reason' })).toBeInTheDocument();
+    expect(within(waiverDialog).getByRole('textbox', { name: 'Reason' })).toBeInTheDocument();
   });
 
   it('previews and downloads the selected copy through the protected evidence endpoint', async () => {
@@ -367,20 +375,25 @@ describe('admission document table', { timeout: 15000 }, () => {
     expect(within(screen.getByRole('table')).getByText('Birth certificate')).toBeInTheDocument();
   });
 
-  it('offers Approve only inside View when the evidence and reviewer are eligible', async () => {
+  it('offers direct Approve only inside View when the evidence and reviewer are eligible', async () => {
     const summary = reviewedSummary();
     summary.requirements[0].canAccept = true;
+    let reviews = 0;
+    mswServer.use(
+      http.post(`${documentPath}/evidence/original-2/review`, () => {
+        reviews += 1;
+        return HttpResponse.json(summary);
+      })
+    );
     renderTable(summary, ['View', 'Add']);
     const view = await screen.findByRole('button', { name: 'View document for Birth certificate' });
     expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
     await userEvent.click(view);
     const dialog = screen.getByRole('dialog');
+    expect(within(dialog).queryByRole('textbox', { name: 'Notes' })).not.toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Approve' }));
-    expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(within(dialog).getByRole('textbox', { name: 'Notes' })).toBeInTheDocument();
-    expect(
-      within(dialog).queryByRole('button', { name: 'Waive requirement' })
-    ).not.toBeInTheDocument();
+    await waitFor(() => expect(reviews).toBe(1));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('opts into one selected completed stage as read-only without fetching current documents', async () => {

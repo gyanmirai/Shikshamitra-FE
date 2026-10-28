@@ -24,6 +24,20 @@ export function getStudentParentSiblingActivationState(
   if (!workspace || workspace.caseId !== caseId || unavailable) return { caseId, loaded: false };
   const context = workspace.parentSibling;
   if (workspace.guardianAccessEnabled === false) return { caseId, loaded: true };
+  // Onboarding confirmation is a separate late-link command after enrollment;
+  // absence of historical Admission proof is not a new activation gate.
+  if (
+    context?.requiresOnboardingConfirmation &&
+    !context.familyConfirmed &&
+    context.status !== 'ReviewRequired' &&
+    (!guardianAccessSelection?.confirmRecipientAccess ||
+      context.candidates.some(
+        (candidate) =>
+          candidate.relationship === 'guardian' &&
+          candidate.email === guardianAccessSelection.expectedEmail
+      ))
+  )
+    return { caseId, loaded: true };
   if (guardianAccessSelection) {
     const guardian = workspace.recipients.find(
       (recipient) => recipient.accountType === 'guardian' && recipient.relationship === 'guardian'

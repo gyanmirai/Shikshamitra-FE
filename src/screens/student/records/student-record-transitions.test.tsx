@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   decide: vi.fn(),
   params: new URLSearchParams(),
   push: vi.fn(),
+  exitProps: undefined as any,
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mocks.push }),
@@ -77,6 +78,12 @@ vi.mock('src/components/customizabaleTable', () => ({
 }));
 vi.mock('./transition-batch-form', () => ({ default: () => null }));
 vi.mock('./returning-student-form', () => ({ default: () => null }));
+vi.mock('./school-exit-drawer', () => ({
+  default: (props: any) => {
+    mocks.exitProps = props;
+    return <div role="dialog" aria-label="School Exit">Exit clearance review</div>;
+  },
+}));
 vi.mock('src/redux/student/records/student-record-transitions-api', () => ({
   useGetStudentRecordTransitionsQuery: () => ({
     currentData: { items: [mocks.row], totalCount: 1 },
@@ -98,7 +105,8 @@ beforeEach(() => {
     studentId: 'student-1',
     studentName: 'Riya Shah',
     status: 'Submitted',
-    outcome: 'Withdraw',
+    outcome: 'Hold',
+    academicYearId: 'year-1',
     reason: 'School withdrawal',
     effectiveDate: '2026-09-30',
     history: [],
@@ -111,6 +119,16 @@ beforeEach(() => {
   mocks.decide.mockImplementation(() => ({ unwrap: () => Promise.resolve(mocks.row) }));
 });
 describe('Transition command permissions', () => {
+  it('opens pending exits in the contextual clearance drawer and retains history access', () => {
+    mocks.row.outcome = 'Withdraw';
+    render(<StudentRecordTransitions />);
+    fireEvent.click(screen.getByRole('button', { name: 'Review' }));
+    expect(screen.getByRole('dialog', { name: 'School Exit' })).toBeVisible();
+    expect(mocks.exitProps).toMatchObject({
+      studentId: 'student-1', academicYearId: 'year-1', transition: mocks.row,
+    });
+    expect(screen.getByRole('button', { name: 'History & actions' })).toBeVisible();
+  });
   it.each([
     { grant: 'Add', canCancel: true, canApprove: true },
     { grant: 'Delete', canCancel: false, canApprove: false },

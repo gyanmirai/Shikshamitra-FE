@@ -107,7 +107,7 @@ The heading is Student List and its description uses the shared information tool
 | Primary profile views   | `view=overview`, `details`, `documents`, `history`                                         | Real tab links retain the Student and list context                       |
 | Legacy admission view   | `view=admission`                                                                           | Resolves to Details; there is no separate Admission & Onboarding tab     |
 | Legacy detail bookmarks | `view=details&section=<section>`, `tab=general` and existing structured-section values     | Resolve to the retained Registration form in Details                     |
-| Record status change    | `/student/records/changes?mode=new&student=<id>&section=status`                            | Uses the existing audited Changes workflow with exact View/Create access |
+| School exit             | Contextual drawer on `/student/profile`; pending exit review from `/student/records/transitions` | Uses exact Transitions View/Add and server stage capabilities; the retained status-correction URL remains available independently |
 
 Student-name and View actions are native profile links, so modifier-click and opening another tab work.
 Back to Student List removes only profile-specific `student`, `view`, `section` and `tab` state.

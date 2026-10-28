@@ -212,10 +212,10 @@ function useMultilingualController() {
 
 describe('New inquiry form', () => {
   it('reports failed prerequisite requests through standard toasts without inline errors or Retry rows', () => {
+    const fixture = controller({ offeringsError: true, academicError: true });
+    fixture.formik.values.standardId = '';
     vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
-      controller({ offeringsError: true, academicError: true }) as unknown as ReturnType<
-        typeof useAdmissionInquiryDialog
-      >
+      fixture as unknown as ReturnType<typeof useAdmissionInquiryDialog>
     );
     const { rerender } = render(<AdmissionInquiryFormPage />);
     expect(shikshaMitraToast.error).toHaveBeenCalledWith(
@@ -224,12 +224,77 @@ describe('New inquiry form', () => {
     expect(shikshaMitraToast.error).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'Academic choices could not be loaded.' })
     );
-    expect(screen.queryByText('Open admission offerings could not be loaded.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Open admission offerings could not be loaded.')
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Academic choices could not be loaded.')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Retry/ })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'New inquiry' })).toBeVisible();
     rerender(<AdmissionInquiryFormPage />);
     expect(shikshaMitraToast.error).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps class selection usable while checking and does not announce stale unavailability', () => {
+    const fixture = controller({
+      offeringsLoading: true,
+      canCreateInquiry: false,
+      offerings: [],
+      sections: [],
+      noOfferingReason: 'Admission is closed.',
+    });
+    fixture.formik.values.offeringId = '';
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      fixture as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    render(<AdmissionInquiryFormPage />);
+    expect(screen.getByRole('combobox', { name: 'Class' })).not.toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('combobox', { name: 'Offering' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByText('Checking latest admission offerings…')).toBeVisible();
+    expect(screen.queryByText('Admission is closed.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeDisabled();
+  });
+
+  it('shows a recoverable class-check failure instead of saying no admission is available', () => {
+    const retry = vi.fn();
+    const fixture = controller({
+      offeringsError: true,
+      canCreateInquiry: false,
+      offerings: [],
+      sections: [],
+      retryOfferings: retry,
+    });
+    fixture.formik.values.offeringId = '';
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      fixture as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    render(<AdmissionInquiryFormPage />);
+    expect(
+      screen.getByText(
+        'Admission availability could not be checked. Retry or select another class.'
+      )
+    ).toBeVisible();
+    expect(screen.queryByText(/No inquiry offering/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(retry).toHaveBeenCalledOnce();
+    expect(screen.getByRole('combobox', { name: 'Class' })).not.toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeDisabled();
+  });
+
+  it('shows the latest unavailable reason once, without the old generic helper', () => {
+    const reason = 'Admission offering setup is incomplete.';
+    const fixture = controller({
+      offerings: [],
+      sections: [],
+      canCreateInquiry: false,
+      noOfferingReason: reason,
+    });
+    fixture.formik.values.offeringId = '';
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      fixture as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    render(<AdmissionInquiryFormPage />);
+    expect(screen.getAllByText(reason)).toHaveLength(1);
+    expect(screen.queryByText('Selected class has no admission open.')).not.toBeInTheDocument();
   });
 
   it('shows academic-start age with configured DOB help and permits creating an underage inquiry', async () => {
@@ -276,9 +341,11 @@ describe('New inquiry form', () => {
         <AdmissionInquiryFormPage />
       </LocalizationProvider>
     );
-    expect(
-      screen.getByText(/Birth certificate date. Age at academic year start.*4 years 3 months/)
-    ).toBeVisible();
+    expect(screen.getByText('Age: 4y 3m · Minimum: 5y')).toBeVisible();
+    await userEvent.hover(screen.getByLabelText('Date of birth information'));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Birth certificate date. Age at academic year start (01-04-2026)'
+    );
     await waitFor(() =>
       expect(shikshaMitraToast.warning).toHaveBeenCalledWith({
         message: expect.stringContaining('below the minimum age of 5 years'),
@@ -324,15 +391,16 @@ describe('New inquiry form', () => {
     expect(screen.getByRole('textbox', { name: 'Applicant first name' })).toHaveValue('QA student');
   });
 
-  it('uses form validation and shows every required field error', async () => {
+  it('shows required errors only beside their fields and focuses the first invalid field', async () => {
     vi.mocked(useAdmissionInquiryDialog).mockImplementation(useValidationController);
     const { container } = render(<AdmissionInquiryFormPage />);
 
     expect(container.querySelector('form')).toHaveAttribute('novalidate');
     fireEvent.click(screen.getByRole('button', { name: 'Create inquiry' }));
     await waitFor(() => {
-      expect(screen.getAllByText('Applicant first name is required').length).toBeGreaterThan(0);
-      expect(screen.getAllByText('Guardian mobile is required').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Applicant first name is required')).toHaveLength(1);
+      expect(screen.getAllByText('Guardian mobile is required')).toHaveLength(1);
+      expect(container.querySelector('[aria-invalid="true"]')).toHaveFocus();
     });
   });
 
@@ -371,8 +439,17 @@ describe('New inquiry form', () => {
     render(<AdmissionInquiryFormPage />);
 
     expect(screen.getByRole('textbox', { name: 'Source details' })).not.toBeRequired();
-    expect(
-      screen.getByText('Optional context to help staff trace this inquiry.')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Optional inquiry context.')).toBeInTheDocument();
+  });
+
+  it('keeps the published family fields without the extra family-contact controls', () => {
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      controller() as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    render(<AdmissionInquiryFormPage />);
+    expect(screen.queryByRole('heading', { name: 'Family Contacts' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Add other parent' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Add other guardian' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Main school contact' })).not.toBeInTheDocument();
   });
 });

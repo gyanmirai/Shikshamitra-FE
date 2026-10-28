@@ -12,6 +12,7 @@ import { useGetApplicationDocumentsQuery } from 'src/redux/student/admissions/ad
 import { AdmissionQueryError } from '../admission-query-error';
 import { DocumentActionDialog } from './document-action-dialog';
 import { DocumentReviewDialog } from './document-review-dialog';
+import { getDocumentReviewActions } from './document-review-model';
 import { useDocumentPermissions } from './use-document-permissions';
 import { DocumentChecklistContent } from './document-checklist-content';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
@@ -158,6 +159,17 @@ export function ApplicationDocumentsPanel({
               action={selected.action}
               summary={selected.summary}
               requirement={selected.requirement}
+              canSubmit={
+                !disabled &&
+                !query.isFetching &&
+                !advancing &&
+                getDocumentReviewActions(
+                  selected.requirement,
+                  permissions,
+                  historical || selected.readOnly === true,
+                  selected.summary.policy?.allowWaivers === true
+                ).includes(selected.action)
+              }
               onClose={() => setSelected(null)}
             />
           ))}

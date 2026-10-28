@@ -20,6 +20,7 @@ import {
 } from '../field-choice-options';
 
 import type { FieldSettingsProps } from '../types/field-settings';
+import { academicOptionsJson, isInstituteAcademicSource } from '../../admission-academic-options';
 
 type OptionsSource = { source: string; parentField?: string };
 
@@ -40,6 +41,12 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
   const [pastedChoices, setPastedChoices] = useState('');
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
   const path = `sections[${sectionIndex}].fields[${fieldIndex}]`;
+  if (isInstituteAcademicSource(academicOptionsJson(field)))
+    return (
+      <Typography variant="body2" color="text.secondary">
+        Choices come from Institute Setup for the selected academic year and parent academic field.
+      </Typography>
+    );
   const sourceConfig = parseOptionsSource(field.optionsJson);
   const parsedChoices = sourceConfig
     ? { choices: [] as EditableAdmissionChoice[] }

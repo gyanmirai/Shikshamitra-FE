@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-27
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -22,7 +22,11 @@ Credentials recipients add `isMainContact` and `relationshipLabel`; `hasLinkedAc
 
 The credentials workspace returns `guardianAccessEnabled` from the saved school/case policy, including explicit `false` for Not needed. A checked guardian choice requires a current capability response; older responses require Refresh App Login. An unchecked contact suggestion does not create activation intent. Clearing an edited guardian relationship sends an explicit empty string; omitted/null fields retain their existing value.
 
+The same workspace returns `studentAccessEnabled` and `canEnableStudentAccess`. App Login displays **Enable student login** only with an explicit server capability and current Add authority. `enableStudentAppAccess` posts the required reason and current case stamp to `/student/onboarding/{id}/student-app-access/enable`, then invalidates the case/workspace tags. Its local reason dialog uses the shared dialog, section, busy and unsaved-navigation patterns; changing case or losing authority closes it. After saving, the workspace refreshes and staff separately select Student to send login details. See the [backend command contract](../../../Shikshamitra-BE/docs/modules/student/api.md) for optional access and completed-case behavior.
+
 ## Application numbering settings
+
+`admission-numbering-cycle.tsx` maps the selected cycle to the existing `yearFormat` and `resetPolicy` fields in one Formik update; the API payload, settings version and server validation contract are unchanged. Existing Continuous plus year combinations are preserved until staff explicitly changes their format. Cycle selection honors `sequenceLocked`; the optional year display remains editable for a Continuous counter under the existing format-edit permission. No new endpoint, dependency or backend change is required.
 
 `admission-numbering-api.ts` owns school-wide settings through `GET`/`PUT /api/student/enrollment/admissions/application-numbering`. Admission Periods mounts the query only while its Numbering settings dialog is open. Successful saves invalidate the specific `APPLICATION_NUMBERING` cycle-cache tag; failed saves preserve entered values and the expected settings version. No application-number input or client-side allocation exists. The lazy `POST .../application-numbering/preview` query sends the valid draft and selected academic-year ID after a 350 ms debounce; responses show the actual next available number without reserving it. Stale draft responses are ignored, missing academic context prevents the request, and Retry/Refresh explicitly fetch a fresh counter value.
 
@@ -53,6 +57,8 @@ The existing Onboarding settings client persists the school's `readinessAccess` 
 
 ## Payment collection and deferral
 
+`admission-joining-date-api.ts` owns the Admissions joining-date state, read-only proposed-date preview and concurrency-guarded confirmation endpoints. `use-admission-joining-date.ts` keeps the date draft separate from the saved source; `use-admission-fee-preview.ts` debounces exact date/variable-amount arguments and never displays an earlier input's result. Server `canEdit`, `canPreview` and `isLocked` capabilities govern capture. Confirmation refreshes application, collection and Onboarding state; a failed confirmation refreshes capabilities without preparing fees. A locked/read-only date displays the server value even if a local draft existed. Existing Finance components and endpoints remain the authority for amounts, preparation, payments and receipts; no Finance implementation changes are required. See the [backend Student API contract](../../../Shikshamitra-BE/docs/modules/student/api.md).
+
 `admission-fee-collection-api.ts` adapts the Finance-owned admission application summary, prepare, collect-form and collection endpoints. Reads do not prepare dues. Only Collect Fees submits preparation; the shared Finance form receives an application adapter and explicit academic year, without inventing a Student ID or navigating to Finance. Mutations invalidate application, fee-selection, Finance collection/receipt and Onboarding caches. Receipt access remains independently gated. Successful fee-selection saves also invalidate the same application's Finance collection tag, refreshing its summary and any cached collection form. Failed saves do not refresh Finance as though a new selection was accepted. Payment's Refresh action refreshes the selection and the visible collection summary together; collection remains gated by the Finance response.
 
 Workflow advance accepts `deferFeeCollection: true` with the required trimmed `reason`, expected stage, application stamp and idempotency key. Fee-selection reads include `hasRecordedFeePayment` and nullable `feeCollectionDeferral` (stage, reason, actor and timestamp), which is also displayed in Onboarding Fees. Finalization follows the existing decision path. See the [backend collection contract](../../../Shikshamitra-BE/docs/modules/finance/references/admission-fee-collection.md).
@@ -77,6 +83,10 @@ The take-attendance client reads `/students/attendance/context` for scoped acade
 Broad paging, search and sorting run on the server. Full-class display paging/search is local to its loaded register; Save/Submit always retain the complete eligible roster. Date and academic selection plus `search`, `sort`, `page` and `pageSize` are URL-backed. Existing mark requests use `submit: false/true`; locking is a separate request. Mutations invalidate the affected register, workspace and reporting caches. Loading/error context disables marking and preserves unsaved work.
 
 ## Academic filter requests
+
+Offering table criteria exclude compulsory Board/Medium context; removing optional criteria preserves those query parameters. Form builder checks reuse the existing System-field catalogue query only for linked fields, share the RTK Query cache, and keep unavailable checks distinct from a valid form. No backend validation or publish endpoint changes are introduced.
+
+Class and Division form choices use Institute Setup records through `admission-forms-api.ts` and `admission-master-data-runtime-field.tsx`. The supported academic descriptors are `Standards`, `StandardsByMedium`, `StandardsByMediumStage`, and `DivisionsByStandard`. Requests include the owning academic year and parent ID; `parentField` changes clear dependent selections, including only the affected repeatable row. API failures use the standard error toast and disable the affected field. Academic cache tags refresh choices after Institute Setup changes. Known older template Class/Division codes resolve live choices without rewriting their frozen definitions; saved historical labels remain displayable as disabled values. Public Inquiry receives resolved academic choices from its token-authorized context and does not call the authenticated options API.
 
 `src/hooks/use-student-academic-scope.ts` reads the logged-in staff hierarchy through `userScopeApi`, merges it with Academic board data and prunes the selected year's descendants with `getScopedAcademicData`. Local `board`/`medium` query parameters select among authorized options; invalid selections and failed scope reads expose no hierarchy. Attendance, legacy management, certificates, ID cards and profile selectors consume this hook. The global Student header continues to show the year only. `src/layouts/components/global-academic-search/student-academic-years.ts` excludes unassigned year nodes returned for the scope editor, retaining explicit year-wide scope and authorized board ancestry. Student entry selects an authorized year when the current calendar year is outside scope; other module selectors keep their existing behavior.
 
@@ -133,6 +143,10 @@ The backend owns lifecycle, dependency, permission, institution-timezone, and co
 
 ## Client map
 
+### Student Records school exit
+
+`school-exit-drawer.tsx` reuses `StudentAssignmentDrawer`, shared sections/help, Formik validation, blocking save state and the existing transition API. `getSchoolExitSummary` reads `/students/records/transitions/school-exit-summary` with student, academic year, outcome and effective-date context. Amounts remain owner-calculated and permission-gated. The drawer previews and submits via the existing transitions endpoints; decisions refresh the transition before exposing current-stage approval. `outstandingReason` is sent separately for approved pending fees/books. Successful commands invalidate existing Records/Finance tags through the owning API; no alternate base client or financial writes are introduced.
+
 ### Student Records list and profile
 
 | Client                                                    | Frontend responsibility                                                                                                                                                                                                                                                                            |
@@ -164,6 +178,8 @@ Successful direct form saves and existing create/approve/apply operations invali
 Deployment, data freezing, approval policy, concurrency, tenant scope and custom-value persistence are owned by the [backend Student contracts](../../../Shikshamitra-BE/docs/modules/student/api.md) and [Records product rules](../../../Shikshamitra-BE/docs/modules/student/product.md#permanent-student-records-behavior).
 
 ### Admissions clients
+
+New Inquiry keeps the academic-year `capture-catalogue` subscription for period/academic choices. `use-admission-inquiry-class-offerings.ts` force-refreshes that same Inquiry-authorized endpoint for each complete period/board/medium/class selection and Retry. Class scope and a per-check identity isolate the RTK cache, including rapid A → B → A transitions; only `academicYearId` is sent to the existing server endpoint. No Offering-settings permission or backend contract is added. The hook filters the fresh catalogue, ignores previous-selection completions, follows later tag refreshes, and separates failed checks from successful empty results. The selected offering's existing `capture-context` remains authoritative for form, policy, capacity and save availability.
 
 | Client                          | Responsibilities                                                                                                                                                                                                                             | Main screens                                                |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -247,6 +263,7 @@ The backend computes this capability from Onboarding Add/Update (the Repair alia
 The case client owns GET/POST portal-account links and credential-email status/request operations.
 `src/screens/student/onboarding/student-setup/student-onboarding-model.ts` projects backend locks, fee confirmation, credentials pending and requirement-review flags, and splits the legacy combined identifier check into independent GR/Roll tasks.
 It excludes the system-owned final-readiness aggregate from staff task counts and uses the explicit `admissionConfirmed` server flag for an Offering case's Admission confirmed check, while preserving legacy imported-case identity projection.
+It merges the case response's effective `requiredServiceHandoffs` into that same checklist, so failed, pending or cancelled required services cannot leave staff counts at 100%. Acknowledged required services remain in the completed count; optional service work is excluded. Nullable `requiredCredentialDeliveryConfirmed` adds required activation-timed delivery to the checklist without treating optional email or completion-timed requests as blockers. Older servers retain the explicit enrolled-case student/parent account requirements as a fallback. Operational handoff applicability and completion remain backend-owned; this projection does not add a first-payment gate or change Finance.
 
 | Client operation                                                                      | Screen wiring                                                                                                                            | Concurrency and cache behavior                                                                                    |
 | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -270,6 +287,7 @@ Without that grant the extra query is skipped and cached Offering labels are hid
 
 Assessment sessions and offering/stage choices use `src/redux/student/admissions/admission-assessment-sessions-api.ts`.
 The single applicant workspace uses `src/redux/student/admissions/admission-assessment-roster-api.ts` with optional Offering/stage, academic context and session filters; search, sorting, counts and paging are server-owned.
+The additive `displayStatus` and `displayAttendance` fields supply the merged row Status/Attendance; broad `status` remains the progress-tab group. `assessment-roster-status.ts` owns labels/colors and an evidence-based older-host fallback. Exact `status` column filters are separate from the `assessmentProgress` tab chip, and saved `result` URL filters migrate to Status. Criteria reach the roster before counts/paging; the same formatted cells drive the explicit current-page export. Assessment commands and Continue authorization remain unchanged.
 `src/redux/student/admissions/admission-assessment-planning-api.ts` owns the shared-session reads and coordinated planning commands.
 
 | Planning client operation                                                                       | Frontend use                                                                                                                                                     |
@@ -338,7 +356,7 @@ Inquiry creation can invoke the same contract for an automatic acknowledgement; 
 
 Managed Form stages use `admission-form-stage-api.ts` for the scoped stage summary and authorized correction requests. Correction sends the application concurrency stamp and invalidates stage-specific and application tags so blockers, attempts, form state and workflow controls refresh together. The legacy verification contracts remain compatible, but settings and application screens no longer expose separate section verification. Stage save normalization clears those retired flags; the backend also ignores them in effective legacy runtime policy. `admission-form-stage-policy.ts` preserves unrelated stage configuration. Form selection uses the published-form list without a verification-only form-detail request.
 
-Payment uses the existing `admission-fee-selection-api.ts` and shared FeeSelectionPanel. Candidate reads enforce the Offering class/year/Board/Medium scope; saved snapshots include the selected structure version and chosen optional heads. Confirm fee structure uses the existing save mutation and application concurrency stamp, invalidates application/selection and scoped Finance collection state, and remains separate from the workflow advance command. The fee-selection response includes `paymentCompletion` (rule, deferral policy, server capabilities, status and blocker); missing capabilities fail closed. Workflow stage JSON stores version 1 `paymentCompletion` with `paymentRule: partial | full` and `allowCollectionLater`. Finance remains responsible for balances, preparation and payments; existing collection cache invalidation refreshes the completion decision. Explicit zero-payable preparation closes without a collection dialog only when Finance returns `isSettled`.
+Payment uses the existing admission-fee-selection-api.ts and shared FeeSelectionPanel. Candidate reads enforce Offering class/year/Board/Medium scope; saved snapshots retain structure version and optional heads. The existing concurrency-guarded save mutation invalidates selection/application and Finance collection state; workflow advance remains separate. The paymentCompletion response reports operational canComplete/canDeferCollection/status/blocker capabilities only. The removed paymentRule/allowCollectionLater settings are not authored or consumed; draft normalization removes retired JSON while preserving extensions. Finance owns balances, preparation and payments. Explicit zero-payable preparation closes without a collection dialog only when Finance returns isSettled.
 
 Eligibility, Review, and Offer are retired Admission Stage types. New drafts cannot select them, publication rejects them, application workspaces do not mount their working panels, and their direct admission operations reject unsupported stages. Existing enum numbers and stored audit records remain intact. Inquiry qualification, Student Records reviews, class capacity, and Finance ownership are separate contracts.
 
@@ -349,6 +367,10 @@ Request and response contracts are owned by `../../../Shikshamitra-BE/src/Shiksh
 Product rules and persistence are owned by `../../../Shikshamitra-BE/src/ShikshaMitra.Application/Students/StudentEnrollments/Admissions/**`.
 
 ## Cache behavior
+
+Approval and finalization retain the existing decision/finalize endpoints. Approval opens checks while `useApplicationDetail.advance` refreshes the application/workflow and completes only the expected current decision stage with the latest stamp. The finalization-success callback uses the returned Onboarding case ID instead of searching by student name or application number. Loading and failed preparation cannot submit finalization, and authoritative workflow completion clears a stale local preparation error.
+
+Document review reuses `useDocumentActionForm` and its pinned evidence/concurrency snapshot. Direct approval submits the existing accepted decision without a reason; rejection trims and validates its required reason through the existing action dialog. Table upload and nested review actions recheck current UI permission and busy state before submission, while failed commands retain the draft and invalidate the checklist as before. No endpoint, permission or backend policy is added.
 
 The managed document checklist uses `admission-document-verification-api.ts` and `admission-document-types.ts`. Uploads send `FormData` through the global authenticated API, while acceptance and replacement decisions use typed mutations. Table actions retain the existing server capability, policy and canonical permission checks for review, original collection and waivers. All document commands invalidate the application tag, including rejected stale writes, so the current checklist and concurrency stamp refresh. The application-level stamp is captured when the action dialog opens.
 
@@ -445,6 +467,20 @@ Approval-only responses refresh batch status without claiming rolls changed.
 No Finance client or command is changed.
 
 ## App-login email editor
+
+The App Login card keeps one credentials workspace query and sends checked Student and one selected
+Parent / guardian through separate existing mutations, in that order. Each next command uses the
+previous response's concurrency stamp. A rejected write triggers a current workspace read before
+another recipient is attempted; a proved Queued/Submitted result suppresses retry of that recipient.
+Unknown writes are never replayed automatically. Each row retains its own outcome and failed-only
+retry while the owning page/drawer receives one continuous busy signal.
+
+`linkStudentOnboardingParent` accepts `confirmExistingParentAccess` plus the exact server candidate
+identity, including Guardian. `requiresOnboardingConfirmation` identifies a late link after enrollment
+and does not fabricate Admission family proof or a new activation requirement. A reused linked
+adult receives sign-in help only when `canSendExistingParentHelp` permits the explicit
+`sendExistingParentHelp` command; no new password is requested. Student/Father/Mother/Guardian
+email changes use the existing editor, expected saved email, edit token, and owner verification.
 
 `student-onboarding-api.ts` owns `updateStudentCredentialsEmail` through the existing shared API and case tags.
 The editor's conditional Cancel change action uses the same mutation with `cancelPendingChange: true`; it cancels pending verification without sending credentials or modifying the current login.

@@ -21,6 +21,7 @@ import StudentOnboardingFees from './student-onboarding-fees';
 import { mapOnboardingCaseToItem } from './student-onboarding-model';
 import { runStudentQuickSetupSave } from './student-quick-setup-save';
 import StudentQuickSetupAcademic from './student-quick-setup-academic';
+import StudentQuickSetupFeesSection from './student-quick-setup-fees-section';
 import { useStudentQuickSetupAcademic } from './use-student-quick-setup-academic';
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
 import StudentOnboardingWorkflowDocuments from './student-onboarding-workflow-documents';
@@ -228,9 +229,7 @@ export default function StudentQuickSetupPage({
     } catch (error) {
       const requestFailure = !(error instanceof Error) || 'data' in error || 'status' in error;
       setFailurePresentation(requestFailure ? 'toast' : 'inline');
-      setFailure(
-        getOnboardingErrorMessage(error, 'Changes could not be saved. Try again.')
-      );
+      setFailure(getOnboardingErrorMessage(error, 'Changes could not be saved. Try again.'));
       // Reconcile persisted progress after a lost response; never reallocate a saved number.
       const recovered = await getCase(student.id, false)
         .unwrap()
@@ -268,8 +267,12 @@ export default function StudentQuickSetupPage({
         direction="row"
         alignItems="center"
         spacing={1}
+        useFlexGap
         sx={{
           p: 1.5,
+          display: 'grid',
+          gridTemplateColumns: { xs: '40px minmax(0, 1fr)', sm: '40px minmax(0, 1fr) auto' },
+          gap: 1,
           bgcolor: 'background.paper',
           border: 1,
           borderColor: 'divider',
@@ -315,7 +318,11 @@ export default function StudentQuickSetupPage({
             spacing={1}
             useFlexGap
             flexWrap="wrap"
-            sx={{ minWidth: 0, flexShrink: 0, maxWidth: { xs: '50%', sm: 'none' } }}
+            sx={{
+              minWidth: 0,
+              gridColumn: { xs: '1 / -1', sm: 'auto' },
+              justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+            }}
           >
             <Label color={status.color}>{status.label}</Label>
             <Button
@@ -372,17 +379,7 @@ export default function StudentQuickSetupPage({
                   }
                 />
               )}
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: 'minmax(0, 1fr)',
-                    md: 'minmax(0, 1.2fr) minmax(0, 1fr)',
-                  },
-                  gap: 1.5,
-                  alignItems: 'stretch',
-                }}
-              >
+              <>
                 <Box
                   id="quick-setup-academic"
                   component="fieldset"
@@ -397,7 +394,7 @@ export default function StudentQuickSetupPage({
                     flexDirection: 'column',
                   }}
                 >
-                  <StudentQuickSetupAcademic editor={editor} />
+                  <StudentQuickSetupAcademic editor={editor} compact />
                 </Box>
                 <Box
                   id="quick-setup-login"
@@ -428,8 +425,8 @@ export default function StudentQuickSetupPage({
                   <FormSectionCard
                     title="App Login"
                     icon="mdi:account-key-outline"
+                    descriptionTooltip="Select a recipient to send login details, or edit their saved email."
                     contentSpacing={1}
-                    sx={{ flex: 1 }}
                   >
                     <StudentOnboardingPortalAccounts
                       student={activeStudent}
@@ -437,10 +434,11 @@ export default function StudentQuickSetupPage({
                       onBusyChange={setCredentialsBusy}
                       onParentStateChange={setParentState}
                       parentValidationAttempt={parentValidationAttempt}
+                      compact
                     />
                   </FormSectionCard>
                 </Box>
-              </Box>
+              </>
               <Box
                 id="quick-setup-fees"
                 component="fieldset"
@@ -460,7 +458,12 @@ export default function StudentQuickSetupPage({
                 }
                 sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}
               >
-                <FormSectionCard title="Fees" icon="mdi:receipt-text-outline" contentSpacing={1}>
+                <StudentQuickSetupFeesSection
+                  caseId={student.id}
+                  state={feesState}
+                  initiallyExpanded={initialSection === 'fees'}
+                  disabled={busy || editor.readError || scopeChanged}
+                >
                   <StudentOnboardingFees
                     caseId={student.id}
                     canManage={canManage}
@@ -475,11 +478,25 @@ export default function StudentQuickSetupPage({
                       editor.readError
                     }
                   />
-                </FormSectionCard>
+                </StudentQuickSetupFeesSection>
               </Box>
               <FormSectionCard
                 title="Admission & Documents"
                 icon="mdi:file-document-check-outline"
+                descriptionTooltip="View admission approval and the required documents."
+                action={
+                  current ? (
+                    <Label color={current.admissionConfirmed === true ? 'success' : 'warning'}>
+                      {current.admissionConfirmed === true
+                        ? 'Admission approved'
+                        : current.admissionConfirmed === false
+                          ? 'Admission pending'
+                          : 'Admission unavailable'}
+                    </Label>
+                  ) : (
+                    <Skeleton width={120} height={24} aria-label="Loading admission details" />
+                  )
+                }
                 contentSpacing={1}
               >
                 <Box
@@ -488,27 +505,6 @@ export default function StudentQuickSetupPage({
                   inert={busy || editor.readError}
                   sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}
                 >
-                  {!current ? (
-                    <Skeleton
-                      width={240}
-                      height={24}
-                      sx={{ mb: 1.5 }}
-                      aria-label="Loading admission details"
-                    />
-                  ) : (
-                    <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap" sx={{ mb: 1.5 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Admission:{' '}
-                        <Box component="span" sx={{ color: 'text.primary' }}>
-                          {current?.admissionConfirmed === true
-                            ? 'Approved'
-                            : current?.admissionConfirmed === false
-                              ? 'Pending'
-                              : 'Not available'}
-                        </Box>
-                      </Typography>
-                    </Stack>
-                  )}
                   <StudentOnboardingWorkflowDocuments
                     caseId={student.id}
                     canManage={canManage && !scopeChanged}

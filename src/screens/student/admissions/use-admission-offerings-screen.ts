@@ -100,6 +100,7 @@ export function useAdmissionOfferingsScreen() {
   const tableFilters: IParams['filters'] = [
     ...offeringColumnFilters(filterState.filters.columnFilters ?? ''),
     ...Object.entries(offeringScopeColumns).flatMap(([column, field]) => {
+      if (field === 'boardId' || field === 'mediumId') return [];
       const value = filterState.filters[field];
       if (!value) return [];
       return [

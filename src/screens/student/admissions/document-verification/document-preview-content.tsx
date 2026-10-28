@@ -13,9 +13,11 @@ import { DocumentDownloadButton } from './document-download-button';
 export function DocumentPreviewContent({
   evidence,
   name,
+  showFileName = true,
 }: {
   evidence: AdmissionDocumentEvidence;
   name: string;
+  showFileName?: boolean;
 }) {
   const { preview, retry } = useDocumentPreview(evidence);
   const [zoom, setZoom] = useState<number | null>(null);
@@ -39,9 +41,11 @@ export function DocumentPreviewContent({
       }}
     >
       <Stack spacing={1} sx={{ pb: 1.5, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-          {evidence.fileName} · Copy version {evidence.versionNumber}
-        </Typography>
+        {showFileName && (
+          <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+            {evidence.fileName} · Copy version {evidence.versionNumber}
+          </Typography>
+        )}
         <Stack direction="row" alignItems="center" gap={1} useFlexGap flexWrap="wrap">
           {imageReady && !imageFailed && (
             <>
@@ -86,7 +90,7 @@ export function DocumentPreviewContent({
         ) : preview.status === 'error' || imageFailed ? (
           <StudentFeedback
             notificationKey="STU-0316"
-            presentation="toast"
+            presentation="persistent"
             severity="error"
             action={
               <Button size="small" color="inherit" onClick={retryPreview}>

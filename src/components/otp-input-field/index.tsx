@@ -93,7 +93,7 @@ const OtpInputField: React.FC<OtpInputFieldProps> = ({
   const helperId = `${inputId}-helper`;
 
   return (
-    <Box sx={{ position: 'relative' }}>
+    <Box data-form-field-control sx={{ position: 'relative' }}>
       <FormLabel
         htmlFor={inputId}
         error={error}

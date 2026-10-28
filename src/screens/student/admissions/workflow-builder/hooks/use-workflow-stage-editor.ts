@@ -8,7 +8,6 @@ import * as Yup from 'yup';
 import { useEffect } from 'react';
 import { useFormik } from 'formik';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { readPaymentCompletionPolicy } from 'src/redux/student/admissions/admission-payment-completion-policy';
 import { getDocumentConfigurationError } from 'src/redux/student/admissions/admission-document-policy-validation';
 import { getAdmissionFormStageConfigurationError } from 'src/redux/student/admissions/admission-form-stage-policy';
 import {
@@ -140,11 +139,6 @@ function validateConfiguration(
   if (!isApplicationStageType(values.stageType)) {
     return {
       stageType: 'Choose Form, Assessment, Payment, Document verification or Admission Decision.',
-    };
-  }
-  if (values.stageType === 4 && !readPaymentCompletionPolicy(values.configurationJson)) {
-    return {
-      configurationJson: 'These Payment completion settings are unsupported. Reload the workflow.',
     };
   }
   if (values.stageType === 2) {

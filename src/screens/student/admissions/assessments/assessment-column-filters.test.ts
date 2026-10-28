@@ -13,6 +13,31 @@ it('round-trips scalar server criteria and reconstructs readable enum chips', ()
   expect(serializeAssessmentColumnFilters(filters)).toBe(raw);
 });
 
+it('round-trips exact outcome statuses independently of the broad progress tabs', () => {
+  const raw =
+    '[{"column":"status","type":"equals","value":"waived","valueType":"enum"},{"column":"attendance","type":"equals","value":"notRequired","valueType":"enum"}]';
+  const filters = readAssessmentColumnFilters(raw);
+  expect(filters).toHaveLength(2);
+  expect(filters[0]).toMatchObject({ label: 'Status', displayValue: 'Waived' });
+  expect(filters[1]).toMatchObject({ label: 'Attendance', displayValue: 'Not required' });
+  expect(serializeAssessmentColumnFilters(filters)).toBe(raw);
+});
+
+it('migrates saved Result filters into the merged Status column', () => {
+  expect(
+    readAssessmentColumnFilters(
+      '[{"column":"result","type":"equals","value":"passed","valueType":"enum"}]'
+    )
+  ).toEqual([
+    expect.objectContaining({
+      column: 'status',
+      value: 'passed',
+      label: 'Status',
+      displayValue: 'Pass',
+    }),
+  ]);
+});
+
 it.each([
   '[null]',
   '{}',

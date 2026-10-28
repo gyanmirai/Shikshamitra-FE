@@ -340,11 +340,61 @@ const systemStepFallbackDetails: Record<string, string> = {
     'This is completed automatically when activation validates every required check.',
 };
 
+const serviceHandoffLabels: Record<string, string> = {
+  'student-account': 'Student app login',
+  'guardian-account': 'Parent app login',
+  'service-consent': 'Service consent',
+};
+
+const getRequiredServiceChecks = (
+  onboardingCase: StudentOnboardingCase
+): OnboardingChecklistItem[] => {
+  // Older servers expose the required account statuses separately. Do not infer other services.
+  const handoffs =
+    onboardingCase.requiredServiceHandoffs ??
+    (onboardingCase.studentEnrollmentId
+      ? [
+          {
+            serviceKey: 'student-account',
+            required: onboardingCase.studentAccountRequired,
+            status: onboardingCase.studentAccountStatus,
+            lastError: null,
+          },
+          {
+            serviceKey: 'guardian-account',
+            required: onboardingCase.guardianAccountRequired,
+            status: onboardingCase.guardianAccountStatus,
+            lastError: null,
+          },
+        ]
+      : []);
+  return handoffs
+    .filter((handoff) => handoff.required)
+    .map((handoff) => ({
+      key: handoff.serviceKey,
+      label: serviceHandoffLabels[handoff.serviceKey] ?? handoff.serviceKey.replaceAll('-', ' '),
+      detail:
+        handoff.lastError ||
+        (handoff.status === 2
+          ? 'Required service setup is complete.'
+          : 'Complete this required setup to finish onboarding.'),
+      status:
+        handoff.status === 2
+          ? 'passed'
+          : handoff.status === 3 || handoff.status === 4
+            ? 'failed'
+            : 'pending',
+      blocking: handoff.status !== 2,
+      owner: 'Onboarding',
+    }));
+};
+
 export const mapOnboardingCaseToItem = (
   onboardingCase: StudentOnboardingCase
 ): StudentOnboardingItem => {
   const documentStep = onboardingCase.steps.find((step) => step.key === 'documents');
   const documentPassed = documentStep?.status === 2 || documentStep?.status === 4;
+  const serviceChecks = getRequiredServiceChecks(onboardingCase);
   const accountStatus = (
     required: boolean | undefined,
     status: number | null | undefined
@@ -416,7 +466,8 @@ export const mapOnboardingCaseToItem = (
         : []),
       ...onboardingCase.steps.flatMap((step) => {
         // Final readiness summarizes these tasks and is completed by activation, not by staff.
-        if (step.key === 'final_readiness') return [];
+        if (step.key === 'final_readiness' || serviceChecks.some((check) => check.key === step.key))
+          return [];
         const check = {
           key: step.key,
           label: step.label,
@@ -452,6 +503,23 @@ export const mapOnboardingCaseToItem = (
           blocking: step.required && (!identifier.assigned || step.status === 3),
         }));
       }),
+      ...serviceChecks,
+      ...(onboardingCase.requiredCredentialDeliveryConfirmed != null
+        ? [
+            {
+              key: 'credential_delivery',
+              label: 'App login details',
+              detail: onboardingCase.requiredCredentialDeliveryConfirmed
+                ? 'Required login details have been sent.'
+                : 'Send or retry the required login details in App Login.',
+              status: onboardingCase.requiredCredentialDeliveryConfirmed
+                ? ('passed' as const)
+                : ('pending' as const),
+              blocking: !onboardingCase.requiredCredentialDeliveryConfirmed,
+              owner: 'Onboarding',
+            },
+          ]
+        : []),
     ],
     activity: onboardingCase.events.map(mapOnboardingEventToActivity),
     updatedAt:

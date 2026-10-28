@@ -11,6 +11,8 @@ export const ADMISSION_WORKFLOW_PERMISSIONS = {
   rollback: 'Students.Admissions.Workflows.Add',
 } as const;
 
+export const isAdmissionWorkflowPublishable = (status: number) => [0, 3, 5, 6].includes(status);
+
 export function getAdmissionWorkflowAccess(permissions: GrantedPermission[] | undefined) {
   return {
     canView: hasGrantedPermission(permissions, ADMISSION_WORKFLOW_PERMISSIONS.view),

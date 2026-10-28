@@ -70,7 +70,7 @@ export function FormBuilderPalette({
           role="tabpanel"
           id={`${tabId}-panel-${tab}`}
           aria-labelledby={`${tabId}-${tab}`}
-          spacing={0.75}
+          spacing={tab === 'system' ? 1 : 0.75}
           sx={{ display: activeTab === tab ? 'flex' : 'none', flex: 1, minHeight: 0, pt: 1 }}
         >
           {tab === 'system' ? (

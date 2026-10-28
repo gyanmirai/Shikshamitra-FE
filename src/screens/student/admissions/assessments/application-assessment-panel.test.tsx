@@ -190,6 +190,53 @@ it('locks compact stage controls during refresh and supports query retry', () =>
   expect(mocks.refetch).toHaveBeenCalledOnce();
 });
 
+it.each([false, true])(
+  'announces a background assessment refresh and retains evidence when it settles (error: %s)',
+  (isError) => {
+    const assessment = {
+      ...base,
+      canBook: false,
+      attempts: [
+        {
+          id: 'waived',
+          attemptNumber: 1,
+          attendance: 'pending' as const,
+          status: 'completed' as const,
+          outcome: 'waived' as const,
+          createdAt: '',
+          concurrencyStamp: 'waived-stamp',
+          notes: 'Prior school assessment accepted',
+        },
+      ],
+    };
+    mocks.query.mockReturnValue(query(assessment, { isFetching: true }));
+    const { rerender } = panel();
+    const attempt = screen.getByRole('article', { name: 'Assessment attempt 1' });
+    expect(attempt).toBeVisible();
+    expect(screen.getByRole('progressbar', { name: 'Refreshing assessment' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled();
+    mocks.query.mockReturnValue(query(assessment, { isError }));
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <ApplicationAssessmentPanel
+          compact
+          applicationId="application-1"
+          admissionOfferingId="offering-1"
+          stage={stage}
+          canAdvance
+          advancing={false}
+          onComplete={vi.fn()}
+        />
+      </ThemeProvider>
+    );
+    expect(
+      screen.queryByRole('progressbar', { name: 'Refreshing assessment' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('article', { name: 'Assessment attempt 1' })).toBe(attempt);
+    expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled();
+  }
+);
+
 it('opens scheduled booking in the Pipeline drawer without the external scheduling warning', () => {
   mocks.query.mockReturnValue(
     query({ ...base, policy: { ...DEFAULT_ASSESSMENT_POLICY, schedulingEnabled: true } })

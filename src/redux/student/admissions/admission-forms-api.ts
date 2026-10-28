@@ -1,5 +1,6 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import { academicReorderTags } from 'src/redux/academic-reorder-tags';
 
 export type AdmissionFormStatus = 0 | 1 | 2;
 export type AdmissionFormLayoutType = 0 | 1;
@@ -118,6 +119,8 @@ export type AdmissionFormOptionsQuery = {
   sourceKey: string;
   parentId?: string;
   academicYearId?: string;
+  // Client-only identity for a fresh dependent-field check; never sent to the API.
+  optionsCheckId?: string;
   searchTerm?: string;
   skipCount?: number;
   maxResultCount?: number;
@@ -316,6 +319,7 @@ export const admissionFormsApi = api.injectEndpoints({
       ) => unwrap(r),
     }),
     getAdmissionFormOptions: builder.query<AdmissionFormOption[], AdmissionFormOptionsQuery>({
+      providesTags: academicReorderTags,
       query: ({
         sourceKey,
         parentId,

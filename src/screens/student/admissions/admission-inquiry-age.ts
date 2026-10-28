@@ -23,6 +23,7 @@ export function getAdmissionInquiryAge(
       : null;
   if (birth.isAfter(start, 'day')) {
     return {
+      compactHelpText: 'Not born at academic year start.',
       helpText: `Not born at academic year start (${dateLabel}).`,
       warning: minimum
         ? `Date of birth is after academic year start (${dateLabel}). Minimum age is ${minimum} years. You can still save this inquiry.`
@@ -40,6 +41,7 @@ export function getAdmissionInquiryAge(
       ? `Student's age at academic year start (${dateLabel}) is ${age}, below the minimum age of ${minimum} years for this class. You can still save this inquiry.`
       : '';
   return {
+    compactHelpText: `Age: ${years}y ${months}m${minimum ? ` · Minimum: ${minimum}y` : ''}`,
     helpText: `Age at academic year start (${dateLabel}): ${age}.${warning ? ` Minimum age: ${minimum} years. This is a warning only.` : ''}`,
     warning,
   };

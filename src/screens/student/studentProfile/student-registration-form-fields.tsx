@@ -7,6 +7,7 @@ import { isAdmissionRuleVisible } from 'src/screens/student/admissions/admission
 import { parseFieldConfiguration } from 'src/screens/student/admissions/form-dialog/form-field-presets';
 
 import { StudentCustomRuntimeField } from './student-custom-runtime-field';
+import { dependentAdmissionFieldValues } from '../admissions/admission-field-dependencies';
 import {
   profileRuleValues,
   profileFieldValue,
@@ -147,7 +148,7 @@ export function StudentRegistrationFormFields({
                           disabled={!editing || busy || field.readOnly || !editable.has(field.code)}
                           error={error}
                           onBlur={() => onBlur?.(field.code)}
-                          onChange={(next) =>
+                          onChange={(next) => {
                             onChange?.(
                               field.code,
                               entryIndex != null
@@ -157,8 +158,19 @@ export function StudentRegistrationFormFields({
                                     serializeProfileField(field, next)
                                   )
                                 : next
+                            );
+                            Object.entries(
+                              dependentAdmissionFieldValues(
+                                source.definition?.sections.flatMap((item) => item.fields) ?? [],
+                                field.code,
+                                profileRuleValues(values),
+                                entryIndex,
+                                section.fields.map((item) => item.code)
+                              )
                             )
-                          }
+                              .filter(([code]) => editable.has(code))
+                              .forEach(([code, nextValue]) => onChange?.(code, nextValue));
+                          }}
                         />
                       )}
                     </Grid>

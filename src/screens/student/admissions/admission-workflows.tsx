@@ -87,6 +87,8 @@ export default function AdmissionWorkflowsScreen() {
     onArchive: (workflow) => actions.requestConfirmation(workflow, 'archive'),
     onReopen: (workflow) => actions.requestConfirmation(workflow, 'reopen'),
     onDelete: (workflow) => actions.requestConfirmation(workflow, 'delete'),
+    onPublish: actions.publish,
+    publishingId: actions.publishingId,
   });
   return (
     <Box

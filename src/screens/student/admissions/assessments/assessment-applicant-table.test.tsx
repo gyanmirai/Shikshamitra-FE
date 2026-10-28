@@ -4,8 +4,8 @@ import { it, vi, expect } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { renderWithProviders } from 'src/test/test-utils';
-import { screen, waitFor, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 import { assessmentResponse } from 'src/redux/student/admissions/assessment-test-fixture';
 
 import { AssessmentApplicantTable } from './assessment-applicant-table';
@@ -55,6 +55,53 @@ const renderTable = (
       />
     </ThemeProvider>
   );
+
+it('merges the outcome into Status and shows waived attendance as not required', () => {
+  renderTable([
+    row('Waived student', {
+      status: 'complete',
+      queue: 'completed',
+      isActive: false,
+      assessment: {
+        ...assessmentResponse,
+        attempts: [
+          {
+            id: 'waived',
+            createdAt: '2026-10-28T09:00:00Z',
+            attemptNumber: 1,
+            attendance: 'pending',
+            status: 'completed',
+            outcome: 'waived',
+            concurrencyStamp: 'stamp',
+          },
+        ],
+      },
+    }),
+  ]);
+  expect(screen.queryByRole('columnheader', { name: /^Result\b/ })).not.toBeInTheDocument();
+  const student = within(
+    screen.getByRole('row', { name: 'Assessment details for Waived student' })
+  );
+  expect(student.getByText('Not required')).toBeInTheDocument();
+  expect(student.getByText('Waived')).toBeInTheDocument();
+  expect(student.queryByText('Pending')).not.toBeInTheDocument();
+  expect(student.queryByText('Complete')).not.toBeInTheDocument();
+});
+
+it('places Status before the final Action column and opens read-only details from its button', () => {
+  const onDetails = vi.fn();
+  renderTable(
+    [row('History action', { isActive: false, queue: 'completed' })],
+    vi.fn(),
+    new Set(),
+    onDetails
+  );
+  const headers = screen.getAllByRole('columnheader').map((header) => header.textContent?.trim());
+  expect(headers.slice(-2)).toEqual(['Status', 'Action']);
+  expect(screen.queryByRole('columnheader', { name: /^Next action\b/ })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'View details for History action' }));
+  expect(onDetails).toHaveBeenCalledOnce();
+});
 
 it('exposes real scalar filters while leaving combined identity and next-action controls unfilterable', async () => {
   const onServerFilter = vi.fn();

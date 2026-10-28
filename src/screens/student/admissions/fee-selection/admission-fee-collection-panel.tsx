@@ -33,6 +33,8 @@ import {
   usePrepareAdmissionFeeCollectionMutation,
 } from 'src/redux/student/admissions/admission-fee-collection-api';
 
+import { useAdmissionJoiningDate } from './use-admission-joining-date';
+import { AdmissionJoiningDateField } from './admission-joining-date-field';
 import { AdmissionFeePreparationDialog } from './admission-fee-preparation-dialog';
 import { getAdmissionFeeCollectionAccess } from './admission-fee-collection-permissions';
 
@@ -132,7 +134,13 @@ export default function AdmissionFeeCollectionPanel({
   useEffect(() => () => openChange.current?.(false), []);
   const state = summary.currentData;
   const refreshingCollection = refreshing || summary.isFetching;
+  const joiningDate = useAdmissionJoiningDate(applicationId, {
+    enabled: access.canView,
+    requiresVariableAmounts: Boolean(state?.variableFeeHeads?.length),
+  });
+  const canPrepare = Boolean(state?.canCollect || joiningDate.state?.canPreview);
   const prepareAndOpen = async (variableFeeHeads: AdmissionVariableFeeHead[]) => {
+    await joiningDate.confirm();
     const prepared = await prepare({ applicationId, variableFeeHeads }).unwrap();
     variableAmounts.onFalse();
     if (prepared.isSettled) {
@@ -149,8 +157,10 @@ export default function AdmissionFeeCollectionPanel({
       disabled ||
       refreshingCollection ||
       !access.canCollect ||
+      !state ||
       state?.isSettled ||
-      !state?.canCollect ||
+      !canPrepare ||
+      joiningDate.blocked ||
       summary.isError
     )
       return;
@@ -282,12 +292,13 @@ export default function AdmissionFeeCollectionPanel({
       size="small"
       variant="contained"
       startIcon={<Iconify icon="mdi:cash-plus" width={16} />}
-      loading={preparing.isLoading}
+      loading={preparing.isLoading || joiningDate.saving}
       disabled={
         disabled ||
         refreshingCollection ||
         !access.canCollect ||
-        !state.canCollect ||
+        !canPrepare ||
+        joiningDate.blocked ||
         summary.isError ||
         dialog.value ||
         variableAmounts.value
@@ -354,6 +365,20 @@ export default function AdmissionFeeCollectionPanel({
             </Button>
           </Stack>
         )}
+        <AdmissionJoiningDateField
+          controller={joiningDate}
+          disabled={
+            disabled ||
+            refreshingCollection ||
+            dialog.value ||
+            variableAmounts.value ||
+            preparing.isLoading
+          }
+        />
+        {joiningDate.preview?.proration && <Label sx={{ alignSelf: 'flex-end' }}>Preview</Label>}
+        <FeeProrationResult
+          result={joiningDate.state?.canPreview ? joiningDate.preview?.proration : state.proration}
+        />
         <Box
           component="dl"
           sx={{
@@ -364,9 +389,19 @@ export default function AdmissionFeeCollectionPanel({
           }}
         >
           {[
-            [state.proration ? 'Payable fees' : 'Scheduled fees', state.totalAmount],
+            [
+              'Scheduled fees',
+              joiningDate.state?.canPreview
+                ? (joiningDate.preview?.totalAmount ?? null)
+                : state.totalAmount,
+            ],
             ['Confirmed payments', state.confirmedPaidAmount],
-            ['Fee balance', state.outstandingAmount],
+            [
+              'Fee balance',
+              joiningDate.state?.canPreview
+                ? (joiningDate.preview?.totalAmount ?? null)
+                : state.outstandingAmount,
+            ],
           ].map(([title, value]) => (
             <Box key={title} sx={{ minWidth: 0 }}>
               <Typography component="dt" variant="caption" color="text.secondary">
@@ -390,7 +425,6 @@ export default function AdmissionFeeCollectionPanel({
             </Box>
           ))}
         </Box>
-        <FeeProrationResult result={state.proration} />
         {!stretch && !state.isSettled && (
           <Typography variant="caption" color="text.secondary">
             Charges and late fees are shown separately in the collection form.
@@ -403,6 +437,7 @@ export default function AdmissionFeeCollectionPanel({
           </StudentFeedback>
         )}
         {state.blocker &&
+          !joiningDate.state?.canPreview &&
           (stretch ? (
             <Stack direction="row" spacing={1} alignItems="flex-start" role="status">
               <Iconify
@@ -559,6 +594,11 @@ export default function AdmissionFeeCollectionPanel({
           applicantName={state.applicantName}
           heads={state.variableFeeHeads}
           busy={preparing.isLoading}
+          previewContext={
+            joiningDate.state?.canPreview
+              ? { applicationId, joiningDate: joiningDate.date }
+              : undefined
+          }
           onClose={() => {
             if (preparing.isLoading) return;
             variableAmounts.onFalse();

@@ -1,12 +1,24 @@
-import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  CreateUpdateAdmissionForm,
+  AdmissionFormSystemFieldMetadata,
+} from 'src/redux/student/admissions/admission-forms-api';
 
+import { FIELD_TYPES } from './form-dialog-model';
 import { parseFieldConfiguration } from './form-field-presets';
 import { getAdmissionFormStepGroups } from './form-step-groups';
 import { isJsonObject, parseOptions, extractRuleFields } from './form-builder-issue-utils';
 
 type Issue = { message: string; fieldId?: string };
+type StudentFieldCatalogue = {
+  fields?: AdmissionFormSystemFieldMetadata[];
+  isLoading?: boolean;
+  isError?: boolean;
+};
 
-export function getBuilderIssues(form: CreateUpdateAdmissionForm): Issue[] {
+export function getBuilderIssues(
+  form: CreateUpdateAdmissionForm,
+  catalogue: StudentFieldCatalogue = {}
+): Issue[] {
   const issues: Issue[] = [];
   const steps = getAdmissionFormStepGroups(form.sections);
   if (!form.sections.length) issues.push({ message: 'Add at least one section.' });
@@ -28,6 +40,40 @@ export function getBuilderIssues(form: CreateUpdateAdmissionForm): Issue[] {
   const sectionCodes = new Set<string>();
   const fieldCodes = new Set<string>();
   const fields = form.sections.flatMap((section) => section.fields);
+  const linkedFields = fields.filter((field) => field.bindingType === 0 && field.fieldType !== 12);
+  const catalogueReady =
+    catalogue.fields !== undefined && !catalogue.isLoading && !catalogue.isError;
+  if (linkedFields.length && !catalogueReady)
+    issues.push({
+      message: catalogue.isError
+        ? 'Student field connections could not be checked. Reload the form and try again.'
+        : 'Student field connections are still being checked.',
+    });
+  const boundKeys = new Set<string>();
+  linkedFields.forEach((field) => {
+    const key = field.bindingKey?.toLowerCase();
+    if (key && boundKeys.has(key))
+      issues.push({
+        message: `${field.label || field.code} duplicates a linked student field.`,
+        fieldId: field.id,
+      });
+    if (key) boundKeys.add(key);
+    if (!catalogueReady) return;
+    const metadata = catalogue.fields!.find((item) => item.key.toLowerCase() === key);
+    if (!metadata)
+      issues.push({
+        message: `${field.label || field.code} needs a valid student field connection.`,
+        fieldId: field.id,
+      });
+    else if (metadata.fieldType !== field.fieldType) {
+      const expectedType =
+        FIELD_TYPES.find(([, type]) => type === metadata.fieldType)?.[0] ?? 'original answer type';
+      issues.push({
+        message: `${field.label || field.code} is linked to ${metadata.displayName} and must use ${expectedType}. Restore its field type in Basic settings.`,
+        fieldId: field.id,
+      });
+    }
+  });
   form.sections.forEach((section) => {
     if (!section.fields.length)
       issues.push({

@@ -1,18 +1,18 @@
 import type { IParams } from 'src/components/customizabaleTable/types';
 
+import { assessmentStatusLabels, assessmentAttendanceLabels } from './assessment-roster-status';
+
 const labels: Record<string, string> = {
   applicationNumber: 'Application number',
   className: 'Class',
   sessionName: 'Session',
   attendance: 'Attendance',
-  result: 'Result',
+  status: 'Status',
 };
-const attendance: Record<string, string> = {
-  pending: 'Pending',
-  present: 'Present',
-  absent: 'Absent',
-};
-const results: Record<string, string> = { passed: 'Pass', failed: 'Failed', waived: 'Waived' };
+const attendance: Record<string, string> = assessmentAttendanceLabels;
+const statuses: Record<string, string> = Object.fromEntries(
+  Object.entries(assessmentStatusLabels).filter(([key]) => key !== 'unavailable')
+);
 
 export function readAssessmentColumnFilters(raw: string): IParams['filters'] {
   if (!raw || raw.length > 12000) return [];
@@ -20,19 +20,11 @@ export function readAssessmentColumnFilters(raw: string): IParams['filters'] {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length > 20) return [];
     return parsed.flatMap((filter) => {
-      if (
-        !filter ||
-        typeof filter !== 'object' ||
-        !Object.hasOwn(labels, filter.column) ||
-        typeof filter.value !== 'string'
-      )
-        return [];
+      if (!filter || typeof filter !== 'object' || typeof filter.value !== 'string') return [];
+      const column = filter.column === 'result' ? 'status' : filter.column;
+      if (!Object.hasOwn(labels, column)) return [];
       const options =
-        filter.column === 'attendance'
-          ? attendance
-          : filter.column === 'result'
-            ? results
-            : undefined;
+        column === 'attendance' ? attendance : column === 'status' ? statuses : undefined;
       if (
         options
           ? filter.type !== 'equals' ||
@@ -46,11 +38,11 @@ export function readAssessmentColumnFilters(raw: string): IParams['filters'] {
         return [];
       return [
         {
-          column: filter.column,
+          column,
           type: filter.type,
           value: filter.value,
           valueType: filter.valueType,
-          label: labels[filter.column],
+          label: labels[column],
           ...(options ? { displayValue: options[filter.value] } : {}),
         },
       ];

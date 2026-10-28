@@ -70,11 +70,11 @@ export default function AdmissionAssessmentsScreen() {
         ? []
         : [
             {
-              column: 'status',
+              column: 'assessmentProgress',
               type: 'equals',
               value: state.status,
               valueType: 'enum',
-              label: 'Status',
+              label: 'Assessment progress',
               displayValue: { pending: 'Pending', ongoing: 'Ongoing', complete: 'Complete' }[
                 state.status
               ],
@@ -394,7 +394,8 @@ export default function AdmissionAssessmentsScreen() {
               onServerFilter={(next) =>
                 updateWorkbench({
                   assessmentFilters: serializeAssessmentColumnFilters(next),
-                  assessmentStatus: next.findLast((item) => item.column === 'status')?.value,
+                  assessmentStatus: next.findLast((item) => item.column === 'assessmentProgress')
+                    ?.value,
                   assessmentPage: 0,
                 })
               }

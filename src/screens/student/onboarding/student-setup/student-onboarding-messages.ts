@@ -2,6 +2,39 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 // Keep staff wording local to Onboarding. The shared parser serves other modules too.
 const messages: Record<string, string> = {
+  'Student and adult app logins need different saved email addresses.':
+    'Use different saved emails for the student and parent / guardian logins.',
+  'This email is already used by a conflicting, inactive or restricted account. Existing accounts cannot be merged or repurposed through a profile email change.':
+    'This email already has another login or restricted access. Use a different email, or ask your administrator to review it.',
+  'This Student email is already used by another account. Correct the saved email or ask authorized staff to review it.':
+    'This student email already has another login. Update the saved email, or ask your administrator to review it.',
+  'The saved email belongs to a conflicting, inactive or restricted account, or has no accessible verified Parent association. Ask authorized staff to review it.':
+    'This email cannot be used for parent access. Ask your administrator to review the existing login and linked children.',
+  'The saved email is conflicting, inactive, restricted or has no accessible verified Parent association. Refresh App Login or ask authorized staff to review it.':
+    'This email cannot be used for parent access. Refresh App Login, or ask your administrator to review the existing login and linked children.',
+  'Explicitly confirm the saved adult and existing Parent account in App Login before linking.':
+    'Confirm this person may access the student, then choose Confirm & link parent.',
+  'Confirm the current saved adult and existing Parent account before linking.':
+    'Confirm this person may access the student, then choose Confirm & link parent.',
+  'Confirm the existing saved adult explicitly in App Login after activation.':
+    'Activate the student, then confirm and link this parent in App Login.',
+  'The reviewed existing adult or linked account changed. Ask authorized staff to review App Login.':
+    'The saved adult or linked login has changed. Ask your administrator to review App Login.',
+  'The saved adult differs from the reviewed linked Parent account.':
+    'A different adult login is linked. Ask your administrator to review App Login.',
+  'An adult app-access review is pending. Complete the reviewed access workflow before linking or sending sign-in help.':
+    'An adult access review is pending. Complete it before linking or sending sign-in help.',
+  'A different adult access choice is already linked. Use the reviewed access repair workflow.':
+    'A different adult login is already linked. Ask your administrator to review access.',
+  'Guardian app access is already selected. Use the reviewed access repair workflow.':
+    'Guardian access is already selected. Ask your administrator to review access.',
+  'The reviewed adult selection changed. Use the reviewed access repair workflow.':
+    'The saved adult choice has changed. Ask your administrator to review access.',
+  'Uses the existing Parent login. Select sign-in help to email secure account access guidance.':
+    'This parent uses an existing login. Select them to send sign-in help; their password stays unchanged.',
+  'This parent account is already confirmed. Link it before requesting an email change.':
+    'Link the confirmed parent before changing the login email.',
+  'Identity update permission is required.': 'Ask authorized staff to link this parent.',
   'An identity already uses this email. Only an explicitly confirmed, verified existing guardian portal account may be linked for a sibling.':
     'This email already has an app login. Use a different student email, or ask your administrator to check the existing login.',
   'The saved email changed. Refresh the recipient before sending credentials.':

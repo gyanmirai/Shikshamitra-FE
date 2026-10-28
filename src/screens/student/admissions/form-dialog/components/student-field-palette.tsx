@@ -12,7 +12,6 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { Scrollbar } from 'src/components/scrollbar';
 import InputAdornment from '@mui/material/InputAdornment';
-import CustomAccordion from 'src/components/custom-accordian';
 
 import { fieldTypeIcon } from '../form-dialog-model';
 import { PaletteFieldButton } from './palette-field-button';
@@ -49,7 +48,6 @@ export function StudentFieldPalette({
   const paletteId = useId();
   const [search, setSearch] = useState('');
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  const [contextExpanded, setContextExpanded] = useState(true);
   const normalizedSearch = search.trim().toLowerCase();
   const groupedFields = groupStudentFields(fields);
   const visibleGroups = groupedFields
@@ -124,18 +122,6 @@ export function StudentFieldPalette({
         }}
       >
         <Stack spacing={0.75} sx={{ pr: 1, pb: 1 }}>
-          {!loading && !error && fields.some(usesAdmissionContext) && (
-            <CustomAccordion
-              title="Board, medium and class"
-              expanded={contextExpanded}
-              onChange={() => setContextExpanded((value) => !value)}
-              content={
-                <Typography variant="caption" color="text.secondary" role="note">
-                  {admissionContextMessage}
-                </Typography>
-              }
-            />
-          )}
           {loading &&
             Array.from({ length: 4 }, (_, index) => (
               <Skeleton key={index} variant="rounded" height={48} />

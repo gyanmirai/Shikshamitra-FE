@@ -8,6 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionApplicationQuery } from 'src/redux/student/admissions/admission-applications-api';
 import {
@@ -253,103 +254,112 @@ export function AssessmentPipelineBookingDrawer({
           </Stack>
           <Divider />
           <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <Stack spacing={2} sx={{ p: 2 }}>
-              <Box sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1 }}>
-                {application.isLoading ? (
-                  <Skeleton />
-                ) : (
-                  <Typography variant="subtitle2">
-                    {application.currentData?.applicantName || 'Student'}
+            <FormBusyRegion
+              busy={busy}
+              label={
+                mode === 'book'
+                  ? 'Booking assessment slot…'
+                  : 'Creating and booking assessment slot…'
+              }
+            >
+              <Stack spacing={2} sx={{ p: 2 }}>
+                <Box sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                  {application.isLoading ? (
+                    <Skeleton />
+                  ) : (
+                    <Typography variant="subtitle2">
+                      {application.currentData?.applicantName || 'Student'}
+                    </Typography>
+                  )}
+                  <Typography variant="body2" color="text.secondary">
+                    {[application.currentData?.standardName || scope?.className, stage.name]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </Typography>
+                </Box>
+                {error && (
+                  <StudentFeedback
+                    notificationKey="STU-0263"
+                    presentation="persistent"
+                    severity="error"
+                  >
+                    {error}
+                  </StudentFeedback>
                 )}
-                <Typography variant="body2" color="text.secondary">
-                  {[application.currentData?.standardName || scope?.className, stage.name]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </Typography>
-              </Box>
-              {error && (
-                <StudentFeedback
-                  notificationKey="STU-0263"
-                  presentation="persistent"
-                  severity="error"
-                >
-                  {error}
-                </StudentFeedback>
-              )}
-              {mode === 'book' ? (
-                <AssessmentBookingField
-                  {...scopeKey}
-                  value={bookForm.values.sessionId}
-                  slotStartsAt={bookForm.values.slotStartsAt}
-                  onChange={(value) => bookForm.setFieldValue('sessionId', value)}
-                  onSlotChange={(value) => bookForm.setFieldValue('slotStartsAt', value)}
-                  onSlotRequirementChange={(value) =>
-                    bookForm.setFieldValue('requiresSlot', value, false)
-                  }
-                  error={bookForm.touched.sessionId ? bookForm.errors.sessionId : undefined}
-                  slotError={
-                    bookForm.touched.slotStartsAt ? bookForm.errors.slotStartsAt : undefined
-                  }
-                  disabled={busy || !canBook}
-                  inlineBooking
-                  onAddSlot={
-                    permissions.manageSessions && canBook
-                      ? () => {
-                          setMode('create');
-                          setError('');
-                        }
-                      : undefined
-                  }
-                />
-              ) : resourcesLoading ? (
-                <Skeleton variant="rounded" height={320} />
-              ) : resourcesError ? (
-                <StudentFeedback
-                  notificationKey="STU-0264"
-                  presentation="toast"
-                  severity="error"
-                  action={
-                    <Button
-                      size="small"
-                      onClick={() => {
-                        scopes.refetch();
-                        resources.refetch();
-                      }}
-                    >
-                      Retry
-                    </Button>
-                  }
-                >
-                  Unable to load slot setup.
-                </StudentFeedback>
-              ) : (
-                <AssessmentSessionSetupFields
-                  pipeline
-                  formik={createForm}
-                  scopes={selectedScopes}
-                  rooms={rooms}
-                  interviewers={resources.currentData?.interviewers ?? []}
-                  onSearchInterviewers={(search) => searchInterviewers(search).unwrap()}
-                  disabled={busy || !canBook || !permissions.manageSessions}
-                  bookedCount={0}
-                />
-              )}
-              {mode === 'create' && application.isError && (
-                <StudentFeedback
-                  notificationKey="STU-0265"
-                  presentation="toast"
-                  severity="error"
-                  action={
-                    <Button size="small" onClick={application.refetch}>
-                      Retry
-                    </Button>
-                  }
-                >
-                  Unable to load student details.
-                </StudentFeedback>
-              )}
-            </Stack>
+                {mode === 'book' ? (
+                  <AssessmentBookingField
+                    {...scopeKey}
+                    value={bookForm.values.sessionId}
+                    slotStartsAt={bookForm.values.slotStartsAt}
+                    onChange={(value) => bookForm.setFieldValue('sessionId', value)}
+                    onSlotChange={(value) => bookForm.setFieldValue('slotStartsAt', value)}
+                    onSlotRequirementChange={(value) =>
+                      bookForm.setFieldValue('requiresSlot', value, false)
+                    }
+                    error={bookForm.touched.sessionId ? bookForm.errors.sessionId : undefined}
+                    slotError={
+                      bookForm.touched.slotStartsAt ? bookForm.errors.slotStartsAt : undefined
+                    }
+                    disabled={busy || !canBook}
+                    inlineBooking
+                    onAddSlot={
+                      permissions.manageSessions && canBook
+                        ? () => {
+                            setMode('create');
+                            setError('');
+                          }
+                        : undefined
+                    }
+                  />
+                ) : resourcesLoading ? (
+                  <Skeleton variant="rounded" height={320} />
+                ) : resourcesError ? (
+                  <StudentFeedback
+                    notificationKey="STU-0264"
+                    presentation="toast"
+                    severity="error"
+                    action={
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          scopes.refetch();
+                          resources.refetch();
+                        }}
+                      >
+                        Retry
+                      </Button>
+                    }
+                  >
+                    Unable to load slot setup.
+                  </StudentFeedback>
+                ) : (
+                  <AssessmentSessionSetupFields
+                    pipeline
+                    formik={createForm}
+                    scopes={selectedScopes}
+                    rooms={rooms}
+                    interviewers={resources.currentData?.interviewers ?? []}
+                    onSearchInterviewers={(search) => searchInterviewers(search).unwrap()}
+                    disabled={busy || !canBook || !permissions.manageSessions}
+                    bookedCount={0}
+                  />
+                )}
+                {mode === 'create' && application.isError && (
+                  <StudentFeedback
+                    notificationKey="STU-0265"
+                    presentation="toast"
+                    severity="error"
+                    action={
+                      <Button size="small" onClick={application.refetch}>
+                        Retry
+                      </Button>
+                    }
+                  >
+                    Unable to load student details.
+                  </StudentFeedback>
+                )}
+              </Stack>
+            </FormBusyRegion>
           </Scrollbar>
           <Divider />
           <Stack direction="row" justifyContent="space-between" sx={{ p: 2 }}>

@@ -35,6 +35,29 @@ afterEach(() => {
   clearCachedAuthSession();
 });
 
+it('enables optional Student access for one case using its reason and current stamp', async () => {
+  let body: unknown;
+  mswServer.use(
+    http.post('*/api/student/onboarding/case-1/student-app-access/enable', async ({ request }) => {
+      body = await request.json();
+      return HttpResponse.json({
+        data: { ...workspace, studentAccessEnabled: true, canEnableStudentAccess: false },
+      });
+    })
+  );
+  const result = await store
+    .dispatch(
+      studentOnboardingApi.endpoints.enableStudentAppAccess.initiate({
+        id: 'case-1',
+        reason: 'Student requested access',
+        concurrencyStamp: 'current-stamp',
+      })
+    )
+    .unwrap();
+  expect(body).toEqual({ reason: 'Student requested access', concurrencyStamp: 'current-stamp' });
+  expect(result.studentAccessEnabled).toBe(true);
+});
+
 it('loads canonical recipients through the Onboarding boundary', async () => {
   mswServer.use(
     http.get('*/api/student/onboarding/case-1/credentials', () =>
@@ -279,4 +302,65 @@ it('links an enrolled parent with one credential-boundary write and no activatio
   } finally {
     mswServer.events.removeListener('request:start', capture);
   }
+});
+
+it('serializes explicit Onboarding Guardian confirmation through the existing parent-link endpoint', async () => {
+  let submitted: unknown;
+  mswServer.use(
+    http.post('*/api/student/onboarding/case-1/credentials/link-parent', async ({ request }) => {
+      submitted = await request.json();
+      return HttpResponse.json({ data: workspace });
+    })
+  );
+  const siblingParentSelection = {
+    relationship: 'guardian' as const,
+    expectedEmail: 'aunt@example.test',
+    expectedUserId: 'parent-3',
+  };
+  await store
+    .dispatch(
+      studentOnboardingApi.endpoints.linkStudentOnboardingParent.initiate({
+        id: 'case-1',
+        concurrencyStamp: 'current-stamp',
+        siblingParentSelection,
+        confirmExistingParentAccess: true,
+      })
+    )
+    .unwrap();
+  expect(submitted).toEqual({
+    concurrencyStamp: 'current-stamp',
+    siblingParentSelection,
+    confirmExistingParentAccess: true,
+  });
+});
+
+it('passes the reviewed existing-parent help flag without password or replacement address fields', async () => {
+  let submitted: unknown;
+  mswServer.use(
+    http.post('*/api/student/onboarding/case-1/credentials', async ({ request }) => {
+      submitted = await request.json();
+      return HttpResponse.json({ data: workspace });
+    })
+  );
+  await store
+    .dispatch(
+      studentOnboardingApi.endpoints.sendStudentOnboardingCredentials.initiate({
+        id: 'case-1',
+        accountType: 'guardian',
+        relationship: 'father',
+        expectedEmail: 'raj@example.com',
+        confirmRecipientAccess: true,
+        concurrencyStamp: 'current-stamp',
+        sendExistingParentHelp: true,
+      })
+    )
+    .unwrap();
+  expect(submitted).toEqual({
+    accountType: 'guardian',
+    relationship: 'father',
+    expectedEmail: 'raj@example.com',
+    confirmRecipientAccess: true,
+    concurrencyStamp: 'current-stamp',
+    sendExistingParentHelp: true,
+  });
 });

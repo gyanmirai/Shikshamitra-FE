@@ -20,20 +20,26 @@ describe('applicant document checklist interactions', { timeout: 15000 }, () => 
     { grants: ['View'], canAdd: false, canWaive: false },
     { grants: ['View', 'Add'], canAdd: true, canWaive: false },
     { grants: ['View', 'Delete'], canAdd: false, canWaive: false },
-    { grants: ['View', 'Upload', 'Review', 'RecordOriginal', 'Waive'], canAdd: false, canWaive: false },
+    {
+      grants: ['View', 'Upload', 'Review', 'RecordOriginal', 'Waive'],
+      canAdd: false,
+      canWaive: false,
+    },
   ])('uses canonical document grants: $grants', async ({ grants, canAdd, canWaive }) => {
     mswServer.use(
       http.get(documentStagePath, () =>
         HttpResponse.json({
           ...documentSummary,
-          requirements: [{
-            ...documentSummary.requirements[0],
-            canUpload: true,
-            canRecordOriginal: true,
-            canReview: true,
-            canAccept: true,
-            canWaive: true,
-          }],
+          requirements: [
+            {
+              ...documentSummary.requirements[0],
+              canUpload: true,
+              canRecordOriginal: true,
+              canReview: true,
+              canAccept: true,
+              canWaive: true,
+            },
+          ],
         })
       )
     );
@@ -146,7 +152,7 @@ describe('applicant document checklist interactions', { timeout: 15000 }, () => 
     await userEvent.click(dialog.getByRole('button', { name: 'Request replacement' }));
     expect(await dialog.findByText('Give a reason for this decision')).toBeInTheDocument();
     expect(requests).toBe(0);
-    await userEvent.type(dialog.getByLabelText(/^Reason/), 'The seal is unreadable.');
+    await userEvent.type(dialog.getByLabelText(/^Rejection reason/), 'The seal is unreadable.');
     await userEvent.click(dialog.getByRole('button', { name: 'Request replacement' }));
     await waitFor(() => expect(requests).toBe(1));
     expect(reason).toBe('The seal is unreadable.');

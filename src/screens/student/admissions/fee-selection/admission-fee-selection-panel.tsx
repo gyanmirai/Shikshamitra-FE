@@ -252,13 +252,7 @@ export default function AdmissionFeeSelectionPanel({
               {compact && mode === 'admissions' ? 'Payment' : 'Fee structure'}
             </Typography>
             {mode === 'admissions' && (
-              <CustomTooltip
-                title={
-                  state.paymentCompletion?.paymentRule === 'full'
-                    ? 'The entire selected Finance fee structure, including future installments, must be cleared. Finance-verified zero payable needs no payment entry.'
-                    : 'A confirmed partial payment is sufficient. Finance-verified zero payable needs no payment entry.'
-                }
-              >
+              <CustomTooltip title="A confirmed payment is sufficient. Finance-verified zero payable needs no payment entry. Authorized staff can instead collect later in Onboarding with a reason.">
                 <IconButton
                   size="small"
                   color="info"

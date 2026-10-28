@@ -9,12 +9,12 @@ import ListItem from '@mui/material/ListItem';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 
-import { getBuilderIssues } from '../form-builder-issues';
+import { useFormBuilderIssues } from '../hooks/use-form-builder-issues';
 
 type Props = { form: CreateUpdateAdmissionForm; onEditFields: () => void };
 
 export function FormReviewChecks({ form, onEditFields }: Props) {
-  const issues = getBuilderIssues(form);
+  const issues = useFormBuilderIssues(form);
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack direction="row" alignItems="flex-start" spacing={1}>

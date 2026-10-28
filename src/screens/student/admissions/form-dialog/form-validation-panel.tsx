@@ -9,14 +9,14 @@ import Divider from '@mui/material/Divider';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 
-import { getBuilderIssues } from './form-builder-issues';
+import { useFormBuilderIssues } from './hooks/use-form-builder-issues';
 
 export { getBuilderIssues } from './form-builder-issues';
 
 type Props = { form: CreateUpdateAdmissionForm; onSelectField?: (fieldId: string) => void };
 
 export function FormValidationPanel({ form, onSelectField }: Props) {
-  const issues = getBuilderIssues(form);
+  const issues = useFormBuilderIssues(form);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
 

@@ -21,7 +21,7 @@ import {
 
 import { DocumentStatusLabel } from './document-status';
 import { getDocumentTableFile } from './document-table-model';
-import { DocumentActionFields } from './document-action-fields';
+import { DocumentActionDialog } from './document-action-dialog';
 import { useDocumentActionForm } from './use-document-action-form';
 import { DocumentPreviewContent } from './document-preview-content';
 import { DocumentEvidenceHistory } from './document-evidence-history';
@@ -49,7 +49,7 @@ export function DocumentReviewDialog({
   readOnly: boolean;
   onClose: () => void;
 }) {
-  const [action, setAction] = useState<DocumentAction | null>(null);
+  const [action, setAction] = useState<Exclude<DocumentAction, 'accept'> | null>(null);
   const [snapshot] = useState({ summary, requirement });
   const current = snapshot.requirement;
   const actions = getDocumentReviewActions(
@@ -58,76 +58,95 @@ export function DocumentReviewDialog({
     readOnly,
     snapshot.summary.policy?.allowWaivers === true
   );
-  const canSubmit = Boolean(action && actions.includes(action) && !disabled && permissions.view);
-  const { formik, error, clearError, extensions, maxFileSizeMb } = useDocumentActionForm({
+  const canApprove = actions.includes('accept') && !disabled && !action && permissions.view;
+  const { formik, error } = useDocumentActionForm({
     ...snapshot,
-    action: action ?? 'accept',
+    action: 'accept',
     onSuccess: onClose,
-    canSubmit,
+    canSubmit: canApprove,
   });
   const file = getDocumentTableFile(current);
   const latest = current.evidence.at(-1);
   const canPreview = Boolean(file?.canDownload && permissions.view && permissions.download);
-  const locked = disabled || formik.isSubmitting;
-  const chooseAction = (next: DocumentAction) => {
-    if (locked || !actions.includes(next)) return;
-    formik.resetForm();
-    clearError();
-    setAction(next);
+  const locked = disabled || formik.isSubmitting || Boolean(action);
+  const chooseAction = (next: Exclude<DocumentAction, 'accept'>) => {
+    if (!locked && actions.includes(next)) setAction(next);
   };
-  const cancelAction = () => {
-    if (formik.isSubmitting) return;
-    if (formik.dirty && !window.confirm('You have unsaved changes. Do you want to discard them?'))
-      return;
-    formik.resetForm();
-    clearError();
-    setAction(null);
-  };
+
   return (
-    <CustomDialog
-      open
-      title={`${current.name} · Document Review`}
-      titleInfo="Review the document and its latest evidence before recording a decision. Rejection requires a reason and requests a replacement."
-      handleClose={onClose}
-      hasUnsavedChanges={formik.dirty}
-      disableClose={formik.isSubmitting}
-      maxWidth="lg"
-      hasForm={false}
-      paperProps={{ sx: { height: '85dvh' } }}
-    >
-      <Box
-        component="fieldset"
-        disabled={formik.isSubmitting}
-        sx={{ m: 0, p: 0, border: 0, minWidth: 0, minHeight: 0, flex: 1, display: 'flex' }}
+    <>
+      <CustomDialog
+        open
+        title={`${current.name} · Document Review`}
+        titleInfo="Review the latest evidence before approving it. Reject requests a replacement and requires a reason."
+        handleClose={onClose}
+        hasUnsavedChanges={false}
+        disableClose={formik.isSubmitting || Boolean(action)}
+        maxWidth="lg"
+        hasForm={false}
+        paperProps={{ sx: { height: '85dvh' } }}
       >
-        <DialogScrollContent
-          scrollBarProps={{
-            fillContent: true,
-            sx: { flex: 1, minHeight: 0 },
-            slotProps: { content: { height: 1, minHeight: 0 } },
-          }}
-          sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+        <Box
+          component="fieldset"
+          disabled={formik.isSubmitting || Boolean(action)}
+          sx={{ m: 0, p: 0, border: 0, minWidth: 0, minHeight: 0, flex: 1, display: 'flex' }}
         >
-          <Box
+          <DialogScrollContent
+            scrollBarProps={{
+              fillContent: true,
+              sx: { flex: 1, minHeight: 0 },
+              slotProps: { content: { height: 1, minHeight: 0 } },
+            }}
             sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) minmax(0, 300px)' },
-              gap: 2,
               flex: 1,
               minWidth: 0,
               minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5,
             }}
           >
+            <Stack direction="row" alignItems="center" useFlexGap flexWrap="wrap" gap={1}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}
+              >
+                {latest
+                  ? `${latest.fileName || (latest.kind === 'original' ? 'Physical original recorded' : 'Requirement waived')} · Version ${latest.versionNumber}`
+                  : current.name}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {current.isRequired ? 'Required' : 'Optional'}
+              </Typography>
+              <DocumentStatusLabel status={current.status} />
+            </Stack>
+            {current.description && <Typography variant="body2">{current.description}</Typography>}
+            {error && (
+              <StudentFeedback
+                notificationKey="STU-0320"
+                presentation="persistent"
+                severity="error"
+              >
+                {error}
+              </StudentFeedback>
+            )}
             <Box
               sx={{
+                flex: '1 0 300px',
+                minWidth: 0,
+                minHeight: 300,
                 display: 'flex',
                 flexDirection: 'column',
-                minWidth: 0,
-                minHeight: { xs: 300, md: 0 },
               }}
             >
               {canPreview && file ? (
-                <DocumentPreviewContent key={file.id} evidence={file} name={current.name} />
+                <DocumentPreviewContent
+                  key={file.id}
+                  evidence={file}
+                  name={current.name}
+                  showFileName={file.id !== latest?.id}
+                />
               ) : (
                 <EmptyContent
                   title={file ? 'Preview unavailable' : 'No document uploaded'}
@@ -143,152 +162,101 @@ export function DocumentReviewDialog({
                 />
               )}
             </Box>
-            <Stack spacing={1.5} sx={{ minWidth: 0 }}>
-              <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-                <DocumentStatusLabel status={current.status} />
-                <Typography variant="caption" color="text.secondary">
-                  {current.isRequired ? 'Required' : 'Optional'}
-                </Typography>
+            {actions.some((item) => item !== 'accept' && item !== 'reject') && (
+              <Stack direction="row" gap={1} useFlexGap flexWrap="wrap">
+                {actions
+                  .filter((item) => item !== 'accept' && item !== 'reject')
+                  .map((item) => (
+                    <Button
+                      key={item}
+                      size="small"
+                      variant="outlined"
+                      disabled={locked}
+                      startIcon={<Iconify icon={documentReviewActionIcons[item]} />}
+                      onClick={() => chooseAction(item)}
+                    >
+                      {item === 'upload' && file
+                        ? 'Upload replacement'
+                        : documentReviewActionLabels[item]}
+                    </Button>
+                  ))}
               </Stack>
-              {current.description && (
-                <Typography variant="body2">{current.description}</Typography>
-              )}
-              {latest && (
-                <Stack spacing={0.5}>
-                  <Typography variant="subtitle2">
-                    Latest evidence · Version {latest.versionNumber}
-                  </Typography>
-                  <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                    {latest.fileName ||
-                      (latest.kind === 'original'
-                        ? 'Physical original recorded'
-                        : 'Requirement waived')}
-                  </Typography>
-                  {latest.notes && (
-                    <Typography variant="body2" color="text.secondary">
-                      {latest.notes}
-                    </Typography>
-                  )}
-                </Stack>
-              )}
-              {error && (
-                <StudentFeedback
-                  notificationKey="STU-0320"
-                  presentation="persistent"
-                  severity="error"
-                >
-                  {error}
-                </StudentFeedback>
-              )}
-              {action ? (
-                <Box
-                  component="fieldset"
-                  disabled={locked}
-                  sx={{ m: 0, p: 0, border: 0, minWidth: 0 }}
-                >
-                  <DocumentActionFields
-                    action={action}
-                    requirement={current}
-                    formik={formik}
-                    extensions={extensions}
-                    maxFileSizeMb={maxFileSizeMb}
-                  />
-                </Box>
-              ) : (
-                <Stack direction="row" gap={1} useFlexGap flexWrap="wrap">
-                  {actions
-                    .filter((item) => item !== 'accept' && item !== 'reject')
-                    .map((item) => (
-                      <Button
-                        key={item}
-                        size="small"
-                        variant="outlined"
-                        disabled={locked}
-                        startIcon={<Iconify icon={documentReviewActionIcons[item]} />}
-                        onClick={() => chooseAction(item)}
-                      >
-                        {item === 'upload' && file
-                          ? 'Upload replacement'
-                          : documentReviewActionLabels[item]}
-                      </Button>
-                    ))}
-                </Stack>
-              )}
-              {snapshot.summary.policy?.requireIndependentReview && (
-                <Typography variant="caption" color="text.secondary">
-                  A different authorized reviewer must check collected evidence.
-                </Typography>
-              )}
-              {current.evidence.length > 0 && (
-                <Accordion disableGutters variant="outlined" sx={{ boxShadow: 'none' }}>
-                  <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                    <Typography variant="subtitle2">
-                      Evidence history ({current.evidence.length})
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <DocumentEvidenceHistory
-                      evidence={current.evidence}
-                      allowDownload={permissions.download}
-                    />
-                  </AccordionDetails>
-                </Accordion>
-              )}
-            </Stack>
-          </Box>
-        </DialogScrollContent>
-      </Box>
-      <DialogActions sx={{ p: 2, gap: 1, flexWrap: 'wrap', borderTop: 1, borderColor: 'divider' }}>
-        <Button
-          size="small"
-          variant="outlined"
-          disabled={formik.isSubmitting}
-          startIcon={<Iconify icon="mdi:close" />}
-          onClick={action ? cancelAction : onClose}
-          sx={{ mr: 'auto' }}
-        >
-          {action ? 'Cancel' : 'Close'}
-        </Button>
-        {action ? (
-          <Button
-            type="button"
-            size="small"
-            variant="contained"
-            loading={formik.isSubmitting}
-            loadingPosition="start"
-            disabled={!canSubmit || formik.isSubmitting}
-            onClick={() => formik.handleSubmit()}
-            startIcon={<Iconify icon={documentReviewActionIcons[action]} />}
-          >
-            {documentReviewActionLabels[action]}
-          </Button>
-        ) : (
-          <>
-            {actions.includes('reject') && (
-              <Button
-                size="small"
+            )}
+            {snapshot.summary.policy?.requireIndependentReview && (
+              <Typography variant="caption" color="text.secondary">
+                A different authorized reviewer must check collected evidence.
+              </Typography>
+            )}
+            {current.evidence.length > 0 && (
+              <Accordion
+                disableGutters
                 variant="outlined"
-                disabled={locked}
-                startIcon={<Iconify icon={documentReviewActionIcons.reject} />}
-                onClick={() => chooseAction('reject')}
+                sx={{ boxShadow: 'none', flexShrink: 0 }}
               >
-                Reject
-              </Button>
+                <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+                  <Typography variant="subtitle2">
+                    Evidence history ({current.evidence.length})
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <DocumentEvidenceHistory
+                    evidence={current.evidence}
+                    allowDownload={permissions.download}
+                  />
+                </AccordionDetails>
+              </Accordion>
             )}
-            {actions.includes('accept') && (
-              <Button
-                size="small"
-                variant="contained"
-                disabled={locked}
-                startIcon={<Iconify icon={documentReviewActionIcons.accept} />}
-                onClick={() => chooseAction('accept')}
-              >
-                Approve
-              </Button>
-            )}
-          </>
-        )}
-      </DialogActions>
-    </CustomDialog>
+          </DialogScrollContent>
+        </Box>
+        <DialogActions>
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={locked}
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={onClose}
+            sx={{ mr: 'auto' }}
+          >
+            Close
+          </Button>
+          {actions.includes('reject') && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="error"
+              disabled={locked}
+              startIcon={<Iconify icon="mdi:close" />}
+              onClick={() => chooseAction('reject')}
+            >
+              Reject
+            </Button>
+          )}
+          {actions.includes('accept') && (
+            <Button
+              size="small"
+              variant="contained"
+              disabled={!canApprove || formik.isSubmitting}
+              loading={formik.isSubmitting}
+              loadingPosition="start"
+              startIcon={<Iconify icon={documentReviewActionIcons.accept} />}
+              onClick={() => formik.handleSubmit()}
+            >
+              Approve
+            </Button>
+          )}
+        </DialogActions>
+      </CustomDialog>
+      {action && (
+        <DocumentActionDialog
+          {...snapshot}
+          action={action}
+          title={action === 'reject' ? 'Reject Document' : undefined}
+          submitLabel={action === 'reject' ? 'Reject document' : undefined}
+          canSubmit={actions.includes(action) && !disabled && permissions.view}
+          onClose={() => setAction(null)}
+          onSuccess={onClose}
+        />
+      )}
+    </>
   );
 }

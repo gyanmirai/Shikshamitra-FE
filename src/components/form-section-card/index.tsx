@@ -1,14 +1,12 @@
 import type { ReactNode } from 'react';
 import type { Theme, SxProps } from '@mui/material/styles';
 
-import Box from '@mui/material/Box';
 import { Card, Stack } from '@mui/material';
 
 import { FormSectionHeader, type FormSectionHeaderProps } from './section-header';
 
+export { FormFieldSpacing } from './field-spacing';
 export { FormSectionHeader } from './section-header';
-// Forms own their Grid/Stack spacing; this boundary forwards the standard MUI Box API.
-export const FormFieldSpacing = Box;
 
 interface FormSectionCardProps extends FormSectionHeaderProps {
   children?: ReactNode;

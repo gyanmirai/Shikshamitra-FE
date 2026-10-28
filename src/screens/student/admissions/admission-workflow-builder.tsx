@@ -26,7 +26,7 @@ import {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { duplicateStage } from './workflow-builder-utils';
-import { getAdmissionWorkflowAccess } from './workflow-access';
+import { getAdmissionWorkflowAccess, isAdmissionWorkflowPublishable } from './workflow-access';
 import { findMatchingWorkflowTemplate } from './workflow-template';
 import { AdmissionWorkflowDialog } from './admission-workflow-dialog';
 import { useAdmissionDefinitionOptions } from './use-admission-definition-options';
@@ -109,7 +109,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   if (workflowQuery.isError || !workflow) {
     return <WorkflowBuilderPageState state="error" onRetry={() => workflowQuery.refetch()} />;
   }
-  const canPublishCurrent = canPublish && [0, 3, 5, 6].includes(workflow.status);
+  const canPublishCurrent = canPublish && isAdmissionWorkflowPublishable(workflow.status);
   const requestPublish = async () => {
     if (!canPublishCurrent) return;
     const published = await commands.publish();

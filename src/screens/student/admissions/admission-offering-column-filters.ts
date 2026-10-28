@@ -15,12 +15,19 @@ export const offeringScopeColumns = {
 
 export function offeringScopeChanges(
   criteria: IParams['filters'],
-  current: Pick<AdmissionOfferingFilters, 'boardId' | 'mediumId'> & Partial<Pick<AdmissionOfferingFilters, 'stageId'>>
+  current: Pick<AdmissionOfferingFilters, 'boardId' | 'mediumId'> &
+    Partial<Pick<AdmissionOfferingFilters, 'stageId'>>
 ): Partial<AdmissionOfferingFilters> {
   const changes: Partial<AdmissionOfferingFilters> = {};
   Object.entries(offeringScopeColumns).forEach(([column, field]) => {
     const value = criteria.findLast((filter) => filter.column === column)?.value;
-    changes[field] = value === undefined ? '' : String(value);
+    // Board and Medium are compulsory context, so removing table criteria retains them.
+    changes[field] =
+      value === undefined && (field === 'boardId' || field === 'mediumId')
+        ? current[field]
+        : value === undefined
+          ? ''
+          : String(value);
   });
   if (changes.boardId !== current.boardId) {
     changes.mediumId = '';
@@ -83,19 +90,17 @@ const validFilter = (filter: IParams['filters'][number]) => {
 
 // Keep presentation-only labels out of the API and shareable URL contract.
 export function serializeOfferingColumnFilters(filters: IParams['filters']): string {
-  const criteria = filters
-    .filter(validFilter)
-    .map(({ column, type, value, valueType }) => ({
-      column,
-      type,
-      value:
-        valueType === 'number'
-          ? type === 'between'
-            ? { min: Number(value.min), max: Number(value.max) }
-            : Number(value)
-          : value,
-      valueType,
-    }));
+  const criteria = filters.filter(validFilter).map(({ column, type, value, valueType }) => ({
+    column,
+    type,
+    value:
+      valueType === 'number'
+        ? type === 'between'
+          ? { min: Number(value.min), max: Number(value.max) }
+          : Number(value)
+        : value,
+    valueType,
+  }));
   return criteria.length ? JSON.stringify(criteria) : '';
 }
 

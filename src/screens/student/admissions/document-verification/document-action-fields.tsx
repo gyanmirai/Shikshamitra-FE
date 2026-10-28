@@ -2,6 +2,7 @@ import type { FormikProps } from 'formik';
 import type { AdmissionDocumentRequirement } from 'src/redux/student/admissions/admission-document-types';
 
 import { Stack, TextField, Typography } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 
 import type { DocumentAction, DocumentActionValues } from './document-action-model';
@@ -66,11 +67,6 @@ export function DocumentActionFields({
           and sends the evidence for review.
         </StudentFeedback>
       )}
-      {action === 'accept' && (
-        <StudentFeedback notificationKey="STU-0309" presentation="inline" severity="info">
-          Accept the latest evidence after checking it against this requirement.
-        </StudentFeedback>
-      )}
       {action === 'reject' && (
         <StudentFeedback notificationKey="STU-0310" presentation="inline" severity="warning">
           Explain what needs correcting so admissions staff can provide a replacement.
@@ -81,28 +77,34 @@ export function DocumentActionFields({
           This records an exception for this applicant. Explain why the requirement can be waived.
         </StudentFeedback>
       )}
-      <TextField
-        fullWidth
-        multiline
-        minRows={3}
-        size="small"
-        name="notes"
-        label={
-          original
-            ? 'Original verification notes'
-            : ['reject', 'waive'].includes(action)
-              ? 'Reason'
-              : 'Notes'
-        }
-        required={['original', 'reject', 'waive'].includes(action)}
-        disabled={formik.isSubmitting}
-        value={formik.values.notes}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        error={formik.touched.notes && Boolean(formik.errors.notes)}
-        helperText={formik.touched.notes && formik.errors.notes}
-        slotProps={{ htmlInput: { maxLength: 1024 } }}
-      />
+      {action !== 'accept' && (
+        <ShakingTextField error={Boolean(formik.touched.notes && formik.errors.notes)}>
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            size="small"
+            name="notes"
+            label={
+              original
+                ? 'Original verification notes'
+                : action === 'reject'
+                  ? 'Rejection reason'
+                  : action === 'waive'
+                    ? 'Reason'
+                    : 'Notes'
+            }
+            required={['original', 'reject', 'waive'].includes(action)}
+            disabled={formik.isSubmitting}
+            value={formik.values.notes}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.notes && Boolean(formik.errors.notes)}
+            helperText={formik.touched.notes && formik.errors.notes}
+            slotProps={{ htmlInput: { maxLength: 1024 } }}
+          />
+        </ShakingTextField>
+      )}
     </Stack>
   );
 }

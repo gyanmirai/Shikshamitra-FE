@@ -21,11 +21,12 @@ import {
 } from 'src/components/form-section-card';
 
 import AdmissionRuntimeField from '../admission-runtime-field';
+import { academicOptionsJson, isInstituteAcademicSource } from '../admission-academic-options';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
 import { AdmissionSectionFields } from '../components/admission-section-fields';
-import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
+import { dependentAdmissionFieldValues } from '../admission-field-dependencies';
 import { AdmissionFormStepNavigation } from '../components/admission-form-step-navigation';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import {
@@ -63,6 +64,7 @@ type Props = {
   sectionActions?: ReactNode;
   compact?: boolean;
   readOnly?: boolean;
+  academicMediumId?: string;
 };
 
 export function ApplicationRuntimeForm({
@@ -89,6 +91,7 @@ export function ApplicationRuntimeForm({
   sectionActions,
   compact = false,
   readOnly = false,
+  academicMediumId,
 }: Props) {
   const fieldsPerRow = form.definition.fieldsPerRow ?? 1;
   const [activeStep, setActiveStep] = useState(0);
@@ -131,11 +134,19 @@ export function ApplicationRuntimeForm({
     () => localizedSections.flatMap((section) => section.fields),
     [localizedSections]
   );
-  const updateField = (code: string, value: string) => {
-    onChange(code, value);
-    getDependentAdmissionFieldCodes(fields, code).forEach((dependentCode) =>
-      onChange(dependentCode, '')
+  const updateField = (
+    code: string,
+    value: string,
+    entryIndex?: number,
+    repeatedCodes?: string[]
+  ) => {
+    onChange(
+      code,
+      entryIndex == null ? value : writeRepeatableValue(values[code], entryIndex, value)
     );
+    Object.entries(
+      dependentAdmissionFieldValues(fields, code, values, entryIndex, repeatedCodes)
+    ).forEach(([dependentCode, nextValue]) => onChange(dependentCode, nextValue));
   };
   const optionRequests = useMemo<RuntimeOptionRequest[]>(
     () =>
@@ -143,7 +154,11 @@ export function ApplicationRuntimeForm({
         .flatMap((section) => section.fields)
         .reduce<RuntimeOptionRequest[]>((requests, field) => {
           const source = parseRuntimeOptionsSource(field.optionsJson);
-          if (source && source.source !== 'StudentSiblings')
+          if (
+            source &&
+            source.source !== 'StudentSiblings' &&
+            !isInstituteAcademicSource(academicOptionsJson(field))
+          )
             requests.push({
               code: field.code,
               sourceKey: source.source,
@@ -237,14 +252,18 @@ export function ApplicationRuntimeForm({
             <AdmissionRuntimeField
               field={{
                 ...field,
-                optionsJson: resolveRuntimeOptionsJson({
-                  configuredOptionsJson: field.optionsJson,
-                  resolvedOptionsJson: resolvedOptions[field.code],
-                  currentValue: value,
-                  multiple: field.fieldType === 7,
-                }),
+                optionsJson: isInstituteAcademicSource(academicOptionsJson(field))
+                  ? field.optionsJson
+                  : resolveRuntimeOptionsJson({
+                      configuredOptionsJson: field.optionsJson,
+                      resolvedOptionsJson: resolvedOptions[field.code],
+                      currentValue: value,
+                      multiple: field.fieldType === 7,
+                    }),
               }}
               value={value}
+              academicYearId={form.academicYearId}
+              academicMediumId={academicMediumId}
               disabled={interactionLocked || readOnly || field.readOnly || application.status !== 0}
               error={
                 fieldErrors[`${field.code}[${entryIndex}]`] || fieldErrors[field.code]
@@ -259,9 +278,11 @@ export function ApplicationRuntimeForm({
               onChange={(nextValue) =>
                 entryIndex === undefined
                   ? updateField(field.code, nextValue)
-                  : onChange(
+                  : updateField(
                       field.code,
-                      writeRepeatableValue(values[field.code], entryIndex, nextValue)
+                      nextValue,
+                      entryIndex,
+                      section.fields.map((item) => item.code)
                     )
               }
             />

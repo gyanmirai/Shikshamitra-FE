@@ -12,7 +12,6 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { WorkflowStageForm } from './workflow-stage-form';
 import { WorkflowStageBasics } from './workflow-stage-basics';
 import { WorkflowStageBehavior } from './workflow-stage-behavior';
-import { WorkflowPaymentSettings } from './workflow-payment-settings';
 import { WorkflowFormStageFields } from './workflow-form-stage-fields';
 import { WorkflowDocumentSettings } from './workflow-document-settings';
 import { isApplicationStageType } from '../workflow-stage-configuration';
@@ -40,14 +39,6 @@ export function WorkflowStageFields(props: Props) {
             formik={formik}
             readOnly={readOnly}
             available={available('assessment')}
-          />
-        );
-      case 4:
-        return (
-          <WorkflowPaymentSettings
-            formik={formik}
-            readOnly={readOnly}
-            available={metadata?.isRuntimeReady === true}
           />
         );
       case 5:

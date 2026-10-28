@@ -31,6 +31,7 @@ import {
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import AdmissionRuntimeField from '../admission-runtime-field';
+import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
 import { useAdmissionInquiryAge } from '../use-admission-inquiry-age';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
@@ -510,6 +511,8 @@ export function InquiryOverviewForm({
                       )}
                       renderField={(field) => (
                         <AdmissionRuntimeField
+                          academicYearId={academicYearId}
+                          academicMediumId={formik.values.mediumId}
                           onBusyChange={(busy) => onPhotoReading(field.code, busy)}
                           field={ageFeedback.withAgeHelp(field)}
                           value={formik.values.fields[field.code] ?? ''}
@@ -526,7 +529,12 @@ export function InquiryOverviewForm({
                             if (isAdmissionInquiryBirthDateField(field)) ageFeedback.notify();
                             formik.setFieldTouched(`fields.${field.code}`, true);
                           }}
-                          onChange={(value) => formik.setFieldValue(`fields.${field.code}`, value)}
+                          onChange={(value) => {
+                            formik.setFieldValue(`fields.${field.code}`, value);
+                            getDependentAdmissionFieldCodes(fields, field.code).forEach((code) =>
+                              formik.setFieldValue(`fields.${code}`, '')
+                            );
+                          }}
                         />
                       )}
                     />

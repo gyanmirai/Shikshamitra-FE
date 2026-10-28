@@ -14,7 +14,7 @@ import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
 import { AdmissionSectionFields } from '../components/admission-section-fields';
-import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
+import { dependentAdmissionFieldValues } from '../admission-field-dependencies';
 import { getDynamicAdmissionValidationErrors } from '../admission-form-validation';
 import { AdmissionFormStepNavigation } from '../components/admission-form-step-navigation';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
@@ -61,10 +61,22 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
   const sectionsToRender = isStepper
     ? (visibleSteps[safeActiveStep]?.sections.map(({ section }) => section) ?? [])
     : visibleSections;
-  const updateField = (code: string, value: string) => {
-    formik.setFieldValue(code, value).catch(() => undefined);
-    getDependentAdmissionFieldCodes(fields, code).forEach((dependentCode) => {
-      formik.setFieldValue(dependentCode, '').catch(() => undefined);
+  const updateField = (
+    code: string,
+    value: string,
+    entryIndex?: number,
+    repeatedCodes?: string[]
+  ) => {
+    formik
+      .setFieldValue(
+        code,
+        entryIndex == null ? value : writeRepeatableValue(values[code], entryIndex, value)
+      )
+      .catch(() => undefined);
+    Object.entries(
+      dependentAdmissionFieldValues(fields, code, values, entryIndex, repeatedCodes)
+    ).forEach(([dependentCode, nextValue]) => {
+      formik.setFieldValue(dependentCode, nextValue).catch(() => undefined);
     });
   };
   const renderFields = (section: (typeof localizedSections)[number], entryIndex?: number) => {
@@ -121,7 +133,9 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
                   ? updateField(field.code, nextValue)
                   : updateField(
                       field.code,
-                      writeRepeatableValue(values[field.code], entryIndex, nextValue)
+                      nextValue,
+                      entryIndex,
+                      section.fields.map((item) => item.code)
                     )
               }
             />

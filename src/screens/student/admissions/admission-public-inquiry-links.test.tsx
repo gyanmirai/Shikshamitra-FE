@@ -85,7 +85,12 @@ vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
 }));
 vi.mock('src/redux/student/admissions/admission-cycles-api', () => ({
   useGetAdmissionCyclesQuery: () => ({
-    data: { items: [{ id: 'cycle-1', name: 'Regular admission', status: 1 }] },
+    data: {
+      items: [
+        { id: 'cycle-1', name: 'Regular admission', status: 1 },
+        { id: 'cycle-2', name: 'Next admission', status: 1 },
+      ],
+    },
     isLoading: false,
   }),
 }));
@@ -147,8 +152,19 @@ vi.mock('src/components/customDialog', () => ({
   DialogScrollContent: ({ children }: { children: React.ReactNode }) => children,
 }));
 vi.mock('src/screens/hr/employee/employee-form-fields/InformationFields', () => ({
-  SectionCard: ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <section aria-label={title}>{children}</section>
+  SectionCard: ({
+    title,
+    children,
+    headerContent,
+  }: {
+    title: string;
+    children: React.ReactNode;
+    headerContent?: React.ReactNode;
+  }) => (
+    <section aria-label={title}>
+      {headerContent}
+      {children}
+    </section>
   ),
 }));
 vi.mock('@mui/x-date-pickers', () => ({ DateTimePicker: () => null }));
@@ -204,6 +220,9 @@ describe('create public inquiry link', () => {
     hooks.options.isFetching = false;
     hooks.options.isError = false;
     hooks.formLoading = false;
+    hooks.forms.data.items = [
+      { id: 'form-1', name: 'Inquiry form', version: 1, status: 1, purpose: 0 },
+    ];
     hooks.forms.isLoading = false;
     hooks.forms.isFetching = false;
     hooks.forms.isError = false;
@@ -211,6 +230,44 @@ describe('create public inquiry link', () => {
     hooks.create.mockReturnValue({
       unwrap: () => Promise.resolve({ ...activeLink, name: 'School fair', token: 'fixture-token' }),
     });
+  });
+
+  it('offers every eligible form while excluding an unlinked published form', async () => {
+    hooks.forms.data.items.push(
+      { id: 'form-2', name: 'Second inquiry', version: 2, status: 1, purpose: 0 },
+      { id: 'form-3', name: 'Unlinked inquiry', version: 1, status: 1, purpose: 0 }
+    );
+    hooks.options.currentData!.push({
+      counsellorAssignmentProfileId: null,
+      inquiryFormDefinitionId: 'form-2',
+    });
+    renderDrawer();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+    await user.click(screen.getByRole('option', { name: 'Regular admission' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+    expect(screen.getByRole('option', { name: 'Inquiry form · v1' })).toBeVisible();
+    expect(screen.getByRole('option', { name: 'Second inquiry · v2' })).toBeVisible();
+    expect(screen.queryByRole('option', { name: 'Unlinked inquiry · v1' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('option', { name: 'Second inquiry · v2' }));
+    expect(screen.getByRole('combobox', { name: 'Published inquiry form' })).toHaveTextContent(
+      'Second inquiry · v2'
+    );
+  });
+
+  it('clears the selected form when the admission period changes while keeping link details', async () => {
+    renderDrawer();
+    const user = userEvent.setup();
+    await fillLink(user);
+    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+    await user.click(screen.getByRole('option', { name: 'Next admission' }));
+    expect(screen.getByRole('combobox', { name: 'Published inquiry form' })).not.toHaveTextContent(
+      'Inquiry form · v1'
+    );
+    expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
+    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    expect(await screen.findByText('Choose a published inquiry form.')).toBeVisible();
+    expect(hooks.create).not.toHaveBeenCalled();
   });
 
   it('supports keyboard prerequisite feedback and opens options after offerings are refreshed', async () => {
@@ -617,6 +674,18 @@ describe('public inquiry link details and actions', () => {
     hooks.linksFetching = false;
     hooks.formLoading = false;
     hooks.revokeLoading = false;
+    hooks.forms.data.items = [
+      { id: 'form-1', name: 'Inquiry form', version: 1, status: 1, purpose: 0 },
+    ];
+    hooks.forms.isLoading = false;
+    hooks.forms.isFetching = false;
+    hooks.forms.isError = false;
+    hooks.options.currentData = [
+      { counsellorAssignmentProfileId: null, inquiryFormDefinitionId: 'form-1' },
+    ];
+    hooks.options.isLoading = false;
+    hooks.options.isFetching = false;
+    hooks.options.isError = false;
   });
 
   it('enables each data header filter on the complete returned list', () => {
@@ -734,6 +803,73 @@ describe('public inquiry link details and actions', () => {
     expect(screen.getByTestId('table-action-form')).toBeDisabled();
     expect(screen.getByTestId('table-action-revoke')).toBeDisabled();
   });
+
+  it('restricts replacement forms to compatible offerings in the existing link period', async () => {
+    hooks.forms.data.items.push(
+      { id: 'form-2', name: 'Second inquiry', version: 2, status: 1, purpose: 0 },
+      { id: 'form-3', name: 'Unlinked inquiry', version: 1, status: 1, purpose: 0 }
+    );
+    hooks.options.currentData!.push({
+      counsellorAssignmentProfileId: null,
+      inquiryFormDefinitionId: 'form-2',
+    });
+    hooks.setForm.mockReturnValue({ unwrap: () => Promise.resolve(activeLink) });
+    renderList();
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole('button', { name: `Set inquiry form for ${activeLink.name}` })
+    );
+    expect(hooks.optionsQuery).toHaveBeenCalledWith(
+      'cycle-1',
+      expect.objectContaining({ skip: false })
+    );
+    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+    expect(screen.getByRole('option', { name: 'Inquiry form · v1' })).toBeVisible();
+    expect(screen.getByRole('option', { name: 'Second inquiry · v2' })).toBeVisible();
+    expect(screen.queryByRole('option', { name: 'Unlinked inquiry · v1' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('option', { name: 'Second inquiry · v2' }));
+    await user.click(screen.getByRole('button', { name: 'Save form' }));
+    await waitFor(() =>
+      expect(hooks.setForm).toHaveBeenCalledWith({
+        id: activeLink.id,
+        concurrencyStamp: 'stamp-1',
+        inquiryFormDefinitionId: 'form-2',
+      })
+    );
+  });
+
+  it.each(['loading', 'error', 'empty'] as const)(
+    'blocks replacement on %s compatibility without changing the link',
+    async (state) => {
+      hooks.options.currentData = state === 'empty' ? [] : undefined;
+      hooks.options.isFetching = state === 'loading';
+      hooks.options.isError = state === 'error';
+      renderList();
+      const user = userEvent.setup();
+      await user.click(
+        screen.getByRole('button', { name: `Set inquiry form for ${activeLink.name}` })
+      );
+      expect(screen.getByRole('button', { name: 'Save form' })).toBeDisabled();
+      if (state === 'loading')
+        expect(
+          screen.getByRole('status', { name: 'Loading published inquiry forms' })
+        ).toBeVisible();
+      if (state === 'empty') {
+        expect(
+          screen.getByText(
+            /Attach a published Inquiry form to an active inquiry offering in this admission period/
+          )
+        ).toBeVisible();
+        await user.click(screen.getByRole('button', { name: 'Refresh offerings' }));
+        expect(hooks.options.refetch).toHaveBeenCalledOnce();
+      }
+      if (state === 'error') {
+        await user.click(screen.getByRole('button', { name: 'Retry' }));
+        expect(hooks.options.refetch).toHaveBeenCalledOnce();
+      }
+      expect(hooks.setForm).not.toHaveBeenCalled();
+    }
+  );
 
   it('keeps revoked links viewable while hiding unavailable actions', async () => {
     hooks.links = [{ ...activeLink, isActive: false }];

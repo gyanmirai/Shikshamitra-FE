@@ -22,6 +22,7 @@ import {
 
 import { getAdmissionWorkflowAccess } from '../workflow-access';
 import { getAdmissionWorkflowTemplate } from '../workflow-template';
+import { useWorkflowListPublish } from './use-workflow-list-publish';
 
 import type { WorkflowDetails } from '../admission-workflow-dialog';
 
@@ -41,6 +42,7 @@ export function useWorkflowListActions() {
   const [confirmationNotice, setConfirmationNotice] = useState<string | null>(null);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const workflowAccess = getAdmissionWorkflowAccess(permissions);
+  const publication = useWorkflowListPublish(workflowAccess.canManage);
   const allowed = {
     canCreate: workflowAccess.canManage,
     canEdit: workflowAccess.canManage,
@@ -50,6 +52,7 @@ export function useWorkflowListActions() {
     canArchive: workflowAccess.canManage,
     canReopen: workflowAccess.canManage,
     canViewUsage: workflowAccess.canView,
+    canPublish: workflowAccess.canManage,
   };
   const [createWorkflow, createState] = useCreateAdmissionWorkflowMutation();
   const [cloneWorkflow, cloneState] = useCloneAdmissionWorkflowMutation();
@@ -192,6 +195,7 @@ export function useWorkflowListActions() {
   };
 
   return {
+    ...publication,
     allowed,
     createDialog,
     createCloseRef,

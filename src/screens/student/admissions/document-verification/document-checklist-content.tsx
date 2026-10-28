@@ -89,6 +89,9 @@ export function DocumentChecklistContent({
           summary={summary}
           requirements={visible}
           permissions={permissions}
+          disabled={disabled}
+          readOnly={readOnly}
+          onAction={onAction}
           onView={onView}
         />
       ) : (

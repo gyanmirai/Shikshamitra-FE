@@ -2,7 +2,6 @@ import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admiss
 
 import { StudentFeedback } from 'src/components/student-feedback';
 import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
-import { readPaymentCompletionPolicy } from 'src/redux/student/admissions/admission-payment-completion-policy';
 
 import { WorkflowSettingLabel } from './workflow-setting-label';
 import { getStageOutcomeRule } from '../workflow-runtime-route-rules';
@@ -35,8 +34,8 @@ export function getWorkflowStageCompletionDescription(stage: AdmissionWorkflowSt
     description =
       'Every eligibility check passes or has an approved exception. Ineligible or missing-information outcomes need an explicit matching path to continue.';
   if (stage.stageType === 4) {
-    const payment = readPaymentCompletionPolicy(stage.configurationJson);
-    description = `${payment?.paymentRule === 'full' ? 'The entire selected Finance fee structure, including future installments, is cleared' : 'A confirmed partial payment is recorded in Finance'}. Finance-verified zero payable needs no payment entry.${payment?.allowCollectionLater ? ' Authorized staff can instead defer collection to Onboarding with a reason.' : ''}`;
+    description =
+      'A confirmed payment is recorded in Finance, or Finance verifies no amount is payable. Authorized staff can instead defer collection to Onboarding with a reason.';
   }
   if (stage.stageType === 5 && managed)
     description = `All applicable required documents are accepted${policy?.allowWaivers ? ' or have an authorized waiver' : ''}. Replaced documents require fresh review. Documents for other classes do not block completion.`;

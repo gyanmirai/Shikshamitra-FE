@@ -14,6 +14,7 @@ const workflowRefetch = vi.fn();
 let detailState: any;
 let permissions = [{ name: 'Students.Admissions.Applicants.View', isGranted: true }];
 const offeringContext = vi.hoisted(() => vi.fn());
+const decisionCardProps = vi.hoisted(() => ({ current: null as any }));
 vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
   useGetAdmissionOfferingQuery: offeringContext,
 }));
@@ -195,7 +196,10 @@ vi.mock('./application-detail/application-managed-stages', () => ({
 }));
 
 vi.mock('./application-detail/application-decision-card', () => ({
-  ApplicationDecisionCard: () => null,
+  ApplicationDecisionCard: (props: any) => {
+    decisionCardProps.current = props;
+    return null;
+  },
 }));
 
 vi.mock('./application-detail/form-history-card', () => ({ FormHistoryCard: () => null }));
@@ -216,6 +220,55 @@ const query = (overrides: Record<string, unknown> = {}) => ({
   data: undefined,
   refetch: vi.fn(),
   ...overrides,
+});
+
+describe('approval finalization handoff', () => {
+  beforeEach(() => {
+    push.mockReset();
+    replace.mockReset();
+    permissions = [{ name: 'Students.Onboarding.View', isGranted: true }];
+    pathname = '/student/admissions/applications/application-1';
+    returnParams = new URLSearchParams();
+    loadPaymentDetail();
+    detailState.applicationQuery.data.status = 6;
+    detailState.applicationQuery.data.hasReachedDecision = true;
+    detailState.workflowQuery.data.currentStageInstanceId = 'decision';
+    detailState.workflowQuery.data.stages = [
+      {
+        id: 'decision',
+        code: 'VERIFY_APPROVE_ADMISSION',
+        name: 'Admission decision',
+        stageType: 7,
+        status: 1,
+      },
+    ];
+    decisionCardProps.current = null;
+  });
+
+  it('reuses the guarded workflow advance and opens the exact returned Onboarding case', async () => {
+    render(<AdmissionApplicationDetailScreen />);
+    await decisionCardProps.current.onPrepareFinalization();
+    expect(detailState.advance).toHaveBeenCalledOnce();
+    decisionCardProps.current.onFinalized({
+      onboardingCaseId: 'case-finalized',
+      studentId: 'student-finalized',
+    });
+    expect(push).toHaveBeenCalledWith('/student/onboarding/setup?case=case-finalized');
+  });
+
+  it('does not navigate to Onboarding without its View permission', () => {
+    permissions = [];
+    render(<AdmissionApplicationDetailScreen />);
+    decisionCardProps.current.onFinalized({ onboardingCaseId: 'case-finalized' });
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it('does not offer automatic stage completion while there are unsaved answers', () => {
+    detailState.hasUnsavedAnswers = true;
+    render(<AdmissionApplicationDetailScreen />);
+    expect(decisionCardProps.current.onPrepareFinalization).toBeUndefined();
+    expect(detailState.advance).not.toHaveBeenCalled();
+  });
 });
 
 const baseDetail = () => ({

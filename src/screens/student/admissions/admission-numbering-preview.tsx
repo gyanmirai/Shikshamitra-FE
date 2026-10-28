@@ -78,17 +78,13 @@ export function AdmissionNumberingPreview({
       ) : loading ? (
         <Skeleton width="75%" height={32} />
       ) : error ? (
-        <StudentFeedback
-          notificationKey="STU-0108"
-          presentation="toast"
-          severity="error"
-          action={
+        <StudentFeedback notificationKey="STU-0108" presentation="toast" severity="error">
+          <Stack spacing={1}>
+            <span>{error}</span>
             <Button size="small" onClick={() => setRefresh((value) => value + 1)}>
               Retry preview
             </Button>
-          }
-        >
-          {error}
+          </Stack>
         </StudentFeedback>
       ) : (
         <Typography

@@ -420,6 +420,42 @@ describe('Student Setup drawer readiness UI', () => {
     expect(screen.getByRole('button', { name: 'Show 5 passed checks' })).toBeInTheDocument();
   });
 
+  it('shows incomplete readiness and the next required service when preparation checks have passed', () => {
+    render(
+      <StudentSetupDrawer
+        open
+        onClose={vi.fn()}
+        student={{
+          ...student,
+          source: 'onboarding-case',
+          status: 'action-required',
+          studentEnrollmentId: 'enrollment-1',
+          readinessItems: [
+            ...Array.from({ length: 8 }, (_, index) => ({
+              ...student.readinessItems[0],
+              key: `preparation-${index}`,
+              label: `Preparation ${index + 1}`,
+              status: 'passed' as const,
+              blocking: false,
+            })),
+            {
+              key: 'guardian-account',
+              label: 'Parent app login',
+              detail: 'Parent account could not be linked.',
+              status: 'failed',
+              blocking: true,
+              owner: 'Onboarding',
+            },
+          ],
+        }}
+      />
+    );
+    expect(screen.getByRole('button', { name: '8 of 9 checks passed' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '8 of 8 checks passed' })).not.toBeInTheDocument();
+    expect(screen.getByText('Next: Parent app login')).toBeInTheDocument();
+    expect(screen.queryByText('Ready to activate')).not.toBeInTheDocument();
+  });
+
   it('does not offer a nonfunctional student-record action or misleading optional Finance check', () => {
     render(
       <StudentSetupDrawer

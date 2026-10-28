@@ -24,8 +24,6 @@ export default function AdmissionOfferingsScreen() {
   const action = screen.pendingAction?.type;
   const hasActiveFilters = Boolean(
     screen.filters.campusId ||
-    screen.filters.boardId ||
-    screen.filters.mediumId ||
     screen.filters.stageId ||
     screen.filters.standardId ||
     screen.filters.isActive ||
@@ -229,6 +227,8 @@ export default function AdmissionOfferingsScreen() {
         disableBackdropClick
         disableCancel={screen.commanding}
         disableEscapeKeyDown={screen.commanding}
+        bodyBusy={action === 'activate' ? screen.commanding : undefined}
+        busyLabel="Activating offering…"
         content={
           action && screen.pendingAction ? (
             <Box id="offering-action-description">
@@ -241,7 +241,8 @@ export default function AdmissionOfferingsScreen() {
             variant="contained"
             size="small"
             color={action === 'delete' ? 'error' : 'primary'}
-            loading={screen.commanding}
+            loading={action !== 'activate' && screen.commanding}
+            disabled={screen.commanding}
             startIcon={
               <Iconify
                 icon={action === 'delete' ? 'mdi:delete-outline' : 'mdi:check-circle-outline'}

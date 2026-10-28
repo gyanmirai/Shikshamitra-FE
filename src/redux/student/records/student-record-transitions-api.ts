@@ -26,6 +26,8 @@ export type TransitionRow = {
 };
 export type TransitionIssue = { code: string; message: string };
 export type TransitionPreviewRow = {
+  approvalRequired?: boolean;
+  outstandingItems?: TransitionIssue[];
   proration?: FeeProrationResult | null;
   rollAssignmentMode?: 'manual' | 'automatic';
   proposedRollNumber?: number | null;
@@ -49,6 +51,8 @@ export type TransitionPreview = {
   policyVersionId?: string | null;
 };
 export type StudentTransition = {
+  outstandingOverrideRequired?: boolean;
+  outstandingItems?: TransitionIssue[];
   id: string;
   batchId: string;
   studentId: string;
@@ -171,6 +175,18 @@ export type StudentRecordReturnResult = {
   admissionInquiryId?: string | null;
   status: string;
 };
+export type SchoolExitSummary = {
+  studentId: string;
+  studentName: string | null;
+  academicYearId: string;
+  studentConcurrencyStamp: string;
+  enrollmentConcurrencyStamp: string;
+  canSubmit: boolean;
+  fees: { status: 'Clear' | 'Pending' | 'Unavailable' | 'Restricted'; detail: string; outstandingAmount: number | null };
+  library: { status: 'Clear' | 'Pending'; detail: string; pendingCount: number };
+  documents: { status: 'Available' | 'NotApplicable' | 'Restricted'; detail: string; items: { name: string; status: string }[] };
+  pendingTransitions: StudentTransition[];
+};
 const transitionsTag = [{ type: studentType.student, id: 'RECORDS-TRANSITIONS' }];
 const renewalsTag = [{ type: studentType.student, id: 'RECORDS-RENEWALS' }];
 const withdrawalFinanceTags = [
@@ -182,6 +198,11 @@ const withdrawalFinanceTags = [
 ];
 export const studentRecordTransitionsApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getSchoolExitSummary: builder.query<SchoolExitSummary, { studentId: string; academicYearId: string; outcome?: RecordsOutcome; effectiveDate?: string }>({
+      query: (params) => ({ url: '/students/records/transitions/school-exit-summary', params }),
+      transformResponse: (response: SchoolExitSummary | { data?: SchoolExitSummary }) => unwrapRecordsResult(response),
+      providesTags: transitionsTag,
+    }),
     getStudentRecordTransitionOptions: builder.query<
       TransitionOptions,
       { academicYearId?: string; studentId?: string; admissionOfferingId?: string }
@@ -245,6 +266,7 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
       {
         id: string;
         command: 'approve' | 'reject' | 'cancel' | 'apply';
+        outstandingReason?: string;
         concurrencyStamp: string;
         remarks: string;
       }
@@ -358,6 +380,7 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
   }),
 });
 export const {
+  useGetSchoolExitSummaryQuery,
   useGetStudentRecordTransitionOptionsQuery,
   useGetStudentRecordTransitionsQuery,
   useGetStudentRecordTransitionQuery,

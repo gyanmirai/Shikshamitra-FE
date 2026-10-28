@@ -78,6 +78,12 @@ describe('inquiryWorkState', () => {
 });
 
 describe('admission inquiry columns', () => {
+  it('keeps phone contact in the inquiry queue without an Email column', () => {
+    const ids = buildAdmissionInquiryColumns(columnOptions).map((column) => column.id);
+    expect(ids).not.toContain('email');
+    expect(ids).toContain('normalizedPhone');
+  });
+
   it('shows progress only on the moving inquiry and blocks competing actions', () => {
     const options = { ...columnOptions, isMoving: true, movingInquiryId: 'inquiry-1' };
     const moving = getAdmissionInquiryActions(inquiry(), options);

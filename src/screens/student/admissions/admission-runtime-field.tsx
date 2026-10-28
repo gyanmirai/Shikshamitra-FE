@@ -7,18 +7,24 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import dayjs from 'dayjs';
+import { useId } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import { normalizeEmail } from 'src/utils/input-format';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
-import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
+import { Box, Grid, Checkbox, TextField, FormHelperText, FormControlLabel } from '@mui/material';
 
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { isAdmissionEmailField } from './admission-email-values';
 import { parseFieldConfiguration } from './form-dialog/form-field-presets';
 import { AdmissionProfilePhotoField } from './admission-profile-photo-field';
 import { AdmissionSpecializedRuntimeField } from './admission-specialized-runtime-field';
+import { AdmissionMasterDataRuntimeField } from './admission-master-data-runtime-field';
+import { academicOptionsJson, isInstituteAcademicSource } from './admission-academic-options';
 import {
   isAdmissionSiblingField,
   AdmissionSiblingRuntimeField,
@@ -33,6 +39,7 @@ type Field = {
   readOnly: boolean;
   placeholder?: string | null;
   helpText?: string | null;
+  helpTextDetails?: string;
   optionsJson?: string | null;
   validationJson?: string | null;
 };
@@ -46,9 +53,12 @@ export type AdmissionRuntimeFieldProps = {
   onBlur?: () => void;
   onBusyChange?: (busy: boolean) => void;
   loadSiblingOptions?: (input: AdmissionFormOptionsQuery) => Promise<AdmissionFormOption[]>;
+  academicYearId?: string;
+  academicMediumId?: string;
+  optionsResolved?: boolean;
 };
 type ChoiceOption = { value: string; label: string };
-type RendererProps = AdmissionRuntimeFieldProps & { options: ChoiceOption[] };
+type RendererProps = AdmissionRuntimeFieldProps & { options: ChoiceOption[]; helperId: string };
 type FieldRenderer = (props: RendererProps) => ReactNode;
 
 /** Central registry for runtime field renderers. */
@@ -66,9 +76,12 @@ const GENDER_OPTIONS: ChoiceOption[] = [
 ];
 
 export default function AdmissionRuntimeField(props: AdmissionRuntimeFieldProps) {
-  const { field, formValues } = props;
+  const helperId = useId();
+  const { field, formValues, optionsResolved } = props;
   const { format } = parseFieldConfiguration(field.validationJson);
   if (isAdmissionSiblingField(field)) return <AdmissionSiblingRuntimeField {...props} />;
+  if (!optionsResolved && [6, 7, 8].includes(field.fieldType) && isInstituteAcademicSource(academicOptionsJson(field)))
+    return <AdmissionMasterDataRuntimeField {...props} />;
   if (format === 'photo') return <AdmissionProfilePhotoField {...props} />;
   if ((format && format !== 'email') || field.fieldType === 4) {
     return <AdmissionSpecializedRuntimeField {...props} formValues={formValues ?? {}} />;
@@ -76,6 +89,7 @@ export default function AdmissionRuntimeField(props: AdmissionRuntimeFieldProps)
   const renderer = fieldRendererRegistry[field.fieldType] ?? renderInput;
   return renderer({
     ...props,
+    helperId,
     options:
       field.bindingKey === 'Applicant.Gender' || field.code === 'Gender'
         ? GENDER_OPTIONS
@@ -124,10 +138,18 @@ function renderFilePlaceholder({ field, disabled, error, onBlur }: RendererProps
   );
 }
 
-function renderAddressGroup({ field, value, disabled, error, onChange, onBlur }: RendererProps) {
+function renderAddressGroup({
+  field,
+  value,
+  disabled,
+  error,
+  onChange,
+  onBlur,
+  helperId,
+}: RendererProps) {
   const address = readAddress(value);
   return (
-    <Box>
+    <Box data-form-field-control>
       <TypographyLabel label={field.label} required={field.required} />
       <Grid container spacing={1}>
         {ADDRESS_KEYS.map((key) => (
@@ -143,6 +165,7 @@ function renderAddressGroup({ field, value, disabled, error, onChange, onBlur }:
               disabled={disabled}
               onBlur={onBlur}
               error={Boolean(error)}
+              inputProps={{ 'aria-describedby': error || field.helpText ? helperId : undefined }}
               placeholder={key === 'addressLine1' ? (field.placeholder ?? undefined) : undefined}
               onChange={(event) => onChange(writeAddress(value, key, event.target.value))}
             />
@@ -150,11 +173,9 @@ function renderAddressGroup({ field, value, disabled, error, onChange, onBlur }:
         ))}
       </Grid>
       {(error || field.helpText) && (
-        <Box
-          sx={{ typography: 'caption', color: error ? 'error.main' : 'text.secondary', mt: 0.5 }}
-        >
+        <FormHelperText id={helperId} error={Boolean(error)}>
           {error || field.helpText}
-        </Box>
+        </FormHelperText>
       )}
     </Box>
   );
@@ -163,24 +184,43 @@ function renderAddressGroup({ field, value, disabled, error, onChange, onBlur }:
 function renderDate({ field, value, disabled, error, onChange, onBlur }: RendererProps) {
   const parsedDate = value ? dayjs(value) : null;
   return (
-    <DatePicker
-      label={field.label}
-      format={ADMISSION_DATE_FORMAT}
-      value={parsedDate?.isValid() ? parsedDate : null}
-      disabled={disabled}
-      onChange={(nextValue) => onChange(datePickerToDateTimeOffset(nextValue) ?? '')}
-      slotProps={{
-        textField: {
-          fullWidth: true,
-          size: 'small',
-          required: field.required,
-          error: Boolean(error),
-          helperText: error || field.helpText || undefined,
-          placeholder: field.placeholder ?? undefined,
-          onBlur,
-        },
-      }}
-    />
+    <ShakingTextField error={Boolean(error)}>
+      <DatePicker
+        label={field.label}
+        format={ADMISSION_DATE_FORMAT}
+        value={parsedDate?.isValid() ? parsedDate : null}
+        disabled={disabled}
+        onChange={(nextValue) => onChange(datePickerToDateTimeOffset(nextValue) ?? '')}
+        slotProps={{
+          textField: {
+            fullWidth: true,
+            size: 'small',
+            required: field.required,
+            error: Boolean(error),
+            helperText: error || renderFieldHelp(field),
+            placeholder: field.placeholder ?? undefined,
+            onBlur,
+          },
+        }}
+      />
+    </ShakingTextField>
+  );
+}
+
+function renderFieldHelp(field: Field) {
+  if (!field.helpTextDetails) return field.helpText || undefined;
+  return (
+    <CustomTooltip title={field.helpTextDetails} describeChild arrow>
+      <Box
+        component="span"
+        tabIndex={0}
+        aria-label={`${field.label} information`}
+        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, maxWidth: 1 }}
+      >
+        <span>{field.helpText}</span>
+        <Iconify icon={GlobalIcons.info} width={14} sx={{ flexShrink: 0 }} aria-hidden />
+      </Box>
+    </CustomTooltip>
   );
 }
 
