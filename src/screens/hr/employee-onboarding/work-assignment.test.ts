@@ -1,9 +1,54 @@
 import { it, expect, describe } from 'vitest';
 
-import { workAssignmentText, emptyWorkAssignment, isWorkAssignmentValid } from './work-assignment';
 import { createEmployeeApplicationInitialValues } from '../../public/employee-application/validation';
+import {
+  workAssignmentText,
+  emptyWorkAssignment,
+  isWorkAssignmentValid,
+  workAssignmentRequest,
+  workAssignmentSelectionError,
+} from './work-assignment';
 
 describe('work assignment', () => {
+  it('matches the server maximum and distinguishes missing, duplicate and unavailable identities', () => {
+    const ids = Array.from({ length: 101 }, (_, i) => `stage-${i}`);
+    const draft = {
+      mode: 'specificOrganizations' as const,
+      academicYearId: 'year',
+      organizationIds: ids,
+    };
+    expect(isWorkAssignmentValid(draft, ids, true)).toBe(false);
+    expect(workAssignmentSelectionError(draft, ids)).toBe('Select no more than 100 organizations.');
+    expect(isWorkAssignmentValid({ ...draft, organizationIds: ids.slice(0, 100) }, ids, true)).toBe(
+      true
+    );
+    expect(workAssignmentSelectionError({ ...draft, organizationIds: [] }, ids)).toBe(
+      'Select at least one organization.'
+    );
+    expect(
+      workAssignmentSelectionError({ ...draft, organizationIds: ['a', 'a'] }, ['a'])
+    ).toContain('duplicate');
+    expect(workAssignmentSelectionError({ ...draft, organizationIds: ['gone'] }, ids)).toContain(
+      'unavailable'
+    );
+  });
+  it('submits stable identity only and never treats display snapshots as authoritative', () => {
+    const draft = {
+      mode: 'specificOrganizations' as const,
+      academicYearId: 'year',
+      academicYearName: 'Old display name',
+      organizationIds: ['b', 'a'],
+      organizationLabels: ['Old label B', 'Old label A'],
+    };
+    expect(workAssignmentRequest(draft)).toEqual({
+      mode: 'specificOrganizations',
+      academicYearId: 'year',
+      organizationIds: ['b', 'a'],
+    });
+    const request = workAssignmentRequest(draft);
+    request.organizationIds.pop();
+    expect(draft.organizationIds).toEqual(['b', 'a']);
+  });
   it('supports no setup and school-wide work without academic IDs', () => {
     expect(isWorkAssignmentValid(emptyWorkAssignment(), [], false)).toBe(true);
     expect(isWorkAssignmentValid({ mode: 'schoolWide', organizationIds: [] }, [], false)).toBe(
