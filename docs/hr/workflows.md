@@ -260,6 +260,8 @@ Calculation help uses the ESIC section information control; Change History is an
 A compact staff status row provides one Review Staff action, initially filtering to attention items when present.
 Save and Cancel use compact shared button styling in the stationary bottom-right footer.
 Earning classification is managed beside each salary component through its ESIC treatment action.
+ESIC policy creation, version editing, and read-only version details use right-side drawers with shared section cards and fixed actions.
+Dirty dismissal offers Keep editing or Discard changes, and submission locks the form and close controls until the request settles.
 Employee attention items appear only when relevant.
 An optional shared employee table uses server-backed paging, search, and sorting.
 Employee details open in the existing drawer, where HR supplies registration facts and supported exceptions.
@@ -289,6 +291,8 @@ System-managed statutory lines stay visible in the calculation but are never per
 Run Payroll shows compensation revision provenance and protected-target drift without silently changing salary or blocking lock.
 Employee payslips omit employer cost and compensation protection details.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
+Professional-tax amount fields preserve raw two-decimal values during editing and submission.
+Pending saves lock inputs and dismissal, and failed saves retain the draft with inline error feedback for retry.
 Salary Template settings uses one full-height table for Active, Needs setup, and Archived templates.
 The shared inline breadcrumb header owns the Create template action and places reusable-default guidance in its information tooltip.
 Dedicated create, edit, and view pages use a continuous form with compact shared controls, a month picker, and a persistent action footer.

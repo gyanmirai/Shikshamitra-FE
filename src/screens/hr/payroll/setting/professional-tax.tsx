@@ -1,30 +1,33 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
+import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ShakingTextField from 'src/components/shaking-text-field';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
+  Grid,
+  Alert,
   Stack,
   Button,
   Switch,
   TextField,
-  Typography,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -56,6 +59,7 @@ const ProfessionalTax = () => {
   const exportTable = useHrTableExport('hr-professional-tax', tableQuery);
   const dialog = useBoolean();
   const confirm = useBoolean();
+  const [formBusy, setFormBusy] = useState(false);
 
   const [editData, setEditData] = useState<null | IProfessionalTaxRange>(null);
   const {
@@ -86,14 +90,22 @@ const ProfessionalTax = () => {
   });
 
   const handleClose = () => {
+    if (formBusy) return;
     setEditData(null);
     dialog.onFalse();
   };
 
   const tableData = PFData?.items || [];
   return (
-    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
+        sx={{ flexShrink: 0 }}
+        slotProps={{
+          heading: {},
+          moreLink: {},
+          breadcrumbs: {},
+          action: { alignSelf: { xs: 'flex-end', md: 'center' } },
+        }}
         heading="Professional tax"
         description="Manage effective-dated professional tax salary ranges."
         links={[
@@ -232,20 +244,16 @@ const ProfessionalTax = () => {
         open={dialog.value}
         handleClose={handleClose}
         hasForm={false}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Create New Tax Range</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="In this section, you can create a Professional Tax entry by setting the tax range, allowing for customized tax deductions based on salary brackets."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        disableClose={formBusy}
+        maxWidth="sm"
+        title={editData ? 'Edit Tax Range' : 'Add Tax Range'}
+        titleInfo="Set the effective dates and salary range for a professional tax deduction."
       >
-        <ProfessionalTaxForm handleClose={handleClose} editData={editData} />
+        <ProfessionalTaxForm
+          handleClose={handleClose}
+          editData={editData}
+          onBusyChange={setFormBusy}
+        />
       </CustomDialog>
     </Box>
   );
@@ -253,26 +261,19 @@ const ProfessionalTax = () => {
 
 export default ProfessionalTax;
 
-const numberConvertor = (value: string | number): number => {
-  if (typeof value === 'string') {
-    const matches = value.match(/\d+/g);
-    return matches ? +matches.join('') : 0;
-  }
-
-  return value;
-};
-
 const ProfessionalTaxForm = ({
   handleClose,
   editData,
+  onBusyChange,
 }: {
   editData: IProfessionalTaxRange | null;
   handleClose: () => void;
+  onBusyChange: (busy: boolean) => void;
 }) => {
+  const [formError, setFormError] = useState('');
   const [addPf, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddProfessionalTaxMutation,
-    isThrowError: true,
     popupConfig: {
       success: true,
       successMessage: 'Professional Tax created successfully',
@@ -281,12 +282,16 @@ const ProfessionalTaxForm = ({
   const [updatePF, { isLoading: isUpdatePFLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateProfessionalTaxMutation,
-    isThrowError: true,
     popupConfig: {
       success: true,
       successMessage: 'Professional Tax updated successfully',
     },
   });
+  const busy = isLoading || isUpdatePFLoading;
+  useEffect(() => {
+    onBusyChange(busy);
+    return () => onBusyChange(false);
+  }, [busy, onBusyChange]);
   const formik = useFormik({
     initialValues: {
       jurisdictionCode: editData?.jurisdictionCode || 'IN-GJ',
@@ -306,6 +311,7 @@ const ProfessionalTaxForm = ({
       taxAmount: Yup.string().required('Tax amount is required'),
     }),
     onSubmit: async (values) => {
+      setFormError('');
       try {
         if (editData) {
           await updatePF({
@@ -314,129 +320,200 @@ const ProfessionalTaxForm = ({
               jurisdictionCode: values.jurisdictionCode,
               effectiveFrom: values.effectiveFrom,
               effectiveTo: values.effectiveTo || null,
-              fromSalary: numberConvertor(values.fromSalary),
-              toSalary: values.toSalary ? numberConvertor(values.toSalary) : null,
-              taxAmount: numberConvertor(values.taxAmount),
+              fromSalary: Number(values.fromSalary),
+              toSalary: values.toSalary ? Number(values.toSalary) : null,
+              taxAmount: Number(values.taxAmount),
               isActive: values.isActive,
               deductInCessationMonth: values.deductInCessationMonth,
             },
-          });
+          }).unwrap();
         } else {
           await addPf({
             jurisdictionCode: values.jurisdictionCode,
             effectiveFrom: values.effectiveFrom,
             effectiveTo: values.effectiveTo || null,
-            fromSalary: numberConvertor(values.fromSalary),
-            toSalary: values.toSalary ? numberConvertor(values.toSalary) : null,
-            taxAmount: numberConvertor(values.taxAmount),
+            fromSalary: Number(values.fromSalary),
+            toSalary: values.toSalary ? Number(values.toSalary) : null,
+            taxAmount: Number(values.taxAmount),
             isActive: values.isActive,
             deductInCessationMonth: values.deductInCessationMonth,
-          });
+          }).unwrap();
         }
         handleClose();
       } catch (error) {
-        console.error(error);
+        setFormError(parseApiProblemDetail(error).detail);
       }
     },
   });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-        <Stack spacing={2} sx={{ p: 2 }}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Jurisdiction"
-            value={formik.values.jurisdictionCode}
-            disabled
-          />
-          <TextField
-            fullWidth
-            size="small"
-            type="date"
-            label="Effective from"
-            name="effectiveFrom"
-            value={formik.values.effectiveFrom}
-            onChange={formik.handleChange}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            fullWidth
-            size="small"
-            type="date"
-            label="Effective to"
-            name="effectiveTo"
-            value={formik.values.effectiveTo}
-            onChange={formik.handleChange}
-            InputLabelProps={{ shrink: true }}
-            helperText="Optional"
-          />
-
-          <NumericFormatCustom
-            size="small"
-            label="From Salary"
-            name="fromSalary"
-            value={formik.values.fromSalary}
-            onChange={formik.handleChange}
-            error={formik.touched.fromSalary && Boolean(formik.errors.fromSalary)}
-            helperText={formik.touched.fromSalary && formik.errors.fromSalary}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formik.values.isActive}
-                onChange={(_, checked) => formik.setFieldValue('isActive', checked)}
-              />
-            }
-            label="Active rule"
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formik.values.deductInCessationMonth}
-                onChange={(_, checked) => formik.setFieldValue('deductInCessationMonth', checked)}
-              />
-            }
-            label="Deduct in employment cessation month"
-          />
-          <NumericFormatCustom
-            size="small"
-            label="To Salary"
-            name="toSalary"
-            value={formik.values.toSalary}
-            onChange={formik.handleChange}
-            error={formik.touched.toSalary && Boolean(formik.errors.toSalary)}
-            helperText={formik.touched.toSalary && formik.errors.toSalary}
-          />
-          <NumericFormatCustom
-            size="small"
-            label="Tax Amount"
-            name="taxAmount"
-            value={formik.values.taxAmount}
-            onChange={formik.handleChange}
-            error={formik.touched.taxAmount && Boolean(formik.errors.taxAmount)}
-            helperText={formik.touched.taxAmount && formik.errors.taxAmount}
-          />
-        </Stack>
-      </Scrollbar>
+    <Box component="form" noValidate onSubmit={formik.handleSubmit}>
+      <DialogScrollContent>
+        {formError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {formError}
+          </Alert>
+        )}
+        <Box
+          component="fieldset"
+          disabled={busy}
+          inert={busy || undefined}
+          aria-busy={busy}
+          sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}
+        >
+          <FormSectionCard
+            title="Tax Range Details"
+            icon={GlobalIcons.receiptIcon}
+            descriptionTooltip="Define the effective period, salary limits, and tax amount. An empty upper salary limit means there is no maximum."
+          >
+            <Grid container spacing={2}>
+              <Grid size={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Jurisdiction"
+                  value={formik.values.jurisdictionCode}
+                  disabled
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ShakingTextField
+                  error={Boolean(formik.touched.effectiveFrom && formik.errors.effectiveFrom)}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="date"
+                    label="Effective from"
+                    required
+                    {...formik.getFieldProps('effectiveFrom')}
+                    InputLabelProps={{ shrink: true }}
+                    error={Boolean(formik.touched.effectiveFrom && formik.errors.effectiveFrom)}
+                    helperText={formik.touched.effectiveFrom && formik.errors.effectiveFrom}
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="date"
+                  label="Effective to"
+                  {...formik.getFieldProps('effectiveTo')}
+                  InputLabelProps={{ shrink: true }}
+                  helperText="Optional"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ShakingTextField
+                  error={Boolean(formik.touched.fromSalary && formik.errors.fromSalary)}
+                >
+                  <NumericFormatCustom
+                    valueIsNumericString
+                    roundToWholeRupees={false}
+                    decimalScale={2}
+                    fullWidth
+                    size="small"
+                    label="From salary"
+                    required
+                    name="fromSalary"
+                    value={formik.values.fromSalary}
+                    onBlur={formik.handleBlur}
+                    onValueChange={({ value }, { source }) => {
+                      if (source === 'event') formik.setFieldValue('fromSalary', value);
+                    }}
+                    error={Boolean(formik.touched.fromSalary && formik.errors.fromSalary)}
+                    helperText={formik.touched.fromSalary && formik.errors.fromSalary}
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <NumericFormatCustom
+                  valueIsNumericString
+                  roundToWholeRupees={false}
+                  decimalScale={2}
+                  fullWidth
+                  size="small"
+                  label="To salary"
+                  name="toSalary"
+                  value={formik.values.toSalary}
+                  onBlur={formik.handleBlur}
+                  onValueChange={({ value }, { source }) => {
+                    if (source === 'event') formik.setFieldValue('toSalary', value);
+                  }}
+                  error={Boolean(formik.touched.toSalary && formik.errors.toSalary)}
+                  helperText={(formik.touched.toSalary && formik.errors.toSalary) || 'Optional'}
+                />
+              </Grid>
+              <Grid size={12}>
+                <ShakingTextField
+                  error={Boolean(formik.touched.taxAmount && formik.errors.taxAmount)}
+                >
+                  <NumericFormatCustom
+                    valueIsNumericString
+                    roundToWholeRupees={false}
+                    decimalScale={2}
+                    fullWidth
+                    size="small"
+                    label="Tax amount"
+                    required
+                    name="taxAmount"
+                    value={formik.values.taxAmount}
+                    onBlur={formik.handleBlur}
+                    onValueChange={({ value }, { source }) => {
+                      if (source === 'event') formik.setFieldValue('taxAmount', value);
+                    }}
+                    error={Boolean(formik.touched.taxAmount && formik.errors.taxAmount)}
+                    helperText={formik.touched.taxAmount && formik.errors.taxAmount}
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid size={12}>
+                <Stack spacing={1}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formik.values.isActive}
+                        onChange={(_, checked) => formik.setFieldValue('isActive', checked)}
+                      />
+                    }
+                    label="Active rule"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formik.values.deductInCessationMonth}
+                        onChange={(_, checked) =>
+                          formik.setFieldValue('deductInCessationMonth', checked)
+                        }
+                      />
+                    }
+                    label="Deduct in employment cessation month"
+                  />
+                </Stack>
+              </Grid>
+            </Grid>
+          </FormSectionCard>
+        </Box>
+      </DialogScrollContent>
       <DialogActions>
         <Button
           size="small"
           variant="outlined"
-          startIcon={<Iconify icon="mdi:close" />}
+          disabled={busy}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={handleClose}
         >
           Cancel
         </Button>
         <LoadingButton
           size="small"
-          startIcon={<Iconify icon="mdi:content-save-outline" />}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
           loading={isLoading || isUpdatePFLoading}
           variant="contained"
           type="submit"
         >
-          Save
+          Submit
         </LoadingButton>
       </DialogActions>
     </Box>

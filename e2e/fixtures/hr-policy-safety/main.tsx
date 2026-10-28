@@ -15,9 +15,16 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import HRPolicyWorkspace from 'src/screens/hr/policies/HRPolicyWorkspace';
+import ProfessionalTax from 'src/screens/hr/payroll/setting/professional-tax';
 import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import EarningComponent from 'src/screens/hr/payroll/setting/earning-component';
 import ManualAttendanceScreen from 'src/screens/hr/attendance/manual-attendance';
+import DeductionComponent from 'src/screens/hr/payroll/setting/deduction-component';
+import SalaryTemplateSettings from 'src/screens/hr/payroll/setting/salary-templates';
+import SalaryTemplateEditor from 'src/screens/hr/payroll/setting/salary-template-editor';
+import PayslipStatementSettings from 'src/screens/hr/payroll/setting/payslip-statement-settings';
+import StatutorySchemesPage from 'src/app/(auth-route)/hr/(Payroll-Management)/payroll/setting/statutory-schemes/page';
 
 import { year } from './data';
 
@@ -32,7 +39,23 @@ const permissions = [
   ...Object.values(hrLeavePolicyPermissions),
   'HR.PayrollManagement.Settings.PfRule.View',
   'HR.PayrollManagement.Settings.PfRule.Add',
+  ...Object.values(hrPermissions.payroll.settings).filter(
+    (value): value is string => typeof value === 'string'
+  ),
+  ...Object.values(hrPermissions.payroll.settings.salaryTemplateActions),
+  ...Object.values(hrPermissions.payroll.settings.statutorySchemeActions),
+  `${hrPermissions.payroll.generateSalarySlip}.Add`,
 ].map((name) => ({ name, isGranted: true }));
+const settingsScreens: Record<string, React.ComponentType> = {
+  earnings: EarningComponent,
+  deductions: DeductionComponent,
+  'professional-tax': ProfessionalTax,
+  'salary-templates': SalaryTemplateSettings,
+  'salary-template-editor': () => <SalaryTemplateEditor mode="create" />,
+  'payslip-settings': PayslipStatementSettings,
+  'statutory-schemes': StatutorySchemesPage,
+};
+const SettingsScreen = settingsScreens[query.get('surface') || ''];
 const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
@@ -64,7 +87,9 @@ createRoot(document.getElementById('root')!).render(
             Synthetic policy fixture — all policy writes are refused; no school data is connected.
           </Alert>
           <Box sx={{ flex: 1, minHeight: 0 }}>
-            {query.get('surface') === 'pf' ? (
+            {SettingsScreen ? (
+              <SettingsScreen />
+            ) : query.get('surface') === 'pf' ? (
               <PF />
             ) : query.get('surface') === 'manual-attendance' ? (
               <ManualAttendanceScreen />

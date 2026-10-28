@@ -55,7 +55,7 @@ it('submits one actual form and retains the idempotency key after an error', asy
   fireEvent.change(within(dialog).getByLabelText('Source URL', { exact: false }), {
     target: { value: 'https://example.com/esic' },
   });
-  await user.click(within(dialog).getByRole('button', { name: 'Create policy' }));
+  await user.click(within(dialog).getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
   const body = mocks.create.mock.calls[0][0];
   expect(body).toMatchObject({
@@ -65,7 +65,7 @@ it('submits one actual form and retains the idempotency key after an error', asy
     employerPercentage: 3.25,
   });
   expect(body.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/);
-  await user.click(within(dialog).getByRole('button', { name: 'Create policy' }));
+  await user.click(within(dialog).getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(2));
   expect(mocks.create.mock.calls[1][0].idempotencyKey).toBe(body.idempotencyKey);
 });

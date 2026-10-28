@@ -320,20 +320,12 @@ export default function SalaryTemplateSettings() {
   return (
     <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        sx={{
-          flexShrink: 0,
-          display: { xs: 'grid', lg: 'flex' },
-          gridTemplateColumns: 'minmax(0, 1fr)',
-          gap: 1,
-          py: { xs: 1, lg: 0 },
-          '& > *': { m: '0 !important' },
-          '& > .MuiStack-root': { flexShrink: 0 },
-        }}
+        sx={{ flexShrink: 0 }}
         slotProps={{
           heading: {},
-          action: { justifySelf: 'end' },
           moreLink: {},
-          breadcrumbs: { minWidth: 0, '& .MuiBreadcrumbs-li': { whiteSpace: 'nowrap' } },
+          breadcrumbs: {},
+          action: { alignSelf: { xs: 'flex-end', md: 'center' } },
         }}
         heading="Salary Templates"
         description="Create reusable salary defaults. Changes apply to future salary setups; existing staff salaries stay unchanged."
@@ -348,7 +340,6 @@ export default function SalaryTemplateSettings() {
               variant="contained"
               startIcon={<Iconify icon="mdi:plus" width={18} />}
               onClick={() => router.push(editorHref())}
-              sx={{ minWidth: 140 }}
             >
               Create Template
             </Button>

@@ -20,31 +20,33 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { formatPayrollCurrency } from 'src/utils/payroll-currency';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 import { useGetEsiComponentTreatmentsQuery } from 'src/redux/hr/statutory-scheme-api';
-import {
-  Box,
-  Grid,
-  Chip,
-  Stack,
-  Alert,
-  Button,
-  MenuItem,
-  MenuList,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
 import {
   useGetEsiPoliciesQuery,
   useCreateEsiPolicyMutation,
   useArchiveEsiPolicyMutation,
   useAddEsiPolicyVersionMutation,
 } from 'src/redux/hr/esi-policy-api';
-
-import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
+import {
+  Box,
+  Grid,
+  Chip,
+  Stack,
+  Alert,
+  Drawer,
+  Button,
+  Divider,
+  MenuItem,
+  MenuList,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope: boolean }) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -163,7 +165,13 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
   ];
   return (
     <Stack spacing={2} sx={{ minWidth: 0, minHeight: 0, height: 1 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        justifyContent="space-between"
+        spacing={1}
+        sx={{ px: 1, flexShrink: 0 }}
+      >
         <Box>
           <Typography variant="h6">ESIC Policies</Typography>
           <Typography variant="body2" color="text.secondary">
@@ -175,6 +183,7 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
             size="small"
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+            sx={{ alignSelf: { xs: 'flex-end', sm: 'center' } }}
             onClick={() => setTarget('new')}
           >
             Create policy
@@ -182,7 +191,9 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
         )}
       </Stack>
       {!hasSchoolWideScope && (
-        <HrNotice role="alert" severity="info">School-wide HR scope is required to manage ESIC policies.</HrNotice>
+        <HrNotice role="alert" severity="info">
+          School-wide HR scope is required to manage ESIC policies.
+        </HrNotice>
       )}
       {query.isError ? (
         <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
@@ -210,14 +221,24 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
           onClose={() => setTarget(null)}
         />
       )}
-      <CustomDialog
+      <Drawer
+        anchor="right"
         open={Boolean(view)}
-        handleClose={() => setView(null)}
-        title={view?.name || 'ESIC policy'}
-        maxWidth="md"
-        hasForm={false}
+        onClose={() => setView(null)}
+        PaperProps={{
+          role: 'dialog',
+          'aria-modal': true,
+          'aria-label': view?.name || 'ESIC Policy',
+          sx: { width: { xs: '100%', sm: 'min(960px, 92vw)' }, maxWidth: '100%' },
+        }}
       >
-        <DialogScrollContent>
+        <DrawerHeader
+          title={view?.name || 'ESIC Policy'}
+          helpText="Review the effective versions, contribution rates, and policy sources."
+          onClose={() => setView(null)}
+        />
+        <Divider />
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
           <Stack spacing={2}>
             <Typography variant="body2">
               {view?.code}
@@ -225,53 +246,65 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
               {view?.isArchived ? ' · Archived' : ''}
             </Typography>
             {view?.versions.map((version) => (
-              <SectionCard
+              <FormSectionCard
                 key={version.id}
                 title={`Version ${version.version}`}
-                gridProps={{ spacing: 2 }}
+                icon={GlobalIcons.history}
+                descriptionTooltip="Saved contribution rates and coverage details for this effective version."
               >
-                {[
-                  ['Effective from', version.effectiveFrom.slice(0, 10)],
-                  ['Applies until', version.appliesUntil?.slice(0, 10) || 'Until replaced'],
-                  ['Employee share', `${version.employeePercentage}%`],
-                  ['School share', `${version.employerPercentage}%`],
-                  ['Standard wage ceiling', formatPayrollCurrency(version.standardWageCeiling)],
-                  ['Disability wage ceiling', formatPayrollCurrency(version.disabilityWageCeiling)],
-                  [
-                    'Employee daily wage exemption',
-                    formatPayrollCurrency(version.employeeShareDailyWageExemption),
-                  ],
-                  ['Rounding', version.roundingPolicy],
-                  [
-                    'Eligibility basis',
-                    version.calculationSettings?.eligibilityBasis || 'School settings',
-                  ],
-                  [
-                    'Contribution basis',
-                    version.calculationSettings?.calculationBasis || 'School settings',
-                  ],
-                  ['Source', version.sourceUrl],
-                  ['Verified on', version.sourceVerifiedOn.slice(0, 10)],
-                ].map(([label, value]) => (
-                  <Grid key={label} size={{ xs: 12, sm: 6 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {label}
-                    </Typography>
-                    <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                      {value}
-                    </Typography>
-                  </Grid>
-                ))}
-              </SectionCard>
+                <Grid container spacing={2}>
+                  {[
+                    ['Effective from', version.effectiveFrom.slice(0, 10)],
+                    ['Applies until', version.appliesUntil?.slice(0, 10) || 'Until replaced'],
+                    ['Employee share', `${version.employeePercentage}%`],
+                    ['School share', `${version.employerPercentage}%`],
+                    ['Standard wage ceiling', formatPayrollCurrency(version.standardWageCeiling)],
+                    [
+                      'Disability wage ceiling',
+                      formatPayrollCurrency(version.disabilityWageCeiling),
+                    ],
+                    [
+                      'Employee daily wage exemption',
+                      formatPayrollCurrency(version.employeeShareDailyWageExemption),
+                    ],
+                    ['Rounding', version.roundingPolicy],
+                    [
+                      'Eligibility basis',
+                      version.calculationSettings?.eligibilityBasis || 'School settings',
+                    ],
+                    [
+                      'Contribution basis',
+                      version.calculationSettings?.calculationBasis || 'School settings',
+                    ],
+                    ['Source', version.sourceUrl],
+                    ['Verified on', version.sourceVerifiedOn.slice(0, 10)],
+                  ].map(([label, value]) => (
+                    <Grid key={label} size={{ xs: 12, sm: 6 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {label}
+                      </Typography>
+                      <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                        {value}
+                      </Typography>
+                    </Grid>
+                  ))}
+                </Grid>
+              </FormSectionCard>
             ))}
           </Stack>
-        </DialogScrollContent>
+        </Box>
+        <Divider />
         <DialogActions>
-          <Button variant="outlined" onClick={() => setView(null)}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => setView(null)}
+          >
             Close
           </Button>
         </DialogActions>
-      </CustomDialog>
+      </Drawer>
       <ConfirmDialog
         open={Boolean(archiveTarget)}
         onClose={() => {
@@ -456,6 +489,10 @@ function EsiPolicyEditor({ policy, onClose }: { policy?: EsiPolicy; onClose: () 
     },
   });
   const busy = creation.isLoading || addition.isLoading;
+  const { requestNavigation, confirmation } = useUnsavedNavigation(form.dirty, {
+    blockNavigation: busy,
+  });
+  const close = () => requestNavigation(onClose);
   const field = (key: keyof Values, label: string, type?: string) => (
     <ShakingTextField error={Boolean(form.touched[key] && form.errors[key])}>
       <TextField
@@ -496,158 +533,221 @@ function EsiPolicyEditor({ policy, onClose }: { policy?: EsiPolicy; onClose: () 
     </ShakingTextField>
   );
   return (
-    <CustomDialog
-      open
-      title={policy ? `New version - ${policy.name}` : 'Create ESIC policy'}
-      maxWidth="md"
-      hasForm={false}
-      handleClose={onClose}
-      disableClose={busy}
-      hasUnsavedChanges={form.dirty}
-    >
-      <Box component="form" onSubmit={form.handleSubmit} noValidate>
-        <DialogScrollContent onSubmit={() => form.submitForm()}>
-          <Stack spacing={2}>
-            <SectionCard title="Policy details" gridProps={{ spacing: 2 }}>
-              <Grid size={{ xs: 12, sm: 6 }}>{field('name', 'Policy name')}</Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>{field('code', 'Policy code')}</Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {field('effectiveFrom', 'Effective from', 'month')}
-              </Grid>
-              <Grid size={12}>
-                <Typography variant="body2" color="text.secondary">
-                  Versions are immutable. A new version replaces the previous version from its
-                  effective month.
-                </Typography>
-              </Grid>
-            </SectionCard>
-            <SectionCard title="Contributions and coverage" gridProps={{ spacing: 2 }}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {numeric('employeePercentage', 'Employee share', true)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {numeric('employerPercentage', 'School share', true)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {numeric('standardWageCeiling', 'Standard wage ceiling')}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {numeric('disabilityWageCeiling', 'Disability wage ceiling')}
-              </Grid>
-            </SectionCard>
-            <Box component="details">
-              <Typography component="summary" variant="subtitle2" sx={{ cursor: 'pointer', py: 1 }}>
-                Advanced calculation settings
-              </Typography>
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  {numeric('employeeShareDailyWageExemption', 'Employee daily wage exemption')}
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  {numeric('establishmentThreshold', 'Establishment threshold')}
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  {numeric('exclusionCapPercentage', 'Exclusion cap', true)}
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  {numeric('inKindCapPercentage', 'In-kind cap', true)}
-                </Grid>
-                {(['eligibility', 'calculation'] as const).map((kind) => (
-                  <Grid key={kind} size={{ xs: 12, sm: 6 }}>
-                    <Stack spacing={2}>
+    <>
+      <Drawer
+        anchor="right"
+        open
+        onClose={close}
+        PaperProps={{
+          role: 'dialog',
+          'aria-modal': true,
+          'aria-label': policy ? 'New ESIC Policy Version' : 'Create ESIC Policy',
+          sx: { width: { xs: '100%', sm: 'min(960px, 92vw)' }, maxWidth: '100%' },
+        }}
+      >
+        <Box
+          component="form"
+          onSubmit={form.handleSubmit}
+          noValidate
+          sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+        >
+          <DrawerHeader
+            title={policy ? `New Version - ${policy.name}` : 'Create ESIC Policy'}
+            helpText="Configure effective contribution rates, coverage, and the supporting policy source."
+            onClose={close}
+            closeDisabled={busy}
+          />
+          <Divider />
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
+            <Box
+              component="fieldset"
+              disabled={busy}
+              inert={busy || undefined}
+              aria-busy={busy}
+              sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}
+            >
+              <Stack spacing={2}>
+                <FormSectionCard
+                  title="Policy Details"
+                  icon={GlobalIcons.documentIcon}
+                  descriptionTooltip="Identify the policy and the first month when this version applies."
+                >
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 6 }}>{field('name', 'Policy name')}</Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>{field('code', 'Policy code')}</Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      {field('effectiveFrom', 'Effective from', 'month')}
+                    </Grid>
+                    <Grid size={12}>
+                      <Typography variant="body2" color="text.secondary">
+                        Versions are immutable. A new version replaces the previous version from its
+                        effective month.
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </FormSectionCard>
+                <FormSectionCard
+                  title="Contributions and Coverage"
+                  icon={GlobalIcons.receiptIcon}
+                  descriptionTooltip="Set the employee and school contribution rates and wage ceilings."
+                >
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      {numeric('employeePercentage', 'Employee share', true)}
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      {numeric('employerPercentage', 'School share', true)}
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      {numeric('standardWageCeiling', 'Standard wage ceiling')}
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      {numeric('disabilityWageCeiling', 'Disability wage ceiling')}
+                    </Grid>
+                  </Grid>
+                </FormSectionCard>
+                <Box component="details">
+                  <Typography
+                    component="summary"
+                    variant="subtitle2"
+                    sx={{ cursor: 'pointer', py: 1 }}
+                  >
+                    Advanced calculation settings
+                  </Typography>
+                  <Grid container spacing={2} sx={{ mt: 1 }}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      {numeric('employeeShareDailyWageExemption', 'Employee daily wage exemption')}
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      {numeric('establishmentThreshold', 'Establishment threshold')}
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      {numeric('exclusionCapPercentage', 'Exclusion cap', true)}
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      {numeric('inKindCapPercentage', 'In-kind cap', true)}
+                    </Grid>
+                    {(['eligibility', 'calculation'] as const).map((kind) => (
+                      <Grid key={kind} size={{ xs: 12, sm: 6 }}>
+                        <Stack spacing={2}>
+                          <TextField
+                            select
+                            fullWidth
+                            size="small"
+                            label={
+                              kind === 'eligibility' ? 'Eligibility basis' : 'Contribution basis'
+                            }
+                            {...form.getFieldProps(`${kind}Basis`)}
+                            disabled={busy}
+                          >
+                            <MenuItem value="CLASSIFIED_EARNINGS">Classified earnings</MenuItem>
+                            <MenuItem value="GROSS">Gross salary</MenuItem>
+                            <MenuItem value="COMPONENT">Salary component</MenuItem>
+                          </TextField>
+                          {form.values[`${kind}Basis`] === 'COMPONENT' && (
+                            <ShakingTextField
+                              error={Boolean(
+                                form.touched[`${kind}ComponentId`] &&
+                                form.errors[`${kind}ComponentId`]
+                              )}
+                            >
+                              <TextField
+                                select
+                                required
+                                fullWidth
+                                size="small"
+                                label={
+                                  kind === 'eligibility'
+                                    ? 'Eligibility component'
+                                    : 'Contribution component'
+                                }
+                                {...form.getFieldProps(`${kind}ComponentId`)}
+                                disabled={busy || components.isLoading || components.isError}
+                                error={Boolean(
+                                  form.touched[`${kind}ComponentId`] &&
+                                  form.errors[`${kind}ComponentId`]
+                                )}
+                                helperText={
+                                  form.touched[`${kind}ComponentId`] &&
+                                  form.errors[`${kind}ComponentId`]
+                                }
+                              >
+                                {components.data?.map((item) => (
+                                  <MenuItem key={item.componentId} value={item.componentId}>
+                                    {item.componentName}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                            </ShakingTextField>
+                          )}
+                        </Stack>
+                      </Grid>
+                    ))}
+                    <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
                         select
                         fullWidth
                         size="small"
-                        label={kind === 'eligibility' ? 'Eligibility basis' : 'Contribution basis'}
-                        {...form.getFieldProps(`${kind}Basis`)}
+                        label="Rounding"
+                        {...form.getFieldProps('roundingPolicy')}
                         disabled={busy}
                       >
-                        <MenuItem value="CLASSIFIED_EARNINGS">Classified earnings</MenuItem>
-                        <MenuItem value="GROSS">Gross salary</MenuItem>
-                        <MenuItem value="COMPONENT">Salary component</MenuItem>
+                        <MenuItem value="NextHigherRupee">Next higher rupee</MenuItem>
+                        <MenuItem value="TwoDecimalsAwayFromZero">Two decimals</MenuItem>
                       </TextField>
-                      {form.values[`${kind}Basis`] === 'COMPONENT' && (
-                        <ShakingTextField
-                          error={Boolean(
-                            form.touched[`${kind}ComponentId`] && form.errors[`${kind}ComponentId`]
-                          )}
+                    </Grid>
+                    {components.isError && (
+                      <Grid size={12}>
+                        <Alert
+                          severity="error"
+                          action={<Button onClick={() => components.refetch()}>Retry</Button>}
                         >
-                          <TextField
-                            select
-                            required
-                            fullWidth
-                            size="small"
-                            label={
-                              kind === 'eligibility'
-                                ? 'Eligibility component'
-                                : 'Contribution component'
-                            }
-                            {...form.getFieldProps(`${kind}ComponentId`)}
-                            disabled={busy || components.isLoading || components.isError}
-                            error={Boolean(
-                              form.touched[`${kind}ComponentId`] &&
-                              form.errors[`${kind}ComponentId`]
-                            )}
-                            helperText={
-                              form.touched[`${kind}ComponentId`] &&
-                              form.errors[`${kind}ComponentId`]
-                            }
-                          >
-                            {components.data?.map((item) => (
-                              <MenuItem key={item.componentId} value={item.componentId}>
-                                {item.componentName}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                        </ShakingTextField>
-                      )}
-                    </Stack>
+                          Salary components could not be loaded.
+                        </Alert>
+                      </Grid>
+                    )}
                   </Grid>
-                ))}
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    select
-                    fullWidth
-                    size="small"
-                    label="Rounding"
-                    {...form.getFieldProps('roundingPolicy')}
-                    disabled={busy}
-                  >
-                    <MenuItem value="NextHigherRupee">Next higher rupee</MenuItem>
-                    <MenuItem value="TwoDecimalsAwayFromZero">Two decimals</MenuItem>
-                  </TextField>
-                </Grid>
-                {components.isError && (
-                  <Grid size={12}>
-                    <Alert
-                      severity="error"
-                      action={<Button onClick={() => components.refetch()}>Retry</Button>}
-                    >
-                      Salary components could not be loaded.
-                    </Alert>
+                </Box>
+                <FormSectionCard
+                  title="Policy Source"
+                  icon={GlobalIcons.documentIcon}
+                  descriptionTooltip="Record the official source and the date it was verified."
+                >
+                  <Grid container spacing={2}>
+                    <Grid size={12}>{field('sourceUrl', 'Source URL')}</Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      {field('sourceVerifiedOn', 'Verified on', 'date')}
+                    </Grid>
                   </Grid>
-                )}
-              </Grid>
+                </FormSectionCard>
+                {error && <Alert severity="error">{error}</Alert>}
+              </Stack>
             </Box>
-            <SectionCard title="Policy source" gridProps={{ spacing: 2 }}>
-              <Grid size={12}>{field('sourceUrl', 'Source URL')}</Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {field('sourceVerifiedOn', 'Verified on', 'date')}
-              </Grid>
-            </SectionCard>
-            {error && <Alert severity="error">{error}</Alert>}
-          </Stack>
-        </DialogScrollContent>
-        <DialogActions>
-          <Button variant="outlined" onClick={onClose} disabled={busy}>
-            Cancel
-          </Button>
-          <Button variant="contained" type="submit" loading={busy}>
-            {policy ? 'Save version' : 'Create policy'}
-          </Button>
-        </DialogActions>
-      </Box>
-    </CustomDialog>
+          </Box>
+          <Divider />
+          <DialogActions>
+            <Button
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              variant="outlined"
+              onClick={close}
+              disabled={busy}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              variant="contained"
+              type="submit"
+              loading={busy}
+            >
+              Submit
+            </Button>
+          </DialogActions>
+        </Box>
+      </Drawer>
+      {confirmation}
+    </>
   );
 }
