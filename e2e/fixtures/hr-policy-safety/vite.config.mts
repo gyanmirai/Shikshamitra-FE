@@ -1,6 +1,15 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
-import { year, attendance, calendars, leave, payroll, versions, policyImpact } from './data';
+import {
+  year,
+  attendance,
+  calendars,
+  leave,
+  payroll,
+  versions,
+  policyImpact,
+  manualAttendanceDay,
+} from './data';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = fileURLToPath(new URL('../../../', import.meta.url));
@@ -21,7 +30,10 @@ export default defineConfig({
           if (path === '/api/hr/table-query') {
             let body = '';
             for await (const chunk of request) body += chunk;
-            const table = JSON.parse(body).table;
+            const parsed = JSON.parse(body);
+            const table = parsed.table;
+            if (table === 'hr-manual-attendance')
+              return response.end(JSON.stringify(manualAttendanceDay(parsed.query)));
             return page(
               table === 'hr-policy-attendance'
                 ? attendance
@@ -61,6 +73,14 @@ export default defineConfig({
           if (path.includes('holiday-import-preview') || path.endsWith('/holidays'))
             return response.end('[]');
           if (path === '/api/leave-management/year-end-settlements') return response.end('[]');
+          if (path === '/api/hr/attendance/take-attendance/day')
+            return response.end(
+              JSON.stringify(
+                manualAttendanceDay(
+                  Object.fromEntries(new URL(request.url, 'http://127.0.0.1').searchParams)
+                )
+              )
+            );
           if (path.endsWith('/restore-preview')) {
             return response.end(JSON.stringify({ ...policyImpact, blockingWarnings: [] }));
           }

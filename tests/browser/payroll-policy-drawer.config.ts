@@ -3,7 +3,11 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: ['payroll-policy-drawer.spec.ts', 'hr-policy-drawers.spec.ts'],
+  testMatch: [
+    'payroll-policy-drawer.spec.ts',
+    'hr-policy-drawers.spec.ts',
+    'manual-attendance-filters.spec.ts',
+  ],
   timeout: 30000,
   workers: 1,
   use: { baseURL: 'http://127.0.0.1:4208', browserName: 'chromium', headless: true },

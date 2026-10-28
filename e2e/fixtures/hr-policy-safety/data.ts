@@ -1,5 +1,54 @@
 import type { HrPolicyVersion, HrPolicyImpactPreview } from 'src/redux/hr/hr-policy-api';
 
+export function manualAttendanceDay(query: Record<string, unknown>) {
+  const allStaff = [
+    {
+      employeeId: 'manual-1',
+      fullName: 'Synthetic Teacher',
+      employeeCode: 'SYN-1',
+      department: 'Science',
+      isTeaching: true,
+    },
+    {
+      employeeId: 'manual-2',
+      fullName: 'Synthetic Support',
+      employeeCode: 'SYN-2',
+      department: 'Support',
+      isTeaching: false,
+    },
+    {
+      employeeId: 'manual-3',
+      fullName: 'Synthetic Administrator',
+      employeeCode: 'SYN-3',
+      department: 'Administration',
+      isTeaching: false,
+    },
+  ];
+  const items = allStaff
+    .filter(
+      (staff) =>
+        (query.isTeaching == null || staff.isTeaching === (String(query.isTeaching) === 'true')) &&
+        (!query.department ||
+          staff.department.toLowerCase().includes(String(query.department).toLowerCase()))
+    )
+    .map((staff) => ({
+      ...staff,
+      dateIso: `${query.attendanceDate}T00:00:00Z`,
+      status: 1,
+      captureMode: 'manual_status',
+      warnings: [],
+      errors: [],
+    }));
+  return {
+    items,
+    totalCount: items.length,
+    date: query.attendanceDate,
+    isDayLocked: false,
+    isHoliday: false,
+    captureMode: 'manual_status',
+  };
+}
+
 export const year = {
   id: 'synthetic-year',
   name: '2026–2027',

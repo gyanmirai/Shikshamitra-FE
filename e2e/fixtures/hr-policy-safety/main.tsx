@@ -16,6 +16,7 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import HRPolicyWorkspace from 'src/screens/hr/policies/HRPolicyWorkspace';
 import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import ManualAttendanceScreen from 'src/screens/hr/attendance/manual-attendance';
 
 import { year } from './data';
 
@@ -60,7 +61,11 @@ createRoot(document.getElementById('root')!).render(
             Synthetic policy fixture — all policy writes are refused; no school data is connected.
           </Alert>
           <Box sx={{ flex: 1, minHeight: 0 }}>
-            <HRPolicyWorkspace focus={focus} />
+            {query.get('surface') === 'manual-attendance' ? (
+              <ManualAttendanceScreen />
+            ) : (
+              <HRPolicyWorkspace focus={focus} />
+            )}
           </Box>
         </Box>
       </LocalizationProvider>
