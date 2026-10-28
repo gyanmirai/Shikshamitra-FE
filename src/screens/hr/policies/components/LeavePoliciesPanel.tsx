@@ -6,7 +6,6 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { Add } from '@mui/icons-material';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -20,7 +19,18 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
-import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import {
+  Card,
+  Chip,
+  Stack,
+  Alert,
+  Button,
+  Drawer,
+  Divider,
+  MenuItem,
+  MenuList,
+  Typography,
+} from '@mui/material';
 import {
   useGetLeavePoliciesQuery,
   useDeleteLeavePolicyMutation,
@@ -28,8 +38,8 @@ import {
   useSetDefaultLeavePolicyMutation,
 } from 'src/redux/hr/leaveApi';
 
+import { DrawerHeader } from './HRPolicySharedUI';
 import { LeavePolicyForm } from './LeavePolicyForm';
-import { InfoTooltipIcon } from './HRPolicySharedUI';
 import { policyImpactRequest } from '../leave-impact.types';
 import { getErrorMessage } from '../hr-policy-workspace-utils';
 import { LeavePolicyDetailsDrawer } from './LeavePolicyDetailsDrawer';
@@ -71,7 +81,7 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
   const canSetDefault = hasGrantedPermission(permissions, hrLeavePolicyPermissions.setDefault);
   const [viewPolicy, setViewPolicy] = useState<ILeavePolicy | null>(null);
   const [editData, setEditData] = useState<ILeavePolicy | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const impactReview = useLeavePolicyImpactReview(currentYear?.id);
   const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
   const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 10, search: '' });
@@ -139,22 +149,22 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
   const tableData = (leavePolicyData?.items || []) as ILeavePolicy[];
   const archivedCount = archivedSummary?.totalCount || 0;
 
-  const openCreateDialog = () => {
+  const openCreateDrawer = () => {
     if (!canCreate) return;
     setEditData(null);
-    setDialogOpen(true);
+    setDrawerOpen(true);
   };
 
-  const openEditDialog = useCallback(
+  const openEditDrawer = useCallback(
     (policy: ILeavePolicy) => {
       if (!canEdit) return;
       setEditData(policy);
-      setDialogOpen(true);
+      setDrawerOpen(true);
     },
     [canEdit]
   );
 
-  const openDuplicateDialog = useCallback(
+  const openDuplicateDrawer = useCallback(
     (policy: ILeavePolicy) => {
       if (!canCreate) return;
       // Strip the id so the form treats it as a brand-new creation (same pattern as FeeHeadForm).
@@ -166,12 +176,12 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
         title: `Copy of ${policy.policyTitle || policy.title || ''}`.trim(),
         isDefault: false,
       });
-      setDialogOpen(true);
+      setDrawerOpen(true);
     },
     [canCreate]
   );
 
-  const closeDialog = (_e?: unknown, isSubmit?: boolean) => {
+  const closeDrawer = (_e?: unknown, isSubmit?: boolean) => {
     if (!isSubmit && formCloseState.current.busy) return;
     if (!isSubmit && formCloseState.current.dirty) {
       setDiscardOpen(true);
@@ -179,7 +189,7 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
     }
     formCloseState.current = { dirty: false, busy: false };
     dispatch(setIsChanges(false));
-    setDialogOpen(false);
+    setDrawerOpen(false);
     setEditData(null);
     if (isSubmit) {
       refetch();
@@ -423,7 +433,7 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
                 setViewPolicy(policy);
               }}
               showEditIcon={!isArchived && canEdit}
-              handleEditClick={() => openEditDialog(policy)}
+              handleEditClick={() => openEditDrawer(policy)}
               actions={({ popover }) => (
                 <MenuList>
                   <MenuItem
@@ -482,7 +492,7 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
                     <MenuItem
                       onClick={() => {
                         popover.onClose();
-                        openDuplicateDialog(policy);
+                        openDuplicateDrawer(policy);
                       }}
                     >
                       <Iconify icon="mdi:content-copy" />
@@ -517,8 +527,8 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
       confirmUnarchive,
       defaultState.isLoading,
       unarchiveState.isLoading,
-      openEditDialog,
-      openDuplicateDialog,
+      openEditDrawer,
+      openDuplicateDrawer,
       previewArchive,
       currentYear,
       impactReview,
@@ -568,7 +578,7 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={openCreateDialog}
+              onClick={openCreateDrawer}
               disabled={!currentYear?.id}
               size="small"
               sx={{ borderRadius: 1, flexShrink: 0 }}
@@ -624,37 +634,28 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
         {...operationalTableProps}
       />
 
-      <CustomDialog
-        maxWidth="md"
-        title={
-          <Stack
-            component="span"
-            direction="row"
-            spacing={0.75}
-            alignItems="center"
-            display="inline-flex"
-          >
-            <span>{editData?.id ? 'Update Leave Policy' : 'Add Leave Policy'}</span>
-            <InfoTooltipIcon
-              title={
-                editData?.id
-                  ? 'Update the rules for leave entitlement, accrual type, carry forward options, and approval workflows.'
-                  : 'Define new rules for leave entitlement, accrual type, carry forward options, and approval workflows.'
-              }
-            />
-          </Stack>
-        }
-        open={dialogOpen}
-        guardUnsavedChanges={false}
-        disableClose={formBusy}
-        handleClose={() => closeDialog()}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => closeDrawer()}
+        PaperProps={{
+          'aria-label': editData?.id ? 'Update Leave Policy' : 'Add Leave Policy',
+          sx: { width: { xs: '100%', sm: 'min(1180px, 92vw)' }, maxWidth: '100%' },
+        }}
       >
+        <DrawerHeader
+          title={editData?.id ? 'Update Leave Policy' : 'Add Leave Policy'}
+          helpText="Configure leave entitlement, accrual, carry forward, and approval rules."
+          onClose={() => closeDrawer()}
+          closeDisabled={formBusy}
+        />
+        <Divider />
         <LeavePolicyForm
-          handleClose={closeDialog}
+          handleClose={closeDrawer}
           editData={editData}
           onCloseStateChange={updateCloseState}
         />
-      </CustomDialog>
+      </Drawer>
       <ConfirmDialog
         open={discardOpen}
         title="Discard Unsaved Changes?"
@@ -676,7 +677,7 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
               if (formCloseState.current.busy) return;
               formCloseState.current.dirty = false;
               setDiscardOpen(false);
-              closeDialog();
+              closeDrawer();
             }}
           >
             Discard changes

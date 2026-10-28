@@ -10,7 +10,6 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useRef, useMemo, useEffect } from 'react';
-import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -19,6 +18,7 @@ import {
   useUpdateLeavePolicyMutation,
 } from 'src/redux/hr/leaveApi';
 import {
+  Box,
   Grid,
   Chip,
   Stack,
@@ -32,7 +32,6 @@ import {
   InputLabel,
   Typography,
   FormControl,
-  DialogActions,
   FormControlLabel,
 } from '@mui/material';
 
@@ -404,136 +403,161 @@ export function LeavePolicyForm({
     });
   }, [formik.dirty, formik.isSubmitting, isCreateLoading, isUpdateLoading, onCloseStateChange]);
 
+  const busy = isCreateLoading || isUpdateLoading || formik.isSubmitting;
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       {impactReview.drawer}
-      <DialogScrollContent>
-        <Stack spacing={2}>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                name="policyTitle"
-                label="Policy Name *"
-                value={formik.values.policyTitle}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                size="small"
-                fullWidth
-                error={formik.touched.policyTitle && Boolean(formik.errors.policyTitle)}
-                helperText={
-                  formik.touched.policyTitle && formik.errors.policyTitle
-                    ? formik.errors.policyTitle
-                    : undefined
-                }
-              />
+      <Box
+        component="form"
+        onSubmit={formik.handleSubmit}
+        sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
+      >
+        <Box
+          component="fieldset"
+          disabled={busy}
+          inert={busy}
+          sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'auto', border: 0, m: 0, p: 2 }}
+        >
+          <Stack spacing={2}>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  name="policyTitle"
+                  label="Policy Name *"
+                  value={formik.values.policyTitle}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  size="small"
+                  fullWidth
+                  error={formik.touched.policyTitle && Boolean(formik.errors.policyTitle)}
+                  helperText={
+                    formik.touched.policyTitle && formik.errors.policyTitle
+                      ? formik.errors.policyTitle
+                      : undefined
+                  }
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <TextField
+                  name="effectiveFrom"
+                  label="Effective From *"
+                  value={formik.values.effectiveFrom}
+                  onChange={formik.handleChange}
+                  type="date"
+                  size="small"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <TextField
+                  name="effectiveTo"
+                  label="Effective To"
+                  value={formik.values.effectiveTo}
+                  onChange={formik.handleChange}
+                  type="date"
+                  size="small"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    label="Status"
+                    value={formik.values.status}
+                    onChange={(event) => formik.setFieldValue('status', event.target.value)}
+                  >
+                    {LEAVE_POLICY_FORM_STATUS_OPTIONS.map((status) => (
+                      <MenuItem key={status} value={status}>
+                        {status}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formik.values.isDefault}
+                      onChange={(event) => formik.setFieldValue('isDefault', event.target.checked)}
+                    />
+                  }
+                  label="Default policy"
+                />
+              </Grid>
+              <Grid size={12}>
+                <TextField
+                  name="description"
+                  label="Description"
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  size="small"
+                  multiline
+                  rows={2}
+                  fullWidth
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <TextField
-                name="effectiveFrom"
-                label="Effective From *"
-                value={formik.values.effectiveFrom}
-                onChange={formik.handleChange}
-                type="date"
-                size="small"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <TextField
-                name="effectiveTo"
-                label="Effective To"
-                value={formik.values.effectiveTo}
-                onChange={formik.handleChange}
-                type="date"
-                size="small"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Status</InputLabel>
-                <Select
-                  label="Status"
-                  value={formik.values.status}
-                  onChange={(event) => formik.setFieldValue('status', event.target.value)}
-                >
-                  {LEAVE_POLICY_FORM_STATUS_OPTIONS.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formik.values.isDefault}
-                    onChange={(event) => formik.setFieldValue('isDefault', event.target.checked)}
-                  />
-                }
-                label="Default policy"
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                name="description"
-                label="Description"
-                value={formik.values.description}
-                onChange={formik.handleChange}
-                size="small"
-                multiline
-                rows={2}
-                fullWidth
-              />
-            </Grid>
-          </Grid>
 
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-            <Typography variant="subtitle2">Rule Buckets</Typography>
-            <Chip size="small" label="Paid" color="success" variant="outlined" />
-            <Chip size="small" label="Unpaid" color="warning" variant="outlined" />
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Typography variant="subtitle2">Rule Buckets</Typography>
+              <Chip size="small" label="Paid" color="success" variant="outlined" />
+              <Chip size="small" label="Unpaid" color="warning" variant="outlined" />
+            </Stack>
+
+            <RuleSection
+              title="Paid"
+              bucket="paid"
+              rule={formik.values.paid}
+              setRuleValue={setRuleValue}
+            />
+            <RuleSection
+              title="Unpaid"
+              bucket="unpaid"
+              rule={formik.values.unpaid}
+              setRuleValue={setRuleValue}
+            />
           </Stack>
+        </Box>
 
-          <RuleSection
-            title="Paid"
-            bucket="paid"
-            rule={formik.values.paid}
-            setRuleValue={setRuleValue}
-          />
-          <RuleSection
-            title="Unpaid"
-            bucket="unpaid"
-            rule={formik.values.unpaid}
-            setRuleValue={setRuleValue}
-          />
+        <Stack
+          direction="row"
+          spacing={1.5}
+          justifyContent="flex-end"
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: 1.5,
+            flexShrink: 0,
+            borderTop: 1,
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => handleClose()}
+            variant="outlined"
+            size="small"
+            type="button"
+            disabled={busy}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            type="submit"
+            variant="contained"
+            size="small"
+            loading={busy}
+          >
+            Submit
+          </LoadingButton>
         </Stack>
-      </DialogScrollContent>
-
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={() => handleClose()}
-          variant="outlined"
-          size="small"
-          type="button"
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-          type="submit"
-          variant="contained"
-          size="small"
-          loading={isCreateLoading || isUpdateLoading}
-          onClick={() => formik.handleSubmit()}
-        >
-          {editData?.id ? 'Update' : 'Submit'}
-        </LoadingButton>
-      </DialogActions>
+      </Box>
     </BackPopUpChecked>
   );
 }

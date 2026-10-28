@@ -20,6 +20,10 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { year } from './data';
 
 const query = new URLSearchParams(window.location.search);
+const focus =
+  (['calendars', 'attendance', 'leave', 'payroll', 'assignments'] as const).find(
+    (surface) => surface === query.get('surface')
+  ) || 'attendance';
 const permissions = [
   ...Object.values(hrPermissions.policies),
   ...Object.values(hrPermissions.policyActions),
@@ -56,15 +60,7 @@ createRoot(document.getElementById('root')!).render(
             Synthetic policy fixture — all policy writes are refused; no school data is connected.
           </Alert>
           <Box sx={{ flex: 1, minHeight: 0 }}>
-            <HRPolicyWorkspace
-              focus={
-                query.get('surface') === 'leave'
-                  ? 'leave'
-                  : query.get('surface') === 'payroll'
-                    ? 'payroll'
-                    : 'attendance'
-              }
-            />
+            <HRPolicyWorkspace focus={focus} />
           </Box>
         </Box>
       </LocalizationProvider>

@@ -31,7 +31,7 @@ import { useHRPolicyWorkspace } from './hooks/useHRPolicyWorkspace';
 import { PolicyImpactDrawer } from './components/PolicyImpactDrawer';
 import { LeavePoliciesPanel } from './components/LeavePoliciesPanel';
 import { PolicyVersionDrawer } from './components/PolicyVersionDrawer';
-import { ManualHolidayDialog } from './components/ManualHolidayDialog';
+import { ManualHolidayDrawer } from './components/ManualHolidayDrawer';
 import { PayrollPolicyDrawer } from './components/PayrollPolicyDrawer';
 import { PolicyOperationOverlay } from './components/HRPolicySharedUI';
 import { CalendarPolicyDrawer } from './components/CalendarPolicyDrawer';
@@ -246,8 +246,8 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         }
       />
 
-      {/* Dialogs and overlay drawers */}
-      <ManualHolidayDialog ctx={ctx} />
+      {/* Supporting policy drawers */}
+      <ManualHolidayDrawer ctx={ctx} />
       <PolicyImpactDrawer ctx={ctx} />
       <PolicyAuditDrawer ctx={ctx} />
       <PolicyVersionDrawer ctx={ctx} />

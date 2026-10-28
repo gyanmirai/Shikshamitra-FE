@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
-import { year, attendance, calendars, leave, payroll } from './data';
+import { year, attendance, calendars, leave, payroll, versions, policyImpact } from './data';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = fileURLToPath(new URL('../../../', import.meta.url));
@@ -32,6 +32,9 @@ export default defineConfig({
                     : []
             );
           }
+          if (path === '/api/hr/policies/impact-preview' && request.method === 'POST') {
+            return response.end(JSON.stringify(policyImpact));
+          }
           if (request.method !== 'GET') {
             response.statusCode = 405;
             return response.end(
@@ -57,6 +60,11 @@ export default defineConfig({
           }
           if (path.includes('holiday-import-preview') || path.endsWith('/holidays'))
             return response.end('[]');
+          if (path === '/api/leave-management/year-end-settlements') return response.end('[]');
+          if (path.endsWith('/restore-preview')) {
+            return response.end(JSON.stringify({ ...policyImpact, blockingWarnings: [] }));
+          }
+          if (path.endsWith('/versions')) return page(versions);
           if (path === '/api/hr/work-calendar-policies') return page(calendars);
           if (path === '/api/hr/attendance/policies') return page(attendance);
           if (path === '/api/hr/payroll/policies') return page(payroll);

@@ -166,6 +166,8 @@ The leave-policy impact drawer is read-only, and archive confirmation is a separ
 Attendance advanced-rule disclosure preserves both draft values and the save payload; a separate cancelable reset lists the values it will replace with existing form defaults.
 Changing the selected work calendar preserves the explicit default-policy choice.
 Dirty policy drawers and the leave editor use Keep editing / Discard changes for local dismissal while retaining existing navigation guards and save locks.
+Calendar, attendance, payroll, assignment, and leave policy forms open in right-side drawers, including leave creation, editing, and duplication.
+Manual holiday editing, version restoration, and assignment-conflict details use supporting drawers with a fixed header, scrollable body, and stable actions; focused discard and lifecycle confirmations remain separate decisions.
 Saved leave rules open separately from the qualitative impact checklist, whose affected-record measures remain Not calculated until an authoritative server assessment exists.
 Leave create/duplicate, edit, set-default and archive/restore controls use their exact existing action grants.
 Assignment previews show current policies, the server-resolved proposed winner and the selected form values separately. Group previews cover only the selected group unless accessible sample staff are selected; a staff sample includes matching groups and staff override precedence. Loading, denied access and unresolved new-assignment ID ties never borrow selected form values as a winner.
