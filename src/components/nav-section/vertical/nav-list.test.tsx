@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { it, vi, expect, describe, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 import { NavList } from './nav-list';
 
@@ -61,33 +61,41 @@ function Navigation({ data = fees }: { data?: NavItemBaseProps }) {
 afterEach(cleanup);
 
 describe('active navigation ancestors', () => {
-  it.each(['/hr/employee', '/hr/employee/onboarding'])(
-    'renders Staff Onboarding immediately before Staff Directory on %s',
-    (pathname) => {
-      route.pathname = pathname;
-      const staff = navSubData()['/hr']
-        .flatMap((group) => group.items)
-        .find((item) => item.title === 'Staff');
-      render(<Navigation data={staff as NavItemBaseProps} />);
+  it.each([
+    '/hr/employee',
+    '/hr/employee/onboarding',
+    '/hr/employee/onboarding/11111111-1111-1111-1111-111111111111/finalize',
+  ])('renders Staff Onboarding immediately before Staff Directory on %s', (pathname) => {
+    route.pathname = pathname;
+    const staff = navSubData()
+      ['/hr'].flatMap((group) => group.items)
+      .find((item) => item.title === 'Staff');
+    render(<Navigation data={staff as NavItemBaseProps} />);
 
-      expect(screen.getAllByRole('button').map((button) => button.textContent).slice(1, 3)).toEqual([
-        'Staff Onboarding',
-        'Staff Directory',
-      ]);
-    }
-  );
+    expect(
+      screen
+        .getAllByRole('button')
+        .map((button) => button.textContent)
+        .slice(1, 3)
+    ).toEqual(['Staff Onboarding', 'Staff Directory']);
+  });
 
   it.each([
     ['/hr/employee', 'Staff Directory', 'Staff Onboarding'],
     ['/hr/employee/', 'Staff Directory', 'Staff Onboarding'],
     ['/hr/employee?employee=staff-123', 'Staff Directory', 'Staff Onboarding'],
     ['/hr/employee/onboarding', 'Staff Onboarding', 'Staff Directory'],
+    [
+      '/hr/employee/onboarding/11111111-1111-1111-1111-111111111111/finalize',
+      'Staff Onboarding',
+      'Staff Directory',
+    ],
     ['/hr/employee/onboarding/', 'Staff Onboarding', 'Staff Directory'],
     ['/hr/employee/onboarding?application=application-123', 'Staff Onboarding', 'Staff Directory'],
   ])('selects only the matching Staff destination on %s', (pathname, selected, other) => {
     route.pathname = pathname;
-    const staff = navSubData()['/hr']
-      .flatMap((group) => group.items)
+    const staff = navSubData()
+      ['/hr'].flatMap((group) => group.items)
       .find((item) => item.title === 'Staff');
     render(<Navigation data={staff as NavItemBaseProps} />);
     expect(screen.getByRole('button', { name: selected })).toHaveAttribute('data-active', 'true');
@@ -110,7 +118,10 @@ describe('active navigation ancestors', () => {
                 title: 'Settings',
                 path: '/hr/payroll/setting',
                 children: [
-                  { title: 'Payslip & statement settings', path: '/hr/payroll/setting/payslip-statement-settings' },
+                  {
+                    title: 'Payslip & statement settings',
+                    path: '/hr/payroll/setting/payslip-statement-settings',
+                  },
                 ],
               },
             ],

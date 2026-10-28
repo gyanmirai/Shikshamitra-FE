@@ -5,6 +5,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(root, '../../..');
 const mocks = path.join(root, 'mock-hooks.ts').replaceAll('\\', '/');
 const mockedImports = [
+  'src/routes/hooks',
   'src/redux/role/roleApi',
   'src/redux/shiftManagement/shift-management-api',
   'src/screens/hr/hooks/useAcademicOrganizationOptions',
@@ -26,7 +27,7 @@ export default defineConfig({
       enforce: 'pre',
       transform(code, id) {
         if (
-          !id.endsWith('/src/screens/hr/employee-onboarding/index.tsx') &&
+          !id.includes('/src/screens/hr/employee-onboarding/') &&
           !id.endsWith('/src/screens/hr/payroll/structure/SalaryStructureBuilder.tsx') &&
           !id.endsWith('/src/screens/hr/payroll/setting/esi-policy-fields.tsx')
         )

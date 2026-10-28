@@ -66,7 +66,7 @@ Missing policy setup does not block profile entry. Payroll/activation readiness 
 Creation failures keep entered details and allow retry on the same step.
 The Role field uses the employee-specific assignable-role lookup, so Staff Add/Edit does not require access to security role administration.
 Existing staff edits retain their independent save flow.
-Finalize onboarding refreshes its Security role choices each time the dialog opens. If a role is missing, review its Employee audience, **Available for employee onboarding** setting and Employee Group Availability in Security; custom and legacy roles are not automatically approved.
+Finalize onboarding refreshes its Security role choices each time the finalization page opens. If a role is missing, review its Employee audience, **Available for employee onboarding** setting and Employee Group Availability in Security; custom and legacy roles are not automatically approved.
 Use **Refresh roles** after a Security change in another tab. A failed read shows **Retry roles**, preserves entered staff details and blocks progression with stale role data. Access failures require an administrator to review existing Security role access; onboarding does not grant that access.
 Academic Permission organization cards use a single full-card checkbox label, with Space/Enter selection, visible focus and disabled behavior during blocked operations.
 The salary step has vertical section navigation for template/amount, statutory deductions and preview, followed by Final Review. Section navigation preserves the mounted salary and statutory drafts; it does not save or finalize.
@@ -78,7 +78,7 @@ An invitation remains at Invitation sent until the candidate submits the public 
 Workflow statuses move forward, while Finalized, Rejected, and Withdrawn applications are terminal and their status selector is disabled.
 Deleting an application requires explicit confirmation.
 Finalization validates the complete employee record, including Category and Family Caste, before it sends one atomic request containing academic permissions only for a teaching employee.
-The finalization wizard blocks step changes, its close control, backdrop handling, and Escape while saving, and it focuses the first invalid field when validation fails.
+The dedicated finalization page blocks step changes and Back/Cancel/internal departure while saving, and focuses the first invalid field when validation fails. Its existing unsaved-navigation owner guards internal links and supported browser traversal; a before-unload warning is best effort. Refreshing, closing or a non-cancelable browser traversal can lose the in-memory draft. No new draft persistence or resume guarantee is introduced.
 The public application requires a name for entered family details and organization, designation, and start date for entered work details.
 Public date checks use the Asia/Kolkata institution date, and untouched work rows are omitted from the payload.
 The public onboarding form requires both a resume and a photo before submission; Staff Directory's optional-photo rule does not apply to this flow.
@@ -679,3 +679,11 @@ Version history reuses `PolicyVersionDrawer`. Recorded snapshots include drafts 
 HR API mutation failures now have a persistent review dialog with a specific safe reason, named validation fields when supplied by the server, and permission-gated setup links where a verified error code identifies a prerequisite. Keep editing returns focus to the original workflow and clears the notice; Dismiss error also clears it. Successful matching mutations and route/account changes clear stale feedback.
 
 Setup links explicitly open in a separate tab. Keep the original form tab open, return to it after setup, refresh the available choices where offered, then review and submit again. Setup never auto-submits the original form. Closing, canceling or being denied access in setup leaves the original form untouched. Reloading or closing the original tab can lose unsaved values and attachments; no HR draft is written to browser storage. See [validation recovery coverage and rationale](references/validation-recovery.md).
+
+## Dedicated Staff Finalization Page
+
+List and application-detail Finalize actions open `/hr/employee/onboarding/{applicationId}/finalize` with a validated return destination containing the list search, status and pagination. The current academic year remains in the existing shared scope. Entry/reload makes a fresh scoped application read; malformed IDs, denied access, missing records and statuses that cannot be finalized have distinct states. The page requires the existing application View and Finalize grants, in addition to its inherited navigation guards; no grant definitions change.
+
+Application/session changes abort the old read, clear its in-memory editor and reject responses for another ID. A temporary same-application read failure preserves edits and locks finalization until retry succeeds. Denied/deleted records hide cached protected content. Step navigation keeps the authoritative Formik, work-assignment, statutory and salary drafts mounted. Academic cards retain one native full-surface checkbox label; unchecked hover is neutral and focus has a separate outline.
+
+Finalization uses the existing atomic endpoint and payload, role/assignment/academic/salary gates and inactive-staff result. Confirmed success is terminal in the current editor and returns to the sanitized onboarding destination using replacement navigation; existing RTK tags invalidate application/staff readers. Late results from an unmounted editor cannot navigate a newer context. Errors retain the draft for explicit retry. Closing a page does not prove an already submitted server operation was rolled back; reopening must read its current application status before another action.

@@ -5,7 +5,8 @@ test('salary precedes Finalize; back, cancel, failure and retry preserve the dra
   page,
 }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Save & Next', exact: true }).click();
+  await page.getByRole('checkbox', { name: /I confirm this work assignment/ }).check();
+  await page.getByRole('button', { name: 'Next', exact: true }).click();
   await page.locator('input[maxlength="12"]').fill('123456789012');
   await page.locator('input[maxlength="10"]').fill('ABCDE1234F');
   await page.getByRole('combobox', { name: 'Religion *', exact: true }).click();
@@ -14,8 +15,8 @@ test('salary precedes Finalize; back, cancel, failure and retry preserve the dra
   await page.getByRole('option', { name: 'Office staff', exact: true }).click();
   await page.getByRole('combobox', { name: 'Shift *', exact: true }).click();
   await page.getByRole('option', { name: 'Day shift', exact: true }).click();
-  await page.getByRole('button', { name: 'Save & Next', exact: true }).click();
-  await page.getByRole('button', { name: 'Save & Next', exact: true }).click();
+  await page.getByRole('button', { name: 'Next', exact: true }).click();
+  await page.getByRole('button', { name: 'Next', exact: true }).click();
   const finalize = page.getByRole('button', { name: 'Finalize', exact: true });
   await expect(finalize).toBeDisabled();
   await expect(page.getByRole('switch', { name: 'Apply ESIC', exact: true })).toBeVisible();
@@ -28,10 +29,10 @@ test('salary precedes Finalize; back, cancel, failure and retry preserve the dra
   await page.screenshot({
     path: '.artifacts/onboarding-salary-browser/salary-before-finalize.png',
   });
-  await page.getByRole('button', { name: 'Back', exact: true }).click();
-  await page.getByRole('button', { name: 'Save & Next', exact: true }).click();
+  await page.getByRole('button', { name: 'Back', exact: true }).last().click();
+  await page.getByRole('button', { name: 'Next', exact: true }).click();
   await expect(amount).toHaveValue('₹ 18,000');
-  await page.getByRole('button', { name: 'close', exact: true }).click();
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(page.getByText('Discard unsaved changes?', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Keep editing', exact: true }).click();
   await expect(amount).toHaveValue('₹ 18,000');

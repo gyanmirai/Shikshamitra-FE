@@ -17,19 +17,20 @@ import { isNaN } from 'lodash';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'src/routes/hooks';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import PhoneInput from 'src/components/phone-input';
 import CustomDialog from 'src/components/customDialog';
+import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { HrBloodGroupArray } from 'src/enums/blood-group';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
-import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ShakingTextField from 'src/components/shaking-text-field';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -100,6 +101,7 @@ import {
 } from 'src/redux/hr/employeeOnboardingApi';
 
 import { getOnboardingErrorMessage } from './error-message';
+import { FinalizePageHeader } from './finalize-page-header';
 import { AcademicPermissionCard } from './academic-permission-card';
 import { useFinalizeRoles, FinalizeRoleField } from './finalize-role-field';
 import { statutoryProfileSchema } from '../employee/statutory-profile-fields';
@@ -116,6 +118,11 @@ import {
   workAssignmentRequest,
   type EmployeeWorkAssignment,
 } from './work-assignment';
+import {
+  onboardingReturnHref,
+  onboardingFinalizeHref,
+  readOnboardingListContext,
+} from './finalize-navigation';
 import {
   isOnboardingAcademicPermissionStepValid,
   buildOnboardingAcademicPermissionScopeRows,
@@ -231,7 +238,7 @@ const buildPublicLink = (path: string) =>
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 const isMobileValid = (value: string) => value && value.replace(/\D/g, '').length >= 10;
 
-// ── Yup validation schema for FinalizeDialog Step 1 ────────────────────────────
+// ── Yup validation schema for FinalizeWorkflow Step 1 ────────────────────────────
 
 const showInviteEmailDeliveryToast = (
   emailDeliverySucceeded: boolean,
@@ -607,6 +614,11 @@ function EmployeeOnboardingDetailView({
   const [downloadResume] = useLazyGetEmployeeApplicationResumeQuery();
   const [downloadPhoto] = useLazyGetEmployeeApplicationPhotoQuery();
   const theme = useTheme();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const mayFinalize = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.employee.onboarding}.Finalize`
+  );
   useEffect(() => {
     if (application) {
       setStatus(normalizeEmployeeApplicationStatus(application.status));
@@ -765,7 +777,7 @@ function EmployeeOnboardingDetailView({
               variant="contained"
               color="success"
               onClick={() => onFinalize(application)}
-              disabled={!canFinalizeEmployeeApplication(application.status)}
+              disabled={!mayFinalize || !canFinalizeEmployeeApplication(application.status)}
               startIcon={<Iconify icon="mdi:account-check-outline" />}
               data-testid="employee-onboarding-detail-finalize"
             >
@@ -1092,17 +1104,35 @@ function EmployeeOnboardingDetailView({
   );
 }
 
-export function FinalizeDialog({
+export function FinalizeWorkflow({
   application,
-  open,
-  onClose,
+  returnHref,
+  readReady,
+  readError,
+  onRetry,
   onFinalized,
 }: {
-  application?: EmployeeApplication;
-  open: boolean;
-  onClose: () => void;
+  application: EmployeeApplication;
+  returnHref: string;
+  readReady: boolean;
+  readError: boolean;
+  onRetry: () => void;
   onFinalized: (employee: FinalizedEmployeeResult) => void;
 }) {
+  const open = true;
+  const router = useRouter();
+  const onClose = () => router.push(returnHref);
+  const readyRef = useRef(readReady);
+  readyRef.current = readReady;
+  const alive = useRef(true);
+  const completedRef = useRef(false);
+  const [completed, setCompleted] = useState(false);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   const [step, setStep] = useState(0);
   const [maxStepVisited, setMaxStepVisited] = useState(0);
   const [academicTouched, setAcademicTouched] = useState(false);
@@ -1156,8 +1186,10 @@ export function FinalizeDialog({
   });
 
   const navigation = useUnsavedNavigation(
-    open && (formik.dirty || statutoryForm.dirty || salaryEditor.dirty || workAssignmentDirty),
+    !completed &&
+      (formik.dirty || statutoryForm.dirty || salaryEditor.dirty || workAssignmentDirty),
     {
+      push: router.push,
       blockNavigation: finalizeSaving || isLoading || salaryEditor.busy,
       description:
         'The onboarding changes and salary preview have not been saved. Discarding or reloading requires entering them again. Finalize saves the staff and salary together.',
@@ -1188,6 +1220,8 @@ export function FinalizeDialog({
 
   useEffect(() => {
     if (application && open) {
+      completedRef.current = false;
+      setCompleted(false);
       setStep(0);
       setMaxStepVisited(0);
       setAcademicTouched(false);
@@ -1255,6 +1289,13 @@ export function FinalizeDialog({
     formikInstance: any,
     setIsLoading: (val: boolean) => void
   ) => {
+    if (
+      !readyRef.current ||
+      completedRef.current ||
+      finalizationPending.current ||
+      salaryEditor.busy
+    )
+      return;
     if (step === 0 && (!workAssignmentValid || !workAssignmentConfirmed)) {
       shikshaMitraToast.warning({
         message: 'Review and confirm the organization / work assignment.',
@@ -1268,6 +1309,7 @@ export function FinalizeDialog({
       setAcademicTouched(true);
       return;
     }
+    if (!alive.current || !readyRef.current || completedRef.current) return;
     setAcademicTouched(false);
     if (isLastStep) {
       setIsLoading(true);
@@ -1283,7 +1325,13 @@ export function FinalizeDialog({
 
   const isStepClickable = (index: number) => index <= maxStepVisited;
   const handleStepClick = async (index: number) => {
-    if (finalizationPending.current || salaryEditor.busy) return;
+    if (
+      completedRef.current ||
+      !readyRef.current ||
+      finalizationPending.current ||
+      salaryEditor.busy
+    )
+      return;
     if (index > 0 && (!workAssignmentValid || !workAssignmentConfirmed)) {
       setStep(0);
       return;
@@ -1302,6 +1350,8 @@ export function FinalizeDialog({
   };
 
   const canSubmit =
+    readReady &&
+    !completed &&
     workAssignmentValid &&
     workAssignmentConfirmed &&
     roleLookup.ready &&
@@ -1320,7 +1370,13 @@ export function FinalizeDialog({
       });
       return;
     }
-    if (finalizationPending.current || salaryEditor.busy) return;
+    if (
+      completedRef.current ||
+      !readyRef.current ||
+      finalizationPending.current ||
+      salaryEditor.busy
+    )
+      return;
     if (!(await validateEmployeeFields())) {
       return;
     }
@@ -1357,6 +1413,7 @@ export function FinalizeDialog({
     finalizationPending.current = true;
     setFinalizeSaving(true);
     try {
+      if (!alive.current || !readyRef.current || completedRef.current) return;
       const result = await finalizeApplication({
         id: application.id,
         body: {
@@ -1423,6 +1480,9 @@ export function FinalizeDialog({
         );
       }
 
+      completedRef.current = true;
+      if (!alive.current) return;
+      setCompleted(true);
       shikshaMitraToast.success({ message: 'Staff and salary saved. Staff remains inactive.' });
       onFinalized({
         id: employeeId,
@@ -1430,6 +1490,7 @@ export function FinalizeDialog({
         activationReadiness: result.activationReadiness,
       });
     } catch (error) {
+      if (!alive.current) return;
       shikshaMitraToast.error({
         message: getOnboardingErrorMessage(error, 'Could not finalize onboarding'),
       });
@@ -1442,47 +1503,67 @@ export function FinalizeDialog({
   const steps = ['Review', 'Staff fields', 'Academic Permission', 'Salary and confirm'];
 
   return (
-    <CustomDialog
-      open={open}
-      handleClose={() => navigation.requestNavigation(onClose)}
-      disableClose={finalizeSaving || isLoading || salaryEditor.busy}
-      maxWidth="lg"
-      data-testid="employee-onboarding-finalize-dialog"
-      hasForm={false}
-      guardUnsavedChanges={false}
-      paperProps={{
-        sx: {
-          height: '85vh',
-          '& #dialog-form': {
-            display: 'flex',
-            flexDirection: 'column',
-            flex: '1 1 auto',
-            minHeight: 0,
-            height: '100%',
-          },
-        },
+    <Box
+      data-testid="employee-onboarding-finalize-page"
+      aria-busy={!readReady || finalizeSaving || isLoading || salaryEditor.busy}
+      sx={{
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
       }}
-      title={
-        <Box display="flex" alignItems="center" gap={1}>
-          Finalize onboarding
-          <CustomTooltip
-            arrow
-            placement="right"
-            sx={{ textAlign: 'justify' }}
-            title="Review and complete the onboarding process for this application."
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
-        </Box>
-      }
     >
+      <FinalizePageHeader
+        applicationId={application.id}
+        returnHref={returnHref}
+        onBack={() => navigation.requestNavigation(onClose)}
+        busy={finalizeSaving || isLoading || salaryEditor.busy}
+      />
       {navigation.confirmation}
-      <DialogContent
+      {(finalizeSaving || isLoading) && (
+        <Typography role="status" variant="body2">
+          Finalizing staff onboarding…
+        </Typography>
+      )}
+      {!readReady &&
+        (readError ? (
+          <Alert
+            severity="error"
+            action={
+              <Button
+                size="small"
+                type="button"
+                disabled={finalizeSaving || isLoading || salaryEditor.busy}
+                onClick={onRetry}
+              >
+                Retry application
+              </Button>
+            }
+          >
+            Application details could not be refreshed. Your entries are still here. Retry before
+            finalizing.
+          </Alert>
+        ) : (
+          <LinearProgress aria-label="Refreshing onboarding application" />
+        ))}
+      {completed && (
+        <Alert severity="success">
+          Staff and salary were saved. Returning to Staff Onboarding. Staff remain inactive.
+        </Alert>
+      )}
+      <Box
+        component="fieldset"
+        disabled={!readReady || completed || finalizeSaving || isLoading}
+        inert={!readReady || completed || finalizeSaving || isLoading}
         sx={{
-          overflow: 'visible',
           p: 0,
-          flex: '1 1 auto',
+          m: 0,
+          border: 0,
+          flex: 1,
           minHeight: 0,
+          minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -1490,12 +1571,20 @@ export function FinalizeDialog({
         <CustomStepperWithFormik
           scrollbarHeight="auto"
           showSaveButton={false}
+          nextButtonLabel="Next"
+          onCancel={() => navigation.requestNavigation(onClose)}
           formikInstance={formik}
           initialValues={initialValues}
           steps={steps}
           activeStep={step}
           handleBack={() => {
-            if (finalizationPending.current || salaryEditor.busy) return;
+            if (
+              completedRef.current ||
+              !readyRef.current ||
+              finalizationPending.current ||
+              salaryEditor.busy
+            )
+              return;
             setAcademicTouched(false);
             formik.setTouched({});
             setStep((current) => current - 1);
@@ -1508,6 +1597,9 @@ export function FinalizeDialog({
           finalButtonLabel="Finalize"
           saveAndNextButtonProps={{ loading: finalizeSaving || isLoading }}
           disableSubmit={!canSubmit}
+          backButtonProps={{
+            disabled: finalizeSaving || isLoading || salaryEditor.busy || completed,
+          }}
           renderItem={({ activeStep: currentStep }) => (
             <Box sx={{ p: 2 }}>
               {currentStep === 0 && (
@@ -2654,7 +2746,13 @@ export function FinalizeDialog({
                                         .filter(Boolean)
                                         .join(' · ')}
                                       checked={isChecked}
-                                      disabled={finalizeSaving || isLoading || salaryEditor.busy}
+                                      disabled={
+                                        !readReady ||
+                                        completed ||
+                                        finalizeSaving ||
+                                        isLoading ||
+                                        salaryEditor.busy
+                                      }
                                       onChange={(checked) => {
                                         const next = checked
                                           ? [...selectedStageIds, option.id]
@@ -2753,29 +2851,29 @@ export function FinalizeDialog({
             </Box>
           )}
         />
-      </DialogContent>
-    </CustomDialog>
+      </Box>
+    </Box>
   );
 }
 
 export default function EmployeeOnboardingScreen() {
+  const router = useRouter();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const mayFinalize = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.employee.onboarding}.Finalize`
+  );
   const { getAllParams, setParam, deleteParam } = useCustomSearchParams();
   const searchParams = getAllParams();
   const applicationId = searchParams.application || '';
-  const [employeeParams, setEmployeeParams] = useState<EmployeeOnboardingListParams>({
-    page: 1,
-    pageSize: 10,
-    search: '',
-    status: 'All',
-  });
+  const [employeeParams, setEmployeeParams] = useState<EmployeeOnboardingListParams>(() =>
+    readOnboardingListContext(searchParams)
+  );
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [finalizeApplication, setFinalizeApplication] = useState<EmployeeApplication | undefined>();
-  const [finalizedEmployee, setFinalizedEmployee] = useState<FinalizedEmployeeResult>();
   const [pendingDeletion, setPendingDeletion] = useState<{
     application: EmployeeApplication;
     onDeleted?: () => void;
   }>();
-  const finalizeApplicationId = finalizeApplication?.id;
   const [regenerateLink, { isLoading: regenerateLoading }] =
     useRegenerateEmployeeApplicationLinkMutation();
   const [deleteApplication, { isLoading: deleteLoading }] = useDeleteEmployeeApplicationMutation();
@@ -2818,13 +2916,6 @@ export default function EmployeeOnboardingScreen() {
   const { currentData: detailData } = useGetEmployeeApplicationQuery(applicationId || '', {
     skip: !applicationId,
   });
-  const { currentData: finalizeDetailData } = useGetEmployeeApplicationQuery(
-    finalizeApplicationId || '',
-    {
-      skip: !finalizeApplicationId,
-    }
-  );
-
   const applications = data?.items || [];
   const totalCount = data?.totalCount || 0;
   const selectedApplication = resolveCurrentEmployeeApplication(
@@ -2832,14 +2923,14 @@ export default function EmployeeOnboardingScreen() {
     detailData,
     applications
   );
-  const currentFinalizeApplication = resolveCurrentEmployeeApplication(
-    finalizeApplicationId,
-    finalizeDetailData
+  const handleOpenFinalize = useCallback(
+    (application: EmployeeApplication) => {
+      if (!mayFinalize) return;
+      const returnHref = onboardingReturnHref(employeeParams, applicationId || undefined);
+      router.push(onboardingFinalizeHref(application.id, returnHref));
+    },
+    [router, employeeParams, applicationId, mayFinalize]
   );
-
-  useEffect(() => {
-    setFinalizeApplication(undefined);
-  }, [applicationId]);
 
   const handleOpenApplication = useCallback(
     (id: string) => {
@@ -2900,52 +2991,6 @@ export default function EmployeeOnboardingScreen() {
       });
     }
   }, [deleteApplication, pendingDeletion]);
-
-  const handleFinalized = useCallback((employee: FinalizedEmployeeResult) => {
-    setFinalizeApplication(undefined);
-    setFinalizedEmployee(employee);
-  }, []);
-
-  const finalizationResult = (
-    <CustomDialog
-      open={Boolean(finalizedEmployee)}
-      handleClose={() => setFinalizedEmployee(undefined)}
-      title="Staff created"
-      maxWidth="sm"
-      hasForm={false}
-    >
-      <DialogContent>
-        <Stack spacing={2}>
-          <Alert severity="warning">
-            <Typography variant="subtitle2">HR setup saved - staff inactive</Typography>
-            <Typography variant="body2">
-              {finalizedEmployee?.name || 'The staff'} and their salary have been saved. An
-              authorized HR user must activate the staff separately. Logging in does not activate
-              staff.
-            </Typography>
-            {finalizedEmployee?.activationReadiness?.canActivate === false && (
-              <Typography variant="body2">
-                Payroll activation checks still need attention. Review the staff profile before
-                activation.
-              </Typography>
-            )}
-          </Alert>
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button
-          size="small"
-          href={
-            finalizedEmployee
-              ? `${hrPaths.employee.list}?employee=${finalizedEmployee.id}`
-              : undefined
-          }
-        >
-          View staff
-        </Button>
-      </DialogActions>
-    </CustomDialog>
-  );
 
   const deleteConfirmation = (
     <ConfirmDialog
@@ -3089,7 +3134,7 @@ export default function EmployeeOnboardingScreen() {
         isFilter: false,
         render: (_value, row) => {
           const application = row as EmployeeApplication;
-          const canFinalize = canFinalizeEmployeeApplication(application.status);
+          const canFinalize = mayFinalize && canFinalizeEmployeeApplication(application.status);
           const normalizedStatus = normalizeEmployeeApplicationStatus(application.status);
           const canRegenerate =
             canRegenerateEmployeeApplicationLink(normalizedStatus) && !application.submittedAt;
@@ -3115,7 +3160,7 @@ export default function EmployeeOnboardingScreen() {
                       disabled={!canFinalize}
                       onClick={() => {
                         popover.onClose();
-                        setFinalizeApplication(application);
+                        handleOpenFinalize(application);
                       }}
                     >
                       <ListItemIcon>
@@ -3174,7 +3219,8 @@ export default function EmployeeOnboardingScreen() {
       handleOpenApplication,
       handleRegenerateLink,
       requestDeleteApplication,
-      setFinalizeApplication,
+      handleOpenFinalize,
+      mayFinalize,
     ]
   );
 
@@ -3193,20 +3239,13 @@ export default function EmployeeOnboardingScreen() {
         <EmployeeOnboardingDetailView
           application={selectedApplication}
           onBack={handleBackToList}
-          onFinalize={(application) => setFinalizeApplication(application)}
+          onFinalize={handleOpenFinalize}
           onCopyInviteLink={handleCopyInviteLink}
           onRegenerateLink={handleRegenerateLink}
           onDelete={requestDeleteApplication}
           regenerateLoading={regenerateLoading}
           deleteLoading={deleteLoading}
         />
-        <FinalizeDialog
-          open={Boolean(currentFinalizeApplication)}
-          application={currentFinalizeApplication}
-          onClose={() => setFinalizeApplication(undefined)}
-          onFinalized={handleFinalized}
-        />
-        {finalizationResult}
         {deleteConfirmation}
       </Box>
     );
@@ -3311,13 +3350,6 @@ export default function EmployeeOnboardingScreen() {
         />
 
         <InviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
-        <FinalizeDialog
-          open={Boolean(currentFinalizeApplication)}
-          application={currentFinalizeApplication}
-          onClose={() => setFinalizeApplication(undefined)}
-          onFinalized={handleFinalized}
-        />
-        {finalizationResult}
         {deleteConfirmation}
       </Stack>
     </Box>

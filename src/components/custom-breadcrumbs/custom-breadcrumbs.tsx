@@ -31,6 +31,7 @@ export function CustomBreadcrumbs({
   tooltipProps,
   isBack = false,
   onBack = () => {},
+  backDisabled = false,
   showDivider = false,
   ...other
 }: CustomBreadcrumbsProps) {
@@ -81,6 +82,7 @@ export function CustomBreadcrumbs({
           data-testid="breadcrumb-back"
           size="small"
           onClick={onBack}
+          disabled={backDisabled}
           sx={{
             color: 'text.secondary',
             bgcolor: 'action.hover',

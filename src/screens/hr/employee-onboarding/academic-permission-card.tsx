@@ -36,7 +36,9 @@ export function AcademicPermissionCard({
           outlineColor: 'primary.main',
           outlineOffset: 2,
         },
-        ...(!disabled && { '&:hover': { borderColor: 'primary.main' } }),
+        ...(!disabled && {
+          '&:hover': { borderColor: checked ? 'primary.main' : 'text.secondary' },
+        }),
       }}
     >
       <Checkbox
