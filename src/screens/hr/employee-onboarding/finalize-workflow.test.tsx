@@ -5,9 +5,11 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { FinalizeWorkflow } from './finalize-workflow';
+import { StatutoryProfileFields } from '../employee/statutory-profile-fields';
 import { getLocalMonthKey } from '../payroll/structure/salary-structure-builder-utils';
 
 const mocks = vi.hoisted(() => ({
@@ -18,6 +20,15 @@ const mocks = vi.hoisted(() => ({
   error: vi.fn(),
   success: vi.fn(),
   warning: vi.fn(),
+  canManageSalary: true,
+  canManageEnrollment: true,
+  roleReady: true,
+  roleError: undefined as string | undefined,
+  organizationAvailable: true,
+  organizationLoading: false,
+  assignmentValid: true,
+  salaryBusy: false,
+  customizationReview: false,
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { error: mocks.error, success: mocks.success, warning: mocks.warning },
@@ -52,7 +63,10 @@ vi.mock('react-redux', () => ({
         permissions: [
           hrPermissions.payroll.compensationRevisionActions.manage,
           hrPermissions.payroll.settings.statutorySchemeActions.manageEnrollment,
-        ].map((name) => ({ name, isGranted: true })),
+        ].map((name, index) => ({
+          name,
+          isGranted: index === 0 ? mocks.canManageSalary : mocks.canManageEnrollment,
+        })),
       },
     }),
 }));
@@ -81,14 +95,19 @@ vi.mock('src/redux/shiftManagement/shift-management-api', () => ({
 }));
 vi.mock('src/screens/hr/hooks/useAcademicOrganizationOptions', () => ({
   useAcademicOrganizationOptions: () => ({
-    options: organizations,
-    byId: new Map(organizations.map((item) => [item.id, item])),
-    isLoading: false,
+    options: organizations.filter((item) => mocks.organizationAvailable || item.id !== 'stage-1'),
+    byId: new Map(
+      organizations
+        .filter((item) => mocks.organizationAvailable || item.id !== 'stage-1')
+        .map((item) => [item.id, item])
+    ),
+    isLoading: mocks.organizationLoading,
   }),
 }));
 vi.mock('./work-assignment-field', () => ({
   default: function WorkAssignmentFixture({ onValidityChange, confirmation }: any) {
-    useEffect(() => onValidityChange(true), [onValidityChange]);
+    const valid = mocks.assignmentValid;
+    useEffect(() => onValidityChange(valid), [onValidityChange, valid]);
     return (
       <>
         <p>Work assignment fixture</p>
@@ -110,14 +129,19 @@ vi.mock('./work-assignment-field', () => ({
 }));
 vi.mock('./finalize-role-field', () => ({
   useFinalizeRoles: () => ({
-    ready: true,
-    selectionError: undefined,
+    ready: mocks.roleReady,
+    selectionError: mocks.roleError,
     query: { data: { items: [role] } },
   }),
   FinalizeRoleField: ({ value, onChange }: any) => (
     <label htmlFor="fixture-role">
       Role
-      <select id="fixture-role" value={value} onChange={(event) => onChange(event.target.value)}>
+      <select
+        id="fixture-role"
+        name="roleId"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
         <option value="">Select</option>
         <option value="teacher-role">Teacher</option>
       </select>
@@ -131,12 +155,35 @@ vi.mock('src/redux/hr/employeeOnboardingApi', async (importOriginal) => ({
 vi.mock('../payroll/structure/SalaryStructureBuilder', () => ({
   SalaryStructureBuilder: ({ onboarding, onEditorStateChange }: any) => {
     const [amount, setAmount] = useState('');
+    const [customizing, setCustomizing] = useState(false);
+    const [customValue, setCustomValue] = useState('5000');
+    const [customReason, setCustomReason] = useState('');
+    const withCustomization = mocks.customizationReview;
+    const busy = mocks.salaryBusy;
+    const { invalidatePreviewKey, onSalaryChange, onReadinessChange } = onboarding;
     useEffect(
-      () => onEditorStateChange({ dirty: Boolean(amount), busy: false }),
-      [amount, onEditorStateChange]
+      () => onEditorStateChange({ dirty: Boolean(amount), busy }),
+      [amount, onEditorStateChange, busy]
     );
+    useEffect(() => {
+      if (invalidatePreviewKey) onSalaryChange(null);
+    }, [invalidatePreviewKey, onSalaryChange]);
+    useEffect(() => {
+      onReadinessChange?.(
+        withCustomization && customValue !== '5000' && !customReason
+          ? [
+              {
+                key: 'salary-reason',
+                message: 'Add a reason for the staff-specific salary customization.',
+                selector: '[name="customizationReason"]',
+              },
+            ]
+          : []
+      );
+    }, [withCustomization, customValue, customReason, onReadinessChange]);
     return (
       <>
+        <StatutoryProfileFields form={onboarding.statutoryForm} />
         <label htmlFor="fixture-salary">
           Salary draft
           <input
@@ -160,6 +207,47 @@ vi.mock('../payroll/structure/SalaryStructureBuilder', () => ({
         >
           Prepare salary preview
         </button>
+        {withCustomization && (
+          <>
+            <Accordion>
+              <AccordionSummary>Additional review information</AccordionSummary>
+              <AccordionDetails>Unrelated context</AccordionDetails>
+            </Accordion>
+            <Accordion>
+              <AccordionSummary>Staff-specific customization</AccordionSummary>
+              <AccordionDetails>
+                <button type="button" onClick={() => setCustomizing(true)}>
+                  Customize
+                </button>
+                {customizing && (
+                  <>
+                    <label htmlFor="fixture-custom-value">
+                      Value
+                      <input
+                        id="fixture-custom-value"
+                        value={customValue}
+                        onChange={(event) => setCustomValue(event.target.value)}
+                      />
+                    </label>
+                    <label htmlFor="fixture-custom-reason">
+                      Customization reason
+                      <input
+                        id="fixture-custom-reason"
+                        name="customizationReason"
+                        value={customReason}
+                        onChange={(event) => setCustomReason(event.target.value)}
+                      />
+                    </label>
+                    <Accordion>
+                      <AccordionSummary>Advanced customization help</AccordionSummary>
+                      <AccordionDetails>Nested context</AccordionDetails>
+                    </Accordion>
+                  </>
+                )}
+              </AccordionDetails>
+            </Accordion>
+          </>
+        )}
       </>
     );
   },
@@ -211,6 +299,15 @@ const content = (readReady = true) => (
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.canManageSalary = true;
+  mocks.canManageEnrollment = true;
+  mocks.roleReady = true;
+  mocks.roleError = undefined;
+  mocks.organizationAvailable = true;
+  mocks.organizationLoading = false;
+  mocks.assignmentValid = true;
+  mocks.salaryBusy = false;
+  mocks.customizationReview = false;
   mocks.finalize.mockReturnValue({
     unwrap: () =>
       Promise.resolve({
@@ -352,7 +449,8 @@ it('retains the salary/staff draft after server failure, supports deliberate ret
   await user.type(screen.getByLabelText('Salary draft'), '12000');
   await user.click(screen.getByRole('button', { name: 'Prepare salary preview' }));
   await user.click(screen.getByRole('button', { name: 'Finalize' }));
-  await waitFor(() => expect(mocks.error).toHaveBeenCalled());
+  const failure = await screen.findByText(/Synthetic server validation failure/);
+  await waitFor(() => expect(failure.closest('[role="alert"]')).toHaveFocus());
   expect(screen.getByLabelText('Salary draft')).toHaveValue('12000');
   expect(screen.getByRole('button', { name: 'Finalize' })).toBeEnabled();
   expect(mocks.onFinalized).not.toHaveBeenCalled();
@@ -374,4 +472,207 @@ it('retains the salary/staff draft after server failure, supports deliberate ret
     })
   );
   expect(mocks.onFinalized).not.toHaveBeenCalled();
+});
+
+async function salaryStep(user: ReturnType<typeof userEvent.setup>) {
+  await academicStep(user);
+  await user.click(screen.getByRole('checkbox', { name: /Organization 1/ }));
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+  await user.type(screen.getByLabelText('Salary draft'), '12000');
+  await user.click(screen.getByRole('button', { name: 'Prepare salary preview' }));
+}
+
+it('reveals collapsed customization before focusing its reason without toggling other or already-open accordions', async () => {
+  mocks.customizationReview = true;
+  const user = userEvent.setup();
+  render(content());
+  await salaryStep(user);
+  const customization = screen.getByRole('button', { name: 'Staff-specific customization' });
+  const unrelated = screen.getByRole('button', { name: 'Additional review information' });
+  await user.click(customization);
+  await user.click(screen.getByRole('button', { name: 'Customize' }));
+  await user.clear(screen.getByLabelText('Value'));
+  await user.type(screen.getByLabelText('Value'), '6000');
+  await user.click(customization);
+  const reason = screen.getByLabelText('Customization reason');
+  expect(reason).not.toBeVisible();
+  expect(customization).toHaveAttribute('aria-expanded', 'false');
+  const correction = screen.getByRole('button', {
+    name: /Review: Add a reason for the staff-specific salary customization/,
+  });
+  await user.click(correction);
+  await waitFor(() => expect(reason).toHaveFocus());
+  expect(reason).toBeVisible();
+  expect(customization).toHaveAttribute('aria-expanded', 'true');
+  expect(unrelated).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.getByRole('button', { name: 'Advanced customization help' })).toHaveAttribute(
+    'aria-expanded',
+    'false'
+  );
+  expect(screen.getByLabelText('Value')).toHaveValue('6000');
+  await user.click(correction);
+  await waitFor(() => expect(reason).toHaveFocus());
+  expect(customization).toHaveAttribute('aria-expanded', 'true');
+  expect(mocks.finalize).not.toHaveBeenCalled();
+});
+
+it('explains both off-mode reasons, focuses the exact correction and submits only after they are provided', async () => {
+  const user = userEvent.setup();
+  render(content());
+  await salaryStep(user);
+  expect(screen.getByRole('button', { name: 'Finalize' })).toBeEnabled();
+  await user.click(screen.getByRole('switch', { name: 'Apply PF' }));
+  await user.click(screen.getByRole('switch', { name: 'Apply ESIC' }));
+  expect(screen.getByRole('button', { name: 'Finalize' })).toBeDisabled();
+  const requirements = within(screen.getByRole('region', { name: 'Finalization requirements' }));
+  await user.click(
+    requirements.getByRole('button', { name: /Review: Enter a reason for turning PF off/ })
+  );
+  const pfReason = screen.getByLabelText('Reason for turning PF off');
+  await waitFor(() => expect(pfReason).toHaveFocus());
+  await user.type(pfReason, 'Not enrolled');
+  await user.click(
+    requirements.getByRole('button', { name: /Review: Enter a reason for turning ESIC off/ })
+  );
+  const esicReason = screen.getByLabelText('Reason for turning ESIC off');
+  await waitFor(() => expect(esicReason).toHaveFocus());
+  await user.type(esicReason, 'Not enrolled');
+  expect(screen.getByRole('button', { name: 'Finalize' })).toBeEnabled();
+  await user.click(screen.getByRole('button', { name: 'Finalize' }));
+  await waitFor(() => expect(mocks.finalize).toHaveBeenCalledOnce());
+  expect(mocks.finalize.mock.calls[0][0].body.statutoryProfile).toEqual(
+    expect.objectContaining({
+      applyPf: false,
+      applyEsic: false,
+      pfDisabledReason: 'Not enrolled',
+      esicDisabledReason: 'Not enrolled',
+    })
+  );
+});
+
+it.each(['PF', 'ESIC'])(
+  'keeps an invalid retained %s off-reason accessible after switching the scheme on',
+  async (scheme) => {
+    const user = userEvent.setup();
+    render(content());
+    await salaryStep(user);
+    const toggle = screen.getByRole('switch', { name: `Apply ${scheme}` });
+    await user.click(toggle);
+    const longReason = 'x'.repeat(501);
+    fireEvent.change(screen.getByLabelText(`Reason for turning ${scheme} off`), {
+      target: { value: longReason },
+    });
+    await user.click(toggle);
+    const retained = screen.getByLabelText(`Retained ${scheme} off-reason`);
+    expect(retained).toHaveValue(longReason);
+    expect(toggle).toBeChecked();
+    expect(
+      screen.getByText(
+        `${scheme} is on. This retained off-reason is not used while ${scheme} is on. Correct any error or clear the reason.`
+      )
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Finalize' })).toBeDisabled();
+    await user.click(
+      screen.getByRole('button', {
+        name: `Review: ${scheme} off-reason cannot exceed 500 characters.`,
+      })
+    );
+    await waitFor(() => expect(retained).toHaveFocus());
+    expect(retained).toHaveAttribute('aria-invalid', 'true');
+    await user.clear(retained);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Finalize' })).toBeEnabled());
+    expect(toggle).toBeChecked();
+    expect(mocks.finalize).not.toHaveBeenCalled();
+  }
+);
+
+it('invalidates completed earlier steps after background changes and takes the correction link to its role field', async () => {
+  const user = userEvent.setup();
+  const mounted = render(content());
+  await salaryStep(user);
+  mocks.roleError = 'Choose an available role for this staff group.';
+  mocks.organizationAvailable = false;
+  mounted.rerender(content());
+  expect(screen.getByRole('button', { name: 'Finalize' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Step 2: Staff Fields' })).toHaveAttribute(
+    'aria-invalid',
+    'true'
+  );
+  expect(screen.getByRole('button', { name: /Step 3: Academic Permission/ })).toHaveAttribute(
+    'aria-invalid',
+    'true'
+  );
+  await user.click(screen.getByRole('button', { name: /Review: Choose an available role/ }));
+  await waitFor(() => expect(screen.getByLabelText('Role')).toHaveFocus());
+  expect(screen.getByRole('heading', { name: /Step 2 of 4/ })).toBeVisible();
+  expect(mocks.finalize).not.toHaveBeenCalled();
+});
+
+it.each(['salary', 'enrollment'] as const)(
+  'explains a missing %s permission without allowing a mutation',
+  async (permission) => {
+    const user = userEvent.setup();
+    const mounted = render(content());
+    await salaryStep(user);
+    if (permission === 'salary') mocks.canManageSalary = false;
+    else mocks.canManageEnrollment = false;
+    mounted.rerender(content());
+    expect(screen.getByRole('button', { name: 'Finalize' })).toBeDisabled();
+    expect(screen.getByRole('region', { name: 'Finalization requirements' })).toHaveTextContent(
+      permission === 'salary'
+        ? 'Salary management permission is required'
+        : 'Statutory enrollment permission is required'
+    );
+    expect(mocks.finalize).not.toHaveBeenCalled();
+  }
+);
+
+it('locks final and keyboard submission during salary work and explains application refresh failures', async () => {
+  const user = userEvent.setup();
+  const mounted = render(content());
+  await salaryStep(user);
+  mocks.salaryBusy = true;
+  mounted.rerender(content());
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Finalize' })).toBeDisabled());
+  expect(screen.getByRole('region', { name: 'Finalization requirements' })).toHaveTextContent(
+    'Wait for salary setup to finish.'
+  );
+  fireEvent.submit(screen.getByLabelText('Salary draft').closest('form')!);
+  expect(mocks.finalize).not.toHaveBeenCalled();
+  mocks.salaryBusy = false;
+  mounted.rerender(content(false));
+  expect(screen.getByRole('button', { name: 'Retry application' })).toBeEnabled();
+  expect(screen.getByRole('region', { name: 'Finalization requirements' })).toHaveTextContent(
+    'Refresh the application details before finalizing.'
+  );
+});
+
+it('invalidates a server-rejected stale policy preview and preserves the staff and salary draft for a fresh preview', async () => {
+  const user = userEvent.setup();
+  render(content());
+  await salaryStep(user);
+  mocks.finalize.mockReturnValueOnce({
+    unwrap: () =>
+      Promise.reject(
+        Object.assign(new Error('ESIC policy changed. Refresh preview.'), {
+          data: {
+            error: {
+              code: 'HR:Payroll:CompensationPreviewStale',
+              message: 'ESIC policy changed. Refresh preview.',
+            },
+          },
+        })
+      ),
+  });
+  await user.click(screen.getByRole('button', { name: 'Finalize' }));
+  await screen.findByText(/ESIC policy changed/);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Finalize' })).toBeDisabled());
+  expect(screen.getByLabelText('Salary draft')).toHaveValue('12000');
+  expect(screen.getByRole('region', { name: 'Finalization requirements' })).toHaveTextContent(
+    'Prepare a valid salary preview'
+  );
+  await user.click(screen.getByRole('button', { name: 'Prepare salary preview' }));
+  expect(screen.getByRole('button', { name: 'Finalize' })).toBeEnabled();
+  expect(screen.queryByText(/ESIC policy changed/)).not.toBeInTheDocument();
+  expect(mocks.finalize).toHaveBeenCalledOnce();
 });

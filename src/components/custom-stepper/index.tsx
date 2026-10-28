@@ -233,7 +233,7 @@ const QontoConnector = styled(StepConnector)(({ theme }) => ({
 }));
 
 const ModernStepIcon = (props: StepIconProps) => {
-  const { active, completed, icon } = props;
+  const { active, completed, error, icon } = props;
 
   return (
     <Box
@@ -275,14 +275,22 @@ const ModernStepIcon = (props: StepIconProps) => {
           justifyContent: 'center',
           borderRadius: '50%',
           border: '2px solid',
-          bgcolor: completed || active ? 'primary.main' : 'background.default',
-          borderColor: completed || active ? 'primary.main' : 'grey.400',
-          color: completed || active ? 'common.white' : 'text.primary',
+          bgcolor: error
+            ? 'error.main'
+            : completed || active
+              ? 'primary.main'
+              : 'background.default',
+          borderColor: error ? 'error.main' : completed || active ? 'primary.main' : 'grey.400',
+          color: error || completed || active ? 'common.white' : 'text.primary',
           transition: 'background-color 300ms ease-out, border-color 300ms ease-out',
           '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
         }}
       >
-        {completed ? (
+        {error ? (
+          <Box component="span" aria-label="Needs attention">
+            !
+          </Box>
+        ) : completed ? (
           <Iconify icon="eva:checkmark-fill" width={16} />
         ) : (
           <Box
@@ -412,6 +420,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     setIsBackClick(false);
 
     const isLastStep = activeStep === steps.length - 1;
+    if (saveAndNextButtonProps.disabled || (isLastStep && disableSubmit)) return;
     if (shouldValidateCurrentStep(isLastStep, validateFinalStep)) {
       const validationErrors = await formik.validateForm();
       const hasValidationErrors = Object.keys(validationErrors).length > 0;
@@ -583,6 +592,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           >
             <StepButton
               aria-label={`Step ${index + 1}: ${label}`}
+              aria-invalid={errors[index] || undefined}
               disabled={!isClickable}
               aria-current={index === activeStep ? 'step' : undefined}
               sx={{

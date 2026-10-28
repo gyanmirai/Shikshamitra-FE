@@ -83,11 +83,15 @@ import { EmployeeEsiDetails } from '../setting/employee-esi-details';
 import { SalaryTemplateSetupState } from './salary-template-setup-state';
 import { SalaryTotals, SalaryBreakdown, StatutorySummary } from './salary-summary-view';
 
+export type OnboardingSalaryIssue = { key: string; message: string; selector?: string };
+
 type Props = {
   formik: FormikProps<any>;
   onboarding?: {
     statutoryForm: FormikProps<StaffStatutoryProfile>;
     onSalaryChange: (salary: SaveEmployeeCompensation | null) => void;
+    onReadinessChange?: (issues: OnboardingSalaryIssue[]) => void;
+    invalidatePreviewKey?: number;
   };
   employeeId?: string;
   dateOfJoining?: string | null;
@@ -411,7 +415,12 @@ export function SalaryStructureBuilder({
       busy: busy || esiEditorState.busy,
     });
   }, [baseline, signature, busy, esiEditorState.dirty, esiEditorState.busy, onEditorStateChange]);
-  const { data: esiPolicies, refetch: refetchEsiPolicies } = useGetEsiPolicyOptionsQuery();
+  const {
+    data: esiPolicies,
+    isError: esiPoliciesError,
+    isFetching: esiPoliciesFetching,
+    refetch: refetchEsiPolicies,
+  } = useGetEsiPolicyOptionsQuery();
   const refreshSetup = async () => {
     if (operationPending.current) throw new Error('A salary operation is already in progress.');
     operationPending.current = true;
@@ -434,6 +443,18 @@ export function SalaryStructureBuilder({
     esiPolicies?.find((policy) => policy.id === esiPolicyId),
     effectiveMonth
   );
+  const pfConfigurationInvalid = Boolean(
+    pfApplicable && (pfRulesError || !pfRules.some((rule: any) => rule.id === pfRuleId))
+  );
+  const esiConfigurationInvalid = Boolean(
+    esiMode === 'IN_PLATFORM' && (!effectiveEsiVersion || esiPoliciesError || esiPoliciesFetching)
+  );
+  useEffect(() => {
+    if (onboarding?.invalidatePreviewKey) {
+      setCalculation(null);
+      setCalculatedSignature('');
+    }
+  }, [onboarding?.invalidatePreviewKey]);
   const calculationCurrent = Boolean(
     calculation &&
     calculatedSignature === signature &&
@@ -478,7 +499,8 @@ export function SalaryStructureBuilder({
       !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
       pfChoiceMissing ||
       esiInvalid ||
-      (pfApplicable && !pfRuleId)
+      pfConfigurationInvalid ||
+      esiConfigurationInvalid
     )
       return;
     operationPending.current = true;
@@ -712,6 +734,10 @@ export function SalaryStructureBuilder({
     !statutoryBlocked &&
     !targetBlocked &&
     !esiInvalid &&
+    !pfConfigurationInvalid &&
+    !esiConfigurationInvalid &&
+    !templateChangeRequired &&
+    /^\d{4}-(0[1-9]|1[0-2])$/.test(effectiveMonth) &&
     selectedVersion &&
     calculation
       ? {
@@ -739,6 +765,99 @@ export function SalaryStructureBuilder({
   useEffect(() => {
     onboardingChange.current?.(JSON.parse(onboardingSalarySignature));
   }, [onboardingSalarySignature]);
+
+  // Publish concrete reasons alongside the nullable salary. A null preview alone cannot
+  // tell the finalization page whether a field, configuration, permission or refresh is missing.
+  const onboardingIssues: OnboardingSalaryIssue[] = [];
+  const issue = (key: string, message: string, selector = '[data-salary-details]') =>
+    onboardingIssues.push({ key, message, selector });
+  if (templatesLoading || templatesFetching)
+    issue('templates-loading', 'Wait for salary templates to finish loading.');
+  else if (templatesError || !templateData)
+    issue('templates-error', 'Salary templates could not be loaded. Retry salary setup.');
+  else if (!templates.length)
+    issue(
+      'templates-empty',
+      'No active salary template is available. Configure a salary template, then refresh setup.'
+    );
+  else if (!selectedVersion)
+    issue(
+      'template-unavailable',
+      'The selected salary template is unavailable. Choose an active template.'
+    );
+  if (templateChangeRequired)
+    issue('template-version', 'Review and accept the salary template version change.');
+  if (amountInvalid)
+    issue(
+      'salary-amount',
+      'Enter a monthly salary amount greater than zero.',
+      '[name="monthlyAmount"]'
+    );
+  else if (monthlyAmount > 100000000)
+    issue(
+      'salary-amount-limit',
+      'Monthly salary amount cannot exceed 100,000,000.',
+      '[name="monthlyAmount"]'
+    );
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(effectiveMonth))
+    issue('salary-month', 'Choose a valid salary effective month.');
+  if (statutoryDraft?.pfChoice === null)
+    issue('pf-choice', 'Choose whether to opt in or opt out of PF.', '[data-salary-statutory]');
+  if (pfConfigurationInvalid)
+    issue(
+      'pf-rule',
+      pfRulesError
+        ? 'PF rules could not be loaded. Refresh setup and retry.'
+        : 'Choose an available active PF rule for PF enrollment.',
+      '[data-salary-statutory]'
+    );
+  if (esiInvalid || esiConfigurationInvalid)
+    issue(
+      'esi-policy',
+      esiMode === 'IN_PLATFORM'
+        ? 'Choose an effective ESIC policy for the salary month. This is required for in-platform assessment even when ESIC is off. Refresh setup if policies changed.'
+        : 'Enter the external ESIC management reason.',
+      '[data-salary-statutory]'
+    );
+  if (calculation?.pfEligibility?.canSave === false)
+    issue(
+      'pf-eligibility',
+      `Resolve PF enrollment: ${contractLabel(calculation.pfEligibility.issueCode || calculation.pfEligibility.status)}. Review school PF settings and the enrollment declaration.`,
+      '[data-salary-statutory]'
+    );
+  if (statutoryBlocked && calculation?.pfEligibility?.canSave !== false)
+    issue(
+      'esi-calculation',
+      'The salary preview has unresolved ESIC requirements. Review the statutory calculation messages.',
+      '[data-salary-statutory]'
+    );
+  if (targetBlocked)
+    issue(
+      'salary-target',
+      'Resolve the difference between the requested salary amount and its calculation.',
+      '[data-salary-preview]'
+    );
+  if (reasonInvalid)
+    issue(
+      'salary-reason',
+      'Add a reason for the staff-specific salary customization.',
+      '[name="customizationReason"]'
+    );
+  if (operationError) issue('salary-error', operationError, '[data-onboarding-salary]');
+  if (!calculationCurrent && !onboardingIssues.length && !pfChoiceMissing)
+    issue(
+      'salary-preview',
+      calculatedSignature
+        ? 'Salary or statutory settings changed. Refresh the salary preview.'
+        : 'Preview salary after completing salary and statutory details.',
+      '[data-salary-preview-button]'
+    );
+  const onboardingIssuesSignature = JSON.stringify(onboardingIssues);
+  const readinessChange = useRef(onboarding?.onReadinessChange);
+  readinessChange.current = onboarding?.onReadinessChange;
+  useEffect(() => {
+    readinessChange.current?.(JSON.parse(onboardingIssuesSignature));
+  }, [onboardingIssuesSignature]);
 
   if (
     templatesLoading ||
@@ -898,6 +1017,7 @@ export function SalaryStructureBuilder({
       >
         <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
         <Select
+          name="pfRuleId"
           labelId={pfRuleLabelId}
           label="PF rule"
           value={pfRuleId}
@@ -1173,6 +1293,7 @@ export function SalaryStructureBuilder({
           )}
           <Grid
             ref={salaryFields}
+            data-salary-details
             tabIndex={-1}
             aria-label="Salary details fields"
             container
@@ -1291,6 +1412,7 @@ export function SalaryStructureBuilder({
               startIcon={<Iconify icon="solar:eye-bold" />}
               onClick={calculateSalary}
               ref={previewButton}
+              data-salary-preview-button
               loading={operation === 'calculate'}
               loadingPosition="start"
               disabled={
@@ -1304,7 +1426,9 @@ export function SalaryStructureBuilder({
                 !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
                 (pfApplicable && !pfRuleId) ||
                 pfChoiceMissing ||
-                esiInvalid
+                esiInvalid ||
+                pfConfigurationInvalid ||
+                esiConfigurationInvalid
               }
             >
               {calculatedSignature ? 'Refresh preview' : 'Preview salary'}
@@ -1318,6 +1442,7 @@ export function SalaryStructureBuilder({
         >
           <Box
             ref={statutoryFields}
+            data-salary-statutory
             tabIndex={-1}
             role="group"
             aria-label="Statutory deductions"
@@ -1593,6 +1718,7 @@ export function SalaryStructureBuilder({
         {calculation ? (
           <Box
             ref={previewSection}
+            data-salary-preview
             tabIndex={-1}
             aria-label="Salary preview"
             display="grid"
