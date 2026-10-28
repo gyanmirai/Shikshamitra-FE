@@ -24,6 +24,10 @@ export type ILeavePolicyRule = {
 };
 
 export type ILeavePolicy = {
+  version?: number;
+  sourceVersionId?: string;
+  sourcePolicyId?: string;
+  sourceVersionNumber?: number;
   id?: string;
   academicYearId?: string;
   policyTitle?: string;

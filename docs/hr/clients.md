@@ -229,6 +229,13 @@ The table view state lives in the page URL and is restored by reload and browser
 `useHrTableExport` captures the same report criteria and visible ordered columns for complete server exports.
 Template management and template selection use the shared table over the accessible library.
 
+
+### Leave impact and version history
+
+`leaveApi.ts` posts exact proposals and academic-year/date scope to `/leave-policies/impact/preview`. Its separate nullable metric contract distinguishes calculated zero, unavailable and uncalculated outcomes. Detail pages post the same assessment/fingerprint to `/leave-policies/impact/details`; totals distinguish accessible and redacted records. Owning employee/request/payroll read grants still apply. Errors and stale assessments require refresh, never a zero fallback.
+
+Active edits/default replacement attach `X-HR-Policy-Impact-Token`; edits carry the reviewed `impactScope` in the body, and default/archive actions carry `X-HR-Leave-Impact-Scope`. The server revalidates the proposal and current state. `hr-policy-api.ts` extends only the shared version type with `leave`; history/compare use existing Leave View and new-draft restore uses existing Leave Add. Restore invalidates the leave policy cache. Leave history calls its authorized direct version endpoint and does not use the generic table-query/export grant.
+
 ### Operational table criteria
 
 `hrOperationalTableApi.ts` and `use-hr-table-query.ts` provide the shared typed query adapter for operational HR table instances, including Register and I-card staff selection. Existing readers remain the unfiltered fast path. Active header criteria use POST `/hr/table-query` with the canonical domain query, typed criteria and zero-based offset/size. Raw response envelopes preserve existing mappers and editing metadata. The field catalog gates header controls; the backend independently validates fields and types. Own mutation tags invalidate criteria views. `useHrTableExport` sends matching criteria and visible columns to the existing complete export workflow. Register retains its native period/division/domain scope and uses the same typed header-criteria path; I-card staff selection reuses the existing authorized employee reader with a narrow field allowlist. Captured reporting retains its owning contract.

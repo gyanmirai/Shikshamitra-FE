@@ -42,15 +42,17 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
   const {
     versionTarget,
     versionHistory,
-    versionCompare,
+    versionCompare: cachedVersionCompare,
     compareVersionIds,
     versionFilters,
     versionPage,
     setVersionPage,
     versionHistoryLoading,
+    versionHistoryError,
+    versionCompareError,
     versionCompareLoading,
     isPolicyOperationActive,
-    canClonePolicy,
+    canRestoreVersion,
     restoreVersionState,
     setVersionTarget,
     setCompareVersionIds,
@@ -58,7 +60,10 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
     setRestoreVersion,
   } = ctx;
 
-  const versions = versionHistory?.items || [];
+  const dataAvailable =
+    !ctx.versionAccessUnavailable && !versionHistoryError && !versionCompareError;
+  const versionCompare = dataAvailable ? cachedVersionCompare : undefined;
+  const versions = dataAvailable ? versionHistory?.items || [] : [];
   const filteredVersions = versions;
   const exportVersions = useHrTableExport('hr-policy-versions', {
     policyType: versionTarget?.policyType,
@@ -129,9 +134,16 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
         <Divider />
         <Stack spacing={2} sx={{ p: 2.5 }}>
           {versionHistoryLoading || versionCompareLoading ? <LinearProgress /> : null}
+          {!dataAvailable ? (
+            <Alert severity="error">
+              Could not load policy history or comparison. Close and retry.
+            </Alert>
+          ) : null}
           <Box gap={1} display="flex" alignItems="center">
-            <Typography variant="subtitle1">{versionTarget?.policyName}</Typography>
-            <InfoTooltipIcon title="Version history includes all published versions. Draft versions are not included." />
+            <Typography variant="subtitle1">
+              {dataAvailable ? versionTarget?.policyName : 'Policy history unavailable'}
+            </Typography>
+            <InfoTooltipIcon title="History contains recorded snapshots. Existing leave policies enter history at their first lifecycle write; earlier history is not reconstructed." />
           </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
             <FormControl size="small" sx={{ minWidth: 180 }}>
@@ -168,8 +180,9 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             serverSideSearch
             page={versionPage.number - 1}
             rowsPerPage={versionPage.size}
-            totalCount={versionHistory?.totalCount || 0}
-            onExport={exportVersions}
+            totalCount={dataAvailable ? versionHistory?.totalCount || 0 : 0}
+            showExport={dataAvailable && versionTarget?.policyType !== 'leave'}
+            onExport={versionTarget?.policyType === 'leave' ? undefined : exportVersions}
             onServerPagination={(number, size) => setVersionPage({ number, size })}
             searchTerm={versionFilters.search}
             searchFieldProps={{ placeholder: 'Search policy history' }}
@@ -224,7 +237,7 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
                           onClick: () =>
                             setCompareVersionIds((current) => ({ ...current, to: version.id })),
                         },
-                        ...(canClonePolicy
+                        ...(canRestoreVersion
                           ? [
                               {
                                 id: 'restore',
@@ -302,14 +315,22 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
 
 function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
-    restoreVersion,
-    restorePreview,
+    restoreVersion: cachedRestoreVersion,
+    restorePreview: cachedRestorePreview,
     restorePreviewLoading,
     restoreVersionState,
     isPolicyOperationActive,
     setRestoreVersion,
     restoreVersionAsDraft,
   } = ctx;
+  const accessUnavailable =
+    ctx.versionAccessUnavailable ||
+    ctx.versionHistoryError ||
+    ctx.versionCompareError ||
+    ctx.restorePreviewError ||
+    ctx.canRestoreVersion === false;
+  const restoreVersion = accessUnavailable ? null : cachedRestoreVersion;
+  const restorePreview = accessUnavailable ? null : cachedRestorePreview;
   const hasBlockingRestoreWarnings = Boolean(restorePreview?.blockingWarnings?.length);
   const displayedRestoreWarnings = [
     ...(restorePreview?.warnings ?? []),
@@ -345,7 +366,7 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           <HrNotice severity="info">
             Restore creates a new draft. The current active policy is not changed.
           </HrNotice>
-          {restorePreview ? (
+          {restorePreview && ctx.versionTarget?.policyType !== 'leave' ? (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <Chip
                 size="small"

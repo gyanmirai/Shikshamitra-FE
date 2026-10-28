@@ -188,7 +188,19 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         {tab === 'calendars' ? <CalendarsTab ctx={ctx} /> : null}
         {tab === 'payroll' ? <PolicyTable type="payroll" ctx={ctx} /> : null}
         {tab === 'attendance' ? <PolicyTable type="attendance" ctx={ctx} /> : null}
-        {tab === 'leave' ? <LeavePoliciesPanel /> : null}
+        {tab === 'leave' ? (
+          <LeavePoliciesPanel
+            onHistory={(policy) => {
+              if (!policy.id) return;
+              ctx.setCompareVersionIds({ from: '', to: '' });
+              ctx.setVersionTarget({
+                policyType: 'leave',
+                policyId: policy.id,
+                policyName: policy.policyTitle || policy.title || 'Leave policy',
+              });
+            }}
+          />
+        ) : null}
         {tab === 'assignments' ? <AssignmentsTab ctx={ctx} /> : null}
       </Box>
 

@@ -662,6 +662,13 @@ The HR audit intentionally retains these exceptions:
 | Dashboard alert categories, audit-event badges, attendance/leave states, metrics, charts, selected controls, and small help icons | Colors identify domain states or affordances; they are not equivalent informational/loading banners |
 | Shared toast, confirmation, validation recovery, warning/error/success, and table loading components | Preserve their established semantic and recovery behavior; this change is scoped to HR inline context |
 
+
+## Leave policy review and history
+
+Edit/default/archive actions open a server assessment before applicable operational writes. The drawer shows exact proposed field changes, effective staff, separate assignment/request/settlement references and factual payroll-period exposure. Definitions and date scopes stay visible. Balance changes and salary differences say Not calculated; exposure does not promise a salary recalculation. Drilldowns retain read-scope redaction and display load/permission/stale errors explicitly. Closing, changing academic year or unmounting cancels the pending review; late responses cannot approve another proposal.
+
+Version history reuses `PolicyVersionDrawer`. Recorded snapshots include drafts and an honestly labeled baseline for policies enrolled after creation; GET does not reconstruct earlier history. Compare uses stable Paid/Unpaid rule fields. Restore creates a new nondefault draft with fresh rule IDs and source provenance, leaving the original policy and historical references intact. Existing draft editing, zero allocation, setup review and assignment rule comparison retain their behavior. Backend invariants are owned by [policy architecture](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/references/policy-architecture.md).
+
 ## Validation and setup recovery
 
 HR API mutation failures now have a persistent review dialog with a specific safe reason, named validation fields when supplied by the server, and permission-gated setup links where a verified error code identifies a prerequisite. Keep editing returns focus to the original workflow and clears the notice; Dismiss error also clears it. Successful matching mutations and route/account changes clear stale feedback.

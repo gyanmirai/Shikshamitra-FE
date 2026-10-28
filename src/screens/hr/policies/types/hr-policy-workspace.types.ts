@@ -6,6 +6,7 @@ import type {
   AttendancePolicy,
   HrPolicyAssignment,
   WorkCalendarPolicy,
+  HrPolicyVersionType,
   WorkCalendarHoliday,
   EditablePolicyStatus,
   HrPolicyImpactPreview,
@@ -16,12 +17,7 @@ import type {
 // --- Navigation --------------------------------------------------------------
 
 export type WorkspaceTab =
-  | 'calendars'
-  | 'payroll'
-  | 'attendance'
-  | 'leave'
-  | 'assignments'
-  | 'holiday';
+  'calendars' | 'payroll' | 'attendance' | 'leave' | 'assignments' | 'holiday';
 
 // --- Drawer -------------------------------------------------------------------
 
@@ -77,7 +73,7 @@ export type AuditTarget = {
 } | null;
 
 export type VersionTarget = {
-  policyType: HrPolicyType;
+  policyType: HrPolicyVersionType;
   policyId: string;
   policyName: string;
 } | null;

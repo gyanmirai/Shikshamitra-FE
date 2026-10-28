@@ -1,12 +1,12 @@
 import type React from 'react';
-import userEvent from '@testing-library/user-event';
-import { ThemeProvider } from '@mui/material/styles';
-import { createTheme } from 'src/theme/create-theme';
-import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { screen } from '@testing-library/react';
 import { vi, it, expect, describe } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
 import { renderWithProviders } from 'src/test/test-utils';
+import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { PolicyVersionDrawer } from './PolicyVersionDrawer';
 
@@ -52,7 +52,7 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
             versionHistoryLoading: false,
             versionCompareLoading: false,
             isPolicyOperationActive: false,
-            canClonePolicy: true,
+            canRestoreVersion: true,
             restoreVersionState: { isLoading: false },
             restoreVersion: {
               version: {
@@ -97,7 +97,7 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
             versionHistoryLoading: false,
             versionCompareLoading: false,
             isPolicyOperationActive: false,
-            canClonePolicy: true,
+            canRestoreVersion: true,
             restoreVersionState: { isLoading: false },
             restoreVersion: {
               version: {
@@ -167,7 +167,7 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
             versionHistoryLoading: false,
             versionCompareLoading: false,
             isPolicyOperationActive: false,
-            canClonePolicy: true,
+            canRestoreVersion: true,
             restoreVersionState: { isLoading: false },
             restoreVersion: {
               version: {
@@ -230,7 +230,7 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
             versionHistoryLoading: false,
             versionCompareLoading: false,
             isPolicyOperationActive: false,
-            canClonePolicy: true,
+            canRestoreVersion: true,
             restoreVersionState: { isLoading: false },
             restoreVersion: {
               version: {
@@ -276,6 +276,70 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
 
 vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));
 
+it.each([{ status: 403 }, { status: 500 }])(
+  'hides cached history, comparison and an already selected restore after read failure %s',
+  async (error) => {
+    const version = {
+      id: 'secret-version',
+      versionNumber: 2,
+      name: 'Cached snapshot secret',
+      status: 'active',
+      changeAction: 'edited',
+    };
+    const ctx = {
+      versionTarget: { policyType: 'leave', policyId: 'policy', policyName: 'Selected policy' },
+      versionHistory: { items: [version], totalCount: 1 },
+      versionHistoryLoading: false,
+      versionCompare: {
+        fromVersion: { versionNumber: 1 },
+        toVersion: { versionNumber: 2 },
+        differences: [
+          {
+            fieldKey: 'description',
+            fieldLabel: 'Description',
+            fromDisplayValue: 'Private before',
+            toDisplayValue: 'Private after',
+          },
+        ],
+      },
+      versionCompareLoading: false,
+      compareVersionIds: { from: 'old', to: 'secret-version' },
+      versionPage: { number: 1, size: 20 },
+      versionFilters: { action: 'all', search: '' },
+      canRestoreVersion: true,
+      isPolicyOperationActive: false,
+      restoreVersionState: { isLoading: false },
+      restoreVersion: { version, name: 'Private restore name', reason: 'Private restore reason' },
+      restorePreview: { warnings: [], blockingWarnings: [] },
+      setVersionPage: vi.fn(),
+      setVersionFilters: vi.fn(),
+      setVersionTarget: vi.fn(),
+      setCompareVersionIds: vi.fn(),
+      setRestoreVersion: vi.fn(),
+      restoreVersionAsDraft: vi.fn(),
+    };
+    const view = renderWithProviders(<PolicyVersionDrawer ctx={ctx as any} />);
+    expect(screen.getByDisplayValue('Private restore name')).toBeInTheDocument();
+    view.rerender(
+      <PolicyVersionDrawer
+        ctx={
+          {
+            ...ctx,
+            versionHistoryError: error,
+            versionAccessUnavailable: true,
+            canRestoreVersion: false,
+          } as any
+        }
+      />
+    );
+    expect(screen.queryByText('Private before')).not.toBeInTheDocument();
+    expect(screen.queryByText('Private after')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Private restore name')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Restore as draft' })).not.toBeInTheDocument();
+    expect(screen.getByText(/Could not load policy history/)).toBeInTheDocument();
+  }
+);
+
 it.each([true, false])(
   'keeps two compare actions direct and gates restore overflow, permission=%s',
   async (canClonePolicy) => {
@@ -302,7 +366,7 @@ it.each([true, false])(
               versionPage: { number: 1, size: 20 },
               versionFilters: { action: 'all', search: '' },
               compareVersionIds: { from: null, to: null },
-              canClonePolicy,
+              canRestoreVersion: canClonePolicy,
               isPolicyOperationActive: false,
               restoreVersionState: { isLoading: false },
               setVersionPage: vi.fn(),

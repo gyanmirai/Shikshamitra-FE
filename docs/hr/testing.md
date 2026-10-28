@@ -8,6 +8,11 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+
+## Leave impact, history and restore
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/policies --pool=threads --maxWorkers=2` on Windows. `useLeavePolicyImpactReview.test.tsx` covers calculated zero versus unknown, exact proposal/scope approval, partial/missing-token blocking, scoped/error drilldowns and prompt year-switch cancellation with discarded late responses. Shared version drawer tests retain comparison and exact restore-action gating. Run frontend types, changed-file/full-source lint and production webpack build separately. Synthetic component tests do not establish authenticated browser or PostgreSQL acceptance.
+
 ## Onboarding cards and salary setup
 
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/employee-onboarding src/screens/hr/payroll/structure/SalaryStructureBuilder.test.tsx src/screens/hr/payroll/structure/salary-template-setup-state.test.tsx src/components/custom-stepper --pool=forks --maxWorkers=1` on Windows.
