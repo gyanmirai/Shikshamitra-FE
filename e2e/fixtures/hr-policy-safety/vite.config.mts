@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
-import { attendance, calendars, leave, payroll } from './data';
+import { year, attendance, calendars, leave, payroll } from './data';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = fileURLToPath(new URL('../../../', import.meta.url));
@@ -36,6 +36,23 @@ export default defineConfig({
             response.statusCode = 405;
             return response.end(
               JSON.stringify({ error: { message: 'Synthetic fixture refuses policy writes.' } })
+            );
+          }
+          if (path.startsWith('/api/hr/setup-review/')) {
+            return response.end(
+              JSON.stringify({
+                academicYearId: year.id,
+                section: path.split('/').at(-1),
+                configurationState: 'valid',
+                reviewState: 'reviewed',
+                fingerprint: 'synthetic-fingerprint',
+                concurrencyStamp: 'synthetic-stamp',
+                canReview: false,
+                starterInitialized: true,
+                tenantStarterEnabled: true,
+                details: [],
+                notices: [],
+              })
             );
           }
           if (path.includes('holiday-import-preview') || path.endsWith('/holidays'))

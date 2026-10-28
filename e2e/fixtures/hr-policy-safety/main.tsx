@@ -56,7 +56,15 @@ createRoot(document.getElementById('root')!).render(
             Synthetic policy fixture — all policy writes are refused; no school data is connected.
           </Alert>
           <Box sx={{ flex: 1, minHeight: 0 }}>
-            <HRPolicyWorkspace focus={query.get('surface') === 'leave' ? 'leave' : 'attendance'} />
+            <HRPolicyWorkspace
+              focus={
+                query.get('surface') === 'leave'
+                  ? 'leave'
+                  : query.get('surface') === 'payroll'
+                    ? 'payroll'
+                    : 'attendance'
+              }
+            />
           </Box>
         </Box>
       </LocalizationProvider>
