@@ -6,6 +6,10 @@ import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import {
+  HrSetupTaskContext,
+  HrSetupEditorContext,
+} from 'src/screens/hr/setup/hr-setup-editor-context';
 
 import SalaryTemplateEditor from './salary-template-editor';
 
@@ -165,6 +169,54 @@ const renderEditor = (ui: React.ReactNode) =>
 const originalTemplate = structuredClone(mocks.template);
 
 describe('SalaryTemplateEditor', () => {
+  it('offers Professional Tax setup only for a draft that requires it', async () => {
+    const user = userEvent.setup();
+    const openTask = vi.fn();
+    mocks.template.editableVersion.rules.push({
+      code: 'PT',
+      componentId: 'deduction-1',
+      lineKind: 'DEDUCTION',
+      semanticType: 'PROFESSIONAL_TAX',
+      formulaType: 'PROFESSIONAL_TAX',
+      value: null,
+      displayOrder: 2,
+    });
+    renderEditor(
+      <HrSetupTaskContext.Provider value={openTask}>
+        <SalaryTemplateEditor templateId="template-1" />
+      </HrSetupTaskContext.Provider>
+    );
+    expect(openTask).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole('button', { name: 'Create required PF rule' })
+    ).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', { name: 'Configure required Professional Tax rule' })
+    );
+    expect(openTask).toHaveBeenCalledWith('professional-tax');
+    expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue('Flexible Salary');
+  });
+
+  it('registers the preview-validated save action with the setup wizard footer', async () => {
+    const user = userEvent.setup();
+    const report = vi.fn();
+    const onSaved = vi.fn();
+    renderEditor(
+      <HrSetupEditorContext.Provider value={report}>
+        <SalaryTemplateEditor templateId="template-1" onSaved={onSaved} />
+      </HrSetupEditorContext.Provider>
+    );
+    expect(report.mock.calls.at(-1)?.[0].save).toBeTypeOf('function');
+    expect(report.mock.calls.at(-1)?.[0].disabled).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Save Changes' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
+    await waitFor(() => expect(report.mock.calls.at(-1)?.[0].disabled).toBe(false));
+    await act(async () => {
+      await report.mock.calls.at(-1)?.[0].save();
+    });
+    expect(mocks.updateTemplate).toHaveBeenCalledOnce();
+    expect(onSaved).toHaveBeenCalledOnce();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.template = structuredClone(originalTemplate);

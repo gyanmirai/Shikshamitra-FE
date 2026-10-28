@@ -1,0 +1,37 @@
+// Keep aligned with the backend HrSetupPermissions operator actions.
+export const hrSetupOperatorPermissions = [
+  'HR.Employee.EmployeeList.Add',
+  'HR.Employee.EmployeeList.Edit',
+  'HR.Employee.EmployeeOnboarding.Add',
+  'HR.Employee.EmployeeOnboarding.Edit',
+  'HR.Employee.EmployeeOnboarding.Finalize',
+  'HR.AttendanceAndLeave.MarkAttendance.Add',
+  'HR.PayrollManagement.RunPayroll.Add',
+  'HR.PayrollManagement.PayrollStructure.Add',
+  'HR.PayrollManagement.GenerateSalarySlip.Add',
+  'HR.PayrollManagement.RunPayroll.Lock',
+  'HR.PayrollManagement.RunPayroll.Adjustments',
+  'HR.PayrollManagement.CompensationRevisions.Manage',
+  'HR.Policies.Add',
+  'HR.Policies.Edit',
+  'HR.Policies.SetDefault',
+  'HR.LeaveManagement.Setting.LeavePolicy.Add',
+  'HR.LeaveManagement.Setting.LeavePolicy.Edit',
+  'HR.AttendanceAndLeave.Setting.ShiftManagement.Add',
+  'HR.PayrollManagement.Settings.EarningComponents.Add',
+  'HR.PayrollManagement.Settings.DeductionComponents.Add',
+  'HR.PayrollManagement.Settings.PfRule.Add',
+  'HR.PayrollManagement.Settings.ProfessionalTax.Add',
+  'HR.PayrollManagement.Settings.Tds.Add',
+  'HR.PayrollManagement.Settings.SalaryTemplates.Add',
+  'HR.PayrollManagement.Settings.SalaryTemplates.Edit',
+  'HR.PayrollManagement.Settings.StatutorySchemes.Edit',
+];
+
+export const hrSetupSteps = [
+  { id: 'staff', label: 'Staff Prerequisites' },
+  { id: 'policies', label: 'Policies and Calendar' },
+  { id: 'earnings', label: 'Earning Components' },
+  { id: 'salary', label: 'Salary Template' },
+  { id: 'completion', label: 'Completion' },
+] as const;

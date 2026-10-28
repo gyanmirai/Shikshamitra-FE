@@ -7,12 +7,12 @@ import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { SetupInlineDialog } from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   Alert,
   Stack,
   Paper,
   Button,
-  Dialog,
   Divider,
   TextField,
   Typography,
@@ -49,7 +49,7 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
   const hasDateError = Boolean(fromDateError) || Boolean(toDateError);
 
   return (
-    <Dialog
+    <SetupInlineDialog
       open={manualHolidayDialogOpen}
       onClose={closeManualHolidayDialog}
       fullWidth
@@ -190,6 +190,6 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
           Save
         </Button>
       </DialogActions>
-    </Dialog>
+    </SetupInlineDialog>
   );
 }

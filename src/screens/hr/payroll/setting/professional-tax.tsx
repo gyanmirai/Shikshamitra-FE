@@ -6,7 +6,6 @@ import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { formatCurrency } from 'src/utils/cureencyFormater';
@@ -18,6 +17,11 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
+import {
+  SetupEditorBody,
+  SetupEditorActions,
+  useHrSetupEditorState,
+} from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   Box,
   Stack,
@@ -262,7 +266,7 @@ const numberConvertor = (value: string | number): number => {
   return value;
 };
 
-const ProfessionalTaxForm = ({
+export const ProfessionalTaxForm = ({
   handleClose,
   editData,
 }: {
@@ -340,9 +344,15 @@ const ProfessionalTaxForm = ({
     },
   });
 
+  useHrSetupEditorState({
+    dirty: formik.dirty,
+    busy: isLoading || isUpdatePFLoading || formik.isSubmitting,
+    save: formik.submitForm,
+  });
+
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
+      <SetupEditorBody>
         <Stack spacing={2} sx={{ p: 2 }}>
           <TextField
             fullWidth
@@ -419,26 +429,28 @@ const ProfessionalTaxForm = ({
             helperText={formik.touched.taxAmount && formik.errors.taxAmount}
           />
         </Stack>
-      </Scrollbar>
-      <DialogActions>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:close" />}
-          onClick={handleClose}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          size="small"
-          startIcon={<Iconify icon="mdi:content-save-outline" />}
-          loading={isLoading || isUpdatePFLoading}
-          variant="contained"
-          type="submit"
-        >
-          Save
-        </LoadingButton>
-      </DialogActions>
+      </SetupEditorBody>
+      <SetupEditorActions>
+        <DialogActions>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            size="small"
+            startIcon={<Iconify icon="mdi:content-save-outline" />}
+            loading={isLoading || isUpdatePFLoading}
+            variant="contained"
+            type="submit"
+          >
+            Save
+          </LoadingButton>
+        </DialogActions>
+      </SetupEditorActions>
     </Box>
   );
 };

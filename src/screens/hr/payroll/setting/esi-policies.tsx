@@ -38,6 +38,12 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
+  SetupEditorBody,
+  SetupEditorActions,
+  useHrSetupEditorState,
+  SetupInlineCustomDialog,
+} from 'src/screens/hr/setup/hr-setup-editor-context';
+import {
   useGetEsiPoliciesQuery,
   useCreateEsiPolicyMutation,
   useArchiveEsiPolicyMutation,
@@ -182,7 +188,9 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
         )}
       </Stack>
       {!hasSchoolWideScope && (
-        <HrNotice role="alert" severity="info">School-wide HR scope is required to manage ESIC policies.</HrNotice>
+        <HrNotice role="alert" severity="info">
+          School-wide HR scope is required to manage ESIC policies.
+        </HrNotice>
       )}
       {query.isError ? (
         <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
@@ -378,7 +386,7 @@ const schema = Yup.object({
   }),
 });
 
-function EsiPolicyEditor({ policy, onClose }: { policy?: EsiPolicy; onClose: () => void }) {
+export function EsiPolicyEditor({ policy, onClose }: { policy?: EsiPolicy; onClose: () => void }) {
   const version = policy?.versions[0];
   const components = useGetEsiComponentTreatmentsQuery();
   const [create, creation] = useCreateEsiPolicyMutation();
@@ -495,8 +503,9 @@ function EsiPolicyEditor({ policy, onClose }: { policy?: EsiPolicy; onClose: () 
       />
     </ShakingTextField>
   );
+  useHrSetupEditorState({ dirty: form.dirty, busy, save: form.submitForm });
   return (
-    <CustomDialog
+    <SetupInlineCustomDialog
       open
       title={policy ? `New version - ${policy.name}` : 'Create ESIC policy'}
       maxWidth="md"
@@ -506,7 +515,7 @@ function EsiPolicyEditor({ policy, onClose }: { policy?: EsiPolicy; onClose: () 
       hasUnsavedChanges={form.dirty}
     >
       <Box component="form" onSubmit={form.handleSubmit} noValidate>
-        <DialogScrollContent onSubmit={() => form.submitForm()}>
+        <SetupEditorBody onSubmit={() => form.submitForm()}>
           <Stack spacing={2}>
             <SectionCard title="Policy details" gridProps={{ spacing: 2 }}>
               <Grid size={{ xs: 12, sm: 6 }}>{field('name', 'Policy name')}</Grid>
@@ -638,16 +647,18 @@ function EsiPolicyEditor({ policy, onClose }: { policy?: EsiPolicy; onClose: () 
             </SectionCard>
             {error && <Alert severity="error">{error}</Alert>}
           </Stack>
-        </DialogScrollContent>
-        <DialogActions>
-          <Button variant="outlined" onClick={onClose} disabled={busy}>
-            Cancel
-          </Button>
-          <Button variant="contained" type="submit" loading={busy}>
-            {policy ? 'Save version' : 'Create policy'}
-          </Button>
-        </DialogActions>
+        </SetupEditorBody>
+        <SetupEditorActions>
+          <DialogActions>
+            <Button variant="outlined" onClick={onClose} disabled={busy}>
+              Cancel
+            </Button>
+            <Button variant="contained" type="submit" loading={busy}>
+              {policy ? 'Save version' : 'Create policy'}
+            </Button>
+          </DialogActions>
+        </SetupEditorActions>
       </Box>
-    </CustomDialog>
+    </SetupInlineCustomDialog>
   );
 }

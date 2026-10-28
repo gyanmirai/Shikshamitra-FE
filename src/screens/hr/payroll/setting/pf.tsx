@@ -13,6 +13,7 @@ import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { formatCurrency } from 'src/utils/cureencyFormater';
@@ -27,8 +28,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   pfApi,
   useGetPFQuery,
@@ -36,6 +35,12 @@ import {
   useUpdatePFMutation,
   useDeletePFMutation,
 } from 'src/redux/PF/PFApi';
+import {
+  SetupEditorBody,
+  SetupEditorGuard,
+  SetupEditorActions,
+  useHrSetupEditorState,
+} from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   Box,
   Stack,
@@ -356,7 +361,7 @@ const PF = () => {
 
 export default PF;
 
-const PFForm = ({
+export const PFForm = ({
   editData,
   handleClose,
 }: {
@@ -446,10 +451,16 @@ const PFForm = ({
     },
   });
 
+  useHrSetupEditorState({
+    dirty: formik.dirty,
+    busy: isLoading || isUpdatePFLoading || formik.isSubmitting,
+    save: formik.submitForm,
+  });
+
   return (
     <>
-      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-        <DialogScrollContent>
+      <SetupEditorGuard initialValues={formik.initialValues} currentValues={formik.values}>
+        <SetupEditorBody>
           <Stack spacing={3}>
             <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
               <TextField
@@ -634,28 +645,30 @@ const PFForm = ({
               label="Active rule"
             />
           </Stack>
-        </DialogScrollContent>
-      </BackPopUpChecked>
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          size="small"
-          variant="outlined"
-          onClick={(e) => handleClose(e, false)}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          loading={isLoading || isUpdatePFLoading}
-          size="small"
-          variant="contained"
-          type="submit"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-          onClick={(e: any) => formik.handleSubmit(e)}
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
+        </SetupEditorBody>
+      </SetupEditorGuard>
+      <SetupEditorActions>
+        <DialogActions>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            size="small"
+            variant="outlined"
+            onClick={(e) => handleClose(e, false)}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            loading={isLoading || isUpdatePFLoading}
+            size="small"
+            variant="contained"
+            type="submit"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            onClick={(e: any) => formik.handleSubmit(e)}
+          >
+            Submit
+          </LoadingButton>
+        </DialogActions>
+      </SetupEditorActions>
     </>
   );
 };

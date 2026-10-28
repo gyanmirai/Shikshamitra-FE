@@ -3,12 +3,18 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-27
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find HR frontend API clients
+
+`hr-setup-readiness-api.ts` reads `/api/hr/setup-readiness` for the document-scoped HR setup wizard.
+Its cache key includes tenant/user/year context, and it shares owning policy, shift, component, template, and statutory invalidation tags.
+The authenticated workspace owns non-persisted dismissal state, while the HR layout owns the query and lazy wizard mounting.
+Embedded editors retain existing mutation endpoints and permissions.
+The [backend readiness contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#hr-setup-readiness) owns readiness rules.
 
 `employeeOnboardingApi.ts` carries structured `workAssignment` in invite/detail/public/finalization data. `work-assignment-field.tsx` reads `academicOrganizationOptionsApi` directly, using `currentData` and refetch-on-mount to avoid validating with a previous year's response. Summary labels are supplied by the backend. Finalization sends the reviewed assignment and `workAssignmentConfirmed`; role and Academic Permission payloads retain their independent contracts.
 

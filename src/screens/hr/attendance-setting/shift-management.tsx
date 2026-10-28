@@ -12,6 +12,7 @@ import { TimePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -22,8 +23,12 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Grid, Stack, Button, TextField, DialogActions } from '@mui/material';
+import {
+  SetupEditorBody,
+  SetupEditorActions,
+  useHrSetupEditorState,
+} from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   useGetShiftsQuery,
   useAddShiftMutation,
@@ -282,7 +287,7 @@ const ShiftManagement = () => {
 
 export default ShiftManagement;
 
-const ShiftManagementForm = ({
+export const ShiftManagementForm = ({
   handleClose,
   editData,
 }: {
@@ -337,9 +342,15 @@ const ShiftManagementForm = ({
     },
   });
 
+  useHrSetupEditorState({
+    dirty: formik.dirty,
+    busy: isAdding || isUpdating || formik.isSubmitting,
+    save: formik.submitForm,
+  });
+
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
-      <DialogScrollContent>
+      <SetupEditorBody>
         <Stack spacing={2}>
           <ShakingTextField error={formik.touched.shiftName && Boolean(formik.errors.shiftName)}>
             <TextField
@@ -402,26 +413,28 @@ const ShiftManagementForm = ({
             </Grid>
           </Grid>
         </Stack>
-      </DialogScrollContent>
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button
-          variant="outlined"
-          startIcon={<Iconify icon="eva:close-fill" />}
-          size="small"
-          onClick={handleClose}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          loading={isAdding || isUpdating}
-          type="submit"
-          variant="contained"
-          size="small"
-          startIcon={<Iconify icon="eva:save-fill" />}
-        >
-          Save
-        </LoadingButton>
-      </DialogActions>
+      </SetupEditorBody>
+      <SetupEditorActions>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon="eva:close-fill" />}
+            size="small"
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            loading={isAdding || isUpdating}
+            type="submit"
+            variant="contained"
+            size="small"
+            startIcon={<Iconify icon="eva:save-fill" />}
+          >
+            Save
+          </LoadingButton>
+        </DialogActions>
+      </SetupEditorActions>
     </Box>
   );
 };

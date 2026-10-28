@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { payrollStructureType } from 'src/redux/tagTypes';
+import { employeeType, payrollStructureType } from 'src/redux/tagTypes';
 
 import type { EsiManagementMode } from './esi-policy-api';
 import type { StaffStatutoryProfile } from './statutory-profile-api';
@@ -249,7 +249,11 @@ export const salaryTemplateApi = api.injectEndpoints({
       void
     >({
       query: () => salaryTemplateComponentCatalogEndpoint,
-      providesTags: [payrollStructureType.salaryTemplate],
+      providesTags: [
+        payrollStructureType.salaryTemplate,
+        employeeType.earningComponents,
+        employeeType.deductionComponents,
+      ],
     }),
     previewSalaryTemplate: builder.mutation<SalaryTemplatePreview, PreviewSalaryTemplateRequest>({
       query: (body) => ({ url: `${salaryTemplateEndpoint}/preview`, method: 'POST', body }),

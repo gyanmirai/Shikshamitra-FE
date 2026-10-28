@@ -9,14 +9,13 @@ import { hrPaths } from 'src/constants/hr-menus';
 import { Iconify } from 'src/components/iconify';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
+import { SetupInlineDrawer, SetupInlineDialog } from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   Box,
   Chip,
   Alert,
   Stack,
   Button,
-  Drawer,
-  Dialog,
   Divider,
   TableRow,
   TableCell,
@@ -85,7 +84,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         : 'success';
 
   return (
-    <Drawer
+    <SetupInlineDrawer
       anchor="right"
       open={impactDrawerOpen}
       onClose={closeImpactDrawer}
@@ -335,12 +334,14 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                           </TableCell>
                           <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {cleanVersionDisplayValue(
-                              difference.fromDisplayValue ?? difference.fromValue, { full: true }
+                              difference.fromDisplayValue ?? difference.fromValue,
+                              { full: true }
                             )}
                           </TableCell>
                           <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {cleanVersionDisplayValue(
-                              difference.toDisplayValue ?? difference.toValue, { full: true }
+                              difference.toDisplayValue ?? difference.toValue,
+                              { full: true }
                             )}
                           </TableCell>
                         </TableRow>
@@ -494,7 +495,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           </>
         ) : null}
       </Box>
-      <Dialog
+      <SetupInlineDialog
         open={Boolean(selectedConflict)}
         onClose={() => setSelectedConflict(null)}
         aria-labelledby="assignment-conflict-title"
@@ -537,7 +538,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         <DialogActions>
           <Button onClick={() => setSelectedConflict(null)}>Return to impact</Button>
         </DialogActions>
-      </Dialog>
-    </Drawer>
+      </SetupInlineDialog>
+    </SetupInlineDrawer>
   );
 }
