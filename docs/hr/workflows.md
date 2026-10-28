@@ -291,13 +291,15 @@ Earnings and Deductions use equal-width, 480 px desktop panels with stationary h
 Tablet and mobile stack the sections with natural heights, and Sample Calculation spans the page below the component panels.
 Statutory guidance stays concise, with longer explanations available through How statutory rules apply.
 Compact rows place the name and calculation summary beside the editable value and expand action.
-Ordinary has no row label; meaningful purposes appear inline without chips.
+Each row explicitly displays its payroll purpose, including Ordinary, so a component's name cannot be mistaken for its Basic classification.
 Expandable details expose formulas, purpose, dependencies, ordering, and removal.
+Payroll purpose is explicit template-rule metadata; the editor never infers Basic from a component name. Choosing Basic preserves an existing fixed amount or gross-percentage formula and its entered value.
 New rows expand and scroll into view before focusing their first setting; validation expands and reveals invalid rows inside the correct list.
 Reordering keeps focus with the moved component when its action remains available.
 Preview Calculation scrolls to and focuses the sample section without saving or calculating.
 Calculate validates configuration, expands invalid rows, and focuses the first error before sending a preview request.
 Create Template or Save Changes creates the version after a current successful preview, with the footer explaining unmet save requirements.
+The footer names the first actual missing requirement. Review configuration expands and focuses a missing Basic purpose setting, while a valid configuration offers Preview before creating/saving. Create remains disabled until a current successful preview is available; expired or failed previews offer an explicit refresh/retry action.
 The title and breadcrumb return action remain available while loading and when loading fails.
 Selecting an editable table row, template-name link, or Edit action opens the dedicated template page directly in edit mode.
 The create page requires Add and a template detail page requires View; mutation controls additionally require Edit.
@@ -308,6 +310,9 @@ Save changes validates the complete template and atomically creates the next act
 Calculate previews the current rules for new and existing templates before saving.
 Changes to rules, values, dependencies, order, compensation defaults, PF, sample amount, or effective month clear the result and disable Save until another successful calculation.
 Name and description edits retain the preview.
+If creation is rejected because the template name is already used, the editor explains how to rename it, focuses the name, and retains the current unexpired preview and configuration.
+An empty earning catalogue or active ESIC policy list shows its actual prerequisite and the shared permission-gated setup link. Setup opens in a separate tab; explicit Refresh setup keeps the original form values and invalidates the previous preview.
+Catalogue load failures are distinct from successful empty results, and denied salary-component reads explain that salary template View access needs review. Unknown errors do not invent a setup prerequisite.
 Late responses for superseded inputs are ignored, calculation errors remain inline, and the preview expires after 30 minutes.
 Sample Calculation shows the sample earning and deduction breakdown, employer contributions, target difference, and statutory warnings.
 The sample does not establish universal employee eligibility.

@@ -4,6 +4,20 @@ import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
   it.each(['problem', 'abp'])(
+    'explains a salary template duplicate name in %s responses',
+    (format) => {
+      const code = 'HR:Payroll:SalaryTemplateNameExists';
+      const data =
+        format === 'problem'
+          ? { errorCode: code, detail: 'One or more business rules were violated.' }
+          : { error: { code, message: 'One or more business rules were violated.' } };
+      expect(parseApiProblemDetail({ status: 400, data })).toEqual({
+        errorCode: code,
+        detail: 'A salary template already uses this name. Enter a different template name.',
+      });
+    }
+  );
+  it.each(['problem', 'abp'])(
     'shows the assessment room conflict reason in %s responses',
     (format) => {
       const reason = "Room is reserved for 'Entrance exam' (Exam) from 14:15 to 15:05.";

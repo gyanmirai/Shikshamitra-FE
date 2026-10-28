@@ -9,10 +9,10 @@ import type {
   SalaryTemplateComponentCatalogItem,
 } from 'src/redux/hr/salary-template-api';
 
-import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
@@ -23,6 +23,7 @@ import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetEsiPolicyOptionsQuery } from 'src/redux/hr/esi-policy-api';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { HrSetupLink, HrSetupRefresh } from 'src/screens/hr/recovery/hr-setup-controls';
 import {
   Box,
   Chip,
@@ -50,6 +51,7 @@ import {
   editorSchema,
   initialEditorValues,
   configurationIssues,
+  configurationFeedback,
 } from './salary-template-form-model';
 
 import type { EditorValues } from './salary-template-form-model';
@@ -96,6 +98,7 @@ export default function SalaryTemplateEditor({
     data: catalogData,
     isLoading: catalogLoading,
     isError: catalogError,
+    error: catalogFailure,
     refetch: refetchCatalog,
   } = useGetSalaryTemplateComponentCatalogQuery(undefined, { skip: !permitted });
   const [dirty, setDirty] = useState(false);
@@ -127,7 +130,10 @@ export default function SalaryTemplateEditor({
       if (result.data) {
         changeDirty(false);
         setGeneration((value) => value + 1);
-      } else toast.error('Unable to reload the template. Your edits are still available.');
+      } else
+        shikshaMitraToast.error({
+          message: 'Unable to reload the template. Your edits are still available.',
+        });
     });
   const readOnly = mode === 'view' || template?.status === 'ARCHIVED' || (!isCreate && !canEdit);
   const loading = (isLoading && !template) || (catalogLoading && !catalogData);
@@ -208,7 +214,11 @@ export default function SalaryTemplateEditor({
         </Box>
       ) : failed || (!isCreate && !template) ? (
         <Alert
-          severity="error"
+          severity={
+            catalogFailure && 'status' in catalogFailure && catalogFailure.status === 403
+              ? 'warning'
+              : 'error'
+          }
           action={
             <Button
               size="small"
@@ -223,7 +233,11 @@ export default function SalaryTemplateEditor({
             </Button>
           }
         >
-          Unable to load the salary template. Try again.
+          {catalogFailure && 'status' in catalogFailure && catalogFailure.status === 403
+            ? 'Your account cannot load salary components. Ask your administrator to review salary template View access, then retry.'
+            : catalogError
+              ? 'Unable to load salary components. Retry to continue configuring the template.'
+              : 'Unable to load the salary template. Try again.'}
         </Alert>
       ) : (
         <Box sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
@@ -238,6 +252,10 @@ export default function SalaryTemplateEditor({
             onDirtyChange={changeDirty}
             onBusyChange={setBusy}
             onReload={reload}
+            onRefreshCatalog={async () => {
+              const result = await refetchCatalog();
+              if (result.error) throw new Error('Salary components could not be refreshed.');
+            }}
           />
         </Box>
       )}
@@ -256,6 +274,7 @@ type WorkflowProps = {
   onDirtyChange: (dirty: boolean) => void;
   onBusyChange: (busy: boolean) => void;
   onReload: () => void;
+  onRefreshCatalog: () => Promise<void>;
 };
 function SalaryTemplateWorkflow({
   template: sourceTemplate,
@@ -267,6 +286,7 @@ function SalaryTemplateWorkflow({
   onDirtyChange,
   onBusyChange,
   onReload,
+  onRefreshCatalog,
 }: WorkflowProps) {
   // Pin the loaded version so background refreshes cannot replace edits.
   const [template] = useState(sourceTemplate);
@@ -279,7 +299,11 @@ function SalaryTemplateWorkflow({
     },
   });
   const templateId = template?.id;
-  const { data: esiPolicies } = useGetEsiPolicyOptionsQuery();
+  const {
+    data: esiPolicies,
+    isError: esiPoliciesError,
+    refetch: refetchEsiPolicies,
+  } = useGetEsiPolicyOptionsQuery();
   const defaultEsiPolicy = esiPolicies?.find((item) => item.isDefault && !item.isArchived);
   useEffect(() => {
     if (isCreate && !formik.dirty && !formik.values.defaultEsiPolicyId && defaultEsiPolicy)
@@ -435,21 +459,26 @@ function SalaryTemplateWorkflow({
           rules: result.editableVersion.rules,
         },
       });
-      toast.success(
-        isCreate
+      shikshaMitraToast.success({
+        message: isCreate
           ? 'Salary template is active for new salary setups.'
-          : `Version ${result.activeVersion} is active for new salary setups. Existing staff are unchanged.`
-      );
+          : `Version ${result.activeVersion} is active for new salary setups. Existing staff are unchanged.`,
+      });
       onSaved();
     } catch (error: any) {
-      if (error?.status === 400 || error?.status === 409) setPreview(null);
       const parsed = parseApiProblemDetail(error);
-      const conflict = error?.status === 409 || parsed.detail.toLowerCase().includes('conflict');
+      const duplicateName = parsed.errorCode === 'HR:Payroll:SalaryTemplateNameExists';
+      if (!duplicateName && (error?.status === 400 || error?.status === 409)) setPreview(null);
+      const conflict =
+        !isCreate &&
+        (parsed.errorCode === 'HR:Payroll:SalaryTemplateSaveConflict' ||
+          (!parsed.errorCode && error?.status === 409));
       setServerError(
         conflict
           ? 'Another administrator changed this template. Reload the latest version, review your edits, and save again.'
           : parsed.detail
       );
+      if (duplicateName) setPendingFocus('salary-basic-information');
     } finally {
       savingRef.current = false;
     }
@@ -461,6 +490,12 @@ function SalaryTemplateWorkflow({
     setShowIssues(true);
     await formik.setTouched(setNestedObjectValues(errors, true), false);
     const invalidRules = formik.values.rules.filter((_, index) => getIn(errors, `rules[${index}]`));
+    const basicCandidate = formik.values.rules.some((rule) => rule.semanticType === 'BASIC')
+      ? undefined
+      : formik.values.rules.find((rule) => rule.lineKind === 'EARNING');
+    if (basicCandidate) {
+      setExpanded((current) => new Set(current).add(basicCandidate.componentId));
+    }
     if (invalidRules.length) {
       setExpanded(
         (current) => new Set([...current, ...invalidRules.map((rule) => rule.componentId)])
@@ -473,11 +508,13 @@ function SalaryTemplateWorkflow({
           ? 'salary-statutory-defaults'
           : invalidRules.length
             ? `salary-rule-${invalidRules[0].componentId}`
-            : currentIssues.length
-              ? currentIssues[0].includes('PF')
-                ? 'salary-statutory-defaults'
-                : 'salary-earnings'
-              : null;
+            : basicCandidate
+              ? `salary-rule-purpose-${basicCandidate.componentId}`
+              : currentIssues.length
+                ? currentIssues[0].includes('PF')
+                  ? 'salary-statutory-defaults'
+                  : 'salary-earnings'
+                : null;
     if (target) setPendingFocus(target);
     return Object.keys(errors).length === 0 && currentIssues.length === 0;
   };
@@ -524,7 +561,8 @@ function SalaryTemplateWorkflow({
   };
 
   const busy = createState.isLoading || updateState.isLoading || formik.isSubmitting;
-  const valid = editorSchema.isValidSync(formik.values) && issues.length === 0;
+  const requirements = configurationFeedback(formik.values);
+  const valid = requirements.length === 0;
   useEffect(() => onBusyChange(busy), [busy, onBusyChange]);
   useEffect(() => {
     if (!pendingFocus) return undefined;
@@ -561,12 +599,14 @@ function SalaryTemplateWorkflow({
       : calculationState.isLoading
         ? 'Preparing preview…'
         : !valid
-          ? 'Complete the configuration before previewing.'
+          ? `${requirements[0]}${requirements.length > 1 ? ` ${requirements.length - 1} more ${requirements.length === 2 ? 'requirement' : 'requirements'}. Review configuration to continue.` : ''}`
           : previewCurrent
             ? 'Preview ready'
             : hasPreviewed
-              ? 'Preview needs refresh'
-              : 'Preview required';
+              ? 'Refresh the salary preview before saving.'
+              : previewError
+                ? 'Salary preview failed. Review the preview error and retry.'
+                : 'Configuration ready. Preview salary before creating or saving the template.';
   return (
     <Box
       component="form"
@@ -601,6 +641,48 @@ function SalaryTemplateWorkflow({
             opacity: busy ? 0.6 : 1,
           }}
         >
+          {!readOnly &&
+            catalogData &&
+            !catalogData.items.some((item) => item.lineKind === 'EARNING') && (
+              <Alert severity="warning">
+                <Typography variant="subtitle2">No active earning components</Typography>
+                <Typography variant="body2">
+                  An active earning component is required. Review salary components in a new tab,
+                  then return here and refresh setup. Your template entries stay in this tab.
+                </Typography>
+                <HrSetupLink setup="components" />
+                <HrSetupRefresh
+                  refresh={async () => {
+                    setPreview(null);
+                    await onRefreshCatalog();
+                  }}
+                  disabled={busy || calculationState.isLoading}
+                />
+              </Alert>
+            )}
+          {!readOnly &&
+            formik.values.defaultEsiManagementMode === 'IN_PLATFORM' &&
+            !esiPoliciesError &&
+            esiPolicies &&
+            !esiPolicies.some((item) => !item.isArchived) && (
+              <Alert severity="warning">
+                <Typography variant="subtitle2">No active ESIC policies</Typography>
+                <Typography variant="body2">
+                  An ESIC policy is required for calculation in ShikshaMitra. Review statutory setup
+                  in a new tab, then return here and refresh setup. Your template entries stay in
+                  this tab.
+                </Typography>
+                <HrSetupLink setup="statutory" />
+                <HrSetupRefresh
+                  refresh={async () => {
+                    setPreview(null);
+                    const result = await refetchEsiPolicies();
+                    if (result.error) throw new Error('ESIC policies could not be refreshed.');
+                  }}
+                  disabled={busy || calculationState.isLoading}
+                />
+              </Alert>
+            )}
           <SalaryTemplateConfigure
             previewMonth={effectiveMonth}
             formik={formik}
@@ -687,6 +769,34 @@ function SalaryTemplateWorkflow({
               justifyContent: 'flex-end',
             }}
           >
+            {!readOnly && !valid && (
+              <Button
+                size="small"
+                type="button"
+                variant="outlined"
+                disabled={busy || calculationState.isLoading}
+                onClick={validateConfiguration}
+              >
+                Review configuration
+              </Button>
+            )}
+            {!readOnly && valid && !previewCurrent && (
+              <Button
+                size="small"
+                type="button"
+                variant="outlined"
+                disabled={busy || calculationState.isLoading}
+                onClick={runSample}
+              >
+                {hasPreviewed
+                  ? 'Refresh salary preview'
+                  : previewError
+                    ? 'Retry salary preview'
+                    : isCreate
+                      ? 'Preview before creating'
+                      : 'Preview before saving'}
+              </Button>
+            )}
             {!readOnly && (
               <LoadingButton
                 size="small"
@@ -718,6 +828,11 @@ function SalaryTemplateWorkflow({
             size="small"
             fullWidth
             options={availableComponents}
+            noOptionsText={
+              availableComponents.length
+                ? 'No matching components'
+                : `No available ${addKind === 'EARNING' ? 'earning' : 'deduction'} components. Review payroll component setup or components already added.`
+            }
             value={selectedComponent}
             onChange={(_, value) => setSelectedComponent(value)}
             getOptionLabel={(option) => option.name}

@@ -12,6 +12,14 @@ export interface ParsedApiProblemDetail {
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'HR:Payroll:SalaryTemplateNameExists':
+    'A salary template already uses this name. Enter a different template name.',
+  'HR:Payroll:SalaryTemplatePreviewRequired':
+    'Calculate a fresh sample for these rules before saving.',
+  'HR:Payroll:SalaryTemplatePreviewExpired':
+    'The sample preview expired. Calculate again before saving.',
+  'HR:Payroll:SalaryTemplatePreviewChanged':
+    'Payroll configuration changed the sample result. Calculate again before saving.',
   'UserScope:InvalidHierarchy':
     'The academic permission selection contains items from different branches. Reload the hierarchy and select the board, medium, stage, class, and division from the same branch.',
   'UserScope:UsersNotFound':
