@@ -11,7 +11,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 import { useLazyGetEmployeeApplicationQuery } from 'src/redux/hr/employeeOnboardingApi';
 
-import { FinalizeWorkflow } from './index';
+import { FinalizeWorkflow } from './finalize-workflow';
 import { canFinalizeEmployeeApplication } from './status';
 import { FinalizePageHeader } from './finalize-page-header';
 import { isEmployeeApplicationId, resolveOnboardingReturnHref } from './finalize-navigation';

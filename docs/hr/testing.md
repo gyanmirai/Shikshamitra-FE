@@ -3,11 +3,17 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-27
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
 
+
+## Onboarding initial load
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/employee-onboarding --pool=forks --maxWorkers=1 --testTimeout=30000` on Windows. `initial-load.test.tsx` uses the real RTK Query clients with synthetic transport responses to verify one initial paged list request, no salary-workflow import, paging/search reset, explicit list errors, operational filtering with accurate counts, retry ownership and filter clearing. The separately imported full finalization tests preserve staff/salary drafts, work-assignment confirmation, permission gates, dirty departure and repeat-submission protection.
+
+After `npm run build` in both baseline and changed checkouts, run `node scripts/performance/measure-onboarding-bundle.mjs <checkout-root>` for each. Compare unique JS chunks required by the list screen's production client manifest, including shared dependencies, with gzip calculated per chunk. This cold-cache asset measure excludes root/layout assets, HTML, CSS, prefetch and runtime/network time. Synthetic transport tests and build measurements do not establish deployed timing or authenticated browser acceptance.
 
 ## Leave impact, history and restore
 
