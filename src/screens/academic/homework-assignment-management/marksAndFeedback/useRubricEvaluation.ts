@@ -1,15 +1,22 @@
+import type { AppDispatch } from 'src/redux/store';
+
 import React from 'react';
+import { api } from 'src/redux/service';
+import { useDispatch } from 'react-redux';
+import { academicType } from 'src/redux/tagTypes';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
-  useAddRubricMutation,
   RubricEvaluationStatus,
-  usePublishRubricMutation,
+  submissionRubricEvaluationTag,
+  assignmentRubricEvaluationTag,
   useUpsertRubricEvaluationMutation,
   useSubmitRubricEvaluationMutation,
   useApproveRubricEvaluationMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
+import { useDefaultRubricCreation } from './useDefaultRubricCreation';
+import { saveRubricEvaluationChain } from './saveRubricEvaluationChain';
 import { useRubricEvaluationQueries } from './useRubricEvaluationQueries';
 import {
   calculateTotalMarks,
@@ -23,14 +30,10 @@ import type {
   RubricEvaluationPanelProps,
 } from './rubricEvaluationTypes';
 
-const defaultCriteria = [
-  { title: 'Concept Understanding', isRequired: true, points: 10, displayOrder: 1 },
-  { title: 'Accuracy', isRequired: true, points: 10, displayOrder: 2 },
-  { title: 'Presentation', isRequired: true, points: 5, displayOrder: 3 },
-];
-
 export const useRubricEvaluation = (props: RubricEvaluationPanelProps) => {
-  const { mode, standardId, subjectId, taskId, taskTitle, studentRow, ensureSubmissionId } = props;
+  const dispatch = useDispatch<AppDispatch>();
+  const { mode, standardId, subjectId, taskId, studentRow, ensureSubmissionId } = props;
+  const { createDefaultRubric, isCreating, isPublishing } = useDefaultRubricCreation(props);
   const studentId = studentRow?.studentId;
   const [resolvedSubmissionId, setResolvedSubmissionId] = React.useState<string | null>(null);
   const submissionId = resolvedSubmissionId || studentRow?.id;
@@ -46,8 +49,6 @@ export const useRubricEvaluation = (props: RubricEvaluationPanelProps) => {
   const isLocked = currentEvaluation?.status === RubricEvaluationStatus.Approved;
   const [criterionValues, setCriterionValues] = React.useState<CriterionEvaluationValues>({});
   const [remarks, setRemarks] = React.useState('');
-  const [addRubric, { isLoading: isCreating }] = useAddRubricMutation();
-  const [publishRubric, { isLoading: isPublishing }] = usePublishRubricMutation();
   const [upsertEvaluation] = useUpsertRubricEvaluationMutation();
   const [submitEvaluation] = useSubmitRubricEvaluationMutation();
   const [approveEvaluation] = useApproveRubricEvaluationMutation();
@@ -69,26 +70,6 @@ export const useRubricEvaluation = (props: RubricEvaluationPanelProps) => {
       ...current,
       [criterionId]: { ...current[criterionId], comments },
     }));
-
-  const createDefaultRubric = async () => {
-    try {
-      const created = await addRubric({
-        standardId,
-        subjectId,
-        homeworkId: mode === 'homework' ? taskId : null,
-        assignmentId: mode === 'assignment' ? taskId : null,
-        title: `${taskTitle || 'Task'} Rubric`,
-        description: 'Default assessment rubric',
-        criteria: defaultCriteria,
-      }).unwrap();
-      await publishRubric(created.id).unwrap();
-      shikshaMitraToast.success({ message: 'Rubric created and published successfully.' });
-    } catch (error) {
-      shikshaMitraToast.error({
-        message: parseApiProblemDetail(error).detail || 'Failed to create rubric',
-      });
-    }
-  };
 
   const save = async () => {
     if (!activeRubric || !studentId) return false;
@@ -117,17 +98,27 @@ export const useRubricEvaluation = (props: RubricEvaluationPanelProps) => {
     }
     setResolvedSubmissionId(validSubmissionId);
     try {
-      const saved = await upsertEvaluation({
+      await saveRubricEvaluationChain({
+        upsert: () => upsertEvaluation({
         rubricId: activeRubric.id,
+        deferInvalidation: true,
         body: {
           studentSubmissionId: validSubmissionId,
           studentId,
           remarks,
           scores: buildEvaluationScores(activeRubric, criterionValues),
         },
-      }).unwrap();
-      await submitEvaluation(saved.id).unwrap();
-      await approveEvaluation(saved.id).unwrap();
+        }).unwrap(),
+        submit: evaluationId => submitEvaluation({ evaluationId, deferInvalidation: true }).unwrap(),
+        approve: evaluationId => approveEvaluation({ evaluationId, deferInvalidation: true }).unwrap(),
+        refresh: () => dispatch(api.util.invalidateTags([
+          mode === 'homework'
+            ? submissionRubricEvaluationTag({ rubricId: activeRubric.id, submissionId: validSubmissionId, studentId })
+            : assignmentRubricEvaluationTag({ assignmentId: taskId, studentId }),
+          { type: mode === 'homework' ? academicType.homeworkSubmissions : academicType.assignmentSubmissions, id: taskId },
+          { type: mode === 'homework' ? academicType.homeworkSubmissions : academicType.assignmentSubmissions, id: 'LIST' },
+        ])),
+      });
       return true;
     } catch (error) {
       shikshaMitraToast.error({

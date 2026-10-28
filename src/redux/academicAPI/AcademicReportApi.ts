@@ -163,20 +163,9 @@ export interface AcademicReportExportJobResponse {
 
 export interface AcademicReportDownloadResponse {
   blob: Blob;
-  // Kept for existing report screens that still use the legacy base64 download helper.
-  bytes: string;
+  bytes?: string;
   contentType?: string | null;
   fileName?: string | null;
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  const chunkSize = 0x8000;
-  let binary = '';
-  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
-  }
-  return window.btoa(binary);
 }
 
 function getDownloadFileName(contentDisposition: string | null): string | null {
@@ -291,7 +280,6 @@ export const academicReportApi = api.injectEndpoints({
           const blob = await response.blob();
           return {
             blob,
-            bytes: arrayBufferToBase64(await blob.arrayBuffer()),
             contentType: response.headers.get('content-type'),
             fileName: getDownloadFileName(response.headers.get('content-disposition')),
           };

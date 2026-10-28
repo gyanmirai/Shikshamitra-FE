@@ -8,8 +8,8 @@ import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
+  useGetSubjectLookupQuery,
   useBulkAddSubjectsMutation,
-  useGetCoreSubjectsByMediumQuery,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import type { IPendingRow } from '../type';
@@ -23,9 +23,9 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
 
   const { data: existingSubjects } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    currentQueryAndMutation: useGetSubjectLookupQuery,
     params: { academicMediumId: (currentMedium as Medium)?.id },
-    options: { skip: !(currentMedium as Medium)?.id },
+    options: { skip: !(currentMedium as Medium)?.id, refetchOnMountOrArgChange: 60 },
   });
 
   const [bulkAddSubjects, { isLoading: isSaving }] = useQueryAndMutation({

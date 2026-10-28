@@ -82,7 +82,7 @@ export function usePublishedSeatingData({
                 standardId,
                 seatingPlanId: plan.seatingPlanId,
                 pageSize: 1000,
-              }).unwrap()
+              }, attempt === 0).unwrap()
             )
           ) as Promise<ManualStudentResponseDto[]>,
           Promise.all(
@@ -93,7 +93,7 @@ export function usePublishedSeatingData({
                 roomId: layoutRoomId,
                 seatingPlanId: plan.seatingPlanId,
                 pageSize: 1000,
-              }).unwrap()
+              }, attempt === 0).unwrap()
             )
           ) as Promise<ManualLayoutResponseDto[]>,
         ]);

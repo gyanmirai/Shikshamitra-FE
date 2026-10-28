@@ -4,6 +4,16 @@ import { academicApi } from '../../academicApi';
 
 export const recordMarksApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
+    getExamGradeOptions: builder.query<string[], {
+      ExamId: string; SubjectId?: string; DivisionId?: string; StandardId?: string;
+    }>({
+      query: (params) => ({
+        url: '/academics/exams/marks/grade-options',
+        method: 'GET',
+        params,
+      }),
+      providesTags: [academicType.recordMarks, academicType.gradeScaling, academicType.exam],
+    }),
     // Get Exam Students Marks
     getExamMarks: builder.query({
       query: (params) => ({
@@ -149,6 +159,7 @@ export const recordMarksApi = academicApi.injectEndpoints({
 });
 
 export const {
+  useGetExamGradeOptionsQuery,
   useGetExamMarksQuery,
   useUpdateStudentMarksMutation,
   usePublishExamMarksMutation,

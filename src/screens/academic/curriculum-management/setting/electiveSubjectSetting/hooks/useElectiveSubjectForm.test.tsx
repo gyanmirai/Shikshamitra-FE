@@ -1,5 +1,5 @@
+import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { act, waitFor, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useElectiveSubjectForm } from './useElectiveSubjectForm';
 
@@ -21,7 +21,7 @@ vi.mock('react-redux', () => ({
 }));
 
 vi.mock('src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi', () => ({
-  useGetCoreSubjectsByMediumQuery: mocks.subjectsHook,
+  useGetSubjectLookupQuery: mocks.subjectsHook,
 }));
 
 vi.mock('src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi', () => ({

@@ -10,7 +10,6 @@ import {
   RubricStatus,
   RubricWorkType,
   RubricScoringModel,
-  type AssessmentRubricDto,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import { getRubricMaximumLabel } from './rubricScoreLabels';
@@ -23,6 +22,8 @@ import {
   RUBRIC_SCORING_MODEL_OPTIONS,
 } from './constants';
 
+import type { RubricTemplateListRow } from './hooks/rubricTemplateListRows';
+
 const statusColor = {
   0: 'warning',
   1: 'success',
@@ -30,7 +31,7 @@ const statusColor = {
   3: 'info',
 } as const;
 
-const toRubricRow = (row: unknown) => row as AssessmentRubricDto;
+const toRubricRow = (row: unknown) => row as RubricTemplateListRow;
 
 export const getRubricConfigColumns = (): IColumn[] => [
   {
@@ -82,7 +83,9 @@ export const getRubricConfigColumns = (): IColumn[] => [
     label: 'Criteria',
     minWidth: 110,
     filterType: 'number',
-    render: (_value, row) => toRubricRow(row).criteria?.length ?? 0,
+    render: (_value, row) => toRubricRow(row).criteriaCount ?? toRubricRow(row).criteria?.length ?? 0,
+    filterValue: (_value, row) => toRubricRow(row).criteriaCount ?? toRubricRow(row).criteria?.length ?? 0,
+    sortValue: (_value, row) => toRubricRow(row).criteriaCount ?? toRubricRow(row).criteria?.length ?? 0,
   },
   {
     id: 'totalMarks',

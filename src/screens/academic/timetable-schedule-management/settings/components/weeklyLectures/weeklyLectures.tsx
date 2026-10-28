@@ -10,9 +10,9 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { TIMETABLE_STATUS_LABEL, normalizeTimetableStatus } from 'src/utils/timetable-capacity';
 import { useGetWeeklyLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
+import { AcademicSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/academic/setup/embedding';
 import { TimetableSettingsSummaryCards } from 'src/screens/academic/components/AcademicSummaryInsights';
 
 import CreateNoOfLecture from './createWeeklyLectures';
@@ -126,7 +126,7 @@ const WeeklyLectures = () => {
   }, [tableData]);
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box height="100%" minHeight={0} display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Weekly Lectures Slots"
         description="Configure and manage weekly lecture slots for each class."

@@ -73,6 +73,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   onPaginationChange,
   onSearchInputChange,
   onServerSearch,
+  onVisibleColumnsChange,
   onServerFilter,
   onSortChange,
   onFiltersChange,
@@ -190,6 +191,12 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   });
 
   const { page, rowsPerPage, searchTerm, filters, sorts, columnVisibility, dense } = tableConfig;
+  const visibleColumnIds = memoizedColumns.filter(column => columnVisibility[column.id] !== false && column.id !== 'actions').map(column => column.id).join('\u001f');
+  const visibleColumnsCallback = useRef(onVisibleColumnsChange);
+  visibleColumnsCallback.current = onVisibleColumnsChange;
+  useEffect(() => {
+    visibleColumnsCallback.current?.(visibleColumnIds ? visibleColumnIds.split('\u001f') : []);
+  }, [visibleColumnIds]);
   const onServerSearchRef = useRef(onServerSearch);
 
   useEffect(() => {

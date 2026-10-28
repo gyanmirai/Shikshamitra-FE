@@ -8,7 +8,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useGetSubjectLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import {
   useGetElectiveGroupsQuery,
   useAddElectiveGroupMutation,
@@ -46,10 +46,11 @@ export const useElectiveSubjectForm = ({
 
   const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    currentQueryAndMutation: useGetSubjectLookupQuery,
     params: { academicMediumId: (currentMedium as Medium)?.id, includeArchived: false },
     options: {
       skip: !(currentMedium as Medium)?.id,
+      refetchOnMountOrArgChange: 60,
     },
   });
 

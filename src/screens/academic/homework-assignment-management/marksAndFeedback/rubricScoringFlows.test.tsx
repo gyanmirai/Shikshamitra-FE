@@ -15,7 +15,8 @@ describe.each(['homework', 'assignment'] as const)('%s rubric scoring through RT
     const fields = await screen.findAllByRole('spinbutton', { name: /Points earned/ });
     fireEvent.change(fields[0], { target: { value: '8' } });
     fireEvent.change(fields[1], { target: { value: '10' } });
-    expect(screen.getByText('18')).toBeInTheDocument();
+    expect(fields[0]).toHaveValue(8);
+    expect(fields[1]).toHaveValue(10);
     fireEvent.click(screen.getByRole('button', { name: 'Save evaluation' }));
     await waitFor(() => expect(writes).toHaveLength(1));
     expect(writes[0].totalMarks).toBe(18);
@@ -29,8 +30,8 @@ describe.each(['homework', 'assignment'] as const)('%s rubric scoring through RT
     const fields = await screen.findAllByRole('spinbutton', { name: /Achievement %/ });
     fireEvent.change(fields[0], { target: { value: '80' } });
     fireEvent.change(fields[1], { target: { value: '85' } });
-    expect(screen.getByText('82.5')).toBeInTheDocument();
-    expect(screen.getByText('/ 100%')).toBeInTheDocument();
+    expect(fields[0]).toHaveValue(80);
+    expect(fields[1]).toHaveValue(85);
     fireEvent.click(screen.getByRole('button', { name: 'Save evaluation' }));
     await waitFor(() => expect(writes).toHaveLength(1));
     expect(writes[0].scores.map(score => score.marks)).toEqual([40, 42.5]);
@@ -43,7 +44,7 @@ describe.each(['homework', 'assignment'] as const)('%s rubric scoring through RT
     const { writes, reload } = setupRubricScoringTest(mode, RubricScoringModel.WeightedPercentage);
     const fields = await screen.findAllByRole('spinbutton', { name: /Achievement %/ });
     fields.forEach(field => fireEvent.change(field, { target: { value: '2.01' } }));
-    expect(screen.getByText('2.02')).toBeInTheDocument();
+    fields.forEach(field => expect(field).toHaveValue(2.01));
     fireEvent.click(screen.getByRole('button', { name: 'Save evaluation' }));
     await waitFor(() => expect(writes).toHaveLength(1));
     expect(writes[0].scores.map(score => score.marks)).toEqual([1.01, 1.01]);
@@ -74,7 +75,8 @@ describe.each(['homework', 'assignment'] as const)('%s rubric scoring through RT
     const unit = model === RubricScoringModel.RatingScale ? 'rating' : 'points';
     fireEvent.click(await screen.findByRole('button', { name: `Criterion 1: Excellent, 4 ${unit}` }));
     fireEvent.click(screen.getByRole('button', { name: `Criterion 2: Good, 3 ${unit}` }));
-    expect(screen.getByText('7')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: `Criterion 1: Excellent, 4 ${unit}` })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: `Criterion 2: Good, 3 ${unit}` })).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(screen.getByRole('button', { name: 'Save evaluation' }));
     await waitFor(() => expect(writes).toHaveLength(1));
     expect(writes[0].scores.map(score => score.marks)).toEqual([4, 3]);

@@ -66,7 +66,7 @@ const Subject = () => {
     handleBackFromView,
     query,
     setQuery,
-  } = useSubjectAssignment();
+  } = useSubjectAssignment(insightsDrawer.value);
 
   const { permissions } = useSelector((state: RootState) => state.auth);
 

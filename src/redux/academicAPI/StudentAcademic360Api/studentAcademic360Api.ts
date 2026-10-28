@@ -1,8 +1,11 @@
-import type { Academic360ListResponse } from 'src/screens/academic/student-academic-360/types';
+import type { Academic360Response, Academic360ListResponse } from 'src/screens/academic/student-academic-360/types';
 
 import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../academicApi';
+import { studentAcademic360Request } from './studentAcademic360Request';
+
+import type { StudentAcademic360Request } from './studentAcademic360Request';
 
 export const studentAcademic360Api = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -82,11 +85,9 @@ export const studentAcademic360Api = academicApi.injectEndpoints({
       },
       providesTags: [academicType.academic360],
     }),
-    getStudentAcademic360Tab: builder.query({
-      query: ({ studentId, tab }: { studentId: string; tab: string }) => ({
-        url: `academics/student-academic-360/${studentId}/tabs/${tab}`,
-        method: 'GET',
-      }),
+    getStudentAcademic360Tab: builder.query<Academic360Response & { detailTab?: string }, StudentAcademic360Request>({
+      query: studentAcademic360Request,
+      transformResponse: (response: Academic360Response, _meta, input) => ({ ...response, detailTab: input.tab }),
       providesTags: [academicType.academic360],
     }),
   }),

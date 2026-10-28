@@ -19,11 +19,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
+import { AcademicSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/academic/setup/embedding';
 import {
   examinationTypeApi,
   useGetExaminationTypesQuery,
@@ -179,7 +179,7 @@ const ExamTypeSettings = () => {
   };
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box height="100%" minHeight={0} display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Exam Types "
         description="Manage the different types of exams conducted in your institution. Add, edit, or delete exam types as needed."

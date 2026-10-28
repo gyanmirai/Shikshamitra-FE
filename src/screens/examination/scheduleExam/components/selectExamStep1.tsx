@@ -20,14 +20,13 @@ import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationAp
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import { useGetExamSubjectsLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
-import { useLazyGetStudentElectiveAssignmentsQuery } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
 
 import { pruneRoomDetails } from './initialValues';
+import { useElectiveReadiness } from './use-elective-readiness';
 import { applyExamSubjectSelection } from './exam-subject-form-state';
 import { resolveDivisionSelection, getDisplayedDivisionSelection } from './division-selection';
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 import {
-  normalizeSubjectId,
   getSubjectSelectionKey,
   getUncachedElectiveGroupIds,
   normalizeSelectedExamSubjects,
@@ -35,16 +34,6 @@ import {
 
 import type { IExamFormValues } from '../type';
 import type { ElectiveReadiness, SubjectSelectionOption } from './exam-subject-selection';
-
-type StudentElectiveAssignmentsResponse = {
-  records?: Array<{ selectedSubjectId?: string | null }>;
-  data?: {
-    records?: Array<{ selectedSubjectId?: string | null }>;
-  };
-};
-
-const getStudentElectiveRecords = (response: StudentElectiveAssignmentsResponse) =>
-  response.records ?? response.data?.records ?? [];
 
 const SELECTABLE_SETTING_STATUSES = new Set([0, 2, 'Active', 'SystemDefault']);
 
@@ -77,9 +66,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const [electiveReadiness, setElectiveReadiness] = useState<Record<string, ElectiveReadiness>>({});
-  const [checkElectiveAssignments] = useLazyGetStudentElectiveAssignmentsQuery();
   const selectionVersionRef = useRef(0);
-  const readinessRequestsRef = useRef(new Map<string, Promise<ElectiveReadiness>>());
 
   // Update classes when organization changes
   useEffect(() => {
@@ -137,6 +124,11 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
     () => formik.values.divisions.filter((divisionId: string) => divisionId !== 'all'),
     [formik.values.divisions]
   );
+  const getElectiveReadiness = useElectiveReadiness({
+    academicMediumId: medium?.id,
+    classId: formik.values.className,
+    divisionIds: selectedDivisionIds,
+  });
 
   const {
     data: subjectTableData = [],
@@ -180,67 +172,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
   useEffect(() => {
     selectionVersionRef.current += 1;
-    readinessRequestsRef.current.clear();
     setElectiveReadiness({});
   }, [formik.values.className, formik.values.divisions]);
-
-  const getElectiveReadiness = (electiveGroupId: string): Promise<ElectiveReadiness> => {
-    const existingRequest = readinessRequestsRef.current.get(electiveGroupId);
-    if (existingRequest) return existingRequest;
-
-    const request = (async () => {
-      if (!medium?.id || !formik.values.className || selectedDivisionIds.length === 0) {
-        return {
-          isReady: false,
-          message: 'Select class and division before selecting an elective group.',
-          assignedCounts: {},
-        };
-      }
-
-      try {
-        const assignments = await Promise.all(
-          selectedDivisionIds.map(
-            (divisionId) =>
-              checkElectiveAssignments(
-                {
-                  academicMediumId: medium.id,
-                  classId: formik.values.className,
-                  divisionId,
-                  electiveGroupId,
-                },
-                true
-              ).unwrap() as Promise<StudentElectiveAssignmentsResponse>
-          )
-        );
-
-        const assignedCounts = assignments.reduce<Record<string, number>>((counts, assignment) => {
-          getStudentElectiveRecords(assignment).forEach(({ selectedSubjectId }) => {
-            const normalizedSubjectId = normalizeSubjectId(selectedSubjectId);
-            if (normalizedSubjectId) {
-              counts[normalizedSubjectId] = (counts[normalizedSubjectId] ?? 0) + 1;
-            }
-          });
-          return counts;
-        }, {});
-
-        return { isReady: true, assignedCounts };
-      } catch {
-        return {
-          isReady: false,
-          message: 'Unable to load elective subject assignments. Please try again.',
-          assignedCounts: {},
-        };
-      }
-    })();
-
-    readinessRequestsRef.current.set(electiveGroupId, request);
-    request.finally(() => {
-      if (readinessRequestsRef.current.get(electiveGroupId) === request) {
-        readinessRequestsRef.current.delete(electiveGroupId);
-      }
-    });
-    return request;
-  };
 
   const commitSubjectSelection = (subjects: IExamFormValues['subjects']) => {
     formik.setFormikState((currentState) => applyExamSubjectSelection(currentState, subjects));
@@ -270,9 +203,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
     const groupIds = getUncachedElectiveGroupIds(value, electiveReadiness);
     if (groupIds.length === 0) return;
 
-    const readinessEntries = await Promise.all(
-      groupIds.map(async (groupId) => [groupId, await getElectiveReadiness(groupId)] as const)
-    );
+    const readinessEntries = Object.entries(await getElectiveReadiness(groupIds));
     if (selectionVersion !== selectionVersionRef.current) return;
 
     const nextReadiness = { ...electiveReadiness, ...Object.fromEntries(readinessEntries) };

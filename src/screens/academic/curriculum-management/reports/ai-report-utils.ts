@@ -1,6 +1,6 @@
 import type { AcademicReportDownloadResponse } from 'src/redux/academicAPI/AcademicReportApi';
 
-function base64ToBlob(bytes: string, contentType: string): Blob {
+function legacyReportBlob(bytes: string, contentType: string): Blob {
   const characters = window.atob(bytes);
   const values = new Uint8Array(characters.length);
   for (let index = 0; index < characters.length; index += 1) {
@@ -9,9 +9,15 @@ function base64ToBlob(bytes: string, contentType: string): Blob {
   return new Blob([values], { type: contentType });
 }
 
-export function saveAcademicReportFile(data: AcademicReportDownloadResponse): void {
-  const contentType = data.contentType || 'application/pdf';
-  const fileBlob = data.bytes ? base64ToBlob(data.bytes, contentType) : data.blob;
+export function saveAcademicReportFile(
+  data: AcademicReportDownloadResponse,
+  fallbackFileName = 'ShikshaMitra_AI_Report.pdf'
+): void {
+  const fileBlob = data.blob?.size
+    ? data.blob
+    : data.bytes
+      ? legacyReportBlob(data.bytes, data.contentType || 'application/pdf')
+      : data.blob;
 
   if (!fileBlob || fileBlob.size === 0) {
     throw new Error('The report download did not contain file data.');
@@ -20,7 +26,7 @@ export function saveAcademicReportFile(data: AcademicReportDownloadResponse): vo
   const url = URL.createObjectURL(fileBlob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = data.fileName || 'ShikshaMitra_AI_Report.pdf';
+  link.download = data.fileName || fallbackFileName;
   link.style.display = 'none';
   document.body.appendChild(link);
   link.click();
@@ -29,6 +35,10 @@ export function saveAcademicReportFile(data: AcademicReportDownloadResponse): vo
   // Chromium/WebView can consume the object URL after click() returns. Revoking it
   // synchronously makes the UI report success even though no file is written.
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function saveAcademicStandardReportFile(data: AcademicReportDownloadResponse): void {
+  saveAcademicReportFile(data, 'report.pdf');
 }
 
 export function startAcademicReportDownload(jobId: string): void {

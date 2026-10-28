@@ -1,7 +1,7 @@
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { AcademicSetupManagerHeader } from 'src/screens/academic/setup/embedding';
 
 interface Props {
   canView: boolean;
@@ -13,7 +13,7 @@ interface Props {
 
 export function SubjectPageHeader({ canView, canAdd, onInsights, onBulkAdd, onAdd }: Props) {
   return (
-    <CustomBreadcrumbs
+    <AcademicSetupManagerHeader
       heading="Subject Creation"
       description="Manage master subjects used across curriculum, timetable, exams, lesson plans, and reports."
       links={[

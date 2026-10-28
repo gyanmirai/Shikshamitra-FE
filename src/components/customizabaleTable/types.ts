@@ -111,6 +111,7 @@ export interface ICustomizableTableProps {
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onSearchInputChange?: (searchTerm: string) => void;
   onServerSearch?: (searchTerm: string) => void;
+  onVisibleColumnsChange?: (columns: string[]) => void;
   onServerFilter?: (filters: IParams['filters']) => void;
   onSortChange?: (sorts: IParams['sorts']) => void;
   onFiltersChange?: (filters: IParams['filters']) => void;

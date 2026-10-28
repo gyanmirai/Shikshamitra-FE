@@ -1,7 +1,7 @@
 import type { NavSectionProps, NavItemBaseProps } from 'src/components/nav-section/types';
 
 import { academicPath } from 'src/routes/paths';
-import academicModule, { academicPaths, academicPermissions } from 'src/constants/academic-menu';
+import academicModule, { academicPaths, academicPermissions, academicSetupViewPermissions } from 'src/constants/academic-menu';
 
 import { hasGrantedPermission } from './permissions';
 
@@ -75,8 +75,11 @@ export const canAccessAcademicRoute = (
   permissions: GrantedPermission[]
 ): boolean => {
   if (!hasGrantedPermission(permissions, academicPermissions.root)) return false;
-  const normalizedPath = pathname.replace(/\/$/, '');
+  const normalizedPath = pathname.split(/[?#]/, 1)[0].replace(/\/$/, '');
   const path = routeAliases[normalizedPath] ?? normalizedPath;
+  if (path === academicPaths.setup || path.startsWith(`${academicPaths.setup}/`)) {
+    return hasGrantedPermission(permissions, academicSetupViewPermissions);
+  }
   const items = academicModule()[academicPath].flatMap((group) => group.items);
   // Unlisted legacy pages retain their own route and screen guards.
   return !hasRoute(items, path) || hasRoute(filterAcademicNavigation(items, permissions), path);

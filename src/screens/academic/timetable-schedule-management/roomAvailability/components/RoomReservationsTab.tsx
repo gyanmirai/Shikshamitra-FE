@@ -1,5 +1,7 @@
 'use client';
 
+import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
+
 import dayjs from 'dayjs';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
@@ -27,6 +29,10 @@ import type { RoomReservation, ReservationStatus } from '../types';
 type PendingAction = { id: string; type: 'approve' | 'reject' | 'cancel' } | null;
 
 interface RoomReservationsTabProps {
+  tableProps?: Partial<ICustomizableTableProps>;
+  selectedStatus?: string;
+  onStatusChange?: (status: string) => void;
+  counts?: Record<string, number>;
   reservations: RoomReservation[];
   isLoading?: boolean;
   canApprove?: boolean;
@@ -53,6 +59,10 @@ const STATUS_TABS: {
 ];
 
 export const RoomReservationsTab = ({
+  tableProps,
+  selectedStatus,
+  onStatusChange,
+  counts: serverStatusCounts,
   reservations,
   isLoading = false,
   canApprove = false,
@@ -116,9 +126,9 @@ export const RoomReservationsTab = ({
   };
 
   const filtered = useMemo(() => {
-    if (filter === 'all') return reservations;
+    if (tableProps || filter === 'all') return reservations;
     return reservations.filter((r) => r.status === filter);
-  }, [filter, reservations]);
+  }, [filter, reservations, tableProps]);
 
   // Count per status for the tab badges.
   const statusCounts = useMemo(() => {
@@ -156,8 +166,8 @@ export const RoomReservationsTab = ({
         }}
       >
         <Tabs
-          value={filter}
-          onChange={(_, v) => setFilter(v as ReservationStatus | 'all')}
+          value={selectedStatus ?? filter}
+          onChange={(_, v) => onStatusChange ? onStatusChange(v) : setFilter(v as ReservationStatus | 'all')}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, flexGrow: 1 }}
         >
           {STATUS_TABS.map((tab) => (
@@ -169,7 +179,7 @@ export const RoomReservationsTab = ({
                 <Box display="flex" justifyContent="center" gap={1} alignItems="center">
                   {tab.label}{' '}
                   <Label color={(tab.color as LabelColor) || 'default'}>
-                    {statusCounts[tab.value] || 0}
+                    {(serverStatusCounts ?? statusCounts)[tab.value] || 0}
                   </Label>
                 </Box>
               }
@@ -179,6 +189,7 @@ export const RoomReservationsTab = ({
       </Paper>
 
       <CustomizableTable
+        {...tableProps}
         tableContainerProps={{ sx: { height: '100%' } }}
         tableId="room-reservations-enhanced"
         tableTitle="Room Reservations"

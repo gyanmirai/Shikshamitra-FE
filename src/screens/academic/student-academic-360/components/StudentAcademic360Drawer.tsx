@@ -2,7 +2,6 @@
 
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect, useCallback } from 'react';
-import { useGetStudentAcademic360TabQuery } from 'src/redux/academicAPI/StudentAcademic360Api/studentAcademic360Api';
 import {
   Box,
   Tab,
@@ -16,6 +15,7 @@ import {
   Drawer,
   Divider,
   Skeleton,
+  LinearProgress,
 } from '@mui/material';
 
 import { getStudentId } from '../types';
@@ -23,6 +23,8 @@ import { SuccessOverview } from './SuccessOverview';
 import { SuccessDetailTabs } from './SuccessDetailTabs';
 import { StudentSuccessHeader } from './StudentSuccessHeader';
 import { Academic360EmptyState } from './Academic360EmptyState';
+import { Academic360DetailPagination } from './Academic360DetailPagination';
+import { useStudentAcademic360Detail } from '../hooks/useStudentAcademic360Detail';
 
 import type { Academic360Response, Academic360StudentRow } from '../types';
 
@@ -87,10 +89,8 @@ export function StudentAcademic360Drawer({
     [currentIndex, onAdjacentPage, onStudentChange, students]
   );
 
-  const { data, isFetching, isError } = useGetStudentAcademic360TabQuery(
-    { studentId, tab: activeTab },
-    { skip: !open || !studentId }
-  );
+  const detail = useStudentAcademic360Detail(studentId, activeTab, open);
+  const { data, isFetching, isError } = detail;
   const academic360 = data as Academic360Response | undefined;
   const drawerStudent = academic360?.student || student;
 
@@ -232,7 +232,8 @@ export function StudentAcademic360Drawer({
         </Stack>
         <Divider />
 
-        <Box sx={{ flex: 1, overflow: 'auto', p: 1.5, bgcolor: 'background.neutral' }}>
+        {isFetching && academic360 && <LinearProgress aria-label="Refreshing academic history" />}
+        <Box aria-busy={isFetching} sx={{ flex: 1, overflow: 'auto', p: 1.5, bgcolor: 'background.neutral' }}>
           {student ? (
             <Stack spacing={1.5}>
               {isError && (
@@ -240,7 +241,7 @@ export function StudentAcademic360Drawer({
                   Unable to load the Academic 360 summary. Please try again.
                 </Alert>
               )}
-              {isFetching ? (
+              {isFetching && !academic360 ? (
                 <DrawerSkeleton activeTab={activeTab} />
               ) : activeTab === 'overview' ? (
                 <SuccessOverview data={academic360} />
@@ -248,8 +249,10 @@ export function StudentAcademic360Drawer({
                 <SuccessDetailTabs
                   data={academic360}
                   activeTab={activeTab}
-                  isLoading={isFetching}
+                  isLoading={isFetching && !academic360}
                   student={drawerStudent}
+                  filters={detail.filters}
+                  onFilterChange={detail.changeFilters}
                 />
               )}
             </Stack>
@@ -260,6 +263,12 @@ export function StudentAcademic360Drawer({
             />
           )}
         </Box>
+        {(activeTab === 'learning' || activeTab === 'exams') && !isFetching && !isError && (
+          <Academic360DetailPagination
+            count={detail.totalCount} page={detail.page} pageSize={detail.pageSize}
+            onChange={detail.changePage}
+          />
+        )}
       </Box>
     </Drawer>
   );

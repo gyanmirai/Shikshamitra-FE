@@ -10,9 +10,10 @@ import { getRubricActionColumn } from './rubricConfigActionColumn';
 import type { RubricConfigTableProps } from './types';
 
 const RubricConfigTable: React.FC<RubricConfigTableProps> = (props) => {
-  const { data, isLoading, isError = false, hasMedium = true, onRetry } = props;
+  const { data, isLoading, isError = false, hasMedium = true, onRetry, serverProps } = props;
   return (
     <CustomizableTable
+      {...serverProps}
       tableTitle="Rubric Templates"
       tableId="rubric-config-table"
       isLoading={isLoading}

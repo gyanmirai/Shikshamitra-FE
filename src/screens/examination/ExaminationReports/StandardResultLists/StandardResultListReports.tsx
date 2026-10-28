@@ -17,8 +17,8 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
-import { useGetExamMarksQuery } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
-import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useGetExamGradeOptionsQuery } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
+import { useGetSubjectLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   ExamReportTitle,
@@ -279,7 +279,7 @@ const StandardResultListReports = ({
     isError: isCoreSubjectError,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    currentQueryAndMutation: useGetSubjectLookupQuery,
     params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
     options: {
       skip: !shouldLoadSubjects || !!classId,
@@ -308,14 +308,6 @@ const StandardResultListReports = ({
   const isSubjectFetching = classId ? isSubjectOptionsFetching : false;
   const isSubjectError = classId ? isSubjectOptionsError : isCoreSubjectError;
 
-  const gradeQuery = useMemo(
-    () => ({
-      page: 1,
-      pageSize: 500,
-    }),
-    []
-  );
-
   const {
     data: gradingData,
     isLoading: isGradeLoading,
@@ -323,13 +315,12 @@ const StandardResultListReports = ({
     isError: isGradeError,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetExamMarksQuery,
+    currentQueryAndMutation: useGetExamGradeOptionsQuery,
     params: {
       ExamId: formik.values.exam,
       SubjectId: undefined,
       DivisionId: selectedDivisionIds[0] || undefined,
       StandardId: selectedClassIds[0] || undefined,
-      ...gradeQuery,
     },
     options: {
       skip: !shouldLoadGrades,
@@ -395,8 +386,7 @@ const StandardResultListReports = ({
   const gradeOptions = useMemo(() => {
     const gradeSet = new Set<string>();
 
-    getApiItems(gradingData).forEach((item: any) => {
-      const rawGrade = item?.grade;
+    (gradingData ?? []).forEach((rawGrade: string) => {
       if (rawGrade === null || rawGrade === undefined) return;
       const normalizedGrade = String(rawGrade).trim();
       if (!normalizedGrade) return;

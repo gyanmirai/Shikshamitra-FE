@@ -34,6 +34,7 @@ import { Academic360EmptyState } from './Academic360EmptyState';
 import { Academic360SectionHeader } from './Academic360SectionHeader';
 
 import type { Academic360ExamResult, Academic360StudentRow } from '../types';
+import type { Academic360DetailFilters } from '../hooks/useStudentAcademic360Detail';
 
 export type ExamStatusCategory = 'UPCOMING' | 'COMPLETED' | 'PUBLISHED';
 
@@ -67,6 +68,9 @@ type ExamsResultsDashboardCardProps = {
   fullView?: boolean;
   onRetry?: () => void;
   onViewAll?: () => void;
+  filters?: Academic360DetailFilters;
+  onFilterChange?: (filters: Partial<Academic360DetailFilters>) => void;
+  summary?: { total: number; upcoming: number; completed: number; average: number | null };
 };
 
 const PAGE_SIZE = 6;
@@ -632,9 +636,18 @@ export function ExamsResultsDashboardCard({
   fullView = false,
   onRetry,
   onViewAll,
+  filters,
+  onFilterChange,
+  summary,
 }: ExamsResultsDashboardCardProps) {
-  const [activeStatusTab, setActiveStatusTab] = useState<'all' | 'upcoming' | 'completed'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [localStatusTab, setLocalStatusTab] = useState<'all' | 'upcoming' | 'completed'>('all');
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
+  const activeStatusTab = filters?.examStatus ?? localStatusTab;
+  const searchQuery = filters?.examSearch ?? localSearchQuery;
+  const setActiveStatusTab = (examStatus: 'all' | 'upcoming' | 'completed') => onFilterChange
+    ? onFilterChange({ examStatus }) : setLocalStatusTab(examStatus);
+  const setSearchQuery = (examSearch: string) => onFilterChange
+    ? onFilterChange({ examSearch }) : setLocalSearchQuery(examSearch);
   const [activeModalExam, setActiveModalExam] = useState<ExamItem | null>(null);
   const [previewExam, setPreviewExam] = useState<ExamItem | null>(null);
   const [showAllDialog, setShowAllDialog] = useState(false);
@@ -679,6 +692,7 @@ export function ExamsResultsDashboardCard({
 
   // Metrics summary
   const metrics = useMemo(() => {
+    if (summary) return { ...summary, published: summary.upcoming };
     let upcomingCount = 0;
     let completedCount = 0;
     let totalScoreSum = 0;
@@ -712,10 +726,10 @@ export function ExamsResultsDashboardCard({
       completed: completedCount,
       average,
     };
-  }, [deduplicatedExams]);
+  }, [deduplicatedExams, summary]);
 
   // Filtered exams according to active status tab and search
-  const filteredExams = useMemo(() => deduplicatedExams.filter((exam) => {
+  const filteredExams = useMemo(() => filters ? deduplicatedExams : deduplicatedExams.filter((exam) => {
       const isCompleted = isExamGradingCompleted(exam);
 
       // Status tab check
@@ -738,7 +752,7 @@ export function ExamsResultsDashboardCard({
       }
 
       return true;
-    }), [deduplicatedExams, activeStatusTab, searchQuery]);
+    }), [deduplicatedExams, activeStatusTab, searchQuery, filters]);
 
   // Reset pagination on filter or tab change
   useEffect(() => {

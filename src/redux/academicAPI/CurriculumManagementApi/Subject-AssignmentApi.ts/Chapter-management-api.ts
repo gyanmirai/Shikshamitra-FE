@@ -4,6 +4,12 @@ import { academicApi } from '../../academicApi';
 
 export const chaptersApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
+    getChapterLookup: builder.query<Array<{ id: string; chapterNumber: number; chapterName: string }>, {
+      standardId: string; subjectId: string; divisionId?: string;
+    }>({
+      query: (params) => ({ url: '/academic/curriculum/chapters/lookup', method: 'GET', params }),
+      providesTags: [academicType.chapter],
+    }),
     // GET - Fetch all chapters of a subject
     getChapters: builder.query({
       query: ({ subjectId }) => ({
@@ -84,6 +90,7 @@ export const chaptersApi = academicApi.injectEndpoints({
 
 // Export hooks
 export const {
+  useGetChapterLookupQuery,
   useGetChaptersQuery,
   useGetChaptersByStandardQuery,
   useAddChapterMutation,

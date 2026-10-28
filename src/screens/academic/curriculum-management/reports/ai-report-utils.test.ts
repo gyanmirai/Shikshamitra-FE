@@ -20,14 +20,16 @@ describe('saveAcademicReportFile', () => {
       .spyOn(HTMLAnchorElement.prototype, 'click')
       .mockImplementation(() => undefined);
 
+    const fileBlob = new Blob(['%PDF-1.7'], { type: 'application/pdf' });
     saveAcademicReportFile({
-      blob: new Blob(['%PDF-1.7'], { type: 'application/pdf' }),
+      blob: fileBlob,
       bytes: 'JVBERi0xLjc=',
       contentType: 'application/pdf',
       fileName: 'curriculum-report.pdf',
     });
 
     expect(createObjectUrl).toHaveBeenCalledOnce();
+    expect(createObjectUrl).toHaveBeenCalledWith(fileBlob);
     expect(click).toHaveBeenCalledOnce();
     expect(revokeObjectUrl).not.toHaveBeenCalled();
 

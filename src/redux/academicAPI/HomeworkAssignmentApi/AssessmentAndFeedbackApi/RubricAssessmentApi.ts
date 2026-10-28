@@ -180,6 +180,26 @@ export type StudentAssignmentEvaluationParams = {
   assignmentId: string;
 };
 
+export type SubmissionRubricEvaluationParams = {
+  rubricId: string;
+  submissionId: string;
+  studentId: string;
+};
+
+export const submissionRubricEvaluationTag = (params: SubmissionRubricEvaluationParams) => ({
+  type: academicType.rubricEvaluation,
+  id: `${params.rubricId}:${params.submissionId}:${params.studentId}`,
+});
+
+type EvaluationMutationId = string | { evaluationId: string; deferInvalidation?: boolean };
+const evaluationMutationId = (input: EvaluationMutationId) => typeof input === 'string' ? input : input.evaluationId;
+const defersEvaluationInvalidation = (input: EvaluationMutationId) => typeof input !== 'string' && input.deferInvalidation;
+
+export const assignmentRubricEvaluationTag = (params: StudentAssignmentEvaluationParams) => ({
+  type: academicType.rubricEvaluation,
+  id: `assignment:${params.studentId}:${params.assignmentId}`,
+});
+
 export const rubricAssessmentApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     getRubrics: builder.query<AssessmentRubricDto[], GetRubricsParams | void>({
@@ -259,14 +279,14 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
 
     upsertRubricEvaluation: builder.mutation<
       RubricEvaluationDto,
-      { rubricId: string; body: UpsertRubricEvaluationDto }
+      { rubricId: string; body: UpsertRubricEvaluationDto; deferInvalidation?: boolean }
     >({
       query: ({ rubricId, body }) => ({
         url: `/academic/rubrics/${rubricId}/evaluations`,
         method: 'POST',
         body,
       }),
-      invalidatesTags: [
+      invalidatesTags: (_result, _error, input) => input.deferInvalidation ? [] : [
         academicType.rubricEvaluation,
         academicType.homeworkSubmissions,
         academicType.assignmentSubmissions,
@@ -281,6 +301,15 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
       providesTags: [academicType.rubricEvaluation],
     }),
 
+    getSubmissionRubricEvaluation: builder.query<RubricEvaluationDto | null, SubmissionRubricEvaluationParams>({
+      query: ({ rubricId, submissionId, studentId }) => ({
+        url: `/academic/rubrics/${rubricId}/evaluations/submission/${submissionId}`,
+        method: 'GET',
+        params: { studentId },
+      }),
+      providesTags: (_result, _error, params) => [submissionRubricEvaluationTag(params)],
+    }),
+
     getStudentAssignmentEvaluation: builder.query<
       RubricEvaluationDto | null,
       StudentAssignmentEvaluationParams
@@ -289,23 +318,23 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
         url: `/academic/rubrics/evaluations/student/${studentId}/assignment/${assignmentId}`,
         method: 'GET',
       }),
-      providesTags: [academicType.rubricEvaluation],
+      providesTags: (_result, _error, params) => [assignmentRubricEvaluationTag(params)],
     }),
 
-    submitRubricEvaluation: builder.mutation<void, string>({
-      query: (evaluationId) => ({
-        url: `/academic/rubrics/evaluations/${evaluationId}/submit`,
+    submitRubricEvaluation: builder.mutation<void, EvaluationMutationId>({
+      query: (input) => ({
+        url: `/academic/rubrics/evaluations/${evaluationMutationId(input)}/submit`,
         method: 'POST',
       }),
-      invalidatesTags: [academicType.rubricEvaluation],
+      invalidatesTags: (_result, _error, input) => defersEvaluationInvalidation(input) ? [] : [academicType.rubricEvaluation],
     }),
 
-    approveRubricEvaluation: builder.mutation<void, string>({
-      query: (evaluationId) => ({
-        url: `/academic/rubrics/evaluations/${evaluationId}/approve`,
+    approveRubricEvaluation: builder.mutation<void, EvaluationMutationId>({
+      query: (input) => ({
+        url: `/academic/rubrics/evaluations/${evaluationMutationId(input)}/approve`,
         method: 'POST',
       }),
-      invalidatesTags: [
+      invalidatesTags: (_result, _error, input) => defersEvaluationInvalidation(input) ? [] : [
         academicType.rubricEvaluation,
         academicType.homeworkSubmissions,
         academicType.assignmentSubmissions,
@@ -318,6 +347,7 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
 export const {
   useGetRubricsQuery,
   useGetRubricByIdQuery,
+  useLazyGetRubricByIdQuery,
   useAddRubricMutation,
   useUpdateRubricMutation,
   useCreateRubricFromTemplateMutation,
@@ -325,6 +355,7 @@ export const {
   useArchiveRubricMutation,
   useUpsertRubricEvaluationMutation,
   useGetRubricEvaluationsQuery,
+  useGetSubmissionRubricEvaluationQuery,
   useGetStudentAssignmentEvaluationQuery,
   useSubmitRubricEvaluationMutation,
   useApproveRubricEvaluationMutation,

@@ -130,7 +130,6 @@ import {
   availabilityStatusOptions,
 } from './substitutionData';
 import {
-  useDailySheetDataQuery,
   useAssignSubstituteAction,
   useDailySheetPdfLazyQuery,
   useSubstitutionsDataQuery,
@@ -859,7 +858,9 @@ const SubstitutionManagementScreen = () => {
     data: rawCreateMetadata,
     isLoading: isCreateMetadataLoading,
     isFetching: isFetchingCreateMetadata,
-  } = useSubstitutionCreateMetadataDataQuery(academicContextParams, { skip: !medium?.id });
+  } = useSubstitutionCreateMetadataDataQuery(academicContextParams, {
+    skip: !medium?.id || (!createDialogOpen && !assignDialogOpen && !availabilityDialogOpen),
+  });
   const createMetadata = rawCreateMetadata as ApiSubstitutionCreateMetadata | undefined;
   const {
     data: rawCreateLectureResult,
@@ -980,14 +981,6 @@ const SubstitutionManagementScreen = () => {
     }
   );
 
-  const {
-    data: dailySheetResult,
-    isLoading: isDailySheetLoading,
-    isFetching: isDailySheetFetching,
-  } = useDailySheetDataQuery({
-    date: toDateTimeOffset((filters.filterDate || dayjs(todayIso)).startOf('day')),
-    maxResultCount: 500,
-  });
   const [
     createSubstitution,
     { isLoading: isCreatingSubstitution, reset: resetCreateSubstitution },

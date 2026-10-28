@@ -85,7 +85,7 @@ const SubjectCreation = () => {
   };
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box height="100%" minHeight={0} display="flex" flexDirection="column">
       <SubjectPageHeader canView={canView} canAdd={canAdd}
         onInsights={insightsDrawer.onTrue} onBulkAdd={bulkImportDialog.onTrue}
         onAdd={() => { setSelectedSubject(null); addSubjectDialog.onTrue(); }} />
@@ -120,7 +120,7 @@ const SubjectCreation = () => {
         onOpenDrawer={bulkImportDialog.onTrue}
       />
 
-      <BulkSubjectImportDialog open={bulkImportDialog.value} onClose={bulkImportDialog.onFalse} />
+      {bulkImportDialog.value && <BulkSubjectImportDialog open onClose={bulkImportDialog.onFalse} />}
 
       {addSubjectDialog.value && <SettingSubjectForm open={addSubjectDialog} onClose={handleClose} editData={selectedSubject} />}
 

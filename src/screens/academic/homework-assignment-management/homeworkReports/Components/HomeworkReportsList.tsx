@@ -8,23 +8,22 @@ import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { HomeworkReportApiTypeMap } from 'src/enums/homework-wise-reports';
 import { AssignmentReportApiTypeMap } from 'src/enums/assignment-wise-report';
 import { Box, Chip, Stack, Button, Tooltip, IconButton } from '@mui/material';
-import { HomeworkAssignmentAnalyticReportApiTypeMap } from 'src/enums/homeworkAssignmentAnalytic-report';
-import CurriculumReportPreviewDrawer from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewDrawer';
 import {
   useGetAcademicReportExportsQuery,
-  useLazyDownloadAcademicReportQuery,
-  useLazyGetAcademicReportExportJobQuery,
 } from 'src/redux/academicAPI/AcademicReportApi';
+import { HomeworkAssignmentAnalyticReportApiTypeMap } from 'src/enums/homeworkAssignmentAnalytic-report';
+import { useAcademicReportDownload } from 'src/screens/academic/components/reports/useAcademicReportDownload';
+import CurriculumReportPreviewDrawer from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewDrawer';
 
 import HomeworkAssignmentReports from '..';
 import { HomeworkAssignmentAiReportButton } from './HomeworkAssignmentAiReportButton';
@@ -42,8 +41,7 @@ const HomeworkReportsList = () => {
 
   const canAdd = hasGrantedPermission(permissions, `${academicPermissions.homework.reports}.Add`);
 
-  const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { downloadingJobId, handleDownload } = useAcademicReportDownload();
 
   const { data: exportsData, isLoading: isExportsLoading } = useQueryAndMutation({
     type: 'query',
@@ -51,90 +49,10 @@ const HomeworkReportsList = () => {
     popupConfig: { error: true, errorMessage: 'Failed to load export history' },
   });
 
-  const [pollJobStatus] = useLazyGetAcademicReportExportJobQuery();
-  const [triggerDownload] = useLazyDownloadAcademicReportQuery();
-
-  const stopPolling = useCallback(() => {
-    if (pollIntervalRef.current !== null) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-  }, []);
-
-  const saveFile = useCallback(
-    (data: { bytes: string; contentType?: string | null; fileName?: string | null }) => {
-      const byteChars = atob(data.bytes);
-      const byteArr = new Uint8Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i += 1) {
-        byteArr[i] = byteChars.charCodeAt(i);
-      }
-      const blob = new Blob([byteArr], { type: data.contentType || 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = data.fileName || 'report.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    },
-    []
-  );
-
-  const handleDownload = useCallback(
-    async (jobId: string, currentStatus: string) => {
-      if (downloadingJobId) return;
-
-      if (currentStatus === 'Completed') {
-        setDownloadingJobId(jobId);
-        try {
-          const dlResult = await triggerDownload({ jobId }, false);
-          if ('data' in dlResult && dlResult.data?.bytes) {
-            saveFile(dlResult.data);
-          }
-        } catch {
-          toast.error('Download failed. Please try again.');
-        } finally {
-          setDownloadingJobId(null);
-        }
-        return;
-      }
-
-      setDownloadingJobId(jobId);
-      pollIntervalRef.current = setInterval(async () => {
-        try {
-          const statusResult = await pollJobStatus({ jobId }, false);
-          if (!('data' in statusResult) || !statusResult.data) return;
-
-          const { status } = statusResult.data;
-          if (status === 'Completed') {
-            stopPolling();
-            try {
-              const dlResult = await triggerDownload({ jobId }, false);
-              if ('data' in dlResult && dlResult.data?.bytes) {
-                saveFile(dlResult.data);
-              }
-            } catch {
-              toast.error('Download failed. Please try again.');
-            } finally {
-              setDownloadingJobId(null);
-            }
-          } else if (status === 'Failed') {
-            stopPolling();
-            setDownloadingJobId(null);
-            toast.error(statusResult.data.errorMessage || 'Export job failed');
-          }
-        } catch {
-          // transient error — retry on next tick
-        }
-      }, 2000);
-    },
-    [downloadingJobId, pollJobStatus, saveFile, stopPolling, triggerDownload]
-  );
-
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedReportRequest, setSelectedReportRequest] = useState<any>(null);
   const [selectedReportTitle, setSelectedReportTitle] = useState('');
+  const [previewExportJobId, setPreviewExportJobId] = useState<string | null>(null);
 
   const handleView = (row: any) => {
     try {
@@ -149,6 +67,7 @@ const HomeworkReportsList = () => {
         requestPayload.filters = {};
       }
       setSelectedReportRequest(requestPayload);
+      setPreviewExportJobId(row.status === 'Completed' && String(row.format || 'pdf').toLowerCase() === 'pdf' ? row.id : null);
       setSelectedReportTitle(row.reportType);
       setPreviewOpen(true);
     } catch (e) {
@@ -343,6 +262,7 @@ const HomeworkReportsList = () => {
         onClose={() => setPreviewOpen(false)}
         reportRequest={selectedReportRequest}
         reportTitle={selectedReportTitle}
+        existingExportJobId={previewExportJobId}
       />
     </Box>
   );

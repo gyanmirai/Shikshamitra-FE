@@ -56,6 +56,7 @@ export function useSubjectAssignmentForm({
     type: 'query',
     currentQueryAndMutation: useGetCoreElectiveSubjectsQuery,
     params: { academicMediumId: (medium as Medium).id },
+    options: { refetchOnMountOrArgChange: 60 },
   });
 
   const { onSubmit, isAddLoading, isUpdateLoading } = useSubjectAssignmentSubmit({

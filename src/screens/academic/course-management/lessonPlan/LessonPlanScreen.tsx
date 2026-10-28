@@ -41,8 +41,6 @@ import {
   LinearProgress,
 } from '@mui/material';
 import {
-  useGetLessonPlansQuery,
-  useGetTeacherDiariesQuery,
   useCreateLessonPlanMutation,
   useUpdateLessonPlanMutation,
   useSubmitLessonPlanMutation,
@@ -56,23 +54,23 @@ import {
   useCreateHomeworkFromLessonPlanMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-api';
 
+import { toPlanStatus } from './lessonPlanStatuses';
 import { ReviewQueueTab } from './components/ReviewQueueTab';
 import DailyTimelineTab from './components/DailyTimelineTab';
 import TeachingKpiCards from './components/TeachingKpiCards';
 import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
 import { reconcileTimelineSlots } from './reconcileTimelineSlots';
-import { toPlanStatus, toDiaryStatus } from './lessonPlanStatuses';
 import { canRoleReviewLessonPlans } from './lessonPlanReviewAccess';
 import { getLessonPlanTableActions } from './lessonPlanTableActions';
-import { useReviewQueueQuery } from './hooks/use-review-queue-query';
 import AiLessonBuilderDrawer from './components/AiLessonBuilderDrawer';
 import { usePendingReviewCount } from './hooks/use-pending-review-count';
+import { useLessonPlanWorkspace } from './hooks/use-lesson-plan-workspace';
 import LessonDiaryDetailsDrawer from './components/LessonDiaryDetailsDrawer';
 import { LessonPlanNavigationTabs } from './components/LessonPlanNavigationTabs';
+import { initialReviewWorkspaceCriteria } from './hooks/use-review-queue-filters';
 import { canEditLessonPlan, getLessonPlanEditLockMessage } from './lessonPlanEditability';
 import {
-  getLessonPlanListQuery,
   getLessonPlanTabQueryState,
   getLessonPlanTabLoadingState,
   shouldSkipLessonPlanListQuery,
@@ -90,12 +88,12 @@ import {
 
 import type { DiaryFormState } from './components/SubmitDiaryModal';
 import type { LessonFormState } from './components/AddLessonPlanModal';
+import type { ReviewStatusFilter } from './components/ReviewStatusTabs';
 import type { LessonPlanTabValue as TabValue } from './components/LessonPlanNavigationTabs';
 import type {
   PlanStatus,
   DiaryStatus,
   LessonPlanRow,
-  TeacherDiaryRow,
   TeachingHealthScore,
 } from './lessonPlanData';
 
@@ -428,10 +426,8 @@ const LessonPlanScreen = () => {
   });
   const [activeTab, setActiveTab] = useState<TabValue>('dailyTimeline');
   const activeTabQueries = getLessonPlanTabQueryState(activeTab);
-  const reviewQueueQuery = useReviewQueueQuery({
-    academicYearId: currentYear?.id,
-    enabled: activeTab === 'reviewQueue' && canReviewSubmissions,
-  });
+  const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatusFilter>('pending');
+  const [reviewCriteria, setReviewCriteria] = useState(initialReviewWorkspaceCriteria);
   const [healthScore] = useState<TeachingHealthScore>(initialHealthScore);
 
   /**
@@ -476,60 +472,47 @@ const LessonPlanScreen = () => {
     [timelineData, currentTeacherId]
   );
 
-  const lessonPlanListQuery = getLessonPlanListQuery(activeTab, {
+  // Filter state
+  const [academicYearFilter, setAcademicYearFilter] = useState('2026-27');
+  const [teacherFilter, setTeacherFilter] = useState('all');
+  const [classFilter, setClassFilter] = useState('all');
+  const [divisionFilter, setDivisionFilter] = useState('all');
+  const [subjectFilter, setSubjectFilter] = useState('all');
+  const [chapterFilter, setChapterFilter] = useState('all');
+  const [planStatusFilter, setPlanStatusFilter] = useState('all');
+  const [diaryStatusFilter, setDiaryStatusFilter] = useState('all');
+  const [approvalStatusFilter, setApprovalStatusFilter] = useState('all');
+  const [fromDate, setFromDate] = useState<Dayjs | null>(null);
+  const [toDate, setToDate] = useState<Dayjs | null>(null);
+  const [quickFilter, setQuickFilter] = useState<string | null>(null);
+
+  const workspace = useLessonPlanWorkspace({
     academicYearId: currentYear?.id,
     academicMediumId: currentMedium?.id,
-    teacherId: currentTeacherId,
-    canReviewSubmissions,
-  });
-
-  const {
-    data: lessonPlanList,
-    refetch: refetchLessonPlans,
-    isLoading: isPlansLoading,
-    isFetching: isPlansFetching,
-    isUninitialized: isLessonPlansUninitialized,
-  } = useGetLessonPlansQuery(lessonPlanListQuery, {
-    skip: shouldSkipLessonPlanListQuery(activeTab, {
-      academicYearId: currentYear?.id,
-      academicMediumId: currentMedium?.id,
+    teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
+    view: activeTab,
+    status: activeTab === 'reviewQueue' && reviewStatusFilter !== 'all'
+      ? ({ pending: 1, approved: 2, rejected: 3, changes: 4 } as const)[reviewStatusFilter] : undefined,
+    uiCriteria: JSON.stringify(activeTab === 'reviewQueue' ? { ...reviewCriteria, todayIso, weekStartIso } : {
+      academicYearFilter, teacherFilter, classFilter, divisionFilter, subjectFilter, chapterFilter,
+      planStatusFilter, diaryStatusFilter, approvalStatusFilter, fromDate: fromDate?.format('YYYY-MM-DD'),
+      toDate: toDate?.format('YYYY-MM-DD'), quickFilter, todayIso, weekStartIso,
     }),
-    refetchOnMountOrArgChange: activeTab === 'reviewQueue',
-  });
-
-  const {
-    data: teacherDiaryList,
-    refetch: refetchTeacherDiaries,
-    isLoading: isDiariesLoading,
-    isFetching: isDiariesFetching,
-    isUninitialized: isTeacherDiariesUninitialized,
-  } = useGetTeacherDiariesQuery(
-    {
-      academicYearId: currentYear?.id,
-      academicMediumId: currentMedium?.id,
-      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-      maxResultCount: 1000,
-    },
-    {
-      skip: !currentYear?.id || !currentMedium?.id || !activeTabQueries.teacherDiaries,
-    }
-  );
-
+  }, !shouldSkipLessonPlanListQuery(activeTab, { academicYearId: currentYear?.id, academicMediumId: currentMedium?.id }));
+  const isPlansLoading = workspace.isLoading;
+  const isPlansFetching = workspace.isFetching;
   const tabLoadingState = getLessonPlanTabLoadingState({
     timeline: { isLoading: isTimelineLoading, isFetching: isTimelineFetching },
     lessonPlans: { isLoading: isPlansLoading, isFetching: isPlansFetching },
-    teacherDiaries: { isLoading: isDiariesLoading, isFetching: isDiariesFetching },
-    reviewQueue: {
-      isLoading: reviewQueueQuery.isLoading,
-      isFetching: reviewQueueQuery.isFetching,
-    },
+    teacherDiaries: { isLoading: false, isFetching: false },
+    reviewQueue: { isLoading: false, isFetching: false },
   });
-
+  const [homeworkPlan, setHomeworkPlan] = useState<LessonPlanRow | null>(null);
   const { data: homeworkTypeData, isLoading: isHomeworkTypesLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetHomeworkTypesQuery,
     params: { academicMediumId: currentMedium?.id },
-    options: { skip: !currentMedium?.id },
+    options: { skip: !currentMedium?.id || !homeworkPlan, refetchOnMountOrArgChange: 60 },
   });
 
   const [createLessonPlan, { isLoading: isCreatingLesson }] = useQueryAndMutation({
@@ -586,89 +569,8 @@ const LessonPlanScreen = () => {
   });
   const isSavingDiary = isCreatingDiary || isUpdatingDiary || isSubmittingDiary;
 
-  /**
-   * Memoization Justification:
-   * - Maps the API response into the screen model only when the server result changes.
-   * - Prevents repeated conversion of up to 1,000 lesson plans during local UI interactions.
-   */
-  const lessonPlans = useMemo<LessonPlanRow[]>(() => {
-    if (!lessonPlanList) return [];
-    return (
-      (lessonPlanList as any).items?.map((p: any) => ({
-        id: p.id,
-        academicYear: p.academicYear || '2026-27',
-        teacherName: p.teacherName || '',
-        teacherId: p.teacherId,
-        standardId: p.standardId || p.classId,
-        classId: p.standardId || p.classId,
-        className: p.standardName || p.className || '',
-        divisionId: p.divisionId,
-        divisionName: p.divisionName || '',
-        subjectId: p.subjectId,
-        subjectName: p.subjectName || '',
-        chapterId: p.chapterId,
-        chapterName: p.chapterName || '',
-        plannedDate: p.plannedDate ? dayjs(p.plannedDate).format('YYYY-MM-DD') : todayIso,
-        periodId: p.timetableSlotId || 'Manual',
-        period: (() => {
-          const rawPeriodName =
-            p.periodName ||
-            p.slotName ||
-            p.timeSlotName ||
-            p.timetableSlot?.periodName ||
-            p.timetableSlot?.slotName;
-          if (rawPeriodName && !isGuidLike(rawPeriodName)) return rawPeriodName;
-          return p.timetableSlotId ? 'Scheduled' : 'Manual';
-        })(),
-        plannedTime: getPlannedSlotTime(p),
-        topic: p.topic || '',
-        learningObjective: p.learningObjective || '',
-        teachingMethod: p.teachingMethod || 'ExplanationBoardWork',
-        resourcesRequired: p.resourcesRequired || '',
-        planStatus: toPlanStatus(p.status),
-        diaryStatus: toDiaryStatus(p.diaryStatus, Boolean(p.teacherDiaryId)),
-        status: toPlanStatus(p.status),
-        approvalStatus: toPlanStatus(p.status) === 'Approved' ? 'Approved' : 'Pending',
-        plannedCompletionPercentage: p.plannedCompletionPercentage || 0,
-        actualCompletionPercentage: p.actualCompletionPercentage || 0,
-        existingChapterProgress: p.existingChapterProgress || 0,
-        source: p.isAiGenerated ? 'AiGenerated' : 'Manual',
-        isAiGenerated: !!p.isAiGenerated,
-        executionStatus: 'OnTrack',
-        reviewStatus: p.status === 'Approved' ? 'Plan Approved' : 'Draft',
-        reviewRemarks: p.reviewRemarks,
-        reviewedByName: p.reviewedByName,
-        reviewedAt: p.reviewedAt,
-        timetableSlotId: p.timetableSlotId,
-        teacherDiaryId: p.teacherDiaryId,
-        insightType: p.insightType,
-        insightSeverity: p.insightSeverity,
-        insightMessage: p.insightMessage,
-        isPlanCreationBlocked: Boolean(p.isPlanCreationBlocked),
-      })) || []
-    );
-  }, [lessonPlanList]);
-
-  /**
-   * Memoization Justification:
-   * - Builds a stable membership set for the currently selected review-status response.
-   * - Prevents repeated O(active rows) membership reconstruction during screen renders.
-   */
-  const reviewQueuePlanIds = useMemo(
-    () =>
-      new Set((reviewQueueQuery.currentData?.items ?? []).map((plan: { id: string }) => plan.id)),
-    [reviewQueueQuery.currentData]
-  );
-
-  /**
-   * Memoization Justification:
-   * - Intersects the complete reviewer dataset with the active server-filtered queue.
-   * - Prevents repeated O(all plans) filtering while unrelated screen state changes.
-   */
-  const reviewQueuePlans = useMemo(
-    () => lessonPlans.filter((plan) => reviewQueuePlanIds.has(plan.id)),
-    [lessonPlans, reviewQueuePlanIds]
-  );
+  const lessonPlans = workspace.items;
+  const reviewQueuePlans = lessonPlans;
 
   /**
    * Memoization Justification:
@@ -688,88 +590,13 @@ const LessonPlanScreen = () => {
 
   const isReconciledTimelineBusy = tabLoadingState.dailyTimeline;
 
-  const diaryEntries = useMemo<TeacherDiaryRow[]>(() => {
-    if (!teacherDiaryList) return [];
-    return (
-      (teacherDiaryList as any).items?.map((d: any) => {
-        const diaryStatus = toDiaryStatus(d.diaryStatus ?? d.status);
-
-        return {
-          id: d.id,
-          lessonPlanId: d.lessonPlanId,
-          teacherId: d.teacherId,
-          actualDate: d.actualDate ? dayjs(d.actualDate).format('YYYY-MM-DD') : todayIso,
-          actualCompletionPercentage: d.actualCompletionPercentage || 0,
-          actualTopicCovered: d.actualTopicCovered || '',
-          teachingMethodUsed: d.teachingMethodUsed || 'ExplanationBoardWork',
-          studentResponse: d.studentResponse || '',
-          classUnderstandingLevel: d.classUnderstandingLevel || 'Medium',
-          studentEngagementLevel: d.studentEngagementLevel || 'Medium',
-          needRevision: Boolean(d.needRevision),
-          reflection: d.reflection || '',
-          whatWentWell: d.whatWentWell || '',
-          whatWasDifficult: d.whatWasDifficult || '',
-          studentsNeedingSupport: d.studentsNeedingSupport || '',
-          nextClassFollowUp: d.nextClassFollowUp || '',
-          remedialActionRequired: d.remedialActionRequired || '',
-          homeworkAssigned: d.homeworkAssigned || '',
-          diaryStatus,
-          isBackdated: Boolean(d.isBackdated),
-          backdatedReason: d.backdatedReason,
-          isSubstituteDiary: Boolean(d.isSubstituteDiary),
-          submittedAt: d.submittedAt,
-          classConducted: Boolean(d.classConducted),
-          actualTopicTaught: d.actualTopicTaught || d.actualTopicCovered || '',
-          actualContentSummary: d.actualContentSummary || '',
-          completionPercentage: d.completionPercentage || d.actualCompletionPercentage || 0,
-          resourcesUsed: d.resourcesUsed || '',
-          missedReason: d.missedReason,
-          rescheduledToDate: d.rescheduledToDate
-            ? dayjs(d.rescheduledToDate).format('YYYY-MM-DD')
-            : undefined,
-          teacherRemarks: d.teacherRemarks || '',
-          status: diaryStatus as Exclude<DiaryStatus, 'NotSubmitted'>,
-        };
-      }) || []
-    );
-  }, [teacherDiaryList]);
-
-  /**
-   * Refreshes only queries that have been started by a visited tab. RTK Query throws when
-   * refetch is called for a skipped, uninitialized query, and starting an inactive query here
-   * would defeat the tab-level lazy loading.
-   */
-  const refetchVisitedTabQueries = useCallback(
-    () =>
-      Promise.all([
-        ...(!isTimelineUninitialized ? [refetchTimeline()] : []),
-        ...(!isLessonPlansUninitialized ? [refetchLessonPlans()] : []),
-        ...(!isTeacherDiariesUninitialized ? [refetchTeacherDiaries()] : []),
-      ]),
-    [
-      isLessonPlansUninitialized,
-      isTeacherDiariesUninitialized,
-      isTimelineUninitialized,
-      refetchLessonPlans,
-      refetchTeacherDiaries,
-      refetchTimeline,
-    ]
-  );
-
-  // Filter state
-  const [academicYearFilter, setAcademicYearFilter] = useState('2026-27');
-  const [teacherFilter, setTeacherFilter] = useState('all');
-  const [classFilter, setClassFilter] = useState('all');
-  const [divisionFilter, setDivisionFilter] = useState('all');
-  const [subjectFilter, setSubjectFilter] = useState('all');
-  const [chapterFilter, setChapterFilter] = useState('all');
-  const [planStatusFilter, setPlanStatusFilter] = useState('all');
-  const [diaryStatusFilter, setDiaryStatusFilter] = useState('all');
-  const [approvalStatusFilter, setApprovalStatusFilter] = useState('all');
-  const [fromDate, setFromDate] = useState<Dayjs | null>(null);
-  const [toDate, setToDate] = useState<Dayjs | null>(null);
-  const [quickFilter, setQuickFilter] = useState<string | null>(null);
-
+  const diaryEntries = workspace.diaries;
+  const refreshWorkspace = workspace.refresh;
+  /** Memoization Justification: submission and review callbacks depend on this active query refresh. */
+  const refetchVisitedTabQueries = useCallback(() => Promise.all([
+    ...(!isTimelineUninitialized ? [refetchTimeline()] : []),
+    Promise.resolve(refreshWorkspace()),
+  ]), [isTimelineUninitialized, refetchTimeline, refreshWorkspace]);
   const activeFiltersState = useMemo(
     () => ({
       academicYear: academicYearFilter,
@@ -841,7 +668,6 @@ const LessonPlanScreen = () => {
   const [activePlanForDiary, setActivePlanForDiary] = useState<LessonPlanRow | null>(null);
   const [detailPlan, setDetailPlan] = useState<LessonPlanRow | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
-  const [homeworkPlan, setHomeworkPlan] = useState<LessonPlanRow | null>(null);
   const [homeworkForm, setHomeworkForm] = useState<HomeworkFromPlanForm>({
     homeworkTypeId: '',
     title: '',
@@ -943,66 +769,7 @@ const LessonPlanScreen = () => {
 
   // ─── Filtered Plans ──────────────────────────────────────────────────────────
 
-  const filteredPlans = useMemo(() => {
-    const from = fromDate?.format('YYYY-MM-DD');
-    const to = toDate?.format('YYYY-MM-DD');
-    const todayStr = todayIso;
-    const weekEnd = dayjs(weekStartIso).add(6, 'day').format('YYYY-MM-DD');
-
-    return lessonPlans.filter((plan) => {
-      if (plan.academicYear !== academicYearFilter) return false;
-      if (teacherFilter !== 'all' && plan.teacherName !== teacherFilter) return false;
-      if (classFilter !== 'all' && plan.className !== classFilter) return false;
-      if (divisionFilter !== 'all' && plan.divisionName !== divisionFilter) return false;
-      if (subjectFilter !== 'all' && plan.subjectName !== subjectFilter) return false;
-      if (chapterFilter !== 'all' && plan.chapterName !== chapterFilter) return false;
-      if (planStatusFilter !== 'all' && plan.planStatus !== planStatusFilter) return false;
-      if (diaryStatusFilter !== 'all' && plan.diaryStatus !== diaryStatusFilter) return false;
-      if (approvalStatusFilter !== 'all' && plan.approvalStatus !== approvalStatusFilter)
-        return false;
-      if (from && plan.plannedDate < from) return false;
-      if (to && plan.plannedDate > to) return false;
-
-      if (quickFilter) {
-        if (quickFilter === 'today' && plan.plannedDate !== todayStr) return false;
-        if (
-          quickFilter === 'this_week' &&
-          (plan.plannedDate < weekStartIso || plan.plannedDate > weekEnd)
-        )
-          return false;
-        if (quickFilter === 'pending_diary' && plan.diaryStatus !== 'NotSubmitted') return false;
-        if (quickFilter === 'pending_approval' && plan.planStatus !== 'Submitted') return false;
-        if (quickFilter === 'missed_lessons' && plan.planStatus !== 'Missed') return false;
-        if (
-          quickFilter === 'delayed_progress' &&
-          plan.plannedCompletionPercentage - plan.actualCompletionPercentage <= 10
-        )
-          return false;
-        if (quickFilter === 'backdated') {
-          const diary = getDiaryForLesson(plan.id);
-          if (!diary?.isBackdated) return false;
-        }
-      }
-
-      return true;
-    });
-  }, [
-    lessonPlans,
-    academicYearFilter,
-    teacherFilter,
-    classFilter,
-    divisionFilter,
-    subjectFilter,
-    chapterFilter,
-    planStatusFilter,
-    diaryStatusFilter,
-    approvalStatusFilter,
-    fromDate,
-    toDate,
-    quickFilter,
-    getDiaryForLesson,
-  ]);
-
+  const filteredPlans = lessonPlans;
   // ─── Lesson Plan Handlers ────────────────────────────────────────────────────
 
   const openAddLesson = useCallback((date?: Dayjs) => {
@@ -1794,33 +1561,6 @@ const LessonPlanScreen = () => {
     [canReviewSubmissions, diaryColumns]
   );
 
-  const reportTeacherData = teacherOptions.map((t) => {
-    const plans = lessonPlans.filter((p) => p.teacherName === t.value);
-    const completed = plans.filter((p) => p.diaryStatus === 'Submitted').length;
-    const missed = diaryEntries.filter((e) => {
-      const p = lessonPlans.find((lp) => lp.id === e.lessonPlanId);
-      return p?.teacherName === t.value && !e.classConducted;
-    }).length;
-    return {
-      teacher: t.label,
-      classDivision:
-        plans
-          .map((p) => `${p.className}-${p.divisionName}`)
-          .filter((v, i, a) => a.indexOf(v) === i)
-          .join(', ') || '-',
-      subject:
-        plans
-          .map((p) => p.subjectName)
-          .filter((v, i, a) => a.indexOf(v) === i)
-          .join(', ') || '-',
-      plannedLessons: plans.length,
-      completedDiary: completed,
-      missedLessons: missed,
-      pendingDiary: plans.filter((p) => p.diaryStatus === 'NotSubmitted').length,
-      completion: plans.length ? `${Math.round((completed / plans.length) * 100)}%` : '0%',
-    };
-  });
-
   return (
     <Box
       sx={{
@@ -1871,6 +1611,7 @@ const LessonPlanScreen = () => {
           <TeachingKpiCards
             lessonPlans={lessonPlans}
             diaryEntries={diaryEntries}
+            counts={workspace.summary?.quickCounts}
             onCardClick={(key) => {
               if (key === 'pending_approvals') {
                 if (canReviewSubmissions) {
@@ -1974,8 +1715,9 @@ const LessonPlanScreen = () => {
 
           {activeTab === 'lessonList' && (
             <CustomizableTable
+              {...workspace.tableProps}
               tableId="lesson-plan-list-table"
-              tableTitle={`Lesson Plans (${filteredPlans.length})`}
+              tableTitle={`Lesson Plans (${workspace.totalCount})`}
               data={filteredPlans}
               columns={visibleLessonColumns}
               isLoading={tabLoadingState.lessonList}
@@ -2005,9 +1747,10 @@ const LessonPlanScreen = () => {
 
           {activeTab === 'teacherDiary' && (
             <CustomizableTable
+              {...workspace.tableProps}
               tableId="teacher-diary-tab-table"
               tableTitle="Teacher Diary"
-              data={lessonPlans.filter((p) => p.plannedDate <= todayIso)}
+              data={lessonPlans}
               columns={visibleDiaryColumns}
               isLoading={tabLoadingState.teacherDiary}
               noDataText="No past or today lessons available for diary."
@@ -2017,11 +1760,11 @@ const LessonPlanScreen = () => {
           {activeTab === 'reviewQueue' && (
             <ReviewQueueTab
               lessonPlans={reviewQueuePlans}
-              allLessonPlans={lessonPlans}
+              workspace={{ tableProps: workspace.tableProps, summary: workspace.summary, criteria: reviewCriteria, change: patch => setReviewCriteria(previous => ({ ...previous, ...patch })) }}
               canReviewSubmissions={canAdd && canReviewSubmissions}
               currentTeacherId={currentTeacherOption?.value}
-              statusFilter={reviewQueueQuery.statusFilter}
-              onStatusFilterChange={reviewQueueQuery.setStatusFilter}
+              statusFilter={reviewStatusFilter}
+              onStatusFilterChange={setReviewStatusFilter}
               onApprove={handleApprove}
               onReject={handleReject}
               onRequestChanges={handleRequestChanges}
@@ -2030,10 +1773,9 @@ const LessonPlanScreen = () => {
               isRejecting={isRejecting}
               isRequesting={isRequestingPlanChanges}
               isLoading={tabLoadingState.reviewQueue}
-              isRefreshing={reviewQueueQuery.isFetching || isPlansFetching}
+              isRefreshing={isPlansFetching}
               onRefresh={() => {
-                reviewQueueQuery.refetch();
-                refetchLessonPlans();
+                workspace.refresh();
               }}
             />
           )}

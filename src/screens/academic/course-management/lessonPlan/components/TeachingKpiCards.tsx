@@ -1,6 +1,7 @@
 'use client';
 
 import type { AcademicInsightMetric } from 'src/screens/academic/components/academic-insights';
+import type { TeachingQuickCounts } from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-workspace-contracts';
 
 import dayjs from 'dayjs';
 import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
@@ -12,22 +13,23 @@ import type { LessonPlanRow, TeacherDiaryRow } from '../lessonPlanData';
 type Props = {
   lessonPlans: LessonPlanRow[];
   diaryEntries: TeacherDiaryRow[];
+  counts?: TeachingQuickCounts;
   onCardClick: (key: string) => void;
 };
 
-const TeachingKpiCards = ({ lessonPlans, diaryEntries, onCardClick }: Props) => {
+const TeachingKpiCards = ({ lessonPlans, diaryEntries, counts, onCardClick }: Props) => {
   const weekStart = dayjs(weekStartIso).format('YYYY-MM-DD');
   const weekEnd = dayjs(weekStartIso).add(6, 'day').format('YYYY-MM-DD');
-  const lessonsPlanned = lessonPlans.filter(
+  const lessonsPlanned = counts?.lessonsPlanned ?? lessonPlans.filter(
     (plan) => plan.plannedDate >= weekStart && plan.plannedDate <= weekEnd
   ).length;
-  const diariesSubmitted = diaryEntries.filter(
+  const diariesSubmitted = counts?.diariesSubmitted ?? diaryEntries.filter(
     (entry) => entry.actualDate === todayIso && entry.diaryStatus === 'Submitted'
   ).length;
-  const pendingDiaries = lessonPlans.filter((plan) => plan.diaryStatus === 'NotSubmitted').length;
-  const pendingApprovals = lessonPlans.filter((plan) => plan.planStatus === 'Submitted').length;
-  const missedLessons = diaryEntries.filter((entry) => !entry.classConducted).length;
-  const syllabusDelayed = lessonPlans.filter(
+  const pendingDiaries = counts?.pendingDiaries ?? lessonPlans.filter((plan) => plan.diaryStatus === 'NotSubmitted').length;
+  const pendingApprovals = counts?.pendingApprovals ?? lessonPlans.filter((plan) => plan.planStatus === 'Submitted').length;
+  const missedLessons = counts?.missedLessons ?? diaryEntries.filter((entry) => !entry.classConducted).length;
+  const syllabusDelayed = counts?.syllabusDelayed ?? lessonPlans.filter(
     (plan) => plan.plannedCompletionPercentage - plan.actualCompletionPercentage > 10
   ).length;
 

@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useState } from 'react';
 import { Box, Chip, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -14,17 +15,15 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CurriculumReportApiTypeMap } from 'src/enums/curriuculum-reports';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   useGetAcademicReportExportsQuery,
-  useLazyGetAcademicReportExportJobQuery,
 } from 'src/redux/academicAPI/AcademicReportApi';
+import { useAcademicReportDownload } from 'src/screens/academic/components/reports/useAcademicReportDownload';
 
 import CurriculumReports from './CurriculumReports';
-import { startAcademicReportDownload } from './ai-report-utils';
 import ShikshaMitraAiReportDrawer from './ShikshaMitraAiReportDrawer';
 import { getCurriculumReportActions } from './curriculumReportActions';
 import CurriculumReportPreviewDrawer from './CurriculumReportPreviewDrawer';
@@ -43,75 +42,13 @@ const CurriculumReportList = () => {
 
   const canAdd = hasGrantedPermission(permissions, `${academicPermissions.curriculum.reports}.Add`);
 
-  const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { downloadingJobId, handleDownload } = useAcademicReportDownload();
 
   const { data: exportsData, isLoading: isExportsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAcademicReportExportsQuery,
     popupConfig: { error: true, errorMessage: 'Failed to load export history' },
   });
-
-  const [pollJobStatus] = useLazyGetAcademicReportExportJobQuery();
-
-  const stopPolling = useCallback(() => {
-    if (pollIntervalRef.current !== null) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-  }, []);
-
-  const handleDownload = useCallback(
-    async (jobId: string, currentStatus: string) => {
-      if (downloadingJobId) return;
-
-      if (currentStatus === 'Completed') {
-        setDownloadingJobId(jobId);
-        try {
-          startAcademicReportDownload(jobId);
-        } catch (error: unknown) {
-          shikshaMitraToast.error({
-            message: error instanceof Error ? error.message : 'Download failed. Please try again.',
-          });
-        } finally {
-          setDownloadingJobId(null);
-        }
-        return;
-      }
-
-      setDownloadingJobId(jobId);
-      pollIntervalRef.current = setInterval(async () => {
-        try {
-          const statusResult = await pollJobStatus({ jobId }, false);
-          if (!('data' in statusResult) || !statusResult.data) return;
-
-          const { status } = statusResult.data;
-          if (status === 'Completed') {
-            stopPolling();
-            try {
-              startAcademicReportDownload(jobId);
-            } catch (error: unknown) {
-              shikshaMitraToast.error({
-                message:
-                  error instanceof Error ? error.message : 'Download failed. Please try again.',
-              });
-            } finally {
-              setDownloadingJobId(null);
-            }
-          } else if (status === 'Failed') {
-            stopPolling();
-            setDownloadingJobId(null);
-            shikshaMitraToast.error({
-              message: statusResult.data.errorMessage || 'Export job failed',
-            });
-          }
-        } catch {
-          // transient error — retry on next tick
-        }
-      }, 2000);
-    },
-    [downloadingJobId, pollJobStatus, stopPolling]
-  );
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewExportJobId, setPreviewExportJobId] = useState<string | null>(null);
@@ -130,7 +67,7 @@ const CurriculumReportList = () => {
         requestPayload.filters = {};
       }
       setSelectedReportRequest(requestPayload);
-      setPreviewExportJobId(row.status === 'Completed' ? row.id : null);
+      setPreviewExportJobId(row.status === 'Completed' && String(row.format || 'pdf').toLowerCase() === 'pdf' ? row.id : null);
       setSelectedReportTitle(row.reportType);
       setPreviewOpen(true);
     } catch (e) {

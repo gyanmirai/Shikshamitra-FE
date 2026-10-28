@@ -24,6 +24,9 @@ test('role values stay visible beside user overrides in both themes', async ({ p
     await page.getByRole('button', { name: 'User Module Permission', exact: true }).click();
     await page.getByRole('button', { name: 'Academics', exact: true }).click();
     await page.getByRole('button', { name: 'Curriculum', exact: true }).click();
+    await expect(page.getByText(
+      'Sidebar and dashboard access are configured separately in Set Module Visibility.'
+    )).toBeVisible();
     const row = page.getByTestId('permission-Subject Allocation');
     const view = row.getByRole('group', { name: 'Subject Allocation View editor', exact: true });
     const remove = row.getByRole('group', {

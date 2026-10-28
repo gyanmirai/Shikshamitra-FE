@@ -7,6 +7,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { useTeacherSelection } from './useTeacherSelection';
+import { uploadSubjectFiles } from '../services/uploadSubjectFiles';
 
 import type { ISubjectCardProps } from '../../type';
 
@@ -23,12 +24,14 @@ export const useSubjectCard = ({
   const { teacherObjs, setTeacherObjs, fetchTeacherOptions } = useTeacherSelection({
     teacherIds: subject.teacherIds,
     standardId: formik.values.classId,
+    initialTeachers: subject.teachers,
   });
 
-  const [uploadCurriculumFile, { isLoading: isUploading }] = useQueryAndMutation({
+  const [uploadCurriculumFile] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUploadCurriculumFileMutation,
   });
+  const [isUploading, setIsUploading] = useState(false);
 
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [localFileNames, setLocalFileNames] = useState<Record<string, string>>({});
@@ -79,26 +82,26 @@ export const useSubjectCard = ({
       return;
     }
 
+    setIsUploading(true);
     try {
-      const newDocs = [...existingFiles];
-      // eslint-disable-next-line no-plusplus
-      for (let i = 0; i < newFiles.length; i++) {
-        const file = newFiles[i];
+      const uploaded = await uploadSubjectFiles(newFiles, async (file) => {
         const formData = new FormData();
         formData.append('File', file);
-        // eslint-disable-next-line no-await-in-loop
         const response = await uploadCurriculumFile(formData).unwrap();
         if (response.data) {
-          newDocs.push(response.data);
           setLocalFileNames((prev) => ({ ...prev, [response.data]: file.name }));
         }
-      }
+        return response.data as string | undefined;
+      });
+      const newDocs = [...existingFiles, ...uploaded.filter(Boolean)];
       formik.setFieldValue(`subjects.${index}.documents`, newDocs);
       formik.setFieldTouched(`subjects.${index}.documents`, true, false);
       shikshaMitraToast.success({ message: 'Document(s) uploaded successfully' });
     } catch (error) {
       console.error('Upload failed:', error);
       shikshaMitraToast.error({ message: 'Upload failed' });
+    } finally {
+      setIsUploading(false);
     }
   };
 

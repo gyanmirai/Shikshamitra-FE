@@ -1,8 +1,8 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useMemo, useState, useEffect } from 'react';
 import { FormSectionHeader } from 'src/components/form-section-card';
 import {
   Box,
@@ -18,6 +18,7 @@ import {
   Typography,
   Autocomplete,
   InputAdornment,
+  TablePagination,
 } from '@mui/material';
 
 import { RoomAuditLogPanel } from './RoomAuditLogPanel';
@@ -39,27 +40,22 @@ interface RoomOption {
 
 const ALL_ROOMS_OPTION: RoomOption = { roomId: 'all', label: 'All Rooms' };
 
-export const RoomAuditLogDrawer = ({
+export const RoomAuditLogDrawer = ({ open, initialRoomId, ...other }: RoomAuditLogDrawerProps) =>
+  open ? <RoomAuditLogDrawerContent {...other} open={open} initialRoomId={initialRoomId} key={initialRoomId || 'all'} /> : null;
+
+const RoomAuditLogDrawerContent = ({
   open,
   onClose,
   rooms,
   initialRoomId,
 }: RoomAuditLogDrawerProps) => {
-  const [selectedRoomId, setSelectedRoomId] = useState<string>('all');
+  const [selectedRoomId, setSelectedRoomId] = useState<string>(initialRoomId || 'all');
   const [search, setSearch] = useState('');
 
-  const { data, isLoading, isFetching, error, refetch } = useRoomAuditLogs(
+  const { data, totalCount, page, setPage, isLoading, isFetching, error, refetch } = useRoomAuditLogs(
     selectedRoomId === 'all' ? null : selectedRoomId,
-    { skip: !open }
+    { skip: !open, searchTerm: search }
   );
-
-  useEffect(() => {
-    if (open) {
-      setSelectedRoomId(initialRoomId || 'all');
-      setSearch('');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialRoomId]);
 
   const roomOptions = useMemo<RoomOption[]>(
     () => [
@@ -75,18 +71,7 @@ export const RoomAuditLogDrawer = ({
   const selectedRoomOption =
     roomOptions.find((o) => o.roomId === selectedRoomId) || ALL_ROOMS_OPTION;
 
-  const filteredLogs = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return data;
-    return data.filter(
-      (log) =>
-        log.action.toLowerCase().includes(term) ||
-        log.user.toLowerCase().includes(term) ||
-        (log.roomName || '').toLowerCase().includes(term) ||
-        (log.remarks || '').toLowerCase().includes(term) ||
-        (log.newValue || '').toLowerCase().includes(term)
-    );
-  }, [data, search]);
+  const filteredLogs = data;
 
   const isDataLoading = isLoading || isFetching;
 
@@ -210,7 +195,7 @@ export const RoomAuditLogDrawer = ({
               ? 'Loading logs…'
               : error
                 ? 'Audit logs unavailable'
-                : `${filteredLogs.length} of ${data.length} entries`}
+                : `${filteredLogs.length} of ${totalCount} entries`}
           </Typography>
           {(selectedRoomId !== 'all' || search) && (
             <Chip
@@ -282,6 +267,7 @@ export const RoomAuditLogDrawer = ({
 
       {/* Footer */}
       <Divider />
+      <TablePagination component="div" count={totalCount} page={page} rowsPerPage={20} rowsPerPageOptions={[20]} onPageChange={(_, value) => setPage(value)} />
       <Stack
         direction="row"
         justifyContent="flex-end"

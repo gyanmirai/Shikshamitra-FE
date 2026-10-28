@@ -28,7 +28,7 @@ import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academi
 import { useGetAssignmentTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { serializeAssignmentFormData } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-serialization';
-import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { useGetChapterLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   AssignmentStatus,
@@ -168,7 +168,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
     type: 'query',
     currentQueryAndMutation: useGetAssignmentTypesQuery,
     params: { academicMediumId: (medium as Medium)?.id, includeArchived: false },
-    options: { skip: !(medium as Medium)?.id },
+    options: { skip: !(medium as Medium)?.id, refetchOnMountOrArgChange: 60 },
   });
 
   /**
@@ -361,7 +361,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
     isFetching: isChapterFetching,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    currentQueryAndMutation: useGetChapterLookupQuery,
     params: { standardId: formik.values.classId, subjectId: formik.values.subjectId },
     options: { skip: !formik.values.classId || !formik.values.subjectId },
   });

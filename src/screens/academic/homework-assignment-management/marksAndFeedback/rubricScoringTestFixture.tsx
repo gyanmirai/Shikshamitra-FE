@@ -16,7 +16,7 @@ import {
 
 import RubricEvaluationPanel, { type RubricEvaluationPanelRef } from './rubricEvaluationPanel';
 
-export function setupRubricScoringTest(mode: 'homework' | 'assignment', model: RubricScoringModel) {
+export function setupRubricScoringTest(mode: 'homework' | 'assignment', model: RubricScoringModel, failSubmit = false) {
   const maxima = model === RubricScoringModel.WeightedPercentage ? [50, 50]
     : model === RubricScoringModel.Checklist ? [1, 1]
     : model === RubricScoringModel.PerformanceLevels ? [4, 4]
@@ -36,6 +36,12 @@ export function setupRubricScoringTest(mode: 'homework' | 'assignment', model: R
   };
   let saved: RubricEvaluationDto | null = null;
   const writes: RubricEvaluationDto[] = [];
+  const evaluationReads: number[] = [];
+  let approved = false;
+  const readEvaluation = () => {
+    evaluationReads.push(writes.length);
+    return saved && { ...saved, status: approved ? 2 : 0 };
+  };
   const base = 'http://localhost:4194/api/academic/rubrics';
   mswServer.use(
     http.get(/^https:\/\/api\.(iconify.design|simplesvg.com|unisvg.com)\//, ({ request }) => {
@@ -49,7 +55,8 @@ export function setupRubricScoringTest(mode: 'homework' | 'assignment', model: R
       return HttpResponse.json([rubric]);
     }),
     http.get(`${base}/rubric/evaluations`, () => HttpResponse.json(saved ? [saved] : [])),
-    http.get(`${base}/evaluations/student/student/assignment/task`, () => HttpResponse.json(saved)),
+    http.get(`${base}/rubric/evaluations/submission/submission`, () => HttpResponse.json(readEvaluation())),
+    http.get(`${base}/evaluations/student/student/assignment/task`, () => HttpResponse.json(readEvaluation())),
     http.post(`${base}/rubric/evaluations`, async ({ request }) => {
       const body = await request.json() as RubricEvaluationDto;
       saved = { ...body, id: 'evaluation', rubricId: 'rubric', evaluatorId: 'teacher', status: 0,
@@ -57,24 +64,29 @@ export function setupRubricScoringTest(mode: 'homework' | 'assignment', model: R
       writes.push(saved);
       return HttpResponse.json(saved);
     }),
-    http.post(`${base}/evaluations/evaluation/submit`, () => new HttpResponse(null, { status: 204 })),
-    http.post(`${base}/evaluations/evaluation/approve`, () => new HttpResponse(null, { status: 204 }))
+    http.post(`${base}/evaluations/evaluation/submit`, () => failSubmit
+      ? HttpResponse.json({ detail: 'Submit failed' }, { status: 500 })
+      : new HttpResponse(null, { status: 204 })),
+    http.post(`${base}/evaluations/evaluation/approve`, () => {
+      approved = true;
+      return new HttpResponse(null, { status: 204 });
+    })
   );
   function SaveButton({ panelRef }: { panelRef: React.RefObject<RubricEvaluationPanelRef | null> }) {
     const [result, setResult] = useState('');
     return <><button type="button" onClick={async () => setResult(await panelRef.current?.save() ? 'Saved' : 'Rejected')}>Save evaluation</button><span>{result}</span></>;
   }
-  const mount = () => {
+  const mount = (readOnly = false) => {
     const ref = createRef<RubricEvaluationPanelRef>();
     const store = configureStore({ reducer: { [api.reducerPath]: api.reducer },
       middleware: getDefault => getDefault().concat(api.middleware) });
     render(<Provider store={store}><ThemeProvider theme={createTheme(defaultSettings)}>
-      <RubricEvaluationPanel ref={ref} mode={mode} standardId="standard" subjectId="subject"
+      <RubricEvaluationPanel ref={ref} mode={mode} readOnly={readOnly} standardId="standard" subjectId="subject"
         taskId="task" studentRow={{ id: 'submission', studentId: 'student' }} />
       <SaveButton panelRef={ref} />
     </ThemeProvider></Provider>);
   };
   mount();
-  return { writes, reload: () => { cleanup(); mount(); } };
+  return { writes, evaluationReads, reload: () => { cleanup(); mount(true); } };
 }
 

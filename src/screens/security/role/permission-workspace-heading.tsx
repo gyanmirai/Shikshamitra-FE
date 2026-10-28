@@ -50,6 +50,11 @@ export default function PermissionWorkspaceHeading({
             Manage {visibility ? 'navigation visibility' : 'access'}
             {subjectName ? ` for ${subjectName}` : user ? ' for this user' : ' for this role'}.
           </Typography>
+          {!visibility && (
+            <Typography variant="caption" color="text.secondary">
+              Sidebar and dashboard access are configured separately in Set Module Visibility.
+            </Typography>
+          )}
         </Box>
         {subjectName && (
           <Box

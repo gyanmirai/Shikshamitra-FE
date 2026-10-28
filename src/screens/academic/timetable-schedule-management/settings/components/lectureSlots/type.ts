@@ -14,4 +14,5 @@ export interface ICreateSlotsFormProps {
   disabled?: boolean;
   isEdit?: boolean;
   data?: any;
+  onStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 }

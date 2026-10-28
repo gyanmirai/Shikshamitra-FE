@@ -1,6 +1,7 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
+import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
+import type { LessonWorkspaceSummary } from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-workspace-contracts';
 
 import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
@@ -30,20 +31,21 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import { lessonPlansToReviewRows } from '../reviewQueueRows';
+import { FilterToolbar } from './review-queue/FilterToolbar';
+import { SkeletonCardGrid } from './review-queue/SkeletonLoader';
+import { ReviewQueuePager } from './review-queue/ReviewQueuePager';
 import { getReviewQueueTableActions } from './reviewQueueTableActions';
 import { ReviewCard, type ReviewItem } from './review-queue/ReviewCard';
+import { useReviewQueueFilters } from '../hooks/use-review-queue-filters';
 import { useReviewSubmissionLock } from '../hooks/use-review-submission-lock';
 import { ReviewStatusTabs, type ReviewStatusFilter } from './ReviewStatusTabs';
-import { SkeletonTable, SkeletonCardGrid } from './review-queue/SkeletonLoader';
-import { FilterToolbar, type ReviewDateFilterMode } from './review-queue/FilterToolbar';
 import { ReviewCommentField, REVIEW_COMMENT_MAX_LENGTH } from './review-queue/ReviewCommentField';
 
 import type { LessonPlanRow } from '../lessonPlanData';
+import type { ReviewWorkspaceControls } from '../hooks/use-review-queue-filters';
 
 type ReviewTarget = { type: 'plan'; id: string };
-
-const getWeekStart = (date: Dayjs) => date.startOf('day').subtract((date.day() + 6) % 7, 'day');
-const getWeekEnd = (date: Dayjs) => getWeekStart(date).add(6, 'day');
 
 const REVIEW_STATUS_DESCRIPTIONS: Record<string, string> = {
   pending: 'Pending: Awaiting reviewer action & approval',
@@ -113,48 +115,13 @@ type ReviewState = {
   updateProgress: boolean;
 };
 
-const mapLessonPlansToReviewRows = (lessonPlans: LessonPlanRow[]): ReviewItem[] =>
-  lessonPlans
-    .filter((plan) =>
-      ['Submitted', 'Approved', 'NeedsChanges', 'Rejected'].includes(plan.planStatus)
-    )
-    .map((plan) => ({
-      id: plan.id,
-      targetType: 'plan',
-      teacherId: plan.teacherId,
-      teacherName: plan.teacherName,
-      submittedDate: plan.plannedDate,
-      pendingSince: plan.plannedDate,
-      classDivision: `${plan.className}-${plan.divisionName}`,
-      subjectName: plan.subjectName,
-      chapterName: plan.chapterName,
-      topic: plan.topic,
-      learningObjective: plan.learningObjective,
-      lessonType: 'Lesson Plan',
-      plannedPct: plan.plannedCompletionPercentage ?? 0,
-      actualPct: plan.actualCompletionPercentage ?? '-',
-      progressGap:
-        typeof plan.actualCompletionPercentage === 'number'
-          ? plan.actualCompletionPercentage - (plan.plannedCompletionPercentage ?? 0)
-          : '-',
-      evidenceCount: 0,
-      submittedAt: plan.plannedDate,
-      status:
-        plan.planStatus === 'Approved'
-          ? 'approved'
-          : plan.planStatus === 'NeedsChanges'
-            ? 'changes'
-            : plan.planStatus === 'Rejected'
-              ? 'rejected'
-              : 'pending',
-      reviewRemarks: plan.reviewRemarks,
-      reviewedByName: plan.reviewedByName,
-      reviewedAt: plan.reviewedAt,
-    }));
-
 type Props = {
   lessonPlans: LessonPlanRow[];
   allLessonPlans?: LessonPlanRow[];
+  workspace?: ReviewWorkspaceControls & {
+    tableProps: Partial<ICustomizableTableProps>;
+    summary?: LessonWorkspaceSummary;
+  };
   canReviewSubmissions: boolean;
   currentTeacherId?: string;
   statusFilter: ReviewStatusFilter;
@@ -174,6 +141,7 @@ type Props = {
 export const ReviewQueueTab = ({
   lessonPlans,
   allLessonPlans = lessonPlans,
+  workspace,
   canReviewSubmissions,
   currentTeacherId,
   statusFilter,
@@ -194,14 +162,11 @@ export const ReviewQueueTab = ({
   // Layout & Navigation State
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
 
-  // Filter States
-  const [selectedClass, setSelectedClass] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('');
-  const [selectedReviewer, setSelectedReviewer] = useState('');
-  const [dateFilterMode, setDateFilterMode] = useState<ReviewDateFilterMode>('all');
-  const [filterDate, setFilterDate] = useState<Dayjs | null>(dayjs());
-  const [rangeStart, setRangeStart] = useState<Dayjs | null>(getWeekStart(dayjs()));
-  const [rangeEnd, setRangeEnd] = useState<Dayjs | null>(getWeekEnd(dayjs()));
+  const {
+    selectedClass, setSelectedClass, selectedSubject, setSelectedSubject,
+    selectedReviewer, setSelectedReviewer, dateFilterMode, setDateFilterMode,
+    filterDate, setFilterDate, rangeStart, setRangeStart, rangeEnd, setRangeEnd, reset,
+  } = useReviewQueueFilters(workspace);
 
   // Review Dialog State
   const [reviewDialog, setReviewDialog] = useState(false);
@@ -278,14 +243,14 @@ export const ReviewQueueTab = ({
    * - Maps the active server-filtered queue only when its API result changes.
    * - Prevents repeated row-shape conversion while local toolbar state changes.
    */
-  const reviewRows = useMemo(() => mapLessonPlansToReviewRows(lessonPlans), [lessonPlans]);
+  const reviewRows = useMemo(() => lessonPlansToReviewRows(lessonPlans), [lessonPlans]);
 
   /**
    * Memoization Justification:
-   * - Keeps status counts and filter options based on the complete review set.
-   * - Avoids remapping up to 1,000 queue records on every local interaction.
+   * - Keeps legacy complete-collection consumers stable while a review dialog changes.
+   * - Server-paged consumers use the separately returned cohort summary.
    */
-  const allReviewRows = useMemo(() => mapLessonPlansToReviewRows(allLessonPlans), [allLessonPlans]);
+  const allReviewRows = useMemo(() => lessonPlansToReviewRows(allLessonPlans), [allLessonPlans]);
 
   const activeTargetPlan = useMemo(() => {
     if (!review.target) return null;
@@ -310,39 +275,41 @@ export const ReviewQueueTab = ({
 
   // Dynamic Options for Filters
   const classOptions = useMemo(() => {
-    const unique = Array.from(new Set(allReviewRows.map((r) => r.classDivision)));
+    const unique = workspace ? workspace.summary?.options?.reviewClasses ?? []
+      : Array.from(new Set(allReviewRows.map((r) => r.classDivision)));
     return unique.map((c) => ({ label: c, value: c }));
-  }, [allReviewRows]);
+  }, [allReviewRows, workspace]);
 
   const subjectOptions = useMemo(() => {
-    const unique = Array.from(new Set(allReviewRows.map((r) => r.subjectName)));
+    const unique = workspace ? workspace.summary?.options?.reviewSubjects ?? []
+      : Array.from(new Set(allReviewRows.map((r) => r.subjectName)));
     return unique.map((s) => ({ label: s, value: s }));
-  }, [allReviewRows]);
+  }, [allReviewRows, workspace]);
 
   const reviewerOptions = useMemo(() => {
-    const unique = Array.from(
+    const unique = workspace ? workspace.summary?.options?.reviewers ?? [] : Array.from(
       new Set(allReviewRows.map((r) => r.reviewedByName).filter(Boolean) as string[])
     );
     return unique.map((rev) => ({ label: rev, value: rev }));
-  }, [allReviewRows]);
+  }, [allReviewRows, workspace]);
 
   // Counts for status tabs
   const statusCounts = useMemo(
     () =>
-      allReviewRows.reduce<Record<ReviewStatusFilter, number>>(
+      workspace ? workspace.summary?.reviewStatusCounts ?? { pending: 0, approved: 0, changes: 0, rejected: 0, all: 0 } : allReviewRows.reduce<Record<ReviewStatusFilter, number>>(
         (counts, row) => ({
           ...counts,
           [row.status as ReviewStatusFilter]: (counts[row.status as ReviewStatusFilter] || 0) + 1,
         }),
         { pending: 0, approved: 0, changes: 0, rejected: 0, all: allReviewRows.length }
       ),
-    [allReviewRows]
+    [allReviewRows, workspace]
   );
 
   // Filtering Logic
   const filteredReviewRows = useMemo(
     () =>
-      reviewRows.filter((row) => {
+      workspace ? reviewRows : reviewRows.filter((row) => {
         if (statusFilter !== 'all' && row.status !== statusFilter) return false;
 
         if (selectedClass && row.classDivision !== selectedClass) return false;
@@ -372,6 +339,7 @@ export const ReviewQueueTab = ({
       filterDate,
       rangeStart,
       rangeEnd,
+      workspace,
     ]
   );
 
@@ -383,13 +351,7 @@ export const ReviewQueueTab = ({
     statusFilter !== 'pending';
 
   const resetFilters = () => {
-    setDateFilterMode('all');
-    setFilterDate(dayjs());
-    setRangeStart(getWeekStart(dayjs()));
-    setRangeEnd(getWeekEnd(dayjs()));
-    setSelectedClass('');
-    setSelectedSubject('');
-    setSelectedReviewer('');
+    reset();
     onStatusFilterChange('pending');
   };
 
@@ -470,11 +432,16 @@ export const ReviewQueueTab = ({
       )}
 
       {/* Loading Skeletons */}
-      {isLoading &&
-        (viewMode === 'card' ? <SkeletonCardGrid count={6} /> : <SkeletonTable rows={6} />)}
+      {isLoading && viewMode === 'card' && <SkeletonCardGrid count={6} />}
+
+      {viewMode === 'card' && Boolean(workspace?.tableProps.error) && (
+        <Alert severity="error" action={<Button size="small" onClick={onRefresh}>Retry</Button>}>
+          Unable to load the review queue.
+        </Alert>
+      )}
 
       {/* Empty States */}
-      {!isLoading && reviewRows.length === 0 && (
+      {!isLoading && viewMode === 'card' && !workspace?.tableProps.error && reviewRows.length === 0 && (
         <Card sx={{ p: 4 }}>
           <EmptyContent
             title={statusFilter === 'pending' ? 'No Pending Reviews' : 'No Reviews Found'}
@@ -496,7 +463,7 @@ export const ReviewQueueTab = ({
         </Card>
       )}
 
-      {!isLoading && reviewRows.length > 0 && filteredReviewRows.length === 0 && (
+      {!isLoading && viewMode === 'card' && reviewRows.length > 0 && filteredReviewRows.length === 0 && (
         <Card sx={{ p: 4 }}>
           <EmptyContent
             title={statusFilter === 'pending' ? 'No Pending Reviews' : 'No Reviews Found'}
@@ -564,11 +531,17 @@ export const ReviewQueueTab = ({
       )}
 
       {/* Data Table View */}
-      {!isLoading && viewMode === 'table' && filteredReviewRows.length > 0 && (
+      {viewMode === 'card' && workspace && !isLoading && !workspace.tableProps.error && (
+        <ReviewQueuePager table={workspace.tableProps} />
+      )}
+
+      {viewMode === 'table' && (
         <CustomizableTable
+          {...workspace?.tableProps}
           tableId="review-queue-table"
           tableTitle="Review Queue"
           data={filteredReviewRows}
+          isLoading={isLoading}
           columns={[
             {
               id: 'teacherName',

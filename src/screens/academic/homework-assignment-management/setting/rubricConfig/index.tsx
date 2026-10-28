@@ -16,13 +16,16 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 import { AcademicContextContent } from 'src/screens/academic/components/AcademicContextContent';
 import { Box, Card, Grid, Paper, Stack, Button, Typography, DialogActions } from '@mui/material';
 import { useAcademicDiscardGuard } from 'src/screens/academic/components/useAcademicDiscardGuard';
 import { TimetableSettingsSummaryCards } from 'src/screens/academic/components/AcademicSummaryInsights';
+import {
+  useAcademicSetupFormState,
+  AcademicSetupManagerHeader as CustomBreadcrumbs,
+} from 'src/screens/academic/setup/embedding';
 import {
   useAddRubricMutation,
   useArchiveRubricMutation,
@@ -34,6 +37,7 @@ import RubricConfigTable from './rubricConfigTable';
 import { getRubricMaximumLabel } from './rubricScoreLabels';
 import { useRubricTemplateList } from './hooks/useRubricTemplateList';
 import { RubricTemplatePreview } from './components/RubricTemplatePreview';
+import { useRubricTemplateDetails } from './hooks/useRubricTemplateDetails';
 import {
   RUBRIC_STATUS_LABELS,
   RUBRIC_WORK_TYPE_LABELS,
@@ -68,11 +72,8 @@ const RubricConfigScreen = () => {
   );
 
   const {
-    rubricData,
-    activeRubrics,
-    draftRubrics,
-    archivedRubrics,
-    linkedRubrics,
+    counts,
+    tableProps,
     usageCountByTemplate,
     tableData,
     isLoading,
@@ -80,6 +81,7 @@ const RubricConfigScreen = () => {
     hasMedium,
     retry,
   } = useRubricTemplateList();
+  const { openDetail, isDetailLoading } = useRubricTemplateDetails();
 
   const [addRubric, { isLoading: isDuplicating }] = useAddRubricMutation();
   const [publishRubric, { isLoading: isPublishing }] = usePublishRubricMutation();
@@ -137,9 +139,13 @@ const RubricConfigScreen = () => {
   };
 
   const isFormOpen = addDialog.value && canAdd;
+  useAcademicSetupFormState({
+    dirty: isFormOpen && formState.dirty,
+    busy: formState.busy || isDuplicating || isPublishing || isArchiving,
+  });
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box height="100%" minHeight={0} display="flex" flexDirection="column">
       {discardGuard.confirmation}
       {/* Breadcrumbs — adapt based on form/list state, like SubjectBreadcrumbs */}
       {isFormOpen ? (
@@ -219,37 +225,37 @@ const RubricConfigScreen = () => {
               cards={[
                 {
                   label: 'Total Templates',
-                  value: rubricData.length,
+                  value: counts.total,
                   icon: 'solar:document-bold',
                   color: 'primary',
                 },
                 {
                   label: 'Published',
-                  value: activeRubrics.length,
+                  value: counts.published,
                   icon: 'mdi:check-circle-outline',
                   color: 'success',
                 },
                 {
                   label: 'Draft',
-                  value: draftRubrics.length,
+                  value: counts.draft,
                   icon: 'mdi:file-document-edit-outline',
                   color: 'warning',
                 },
                 {
                   label: 'In Use',
-                  value: linkedRubrics.length,
+                  value: counts.linked,
                   icon: 'solar:link-circle-bold',
                   color: 'info',
                 },
                 {
                   label: 'Used This Term',
-                  value: linkedRubrics.length,
+                  value: counts.linked,
                   icon: 'solar:calendar-mark-bold',
                   color: 'primary',
                 },
                 {
                   label: 'Archived',
-                  value: archivedRubrics.length,
+                  value: counts.archived,
                   icon: 'solar:archive-bold',
                   color: 'error',
                 },
@@ -257,22 +263,23 @@ const RubricConfigScreen = () => {
             />
 
             <RubricConfigTable
+              serverProps={tableProps}
               data={tableData}
-              isLoading={isLoading}
+              isLoading={isLoading || isDetailLoading}
               isError={isError}
               hasMedium={hasMedium}
               onRetry={retry}
               canAdd={canAdd}
               canDelete={canDelete}
-              onEdit={(row) => {
-                setSelectedData(row);
+              onEdit={(row) => openDetail(row.id, detail => {
+                setSelectedData(detail);
                 addDialog.onTrue();
-              }}
-              onDuplicate={(row) => duplicateRubric(row, `${row.title} Copy`)}
-              onPreview={(row) => {
-                setSelectedData(row);
+              })}
+              onDuplicate={(row) => openDetail(row.id, detail => duplicateRubric(detail, `${detail.title} Copy`))}
+              onPreview={(row) => openDetail(row.id, detail => {
+                setSelectedData(detail);
                 previewDialog.onTrue();
-              }}
+              })}
               onUsage={(row) => {
                 setSelectedData(row);
                 usageDialog.onTrue();

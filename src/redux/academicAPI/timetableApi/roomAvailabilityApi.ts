@@ -1,8 +1,24 @@
 import { academicType } from 'src/redux/tagTypes';
+
 import { academicApi } from '../academicApi';
+import { reservationPageUrl } from './roomReadContracts';
+
+import type { ReservationPage, RoomAuditReadRow, RoomAuditPageInput, ReservationPageInput } from './roomReadContracts';
 
 export const roomAvailabilityApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
+    getReservationPage: builder.query<ReservationPage, ReservationPageInput>({
+      query: reservationPageUrl,
+      providesTags: [academicType.timetableManagement],
+    }),
+    getReservationSummary: builder.query<{ statusCounts: Record<string, number> }, { createdDate?: string; isApprovalView?: boolean }>({
+      query: params => ({ url: 'academics/timetable/room-reservations/summary', params }),
+      providesTags: [academicType.timetableManagement],
+    }),
+    getRoomAuditPage: builder.query<{ totalCount: number; items: RoomAuditReadRow[] }, RoomAuditPageInput>({
+      query: params => ({ url: 'academics/timetable/room-availability/audit-logs/page', params }),
+      providesTags: [academicType.timetableManagement],
+    }),
     getRoomAvailability: builder.query({
       query: (filters) => ({
         url: 'academics/timetable/room-availability',
@@ -107,6 +123,10 @@ export const roomAvailabilityApi = academicApi.injectEndpoints({
 });
 
 export const {
+  useGetReservationPageQuery,
+  useLazyGetReservationPageQuery,
+  useGetReservationSummaryQuery,
+  useGetRoomAuditPageQuery,
   useGetRoomAvailabilityQuery,
   useGetReservationsQuery,
   useCheckRoomConflictsMutation,

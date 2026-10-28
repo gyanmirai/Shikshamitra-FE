@@ -16,8 +16,8 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { AcademicSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/academic/setup/embedding';
 import { TimetableSettingsSummaryCards } from 'src/screens/academic/components/AcademicSummaryInsights';
 import {
   useGetAssignmentTypesQuery,
@@ -129,7 +129,7 @@ const AssignmentTypeCreation = () => {
   const unusedTypes = assignmentTypes.filter((t: any) => !t.usageCount).length;
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box height="100%" minHeight={0} display="flex" flexDirection="column">
       <CustomBreadcrumbs
         sx={{ mb: 1 }}
         links={[

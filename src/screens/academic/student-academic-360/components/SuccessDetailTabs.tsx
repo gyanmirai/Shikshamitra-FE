@@ -34,6 +34,7 @@ import { AcademicInsightSections } from './AcademicInsightSections';
 import { Academic360SectionHeader } from './Academic360SectionHeader';
 import { ExamsResultsDashboardCard } from './ExamsResultsDashboardCard';
 
+import type { Academic360DetailFilters } from '../hooks/useStudentAcademic360Detail';
 import type { Academic360Response, Academic360StudentRow, Academic360TimelineEvent } from '../types';
 
 type SuccessDetailTabsProps = {
@@ -41,6 +42,8 @@ type SuccessDetailTabsProps = {
   activeTab: string;
   isLoading: boolean;
   student?: Academic360StudentRow | null;
+  filters?: Academic360DetailFilters;
+  onFilterChange?: (filters: Partial<Academic360DetailFilters>) => void;
 };
 
 const timelineDotColor = (type?: string) => {
@@ -78,7 +81,7 @@ const filterColor = (f: TimelineFilter): 'default' | 'primary' | 'warning' | 'er
   }
 };
 
-export function SuccessDetailTabs({ data, activeTab, isLoading, student }: SuccessDetailTabsProps) {
+export function SuccessDetailTabs({ data, activeTab, isLoading, student, filters, onFilterChange }: SuccessDetailTabsProps) {
   const [timelineFilter, setTimelineFilter] = useState<TimelineFilter>('All');
   const [attendanceView, setAttendanceView] = useState<'calendar' | 'list'>('calendar');
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
@@ -137,16 +140,20 @@ export function SuccessDetailTabs({ data, activeTab, isLoading, student }: Succe
   }
 
   if (activeTab === 'learning') {
-    return <AcademicInsightSections learningTasks={data?.learningTasks} showExams={false} />;
+    return <AcademicInsightSections learningTasks={data?.learningTasks} showExams={false}
+      filters={filters} onFilterChange={onFilterChange} />;
   }
 
   if (activeTab === 'exams') {
     return (
       <ExamsResultsDashboardCard
         exams={data?.exams}
+        summary={data?.examSummary}
         isLoading={isLoading}
         student={student}
         fullView
+        filters={filters}
+        onFilterChange={onFilterChange}
       />
     );
   }

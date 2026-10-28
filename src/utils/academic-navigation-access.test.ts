@@ -1,7 +1,7 @@
 import type { NavItemBaseProps } from 'src/components/nav-section';
 
 import { it, expect, describe } from 'vitest';
-import academicModule from 'src/constants/academic-menu';
+import academicModule, { academicSetupViewPermissions } from 'src/constants/academic-menu';
 
 import {
   getFirstAcademicPath,
@@ -108,6 +108,7 @@ const activeRoutes: RouteCase[] = [
   ),
   route('audits', 'Academics.Audits.View'),
   route('notification', 'Academics.Notification.View', `${ROOT}.Notification`),
+  route('setup', 'Academics.CurriculumManagement.Settings.SubjectCreation.View'),
 ];
 
 const grants = (...names: string[]) => names.map((name) => ({ name, isGranted: true }));
@@ -118,6 +119,22 @@ const leafPaths = (nodes: NavItemBaseProps[]): string[] =>
   );
 
 describe('Academic navigation and direct route permissions', () => {
+  it('requires an exact configuration View and module root for the manual setup route', () => {
+    const view = 'Academics.CurriculumManagement.Settings.SubjectCreation.View';
+    expect(canAccessAcademicRoute('/academic/setup', grants(ROOT))).toBe(false);
+    expect(canAccessAcademicRoute('/academic/setup?source=automatic#start', grants(ROOT))).toBe(false);
+    expect(canAccessAcademicRoute('/academic/setup/', grants(ROOT, view))).toBe(true);
+    expect(canAccessAcademicRoute('/academic/setup', grants(view))).toBe(false);
+    expect(canAccessAcademicRoute('/academic/setup', grants(ROOT, view.replace('.View', '.Add')))).toBe(false);
+    expect(leafPaths(filterAcademicNavigation(items, grants(ROOT, view)))).toContain('/academic/setup');
+  });
+
+  it.each(academicSetupViewPermissions)('allows the setup guide with only module visibility and %s', (view) => {
+    expect(canAccessAcademicRoute('/academic/setup', grants(ROOT, view))).toBe(true);
+    expect(leafPaths(filterAcademicNavigation(items, grants(ROOT, view)))).toContain('/academic/setup');
+    expect(canAccessAcademicRoute('/academic/setup', grants(ROOT, view.replace('.View', '.Add')))).toBe(false);
+  });
+
   it('covers every active Academic menu leaf', () => {
     expect(leafPaths(items).sort()).toEqual(activeRoutes.map(({ path }) => path).sort());
   });
@@ -160,9 +177,9 @@ describe('Academic navigation and direct route permissions', () => {
     );
     const filtered = filterAcademicNavigation(items, permissions);
 
-    expect(filtered.map(({ title }) => title)).toEqual(['Curriculum']);
+    expect(filtered.map(({ title }) => title)).toEqual(['Curriculum', 'Setup guide']);
     expect(filtered[0].children.map((item: NavItemBaseProps) => item.title)).toEqual(['Settings']);
-    expect(leafPaths(filtered)).toEqual(['/academic/curriculumSetting/subjectCreation']);
+    expect(leafPaths(filtered)).toEqual(['/academic/curriculumSetting/subjectCreation', '/academic/setup']);
     expect(getFirstAcademicPath(filtered)).toBe('/academic/curriculumSetting/subjectCreation');
     expect(leafPaths(items)).toHaveLength(activeRoutes.length);
   });

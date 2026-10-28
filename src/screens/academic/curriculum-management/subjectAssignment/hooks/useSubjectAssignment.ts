@@ -29,7 +29,7 @@ import type { CopySubjectPayload } from '../component/SubjectCopyDialog';
 
 const TEACHER_SEARCH_DEBOUNCE_MS = 400;
 
-export function useSubjectAssignment() {
+export function useSubjectAssignment(includeInsights = false) {
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
@@ -86,7 +86,7 @@ export function useSubjectAssignment() {
     type: 'query',
     currentQueryAndMutation: useGetSubjectKpiQuery,
     params: { classId },
-    options: { skip: !classId },
+    options: { skip: !classId || !includeInsights },
   });
 
   const [archiveSubject, { isLoading: isArchiveLoading }] = useArchiveSubjectAssignmentMutation();
