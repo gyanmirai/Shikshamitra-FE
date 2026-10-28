@@ -7,6 +7,7 @@ import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useHrSetupEmbedded } from 'src/screens/hr/setup/hr-setup-editor-context';
 import { extractTextFromReactNode } from 'src/components/customizabaleTable/utils';
 import {
   Box,
@@ -252,6 +253,14 @@ export function PolicyDrawerLayout({
   operation?: PolicyOperationState;
   children: React.ReactNode;
 }) {
+  const embedded = useHrSetupEmbedded();
+  if (embedded)
+    return (
+      <Stack spacing={2.5}>
+        {error && <Alert severity="error">{error}</Alert>}
+        {children}
+      </Stack>
+    );
   return (
     <Box
       sx={{

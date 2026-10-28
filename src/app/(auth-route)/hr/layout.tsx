@@ -10,6 +10,7 @@ import { SplashScreen } from 'src/components/loading-screen';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 import { hrRecoveryScope } from 'src/screens/hr/recovery/hr-recovery-events';
+import { HrSetupCoordinator } from 'src/screens/hr/setup/hr-setup-coordinator';
 import { HrRecoveryProvider } from 'src/screens/hr/recovery/hr-recovery-provider';
 import { TableExportContext } from 'src/components/customizabaleTable/export-context';
 
@@ -38,7 +39,10 @@ const HRLayout: React.FC<{ children: React.ReactNode }> = ({
   if (loading || !permissionsInitialized) return <SplashScreen />;
   return hasPermission ? (
     <TableExportContext.Provider value={exportContext}>
-      <HrRecoveryProvider key={hrRecoveryScope(auth)}>{children}</HrRecoveryProvider>
+      <HrRecoveryProvider key={hrRecoveryScope(auth)}>
+        {children}
+        <HrSetupCoordinator />
+      </HrRecoveryProvider>
     </TableExportContext.Provider>
   ) : (
     <View403 />

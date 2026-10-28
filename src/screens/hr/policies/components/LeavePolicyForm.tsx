@@ -10,14 +10,18 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useRef, useMemo, useEffect } from 'react';
-import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useGetLeavePoliciesQuery,
   useCreateLeavePolicyMutation,
   useUpdateLeavePolicyMutation,
 } from 'src/redux/hr/leaveApi';
+import {
+  SetupEditorBody,
+  SetupEditorGuard,
+  SetupEditorActions,
+  useHrSetupEditorState,
+} from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   Grid,
   Chip,
@@ -404,10 +408,16 @@ export function LeavePolicyForm({
     });
   }, [formik.dirty, formik.isSubmitting, isCreateLoading, isUpdateLoading, onCloseStateChange]);
 
+  useHrSetupEditorState({
+    dirty: formik.dirty,
+    busy: isCreateLoading || isUpdateLoading || formik.isSubmitting,
+    save: formik.submitForm,
+  });
+
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+    <SetupEditorGuard initialValues={formik.initialValues} currentValues={formik.values}>
       {impactReview.drawer}
-      <DialogScrollContent>
+      <SetupEditorBody>
         <Stack spacing={2}>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -511,30 +521,32 @@ export function LeavePolicyForm({
             setRuleValue={setRuleValue}
           />
         </Stack>
-      </DialogScrollContent>
+      </SetupEditorBody>
 
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={() => handleClose()}
-          variant="outlined"
-          size="small"
-          type="button"
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-          type="submit"
-          variant="contained"
-          size="small"
-          loading={isCreateLoading || isUpdateLoading}
-          onClick={() => formik.handleSubmit()}
-        >
-          {editData?.id ? 'Update' : 'Submit'}
-        </LoadingButton>
-      </DialogActions>
-    </BackPopUpChecked>
+      <SetupEditorActions>
+        <DialogActions>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => handleClose()}
+            variant="outlined"
+            size="small"
+            type="button"
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            type="submit"
+            variant="contained"
+            size="small"
+            loading={isCreateLoading || isUpdateLoading}
+            onClick={() => formik.handleSubmit()}
+          >
+            {editData?.id ? 'Update' : 'Submit'}
+          </LoadingButton>
+        </DialogActions>
+      </SetupEditorActions>
+    </SetupEditorGuard>
   );
 }
 

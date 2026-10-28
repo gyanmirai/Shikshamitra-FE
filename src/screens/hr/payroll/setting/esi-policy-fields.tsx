@@ -1,7 +1,8 @@
 import type { EsiManagementMode } from 'src/redux/hr/esi-policy-api';
 
-import { useId } from 'react';
+import { useId, useContext } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { HrSetupTaskContext } from 'src/screens/hr/setup/hr-setup-editor-context';
 import { Box, Stack, Alert, Button, MenuItem, TextField, Typography } from '@mui/material';
 import {
   effectiveEsiPolicyVersion,
@@ -16,6 +17,7 @@ type Props = EsiAssignment & {
 };
 export function EsiPolicyFields({ mode, policyId, reason, month, disabled, onChange }: Props) {
   const id = useId();
+  const openTask = useContext(HrSetupTaskContext);
   const { data = [], isLoading, isError, refetch } = useGetEsiPolicyOptionsQuery();
   const policy = data.find((item) => item.id === policyId);
   const version = effectiveEsiPolicyVersion(policy, month);
@@ -75,6 +77,11 @@ export function EsiPolicyFields({ mode, policyId, reason, month, disabled, onCha
                 ))}
             </TextField>
           </ShakingTextField>
+          {openTask && !isLoading && !isError && (
+            <Button size="small" disabled={disabled} onClick={() => openTask('esi')}>
+              Configure required ESIC policy
+            </Button>
+          )}
           {version && (
             <Typography
               variant="caption"

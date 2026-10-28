@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-27
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -56,6 +56,20 @@ A missing allocation shows one scoped message, while loading, failed reads, and 
 My Requests owns the single searchable request/history table, including applied date, reason, status, existing request actions, and export.
 Submitted By, Organization, and Remarks remain available through Columns without crowding the default request view.
 The staff-profile leave tab retains its existing employee-specific history.
+
+## HR setup wizard
+
+Authorized HR operators receive the **Complete HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
+The wizard opens at the first unresolved step and marks usable existing configuration complete without requiring acknowledgement.
+Users can configure shifts, policies and calendars, earning components, and salary templates through embedded versions of the existing editors.
+Required deduction and statutory dependencies appear inside the salary step when needed; the salary draft remains mounted while a dependency is configured.
+Role repair remains an explicitly authorized Role Management task in another tab.
+Each step saves independently through existing APIs, and the final action rechecks server readiness.
+Closing preserves saved configuration, protects unsaved entries with the existing discard confirmation, leaves the current route intact, and shows no banner.
+Dismissal lasts for the document lifetime across HR navigation and resets on refresh or a user, tenant, or academic-year change.
+Self-service-only users receive no popup and make no readiness request.
+Read failures display a dismissible retry state rather than missing-setup claims.
+This wizard does not change staff creation, finalization, activation, or payroll validation.
 
 ## Employee onboarding behavior
 

@@ -8,6 +8,15 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## HR setup readiness wizard
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/setup --pool=threads` for progress and document-lifetime reminder tests.
+For disposable API-backed browser verification, start `dotnet run --project test/browser/hr-setup/HrSetupBrowser.csproj` from the backend repository, then run `npx playwright test --config e2e/hr/hr-setup.config.ts` from the frontend repository.
+The fixture uses loopback ports 4396 and 4196, disposable SQLite, synthetic authentication, production setup editors, and real backend endpoints.
+It does not connect to an operational school.
+Browser coverage includes dismissal, refresh, self-service exclusion, request failures, supported viewports/themes, and independent configuration saves through salary preview and completion.
+The salary journey creates an auxiliary deduction while preserving the template draft and refreshes its component catalogue before preview and save.
+Finish user-facing verification in the Codex in-app browser after automated checks.
 
 ## Onboarding initial load
 

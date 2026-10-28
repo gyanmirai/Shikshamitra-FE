@@ -2,7 +2,8 @@
 
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { Box, Alert, Stack, Button, Drawer, Divider, Typography } from '@mui/material';
+import { Box, Alert, Stack, Button, Divider, Typography } from '@mui/material';
+import { SetupInlineDrawer } from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   usePreviewLeavePolicyImpactMutation,
   useGetLeavePolicyImpactDetailsMutation,
@@ -134,7 +135,7 @@ export function useLeavePolicyImpactReview(academicYearId?: string) {
     (review.requiresConfirmation && !review.confirmationToken)
   );
   const drawer = (
-    <Drawer
+    <SetupInlineDrawer
       anchor="right"
       open={Boolean(request)}
       onClose={close}
@@ -299,7 +300,7 @@ export function useLeavePolicyImpactReview(academicYearId?: string) {
           </Button>
         ) : null}
       </Stack>
-    </Drawer>
+    </SetupInlineDrawer>
   );
   return { requestReview, drawer };
 }

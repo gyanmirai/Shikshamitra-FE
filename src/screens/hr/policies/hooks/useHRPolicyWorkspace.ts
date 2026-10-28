@@ -205,9 +205,11 @@ function isActiveLeavePolicy(item: any): boolean {
 export function useHRPolicyWorkspace({
   focus,
   tabs,
+  embedded = false,
 }: {
   focus?: WorkspaceTab;
   tabs: Array<{ value: WorkspaceTab; label: string; icon: string; disabled?: boolean }>;
+  embedded?: boolean;
 }) {
   const muiTheme = useTheme();
   const searchParams = useSearchParams();
@@ -319,7 +321,7 @@ export function useHRPolicyWorkspace({
 
   const { currentData: employees, isFetching: employeesLoading } = useGetEmployeeQuery(
     { page: 1, pageSize: EMPLOYEE_LIST_MAX_PAGE_SIZE },
-    { skip: !academicYearId }
+    { skip: embedded || !academicYearId }
   );
   const { currentData: employeeSearchResults, isFetching: employeeSearchLoading } =
     useGetEmployeeQuery(
@@ -332,22 +334,25 @@ export function useHRPolicyWorkspace({
     );
   const { data: groups, isFetching: groupsLoading } = useGetGroupsQuery(
     { academicYearId, maxResultCount: 200, includeDetails: false },
-    { skip: !academicYearId }
+    { skip: embedded || !academicYearId }
   );
   const {
     data: workCalendarPolicies,
     isFetching: calendarsLoading,
     error: calendarsError,
+    refetch: refetchCalendars,
   } = useGetWorkCalendarPoliciesQuery(listArgs, { skip: !academicYearId });
   const {
     currentData: payrollPolicies,
     isFetching: payrollLoading,
     error: payrollError,
+    refetch: refetchPayroll,
   } = useGetPayrollPoliciesQuery(listArgs, { skip: !academicYearId });
   const {
     currentData: attendancePolicies,
     isFetching: attendanceLoading,
     error: attendanceError,
+    refetch: refetchAttendance,
   } = useGetAttendancePoliciesQuery(listArgs, { skip: !academicYearId });
   const {
     currentData: leavePolicyData,
@@ -355,7 +360,11 @@ export function useHRPolicyWorkspace({
     error: leavePoliciesError,
   } = useGetLeavePoliciesQuery(
     { academicYearId, page: 1, pageSize: 500 },
-    { skip: !academicYearId }
+    {
+      skip:
+        !academicYearId ||
+        (embedded && !hasGrantedPermission(permissions, hrLeavePolicyPermissions.view)),
+    }
   );
   const {
     data: assignments,
@@ -370,9 +379,9 @@ export function useHRPolicyWorkspace({
       page: assignmentPage.number - 1,
       size: assignmentPage.size,
       resetPage: () => setAssignmentPage((current) => ({ ...current, number: 1 })),
-      skip: !academicYearId,
+      skip: embedded || !academicYearId,
     },
-    useGetHrPolicyAssignmentsQuery(assignmentListArgs, { skip: !academicYearId })
+    useGetHrPolicyAssignmentsQuery(assignmentListArgs, { skip: embedded || !academicYearId })
   );
 
   const policyAuditTarget =
@@ -2352,6 +2361,9 @@ export function useHRPolicyWorkspace({
     attendanceLoading,
     leavePoliciesLoading,
     assignmentsLoading,
+    refreshSetupConfiguration: async () => {
+      await Promise.all([refetchCalendars(), refetchPayroll(), refetchAttendance()]);
+    },
     // Errors
     calendarsError,
     payrollError,

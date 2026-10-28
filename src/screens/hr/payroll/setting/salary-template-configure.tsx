@@ -1,12 +1,15 @@
 import type { FormikProps } from 'formik';
 import type { SalaryTemplateRule } from 'src/redux/hr/salary-template-api';
 
+import { useContext } from 'react';
 import { useGetPFQuery } from 'src/redux/PF/PFApi';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { HrSetupTaskContext } from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   Box,
   Grid,
   Alert,
+  Button,
   Select,
   Switch,
   MenuItem,
@@ -46,6 +49,7 @@ export default function SalaryTemplateConfigure({
   onAdd,
   issues,
 }: Props) {
+  const openTask = useContext(HrSetupTaskContext);
   const { data: pfData, isError: pfError } = useGetPFQuery({});
   const pfRules = (pfData?.items || []).filter((rule: { isActive: boolean }) => rule.isActive);
   const pfFormulaPresent = formik.values.rules.some(
@@ -205,6 +209,11 @@ export default function SalaryTemplateConfigure({
                   </FormControl>
                 </Grid>
               </Grid>
+              {openTask && pfFormulaPresent && !pfError && (
+                <Button size="small" disabled={readOnly} onClick={() => openTask('pf')}>
+                  Create required PF rule
+                </Button>
+              )}
               {pfError ? (
                 <Alert severity="error" sx={{ mt: 2 }}>
                   PF rules could not be loaded.
@@ -230,6 +239,16 @@ export default function SalaryTemplateConfigure({
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                 Professional Tax uses effective statutory rules.
               </Typography>
+              {openTask &&
+                formik.values.rules.some((rule) => rule.formulaType === 'PROFESSIONAL_TAX') && (
+                  <Button
+                    size="small"
+                    disabled={readOnly}
+                    onClick={() => openTask('professional-tax')}
+                  >
+                    Configure required Professional Tax rule
+                  </Button>
+                )}
               <Box
                 component="details"
                 sx={{

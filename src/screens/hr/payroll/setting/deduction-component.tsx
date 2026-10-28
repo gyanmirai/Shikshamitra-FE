@@ -12,6 +12,7 @@ import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -25,8 +26,13 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  SetupEditorBody,
+  SetupEditorGuard,
+  SetupInlineDialog,
+  SetupEditorActions,
+  useHrSetupEditorState,
+} from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   Box,
   Grid,
@@ -486,7 +492,7 @@ const validationSchema = Yup.object({
     ),
 });
 
-const DeductionComponentForm = ({
+export const DeductionComponentForm = ({
   editData,
   handleClose,
 }: {
@@ -656,10 +662,20 @@ const DeductionComponentForm = ({
     return options;
   }, [editData, getEarningComponentsData, getDeductionComponentsData]);
 
+  useHrSetupEditorState({
+    dirty: formik.dirty,
+    busy:
+      addDeductionComponentLoading ||
+      updateDeductionComponentLoading ||
+      previewUpdateImpactLoading ||
+      formik.isSubmitting,
+    save: formik.submitForm,
+  });
+
   return (
     <>
-      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-        <DialogScrollContent>
+      <SetupEditorGuard initialValues={formik.initialValues} currentValues={formik.values}>
+        <SetupEditorBody>
           {/* Deduction Details */}
           <SectionCard
             title="Deduction Details"
@@ -1049,34 +1065,36 @@ const DeductionComponentForm = ({
               </HrNotice>
             </Box>
           </Grid>
-        </DialogScrollContent>
+        </SetupEditorBody>
 
-        <DialogActions>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            size="small"
-            variant="outlined"
-            onClick={(e: any) => handleClose(e, false)}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            size="small"
-            variant="contained"
-            type="submit"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            onClick={(e: any) => formik.handleSubmit(e)}
-            loading={
-              addDeductionComponentLoading ||
-              updateDeductionComponentLoading ||
-              previewUpdateImpactLoading
-            }
-          >
-            {editData ? 'Update' : 'Submit'}
-          </LoadingButton>
-        </DialogActions>
-      </BackPopUpChecked>
-      <Dialog
+        <SetupEditorActions>
+          <DialogActions>
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              size="small"
+              variant="outlined"
+              onClick={(e: any) => handleClose(e, false)}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              size="small"
+              variant="contained"
+              type="submit"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              onClick={(e: any) => formik.handleSubmit(e)}
+              loading={
+                addDeductionComponentLoading ||
+                updateDeductionComponentLoading ||
+                previewUpdateImpactLoading
+              }
+            >
+              {editData ? 'Update' : 'Submit'}
+            </LoadingButton>
+          </DialogActions>
+        </SetupEditorActions>
+      </SetupEditorGuard>
+      <SetupInlineDialog
         open={Boolean(impactPreview)}
         onClose={() => setImpactPreview(null)}
         maxWidth="sm"
@@ -1092,7 +1110,9 @@ const DeductionComponentForm = ({
               my: 1,
             }}
           >
-            <HrNotice severity="info">Synced staff: {impactPreview?.syncedEmployeeCount ?? 0}</HrNotice>
+            <HrNotice severity="info">
+              Synced staff: {impactPreview?.syncedEmployeeCount ?? 0}
+            </HrNotice>
             <Alert severity="warning">
               Manual overrides: {impactPreview?.manualOverrideEmployeeCount ?? 0}
             </Alert>
@@ -1136,7 +1156,7 @@ const DeductionComponentForm = ({
             Force apply
           </LoadingButton>
         </DialogActions>
-      </Dialog>
+      </SetupInlineDialog>
     </>
   );
 };

@@ -20,9 +20,8 @@ import { getIn, useFormik, setNestedObjectValues } from 'formik';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetEsiPolicyOptionsQuery } from 'src/redux/hr/esi-policy-api';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useRef, useMemo, useState, useEffect, useContext, useCallback } from 'react';
 import { HrSetupLink, HrSetupRefresh } from 'src/screens/hr/recovery/hr-setup-controls';
 import {
   Box,
@@ -34,6 +33,13 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
+import {
+  SetupEditorBody,
+  useHrSetupEmbedded,
+  HrSetupTaskContext,
+  useHrSetupEditorState,
+  SetupInlineCustomDialog,
+} from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   useGetSalaryTemplateQuery,
   useCreateSalaryTemplateMutation,
@@ -62,6 +68,7 @@ type Props = {
   onClose?: () => void;
   onSaved?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
+  dependencyRevision?: number;
 };
 const operationKey = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 
@@ -71,7 +78,9 @@ export default function SalaryTemplateEditor({
   onClose,
   onSaved,
   onDirtyChange,
+  dependencyRevision = 0,
 }: Props) {
+  const embedded = useHrSetupEmbedded();
   const router = useRouter();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canAdd = hasGrantedPermission(
@@ -124,6 +133,9 @@ export default function SalaryTemplateEditor({
     if (onSaved) onSaved();
     else exit();
   };
+  useEffect(() => {
+    if (dependencyRevision > 0) refetchCatalog();
+  }, [dependencyRevision, refetchCatalog]);
   const reload = () =>
     requestNavigation(async () => {
       const result = await refetch();
@@ -145,31 +157,33 @@ export default function SalaryTemplateEditor({
       : 'Edit Salary Template';
   return (
     <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-      <CustomBreadcrumbs
-        heading={heading}
-        description="Configure reusable salary rules, then preview a full month before saving an active version."
-        isBack
-        onBack={close}
-        links={[
-          { name: 'Payroll Management', href: hrPaths.payroll.root },
-          { name: 'Salary Templates', href: hrPaths.payroll.settings.salaryTemplates },
-          { name: isCreate ? 'Create' : readOnly ? 'View' : 'Edit' },
-        ]}
-        sx={{
-          flexShrink: 0,
-          display: { xs: 'grid', lg: 'flex' },
-          gridTemplateColumns: 'minmax(0, 1fr)',
-          '& > *': { m: '0 !important' },
-          '& > .MuiStack-root': { flexShrink: 0 },
-        }}
-        slotProps={{
-          heading: {},
-          action: {},
-          moreLink: {},
-          breadcrumbs: { minWidth: 0, '& .MuiBreadcrumbs-li': { whiteSpace: 'nowrap' } },
-        }}
-        action={readOnly ? <Chip size="small" label="Read only" /> : undefined}
-      />
+      {!embedded && (
+        <CustomBreadcrumbs
+          heading={heading}
+          description="Configure reusable salary rules, then preview a full month before saving an active version."
+          isBack
+          onBack={close}
+          links={[
+            { name: 'Payroll Management', href: hrPaths.payroll.root },
+            { name: 'Salary Templates', href: hrPaths.payroll.settings.salaryTemplates },
+            { name: isCreate ? 'Create' : readOnly ? 'View' : 'Edit' },
+          ]}
+          sx={{
+            flexShrink: 0,
+            display: { xs: 'grid', lg: 'flex' },
+            gridTemplateColumns: 'minmax(0, 1fr)',
+            '& > *': { m: '0 !important' },
+            '& > .MuiStack-root': { flexShrink: 0 },
+          }}
+          slotProps={{
+            heading: {},
+            action: {},
+            moreLink: {},
+            breadcrumbs: { minWidth: 0, '& .MuiBreadcrumbs-li': { whiteSpace: 'nowrap' } },
+          }}
+          action={readOnly ? <Chip size="small" label="Read only" /> : undefined}
+        />
+      )}
       {!permitted ? (
         <Alert severity="warning">
           You do not have permission to {isCreate ? 'create' : 'view'} salary templates.
@@ -252,6 +266,7 @@ export default function SalaryTemplateEditor({
             onDirtyChange={changeDirty}
             onBusyChange={setBusy}
             onReload={reload}
+            dependencyRevision={dependencyRevision}
             onRefreshCatalog={async () => {
               const result = await refetchCatalog();
               if (result.error) throw new Error('Salary components could not be refreshed.');
@@ -275,6 +290,7 @@ type WorkflowProps = {
   onBusyChange: (busy: boolean) => void;
   onReload: () => void;
   onRefreshCatalog: () => Promise<void>;
+  dependencyRevision: number;
 };
 function SalaryTemplateWorkflow({
   template: sourceTemplate,
@@ -287,7 +303,10 @@ function SalaryTemplateWorkflow({
   onBusyChange,
   onReload,
   onRefreshCatalog,
+  dependencyRevision,
 }: WorkflowProps) {
+  const embedded = useHrSetupEmbedded();
+  const openTask = useContext(HrSetupTaskContext);
   // Pin the loaded version so background refreshes cannot replace edits.
   const [template] = useState(sourceTemplate);
   const [initialValues] = useState(() => initialEditorValues(template));
@@ -350,7 +369,7 @@ function SalaryTemplateWorkflow({
     esiPolicyId: formik.values.defaultEsiPolicyId || null,
     esiExternalReason: formik.values.defaultEsiExternalReason.trim() || null,
   };
-  const inputSignature = JSON.stringify(previewInput);
+  const inputSignature = JSON.stringify([previewInput, dependencyRevision]);
   const latestSignature = useRef(inputSignature);
   latestSignature.current = inputSignature;
   const previewCurrent =
@@ -563,6 +582,12 @@ function SalaryTemplateWorkflow({
   const busy = createState.isLoading || updateState.isLoading || formik.isSubmitting;
   const requirements = configurationFeedback(formik.values);
   const valid = requirements.length === 0;
+  useHrSetupEditorState({
+    dirty: formik.dirty,
+    busy,
+    save: formik.submitForm,
+    disabled: !valid || !previewCurrent || calculationState.isLoading,
+  });
   useEffect(() => onBusyChange(busy), [busy, onBusyChange]);
   useEffect(() => {
     if (!pendingFocus) return undefined;
@@ -621,8 +646,8 @@ function SalaryTemplateWorkflow({
         sx={{
           flex: 1,
           minHeight: 0,
-          overflowY: 'auto',
-          p: { xs: 1, md: 2 },
+          overflowY: embedded ? 'visible' : 'auto',
+          p: embedded ? 0 : { xs: 1, md: 2 },
           scrollPaddingBlock: 2,
         }}
       >
@@ -748,9 +773,11 @@ function SalaryTemplateWorkflow({
           </Alert>
         )}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          <Button size="small" type="button" variant="outlined" onClick={onClose} disabled={busy}>
-            {readOnly ? 'Close' : 'Cancel'}
-          </Button>
+          {!embedded && (
+            <Button size="small" type="button" variant="outlined" onClick={onClose} disabled={busy}>
+              {readOnly ? 'Close' : 'Cancel'}
+            </Button>
+          )}
           <Typography
             id="salary-preview-status"
             role="status"
@@ -797,7 +824,7 @@ function SalaryTemplateWorkflow({
                       : 'Preview before saving'}
               </Button>
             )}
-            {!readOnly && (
+            {!readOnly && !embedded && (
               <LoadingButton
                 size="small"
                 variant="contained"
@@ -812,7 +839,7 @@ function SalaryTemplateWorkflow({
           </Box>
         </Box>
       </Box>
-      <CustomDialog
+      <SetupInlineCustomDialog
         open={Boolean(addKind)}
         handleClose={() => {
           setAddKind(null);
@@ -823,7 +850,7 @@ function SalaryTemplateWorkflow({
         hasForm={false}
         guardUnsavedChanges={false}
       >
-        <DialogScrollContent>
+        <SetupEditorBody>
           <Autocomplete
             size="small"
             fullWidth
@@ -841,7 +868,15 @@ function SalaryTemplateWorkflow({
               <TextField {...params} size="small" label="Payroll component" />
             )}
           />
-        </DialogScrollContent>
+          {openTask && availableComponents.length === 0 && (
+            <Button
+              size="small"
+              onClick={() => openTask(addKind === 'EARNING' ? 'earnings' : 'deductions')}
+            >
+              Create {addKind === 'EARNING' ? 'earning' : 'deduction'} component
+            </Button>
+          )}
+        </SetupEditorBody>
         <DialogActions>
           <Button
             size="small"
@@ -877,7 +912,7 @@ function SalaryTemplateWorkflow({
             Add Component
           </Button>
         </DialogActions>
-      </CustomDialog>
+      </SetupInlineCustomDialog>
     </Box>
   );
 }
