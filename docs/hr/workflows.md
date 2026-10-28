@@ -160,6 +160,10 @@ Failures retain a Retry action, and navigation or changing month/year clears pen
 
 ## Policy, dashboard, and report behavior
 
+School PF coverage is an effective-month school setting separate from PF contribution rules.
+The PF Rule page explains a missing current record only after coverage loads successfully; loading and retryable errors never imply that coverage is missing.
+Coverage changes retain the existing school-wide scope, action grant, evidence requirement, concurrency reference, and retry key.
+
 Policy workspaces show page-specific guidance, keep save errors next to the submit action, and search employee assignment targets through the server after two characters.
 Work calendars prevent all seven days from becoming weekly offs and constrain effective-date years to 1900 through 2100 before submission.
 The leave-policy impact drawer is read-only, and archive confirmation is a separate explicit action.

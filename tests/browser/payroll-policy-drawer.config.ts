@@ -7,6 +7,7 @@ export default defineConfig({
     'payroll-policy-drawer.spec.ts',
     'hr-policy-drawers.spec.ts',
     'manual-attendance-filters.spec.ts',
+    'pf-coverage-settings.spec.ts',
   ],
   timeout: 30000,
   workers: 1,

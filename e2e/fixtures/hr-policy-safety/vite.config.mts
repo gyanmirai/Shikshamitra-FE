@@ -9,6 +9,7 @@ import {
   versions,
   policyImpact,
   manualAttendanceDay,
+  pfRules,
 } from './data';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
@@ -41,7 +42,9 @@ export default defineConfig({
                   ? payroll
                   : table === 'hr-policy-leave'
                     ? leave
-                    : []
+                    : table === 'hr-pf-rules'
+                      ? pfRules
+                      : []
             );
           }
           if (path === '/api/hr/policies/impact-preview' && request.method === 'POST') {
@@ -73,6 +76,9 @@ export default defineConfig({
           if (path.includes('holiday-import-preview') || path.endsWith('/holidays'))
             return response.end('[]');
           if (path === '/api/leave-management/year-end-settlements') return response.end('[]');
+          if (path === '/api/payroll/pf-rules/coverage')
+            return response.end(JSON.stringify({ hasSchoolWideScope: true, history: [] }));
+          if (path === '/api/payroll/pf-rules') return page(pfRules);
           if (path === '/api/hr/attendance/take-attendance/day')
             return response.end(
               JSON.stringify(

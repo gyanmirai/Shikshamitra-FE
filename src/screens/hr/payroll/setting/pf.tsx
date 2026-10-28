@@ -134,6 +134,9 @@ const PF = () => {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        minHeight: 0,
+        minWidth: 0,
+        overflowY: { xs: 'auto', md: 'hidden' },
       }}
     >
       <CustomBreadcrumbs

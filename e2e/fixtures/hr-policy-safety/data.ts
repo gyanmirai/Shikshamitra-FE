@@ -1,5 +1,20 @@
 import type { HrPolicyVersion, HrPolicyImpactPreview } from 'src/redux/hr/hr-policy-api';
 
+export const pfRules = [
+  {
+    id: 'pf-rule-1',
+    code: 'SYN-PF',
+    name: 'Synthetic PF rule',
+    employeePercentage: 12,
+    employerPercentage: 12,
+    contributionBasis: 0,
+    wageCeiling: 15000,
+    effectiveFrom: '2026-04-01',
+    isActive: true,
+    version: 1,
+  },
+];
+
 export function manualAttendanceDay(query: Record<string, unknown>) {
   const allStaff = [
     {

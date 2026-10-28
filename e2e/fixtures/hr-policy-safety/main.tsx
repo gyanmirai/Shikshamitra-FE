@@ -6,6 +6,7 @@ import { api } from 'src/redux/service';
 import { createRoot } from 'react-dom/client';
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from 'src/redux/auth/authSlice';
+import PF from 'src/screens/hr/payroll/setting/pf';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { hrPermissions } from 'src/constants/hr-menus';
@@ -29,6 +30,8 @@ const permissions = [
   ...Object.values(hrPermissions.policies),
   ...Object.values(hrPermissions.policyActions),
   ...Object.values(hrLeavePolicyPermissions),
+  'HR.PayrollManagement.Settings.PfRule.View',
+  'HR.PayrollManagement.Settings.PfRule.Add',
 ].map((name) => ({ name, isGranted: true }));
 const store = configureStore({
   reducer: {
@@ -61,7 +64,9 @@ createRoot(document.getElementById('root')!).render(
             Synthetic policy fixture — all policy writes are refused; no school data is connected.
           </Alert>
           <Box sx={{ flex: 1, minHeight: 0 }}>
-            {query.get('surface') === 'manual-attendance' ? (
+            {query.get('surface') === 'pf' ? (
+              <PF />
+            ) : query.get('surface') === 'manual-attendance' ? (
               <ManualAttendanceScreen />
             ) : (
               <HRPolicyWorkspace focus={focus} />
