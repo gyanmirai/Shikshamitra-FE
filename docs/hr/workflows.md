@@ -175,6 +175,14 @@ Review, adjustment mutations, and locking require a current loaded preview.
 An explicit generate, refresh, or retry shows one completion toast after the requested run and its rows are ready, including empty results.
 Failures retain a Retry action, and navigation or changing month/year clears pending notifications.
 
+## Salary template preview recovery
+
+The salary-template editor keeps failed-preview guidance beside the sample controls and retains every entered value.
+Known target/allocation failures highlight the monthly amount and offer correction actions for the amount and earning rules; reviewing earning rules expands the first earning's controls before focusing them.
+PF rule failures direct the operator to the selected rule or preview month. The shared salary-error mapper handles exact known codes in both ProblemDetails and ABP responses, including older generic responses; it never renders arbitrary diagnostic data.
+Changing rules or sample inputs invalidates any previous preview, and saving still requires a fresh successful signed preview.
+The backend owns the rejection rules and safe error metadata; see its [salary template contract](../../../Shikshamitra-BE/docs/modules/hr/api.md).
+
 ## Policy, dashboard, and report behavior
 
 Policy workspaces show page-specific guidance, keep save errors next to the submit action, and search employee assignment targets through the server after two characters.

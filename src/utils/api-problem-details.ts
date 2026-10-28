@@ -1,3 +1,4 @@
+import { salaryPreviewError } from './salary-preview-error';
 import { prorationPolicyErrorMessage } from './proration-policy-error';
 import { isGenericPermissionMessage, normalizePermissionDeniedError } from './permission-denied';
 import {
@@ -265,6 +266,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
       )) ||
     duplicateStandardMessage ||
     duplicateCategoryMessage ||
+    salaryPreviewError(errorCode, businessData)?.message ||
     (prorationMessage && (prorationCandidate || prorationMessage)) ||
     knownMessage ||
     specificCandidate ||

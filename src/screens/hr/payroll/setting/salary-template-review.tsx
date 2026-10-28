@@ -13,7 +13,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { Box, Chip, Grid, Alert, MenuItem, TextField, Typography } from '@mui/material';
+import { Box, Chip, Grid, Alert, Button, MenuItem, TextField, Typography } from '@mui/material';
 
 import { SalaryTotals } from '../structure/salary-summary-view';
 import { formatRuleLabel } from './salary-template-editor-utils';
@@ -34,6 +34,8 @@ type Props = {
   calculating: boolean;
   archived: boolean;
   previewError: string;
+  previewFields: string[];
+  onCorrect: (field: string) => void;
   calculation?: SalaryTemplateCalculation;
   versions: SalaryTemplateVersion[];
 };
@@ -52,6 +54,8 @@ export default function SalaryTemplateReview({
   calculating,
   archived,
   previewError,
+  previewFields,
+  onCorrect,
   calculation,
   versions,
 }: Props) {
@@ -115,23 +119,30 @@ export default function SalaryTemplateReview({
                   fullWidth
                   disabled={busy}
                   name="sampleMonthlyAmount"
+                  id="salary-preview-monthly-amount"
                   label={
                     salaryBasis === 'EMPLOYER_COST'
                       ? 'Monthly cost to school (CTC)'
                       : 'Monthly salary'
                   }
                   value={sampleAmount}
+                  error={Boolean(previewError && previewFields.includes('monthlyAmount'))}
+                  slotProps={{
+                    htmlInput: {
+                      inputMode: 'decimal',
+                      'aria-describedby': previewError ? 'salary-preview-error' : undefined,
+                    },
+                  }}
                   decimalScale={2}
                   roundToWholeRupees={false}
                   isAllowed={({ floatValue }) =>
                     floatValue === undefined || floatValue <= 100000000
                   }
                   onValueChange={({ floatValue }) => setSampleAmount(floatValue ?? 0)}
-                  slotProps={{ htmlInput: { inputMode: 'decimal' } }}
                 />
               </ShakingTextField>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} id="salary-preview-effective-month">
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   label="Preview month"
@@ -144,7 +155,11 @@ export default function SalaryTemplateReview({
                     setEffectiveMonth(value?.isValid() ? value.format('YYYY-MM') : '')
                   }
                   slotProps={{
-                    textField: { size: 'small', fullWidth: true, name: 'sampleEffectiveMonth' },
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      name: 'sampleEffectiveMonth',
+                    },
                   }}
                 />
               </LocalizationProvider>
@@ -166,8 +181,23 @@ export default function SalaryTemplateReview({
             </Grid>
           </Grid>
           {previewError ? (
-            <Alert severity="error" sx={{ mt: 2 }}>
+            <Alert id="salary-preview-error" severity="error" sx={{ mt: 2 }}>
               {previewError}
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                {previewFields.map((field) => (
+                  <Button key={field} size="small" color="inherit" onClick={() => onCorrect(field)}>
+                    {field === 'rules'
+                      ? 'Review earning rules'
+                      : field === 'deductions'
+                        ? 'Review deduction rules'
+                        : field === 'pfRuleId'
+                          ? 'Review PF rule'
+                          : field === 'effectiveMonth'
+                            ? 'Review preview month'
+                            : 'Review monthly amount'}
+                  </Button>
+                ))}
+              </Box>
             </Alert>
           ) : null}
           {calculation ? (

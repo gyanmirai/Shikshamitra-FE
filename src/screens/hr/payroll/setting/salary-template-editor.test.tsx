@@ -169,6 +169,131 @@ const renderEditor = (ui: React.ReactNode) =>
 const originalTemplate = structuredClone(mocks.template);
 
 describe('SalaryTemplateEditor', () => {
+  it('does not reuse PF correction targets after an unchanged-input retry succeeds and expires', async () => {
+    vi.useFakeTimers();
+    try {
+      const success = await mocks.calculate().unwrap();
+      mocks.calculate.mockClear();
+      mocks.calculate
+        .mockReturnValueOnce({
+          unwrap: vi.fn().mockRejectedValue({
+            status: 400,
+            data: {
+              errorCode: 'HR:Payroll:PfRuleNotEffective',
+              detail: 'One or more business rules were violated.',
+            },
+          }),
+        })
+        .mockReturnValueOnce({
+          unwrap: vi
+            .fn()
+            .mockResolvedValue({
+              ...success,
+              expiresAt: new Date(Date.now() + 1000).toISOString(),
+            }),
+        });
+      renderEditor(<SalaryTemplateEditor templateId="template-1" />);
+      await act(async () =>
+        fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }))
+      );
+      expect(screen.getByRole('button', { name: 'Review PF rule' })).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Review preview month' })).toBeVisible();
+      await act(async () =>
+        fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }))
+      );
+      expect(mocks.calculate.mock.calls[1][0]).toEqual(mocks.calculate.mock.calls[0][0]);
+      expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled();
+      await act(async () => vi.advanceTimersByTimeAsync(1000));
+      expect(
+        screen.getByText('The salary preview expired. Refresh preview before saving.')
+      ).toBeVisible();
+      expect(screen.queryByRole('button', { name: 'Review PF rule' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Review preview month' })
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+      expect(mocks.updateTemplate).not.toHaveBeenCalled();
+    } finally {
+      cleanup();
+      vi.useRealTimers();
+    }
+  });
+
+  it('focuses the visible month control for an ineffective PF rule', async () => {
+    const user = userEvent.setup();
+    mocks.calculate.mockReturnValueOnce({
+      unwrap: vi.fn().mockRejectedValue({
+        status: 400,
+        data: {
+          errorCode: 'HR:Payroll:PfRuleNotEffective',
+          detail: 'One or more business rules were violated.',
+        },
+      }),
+    });
+    renderEditor(<SalaryTemplateEditor templateId="template-1" />);
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await user.click(await screen.findByRole('button', { name: 'Review preview month' }));
+    await waitFor(() => expect(screen.getByRole('spinbutton', { name: 'Month' })).toHaveFocus());
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+  });
+  it('explains an impossible employer-cost target, focuses corrections and requires a fresh proof', async () => {
+    const user = userEvent.setup();
+    mocks.template.editableVersion.rules[0] = {
+      ...mocks.template.editableVersion.rules[0],
+      formulaType: 'FIXED_AMOUNT',
+      value: 2000,
+    };
+    mocks.template.editableVersion.rules[1] = {
+      ...mocks.template.editableVersion.rules[1],
+      semanticType: 'ORDINARY',
+      formulaType: 'FIXED_AMOUNT',
+      value: 50000,
+    };
+    mocks.calculate.mockReturnValueOnce({
+      unwrap: vi.fn().mockRejectedValue({
+        status: 400,
+        data: {
+          errorCode: 'HR:Payroll:CompensationTargetNotSolvable',
+          detail: 'One or more business rules were violated.',
+          data: { salaryBasis: 'EMPLOYER_COST', target: 50000, fixedEarnings: 52000 },
+        },
+      }),
+    });
+    renderEditor(<SalaryTemplateEditor templateId="template-1" />);
+    const amount = screen.getByRole('textbox', { name: 'Monthly cost to school (CTC)' });
+    fireEvent.change(amount, { target: { value: '50000' } });
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    expect(await screen.findByText(/Fixed earnings total INR 52000.00/)).toBeVisible();
+    expect(screen.queryByText('One or more business rules were violated.')).not.toBeInTheDocument();
+    expect(amount).toHaveValue('₹ 50,000');
+    expect(amount).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Review monthly amount' }));
+    await waitFor(() => expect(amount).toHaveFocus());
+    await user.click(screen.getByRole('button', { name: 'Review earning rules' }));
+    expect(screen.getByRole('button', { name: 'Collapse Basic Salary' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    expect(
+      screen.getByRole('combobox', { name: 'Payroll purpose for Basic Salary' })
+    ).toBeVisible();
+    await waitFor(() =>
+      expect(document.getElementById('salary-earnings')).toContainElement(
+        document.activeElement as HTMLElement
+      )
+    );
+    fireEvent.change(amount, { target: { value: '52000' } });
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled());
+    expect(mocks.calculate.mock.calls.at(-1)?.[0]).toMatchObject({
+      monthlyAmount: 52000,
+      salaryBasis: 'EMPLOYER_COST',
+    });
+    expect(mocks.updateTemplate).not.toHaveBeenCalled();
+  });
+
   it('offers Professional Tax setup only for a draft that requires it', async () => {
     const user = userEvent.setup();
     const openTask = vi.fn();
