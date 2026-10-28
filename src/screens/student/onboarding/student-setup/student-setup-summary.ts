@@ -86,6 +86,8 @@ const describePendingTask = (
     case 'guardian-account':
     case 'credentials':
       return { ...task, label: 'App login needs setup', actionLabel: 'Open App Login' };
+    case 'credential_delivery':
+      return { ...task, label: 'App login details need sending', actionLabel: 'Open App Login' };
     case 'finance_accounts_services':
       return {
         ...task,

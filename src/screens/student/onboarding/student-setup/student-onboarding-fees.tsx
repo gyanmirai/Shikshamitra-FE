@@ -10,19 +10,12 @@ import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomAccordion from 'src/components/custom-accordian';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useId, useRef, useState, useEffect, useImperativeHandle } from 'react';
-import {
-  Stack,
-  Button,
-  Skeleton,
-  Accordion,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Stack, Button, Skeleton, Typography, AccordionSummary } from '@mui/material';
 import {
   useGetStudentOnboardingCaseQuery,
   useGetStudentOnboardingFeeStructureQuery,
@@ -41,6 +34,9 @@ export type StudentOnboardingFeesState = {
   busy: boolean;
   loading: boolean;
   canSave: boolean;
+  structureName?: string;
+  confirmed?: boolean;
+  hasError?: boolean;
 };
 
 export default function StudentOnboardingFees({
@@ -199,8 +195,30 @@ export default function StudentOnboardingFees({
 
   useImperativeHandle(editorRef, () => ({ save }));
   useEffect(() => {
-    onStateChange?.({ dirty: form.dirty, busy, loading, canSave });
-  }, [form.dirty, busy, loading, canSave, onStateChange]);
+    onStateChange?.({
+      dirty: form.dirty,
+      busy,
+      loading,
+      canSave,
+      structureName: feeState?.selection?.structureName,
+      confirmed: confirmedUnchanged,
+      hasError: Boolean(
+        readError || form.status || (form.touched.structureId && form.errors.structureId)
+      ),
+    });
+  }, [
+    form.dirty,
+    busy,
+    loading,
+    canSave,
+    onStateChange,
+    feeState?.selection?.structureName,
+    confirmedUnchanged,
+    readError,
+    form.status,
+    form.touched.structureId,
+    form.errors.structureId,
+  ]);
   if (readError && (!caseState || !feeState))
     return (
       <StudentFeedback
@@ -348,26 +366,28 @@ export default function StudentOnboardingFees({
       {chosen && (
         <>
           {compact ? (
-            <Accordion
-              variant="outlined"
-              disableGutters
+            <CustomAccordion
+              title="Fee Details"
               expanded={feeDetails.value}
+              summary={
+                <AccordionSummary
+                  id={`${disclosureId}-heads-summary`}
+                  aria-controls={`${disclosureId}-heads-content`}
+                  disabled={externallyDisabled || busy}
+                  expandIcon={<Iconify icon="mdi:chevron-down" />}
+                >
+                  <Typography variant="subtitle2">Fee Details</Typography>
+                </AccordionSummary>
+              }
               onChange={() => {
                 if (!externallyDisabled && !busy) feeDetails.onToggle();
               }}
-              sx={{ borderRadius: 2, boxShadow: 'none', '&::before': { display: 'none' } }}
-            >
-              <AccordionSummary
-                id={`${disclosureId}-fee-details`}
-                aria-controls={`${disclosureId}-fee-details-content`}
-                expandIcon={<Iconify icon="mdi:chevron-down" width={20} />}
-              >
-                <Typography variant="subtitle2">Fee Details</Typography>
-              </AccordionSummary>
-              <AccordionDetails id={`${disclosureId}-fee-details-content`}>
-                <Stack spacing={0.5}>{includedFeeHeads}</Stack>
-              </AccordionDetails>
-            </Accordion>
+              content={
+                <Stack id={`${disclosureId}-heads-content`} spacing={0.5}>
+                  {includedFeeHeads}
+                </Stack>
+              }
+            />
           ) : (
             <>
               <Typography variant="subtitle2">Included fee heads</Typography>
@@ -409,26 +429,24 @@ export default function StudentOnboardingFees({
       )}
       {collectionPanel &&
         (compact ? (
-          <Accordion
-            variant="outlined"
-            disableGutters
+          <CustomAccordion
+            title="Payments & Receipts"
             expanded={paymentDetails.value}
+            summary={
+              <AccordionSummary
+                id={`${disclosureId}-payments-summary`}
+                aria-controls={`${disclosureId}-payments-content`}
+                disabled={externallyDisabled || busy}
+                expandIcon={<Iconify icon="mdi:chevron-down" />}
+              >
+                <Typography variant="subtitle2">Payments & Receipts</Typography>
+              </AccordionSummary>
+            }
             onChange={() => {
               if (!externallyDisabled && !busy) paymentDetails.onToggle();
             }}
-            sx={{ borderRadius: 2, boxShadow: 'none', '&::before': { display: 'none' } }}
-          >
-            <AccordionSummary
-              id={`${disclosureId}-payment-details`}
-              aria-controls={`${disclosureId}-payment-details-content`}
-              expandIcon={<Iconify icon="mdi:chevron-down" width={20} />}
-            >
-              <Typography variant="subtitle2">Payments & Receipts</Typography>
-            </AccordionSummary>
-            <AccordionDetails id={`${disclosureId}-payment-details-content`}>
-              {collectionPanel}
-            </AccordionDetails>
-          </Accordion>
+            content={<Stack id={`${disclosureId}-payments-content`}>{collectionPanel}</Stack>}
+          />
         ) : (
           collectionPanel
         ))}

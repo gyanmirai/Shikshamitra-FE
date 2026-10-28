@@ -1,4 +1,5 @@
 import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -6,9 +7,11 @@ import CustomSelect from 'src/components/custom-select';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
-import { getConfigurableFieldTypes } from './form-dialog-model';
+import { parseFieldConfiguration } from './form-field-presets';
 import { FieldChoiceSettings } from './components/field-choice-settings';
+import { FIELD_TYPES, getConfigurableFieldTypes } from './form-dialog-model';
 import { FieldTranslationSettings } from './components/field-translation-settings';
 
 import type { FieldSettingsProps } from './types/field-settings';
@@ -18,6 +21,14 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
   const path = `sections[${sectionIndex}].fields[${fieldIndex}]`;
   const isChoice = field.fieldType === 6 || field.fieldType === 7 || field.fieldType === 8;
   const isStatic = field.fieldType === 12;
+  const isLinked = field.bindingType === 0;
+  const catalogue = useGetAdmissionFormSystemFieldsQuery(undefined, { skip: !isLinked });
+  const catalogueReady = catalogue.data !== undefined && !catalogue.isLoading && !catalogue.isError;
+  const linkedField = catalogueReady
+    ? catalogue.data?.find((item) => item.key.toLowerCase() === field.bindingKey?.toLowerCase())
+    : undefined;
+  const expectedType = FIELD_TYPES.find(([, type]) => type === linkedField?.fieldType)?.[0];
+  const needsTypeRepair = Boolean(linkedField && linkedField.fieldType !== field.fieldType);
   const labelMeta = formik.getFieldMeta<string>(`${path}.label`);
   const labelError = Boolean(labelMeta.touched && labelMeta.error);
   return (
@@ -50,14 +61,47 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
               label,
               value,
             }))}
-            disabled={field.fieldType === 10}
+            disabled={isLinked || field.fieldType === 10}
+            error={needsTypeRepair || Boolean(isLinked && catalogueReady && !linkedField)}
             helperText={
-              field.fieldType === 10
-                ? 'File upload is not available yet. Replace this field before publishing.'
-                : undefined
+              isLinked
+                ? catalogue.isError
+                  ? 'Could not check this student field connection. Reload the form and try again.'
+                  : !catalogueReady
+                    ? 'Checking the linked student field.'
+                    : linkedField
+                      ? `Linked to ${linkedField.displayName}. This student field uses ${expectedType}. For a different answer type, add a custom field.`
+                      : 'This student field connection is unavailable. Review this field before publishing.'
+                : field.fieldType === 10
+                  ? 'File upload is not available yet. Replace this field before publishing.'
+                  : undefined
             }
             onChange={(value) => formik.setFieldValue(`${path}.fieldType`, Number(value))}
           />
+          {needsTypeRepair && linkedField && (
+            <Button
+              type="button"
+              size="small"
+              variant="outlined"
+              onClick={() =>
+                formik.setFieldValue(path, {
+                  ...field,
+                  fieldType: linkedField.fieldType,
+                  optionsJson: linkedField.optionsJson,
+                  ...(linkedField.validationJson
+                    ? {
+                        validationJson: JSON.stringify({
+                          ...parseFieldConfiguration(field.validationJson),
+                          ...parseFieldConfiguration(linkedField.validationJson),
+                        }),
+                      }
+                    : {}),
+                })
+              }
+            >
+              Restore {expectedType}
+            </Button>
+          )}
           {!isStatic && (
             <FormControlLabel
               labelPlacement="start"

@@ -50,12 +50,16 @@ describe('Inquiry age feedback', () => {
     );
     const decorated = result.current.withAgeHelp(field);
     expect(decorated.helpText).toBe('Age: 4y 3m · Minimum: 5y');
-    expect(decorated).toEqual(expect.objectContaining({
-      helpTextDetails: expect.stringContaining('As recorded.'),
-    }));
-    expect(decorated).toEqual(expect.objectContaining({
-      helpTextDetails: expect.stringContaining('01-04-2026'),
-    }));
+    expect(decorated).toEqual(
+      expect.objectContaining({
+        helpTextDetails: expect.stringContaining('As recorded.'),
+      })
+    );
+    expect(decorated).toEqual(
+      expect.objectContaining({
+        helpTextDetails: expect.stringContaining('01-04-2026'),
+      })
+    );
   });
   it.each(['', 'DATE_OF_BIRTH', 'date_of_birth'])(
     'supports published legacy DOB bindings (%s)',
@@ -69,7 +73,7 @@ describe('Inquiry age feedback', () => {
           context,
         })
       );
-      expect(result.current.withAgeHelp(legacy).helpText).toContain('4 years 3 months');
+      expect(result.current.withAgeHelp(legacy).helpText).toBe('Age: 4y 3m · Minimum: 5y');
       act(() => vi.advanceTimersByTime(500));
       expect(shikshaMitraToast.warning).toHaveBeenCalledTimes(1);
     }
@@ -79,7 +83,7 @@ describe('Inquiry age feedback', () => {
     const { result, rerender } = renderHook(() =>
       useAdmissionInquiryAge({ sections, values: { BIRTH: '2022-01-01' }, context })
     );
-    expect(result.current.withAgeHelp(field).helpText).toContain(
+    expect(result.current.withAgeHelp(field).helpTextDetails).toContain(
       'As recorded. Age at academic year start'
     );
     act(() => {
@@ -114,7 +118,7 @@ describe('Inquiry age feedback', () => {
     act(() => vi.advanceTimersByTime(500));
     expect(shikshaMitraToast.warning).toHaveBeenCalledTimes(2);
     rerender({ dob: '2022-01-01', settings: { ...context, academicYearStartDate: '2028-04-01' } });
-    expect(result.current.withAgeHelp(field).helpText).toContain('6 years 3 months');
+    expect(result.current.withAgeHelp(field).helpText).toBe('Age: 6y 3m · Minimum: 5y');
     act(() => vi.advanceTimersByTime(500));
     expect(shikshaMitraToast.warning).toHaveBeenCalledTimes(2);
   });

@@ -51,9 +51,13 @@ export function useAdmissionInquiryAge({
 
   return {
     notify,
-    withAgeHelp: (field: AdmissionFormField): AdmissionFormField =>
+    withAgeHelp: (field: AdmissionFormField): AdmissionFormField & { helpTextDetails?: string } =>
       field.code === birthField?.code && age
-        ? { ...field, helpText: [field.helpText, age.helpText].filter(Boolean).join(' ') }
+        ? {
+            ...field,
+            helpText: age.compactHelpText,
+            helpTextDetails: [field.helpText, age.helpText].filter(Boolean).join(' '),
+          }
         : field,
   };
 }

@@ -5,8 +5,17 @@ import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Box, Card, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
 import { useGetApplicationAssessmentQuery } from 'src/redux/student/admissions/admission-assessments-api';
+import {
+  Box,
+  Card,
+  Stack,
+  Button,
+  Skeleton,
+  IconButton,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 
 import { AdmissionQueryError } from '../admission-query-error';
 import { AssessmentActionDialog } from './assessment-action-dialog';
@@ -116,6 +125,7 @@ export function ApplicationAssessmentPanel({
           </StudentFeedback>
         ) : (
           <>
+            {query.isFetching && <LinearProgress aria-label="Refreshing assessment" />}
             {query.isError && <AdmissionQueryError onRetry={query.refetch} />}
             <Box
               component="dl"

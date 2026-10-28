@@ -56,7 +56,13 @@ vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
 }));
 
 describe('Offering cycle context', () => {
-  beforeEach(() => { mocks.queryFilters = {}; });
+  beforeEach(() => {
+    mocks.queryFilters = {};
+  });
+  it('keeps compulsory Board and Medium out of removable table filters', () => {
+    const hook = renderHook(() => useAdmissionOfferingsScreen());
+    expect(hook.result.current.tableFilters).toEqual([]);
+  });
   it('uses exactly the selected cycle when three published open cycles exist', () => {
     mocks.cycleId = 'open-cycle-2';
     const hook = renderHook(() => useAdmissionOfferingsScreen());
@@ -75,14 +81,21 @@ describe('Offering cycle context', () => {
   });
 
   it('never exposes previous-scope rows for bulk activation or table display', () => {
-    mocks.getOfferings.mockReturnValueOnce({ data: { items: [{ id: 'old-scope' }] }, isFetching: true });
+    mocks.getOfferings.mockReturnValueOnce({
+      data: { items: [{ id: 'old-scope' }] },
+      isFetching: true,
+    });
     const hook = renderHook(() => useAdmissionOfferingsScreen());
     expect(hook.result.current.rows).toEqual([]);
   });
 
   it('retains current-scope rows while a refresh is running or fails', () => {
     const items = [{ id: 'current-scope' }];
-    mocks.getOfferings.mockReturnValueOnce({ data: { items }, currentData: { items, totalCount: 1 }, isFetching: true });
+    mocks.getOfferings.mockReturnValueOnce({
+      data: { items },
+      currentData: { items, totalCount: 1 },
+      isFetching: true,
+    });
     const hook = renderHook(() => useAdmissionOfferingsScreen());
     expect(hook.result.current.rows).toEqual(items);
   });
@@ -93,18 +106,47 @@ describe('Offering cycle context', () => {
       { column: 'configurationStatus', type: 'equals', value: 0, valueType: 'enum' },
       { column: 'applicationCount', type: 'greaterThan', value: '10', valueType: 'number' },
     ]);
-    expect(mocks.update).toHaveBeenLastCalledWith(expect.objectContaining({
-      boardId: 'board', mediumId: 'medium', configurationStatus: '0',
-      columnFilters: JSON.stringify([{ column: 'applicationCount', type: 'greaterThan', value: 10, valueType: 'number' }]),
-    }));
+    expect(mocks.update).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        boardId: 'board',
+        mediumId: 'medium',
+        configurationStatus: '0',
+        columnFilters: JSON.stringify([
+          { column: 'applicationCount', type: 'greaterThan', value: 10, valueType: 'number' },
+        ]),
+      })
+    );
   });
   it('passes date/count criteria and false/zero statuses before backend count and paging', () => {
-    const columnFilters = JSON.stringify([{ column: 'applicationCount', type: 'between', value: { min: 0, max: 12 }, valueType: 'number' }]);
-    mocks.queryFilters = { columnFilters, isActive: 'false', availabilityStatus: '0', configurationStatus: '0', page: 2, rowsPerPage: 25 };
+    const columnFilters = JSON.stringify([
+      {
+        column: 'applicationCount',
+        type: 'between',
+        value: { min: 0, max: 12 },
+        valueType: 'number',
+      },
+    ]);
+    mocks.queryFilters = {
+      columnFilters,
+      isActive: 'false',
+      availabilityStatus: '0',
+      configurationStatus: '0',
+      page: 2,
+      rowsPerPage: 25,
+    };
     renderHook(() => useAdmissionOfferingsScreen());
-    expect(mocks.getOfferings).toHaveBeenLastCalledWith(expect.objectContaining({
-      boardId: 'board', mediumId: 'medium', columnFilters, isActive: false,
-      availabilityStatus: 0, configurationStatus: 0, skipCount: 50, maxResultCount: 25,
-    }), { skip: false });
+    expect(mocks.getOfferings).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        boardId: 'board',
+        mediumId: 'medium',
+        columnFilters,
+        isActive: false,
+        availabilityStatus: 0,
+        configurationStatus: 0,
+        skipCount: 50,
+        maxResultCount: 25,
+      }),
+      { skip: false }
+    );
   });
 });

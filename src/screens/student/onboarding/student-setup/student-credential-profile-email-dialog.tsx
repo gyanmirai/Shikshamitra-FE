@@ -13,6 +13,7 @@ import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useUpdateStudentCredentialsEmailMutation } from 'src/redux/student/onboarding/student-onboarding-api';
@@ -95,6 +96,24 @@ export default function StudentCredentialProfileEmailDialog({
         helpers.resetForm({ values });
         onClose();
       } catch (error) {
+        const { detail } = parseApiProblemDetail(error);
+        if (
+          /email/i.test(detail) &&
+          /already (?:belongs|uses|used|in use|has)|another (?:app )?(?:login|account)|duplicate|different saved email|conflicting/i.test(
+            detail
+          )
+        ) {
+          helpers.setFieldError(
+            'email',
+            getOnboardingErrorMessage(
+              error,
+              'This email already has an app login. Use a different email.'
+            )
+          );
+          helpers.setFieldTouched('email', true, false);
+          emailRef.current?.focus();
+          return;
+        }
         shikshaMitraToast.error({
           message: getOnboardingErrorMessage(
             error,
@@ -180,20 +199,26 @@ export default function StudentCredentialProfileEmailDialog({
             >
               <Stack spacing={2}>
                 <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                  {caseLabel} ·{' '}
+                  {recipient.accountType === 'guardian' && recipient.name
+                    ? recipient.name
+                    : caseLabel}{' '}
+                  ·{' '}
                   {recipient.relationship === 'self'
                     ? 'Student'
                     : recipient.relationship === 'father'
                       ? 'Father'
-                      : 'Mother'}
-                  {recipient.accountType === 'guardian' && recipient.name
-                    ? ` · ${recipient.name}`
-                    : ''}
+                      : recipient.relationship === 'mother'
+                        ? 'Mother'
+                        : 'Guardian'}
                 </Typography>
+                {recipient.accountType === 'guardian' && (
+                  <Typography variant="caption" color="text.secondary">
+                    Student: {caseLabel}
+                  </Typography>
+                )}
                 {recipient.hasLinkedAccount && (
                   <Typography variant="body2" color="text.secondary">
-                    Verify the new email before the login changes. The password and linked children
-                    stay unchanged.
+                    Current login: {recipient.email}
                   </Typography>
                 )}
                 <ShakingTextField error={emailError}>
@@ -213,6 +238,16 @@ export default function StudentCredentialProfileEmailDialog({
                     helperText={emailError ? formik.errors.email : undefined}
                   />
                 </ShakingTextField>
+                {recipient.hasLinkedAccount && (
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" color="text.secondary">
+                      Verify the new email before the login changes.
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Password and sibling access stay unchanged.
+                    </Typography>
+                  </Stack>
+                )}
                 {shared && (
                   <ShakingTextField
                     error={Boolean(

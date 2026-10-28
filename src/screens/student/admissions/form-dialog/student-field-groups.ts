@@ -1,6 +1,10 @@
 import type { AdmissionFormSystemFieldMetadata } from 'src/redux/student/admissions/admission-forms-api';
 
-const groups = [
+const groups: {
+  name: string;
+  prefixes: readonly string[];
+  keys?: readonly string[];
+}[] = [
   { name: 'Student profile', prefixes: ['Applicant'] },
   { name: 'Parents and guardians', prefixes: ['Guardian', 'Father', 'Mother', 'Family'] },
   {
@@ -12,7 +16,12 @@ const groups = [
   { name: 'RTE and eligibility', prefixes: ['Eligibility'] },
   { name: 'Identity and school records', prefixes: ['Identity'] },
   { name: 'Admission preferences', prefixes: ['Preference'] },
-] as const;
+  {
+    name: 'Transport preferences',
+    prefixes: [],
+    keys: ['Preference.TransportRequired', 'Preference.PickupArea'],
+  },
+];
 
 export function groupStudentFields(fields: AdmissionFormSystemFieldMetadata[]) {
   const buckets = groups.map((group) => ({
@@ -23,9 +32,9 @@ export function groupStudentFields(fields: AdmissionFormSystemFieldMetadata[]) {
 
   fields.forEach((field) => {
     const prefix = field.key.split('.')[0];
-    const index = groups.findIndex((group) =>
-      (group.prefixes as readonly string[]).includes(prefix)
-    );
+    const exactIndex = groups.findIndex((group) => group.keys?.includes(field.key));
+    const index =
+      exactIndex >= 0 ? exactIndex : groups.findIndex((group) => group.prefixes.includes(prefix));
     if (index < 0) other.push(field);
     else buckets[index].fields.push(field);
   });

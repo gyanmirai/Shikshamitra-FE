@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type {
   FinalizeAdmissionInput,
   AdmissionApplicationStatus,
+  AdmissionFinalizationResult,
   AdmissionApplicationDecisionInput,
 } from 'src/redux/student/admissions/admission-applications-api';
 
@@ -72,7 +73,8 @@ export function useAdmissionApplicationDecisions(
 
   const runFinalization = async (
     concurrencyStamp: string | null | undefined,
-    value: Omit<FinalizeAdmissionInput, 'concurrencyStamp' | 'idempotencyKey'>
+    value: Omit<FinalizeAdmissionInput, 'concurrencyStamp' | 'idempotencyKey'>,
+    onFinalized?: (result: AdmissionFinalizationResult) => void
   ): Promise<boolean> => {
     if (!concurrencyStamp) {
       shikshaMitraToast.error({
@@ -82,12 +84,13 @@ export function useAdmissionApplicationDecisions(
     }
     try {
       finalizationKey.current ??= crypto.randomUUID();
-      await finalizeAdmission({
+      const result = await finalizeAdmission({
         id,
         input: { ...value, concurrencyStamp, idempotencyKey: finalizationKey.current },
       }).unwrap();
       finalizationKey.current = null;
       shikshaMitraToast.success({ message: 'Admission finalized' });
+      onFinalized?.(result);
       return true;
     } catch (error) {
       shikshaMitraToast.error({

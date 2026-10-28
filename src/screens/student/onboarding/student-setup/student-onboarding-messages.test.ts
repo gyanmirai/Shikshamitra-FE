@@ -13,6 +13,26 @@ const portalFailure = (reason: string) => ({
 });
 
 describe('onboarding staff messages', () => {
+  it.each([
+    [
+      'Student and adult app logins need different saved email addresses.',
+      'Use different saved emails for the student and parent / guardian logins.',
+    ],
+    [
+      'This email is already used by a conflicting, inactive or restricted account. Existing accounts cannot be merged or repurposed through a profile email change.',
+      'This email already has another login or restricted access. Use a different email, or ask your administrator to review it.',
+    ],
+    [
+      'Explicitly confirm the saved adult and existing Parent account in App Login before linking.',
+      'Confirm this person may access the student, then choose Confirm & link parent.',
+    ],
+    [
+      'The reviewed existing adult or linked account changed. Ask authorized staff to review App Login.',
+      'The saved adult or linked login has changed. Ask your administrator to review App Login.',
+    ],
+  ])('explains the new Onboarding review or duplicate reason: %s', (reason, expected) => {
+    expect(getOnboardingErrorMessage(portalFailure(reason), fallback)).toBe(expected);
+  });
   it('explains an existing email without allowing a second account or assuming it is a parent', () => {
     expect(
       getOnboardingErrorMessage(

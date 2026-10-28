@@ -13,6 +13,7 @@ import { DocumentTableActions } from './document-table-actions';
 import { DocumentStatusLabel, documentStatusLabels } from './document-status';
 import { getDocumentTableFile, getDocumentTableFormat } from './document-table-model';
 
+import type { DocumentAction } from './document-action-model';
 import type { useDocumentPermissions } from './use-document-permissions';
 
 export function DocumentRequirementTable({
@@ -20,11 +21,17 @@ export function DocumentRequirementTable({
   requirements,
   permissions,
   onView,
+  onAction,
+  disabled = false,
+  readOnly = false,
 }: {
   summary: ApplicationDocumentVerification;
   requirements: AdmissionDocumentRequirement[];
   permissions: ReturnType<typeof useDocumentPermissions>;
   onView?: (requirement: AdmissionDocumentRequirement) => void;
+  onAction?: (action: DocumentAction, requirement: AdmissionDocumentRequirement) => void;
+  disabled?: boolean;
+  readOnly?: boolean;
 }) {
   const compact = useResponsive('down', 'sm');
   const data = useMemo(
@@ -79,7 +86,8 @@ export function DocumentRequirementTable({
         id: 'status',
         label: 'Status',
         minWidth: 110,
-        filterType: 'string',
+        filterType: 'enum',
+        enumOptions: Object.values(documentStatusLabels).map((label) => ({ label, value: label })),
         isSort: true,
         sticky: true,
         stickyPosition: 'right',
@@ -93,20 +101,24 @@ export function DocumentRequirementTable({
         isFilter: false,
         sticky: true,
         stickyPosition: 'right',
-        minWidth: 80,
-        width: 80,
-        align: 'center',
+        minWidth: 144,
+        width: 144,
+        align: 'left',
         excludeFromExport: true,
         render: (_, row) => (
           <DocumentTableActions
             requirement={row.requirement}
             permissions={permissions}
+            disabled={disabled}
+            readOnly={readOnly}
+            allowWaivers={summary.policy?.allowWaivers === true}
             onView={onView ? () => onView(row.requirement) : undefined}
+            onAction={onAction ? (action) => onAction(action, row.requirement) : undefined}
           />
         ),
       },
     ],
-    [permissions, onView, compact]
+    [permissions, onView, onAction, disabled, readOnly, summary.policy?.allowWaivers, compact]
   );
   return (
     <CustomizableTable

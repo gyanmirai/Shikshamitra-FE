@@ -60,6 +60,10 @@ import { INQUIRY_SOURCE_OPTIONS } from './inquiry-management/admission-inquiry-l
 const publicSources = INQUIRY_SOURCE_OPTIONS.filter((item) =>
   [0, 3, 4, 10, 11, 12].includes(item.value)
 );
+const formEligibilityHelp =
+  'Only published Inquiry forms attached to active inquiry offerings in this admission period are available. Publishing a form alone does not make it available here.';
+const noEligibleFormsHelp =
+  'Attach a published Inquiry form to an active inquiry offering in this admission period, then refresh offerings.';
 const sectionProps = {
   sx: {
     p: 2,
@@ -210,6 +214,24 @@ export function AdmissionPublicInquiryLinks({
   const availableForms = publishedForms.filter((form) =>
     linkOptions.some((option) => option.inquiryFormDefinitionId === form.id)
   );
+  const replacementOptions = useGetAdmissionPublicInquiryLinkOptionsQuery(
+    formTarget?.admissionCycleId ?? '',
+    { skip: !formTarget, refetchOnMountOrArgChange: true }
+  );
+  const replacementLoading =
+    forms.isLoading ||
+    forms.isFetching ||
+    replacementOptions.isLoading ||
+    replacementOptions.isFetching;
+  const replacementReady =
+    Boolean(formTarget) &&
+    !replacementLoading &&
+    !forms.isError &&
+    !replacementOptions.isError &&
+    replacementOptions.currentData !== undefined;
+  const replacementForms = publishedForms.filter((form) =>
+    replacementOptions.currentData?.some((option) => option.inquiryFormDefinitionId === form.id)
+  );
   const { dirty } = formik;
   const formEditor = useFormik({
     initialValues: { formId: '' },
@@ -219,6 +241,10 @@ export function AdmissionPublicInquiryLinks({
     onSubmit: async (values) => {
       if (!formTarget) return;
       setError('');
+      if (!replacementReady || !replacementForms.some((form) => form.id === values.formId)) {
+        setError(noEligibleFormsHelp);
+        return;
+      }
       try {
         await setLinkForm({
           id: formTarget.id,
@@ -742,6 +768,17 @@ export function AdmissionPublicInquiryLinks({
           </SectionCard>
           <SectionCard
             title="Admission period and form"
+            headerContent={
+              <CustomTooltip title={formEligibilityHelp}>
+                <IconButton
+                  size="small"
+                  color="info"
+                  aria-label="Admission period and form information"
+                >
+                  <Iconify icon="lucide:info" width={16} />
+                </IconButton>
+              </CustomTooltip>
+            }
             paperProps={sectionProps}
             gridProps={{ spacing: 2 }}
           >
@@ -801,8 +838,7 @@ export function AdmissionPublicInquiryLinks({
                     onOpen: () => {
                       if (availableForms.length === 0) {
                         shikshaMitraToast.info({
-                          message:
-                            'First create or attach a published Inquiry form to an active Admission Offering with Inquiry or Both entry mode in this period.',
+                          message: noEligibleFormsHelp,
                         });
                         return;
                       }
@@ -1014,39 +1050,62 @@ export function AdmissionPublicInquiryLinks({
               {error}
             </StudentFeedback>
           )}
-          <TextField
-            select
-            fullWidth
-            required
-            size="small"
-            label="Published inquiry form"
-            name="formId"
-            value={formEditor.values.formId}
-            onChange={formEditor.handleChange}
-            onBlur={formEditor.handleBlur}
-            error={Boolean(formEditor.touched.formId && formEditor.errors.formId)}
-            helperText={formEditor.touched.formId ? formEditor.errors.formId : undefined}
-          >
-            <MenuItem value="">Choose form</MenuItem>
-            {publishedForms.map((form) => (
-              <MenuItem key={form.id} value={form.id}>
-                {form.name} · v{form.version}
-              </MenuItem>
-            ))}
-          </TextField>
-          {forms.isError && (
-            <StudentFeedback
-              notificationKey="STU-0148"
-              presentation="toast"
-              severity="error"
-              action={
-                <Button size="small" onClick={() => forms.refetch()}>
-                  Retry
-                </Button>
+          {replacementLoading ? (
+            <Stack role="status" aria-live="polite" aria-label="Loading published inquiry forms">
+              <Skeleton variant="rounded" height={40} />
+            </Stack>
+          ) : (
+            <TextField
+              select
+              fullWidth
+              required
+              size="small"
+              label="Published inquiry form"
+              name="formId"
+              value={
+                replacementForms.some((form) => form.id === formEditor.values.formId)
+                  ? formEditor.values.formId
+                  : ''
+              }
+              disabled={!replacementReady}
+              onChange={formEditor.handleChange}
+              onBlur={formEditor.handleBlur}
+              error={Boolean(formEditor.touched.formId && formEditor.errors.formId)}
+              helperText={
+                (formEditor.touched.formId && formEditor.errors.formId) ||
+                (replacementReady && replacementForms.length === 0
+                  ? noEligibleFormsHelp
+                  : formEligibilityHelp)
               }
             >
-              Unable to load published inquiry forms.
-            </StudentFeedback>
+              <MenuItem value="">Choose form</MenuItem>
+              {replacementForms.map((form) => (
+                <MenuItem key={form.id} value={form.id}>
+                  {form.name} · v{form.version}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+          {replacementReady && replacementForms.length === 0 && (
+            <Button size="small" onClick={() => replacementOptions.refetch()}>
+              Refresh offerings
+            </Button>
+          )}
+          {(forms.isError || replacementOptions.isError) && (
+            <Stack spacing={1}>
+              <StudentFeedback notificationKey="STU-0148" presentation="toast" severity="error">
+                Unable to load published inquiry forms.
+              </StudentFeedback>
+              <Button
+                size="small"
+                onClick={() => {
+                  if (forms.isError) forms.refetch();
+                  if (replacementOptions.isError) replacementOptions.refetch();
+                }}
+              >
+                Retry
+              </Button>
+            </Stack>
           )}
         </Stack>
         <Divider />
@@ -1070,6 +1129,10 @@ export function AdmissionPublicInquiryLinks({
             variant="contained"
             type="submit"
             loading={setLinkFormState.isLoading || formEditor.isSubmitting}
+            disabled={
+              !replacementReady ||
+              !replacementForms.some((form) => form.id === formEditor.values.formId)
+            }
           >
             Save form
           </LoadingButton>

@@ -94,22 +94,26 @@ export function buildAdmissionApplicationsColumns({
       render: (_, row) => (
         <Stack spacing={0.25}>
           <Typography variant="body2">{row.contactPhone || '—'}</Typography>
-          {row.contactEmail ? (
-            <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-              {row.contactEmail}
-            </Typography>
-          ) : null}
         </Stack>
       ),
     },
 
     {
-      id: 'decisionEnteredAt',
-      label: 'Decision phase entered',
-      minWidth: 180,
+      // Phone and email stay combined; global search handles both without an ambiguous header filter.
+      id: 'contactEmail',
+      label: 'Email',
+      isFilter: false,
+      minWidth: 200,
       isSort: true,
-      render: (_, row) =>
-        row.decisionEnteredAt ? fDateTime(row.decisionEnteredAt) : 'Not recorded',
+      render: (_, row) => (
+        <Stack spacing={0.25}>
+          {row.contactEmail ? (
+            <Typography variant="inherit" sx={{ overflowWrap: 'anywhere' }}>
+              {row.contactEmail}
+            </Typography>
+          ) : null}
+        </Stack>
+      ),
     },
     {
       id: 'lastSavedAt',

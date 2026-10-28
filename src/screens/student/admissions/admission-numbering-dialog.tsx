@@ -36,6 +36,7 @@ import {
   useLazyPreviewAdmissionNumberingQuery,
 } from 'src/redux/student/admissions/admission-numbering-api';
 
+import { AdmissionNumberingCycle } from './admission-numbering-cycle';
 import { AdmissionNumberingPreview } from './admission-numbering-preview';
 import {
   numberingSchema,
@@ -132,10 +133,9 @@ export function AdmissionNumberingFormDialog({
   const fieldError = (name: keyof typeof formik.values) =>
     formik.touched[name] ? formik.errors[name] : undefined;
   const select = (
-    name: 'separator' | 'yearFormat' | 'resetPolicy' | 'digits',
+    name: 'separator' | 'digits',
     label: string,
-    options: { value: string | number; label: string }[],
-    locked = false
+    options: { value: string | number; label: string }[]
   ) => (
     <ShakingTextField error={Boolean(fieldError(name))}>
       <CustomSelect
@@ -145,7 +145,7 @@ export function AdmissionNumberingFormDialog({
         options={options}
         size="small"
         fullWidth
-        disabled={disabled || locked}
+        disabled={disabled}
         formControlProps={{ required: true }}
         onBlur={formik.handleBlur}
         error={Boolean(fieldError(name))}
@@ -177,17 +177,13 @@ export function AdmissionNumberingFormDialog({
         <DialogScrollContent>
           <Stack spacing={2}>
             {loadError && (
-              <StudentFeedback
-                notificationKey="STU-0105"
-                presentation="toast"
-                severity="error"
-                action={
+              <StudentFeedback notificationKey="STU-0105" presentation="toast" severity="error">
+                <Stack spacing={1}>
+                  <span>Unable to load numbering settings.</span>
                   <Button size="small" onClick={onRetry} disabled={loading}>
                     Retry
                   </Button>
-                }
-              >
-                Unable to load numbering settings.
+                </Stack>
               </StudentFeedback>
             )}
             {error && (
@@ -219,6 +215,11 @@ export function AdmissionNumberingFormDialog({
                   sx={{ m: 0, p: 0, border: 0, minWidth: 0 }}
                 >
                   <Stack spacing={2}>
+                    <AdmissionNumberingCycle
+                      form={formik}
+                      disabled={disabled}
+                      sequenceLocked={settings.sequenceLocked}
+                    />
                     <FormSectionCard
                       icon={GlobalIcons.doc}
                       title="Number Format"
@@ -241,20 +242,6 @@ export function AdmissionNumberingFormDialog({
                           </ShakingTextField>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
-                          {select('separator', 'Separator', [
-                            { value: '/', label: '/' },
-                            { value: '-', label: '-' },
-                            { value: '', label: 'No separator' },
-                          ])}
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          {select('yearFormat', 'Year format', [
-                            { value: 2, label: 'Academic year (2026-27)' },
-                            { value: 1, label: 'Calendar year (2026)' },
-                            { value: 0, label: 'No year' },
-                          ])}
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
                           <TextField
                             label="Suffix"
                             placeholder="Optional"
@@ -267,25 +254,12 @@ export function AdmissionNumberingFormDialog({
                             slotProps={{ htmlInput: { maxLength: 20 } }}
                           />
                         </Grid>
-                      </Grid>
-                    </FormSectionCard>
-                    <FormSectionCard
-                      icon={GlobalIcons.scheduledReport}
-                      title="Sequence Rules"
-                      descriptionTooltip="Counters are shared across school offerings. Starting number and reset policy lock after first use. Format edits keep the counter moving forward."
-                    >
-                      <Grid container spacing={2}>
-                        <Grid size={{ xs: 12 }}>
-                          {select(
-                            'resetPolicy',
-                            'Reset counter',
-                            [
-                              { value: 2, label: 'Each academic year' },
-                              { value: 1, label: 'Each calendar year' },
-                              { value: 0, label: 'Continuous' },
-                            ],
-                            settings.sequenceLocked
-                          )}
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          {select('separator', 'Separator', [
+                            { value: '/', label: '/' },
+                            { value: '-', label: '-' },
+                            { value: '', label: 'No separator' },
+                          ])}
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
                           {select(

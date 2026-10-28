@@ -11,8 +11,9 @@ const state = vi.hoisted(() => ({
   close: vi.fn(),
   viewProps: {} as any,
   boundaryYear: undefined as any,
+  exitProps: undefined as any,
   permissions: [] as { name: string; isGranted: boolean }[],
-  student: { id: 'student-1', studentId: 'student-1', firstName: 'Riya', lastName: 'Shah' },
+  student: { id: 'student-1', studentId: 'student-1', firstName: 'Riya', lastName: 'Shah', status: 6 },
   year: { id: 'year-1', name: '2026–27' },
 }));
 vi.mock('react-redux', () => ({
@@ -34,6 +35,12 @@ vi.mock('src/routes/components', () => ({
   ),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('src/screens/student/records/school-exit-drawer', () => ({
+  default: (props: any) => {
+    state.exitProps = props;
+    return <div role="dialog" aria-label="School Exit" />;
+  },
+}));
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ heading, onBack }: any) => (
     <header>
@@ -103,6 +110,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   state.params = new URLSearchParams();
   state.permissions = [];
+  state.student.status = 6;
+  state.exitProps = undefined;
   state.year = { id: 'year-1', name: '2026–27' };
 });
 
@@ -130,15 +139,41 @@ it.each([['View'], ['Add'], ['View', 'Add']])(
   }
 );
 
-it('routes authorised status edits through the existing audited change request', () => {
-  state.permissions = ['Students.Records.Changes.View', 'Students.Records.Changes.Add'].map(
+it('offers a contextual school exit with transition grants rather than a status-change redirect', () => {
+  state.permissions = ['Students.Records.Transitions.View', 'Students.Records.Transitions.Add'].map(
     (name) => ({ name, isGranted: true })
   );
   render(<StudentProfile />);
-  expect(screen.getByRole('link', { name: 'Change Status' })).toHaveAttribute(
-    'href',
-    `${studentPaths.records.changes}?mode=new&student=student-1&section=status`
+  expect(screen.getByRole('button', { name: 'School Exit' })).toBeVisible();
+  expect(screen.queryByRole('link', { name: 'Change Status' })).not.toBeInTheDocument();
+});
+
+it.each(['View', 'Add'])('requires both transition grants, not only %s', (grant) => {
+  state.permissions = [{ name: `Students.Records.Transitions.${grant}`, isGranted: true }];
+  render(<StudentProfile />);
+  expect(screen.queryByRole('button', { name: 'School Exit' })).not.toBeInTheDocument();
+});
+
+it('opens the selected student in the current year without changing list navigation', () => {
+  state.permissions = ['Students.Records.Transitions.View', 'Students.Records.Transitions.Add'].map(
+    (name) => ({ name, isGranted: true })
   );
+  render(<StudentProfile />);
+  fireEvent.click(screen.getByRole('button', { name: 'School Exit' }));
+  expect(screen.getByRole('dialog', { name: 'School Exit' })).toBeVisible();
+  expect(state.exitProps).toMatchObject({
+    studentId: 'student-1', academicYearId: 'year-1', studentName: 'Riya Shah',
+  });
+  expect(state.push).not.toHaveBeenCalled();
+});
+
+it.each([7, 8])('does not offer a new school exit for former status %s', (status) => {
+  state.student.status = status;
+  state.permissions = ['Students.Records.Transitions.View', 'Students.Records.Transitions.Add'].map(
+    (name) => ({ name, isGranted: true })
+  );
+  render(<StudentProfile />);
+  expect(screen.queryByRole('button', { name: 'School Exit' })).not.toBeInTheDocument();
 });
 
 it('orders edit and attendance shortcuts before governed status changes without fee assignment', () => {
@@ -148,6 +183,8 @@ it('orders edit and attendance shortcuts before governed status changes without 
   state.permissions = [
     'Students.Records.Changes.View',
     'Students.Records.Changes.Add',
+    'Students.Records.Transitions.View',
+    'Students.Records.Transitions.Add',
     `${financePermissions.fees.structureAssign}.View`,
     `${financePermissions.fees.structureAssign}.Add`,
     'Students.Attendance.MarkAttendance.View',
@@ -159,7 +196,7 @@ it('orders edit and attendance shortcuts before governed status changes without 
   expect(actions).toEqual([
     'Edit Details for Riya Shah',
     'Attendance History for Riya Shah',
-    'Change Status',
+    'School Exit',
   ]);
   const edit = new URL(
     screen.getByRole('link', { name: 'Edit Details for Riya Shah' }).getAttribute('href')!,

@@ -1,8 +1,19 @@
 import { it, vi, expect, describe } from 'vitest';
+import { shikshaMitraToast } from 'src/components/toast';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { AdmissionNumberingPreview } from './admission-numbering-preview';
 import { defaultNumbering, numberingFormValues } from './admission-numbering-model';
+
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+  },
+}));
 
 const values = numberingFormValues(defaultNumbering);
 describe('server application number preview', () => {
@@ -45,8 +56,14 @@ describe('server application number preview', () => {
       .mockResolvedValueOnce({ nextNumber: 'APP-2026-000051', nextSequence: 51 })
       .mockResolvedValue({ nextNumber: 'APP-2026-000052', nextSequence: 52 });
     render(<AdmissionNumberingPreview values={values} onPreview={onPreview} />);
+    await waitFor(() => expect(shikshaMitraToast.error).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: 'Retry preview' })).not.toBeInTheDocument();
+    const notice = render(
+      <div role="alert">{vi.mocked(shikshaMitraToast.error).mock.lastCall![0].message}</div>
+    );
     expect(await screen.findByText('Preview temporarily unavailable')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Retry preview' }));
+    notice.unmount();
     expect(await screen.findByText('APP-2026-000051')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
     expect(await screen.findByText('APP-2026-000052')).toBeVisible();

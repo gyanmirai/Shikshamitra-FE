@@ -9,27 +9,14 @@ import { Box, Button, Tooltip, Checkbox, Typography } from '@mui/material';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { getPrimaryAssessmentAction } from './assessment-workbench-model';
 import { assessmentActionLabels, latestAssessmentAttempt } from './assessment-action-model';
+import {
+  assessmentStatusColor,
+  assessmentStatusLabels,
+  assessmentAttendanceLabels,
+  getAssessmentRosterDisplay,
+} from './assessment-roster-status';
 
 import type { AssessmentAction } from './assessment-action-model';
-
-const resultLabels: Record<string, string> = { passed: 'Pass', failed: 'Failed', waived: 'Waived' };
-const progressLabels: Record<string, string> = {
-  pending: 'Pending',
-  ongoing: 'Ongoing',
-  complete: 'Complete',
-};
-const resultLabel = (outcome?: string) => resultLabels[outcome ?? ''] ?? '—';
-const attendanceLabels = { pending: 'Pending', present: 'Present', absent: 'Absent' };
-const nextActionLabel = (row: AssessmentRosterItem) =>
-  ({
-    toBook: row.assessment.policy?.schedulingEnabled ? 'Book' : 'Start',
-    attendance: 'Attendance',
-    result: 'Result',
-    review: 'Review',
-    ready: 'Continue',
-    attention: 'View details',
-    completed: 'View details',
-  })[row.queue];
 
 type Props = Omit<ICustomizableTableProps, 'columns' | 'data' | 'tableId'> & {
   items: AssessmentRosterItem[];
@@ -192,31 +179,61 @@ export function AssessmentApplicantTable({
       isSort: false,
       isFilter: true,
       filterType: 'enum',
-      enumOptions: Object.entries(attendanceLabels).map(([value, label]) => ({ value, label })),
+      enumOptions: Object.entries(assessmentAttendanceLabels).map(([value, label]) => ({
+        value,
+        label,
+      })),
       render: (_, data) => {
-        const value = displayAttempt(data as AssessmentRosterItem)?.attendance ?? 'pending';
+        const row = data as AssessmentRosterItem;
+        const value = getAssessmentRosterDisplay(row, displayAttempt(row)).attendance;
         return (
-          <Label color={value === 'present' ? 'success' : value === 'absent' ? 'error' : 'warning'}>
-            {attendanceLabels[value]}
+          <Label
+            color={
+              value === 'present'
+                ? 'success'
+                : value === 'absent'
+                  ? 'error'
+                  : value === 'pending'
+                    ? 'warning'
+                    : 'default'
+            }
+          >
+            {assessmentAttendanceLabels[value]}
           </Label>
         );
       },
     },
     {
-      id: 'result',
-      label: 'Result',
+      id: 'status',
+      label: 'Status',
+      sticky: true,
+      stickyPosition: 'right',
+      stickyOnMobile: false,
       isSort: false,
       isFilter: true,
       filterType: 'enum',
-      enumOptions: Object.entries(resultLabels).map(([value, label]) => ({ value, label })),
-      render: (_, data) => resultLabel(displayAttempt(data as AssessmentRosterItem)?.outcome),
+      enumOptions: Object.entries(assessmentStatusLabels)
+        .filter(([value]) => value !== 'unavailable')
+        .map(([value, label]) => ({ value, label })),
+      minWidth: 160,
+      width: 160,
+      render: (_, data) => {
+        const row = data as AssessmentRosterItem;
+        const value = getAssessmentRosterDisplay(row, displayAttempt(row)).status;
+        return <Label color={assessmentStatusColor(value)}>{assessmentStatusLabels[value]}</Label>;
+      },
     },
     {
-      id: 'nextAction',
-      label: 'Next action',
+      id: 'actions',
+      label: 'Action',
       isSort: false,
       isFilter: false,
-      minWidth: 120,
+      excludeFromExport: true,
+      sticky: true,
+      stickyPosition: 'right',
+      stickyOnMobile: false,
+      width: 180,
+      minWidth: 180,
       render: (_, data) => {
         const row = data as AssessmentRosterItem;
         const action = getPrimaryAssessmentAction(row, permissions, canAdvance);
@@ -230,44 +247,23 @@ export function AssessmentApplicantTable({
           waive: 'Waive',
           continue: 'Continue',
         };
-        return action ? (
+        return (
           <Button
             size="small"
+            color="inherit"
             variant="outlined"
-            sx={{ minHeight: { xs: 44, sm: 32 } }}
+            sx={{ width: 1, whiteSpace: 'nowrap', minHeight: { xs: 44, sm: 32 } }}
             onClick={(event) => {
               event.stopPropagation();
-              onAction(row, action);
+              if (action) onAction(row, action);
+              else onDetails(row);
             }}
-            aria-label={`${labels[action]} for ${row.applicantName}`}
+            aria-label={`${action ? labels[action] : 'View details'} for ${row.applicantName}`}
           >
-            {labels[action]}
+            {action ? labels[action] : 'View details'}
           </Button>
-        ) : (
-          nextActionLabel(row)
         );
       },
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      stickyOnMobile: false,
-      isSort: false,
-      isFilter: true,
-      filterType: 'enum',
-      enumOptions: Object.entries(progressLabels).map(([value, label]) => ({ value, label })),
-      sticky: true,
-      stickyPosition: 'right',
-      minWidth: 120,
-      render: (_, data) => (
-        <Label
-          color={
-            data.status === 'complete' ? 'success' : data.status === 'ongoing' ? 'info' : 'warning'
-          }
-        >
-          {progressLabels[data.status as string] ?? '—'}
-        </Label>
-      ),
     },
   ];
   const data = items.map((row) => {
@@ -276,9 +272,7 @@ export function AssessmentApplicantTable({
       ...row,
       id: row.stageInstanceId,
       sessionName: attempt?.sessionName ?? '',
-      attendance: attendanceLabels[attempt?.attendance ?? 'pending'],
-      result: resultLabel(attempt?.outcome),
-      nextAction: nextActionLabel(row),
+      attendance: assessmentAttendanceLabels[getAssessmentRosterDisplay(row, attempt).attendance],
     };
   });
   return (
@@ -310,7 +304,7 @@ export function AssessmentApplicantTable({
       columns={columns}
       data={data}
       tableTitle="Assessment students"
-      exportLabel="Export"
+      exportLabel="Export current page"
       wrapperProps={{ sx: { height: 1, minWidth: 0, minHeight: 0 } }}
       tableContainerProps={{ sx: { height: 1 } }}
       isSearch

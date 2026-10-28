@@ -189,7 +189,10 @@ export default function PublicAdmissionInquiryScreen({ token }: { token: string 
   }, [token, offeringId, retry]);
 
   return (
-    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default', px: 2, py: { xs: 3, sm: 6 } }}>
+    <Box
+      component={FormFieldSpacing}
+      sx={{ minHeight: '100dvh', bgcolor: 'background.default', px: 2, py: { xs: 3, sm: 6 } }}
+    >
       <Card variant="outlined" sx={{ maxWidth: 640, mx: 'auto', p: { xs: 2, sm: 4 } }}>
         <Stack spacing={2}>
           {context?.bannerUrl && (
@@ -509,6 +512,7 @@ function InquiryForm({
                         )
                         .map((field) => (
                           <AdmissionRuntimeField
+                            optionsResolved
                             key={field.code}
                             onBusyChange={(busy) => onPhotoReading(field.code, busy)}
                             field={field}

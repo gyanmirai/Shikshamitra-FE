@@ -294,6 +294,7 @@ export default function AdmissionApplicationDetailScreen({
     const readOnly = historicalReview || !detail.canEdit;
     return (
       <ApplicationRuntimeForm
+        academicMediumId={academicOffering?.mediumId}
         compact
         readOnly={readOnly}
         application={application}
@@ -520,6 +521,26 @@ export default function AdmissionApplicationDetailScreen({
             workflow={workflow}
             onSelectStage={(stageId) => requestNavigation({ view: 'journey', stageId })}
             onFinalizationOpenChange={setFinalizationOpen}
+            onPrepareFinalization={
+              selectedCurrentStage &&
+              currentStage &&
+              isAdmissionDecisionStage(currentStage) &&
+              !requiresStageCompletionDetails(currentStage) &&
+              detail.canAdvance &&
+              canLeaveFeeEditor &&
+              !detail.hasUnsavedAnswers
+                ? () => detail.advance()
+                : undefined
+            }
+            onFinalized={(result) => {
+              if (
+                hasGrantedPermission(permissions, studentPermissions.onboarding.setup) &&
+                result.onboardingCaseId
+              )
+                router.push(
+                  `${studentPaths.onboarding.setup}?case=${encodeURIComponent(result.onboardingCaseId)}`
+                );
+            }}
           />
         )}
         {!isFormStage(selectedStage) && renderManagedStages()}
@@ -809,11 +830,9 @@ export default function AdmissionApplicationDetailScreen({
                   busy={workspaceBusy}
                   showOverlay={false}
                   label={
-                    finalizationOpen && panelBusy.decision
-                      ? 'Finalizing admission…'
-                      : detail.advanceState.isLoading
-                        ? 'Moving to the next admission stage…'
-                        : 'Updating admission details…'
+                    detail.advanceState.isLoading
+                      ? 'Moving to the next admission stage…'
+                      : 'Updating admission details…'
                   }
                 >
                   <Box

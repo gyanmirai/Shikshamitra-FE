@@ -51,7 +51,13 @@ vi.mock('src/components/iconify', () => ({
 }));
 
 vi.mock('src/components/loading-button', () => ({
-  LoadingButton: ({ children, loading, loadingPosition: _loadingPosition, startIcon: _startIcon, ...props }: any) => (
+  LoadingButton: ({
+    children,
+    loading,
+    loadingPosition: _loadingPosition,
+    startIcon: _startIcon,
+    ...props
+  }: any) => (
     <button type="button" data-loading={String(loading)} {...props}>
       {children}
     </button>
@@ -426,6 +432,18 @@ describe('ApplicationFinalizationDialog', () => {
     );
     expect(screen.getByRole('button', { name: 'Retry' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  });
+
+  it('does not label readiness preparation as a finalization write', () => {
+    renderDialog(readyPreview, undefined, { busy: true, loading: true });
+    expect(screen.getByRole('status', { name: 'Loading finalization readiness' })).toBeVisible();
+    const finalize = screen.getByRole('button', { name: 'Finalize admission' });
+    expect(finalize).toBeDisabled();
+    expect(finalize).toHaveAttribute('data-loading', 'false');
+    expect(screen.queryByText('Finalizing admission…')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('No additional Student profile details were captured.')
+    ).not.toBeInTheDocument();
   });
 
   it('retains confirmation on failure and closes only after successful finalization', async () => {

@@ -108,8 +108,6 @@ const base: AdmissionFeeSelection = {
   isLocked: false,
   hasRecordedFeePayment: false,
   paymentCompletion: {
-    paymentRule: 'partial',
-    allowCollectionLater: true,
     canComplete: false,
     canDeferCollection: true,
     status: 'collectionPending',
@@ -125,8 +123,6 @@ const selected: AdmissionFeeSelection = {
   ...base,
   hasRecordedFeePayment: true,
   paymentCompletion: {
-    paymentRule: 'partial',
-    allowCollectionLater: true,
     canComplete: true,
     canDeferCollection: true,
     status: 'partiallyPaid',
@@ -797,28 +793,21 @@ describe('Payment fee structure confirmation', () => {
     renderPanel({ canContinue: true, completionStageId: 'payment', onContinue: vi.fn() });
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
   });
-  it('honors Full payment and disabled deferral despite historical payment evidence', () => {
+  it('requires confirmed evidence while retaining reason-based deferral', () => {
     setRead({
       ...selected,
       paymentCompletion: {
-        paymentRule: 'full',
-        allowCollectionLater: false,
         canComplete: false,
-        canDeferCollection: false,
-        status: 'partiallyPaid',
-        blocker:
-          'Clear the entire selected Finance fee structure, including future installments, before continuing.',
+        canDeferCollection: true,
+        status: 'pendingVerification',
+        blocker: 'Record a confirmed fee payment in Finance before continuing.',
       },
     });
     renderPanel({ canContinue: true, onContinue: vi.fn(), onCollectLater: vi.fn() });
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Collect later in Onboarding' })).toBeEnabled();
     expect(
-      screen.queryByRole('button', { name: 'Collect later in Onboarding' })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByText(
-        'Clear the entire selected Finance fee structure, including future installments, before continuing.'
-      )
+      screen.getByText('Record a confirmed fee payment in Finance before continuing.')
     ).toBeVisible();
   });
   it('allows verified zero-payable clearance without inventing a payment flag', () => {
@@ -826,8 +815,6 @@ describe('Payment fee structure confirmation', () => {
       ...selected,
       hasRecordedFeePayment: false,
       paymentCompletion: {
-        paymentRule: 'full',
-        allowCollectionLater: false,
         canComplete: true,
         canDeferCollection: false,
         status: 'financeCleared',

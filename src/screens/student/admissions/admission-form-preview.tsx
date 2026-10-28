@@ -16,6 +16,7 @@ import {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import { FormPreviewContent } from './form-preview/form-preview-content';
+import { academicOptionsJson, isInstituteAcademicSource } from './admission-academic-options';
 import { buildDynamicAdmissionYupSchema } from './admission-form-validation';
 import { getAdmissionFormPreviewInitialValues } from './form-preview/form-preview-model';
 
@@ -42,7 +43,7 @@ export default function AdmissionFormPreviewScreen() {
         .flatMap((section) => section.fields)
         .flatMap((field) => {
           const source = parseOptionsSource(field.optionsJson);
-          return source && source.source !== 'StudentSiblings'
+          return source && source.source !== 'StudentSiblings' && !isInstituteAcademicSource(academicOptionsJson(field))
             ? [
                 {
                   code: field.code,

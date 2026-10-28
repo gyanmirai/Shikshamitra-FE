@@ -23,6 +23,7 @@ import {
   Stack,
   Button,
   Divider,
+  Skeleton,
   Checkbox,
   IconButton,
   Typography,
@@ -345,7 +346,14 @@ function OpenApplicationFinalizationDialog({
                       {preview.profileReviewDescription}
                     </Typography>
                   ))}
-                {!capturedFields.length && (
+                {loading && (
+                  <Skeleton
+                    variant="rounded"
+                    height={96}
+                    aria-label="Loading student record details"
+                  />
+                )}
+                {!loading && !capturedFields.length && (
                   <Typography variant="body2" color="text.secondary">
                     No additional Student profile details were captured.
                   </Typography>
@@ -410,7 +418,7 @@ function OpenApplicationFinalizationDialog({
             variant="contained"
             color="inherit"
             size="small"
-            loading={busy}
+            loading={submitting}
             loadingPosition="start"
             disabled={cannotSubmit}
             startIcon={<Iconify icon="mdi:check-decagram-outline" />}
@@ -437,7 +445,7 @@ function OpenApplicationFinalizationDialog({
               }
             }}
           >
-            {busy ? 'Finalizing admission…' : 'Finalize admission'}
+            {submitting ? 'Finalizing admission…' : 'Finalize admission'}
           </LoadingButton>
         </DialogActions>
       </FinalizationSurface>

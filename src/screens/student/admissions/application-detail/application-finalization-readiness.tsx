@@ -48,7 +48,7 @@ export function ApplicationFinalizationReadiness({
       {hasError && (
         <StudentFeedback
           notificationKey="STU-0195"
-          presentation="toast"
+          presentation="persistent"
           severity="error"
           action={
             <Button

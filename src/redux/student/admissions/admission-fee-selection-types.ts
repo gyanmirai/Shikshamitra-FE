@@ -38,8 +38,6 @@ export type AdmissionFeeSelection = {
   isLocked: boolean;
   hasRecordedFeePayment?: boolean;
   paymentCompletion?: {
-    paymentRule: 'partial' | 'full';
-    allowCollectionLater: boolean;
     canComplete: boolean;
     canDeferCollection: boolean;
     status: string;

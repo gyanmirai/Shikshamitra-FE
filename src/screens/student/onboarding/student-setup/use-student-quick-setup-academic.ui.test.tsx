@@ -176,17 +176,39 @@ beforeEach(() => {
 function Harness({
   canManage = true,
   disabled = false,
+  compact = false,
 }: {
   canManage?: boolean;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   const editor = useStudentQuickSetupAcademic({ caseId: 'case', canManage, disabled });
   return (
     <ThemeProvider theme={createTheme(defaultSettings)}>
-      <StudentQuickSetupAcademic editor={editor} />
+      <StudentQuickSetupAcademic editor={editor} compact={compact} />
     </ThemeProvider>
   );
 }
+
+it('offers compact number edit actions without assigning until the existing save', async () => {
+  mocks.caseQuery.currentData = makeCase({ grNumber: '001', rollNumber: 3 });
+  render(<Harness compact />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Change roll number' }));
+  expect(await screen.findByRole('textbox', { name: 'Roll number' })).not.toHaveAttribute(
+    'readonly'
+  );
+  expect(screen.getByRole('group', { name: 'Roll number assignment method' })).toBeInTheDocument();
+  expect(mocks.roll).not.toHaveBeenCalled();
+  expect(mocks.gr).not.toHaveBeenCalled();
+});
+
+it('does not offer compact edits for closed cases', async () => {
+  mocks.caseQuery.currentData = makeCase({ grNumber: '001', rollNumber: 3, status: 4 });
+  render(<Harness compact />);
+  expect(await screen.findByRole('textbox', { name: 'Roll number' })).toHaveValue('3');
+  expect(screen.queryByRole('button', { name: 'Change roll number' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Change GR number' })).not.toBeInTheDocument();
+});
 
 it('shows an Auto preview in the compact academic card without assigning anything on open', async () => {
   render(<Harness />);

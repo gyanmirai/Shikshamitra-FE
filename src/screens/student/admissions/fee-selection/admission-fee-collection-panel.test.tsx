@@ -4,7 +4,9 @@ import { it, vi, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionFeeCollectionPanel from './admission-fee-collection-panel';
 import { ADMISSION_FEE_COLLECTION_PERMISSIONS } from './admission-fee-collection-permissions';
@@ -19,6 +21,10 @@ const mocks = vi.hoisted(() => ({
   download: vi.fn(),
   refetch: vi.fn(),
   formProps: vi.fn(),
+  joiningDate: vi.fn(),
+  previewDate: vi.fn(),
+  saveDate: vi.fn(),
+  saveDateUnwrap: vi.fn(),
 }));
 let permissions: { name: string; isGranted: boolean }[] = [];
 vi.mock('react-redux', () => ({
@@ -88,6 +94,11 @@ vi.mock('src/redux/student/admissions/admission-fee-collection-api', () => ({
 vi.mock('src/redux/feeCollection/feeCollection', () => ({
   useDownloadReceiptPdfMutation: () => [mocks.download, { isLoading: false }],
 }));
+vi.mock('src/redux/student/admissions/admission-joining-date-api', () => ({
+  useGetAdmissionJoiningDateQuery: mocks.joiningDate,
+  usePreviewAdmissionJoiningDateQuery: mocks.previewDate,
+  useSaveAdmissionJoiningDateMutation: () => [mocks.saveDate, { isLoading: false }],
+}));
 
 const summary: AdmissionFeeCollectionSummary = {
   applicationId: 'application-1',
@@ -131,7 +142,12 @@ const renderPanel = (
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <AdmissionFeeCollectionPanel applicationId="application-1" {...props} />
-    </ThemeProvider>
+    </ThemeProvider>,
+    {
+      wrapper: ({ children }) => (
+        <LocalizationProvider dateAdapter={AdapterDayjs}>{children}</LocalizationProvider>
+      ),
+    }
   );
 
 beforeEach(() => {
@@ -157,6 +173,132 @@ beforeEach(() => {
   mocks.prepareUnwrap.mockResolvedValue(summary);
   mocks.collect.mockReturnValue({ unwrap: mocks.collectUnwrap });
   mocks.collectUnwrap.mockResolvedValue({ id: 'transaction-1' });
+  mocks.joiningDate.mockReturnValue({
+    currentData: {
+      joiningDate: '2026-06-01',
+      concurrencyStamp: 'date-stamp',
+      canEdit: false,
+      canPreview: false,
+      isLocked: true,
+      lockReason: 'Fees already prepared.',
+      academicYearStartDate: '2026-06-01',
+      academicYearEndDate: '2027-05-31',
+    },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  mocks.previewDate.mockReturnValue({ isFetching: false, isError: false });
+  mocks.saveDate.mockReturnValue({ unwrap: mocks.saveDateUnwrap });
+  mocks.saveDateUnwrap.mockResolvedValue({
+    joiningDate: '2026-06-02',
+    concurrencyStamp: 'saved-stamp',
+  });
+});
+
+function editableDate() {
+  const date = mocks.joiningDate.mock.results.at(-1)?.value.currentData ?? {
+    academicYearStartDate: '2026-06-01',
+    academicYearEndDate: '2027-05-31',
+    concurrencyStamp: 'date-stamp',
+  };
+  mocks.joiningDate.mockReturnValue({
+    currentData: {
+      ...date,
+      joiningDate: '2026-06-02',
+      canEdit: true,
+      canPreview: true,
+      isLocked: false,
+    },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  mocks.summary.mockReturnValue({
+    currentData: {
+      ...summary,
+      hasPaymentEvidence: false,
+      receipts: [],
+      totalAmount: null,
+      outstandingAmount: null,
+      canCollect: false,
+      blocker: 'Complete the actual joining date in the registration form before preparing fees.',
+    },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+  });
+  mocks.previewDate.mockReturnValue({
+    currentData: { joiningDate: '2026-06-02', totalAmount: 9973, proration: null, warnings: [] },
+    isFetching: false,
+    isError: false,
+  });
+}
+
+it('previews the date without writing, then confirms it before preparing fees', async () => {
+  editableDate();
+  renderPanel({ stretch: true });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled());
+  expect(mocks.saveDate).not.toHaveBeenCalled();
+  expect(mocks.prepare).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+  await waitFor(() => expect(mocks.prepare).toHaveBeenCalledTimes(1));
+  expect(mocks.saveDate).toHaveBeenCalledWith({
+    applicationId: 'application-1',
+    joiningDate: '2026-06-02',
+    concurrencyStamp: 'date-stamp',
+  });
+  expect(mocks.saveDate.mock.invocationCallOrder[0]).toBeLessThan(
+    mocks.prepare.mock.invocationCallOrder[0]
+  );
+});
+
+it('preserves the selected date and blocks fee preparation if date confirmation fails', async () => {
+  editableDate();
+  mocks.saveDateUnwrap.mockRejectedValueOnce({
+    data: { detail: 'Joining date changed. Refresh and retry.' },
+  });
+  renderPanel();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+  await screen.findByText('Joining date changed. Refresh and retry.');
+  expect(mocks.prepare).not.toHaveBeenCalled();
+});
+
+it('retires a previous proration result when the new date preview has no reduction', async () => {
+  editableDate();
+  const oldSummary = mocks.summary.mock.results.at(-1)?.value?.currentData ?? {
+    ...summary,
+    canCollect: false,
+    hasPaymentEvidence: false,
+    receipts: [],
+  };
+  mocks.summary.mockReturnValue({
+    currentData: {
+      ...oldSummary,
+      proration: {
+        policyName: 'Previous date policy',
+        policyVersion: 1,
+        joiningDate: '2026-08-01',
+        chargeStartDate: '2026-08-01',
+        chargeEndDate: '2027-05-31',
+        scheduledAmount: 10000,
+        admissionReduction: 2000,
+        payableAmount: 8000,
+        withdrawalCredit: 0,
+        excessPaidAmount: 0,
+        explanations: [],
+      },
+    },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+  });
+  renderPanel();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled());
+  expect(screen.queryByText('Previous date policy · v1')).not.toBeInTheDocument();
 });
 
 it('skips financial reads and renders no collection controls without exact Finance view', () => {
@@ -577,6 +719,26 @@ it.each([null, 'existing-unspent-account'])(
     fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
     await screen.findByRole('dialog', { name: 'Set variable fee amounts · Kabir Shah' });
     expect(mocks.prepare).not.toHaveBeenCalled();
+    const description =
+      'Enter amounts for the variable fee heads configured in Finance. Finance will calculate the installments before collection.';
+    expect(screen.queryByText(description)).not.toBeInTheDocument();
+    const dialogHelp = screen.getByRole('button', {
+      name: 'Set variable fee amounts · Kabir Shah information',
+    });
+    act(() => dialogHelp.focus());
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(description);
+    act(() => dialogHelp.blur());
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
+    const amountHelp = screen.getByRole('button', { name: 'About Transport amount' });
+    act(() => amountHelp.focus());
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Full coverage amount; installments follow the Finance payment term.'
+    );
+    act(() => amountHelp.blur());
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to collection' }));
+    expect(await screen.findByText('Enter the total fee for this Fee Head.')).toBeVisible();
+    expect(mocks.prepare).not.toHaveBeenCalled();
     fireEvent.change(screen.getByRole('textbox', { name: /Transport total for term coverage/ }), {
       target: { value: '1250.75' },
     });
@@ -588,3 +750,54 @@ it.each([null, 'existing-unspent-account'])(
     });
   }
 );
+
+it('waits for the exact variable amount preview before confirming date and preparing fees', async () => {
+  editableDate();
+  mocks.summary.mockReturnValue({
+    currentData: {
+      ...summary,
+      hasPaymentEvidence: false,
+      receipts: [],
+      canCollect: false,
+      variableFeeHeads: [
+        {
+          feeHeadId: 'transport',
+          feeHeadName: 'Transport',
+          included: true,
+          isVariable: true,
+          isOptional: true,
+          isOneTime: false,
+          configuredAmount: null,
+          effectiveAmount: null,
+          amountBasis: 'Term coverage',
+          obligation: 0,
+          verification: 'Required',
+        },
+      ],
+    },
+    isFetching: false,
+    isError: false,
+  });
+  renderPanel();
+  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+  await screen.findByRole('dialog', { name: 'Set variable fee amounts · Kabir Shah' });
+  const next = screen.getByRole('button', { name: 'Continue to collection' });
+  expect(next).toBeDisabled();
+  fireEvent.change(screen.getByRole('textbox', { name: /Transport total for term coverage/ }), {
+    target: { value: '1250.75' },
+  });
+  expect(next).toBeDisabled();
+  await waitFor(() => expect(next).toBeEnabled());
+  expect(mocks.previewDate).toHaveBeenCalledWith(
+    {
+      applicationId: 'application-1',
+      joiningDate: '2026-06-02',
+      variableFeeHeads: [{ feeHeadId: 'transport', amount: 1250.75, zeroAmountReason: undefined }],
+    },
+    { skip: false }
+  );
+  expect(mocks.prepare).not.toHaveBeenCalled();
+  fireEvent.click(next);
+  await waitFor(() => expect(mocks.prepare).toHaveBeenCalledOnce());
+  expect(mocks.saveDate).toHaveBeenCalledOnce();
+});

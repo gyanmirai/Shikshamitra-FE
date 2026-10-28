@@ -6,7 +6,7 @@ import { it, vi, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { renderWithProviders } from 'src/test/test-utils';
-import { screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, screen, waitFor, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import {
   sessionResponse,
@@ -202,6 +202,99 @@ it('books an existing selected session without creating a new slot', async () =>
     expect.objectContaining({ sessionId: 'session-1' })
   );
   expect(mocks.confirm).not.toHaveBeenCalled();
+});
+
+it('shows a blocking body loader until booking settles and retains the selection after failure', async () => {
+  let rejectBooking!: (failure: Error) => void;
+  mocks.run.mockReturnValueOnce(
+    new Promise((_resolve, reject) => {
+      rejectBooking = reject;
+    })
+  );
+  mocks.sessions.mockReturnValue({
+    currentData: [{ ...sessionResponse, startsAt: '2999-01-01T10:00:00Z' }],
+    isFetching: false,
+    isError: false,
+  });
+  const onClose = vi.fn();
+  draw(onClose);
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Assessment session' }));
+  fireEvent.click(await screen.findByRole('option', { name: /Entrance exam/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Book Slot' }));
+  await waitFor(() => expect(mocks.run).toHaveBeenCalledOnce());
+
+  expect(screen.getByRole('status', { name: 'Booking assessment slot…' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Book Slot' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Close assessment booking' })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: 'Assessment session' })).toHaveAttribute(
+    'aria-disabled',
+    'true'
+  );
+  fireEvent.keyDown(screen.getByRole('dialog', { name: 'Book Assessment Slot' }), {
+    key: 'Escape',
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Book Slot' }));
+  expect(onClose).not.toHaveBeenCalled();
+  expect(mocks.run).toHaveBeenCalledOnce();
+
+  await act(async () => rejectBooking(new Error('Booking failed')));
+  expect(
+    screen.queryByRole('status', { name: 'Booking assessment slot…' })
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Assessment session' })).toHaveTextContent(
+    'Entrance exam'
+  );
+  expect(screen.getByRole('button', { name: 'Book Slot' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Book Slot' }));
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+});
+
+it('keeps the create-and-book body loader through preview and confirmation', async () => {
+  let resolvePreview!: (value: unknown) => void;
+  let resolveConfirmation!: (value: unknown) => void;
+  mocks.preview.mockImplementationOnce(() => ({
+    unwrap: () =>
+      new Promise((resolve) => {
+        resolvePreview = resolve;
+      }),
+  }));
+  mocks.confirm.mockImplementationOnce(() => ({
+    unwrap: () =>
+      new Promise((resolve) => {
+        resolveConfirmation = resolve;
+      }),
+  }));
+  const onClose = vi.fn();
+  draw(onClose);
+  fireEvent.click(screen.getByRole('button', { name: 'Add Slot' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Fill slot details' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create & Book' }));
+  await waitFor(() => expect(mocks.preview).toHaveBeenCalledOnce());
+
+  expect(
+    screen.getByRole('status', { name: 'Creating and booking assessment slot…' })
+  ).toBeVisible();
+  expect(screen.getByRole('textbox', { name: 'Session name' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Back to booking' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Create & Book' })).toBeDisabled();
+  await act(async () =>
+    resolvePreview({
+      items: [candidate],
+      proposedBookings: [],
+      availableCount: 30,
+      requiresRoomApproval: false,
+      previewFingerprint: 'fresh-preview',
+    })
+  );
+  await waitFor(() => expect(mocks.confirm).toHaveBeenCalledOnce());
+  expect(
+    screen.getByRole('status', { name: 'Creating and booking assessment slot…' })
+  ).toBeVisible();
+  expect(onClose).not.toHaveBeenCalled();
+
+  await act(async () => resolveConfirmation({ session: sessionResponse, bookedCount: 1 }));
+  expect(onClose).toHaveBeenCalledOnce();
 });
 
 it('creates and books exactly the current applicant after validation', async () => {

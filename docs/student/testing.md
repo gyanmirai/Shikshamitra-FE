@@ -3,12 +3,56 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-27
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Application numbering cycle (28 October 2026)
+
+Run `admission-numbering-model.test.ts`, `admission-numbering-dialog.test.tsx` and `admission-numbering-preview.test.tsx` with the Windows preload and one worker. All 25 tests pass: each cycle sends a valid year/reset pair to preview and save, existing Continuous plus year settings are preserved, used counters stay locked while allowed format edits work, disclosure expansion does not dirty the form, permissions and duplicate-submit guards remain intact, and loading/preview failures recover through the standard toast. Number Preview still checks the real server counter and ignores stale responses; it does not allocate locally.
+
+Browser acceptance uses the actual dialog in an isolated fixture with synthetic settings/preview callbacks. No real numbering settings or counters are changed. Authenticated backend acceptance remains unverified while the local database startup is blocked; staging/live deployment is separate.
+
+## Payment joining date and proration preview (28 October 2026)
+
+Run the focused `admission-joining-date-api.test.ts`, `use-admission-joining-date.test.tsx` and `admission-fee-collection-panel.test.tsx` suites with the Windows preload and one worker. All 36 tests pass, including date validation, read-only preview, stale inputs, concurrent preparation locking the saved date, date-confirmation failure before preparation, variable amount preview, permission gates, receipt access and existing collection retries. `npm run ts` and scoped ESLint pass. The broader unchanged fee-selection suite has five existing inline feedback/Retry assertions failing against the shared toast behavior; it mocks the collection panel and is not a green full-suite gate.
+
+In-app browser checks use actual Payment components with isolated synthetic transport at desktop 1440 × 900 and phone 390 × 844: missing-date collection lock, visible preview loading, 2 June reduced-fee preview, 1 June normal full fees without a proration section, invalid date feedback, preview error/retry, and concurrent preparation replacing the unsaved date with the saved value. No date confirmation, dues or payment was written during these browser checks. This fixture is UI proof only. Authenticated local end-to-end verification is blocked because the configured backend database lacks `AbpSettingDefinitions`; no database migration or reseed was performed. Backend integration tests own real calculation/persistence/permission coverage. Staging and production are unverified.
+
+## Approval to finalization handoff (28 October 2026)
+
+The focused card, finalization, decision-hook, decision-recovery and detail-screen run executes 93 tests: 91 pass. The two broader detail-screen Retry assertions remain red (`retries failed history independently of the unopened form` and `retries application and workflow without refetching an unopened form`); their feedback paths are outside this change. All new handoff tests pass, including automatic opening after approval, preparation failure/retry, recovery when workflow completion is observed after a lost response, exact-case navigation with Onboarding View, absent-grant navigation denial, and a retained finalization idempotency key on failed retry. The existing advance test also passes through preflight/write/destination refresh without duplicate writes. Do not report the whole broader suite as green.
+
+Run `node node_modules/@playwright/test/cli.js test --config e2e/student/admission-finalization.config.ts` for nine actual-component synthetic browser tests: 1440/768/390 px in light/dark themes, distinct preparation/readiness/final-save feedback, locked preparation Cancel, no premature empty-data copy or Finalizing label, guardian and identity guards, preparation/readiness retries, and one finalization request with the ready stamp/key. The Codex in-app smoke independently follows the same synthetic flow through its returned exact-case destination. The fixture displays that destination locally; actual owning-screen advance and router wiring are covered separately by detail-screen tests. No real admission was approved or finalized during this UI QA.
+
+## Compact document verification review (28 October 2026)
+
+Run the focused `src/screens/student/admissions/document-verification` Vitest folder with the existing Windows preload and `--pool=threads --maxWorkers=1`: 58 tests pass. Coverage includes direct Upload/View, missing files and original/waiver actions, historical and permission restrictions, one-click approval without notes, duplicate-submit locks, reason-required rejection, pinned evidence/stamp after refresh, upload permission revocation, retry after failed preview, and draft/focus retention on cancel. Full `npm run ts` and scoped ESLint pass.
+
+Run `node node_modules/@playwright/test/cli.js test --config e2e/student/document-review.config.ts` for the actual production components in a synthetic local transport fixture. It checks 1440, 768 and 390 px layouts in light/dark themes, full-width protected-image preview, body-only scrolling and reachable footer, rejection validation/cancel and a single approval request. Synthetic requests do not alter real applications. The final in-app browser smoke also opens the authenticated existing completed Document Verification stage and its protected preview; this is a read-only live check, separate from mutation acceptance on synthetic data.
+
+## Admissions filters, field publishing and action feedback (28 October 2026)
+
+Run the Offering scope mapper/hook/chip suites, linked-field binding/type and existing form-dialog suites, assessment booking/action/panel suites, Inquiry columns and fee collection panel suites. Deferred promises verify real booking/waiver pending states, dismissal/duplicate guards, retained failures and the subsequent assessment refetch indicator. Fee tests verify keyboard-focus help, visible required validation and unchanged decimal preparation payloads.
+
+The combined focused run executes 294 tests across 43 files: 290 pass. Four existing expectations remain red: Inquiry mobile sticky columns, application-assessment inline Retry, unused FieldDataSettings inline catalogue-error text and FieldLibraryDrawer's former Add Text palette action. Do not weaken these assertions or report the whole run as green. Independent baseline runs reproduce the Inquiry sticky and assessment Retry failures.
+
+Authenticated local browser checks reproduce the original Offering Clear loop, then verify Class Clear, preserved Board/Medium and settled URL state. Inquiry Email is absent. A new `QA Inquiry Custom Fields 28 Oct` form containing manual Select choices and a linked Transport Checkbox publishes and reports Published after reload; its linked answer type is visibly disabled in Field settings. This local QA form remains available and is not attached to an Offering. Final screenshot review finds a separate `document-table-actions.tsx` build overlay over the post-publish page; the Published state was verified through browser DOM, not a clean final visual capture. Pipeline navigation later times out, leaving live booking/waiver and fee-tooltip checks unverified; deferred component tests are separate evidence. The first full TypeScript run passes; a later run reports an unrelated current `document-action-dialog.tsx` form-submit callback type mismatch. No stage/live deployment is included.
+
+## Assessments Attendance, Status and Action (28 October 2026)
+
+Run the assessment applicant-table/export, roster-status, column-filter, page-table-state and workspace-controls/data tests, plus batch and Continue tests. They cover merged outcomes, waived/optional attendance without rewriting stored evidence, independent progress/exact-status criteria, saved Result-filter migration, active-only selection, sticky Status/Action order, read-only details and displayed current-page export values. Backend coverage is in `AdmissionAssessmentRosterState_Tests`, `AdmissionAssessmentProgress_Tests`, `AdmissionAssessmentColumnFilters_Tests` and the assessment-roster runtime integration tests. No schema migration is required.
+
+The broader assessment suite also has three existing tests that expect an inline Retry button in `application-assessment-panel`, `assessment-scheduling-guidance` and `assessment-session-setup-drawer`; the unchanged shared Student feedback now uses toast actions. These failures are separate from the merged table/status changes and must not be reported as a green full-suite gate.
+
+Student case access correction: run `npx vitest run src/redux/student/onboarding/student-onboarding-credentials-api.test.ts src/screens/student/onboarding/student-setup/student-onboarding-portal-accounts.ui.test.tsx src/screens/student/onboarding/student-setup/student-app-access-dialog.ui.test.tsx --maxWorkers=1`. This covers the bounded enable payload, server capability, case/permission changes, reason validation, retained failures, busy submission and stale completion. Browser acceptance must additionally verify enable, separate Student selection/send, keyboard focus and narrow-screen dialog layout against the actual current case.
+
+## Institute Setup Class and Division choices
+
+Focused coverage lives in `admission-academic-options.test.ts`, `admission-master-data-runtime-field.test.tsx`, `admission-field-dependencies.test.ts`, the form-template tests, `class-division-filter.test.tsx`, and `student-registration-form-fields.academic.test.tsx`. Check configured names and GUID values, missing parents, failed/loading reads, legacy saved labels, academic-year changes, and row-specific cascading without changing protected fields. Public Inquiry and Records runtime tests must also pass. Browser configuration checks do not establish that an older running backend has loaded the new source handlers.
 
 ## Parent defaults and optional guardians (27 October 2026)
 
@@ -1062,6 +1106,12 @@ The 2026-10-06 focused inquiry simplification checks cover the three status choi
 
 ### Separate Inquiry Edit and Follow-up
 
+The 2026-10-28 class-refresh regressions in `use-admission-inquiry-dialog.test.tsx` use the real hook, RTK Query and synthetic HTTP responses. They cover fresh A → B → A checks, returning to an in-flight A request, late-response isolation, unavailable status reasons, failed checks/Retry, recovery through offering-tag invalidation, reopened offerings, retained manual selection and capacity blockers. `admission-inquiry-form-page.test.tsx` covers pending checks, a usable Class selector, disabled Offering/Create, one reason message and an actionable failed-check Retry. These checks do not establish deployed school data or live availability.
+
+The final four focused suites passed 50 tests, with full `npm run ts`, scoped ESLint and Student documentation validation passing. The in-app browser rendered the actual New Inquiry page against synthetic HTTP responses and verified Closed → Open → Closed requests, pending feedback with Class still usable, automatic open-offering selection, the published form and the single closed reason with Create disabled. No record was submitted. Local proof is retained in ignored `.artifacts/inquiry-class-preview/closed-after-reselect.png`; deployment and authenticated school-data acceptance remain unverified.
+
+The 2026-10-27 Inquiry/Registration spacing regression fixture uses real shared fields and theme controls. Run `node node_modules/@playwright/test/cli.js test --config e2e/student/admission-form-spacing.config.ts` to measure equal input-row spacing with empty, helper, validation and long-message states at 1440, 768 and 390 px in light/dark themes. Composite Aadhaar feedback and the real DOB help renderer are included. The compact field gap totals 28 px for single-line controls/messages, including the 16 px grid gap; feedback must not add another 24 px beneath each field. Longer messages share the same expanded space across the form and must not overlap the next field label. This fixture proves field geometry, not authenticated save/reload or deployed acceptance. The prior 24 px gap evidence below describes the older layout.
+
 Focused suites cover the dedicated editor, row actions, form-history filtering, follow-up dialog, validation model, and management API contract. Verify the original configured form in both Edit entry points, with no Form history on the editing surface; Follow-up must contain only note cards, Notes, Next reminder date, Status, and Cancel/Submit. Initial values must wait for both fresh detail and management responses, while failed submissions and later refreshes preserve the draft.
 
 The 2026-10-15 create/edit UI alignment passed 33 tests across the inquiry create page, both edit entry points, shared section-field layout, registration runtime form and profile-photo uploader. Full `npm run ts`, changed-file ESLint and Student docs checks passed. Authenticated browser checks at 1440 x 900, 768 x 1024 and 390 x 844 verified Add Staff section-card styling, 24 px field gaps, fixed inquiry footers, no horizontal document overflow, required-field messages and dirty-cancel protection. The temporary edit was discarded and no inquiry was created. Photo layout and value binding are covered by the shared layout/runtime tests; the selected live Inquiry form had no photo field. Proof images are retained under `.artifacts/inquiry-ui-15oct/`.
@@ -1348,6 +1398,21 @@ The final three UI suites cover owner selection, read-only saved contacts, scope
 
 ## One-click Credentials (2026-10-13)
 
+Current two-recipient App Login coverage uses `student-app-login-batch.ui.test.tsx` alongside the
+portal-accounts, parent-sibling, parent-sibling-state, profile-email-dialog, staff-message, and
+credentials API suites. It covers neither/either/both recipients, returned-stamp ordering,
+partial failure and failed-only retry, uncertain-commit refetch, case/permission/owner/email drift,
+continuous busy locking, explicit late parent confirmation without Admission proof, existing-parent
+help, legacy activation selection, and missing/linked Guardian email editing. Pending owner
+verification is distinguished from the current login; generic failures and field collisions remain separate.
+
+Run focused Vitest with the Windows preload, `--maxWorkers=1`, and the affected files.
+`npm run ts` checks the full frontend TypeScript project. The repeatable browser command
+`npx playwright test --config e2e/student/onboarding-app-login.config.ts` mounts the actual
+component with synthetic API hooks for safe delivery/linking/error and responsive theme checks.
+This fixture does not establish authenticated runtime, real account mutation, or mailbox delivery.
+The following October 13 evidence describes the earlier selector-based panel.
+
 The final focused four-file run passed 54 tests for the simplified panel, retained legacy email component, owning drawer and new workspace API.
 Coverage includes one/multiple parent emails, hidden missing-email candidates, read-only canonical email, old-case rejection, missing/invalid contacts, loading/refresh/retry, permissions, server errors, stale expected email, one mutation without verification claims, Queued timing messages, controlled retries and drawer dismissal protection.
 The broader 32-file Onboarding run passed 348 tests; four pre-existing retired Offering-readiness screen tests fail because their old fixture renders the current Portal Access route without a Next router.
@@ -1386,14 +1451,6 @@ The existing browser tabs show connection-refused pages, so this revision has no
 - Mobile verification at 390 x 844 showed wrapping helper text and no document horizontal overflow (390px content/viewport); the temporary viewport was reset. Screenshots: `.artifacts/inquiry-age-create.png`, `.artifacts/inquiry-age-edit.png`, `.artifacts/inquiry-age-mobile.png`.
 - This is local verification. Stage/live require both frontend and backend deployment; no production payment, account activation or acknowledgement was sent.
 
-## Payment completion policy verification (22 October 2026)
-
-- `admission-payment-completion-policy.test.ts`, `workflow-payment-decision-editor.test.tsx`, and the fee-selection/collection panel suites cover defaults, saved Full/deferral-off settings, readonly controls, malformed policy, authoritative readiness, zero-payable preparation, stale/error state and unchanged Onboarding behavior. All 72 cases pass.
-- Full TypeScript and focused lint pass. Student documentation validation passes; the all-module documentation command reports 27 existing issues under `docs/testing/`.
-- Local browser QA cloned a separate `QA Payment Completion 22Oct` draft, saved Full payment with collection later disabled, and verified persistence after reload. The published source workflow remained read-only. The information tooltip explains future installments and zero payable. At 390 x 844 the drawer and document widths are both 390 px after responsive layout settles. Screenshots are `.artifacts/payment-completion/payment-settings-desktop.jpg` and `payment-settings-mobile.jpg`.
-- The browser save/reload check proves configuration persistence. The updated runtime completion command is covered by backend integration tests; the already running debugger Host needs rebuilding/restarting to serve the new runtime implementation. This is local verification, not staging or production acceptance.
-- Finance source hashes match the pre-task baseline (835 frontend files); no Finance module code was changed.
-
 ## Form verification retirement and Payment skeletons (23 October 2026)
 
 - The Form-stage drawer and runtime suites cover removal of staff-verification controls, legacy-flag normalization, no obsolete form-detail request, retained correction permissions, server readiness, query errors and skeleton refresh states. These checks supersede earlier browser notes describing the Section verification button.
@@ -1416,3 +1473,10 @@ The existing browser tabs show connection-refused pages, so this revision has no
 - Roll tests verify the Applied callback and complete bounded-result read for a 30-student page, plus safe refresh failure without repeating assignment. The controller updates retained numbers only from confirmed Applied results; existing assigned values and pending policy gates remain unchanged.
 - The complete Student Setup plus Roll API suite passes 535 tests in 32 files, including Auto-to-Manual count retention and recovery from a failed Manual response before Roll Auto. The screen wiring suite passes all 64 tests after the final callback assertion. Full TypeScript, scoped ESLint/Prettier, Student docs validation and diff checks pass.
 - Local browser checks verify tab/scope navigation and assigned values without layout overflow at 1440, 768 and 390px; all five existing rows remain accessible in All students. The local pending GR list is already empty and pending Roll students lack Division, so no new live assignment was made merely for this check. The disappearance/assignment behavior is established by automated mutation/refetch tests, not a live assignment replay. Screenshot: `output/student-setup/identifier-rows-preserved-2026-10-23.png`. No backend or Finance change is needed.
+
+## Payment settings removal verification (28 October 2026)
+
+- The configure drawer has Stage details and Stage behavior only. Regression tests verify retired Full/off or malformed policy data is stripped from draft saves without losing extensions, including readonly behavior and fixed completion guidance.
+- The four focused FE suites ran 72 cases: 67 passed; five existing fee-selection request-error assertions fail because they expect inline banners/Retry after the shared UI moved request errors to toast. Restoring the pre-task tooltip reproduced those same five failures (5/5), proving they are unrelated to this removal. New drawer/normalization tests pass. Full npm run ts and focused lint pass.
+- Backend coverage proves confirmed partial payment and mandatory-reason deferral work despite previously saved Full/off settings; verified zero payable, unprepared/pending evidence, permissions, concurrency, idempotency and Onboarding remain guarded. See backend Student testing documentation for execution details.
+- Local browser UI proof and Finance hash comparison are recorded under .artifacts/payment-completion-removal/. Browser UI/draft persistence and backend integration-test proof are separate from the running debugger Host; rebuild/restart that Host before expecting the changed runtime enforcement. No live payment, Finance code change or schema migration is involved.

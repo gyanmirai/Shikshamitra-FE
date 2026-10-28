@@ -73,23 +73,7 @@ const choices = (values: string[]) =>
   JSON.stringify(values.map((value) => ({ value, label: value })));
 
 const yesNo = choices(['Yes', 'No']);
-const classChoices = choices([
-  'Nursery',
-  'LKG',
-  'UKG',
-  'Class 1',
-  'Class 2',
-  'Class 3',
-  'Class 4',
-  'Class 5',
-  'Class 6',
-  'Class 7',
-  'Class 8',
-  'Class 9',
-  'Class 10',
-  'Class 11',
-  'Class 12',
-]);
+const classChoices = JSON.stringify({ source: 'Standards' });
 const phoneValidation = JSON.stringify({ format: 'phone', phone: true });
 const emailValidation = JSON.stringify({ format: 'email' });
 const pincodeValidation = JSON.stringify({
@@ -395,8 +379,7 @@ const DEFINITIONS: TemplateDefinition[] = [
               {
                 code: 'LAST_CLASS_COMPLETED',
                 label: 'Last class completed',
-                fieldType: 6,
-                optionsJson: classChoices,
+                fieldType: 0,
               },
               { code: 'ACADEMIC_NOTES', label: 'Academic notes', fieldType: 1 },
             ],

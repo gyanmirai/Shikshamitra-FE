@@ -42,6 +42,7 @@ import {
 } from 'src/redux/student/records/student-record-transitions-api';
 
 import TransitionBatchForm from './transition-batch-form';
+import SchoolExitDrawer from './school-exit-drawer';
 import ReturningStudentForm from './returning-student-form';
 import RenewalPortalAccounts from './renewal-portal-accounts';
 import { recordsQueryUrl, positivePageValue } from './records-url-state';
@@ -81,6 +82,7 @@ export default function StudentRecordTransitions() {
     { skip: view !== 'renewals' }
   );
   const [selected, setSelected] = useState<StudentTransition | null>(null);
+  const [exitReview, setExitReview] = useState<StudentTransition | null>(null);
   const [renewal, setRenewal] = useState<StudentRenewal | null>(null);
   const [portalDirty, setPortalDirty] = useState(false);
   const [portalBusy, setPortalBusy] = useState(false);
@@ -443,16 +445,27 @@ export default function StudentRecordTransitions() {
                     sticky: true,
                     stickyPosition: 'right',
                     excludeFromExport: true,
-                    render: (_value, row) => (
-                      <Button
-                        onClick={() => {
-                          setSelected(row as StudentTransition);
-                          setCorrectionKey(crypto.randomUUID());
-                        }}
-                      >
-                        Review
-                      </Button>
-                    ),
+                    render: (_value, row) => {
+                      const pendingExit =
+                        row.status === 'Submitted' &&
+                        ['Withdraw', 'Transfer', 'Graduate'].includes(row.outcome);
+                      const openHistory = () => {
+                        setSelected(row as StudentTransition);
+                        setCorrectionKey(crypto.randomUUID());
+                      };
+                      return (
+                        <Stack direction="row" spacing={0.5}>
+                          <Button
+                            onClick={() =>
+                              pendingExit ? setExitReview(row as StudentTransition) : openHistory()
+                            }
+                          >
+                            Review
+                          </Button>
+                          {pendingExit && <Button onClick={openHistory}>History & actions</Button>}
+                        </Stack>
+                      );
+                    },
                   },
                 ]}
                 noDataText="No transitions match this view."
@@ -460,6 +473,17 @@ export default function StudentRecordTransitions() {
             )}
           </Box>
         </>
+      )}
+      {exitReview && (
+        <SchoolExitDrawer
+          key={exitReview.id}
+          studentId={exitReview.studentId}
+          academicYearId={exitReview.academicYearId}
+          studentName={exitReview.studentName}
+          transition={exitReview}
+          onClose={() => setExitReview(null)}
+          onSaved={() => transitions.refetch()}
+        />
       )}
       <CustomDialog
         open={Boolean(selected || renewal)}
@@ -595,7 +619,8 @@ export default function StudentRecordTransitions() {
         <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
           {!command ? (
             <>
-              {selected?.canApprove && canApprove && (
+              {selected?.canApprove && canApprove &&
+                !(selected.status === 'Submitted' && ['Withdraw', 'Transfer', 'Graduate'].includes(selected.outcome)) && (
                 <>
                   <Button onClick={() => setCommand('reject')} color="error">
                     Reject

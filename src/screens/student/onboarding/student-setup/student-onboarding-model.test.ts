@@ -2,6 +2,7 @@ import type { StudentOnboardingCase } from 'src/redux/student/onboarding/student
 
 import { it, expect, describe } from 'vitest';
 
+import { getStudentPendingTasks } from './student-setup-summary';
 import { getReadinessSummary, mapOnboardingCaseToItem } from './student-onboarding-model';
 import { getPendingStudentCount, filterStudentsForSetupView } from './student-setup-view';
 
@@ -82,6 +83,240 @@ const buildCase = (overrides: Partial<StudentOnboardingCase> = {}): StudentOnboa
 });
 
 describe('mapOnboardingCaseToItem', () => {
+  const readySteps = Array.from({ length: 8 }, (_, index) => ({
+    id: `ready-${index}`,
+    key: `ready_${index}`,
+    label: `Preparation ${index + 1}`,
+    required: true,
+    status: 2 as const,
+    displayOrder: index,
+  }));
+  const handoff = (status: 0 | 1 | 2 | 3 | 4, required = true) => ({
+    id: 'parent-handoff',
+    onboardingCaseId: 'case-1',
+    serviceKey: 'guardian-account',
+    required,
+    status,
+    attemptCount: 1,
+    lastError: status === 3 ? 'Parent account could not be linked.' : null,
+  });
+
+  it.each([0, 1, 3, 4] as const)(
+    'includes an unfinished required handoff (%s) instead of reporting 8/8',
+    (status) => {
+      const item = mapOnboardingCaseToItem(
+        Object.assign(
+          buildCase({
+            studentEnrollmentId: 'enrollment-1',
+            status: 3,
+            steps: readySteps,
+          }),
+          { requiredServiceHandoffs: [handoff(status)] }
+        )
+      );
+      expect(getReadinessSummary(item)).toMatchObject({
+        passedCount: 8,
+        requiredCount: 9,
+        blockingCount: 1,
+        progress: 89,
+      });
+      expect(item.status).toBe('action-required');
+      expect(getStudentPendingTasks(item)).toContainEqual(
+        expect.objectContaining({
+          key: 'guardian-account',
+          view: 'credentials',
+          actionLabel: 'Open App Login',
+        })
+      );
+    }
+  );
+
+  it('counts acknowledged required handoffs consistently for completed cases', () => {
+    const item = mapOnboardingCaseToItem(
+      Object.assign(
+        buildCase({
+          studentEnrollmentId: 'enrollment-1',
+          status: 4,
+          steps: readySteps,
+        }),
+        { requiredServiceHandoffs: [handoff(2)] }
+      )
+    );
+    expect(getReadinessSummary(item)).toMatchObject({
+      passedCount: 9,
+      requiredCount: 9,
+      blockingCount: 0,
+      progress: 100,
+    });
+  });
+
+  it.each([false, true] as const)(
+    'includes required credential delivery after account linking (confirmed=%s)',
+    (confirmed) => {
+      const item = mapOnboardingCaseToItem(
+        Object.assign(
+          buildCase({
+            studentEnrollmentId: 'enrollment-1',
+            steps: readySteps,
+          }),
+          { requiredServiceHandoffs: [handoff(2)], requiredCredentialDeliveryConfirmed: confirmed }
+        )
+      );
+      expect(getReadinessSummary(item)).toMatchObject({
+        passedCount: confirmed ? 10 : 9,
+        requiredCount: 10,
+        blockingCount: confirmed ? 0 : 1,
+        progress: confirmed ? 100 : 90,
+      });
+      if (!confirmed)
+        expect(getStudentPendingTasks(item)).toContainEqual(
+          expect.objectContaining({
+            key: 'credential_delivery',
+            view: 'credentials',
+            actionLabel: 'Open App Login',
+          })
+        );
+    }
+  );
+
+  it('does not invent a delivery requirement for optional or completion-timed email', () => {
+    const item = mapOnboardingCaseToItem(
+      Object.assign(buildCase({ steps: readySteps }), {
+        requiredCredentialDeliveryConfirmed: null,
+      })
+    );
+    expect(getReadinessSummary(item)).toMatchObject({ requiredCount: 8, progress: 100 });
+  });
+
+  it('does not treat optional failed delivery work as a required readiness blocker', () => {
+    const item = mapOnboardingCaseToItem(
+      Object.assign(buildCase({ steps: readySteps }), {
+        requiredServiceHandoffs: [handoff(3, false)],
+      })
+    );
+    expect(getReadinessSummary(item)).toMatchObject({
+      passedCount: 8,
+      requiredCount: 8,
+      progress: 100,
+    });
+  });
+
+  it('keeps legacy server parent-account requirements visible without a new handoff projection', () => {
+    const item = mapOnboardingCaseToItem(
+      buildCase({
+        studentEnrollmentId: 'enrollment-1',
+        guardianAccountRequired: true,
+        guardianAccountStatus: 3,
+        steps: readySteps,
+      })
+    );
+    expect(getReadinessSummary(item)).toMatchObject({
+      passedCount: 8,
+      requiredCount: 9,
+      progress: 89,
+    });
+  });
+
+  it('trusts an explicitly empty effective handoff list over legacy account flags', () => {
+    const item = mapOnboardingCaseToItem(
+      Object.assign(
+        buildCase({
+          studentEnrollmentId: 'enrollment-1',
+          guardianAccountRequired: true,
+          guardianAccountStatus: 3,
+          steps: readySteps,
+        }),
+        { requiredServiceHandoffs: [] }
+      )
+    );
+    expect(getReadinessSummary(item)).toMatchObject({
+      passedCount: 8,
+      requiredCount: 8,
+      progress: 100,
+    });
+    expect(item.readinessItems.some((check) => check.key === 'guardian-account')).toBe(false);
+  });
+
+  it('does not turn post-enrollment account setup into a pre-activation blocker on older servers', () => {
+    const item = mapOnboardingCaseToItem(
+      buildCase({
+        studentEnrollmentId: null,
+        guardianAccountRequired: true,
+        guardianAccountStatus: 0,
+        steps: readySteps,
+      })
+    );
+    expect(getReadinessSummary(item)).toMatchObject({
+      passedCount: 8,
+      requiredCount: 8,
+      progress: 100,
+    });
+    expect(item.readinessItems.some((check) => check.key === 'guardian-account')).toBe(false);
+  });
+
+  it('keeps an unconfirmed fee-structure check below 100 percent without inventing a payment gate', () => {
+    const item = mapOnboardingCaseToItem(
+      buildCase({
+        feeStructureConfirmed: false,
+        steps: [
+          ...readySteps.slice(0, 7),
+          {
+            id: 'fee',
+            key: 'fee_structure',
+            label: 'Fee structure',
+            required: true,
+            status: 3,
+            displayOrder: 8,
+            detail: 'Confirm a published fee structure.',
+          },
+        ],
+      })
+    );
+    expect(getReadinessSummary(item)).toMatchObject({
+      passedCount: 7,
+      requiredCount: 8,
+      progress: 88,
+      blockingCount: 1,
+    });
+    expect(getStudentPendingTasks(item)).toContainEqual(
+      expect.objectContaining({ key: 'fee_structure', view: 'fees' })
+    );
+    expect(item.readinessItems.some((check) => check.key === 'finance-first-payment')).toBe(false);
+  });
+
+  it('counts multiple required services once, with handoff evidence overriding any stale same-key step', () => {
+    const item = mapOnboardingCaseToItem(
+      Object.assign(
+        buildCase({
+          steps: [
+            ...readySteps,
+            {
+              id: 'legacy-account',
+              key: 'guardian-account',
+              label: 'Parent app login',
+              required: true,
+              status: 2 as const,
+              displayOrder: 9,
+            },
+          ],
+        }),
+        {
+          requiredServiceHandoffs: [
+            handoff(3),
+            { ...handoff(0), id: 'consent', serviceKey: 'service-consent' },
+          ],
+        }
+      )
+    );
+    expect(getReadinessSummary(item)).toMatchObject({
+      passedCount: 8,
+      requiredCount: 10,
+      progress: 80,
+      blockingCount: 2,
+    });
+    expect(item.readinessItems.filter((check) => check.key === 'guardian-account')).toHaveLength(1);
+  });
+
   it('shows the server-confirmed finalized admission independently from profile identity', () => {
     const item = mapOnboardingCaseToItem(
       buildCase({

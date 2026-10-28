@@ -1,21 +1,26 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { StudentCredentialsRecipient } from 'src/redux/student/onboarding/student-onboarding-types';
+import type {
+  StudentCredentialsRecipient,
+  StudentCredentialsWorkspace,
+} from 'src/redux/student/onboarding/student-onboarding-types';
 
 import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { RouterLink } from 'src/routes/components';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { LoadingButton } from 'src/components/loading-button';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import {
@@ -25,10 +30,10 @@ import {
   Skeleton,
   Checkbox,
   TextField,
+  IconButton,
   Typography,
   LinearProgress,
   FormHelperText,
-  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -38,6 +43,7 @@ import {
   useRetryStudentOnboardingParentSetupMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import StudentAppAccessDialog from './student-app-access-dialog';
 import GuardianProfileEmailDialog from './guardian-profile-email-dialog';
 import { getStudentParentSiblingActivationState } from './student-parent-sibling-state';
 import StudentCredentialProfileEmailDialog from './student-credential-profile-email-dialog';
@@ -46,54 +52,53 @@ import { getOnboardingMessage, getOnboardingErrorMessage } from './student-onboa
 import type { StudentOnboardingItem } from './student-onboarding-model';
 import type { StudentParentSiblingActivationState } from './student-parent-sibling-state';
 
-type CredentialsValues = {
-  caseId: string;
-  siblingParentRelationship: string;
-  accountType: StudentCredentialsRecipient['accountType'];
-  relationship: string;
-  email: string;
-  confirmRecipientAccess: boolean;
-};
-
 type Props = {
   student: StudentOnboardingItem;
   canManage: boolean;
   onBusyChange?: (busy: boolean) => void;
   onParentStateChange?: (state: StudentParentSiblingActivationState) => void;
   parentValidationAttempt?: number;
+  compact?: boolean;
 };
-
+type AccountType = StudentCredentialsRecipient['accountType'];
 const relationshipLabels = {
   self: 'Student',
   father: 'Father',
   mother: 'Mother',
   guardian: 'Guardian',
 };
-const recipientRelationshipLabel = (recipient: StudentCredentialsRecipient) =>
+const relationshipLabel = (recipient: StudentCredentialsRecipient) =>
   recipient.relationship === 'guardian' && recipient.relationshipLabel?.trim()
     ? `Guardian (${recipient.relationshipLabel.trim()})`
     : relationshipLabels[recipient.relationship];
-const emailSchema = Yup.string()
-  .trim()
-  .email('Enter a valid email, such as name@example.com.')
-  .max(256)
-  .required('No email is saved for this person. Add it in Student Records, then refresh.');
-const credentialsSchema = Yup.object({
-  siblingParentRelationship: Yup.string().oneOf(['', 'father', 'mother']),
-  accountType: Yup.string().oneOf(['student', 'guardian']).required('Choose an account type.'),
-  relationship: Yup.string().when('accountType', {
-    is: 'student',
-    then: (schema) => schema.oneOf(['self']).required(),
-    otherwise: (schema) =>
-      schema.oneOf(['father', 'mother', 'guardian']).required('Choose a recipient.'),
-  }),
-  email: emailSchema,
-  confirmRecipientAccess: Yup.boolean().when('accountType', {
-    is: 'guardian',
-    then: (schema) =>
-      schema.oneOf([true], 'Confirm this person may access the student in the app.'),
-  }),
-});
+const emailSchema = Yup.string().trim().email().max(256).required();
+const queued = (recipient?: StudentCredentialsRecipient) =>
+  ['Pending', 'Processing'].includes(recipient?.delivery?.status ?? '');
+const recipientKey = (recipient: StudentCredentialsRecipient) =>
+  `${recipient.accountType}:${recipient.relationship}`;
+// The stamp changes after each command. Identity changes, unlike stamps, invalidate reviewed access.
+const ownerIdentity = (
+  workspace: StudentCredentialsWorkspace | undefined,
+  relationship: string
+) => {
+  const recipient = workspace?.recipients.find(
+    (item) => item.accountType === 'guardian' && item.relationship === relationship
+  );
+  const candidate = workspace?.parentSibling?.candidates.find(
+    (item) => item.relationship === relationship
+  );
+  return JSON.stringify([
+    workspace?.caseId,
+    relationship,
+    recipient?.email,
+    recipient?.pendingEmail,
+    candidate?.userId,
+    candidate?.email,
+    workspace?.parentSibling?.linkedRelationship,
+    workspace?.parentSibling?.selectedRelationship,
+    workspace?.guardianAccessEnabled,
+  ]);
+};
 
 export default function StudentOnboardingPortalAccounts({
   student,
@@ -101,105 +106,144 @@ export default function StudentOnboardingPortalAccounts({
   onBusyChange,
   onParentStateChange,
   parentValidationAttempt = 0,
+  compact = false,
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const credentials = useGetStudentOnboardingCredentialsQuery(student.id);
   const [sendCredentials, mutation] = useSendStudentOnboardingCredentialsMutation();
   const [retryParentSetup, retryMutation] = useRetryStudentOnboardingParentSetupMutation();
   const [linkParent, linkMutation] = useLinkStudentOnboardingParentMutation();
-  const linkingRef = useRef(false);
-  const formRef = useRef<HTMLFormElement>(null);
-  const retryRef = useRef(false);
-  const submittingRef = useRef(false);
-  const initializedCase = useRef<string | null>(null);
+  const source = credentials.currentData ?? credentials.data;
+  const queryWorkspace = source?.caseId === student.id ? source : undefined;
+  // Retain the returned workspace immediately; a newer query response takes precedence.
+  const [command, setCommand] = useState<{
+    source: typeof source;
+    value: StudentCredentialsWorkspace;
+  } | null>(null);
+  const workspace =
+    command && command.source === source && command.value.caseId === student.id
+      ? command.value
+      : queryWorkspace;
+  const sibling = workspace?.parentSibling;
+  const recipients = workspace?.recipients ?? [];
+  const adults = recipients.filter((recipient) => recipient.accountType === 'guardian');
+  const legacyChoiceRequired = Boolean(
+    sibling?.enabled &&
+    sibling.familyConfirmed &&
+    !sibling.isLinked &&
+    !sibling.selectedRelationship &&
+    sibling.candidates.length > 1
+  );
+  const suggestedAdult =
+    sibling?.linkedRelationship ||
+    sibling?.selectedRelationship ||
+    adults.find((recipient) => recipient.hasLinkedAccount)?.relationship ||
+    (sibling?.guardianAccessSelected ? 'guardian' : '') ||
+    (legacyChoiceRequired
+      ? ''
+      : adults.find((recipient) => recipient.relationship !== 'guardian' && recipient.isMainContact)
+          ?.relationship ||
+        adults.find((recipient) => recipient.relationship !== 'guardian')?.relationship ||
+        adults[0]?.relationship ||
+        '');
+  const [choice, setChoice] = useState({ caseId: student.id, relationship: '' });
+  const relationship =
+    choice.caseId === student.id &&
+    adults.some((adult) => adult.relationship === choice.relationship)
+      ? choice.relationship
+      : suggestedAdult;
+  const adult = adults.find((recipient) => recipient.relationship === relationship);
+  const studentRecipient = recipients.find((recipient) => recipient.accountType === 'student');
+  const [selected, setSelected] = useState<{ caseId: string; student: boolean; guardian: boolean }>(
+    { caseId: student.id, student: false, guardian: false }
+  );
+  const [confirmation, setConfirmation] = useState('');
+  const adultIdentity = ownerIdentity(workspace, relationship);
+  const confirmed = confirmation === adultIdentity;
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [mustRefresh, setMustRefresh] = useState(false);
+  const [working, setWorking] = useState(false);
+  const submitting = useRef(false);
+  const mounted = useRef(true);
+  const latest = useRef({
+    caseId: student.id,
+    source,
+    workspace,
+    canManage,
+    readError: credentials.isError,
+  });
+  const scope = useRef({ caseId: student.id, canManage, version: 0 });
+  if (scope.current.caseId !== student.id || (scope.current.canManage && !canManage))
+    scope.current.version += 1;
+  scope.current.caseId = student.id;
+  scope.current.canManage = canManage;
+  latest.current = {
+    caseId: student.id,
+    source,
+    workspace,
+    canManage,
+    readError: credentials.isError,
+  };
+  const [emailEditor, setEmailEditor] = useState<StudentCredentialsRecipient | null>(null);
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [accessEditorCase, setAccessEditorCase] = useState<string | null>(null);
   const [profileCorrection, setProfileCorrection] = useState<
     'father' | 'mother' | 'guardian' | null
   >(null);
-  const [emailEditor, setEmailEditor] = useState<StudentCredentialsRecipient | null>(null);
-  const [editingEmail, setEditingEmail] = useState(false);
   const [profileChange, setProfileChange] = useState<{
     id: string;
     status: string;
     relationship: string;
   } | null>(null);
-  const currentWorkspace = credentials.currentData ?? credentials.data;
-  const workspace = currentWorkspace?.caseId === student.id ? currentWorkspace : undefined;
-  const sibling = workspace?.parentSibling;
-  const parentOnly = Boolean(sibling?.enabled);
-  const recipients = useMemo(() => workspace?.recipients ?? [], [workspace]);
-  const parentCandidates = useMemo(
-    () =>
-      sibling?.candidates.filter((candidate) =>
-        ['father', 'mother'].includes(candidate.relationship)
-      ) ?? [],
-    [sibling]
+  const busy =
+    working ||
+    mutation.isLoading ||
+    retryMutation.isLoading ||
+    linkMutation.isLoading ||
+    Boolean(emailEditor) ||
+    accessEditorCase === student.id ||
+    Boolean(profileCorrection) ||
+    emailBusy;
+  const unavailable =
+    credentials.isFetching || credentials.isError || mustRefresh || !workspace?.concurrencyStamp;
+  const canEnableStudentAccess = Boolean(
+    canManage &&
+    workspace?.canEnableStudentAccess &&
+    workspace.studentAccessEnabled === false &&
+    !unavailable
   );
-  const formik = useFormik<CredentialsValues>({
-    initialValues: {
-      caseId: student.id,
-      siblingParentRelationship: '',
-      accountType: 'student',
-      relationship: 'self',
-      email: '',
-      confirmRecipientAccess: false,
-    },
-    validationSchema: credentialsSchema,
-    onSubmit: async (values, helpers) => {
-      if (submittingRef.current || !canSend || !workspace || !selectedRecipient) return;
-      submittingRef.current = true;
-      helpers.setStatus(undefined);
-      try {
-        const result = await sendCredentials({
-          id: student.id,
-          accountType: selectedRecipient.accountType,
-          relationship: selectedRecipient.relationship,
-          expectedEmail: values.email.trim(),
-          concurrencyStamp: workspace.concurrencyStamp,
-          confirmRecipientAccess: values.confirmRecipientAccess,
-        }).unwrap();
-        const recipient = result.recipients.find(
-          (item) =>
-            item.accountType === values.accountType && item.relationship === values.relationship
-        );
-        const delivery = recipient?.delivery;
-        if (!delivery || !['Pending', 'Sent'].includes(delivery.status)) {
-          helpers.setStatus(
-            getOnboardingMessage(
-              delivery?.message || recipient?.blockedReason,
-              'Login details could not be requested. Refresh and try again.'
-            )
-          );
-        } else if (delivery.status === 'Sent') {
-          shikshaMitraToast.success({ message: 'Login email submitted for sending.' });
-        } else shikshaMitraToast.info({ message: 'Login email is queued.' });
-      } catch (error) {
-        shikshaMitraToast.error({
-          message: getOnboardingErrorMessage(
-            error,
-            'Login details could not be requested. Refresh and try again.'
-          ),
-        });
-      } finally {
-        submittingRef.current = false;
-      }
-    },
-  });
-  const parentRelationship =
-    formik.values.caseId === student.id ? formik.values.siblingParentRelationship : '';
+  useEffect(() => {
+    if (!canEnableStudentAccess || accessEditorCase !== student.id) setAccessEditorCase(null);
+  }, [canEnableStudentAccess, accessEditorCase, student.id]);
+  const parentCandidate = sibling?.candidates.find(
+    (candidate) => candidate.relationship === relationship
+  );
+  const existingParent = Boolean(
+    sibling?.enabled &&
+    (parentCandidate || sibling.isLinked) &&
+    (!sibling.linkedRelationship || sibling.linkedRelationship === relationship)
+  );
+  const canLink = Boolean(
+    existingParent &&
+    !sibling?.isLinked &&
+    sibling?.canLink &&
+    ['Available', 'SelectParent'].includes(sibling.status) &&
+    parentCandidate &&
+    parentCandidate.email === adult?.email &&
+    student.studentEnrollmentId &&
+    student.backendStatus !== 5 &&
+    workspace?.guardianAccessEnabled !== false &&
+    canManage
+  );
   const parentState = useMemo(
     () =>
       getStudentParentSiblingActivationState(
         student.id,
         workspace,
         credentials.isFetching || credentials.isError,
-        parentRelationship,
-        formik.values.caseId === student.id &&
-          formik.values.accountType === 'guardian' &&
-          formik.values.relationship === 'guardian'
-          ? {
-              expectedEmail: formik.values.email,
-              confirmRecipientAccess: formik.values.confirmRecipientAccess,
-            }
+        relationship,
+        adult?.relationship === 'guardian'
+          ? { expectedEmail: adult.email?.trim() || '', confirmRecipientAccess: confirmed }
           : undefined
       ),
     [
@@ -207,202 +251,333 @@ export default function StudentOnboardingPortalAccounts({
       workspace,
       credentials.isFetching,
       credentials.isError,
-      parentRelationship,
-      formik.values,
+      relationship,
+      adult?.relationship,
+      adult?.email,
+      confirmed,
     ]
   );
   useEffect(() => {
     onParentStateChange?.(parentState);
   }, [onParentStateChange, parentState]);
-  const guardianRecipients = useMemo(
-    () => recipients.filter((recipient) => recipient.accountType === 'guardian'),
-    [recipients]
-  );
-  const selectedRecipient = recipients.find(
-    (recipient) =>
-      recipient.accountType === formik.values.accountType &&
-      recipient.relationship === formik.values.relationship
-  );
-  const savedEmail = selectedRecipient?.email?.trim() ?? '';
-  const validEmail = emailSchema.isValidSync(savedEmail);
-  const busy =
-    mutation.isLoading ||
-    formik.isSubmitting ||
-    retryMutation.isLoading ||
-    linkMutation.isLoading ||
-    editingEmail;
-  const usesExistingParent =
-    parentOnly &&
-    formik.values.accountType === 'guardian' &&
-    formik.values.relationship !== 'guardian' &&
-    Boolean(sibling?.isLinked || parentCandidates.length);
-  const canLinkExistingParent =
-    usesExistingParent &&
-    Boolean(student.studentEnrollmentId) &&
-    student.backendStatus !== 5 &&
-    canManage &&
-    sibling?.canLink &&
-    sibling.familyConfirmed &&
-    !sibling.isLinked &&
-    ['Available', 'SelectParent'].includes(sibling.status) &&
-    parentCandidates.length > 0;
-  const canSend =
-    canManage &&
-    formik.values.caseId === student.id &&
-    !usesExistingParent &&
-    !!workspace?.concurrencyStamp &&
-    !!selectedRecipient?.canSend &&
-    validEmail &&
-    (formik.values.accountType === 'student' || formik.values.confirmRecipientAccess) &&
-    formik.values.email === savedEmail &&
-    !credentials.isFetching &&
-    !credentials.isError &&
-    !mutation.isLoading &&
-    selectedRecipient.delivery?.status !== 'Pending';
-  const { setValues, setFieldValue, setStatus } = formik;
-  const suggestedAdult = useMemo(() => {
-    const linked = guardianRecipients.find((recipient) => recipient.hasLinkedAccount);
-    if (linked) return linked.relationship;
-    if (sibling?.guardianAccessSelected) return 'guardian';
-    const mainContact = guardianRecipients.find((recipient) => recipient.isMainContact);
-    if (mainContact) return mainContact.relationship;
-    const parents = guardianRecipients.filter((recipient) => recipient.relationship !== 'guardian');
-    return parents.length === 1
-      ? parents[0].relationship
-      : parents.length > 1
-        ? ''
-        : guardianRecipients.length === 1
-          ? guardianRecipients[0].relationship
-          : '';
-  }, [guardianRecipients, sibling?.guardianAccessSelected]);
-
-  useEffect(() => {
-    if (!workspace?.recipients.length || initializedCase.current === student.id) return;
-    initializedCase.current = student.id;
-    const first =
-      recipients.find((recipient) => recipient.accountType === 'student' && recipient.canSend) ??
-      recipients.find((recipient) => recipient.accountType === 'guardian') ??
-      recipients[0];
-    const accountType =
-      parentOnly && parentCandidates.length ? 'guardian' : (first?.accountType ?? 'student');
-    setValues(
-      {
-        caseId: student.id,
-        siblingParentRelationship: sibling?.selectedRelationship || '',
-        accountType,
-        relationship: accountType === 'student' ? 'self' : suggestedAdult,
-        email: '',
-        confirmRecipientAccess: false,
-      },
-      false
-    );
-    setStatus(undefined);
-    setProfileChange(null);
-    setProfileCorrection(null);
-    setEmailEditor(null);
-  }, [
-    workspace,
-    student.id,
-    setValues,
-    setStatus,
-    parentOnly,
-    recipients,
-    parentCandidates.length,
-    sibling?.selectedRelationship,
-    suggestedAdult,
-  ]);
-
-  useEffect(() => {
-    if (formik.values.email !== savedEmail) {
-      setFieldValue('email', savedEmail, false);
-      setFieldValue('confirmRecipientAccess', false, false);
-      setStatus(undefined);
-    }
-  }, [savedEmail, formik.values.email, setFieldValue, setStatus]);
-
-  // Saved contact display is independent of permission to link or activate that parent.
-  const displayedParentRole =
-    sibling?.linkedRelationship || sibling?.selectedRelationship || parentRelationship;
-  const displayedParentCandidate = displayedParentRole
-    ? parentCandidates.find((candidate) => candidate.relationship === displayedParentRole)
-    : parentCandidates.length === 1
-      ? parentCandidates[0]
-      : undefined;
-  const soleGuardianRelationship =
-    parentOnly && parentCandidates.length
-      ? displayedParentCandidate?.relationship || ''
-      : guardianRecipients.length === 1
-        ? guardianRecipients[0].relationship
-        : '';
-  const siblingOwnsRelationship =
-    parentOnly && parentCandidates.length > 0 && formik.values.relationship !== 'guardian';
-  useEffect(() => {
-    if (
-      !busy &&
-      formik.values.accountType === 'guardian' &&
-      (siblingOwnsRelationship || guardianRecipients.length === 1) &&
-      formik.values.relationship !== soleGuardianRelationship
-    ) {
-      setFieldValue('relationship', soleGuardianRelationship, false);
-      setStatus(undefined);
-    }
-  }, [
-    busy,
-    formik.values.accountType,
-    formik.values.relationship,
-    soleGuardianRelationship,
-    siblingOwnsRelationship,
-    guardianRecipients.length,
-    setFieldValue,
-    setStatus,
-  ]);
-
   useEffect(() => {
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
       onBusyChange?.(false);
-    },
-    [onBusyChange]
-  );
-
-  const refresh = () => {
-    if (!busy && !credentials.isFetching) {
-      setStatus(undefined);
-      credentials.refetch();
+    };
+  }, [onBusyChange]);
+  const previousIdentity = useRef({
+    adult: adultIdentity,
+    student: studentRecipient?.email,
+    caseId: student.id,
+  });
+  useEffect(() => {
+    const previous = previousIdentity.current;
+    const caseChanged = previous.caseId !== student.id;
+    const adultChanged = previous.adult !== adultIdentity;
+    const studentChanged = previous.student !== studentRecipient?.email;
+    if (caseChanged || adultChanged || studentChanged) {
+      setSelected((current) => ({
+        caseId: student.id,
+        student: caseChanged || studentChanged ? false : current.student,
+        guardian: caseChanged || adultChanged ? false : current.guardian,
+      }));
+      if (adultChanged || caseChanged) setConfirmation('');
+      setErrors((current) =>
+        Object.fromEntries(
+          Object.entries(current).filter(
+            ([key]) =>
+              !caseChanged &&
+              !(studentChanged && key.startsWith('student:')) &&
+              !(adultChanged && key.startsWith('guardian:'))
+          )
+        )
+      );
+      setEmailEditor(null);
+      setProfileCorrection(null);
+      if (caseChanged) setProfileChange(null);
+    }
+    previousIdentity.current = {
+      adult: adultIdentity,
+      student: studentRecipient?.email,
+      caseId: student.id,
+    };
+  }, [adultIdentity, studentRecipient?.email, student.id]);
+  const eligible = (recipient: StudentCredentialsRecipient | undefined, current = workspace) =>
+    Boolean(
+      recipient &&
+      emailSchema.isValidSync(recipient.email?.trim() || '') &&
+      !queued(recipient) &&
+      (recipient.canSend || recipient.canSendExistingParentHelp) &&
+      (!(
+        recipient.accountType === 'guardian' &&
+        current?.parentSibling?.enabled &&
+        current.parentSibling.isLinked
+      ) ||
+        recipient.canSendExistingParentHelp === true) &&
+      (recipient.accountType === 'student' || current?.guardianAccessEnabled !== false) &&
+      // A returned existing-account candidate must be explicitly linked before any send.
+      !(
+        recipient.accountType === 'guardian' &&
+        current?.parentSibling?.enabled &&
+        current.parentSibling.candidates.some(
+          (candidate) => candidate.relationship === recipient.relationship
+        ) &&
+        !current.parentSibling.isLinked
+      )
+    );
+  const activeSelected =
+    selected.caseId === student.id ? selected : { student: false, guardian: false };
+  const chosen = [
+    activeSelected.student ? studentRecipient : undefined,
+    activeSelected.guardian ? adult : undefined,
+  ].filter(Boolean) as StudentCredentialsRecipient[];
+  const canSend =
+    canManage &&
+    !unavailable &&
+    !busy &&
+    chosen.length > 0 &&
+    chosen.length === Number(activeSelected.student) + Number(activeSelected.guardian) &&
+    chosen.every(
+      (recipient) => eligible(recipient) && (recipient.accountType === 'student' || confirmed)
+    );
+  const currentRequest = (caseId: string) =>
+    mounted.current && latest.current.caseId === caseId && latest.current.canManage;
+  const accept = (result: StudentCredentialsWorkspace, baseSource: typeof source) => {
+    if (!currentRequest(result.caseId)) return;
+    setCommand({ source: baseSource, value: result });
+  };
+  const refetchCurrent = async (caseId: string) => {
+    setMustRefresh(true);
+    const result = await credentials.refetch();
+    if (
+      result.isError ||
+      result.error ||
+      !currentRequest(caseId) ||
+      !result.data ||
+      result.data.caseId !== caseId ||
+      !result.data.concurrencyStamp
+    )
+      return undefined;
+    accept(result.data, latest.current.source);
+    setMustRefresh(false);
+    return result.data;
+  };
+  const send = async (only?: StudentCredentialsRecipient) => {
+    if (submitting.current || busy || unavailable || !canManage || !workspace) return;
+    const targets = only ? [only] : chosen;
+    if (
+      !targets.length ||
+      !targets.every(
+        (recipient) => eligible(recipient) && (recipient.accountType === 'student' || confirmed)
+      )
+    )
+      return;
+    const caseId = student.id;
+    const operationVersion = scope.current.version;
+    const isCurrent = () => currentRequest(caseId) && scope.current.version === operationVersion;
+    const reviewedAdult = ownerIdentity(workspace, relationship);
+    let current = workspace;
+    let observedSource = source;
+    submitting.current = true;
+    setWorking(true);
+    try {
+      // Each recipient is an independent write. The next request must await its returned stamp.
+      /* eslint-disable no-restricted-syntax, no-await-in-loop */
+      for (const target of targets) {
+        if (!isCurrent()) break;
+        // A background response must never be overwritten by a captured batch snapshot.
+        if (latest.current.source !== observedSource) {
+          if (latest.current.readError) {
+            setMustRefresh(true);
+            break;
+          }
+          const refreshed = latest.current.workspace;
+          if (!refreshed || refreshed.caseId !== caseId) break;
+          current = refreshed;
+          observedSource = latest.current.source;
+        }
+        const recipient = current.recipients.find(
+          (item) => recipientKey(item) === recipientKey(target)
+        );
+        if (
+          !recipient ||
+          recipient.email !== target.email ||
+          (recipient.accountType === 'guardian' &&
+            ownerIdentity(current, relationship) !== reviewedAdult)
+        ) {
+          setConfirmation('');
+          setSelected({ caseId, student: false, guardian: false });
+          setErrors((previous) => ({
+            ...previous,
+            [recipientKey(target)]:
+              'The saved recipient changed. Refresh App Login and review before sending.',
+          }));
+          break;
+        }
+        if (!eligible(recipient, current)) {
+          setErrors((previous) => ({
+            ...previous,
+            [recipientKey(target)]: getOnboardingMessage(
+              recipient.blockedReason,
+              'Login details cannot be sent yet. Review the onboarding requirements.'
+            ),
+          }));
+          break;
+        }
+        const key = recipientKey(recipient);
+        setErrors((previous) => {
+          const next = { ...previous };
+          delete next[key];
+          return next;
+        });
+        try {
+          const result = await sendCredentials({
+            id: caseId,
+            accountType: recipient.accountType,
+            relationship: recipient.relationship,
+            expectedEmail: recipient.email!.trim(),
+            concurrencyStamp: current.concurrencyStamp,
+            confirmRecipientAccess: recipient.accountType === 'guardian',
+            ...(recipient.canSendExistingParentHelp ? { sendExistingParentHelp: true } : {}),
+          }).unwrap();
+          if (!isCurrent()) break;
+          if (result.caseId !== caseId || !result.concurrencyStamp) break;
+          current = result;
+          accept(result, observedSource);
+          const updated = result.recipients.find((item) => recipientKey(item) === key);
+          if (updated?.delivery?.status === 'Sent')
+            shikshaMitraToast.success({ message: 'Login email submitted for sending.' });
+          else if (queued(updated)) shikshaMitraToast.info({ message: 'Login email is queued.' });
+          else
+            setErrors((previous) => ({
+              ...previous,
+              [key]: getOnboardingMessage(
+                updated?.delivery?.message || updated?.blockedReason,
+                'Login details could not be requested. Refresh and try again.'
+              ),
+            }));
+          // Successful recipients are removed from the next shared action, including partial failure.
+          if (queued(updated) || updated?.delivery?.status === 'Sent')
+            setSelected((previous) => ({ ...previous, [recipient.accountType]: false }));
+        } catch (error) {
+          if (!isCurrent()) break;
+          const message = getOnboardingErrorMessage(
+            error,
+            'Login details could not be requested. Refresh and review status before retrying.'
+          );
+          setErrors((previous) => ({
+            ...previous,
+            [key]: 'Request failed. Review the current email status before retrying.',
+          }));
+          shikshaMitraToast.error({ message });
+          // The server may have committed an uncertain write. Read before sending another person;
+          // never replay this recipient automatically.
+          try {
+            const refreshed = await refetchCurrent(caseId);
+            if (!refreshed) break;
+            current = refreshed;
+            observedSource = latest.current.source;
+            const recovered = refreshed.recipients.find((item) => recipientKey(item) === key);
+            if (queued(recovered) || recovered?.delivery?.status === 'Sent') {
+              setErrors((previous) => {
+                const next = { ...previous };
+                delete next[key];
+                return next;
+              });
+              setSelected((previous) => ({ ...previous, [recipient.accountType]: false }));
+            }
+          } catch {
+            break;
+          }
+        }
+      }
+      /* eslint-enable no-restricted-syntax, no-await-in-loop */
+    } finally {
+      submitting.current = false;
+      if (mounted.current) setWorking(false);
     }
   };
-  if (!workspace && !credentials.isError && (credentials.isLoading || credentials.isFetching)) {
+  const runParentCommand = async (retry = false) => {
+    if (submitting.current || busy || unavailable || !workspace || !canManage) return;
+    if (!retry && (!canLink || !confirmed || !parentCandidate)) return;
+    if (retry && !sibling?.canRetrySetup) return;
+    submitting.current = true;
+    setWorking(true);
+    const caseId = student.id;
+    const operationVersion = scope.current.version;
+    const isCurrent = () => currentRequest(caseId) && scope.current.version === operationVersion;
+    try {
+      const result = retry
+        ? await retryParentSetup({
+            id: caseId,
+            concurrencyStamp: workspace.concurrencyStamp,
+          }).unwrap()
+        : await linkParent({
+            id: caseId,
+            concurrencyStamp: workspace.concurrencyStamp,
+            siblingParentSelection: {
+              relationship: parentCandidate!.relationship,
+              expectedEmail: parentCandidate!.email,
+              expectedUserId: parentCandidate!.userId,
+            },
+            confirmExistingParentAccess: true,
+          }).unwrap();
+      if (!isCurrent()) return;
+      accept(result, source);
+      setConfirmation('');
+      if (retry) shikshaMitraToast.success({ message: 'Original parent setup requested.' });
+      else if (result.parentSibling?.isLinked)
+        shikshaMitraToast.success({ message: 'Parent linked.' });
+      else
+        shikshaMitraToast.warning({ message: 'Parent linking needs review. Refresh and retry.' });
+    } catch (error) {
+      if (isCurrent()) {
+        setConfirmation('');
+        shikshaMitraToast.error({
+          message: getOnboardingErrorMessage(
+            error,
+            retry
+              ? 'Parent setup could not be retried.'
+              : 'Parent could not be linked. Refresh and retry.'
+          ),
+        });
+        try {
+          await refetchCurrent(caseId);
+        } catch {
+          /* A failed refresh keeps actions unavailable until staff refresh. */
+        }
+      }
+    } finally {
+      submitting.current = false;
+      if (mounted.current) setWorking(false);
+    }
+  };
+  const refresh = () => {
+    if (busy || credentials.isFetching) return;
+    refetchCurrent(student.id).catch(() => {
+      /* Keep actions locked until current status is available. */
+    });
+  };
+  if (!workspace && !credentials.isError && (credentials.isLoading || credentials.isFetching))
     return (
       <Stack spacing={1} role="status" aria-label="Loading credentials">
         <Skeleton variant="rounded" height={40} />
         <Skeleton variant="rounded" height={40} />
-        <Skeleton variant="rounded" width={160} height={30} sx={{ alignSelf: 'flex-end' }} />
+        <Skeleton variant="rounded" width={160} height={30} />
       </Stack>
     );
-  }
-  if (!workspace && credentials.isError) {
+  if (!workspace && credentials.isError)
     return (
-      <StudentFeedback
-        notificationKey="STU-1013"
-        presentation="toast"
-        severity="error"
-        action={
-          <Button
-            size="small"
-            startIcon={<Iconify icon="mdi:refresh" width={18} />}
-            onClick={refresh}
-          >
-            Retry
-          </Button>
-        }
-      >
+      <StudentFeedback notificationKey="STU-1013" presentation="toast" severity="error">
         Credentials could not be loaded. Try again.
       </StudentFeedback>
     );
-  }
-  if (!recipients.length) {
+  if (!recipients.length)
     return (
       <StudentFeedback
         notificationKey="STU-1014"
@@ -423,66 +598,518 @@ export default function StudentOnboardingPortalAccounts({
         in Student Records, then refresh.
       </StudentFeedback>
     );
-  }
 
-  const delivery = selectedRecipient?.delivery;
-  const emailError =
-    selectedRecipient && !validEmail
-      ? selectedRecipient.canEditEmail && canManage
-        ? savedEmail
+  const renderRecipient = (
+    recipient: StudentCredentialsRecipient | undefined,
+    accountType: AccountType
+  ) => {
+    const isAdult = accountType === 'guardian';
+    const email = recipient?.email?.trim() || '';
+    const validEmail = emailSchema.isValidSync(email);
+    const key = recipient ? recipientKey(recipient) : accountType;
+    const delivery = recipient?.delivery;
+    const editable = canManage && recipient?.canEditEmail;
+    const emailError = !validEmail
+      ? editable
+        ? email
           ? 'Enter a valid email, such as name@example.com.'
           : 'Add an email before sending login details.'
-        : savedEmail
+        : email
           ? 'The saved email is invalid. Correct it in Student Records, then refresh.'
-          : `No email is saved for this ${selectedRecipient ? recipientRelationshipLabel(selectedRecipient).toLowerCase() : 'person'}. Add their own email in Student Records, then refresh.`
-      : formik.touched.email
-        ? formik.errors.email
-        : undefined;
-  const blockedReason = usesExistingParent
-    ? sibling?.blockedReason
-      ? getOnboardingMessage(sibling.blockedReason, 'Ask authorized staff to review parent linking.')
-      : undefined
-    : !canManage
-      ? 'Ask authorized staff to send login details.'
-      : selectedRecipient &&
-          validEmail &&
-          !selectedRecipient.canSend &&
-          delivery?.status !== 'Pending'
-        ? getOnboardingMessage(
-            selectedRecipient.blockedReason,
-            'Login details cannot be sent yet. Review the onboarding requirements.'
-          )
-        : undefined;
-  const correctionAvailable =
-    !validEmail &&
-    !!selectedRecipient?.name?.trim() &&
-    formik.values.accountType === 'guardian' &&
-    canManage &&
-    student.backendStatus !== 4 &&
-    student.backendStatus !== 5 &&
-    !!student.studentId &&
-    hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
-    hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
-  const formError = typeof formik.status === 'string' ? formik.status : undefined;
-  const parentChoiceError =
-    parentOnly &&
-    parentCandidates.length > 1 &&
-    !sibling?.isLinked &&
-    !sibling?.selectedRelationship &&
-    sibling?.canLink &&
-    !parentRelationship &&
-    (parentValidationAttempt > 0 || formik.touched.siblingParentRelationship)
-      ? `Choose Father or Mother before ${student.studentEnrollmentId ? 'linking' : 'activating'}.`
+          : `No email is saved for this ${isAdult ? relationshipLabels[recipient?.relationship || 'guardian'].toLowerCase() : 'student'}. Add their own email in Student Records, then refresh.`
       : undefined;
-  const selectedSetupStatus =
-    sibling?.status === 'SetupFailed'
-      ? 'Failed'
-      : sibling?.status === 'SetupPending'
-        ? 'Pending'
-        : displayedParentCandidate?.setupStatus;
-
+    const correctionAvailable =
+      isAdult &&
+      !validEmail &&
+      !editable &&
+      Boolean(recipient?.name?.trim()) &&
+      canManage &&
+      ![4, 5].includes(student.backendStatus ?? -1) &&
+      Boolean(student.studentId) &&
+      hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
+      hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
+    const reason = !canManage
+      ? 'Ask authorized staff to send login details.'
+      : isAdult && sibling?.enabled && !sibling.canLink && sibling.blockedReason
+        ? getOnboardingMessage(sibling.blockedReason, 'Ask authorized staff to link this parent.')
+        : isAdult && existingParent && !sibling?.isLinked
+          ? sibling?.blockedReason
+          : recipient && !eligible(recipient) && !queued(recipient) && validEmail
+            ? recipient.blockedReason ||
+              'Login details cannot be sent yet. Review the onboarding requirements.'
+            : undefined;
+    const accepted = queued(recipient) || delivery?.status === 'Sent';
+    const error = accepted ? undefined : errors[key];
+    const failed = !accepted && Boolean(error || delivery?.status === 'Failed');
+    const retryAllowed =
+      failed &&
+      eligible(recipient) &&
+      canManage &&
+      !unavailable &&
+      !busy &&
+      (!isAdult || confirmed);
+    const showEmailError = Boolean(emailError && activeSelected[accountType]);
+    const accessOff =
+      compact &&
+      (isAdult
+        ? workspace?.guardianAccessEnabled === false
+        : workspace?.studentAccessEnabled === false);
+    const showConsent =
+      !compact ||
+      activeSelected.guardian ||
+      confirmed ||
+      parentValidationAttempt ||
+      (existingParent && !sibling?.isLinked);
+    const emailActionLabel = `${email ? 'Update' : 'Add'} ${isAdult && recipient ? relationshipLabel(recipient) : 'Student'} email`;
+    return (
+      <Stack
+        role="group"
+        aria-label={isAdult ? 'Parent / guardian login' : 'Student login'}
+        spacing={compact ? 0.75 : 1}
+        sx={{ minWidth: 0 }}
+      >
+        <Box
+          sx={
+            compact
+              ? {
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: 'minmax(0, 1fr) auto',
+                    md: 'minmax(180px, 1fr) minmax(180px, 1fr) 108px 64px',
+                  },
+                  alignItems: 'center',
+                  gap: 1,
+                }
+              : undefined
+          }
+        >
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            spacing={compact ? 0 : 1}
+            sx={compact ? { display: 'contents' } : undefined}
+          >
+            <FormControlLabel
+              sx={{ m: 0, minWidth: 0, ...(compact && { gridColumn: 1, gridRow: 1 }) }}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={Boolean(activeSelected[accountType])}
+                  disabled={busy || !canManage || !recipient}
+                  slotProps={{
+                    input: {
+                      'aria-label': isAdult ? 'Send to parent / guardian' : 'Send to student',
+                    },
+                  }}
+                  onChange={(_, checked) =>
+                    setSelected((previous) => ({
+                      ...previous,
+                      caseId: student.id,
+                      [accountType]: checked,
+                    }))
+                  }
+                />
+              }
+              label={
+                <Box component="span" sx={{ minWidth: 0 }}>
+                  <Typography
+                    component="span"
+                    display={compact && isAdult ? 'inline' : 'block'}
+                    variant="body2"
+                    fontWeight={600}
+                  >
+                    {isAdult
+                      ? compact && recipient?.relationship !== 'guardian'
+                        ? 'Parent'
+                        : 'Parent / guardian'
+                      : 'Student'}
+                    {!compact && !isAdult && recipient?.name ? ` · ${recipient.name}` : ''}
+                  </Typography>
+                  {compact && isAdult && recipient?.name && (
+                    <Typography
+                      component="span"
+                      display="inline"
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ overflowWrap: 'anywhere' }}
+                    >
+                      {` · ${recipient.name} (${relationshipLabel(recipient)})`}
+                    </Typography>
+                  )}
+                </Box>
+              }
+            />
+            <CustomTooltip
+              title={
+                reason
+                  ? getOnboardingMessage(reason, 'Review the login requirements before sending.')
+                  : delivery?.status === 'Sent' && delivery.sentAt
+                    ? `Submitted for sending · ${fDateTime(delivery.sentAt)}`
+                    : 'Saved app login email'
+              }
+            >
+              <Label
+                role="status"
+                sx={
+                  compact
+                    ? { gridColumn: { xs: 2, md: 3 }, gridRow: 1, justifySelf: 'start' }
+                    : undefined
+                }
+                color={
+                  accessOff
+                    ? 'default'
+                    : !validEmail
+                      ? 'warning'
+                      : queued(recipient)
+                        ? 'info'
+                        : failed
+                          ? 'error'
+                          : 'success'
+                }
+              >
+                {accessOff
+                  ? 'Off'
+                  : !validEmail
+                    ? 'Email needed'
+                    : queued(recipient)
+                      ? 'Queued'
+                      : delivery?.status === 'Sent'
+                        ? 'Submitted'
+                        : failed
+                          ? 'Failed'
+                          : 'Email saved'}
+              </Label>
+            </CustomTooltip>
+          </Stack>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={compact ? 0 : 1}
+            alignItems={{ xs: 'stretch', sm: 'flex-start' }}
+            sx={compact ? { display: 'contents' } : { pl: { xs: 0, sm: 3.5 }, minWidth: 0 }}
+          >
+            {isAdult && adults.length > 1 && (
+              <Box
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  ...(compact && {
+                    gridColumn: { xs: '1 / -1', md: 1 },
+                    gridRow: { xs: 3, md: 2 },
+                  }),
+                }}
+                data-parent-sibling-selection
+              >
+                <ShakingTextField
+                  error={Boolean(
+                    parentValidationAttempt && parentState.blockedReason && !relationship
+                  )}
+                >
+                  <CustomSelect
+                    size="small"
+                    fullWidth
+                    label="Person"
+                    name="relationship"
+                    value={relationship}
+                    disabled={
+                      busy ||
+                      Boolean(sibling?.linkedRelationship || sibling?.selectedRelationship) ||
+                      adults.some((item) => item.hasLinkedAccount) ||
+                      Boolean(
+                        sibling?.enabled &&
+                        sibling.candidates.length &&
+                        !sibling.canLink &&
+                        !sibling.isLinked
+                      )
+                    }
+                    options={adults.map((item) => ({
+                      value: item.relationship,
+                      label: `${relationshipLabel(item)}${item.name?.trim() ? ` — ${item.name}` : ''}${item.email?.trim() ? ` · ${item.email}` : ''}`,
+                    }))}
+                    onChange={(value) => {
+                      setChoice({ caseId: student.id, relationship: String(value) });
+                      setConfirmation('');
+                      setSelected((previous) => ({ ...previous, guardian: false }));
+                      setErrors((previous) =>
+                        Object.fromEntries(
+                          Object.entries(previous).filter(
+                            ([errorKey]) => !errorKey.startsWith('guardian:')
+                          )
+                        )
+                      );
+                    }}
+                    helperText={
+                      parentValidationAttempt &&
+                      parentState.blockedReason &&
+                      !relationship &&
+                      sibling?.canLink
+                        ? 'Choose Father or Mother before activating.'
+                        : undefined
+                    }
+                  />
+                </ShakingTextField>
+              </Box>
+            )}
+            <Box
+              sx={{
+                flex: isAdult && adults.length > 1 ? 1.5 : 1,
+                minWidth: 0,
+                ...(compact && { gridColumn: { xs: 1, md: 2 }, gridRow: { xs: 2, md: 1 } }),
+              }}
+            >
+              {compact ? (
+                <Stack spacing={0.5}>
+                  <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                    {email || 'No email added'}
+                  </Typography>
+                  {emailError && (activeSelected[accountType] || !editable) && (
+                    <FormHelperText error={showEmailError} sx={{ m: 0 }}>
+                      {emailError}
+                    </FormHelperText>
+                  )}
+                </Stack>
+              ) : (
+                <ShakingTextField error={showEmailError}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label={isAdult ? 'Parent / guardian email' : 'Student email'}
+                    value={email}
+                    disabled={busy}
+                    slotProps={{ input: { readOnly: true } }}
+                    error={showEmailError}
+                    helperText={emailError}
+                  />
+                </ShakingTextField>
+              )}
+            </Box>
+            {editable &&
+              (compact ? (
+                <Box
+                  sx={{
+                    gridColumn: { xs: 2, md: 4 },
+                    gridRow: { xs: 2, md: 1 },
+                    justifySelf: { xs: 'end', md: 'start' },
+                  }}
+                >
+                  <CustomTooltip title={emailActionLabel} placement="right">
+                    <span>
+                      <IconButton
+                        type="button"
+                        size="small"
+                        aria-label={emailActionLabel}
+                        sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
+                        disabled={busy || unavailable}
+                        onClick={() => {
+                          setConfirmation('');
+                          setEmailEditor(recipient!);
+                        }}
+                      >
+                        <Iconify icon={email ? 'mdi:pencil-outline' : 'mdi:plus'} width={18} />
+                      </IconButton>
+                    </span>
+                  </CustomTooltip>
+                </Box>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Iconify icon="mdi:pencil-outline" width={18} />}
+                  disabled={busy || unavailable}
+                  sx={{ flexShrink: 0, alignSelf: { xs: 'flex-end', sm: 'flex-start' } }}
+                  onClick={() => {
+                    setConfirmation('');
+                    setEmailEditor(recipient!);
+                  }}
+                >
+                  {email ? 'Update email' : 'Add email'}
+                </Button>
+              ))}
+          </Stack>
+        </Box>
+        {isAdult && adults.length === 1 && !compact && (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ pl: { sm: 3.5 }, overflowWrap: 'anywhere' }}
+          >
+            {recipient?.name?.trim() || 'Name not recorded'} ·{' '}
+            {recipient ? relationshipLabel(recipient) : 'Guardian'}
+          </Typography>
+        )}
+        {recipient?.pendingEmail && (
+          <Typography
+            variant="caption"
+            role="status"
+            sx={{ pl: { sm: 3.5 }, overflowWrap: 'anywhere' }}
+            color="text.secondary"
+          >
+            {!compact && <>Current login: {email || 'No email saved'} · </>}
+            {recipient.emailChangeStatus === 'Expired'
+              ? 'Verification expired'
+              : recipient.emailChangeStatus === 'Stale'
+                ? 'New verification needed'
+                : recipient.emailChangeStatus === 'Pending'
+                  ? 'Verification queued'
+                  : 'Awaiting verification'}
+            : {recipient.pendingEmail}
+          </Typography>
+        )}
+        {isAdult && recipient && showConsent && (
+          <Box sx={{ pl: { sm: 3.5 } }}>
+            <FormControlLabel
+              sx={{ m: 0 }}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={confirmed}
+                  disabled={busy || !canManage}
+                  onChange={(_, checked) => setConfirmation(checked ? adultIdentity : '')}
+                />
+              }
+              label={`I confirm ${recipient.name?.trim() || 'this person'} may access ${student.studentName} in the app.`}
+            />
+            {existingParent && (
+              <Typography variant="caption" color="text.secondary" display="block">
+                {sibling?.isLinked
+                  ? 'Linked existing parent. Sign-in help uses the existing login; no new password is created.'
+                  : 'Confirm access to link the existing parent login. Their password stays unchanged.'}
+              </Typography>
+            )}
+            {existingParent && !sibling?.isLinked && !student.studentEnrollmentId && (
+              <Typography variant="caption" color="text.secondary" display="block">
+                {sibling?.requiresOnboardingConfirmation
+                  ? 'Activate the student, then confirm and link this parent here.'
+                  : 'Save & Activate will link this student to the reviewed parent login.'}
+              </Typography>
+            )}
+            {(sibling?.status === 'SetupFailed' || parentCandidate?.setupStatus === 'Failed') && (
+              <Typography variant="body2" color="text.secondary">
+                {sibling?.canRetrySetup && canManage
+                  ? 'Original parent account setup failed.'
+                  : 'Original parent setup failed. Ask authorized staff to review it.'}
+              </Typography>
+            )}
+            {(sibling?.status === 'SetupPending' || parentCandidate?.setupStatus === 'Pending') && (
+              <Typography variant="body2" color="text.secondary">
+                Original parent account setup is pending.
+              </Typography>
+            )}
+            {canLink && (
+              <LoadingButton
+                type="button"
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon="mdi:account-link-outline" width={18} />}
+                loading={working && linkMutation.isLoading}
+                disabled={busy || unavailable || !confirmed}
+                onClick={() => runParentCommand()}
+              >
+                Confirm &amp; link parent
+              </LoadingButton>
+            )}
+            {existingParent && sibling?.canRetrySetup && canManage && (
+              <LoadingButton
+                type="button"
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon="mdi:refresh" width={18} />}
+                disabled={busy || unavailable}
+                onClick={() => runParentCommand(true)}
+              >
+                Retry parent setup
+              </LoadingButton>
+            )}
+          </Box>
+        )}
+        {(error || (reason && (!compact || activeSelected[accountType]))) && (
+          <Typography
+            variant="body2"
+            color={error ? 'error.main' : 'text.secondary'}
+            sx={{ pl: { sm: 3.5 }, overflowWrap: 'anywhere' }}
+          >
+            {error || getOnboardingMessage(reason, 'Review the login requirements before sending.')}
+          </Typography>
+        )}
+        {delivery &&
+          !error &&
+          !['NotRequested', 'Blocked'].includes(delivery.status) &&
+          !(compact && delivery.status === 'Sent') && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ pl: { sm: 3.5 }, overflowWrap: 'anywhere' }}
+            >
+              {queued(recipient)
+                ? getOnboardingMessage(
+                    delivery.message,
+                    'Login email is queued. Refresh to check progress.'
+                  )
+                : delivery.status === 'Sent'
+                  ? `Submitted for sending${delivery.sentAt ? ` · ${fDateTime(delivery.sentAt)}` : ''}.`
+                  : getOnboardingMessage(
+                      delivery.message,
+                      'Login email could not be sent. Refresh and try again.'
+                    )}
+            </Typography>
+          )}
+        {failed && (
+          <Button
+            size="small"
+            variant="outlined"
+            sx={{ alignSelf: 'flex-start' }}
+            startIcon={<Iconify icon="mdi:refresh" width={18} />}
+            disabled={!retryAllowed}
+            onClick={() => send(recipient)}
+          >
+            {isAdult ? 'Retry parent email' : 'Retry student email'}
+          </Button>
+        )}
+        {correctionAvailable && (
+          <Button
+            size="small"
+            variant="outlined"
+            sx={{ alignSelf: 'flex-start' }}
+            startIcon={<Iconify icon="mdi:pencil-outline" width={18} />}
+            disabled={busy || unavailable}
+            onClick={() =>
+              setProfileCorrection(recipient!.relationship as 'father' | 'mother' | 'guardian')
+            }
+          >
+            Correct Saved Email
+          </Button>
+        )}
+        {isAdult &&
+          profileChange &&
+          profileChange.relationship === relationship &&
+          profileChange.status !== 'Applied' && (
+            <StudentFeedback
+              notificationKey="STU-1015"
+              presentation="inline"
+              severity="warning"
+              action={
+                <Button
+                  component={RouterLink}
+                  href={`${studentPaths.records.changes}?request=${encodeURIComponent(profileChange.id)}`}
+                  size="small"
+                  disabled={busy}
+                  startIcon={<Iconify icon="mdi:open-in-new" width={18} />}
+                >
+                  Review Correction
+                </Button>
+              }
+            >
+              {profileChange.status === 'Pending'
+                ? 'Email correction awaits Records approval. The saved email changes after approval.'
+                : 'Review the email correction in Student Records before sending.'}
+            </StudentFeedback>
+          )}
+      </Stack>
+    );
+  };
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} sx={{ minWidth: 0 }}>
       {credentials.isError && (
         <StudentFeedback notificationKey="STU-1013" presentation="toast" severity="error">
           Credentials could not be refreshed. Refresh again before sending.
@@ -491,349 +1118,88 @@ export default function StudentOnboardingPortalAccounts({
       {credentials.isFetching && <LinearProgress aria-label="Refreshing credentials" />}
       <Box
         component="form"
-        ref={formRef}
         aria-label="Send credentials"
         aria-busy={busy}
         noValidate
-        onSubmit={formik.handleSubmit}
-        sx={{ position: 'relative' }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (canSend) send();
+        }}
       >
-        <Box
-          component="fieldset"
-          disabled={busy}
-          inert={busy}
-          sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}
+        <FormBusyRegion
+          busy={working || emailBusy}
+          label={emailBusy ? 'Saving email…' : 'Requesting credentials…'}
         >
-          <Stack spacing={1}>
-            <CustomSelect
-              size="small"
-              label="Account type"
-              name="accountType"
-              value={formik.values.accountType}
-              disabled={busy}
-              options={[
-                { value: 'student', label: 'Student' },
-                {
-                  value: 'guardian',
-                  label:
-                    parentOnly &&
-                    !guardianRecipients.some((recipient) => recipient.relationship === 'guardian')
-                      ? 'Parent'
-                      : 'Parent / Guardian',
-                },
-              ]}
-              onChange={(value) => {
-                const accountType = value === 'guardian' ? 'guardian' : 'student';
-                setValues(
-                  {
-                    caseId: student.id,
-                    siblingParentRelationship: parentRelationship,
-                    accountType,
-                    relationship: accountType === 'student' ? 'self' : suggestedAdult,
-                    email: '',
-                    confirmRecipientAccess: false,
-                  },
-                  false
-                );
-                formik.setTouched({}, false);
-                setStatus(undefined);
-              }}
-            />
-            {parentOnly &&
-              parentCandidates.length > 1 &&
-              !sibling?.isLinked &&
-              formik.values.relationship !== 'guardian' && (
-                <ShakingTextField data-parent-sibling-selection error={Boolean(parentChoiceError)}>
-                  <CustomSelect
-                    fullWidth
-                    required
-                    size="small"
-                    label="Parent"
-                    name="siblingParentRelationship"
-                    value={sibling?.selectedRelationship || parentRelationship}
-                    disabled={
-                      busy ||
-                      credentials.isFetching ||
-                      !canManage ||
-                      !sibling?.canLink ||
-                      Boolean(sibling?.selectedRelationship)
-                    }
-                    options={parentCandidates.map((candidate) => ({
-                      value: candidate.relationship,
-                      label: `${relationshipLabels[candidate.relationship]}${candidate.name ? ` · ${candidate.name}` : ''} · ${candidate.email}`,
-                    }))}
-                    onChange={(value) =>
-                      setFieldValue('siblingParentRelationship', String(value), false)
-                    }
-                    onBlur={() => formik.setFieldTouched('siblingParentRelationship', true)}
-                    error={Boolean(parentChoiceError)}
-                    helperText={
-                      !sibling?.canLink
-                        ? getOnboardingMessage(
-                            sibling?.blockedReason,
-                            'Ask authorized staff to link this parent.'
-                          )
-                        : parentChoiceError
-                    }
-                  />
-                </ShakingTextField>
+          <Box
+            component="fieldset"
+            disabled={busy}
+            inert={busy}
+            sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}
+          >
+            <Stack spacing={1.5}>
+              {!compact && (
+                <Typography variant="body2" color="text.secondary">
+                  Choose who should receive their own login details.
+                </Typography>
               )}
-            {formik.values.accountType === 'guardian' &&
-              guardianRecipients.length > 1 &&
-              (!(parentOnly && parentCandidates.length) ||
-                guardianRecipients.some((recipient) => recipient.relationship === 'guardian')) && (
-                <ShakingTextField
-                  error={Boolean(formik.touched.relationship && formik.errors.relationship)}
+              {compact && (
+                <Box
+                  aria-hidden
+                  sx={{
+                    display: { xs: 'none', md: 'grid' },
+                    gridTemplateColumns: 'minmax(180px, 1fr) minmax(180px, 1fr) 108px 64px',
+                    gap: 1,
+                    pb: 1,
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    color: 'text.secondary',
+                  }}
                 >
-                  <CustomSelect
-                    size="small"
-                    required
-                    label="Recipient"
-                    name="relationship"
-                    value={formik.values.relationship}
-                    disabled={busy}
-                    options={guardianRecipients.map((recipient) => ({
-                      value: recipient.relationship,
-                      label: `${recipientRelationshipLabel(recipient)}${recipient.name?.trim() ? ` — ${recipient.name}` : ''}${recipient.email?.trim() ? ` · ${recipient.email}` : ''}`,
-                    }))}
-                    error={Boolean(formik.touched.relationship && formik.errors.relationship)}
-                    helperText={
-                      formik.touched.relationship ? formik.errors.relationship : undefined
-                    }
-                    onBlur={() => formik.setFieldTouched('relationship', true)}
-                    onChange={(value) => {
-                      setFieldValue('relationship', value, false);
-                      setFieldValue('confirmRecipientAccess', false, false);
-                      setStatus(undefined);
-                    }}
-                  />
-                </ShakingTextField>
-              )}
-            {selectedRecipient && (
-              <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                {selectedRecipient.name?.trim() || 'Name not recorded'} ·{' '}
-                {recipientRelationshipLabel(selectedRecipient)}
-              </Typography>
-            )}
-            <ShakingTextField error={Boolean(!usesExistingParent && emailError)}>
-              <TextField
-                fullWidth
-                required
-                size="small"
-                label="Email"
-                name="email"
-                value={formik.values.email}
-                onBlur={formik.handleBlur}
-                disabled={busy}
-                slotProps={{ input: { readOnly: true } }}
-                error={Boolean(!usesExistingParent && emailError)}
-                helperText={
-                  (!usesExistingParent &&
-                    (emailError ||
-                      (!selectedRecipient &&
-                      (formik.values.accountType === 'student' || !guardianRecipients.length)
-                        ? 'No saved email is available for this account type. Complete the contact details in Student Records, then refresh.'
-                        : undefined))) ||
-                  undefined
-                }
-              />
-            </ShakingTextField>
-            {formik.values.accountType === 'guardian' &&
-              !usesExistingParent &&
-              selectedRecipient && (
-                <Box>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        size="small"
-                        name="confirmRecipientAccess"
-                        checked={formik.values.confirmRecipientAccess}
-                        disabled={busy || !canManage}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                      />
-                    }
-                    label="I confirm this person may access this student in the app."
-                  />
-                  <FormHelperText
-                    error={Boolean(
-                      formik.touched.confirmRecipientAccess && formik.errors.confirmRecipientAccess
-                    )}
-                  >
-                    {(formik.touched.confirmRecipientAccess &&
-                      formik.errors.confirmRecipientAccess) ||
-                      "Main contact and app access are separate. Login details use this person's saved email."}
-                  </FormHelperText>
+                  {['Recipient', 'Email', 'Status', 'Actions'].map((label) => (
+                    <Typography
+                      key={label}
+                      variant="caption"
+                      fontWeight={600}
+                      sx={{ pl: label === 'Recipient' ? 3.5 : 0 }}
+                    >
+                      {label}
+                    </Typography>
+                  ))}
                 </Box>
               )}
-            {usesExistingParent && (
-              <Stack spacing={1}>
-                <Typography variant="body2" color="text.secondary">
-                  This student uses the parent’s existing login.
-                </Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Label color={sibling?.isLinked ? 'success' : 'info'}>
-                    {sibling?.isLinked ? 'Linked' : 'Existing parent account'}
-                  </Label>
-                </Stack>
-                {selectedSetupStatus && selectedSetupStatus !== 'Ready' && (
-                  <Typography variant="body2" color="text.secondary">
-                    {selectedSetupStatus === 'Failed'
-                      ? sibling?.canRetrySetup && canManage
-                        ? 'Original parent account setup failed.'
-                        : 'Original parent setup failed. Ask authorized staff to review it.'
-                      : 'Original parent account setup is pending.'}
-                  </Typography>
-                )}
-              </Stack>
-            )}
-            {selectedRecipient?.canEditEmail && canManage && (
-              <Button
-                type="button"
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:pencil-outline" width={18} />}
-                disabled={busy || credentials.isFetching || credentials.isError}
-                sx={{ alignSelf: 'flex-start' }}
-                onClick={() => setEmailEditor(selectedRecipient)}
-              >
-                {savedEmail ? 'Update email' : 'Add email'}
-              </Button>
-            )}
-            {selectedRecipient?.pendingEmail && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ overflowWrap: 'anywhere' }}
-                role="status"
-              >
-                {selectedRecipient.emailChangeStatus === 'Expired'
-                  ? 'Verification expired'
-                  : selectedRecipient.emailChangeStatus === 'Stale'
-                    ? 'New verification needed'
-                    : selectedRecipient.emailChangeStatus === 'Pending'
-                      ? 'Verification queued'
-                      : 'Awaiting verification'}
-                : {selectedRecipient.pendingEmail}
-              </Typography>
-            )}
-            {correctionAvailable && !selectedRecipient?.canEditEmail && (
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:pencil-outline" width={18} />}
-                disabled={busy || credentials.isFetching}
-                sx={{ alignSelf: 'flex-start' }}
-                onClick={() =>
-                  setProfileCorrection(
-                    formik.values.relationship as 'father' | 'mother' | 'guardian'
-                  )
-                }
-              >
-                Correct Saved Email
-              </Button>
-            )}
-            {profileChange &&
-              profileChange.relationship === formik.values.relationship &&
-              profileChange.status !== 'Applied' && (
-                <StudentFeedback
-                  notificationKey="STU-1015"
-                  presentation="inline"
-                  severity="warning"
-                  action={
-                    <Button
-                      component={RouterLink}
-                      href={`${studentPaths.records.changes}?request=${encodeURIComponent(profileChange.id)}`}
-                      size="small"
-                      startIcon={<Iconify icon="mdi:open-in-new" width={18} />}
-                      disabled={busy}
-                    >
-                      Review Correction
-                    </Button>
-                  }
+              {renderRecipient(studentRecipient, 'student')}
+              {canEnableStudentAccess && !compact && (
+                <Button
+                  size="small"
+                  color="inherit"
+                  sx={{ alignSelf: 'flex-start' }}
+                  disabled={busy}
+                  startIcon={<Iconify icon={GlobalIcons.admissionStudent} width={18} />}
+                  onClick={() => setAccessEditorCase(student.id)}
                 >
-                  {profileChange.status === 'Pending'
-                    ? 'Email correction awaits Records approval. The saved email changes after approval.'
-                    : 'Review the email correction in Student Records before sending.'}
-                </StudentFeedback>
+                  Enable student login
+                </Button>
               )}
-            {formError ? (
-              <StudentFeedback
-                notificationKey="STU-1016"
-                presentation="inline"
-                severity="error"
-              >
-                {formError}
-              </StudentFeedback>
-            ) : blockedReason &&
-              !(
-                parentOnly &&
-                parentCandidates.length > 1 &&
-                !sibling?.isLinked &&
-                !sibling?.canLink
-              ) ? (
-              <StudentFeedback
-                notificationKey="STU-1017"
-                presentation="inline"
-                severity="warning"
-              >
-                {blockedReason}
-              </StudentFeedback>
-            ) : null}
-            {!usesExistingParent &&
-              !formError &&
-              delivery &&
-              !['NotRequested', 'Blocked'].includes(delivery.status) && (
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  role="status"
-                  sx={{ minWidth: 0 }}
-                >
-                  <Label
-                    color={
-                      delivery.status === 'Sent'
-                        ? 'success'
-                        : delivery.status === 'Failed'
-                          ? 'error'
-                          : delivery.status === 'Pending'
-                            ? 'info'
-                            : 'default'
-                    }
-                  >
-                    {delivery.status === 'Pending'
-                      ? 'Queued'
-                      : delivery.status === 'Sent'
-                        ? 'Submitted'
-                        : delivery.status}
-                  </Label>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ overflowWrap: 'anywhere' }}
-                  >
-                    {delivery.status === 'Pending'
-                      ? getOnboardingMessage(
-                          delivery.message || selectedRecipient?.blockedReason,
-                          'Login email is queued. Refresh to check progress.'
-                        )
-                      : delivery.status === 'Sent'
-                        ? `Submitted for sending${delivery.sentAt ? ` · ${fDateTime(delivery.sentAt)}` : ''}.`
-                        : getOnboardingMessage(
-                            delivery.message,
-                            'Login email could not be sent. Refresh and try again.'
-                          )}
-                  </Typography>
-                </Stack>
-              )}
-            <Stack
-              direction="row"
-              spacing={1}
-              justifyContent="space-between"
-              alignItems="center"
-              sx={{ pt: 1 }}
-            >
+              <Box sx={{ borderTop: '1px solid', borderColor: 'divider', pt: compact ? 1 : 1.5 }}>
+                {renderRecipient(adult, 'guardian')}
+              </Box>
+            </Stack>
+          </Box>
+        </FormBusyRegion>
+        <Stack spacing={1} sx={{ borderTop: '1px solid', borderColor: 'divider', mt: 1.5, pt: 1 }}>
+          {!compact && (
+            <FormHelperText sx={{ m: 0 }}>
+              Each selected person receives a separate email using their own saved login. Submitted
+              means accepted by the sender.
+            </FormHelperText>
+          )}
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ flexWrap: 'wrap', gap: 1 }}
+          >
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
               <Button
                 size="small"
                 color="inherit"
@@ -843,135 +1209,54 @@ export default function StudentOnboardingPortalAccounts({
               >
                 Refresh
               </Button>
-              {usesExistingParent ? (
-                canLinkExistingParent ? (
-                  <LoadingButton
-                    size="small"
-                    type="button"
-                    color="inherit"
-                    variant="contained"
-                    loading={linkMutation.isLoading}
-                    disabled={
-                      busy || credentials.isFetching || credentials.isError || !parentState.loaded
-                    }
-                    startIcon={<Iconify icon="mdi:account-link-outline" width={18} />}
-                    onClick={async () => {
-                      if (linkingRef.current || busy || !workspace || !parentState.loaded) return;
-                      if (!parentState.selection || parentState.blockedReason) {
-                        await formik.setFieldTouched('siblingParentRelationship', true, false);
-                        formRef.current
-                          ?.querySelector<HTMLElement>(
-                            '[data-parent-sibling-selection] [role="combobox"], [data-parent-sibling-selection] select'
-                          )
-                          ?.focus();
-                        return;
-                      }
-                      linkingRef.current = true;
-                      try {
-                        const result = await linkParent({
-                          id: student.id,
-                          concurrencyStamp: workspace.concurrencyStamp,
-                          siblingParentSelection: parentState.selection,
-                        }).unwrap();
-                        if (result.parentSibling?.isLinked)
-                          shikshaMitraToast.success({ message: 'Parent linked.' });
-                        else
-                          shikshaMitraToast.warning({
-                            message: 'Parent linking needs review. Refresh and retry.',
-                          });
-                      } catch (error) {
-                        shikshaMitraToast.error({
-                          message: getOnboardingErrorMessage(
-                            error,
-                            'Parent could not be linked. Refresh and retry.'
-                          ),
-                        });
-                      } finally {
-                        linkingRef.current = false;
-                      }
-                    }}
-                  >
-                    Link parent
-                  </LoadingButton>
-                ) : (
-                  sibling?.canRetrySetup &&
-                  canManage && (
-                    <LoadingButton
-                      size="small"
-                      type="button"
-                      color="inherit"
-                      variant="outlined"
-                      loading={retryMutation.isLoading}
-                      disabled={busy || credentials.isFetching}
-                      startIcon={<Iconify icon="mdi:refresh" width={18} />}
-                      onClick={async () => {
-                        if (retryRef.current || busy || !workspace) return;
-                        retryRef.current = true;
-                        try {
-                          await retryParentSetup({
-                            id: student.id,
-                            concurrencyStamp: workspace.concurrencyStamp,
-                          }).unwrap();
-                          shikshaMitraToast.success({
-                            message: 'Original parent setup requested.',
-                          });
-                        } catch (error) {
-                          shikshaMitraToast.error({
-                            message: getOnboardingErrorMessage(
-                              error,
-                              'Parent setup could not be retried.'
-                            ),
-                          });
-                        } finally {
-                          retryRef.current = false;
-                        }
-                      }}
-                    >
-                      Retry parent setup
-                    </LoadingButton>
-                  )
-                )
-              ) : (
-                <LoadingButton
+              {compact && canEnableStudentAccess && (
+                <Button
                   size="small"
-                  type="submit"
                   color="inherit"
-                  variant="contained"
-                  startIcon={<Iconify icon="mdi:email-send-outline" width={18} />}
-                  loading={busy}
-                  disabled={!canSend || busy}
+                  disabled={busy}
+                  onClick={() => setAccessEditorCase(student.id)}
                 >
-                  Send login details
-                </LoadingButton>
+                  Enable student login
+                </Button>
               )}
             </Stack>
+            <LoadingButton
+              type="submit"
+              aria-label="Send selected login details"
+              size="small"
+              variant="contained"
+              color="inherit"
+              loading={working}
+              disabled={!canSend}
+              sx={{ ml: 'auto' }}
+              startIcon={<Iconify icon="mdi:email-send-outline" width={18} />}
+            >
+              {compact ? 'Send login details' : 'Send selected login details'}
+            </LoadingButton>
           </Stack>
-        </Box>
-        {busy && (
-          <Stack
-            role="status"
-            aria-label={editingEmail ? 'Saving email' : 'Requesting credentials'}
-            spacing={1}
-            justifyContent="center"
-            alignItems="center"
-            sx={{ position: 'absolute', inset: 0, bgcolor: 'background.paper', opacity: 0.9 }}
-          >
-            <CircularProgress size={24} />
-            <Typography variant="body2">
-              {editingEmail ? 'Saving email…' : 'Requesting credentials…'}
-            </Typography>
-          </Stack>
-        )}
+        </Stack>
       </Box>
       {emailEditor && workspace && (
         <StudentCredentialProfileEmailDialog
-          key={`${student.id}:${emailEditor.accountType}:${emailEditor.relationship}`}
+          key={`${student.id}:${recipientKey(emailEditor)}`}
           caseId={student.id}
           caseLabel={student.studentName}
           concurrencyStamp={workspace.concurrencyStamp}
           recipient={emailEditor}
-          onBusyChange={setEditingEmail}
+          onBusyChange={setEmailBusy}
           onClose={() => setEmailEditor(null)}
+        />
+      )}
+      {accessEditorCase === student.id && canEnableStudentAccess && workspace && (
+        <StudentAppAccessDialog
+          key={student.id}
+          caseId={student.id}
+          caseLabel={student.studentName}
+          concurrencyStamp={workspace.concurrencyStamp}
+          onClose={() => setAccessEditorCase(null)}
+          onSaved={() => {
+            refetchCurrent(student.id).catch(() => {});
+          }}
         />
       )}
       {profileCorrection && student.studentId && (
@@ -979,7 +1264,7 @@ export default function StudentOnboardingPortalAccounts({
           studentId={student.studentId}
           relationship={profileCorrection}
           caseLabel={`${student.studentName} · ${student.applicationNumber}`}
-          parentOnly={parentOnly && profileCorrection !== 'guardian'}
+          parentOnly={Boolean(sibling?.enabled && profileCorrection !== 'guardian')}
           onClose={() => setProfileCorrection(null)}
           onSaved={(change) => {
             setProfileChange({ ...change, relationship: profileCorrection });

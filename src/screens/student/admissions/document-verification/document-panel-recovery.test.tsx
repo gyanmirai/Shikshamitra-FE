@@ -45,7 +45,7 @@ it('keeps a selected file and notes when both upload and background checklist re
     await dialog.findByText('Document storage is temporarily unavailable. Try again.')
   ).toBeInTheDocument();
   await waitFor(() => expect(reads).toBe(2));
-  expect(await screen.findByText('Unable to load this enrollment data.')).toBeInTheDocument();
+  expect(dialog.getByRole('button', { name: 'Upload document' })).toBeEnabled();
   expect(dialog.getByLabelText('Notes')).toHaveValue('Keep this replacement');
   expect((dialog.getByLabelText(/^Document/) as HTMLInputElement).files?.[0]).toBe(file);
   expect(screen.getByRole('dialog')).toBeInTheDocument();

@@ -29,21 +29,48 @@ vi.mock('./use-admission-application-decisions', async (original) => ({
   useAdmissionApplicationDecisions: mocks.decisions,
 }));
 vi.mock('./application-decision-dialog', () => ({
-  ApplicationDecisionDialog: ({ open, action }: { open: boolean; action: string }) =>
-    open ? <div role="dialog">Decision {action}</div> : null,
+  ApplicationDecisionDialog: ({
+    open,
+    action,
+    onSubmit,
+  }: {
+    open: boolean;
+    action: string;
+    onSubmit: (input: { concurrencyStamp: string }) => Promise<boolean>;
+  }) =>
+    open ? (
+      <div role="dialog">
+        Decision {action}
+        <button type="button" onClick={() => onSubmit({ concurrencyStamp: 'stamp' })}>
+          Confirm decision
+        </button>
+      </div>
+    ) : null,
 }));
 vi.mock('./application-finalization-dialog', () => ({
   ApplicationFinalizationDialog: ({
     open,
     presentation,
     onClose,
+    loading,
+    hasError,
+    onRetry,
   }: {
     open: boolean;
     presentation: string;
     onClose: () => void;
+    loading: boolean;
+    hasError: boolean;
+    onRetry: () => void;
   }) =>
     open ? (
       <section aria-label={`Finalization ${presentation}`}>
+        {loading && <div role="status">Loading finalization</div>}
+        {hasError && (
+          <button type="button" onClick={onRetry}>
+            Retry finalization
+          </button>
+        )}
         <button type="button" onClick={onClose}>
           Return to decision
         </button>
@@ -72,6 +99,7 @@ const decisions = (extra = {}) => ({
     refetch: mocks.refetch,
   },
   finalizationPreviewQuery: {},
+  runDecision: vi.fn().mockResolvedValue(true),
   ...extra,
 });
 const panel = (status = 1, journeyCompleted = false) =>
@@ -92,6 +120,116 @@ const panel = (status = 1, journeyCompleted = false) =>
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.decisions.mockReturnValue(decisions());
+});
+
+it('opens finalization immediately after approval and keeps it loading while the decision stage completes', async () => {
+  let release: ((value: boolean) => void) | undefined;
+  const prepare = vi.fn(
+    () =>
+      new Promise<boolean>((resolve) => {
+        release = resolve;
+      })
+  );
+  const busy = vi.fn();
+  const view = render(
+    <ThemeProvider theme={createTheme()}>
+      <ApplicationDecisionCard
+        compact
+        application={application}
+        journeyCompleted={false}
+        onPrepareFinalization={prepare}
+        onBusyChange={busy}
+      />
+    </ThemeProvider>
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm decision' }));
+  expect(await screen.findByRole('region', { name: 'Finalization inline' })).toBeVisible();
+  expect(screen.getByRole('status')).toHaveTextContent('Loading finalization');
+  expect(prepare).toHaveBeenCalledOnce();
+  expect(busy).toHaveBeenLastCalledWith(true);
+  release?.(true);
+  await waitFor(() => expect(busy).toHaveBeenLastCalledWith(false));
+  view.rerender(
+    <ThemeProvider theme={createTheme()}>
+      <ApplicationDecisionCard
+        compact
+        application={{ ...application, status: 6 }}
+        journeyCompleted
+        onPrepareFinalization={prepare}
+        onBusyChange={busy}
+      />
+    </ThemeProvider>
+  );
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  expect(prepare).toHaveBeenCalledOnce();
+});
+
+it('does not open finalization after a failed approval', async () => {
+  mocks.decisions.mockReturnValue(decisions({ runDecision: vi.fn().mockResolvedValue(false) }));
+  const prepare = vi.fn();
+  render(
+    <ThemeProvider theme={createTheme()}>
+      <ApplicationDecisionCard
+        compact
+        application={application}
+        journeyCompleted={false}
+        onPrepareFinalization={prepare}
+      />
+    </ThemeProvider>
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm decision' }));
+  await waitFor(() => expect(mocks.decisions().runDecision).toHaveBeenCalledOnce());
+  expect(screen.queryByRole('region', { name: 'Finalization inline' })).not.toBeInTheDocument();
+  expect(prepare).not.toHaveBeenCalled();
+});
+
+it('releases preparation loading and offers retry if the workflow cannot complete', async () => {
+  const prepare = vi.fn().mockResolvedValue(false);
+  render(
+    <ThemeProvider theme={createTheme()}>
+      <ApplicationDecisionCard
+        compact
+        application={{ ...application, status: 6 }}
+        journeyCompleted={false}
+        onPrepareFinalization={prepare}
+      />
+    </ThemeProvider>
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+  expect(await screen.findByRole('button', { name: 'Retry finalization' })).toBeEnabled();
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  expect(prepare).toHaveBeenCalledOnce();
+});
+
+it('uses authoritative workflow completion to recover from a lost preparation response', async () => {
+  const prepare = vi.fn().mockResolvedValue(false);
+  const view = render(
+    <ThemeProvider theme={createTheme()}>
+      <ApplicationDecisionCard
+        compact
+        application={{ ...application, status: 6 }}
+        journeyCompleted={false}
+        onPrepareFinalization={prepare}
+      />
+    </ThemeProvider>
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+  expect(await screen.findByRole('button', { name: 'Retry finalization' })).toBeVisible();
+  view.rerender(
+    <ThemeProvider theme={createTheme()}>
+      <ApplicationDecisionCard
+        compact
+        application={{ ...application, status: 6 }}
+        journeyCompleted
+        onPrepareFinalization={prepare}
+      />
+    </ThemeProvider>
+  );
+  expect(screen.queryByRole('button', { name: 'Retry finalization' })).not.toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Finalization inline' })).toBeVisible();
+  expect(prepare).toHaveBeenCalledOnce();
 });
 
 it('keeps compact decisions actionable while disclosing history on request', async () => {

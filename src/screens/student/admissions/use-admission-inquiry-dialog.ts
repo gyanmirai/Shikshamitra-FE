@@ -2,13 +2,12 @@
 
 import type { RootState } from 'src/redux/store';
 import type { AdmissionFormField } from 'src/redux/student/admissions/admission-forms-api';
-import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 import type { AdmissionSiblingParentSelection } from 'src/redux/student/admissions/admission-parent-family-types';
 
 import { useSelector } from 'react-redux';
+import { useRef, useState, useEffect } from 'react';
 import { useFormik, type FormikProps } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
@@ -27,6 +26,7 @@ import {
 import { useAdmissionPhotoReads } from './use-admission-photo-reads';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
 import { getAdmissionSiblingParentReviewError } from './admission-family-contacts-model';
+import { useAdmissionInquiryClassOfferings } from './use-admission-inquiry-class-offerings';
 import { getInquiryCommunicationTemplate } from './inquiry-management/inquiry-communication-templates';
 import {
   admissionInquirySchema,
@@ -37,11 +37,9 @@ import {
   canLinkAdmissionInquiryFamily,
   type AdmissionInquiryFormValues,
   preserveCompatibleInquiryAnswers,
-  getAdmissionInquiryAcademicOptions,
   buildAdmissionInquiryDuplicateInput,
 } from './admission-inquiry-model';
 
-const EMPTY_OFFERINGS: AdmissionOfferingListItem[] = [];
 const ALL_INQUIRY_SOURCES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 export function useAdmissionInquiryDialog(onClose: () => void) {
@@ -60,9 +58,6 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     { academicYearId },
     { refetchOnMountOrArgChange: true }
   );
-  const offeringChoices = catalogue.currentData?.offerings ?? EMPTY_OFFERINGS;
-  const offeringsLoading = catalogue.isFetching;
-  const offeringsError = catalogue.isError;
   const [create, createState] = useCreateAdmissionInquiryMutation();
   const [createCommunication, communicationState] =
     useCreateAdmissionInquiryCommunicationMutation();
@@ -103,12 +98,21 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
       }
     },
   });
-  const academicOptions = useMemo(
-    () => getAdmissionInquiryAcademicOptions(offeringChoices, formik.values),
-    [formik.values, offeringChoices]
-  );
+  const classOfferings = useAdmissionInquiryClassOfferings({
+    academicYearId,
+    admissionCycleId: formik.values.admissionCycleId ?? '',
+    boardId: formik.values.boardId,
+    mediumId: formik.values.mediumId,
+    standardId: formik.values.standardId,
+  });
+  const offeringChoices = classOfferings.checkedOfferings;
+  const offeringsLoading = catalogue.isFetching || classOfferings.checking;
+  const offeringsError = catalogue.isError || classOfferings.error;
   const runtime = useGetAdmissionInquiryCaptureContextQuery(formik.values.offeringId, {
-    skip: !formik.values.offeringId,
+    skip:
+      offeringsLoading ||
+      offeringsError ||
+      !classOfferings.offerings.some((item) => item.id === formik.values.offeringId),
     refetchOnMountOrArgChange: true,
   });
   const offeringDetail = runtime.currentData?.offering;
@@ -118,7 +122,13 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     Boolean(formik.values.offeringId) &&
     !runtimeError &&
     (runtime.isFetching || !runtime.currentData);
-  const canCreateInquiry = Boolean(runtime.currentData?.availability.canCreateInquiry);
+  const canCreateInquiry =
+    !offeringsLoading &&
+    !offeringsError &&
+    classOfferings.offerings.some((item) => item.id === formik.values.offeringId) &&
+    !runtimeLoading &&
+    !runtimeError &&
+    Boolean(runtime.currentData?.availability.canCreateInquiry);
   const sections =
     formik.values.offeringId && !runtimeLoading && !runtimeError && canCreateInquiry
       ? getAdmissionInquirySections(form)
@@ -178,10 +188,15 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
   useAdmissionUnsavedChanges(true, formik.dirty);
 
   useEffect(() => {
-    const candidates = academicOptions.offerings.filter(
-      (item) =>
-        item.availabilityStatus === 2 && item.configurationStatus === 1 && item.entryMode !== 1
-    );
+    if (offeringsLoading || offeringsError) return;
+    const candidates = classOfferings.offerings;
+    if (
+      formik.values.offeringId &&
+      !candidates.some((item) => item.id === formik.values.offeringId)
+    ) {
+      formik.setFieldValue('offeringId', '', false);
+      return;
+    }
     if (
       formik.values.admissionCycleId &&
       formik.values.standardId &&
@@ -190,7 +205,7 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     ) {
       formik.setFieldValue('offeringId', candidates[0].id, false);
     }
-  }, [academicOptions.offerings, formik]);
+  }, [classOfferings.offerings, formik, offeringsLoading, offeringsError]);
 
   useEffect(() => {
     if (
@@ -295,10 +310,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
           .map((item) => [item.standardId, { id: item.standardId, name: item.standardName }])
       ).values()
     ),
-    offerings: academicOptions.offerings.filter(
-      (item) =>
-        item.availabilityStatus === 2 && item.configurationStatus === 1 && item.entryMode !== 1
-    ),
+    offerings: classOfferings.offerings,
+    noOfferingReason: classOfferings.reason,
     canCreateInquiry,
     unavailableReason: runtime.currentData?.availability.reasonMessage,
     academicLoading: catalogue.isFetching,
@@ -306,10 +319,18 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     retryAcademic: () => catalogue.refetch(),
     selectedOffering,
     classCapacity:
-      offeringDetail?.id === formik.values.offeringId ? offeringDetail.classCapacity : null,
+      !offeringsLoading &&
+      !offeringsError &&
+      selectedOffering &&
+      offeringDetail?.id === formik.values.offeringId
+        ? offeringDetail.classCapacity
+        : null,
     offeringsLoading,
     offeringsError,
-    retryOfferings: () => catalogue.refetch(),
+    retryOfferings: () => {
+      if (formik.values.standardId) classOfferings.retry();
+      if (catalogue.isError || !formik.values.standardId) catalogue.refetch();
+    },
     formLoading: runtime.isFetching,
     workflowLoading,
     runtimeLoading,

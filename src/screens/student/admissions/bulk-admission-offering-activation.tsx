@@ -79,6 +79,12 @@ export function BulkAdmissionOfferingActivation({ activation, disabled }: Props)
         disableBackdropClick
         disableCancel={activation.busy}
         disableEscapeKeyDown={activation.busy}
+        bodyBusy={activation.busy}
+        busyLabel={
+          activation.progress
+            ? `Activating ${activation.progress.completed} of ${activation.progress.total} offerings…`
+            : 'Activating offerings…'
+        }
         content={
           <Box component="span" id="bulk-offering-activation-description">
             {count} selected {count === 1 ? 'offering' : 'offerings'} will become active.
@@ -89,8 +95,7 @@ export function BulkAdmissionOfferingActivation({ activation, disabled }: Props)
             variant="contained"
             size="small"
             startIcon={<Iconify icon="mdi:check-circle-outline" />}
-            loading={activation.busy}
-            disabled={disabled || !count}
+            disabled={activation.busy || disabled || !count}
             onClick={activation.confirmActivation}
             sx={{ bgcolor: 'text.primary', color: 'background.paper' }}
           >

@@ -2,12 +2,13 @@
 
 import type {
   AdmissionApplication,
+  AdmissionFinalizationResult,
   AdmissionApplicationWorkflow,
 } from 'src/redux/student/admissions/admission-applications-api';
 
-import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useRef, useState, useEffect } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomAccordion from 'src/components/custom-accordian';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -43,6 +44,8 @@ type Props = {
   onSelectStage?: (stageId: string) => void;
   onFinalizationOpenChange?: (open: boolean) => void;
   hideFinalizedActions?: boolean;
+  onPrepareFinalization?: () => Promise<boolean>;
+  onFinalized?: (result: AdmissionFinalizationResult) => void;
 };
 const ACTIONS: AdmissionDecisionAction[] = ['approve', 'waitlist', 'reject'];
 
@@ -57,6 +60,8 @@ export function ApplicationDecisionCard({
   onSelectStage,
   onFinalizationOpenChange,
   hideFinalizedActions = false,
+  onPrepareFinalization,
+  onFinalized,
 }: Props) {
   const decisions = useAdmissionApplicationDecisions(
     application.id,
@@ -68,10 +73,13 @@ export function ApplicationDecisionCard({
   const [reloadApplication] = useLazyGetAdmissionApplicationQuery();
   const [action, setAction] = useState<AdmissionDecisionAction | null>(null);
   const [decisionApplication, setDecisionApplication] = useState(application);
+  const [preparingFinalization, setPreparingFinalization] = useState(false);
+  const [preparationError, setPreparationError] = useState(false);
+  const preparingRef = useRef(false);
   const { canDecide, canFinalize } = decisions;
   useEffect(() => {
-    onBusyChange?.(decisions.isBusy);
-  }, [decisions.isBusy, onBusyChange]);
+    onBusyChange?.(decisions.isBusy || preparingFinalization);
+  }, [decisions.isBusy, preparingFinalization, onBusyChange]);
   useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   useEffect(() => {
     onFinalizationOpenChange?.(compact && finalizationDialog.value && application.status !== 11);
@@ -80,6 +88,26 @@ export function ApplicationDecisionCard({
   const visibleActions = ACTIONS.filter(
     (item) => canDecide && canPerformAdmissionDecision(application.status, item)
   );
+  const openFinalization = async () => {
+    if (preparingRef.current) return;
+    finalizationDialog.onTrue();
+    setPreparationError(false);
+    if (journeyCompleted) return;
+    if (!onPrepareFinalization) {
+      setPreparationError(true);
+      return;
+    }
+    preparingRef.current = true;
+    setPreparingFinalization(true);
+    try {
+      setPreparationError(!(await onPrepareFinalization()));
+    } catch {
+      setPreparationError(true);
+    } finally {
+      preparingRef.current = false;
+      setPreparingFinalization(false);
+    }
+  };
 
   const finalization = (
     <ApplicationFinalizationDialog
@@ -87,19 +115,27 @@ export function ApplicationDecisionCard({
       presentation={compact ? 'inline' : 'dialog'}
       application={application}
       applicantId={application.applicantId}
-      busy={disabled || decisions.isBusy}
+      busy={disabled || decisions.isBusy || preparingFinalization}
       preview={decisions.finalizationPreviewQuery.data}
       loading={
+        preparingFinalization ||
         decisions.finalizationPreviewQuery.isLoading ||
         decisions.finalizationPreviewQuery.isFetching
       }
-      hasError={decisions.finalizationPreviewQuery.isError}
-      onRetry={() => decisions.finalizationPreviewQuery.refetch()}
+      hasError={
+        !preparingFinalization &&
+        ((preparationError && !journeyCompleted) || decisions.finalizationPreviewQuery.isError)
+      }
+      onRetry={() => {
+        setPreparationError(false);
+        if (!journeyCompleted) openFinalization();
+        else decisions.finalizationPreviewQuery.refetch();
+      }}
       onClose={finalizationDialog.onFalse}
       onSubmit={(value) =>
         disabled || decisions.isBusy
           ? Promise.resolve(false)
-          : decisions.runFinalization(application.concurrencyStamp, value)
+          : decisions.runFinalization(application.concurrencyStamp, value, onFinalized)
       }
     />
   );
@@ -255,13 +291,17 @@ export function ApplicationDecisionCard({
                 Waitlist and rejection require a reason.
               </Typography>
             )}
-            {application.status === 6 && journeyCompleted && canFinalize && (
-              <ApplicationFinalizationCallout
-                busy={disabled || decisions.isBusy}
-                onOpen={finalizationDialog.onTrue}
-                compact={compact}
-              />
-            )}
+            {application.status === 6 &&
+              canFinalize &&
+              (journeyCompleted || onPrepareFinalization) && (
+                <ApplicationFinalizationCallout
+                  busy={disabled || decisions.isBusy}
+                  onOpen={() => {
+                    openFinalization();
+                  }}
+                  compact={compact}
+                />
+              )}
             {!canDecide && !canFinalize && application.status !== 10 && (
               <StudentFeedback
                 notificationKey="STU-0185"
@@ -307,11 +347,12 @@ export function ApplicationDecisionCard({
         onReload={() => reloadApplication(application.id).unwrap()}
         busy={disabled || decisions.isBusy}
         onClose={() => setAction(null)}
-        onSubmit={(input) =>
-          disabled || decisions.isBusy
-            ? Promise.resolve(false)
-            : decisions.runDecision(action as AdmissionDecisionAction, input)
-        }
+        onSubmit={async (input) => {
+          if (disabled || decisions.isBusy) return false;
+          const success = await decisions.runDecision(action as AdmissionDecisionAction, input);
+          if (success && action === 'approve') openFinalization();
+          return success;
+        }}
       />
       {!compact && finalization}
     </Card>

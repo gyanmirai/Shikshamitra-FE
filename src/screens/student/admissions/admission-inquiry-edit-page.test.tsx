@@ -309,6 +309,7 @@ describe('Edit inquiry page', () => {
       id: 'dob',
       code: 'DOB',
       label: 'Date of birth',
+      helpText: 'Enter the date from the birth certificate.',
       bindingKey: 'Applicant.DateOfBirth',
       bindingType: 0,
       displayOrder: 4,
@@ -337,7 +338,11 @@ describe('Edit inquiry page', () => {
         <AdmissionInquiryEditPage />
       </LocalizationProvider>
     );
-    expect(screen.getByText(/Age at academic year start.*4 years 3 months/)).toBeVisible();
+    expect(screen.getByText('Age: 4y 3m · Minimum: 5y')).toBeVisible();
+    await userEvent.hover(screen.getByLabelText('Date of birth information'));
+    const ageDetails = await screen.findByRole('tooltip');
+    expect(ageDetails).toHaveTextContent('Enter the date from the birth certificate.');
+    expect(ageDetails).toHaveTextContent(/academic year start.*01-04-2026/);
     await waitFor(() =>
       expect(shikshaMitraToast.warning).toHaveBeenCalledWith({
         message: expect.stringContaining('below the minimum age of 5 years'),

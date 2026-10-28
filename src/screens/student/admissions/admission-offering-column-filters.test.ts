@@ -1,31 +1,106 @@
 import { it, expect, describe } from 'vitest';
 
-import { offeringScopeChanges, offeringColumnFilters, serializeOfferingColumnFilters } from './admission-offering-column-filters';
+import {
+  offeringScopeChanges,
+  offeringColumnFilters,
+  serializeOfferingColumnFilters,
+} from './admission-offering-column-filters';
 
 describe('Offering column criteria', () => {
   it('serializes only supported displayed fields and normalizes numeric ranges', () => {
     const filters = [
-      { column: 'applicationCount', type: 'between', value: { min: '0', max: '12' }, valueType: 'number' },
+      {
+        column: 'applicationCount',
+        type: 'between',
+        value: { min: '0', max: '12' },
+        valueType: 'number',
+      },
       { column: 'workflowName', type: 'contains', value: 'General', valueType: 'string' },
     ];
     expect(JSON.parse(serializeOfferingColumnFilters(filters))).toEqual([
-      { column: 'applicationCount', type: 'between', value: { min: 0, max: 12 }, valueType: 'number' },
+      {
+        column: 'applicationCount',
+        type: 'between',
+        value: { min: 0, max: 12 },
+        valueType: 'number',
+      },
     ]);
   });
   it('rejects malformed dates, negative counts, unknown fields and invalid JSON', () => {
     expect(offeringColumnFilters('invalid')).toEqual([]);
-    expect(offeringColumnFilters(JSON.stringify([
-      { column: 'effectiveOpenDate', type: 'equals', value: '31-02-2027', valueType: 'date' },
-      { column: 'applicationCount', type: 'equals', value: -1, valueType: 'number' },
-      { column: 'workflowName', type: 'contains', value: 'General', valueType: 'string' },
-    ]))).toEqual([]);
+    expect(
+      offeringColumnFilters(
+        JSON.stringify([
+          { column: 'effectiveOpenDate', type: 'equals', value: '31-02-2027', valueType: 'date' },
+          { column: 'applicationCount', type: 'equals', value: -1, valueType: 'number' },
+          { column: 'workflowName', type: 'contains', value: 'General', valueType: 'string' },
+        ])
+      )
+    ).toEqual([]);
   });
   it('maps academic and status criteria into the same top selector values and clears children', () => {
-    expect(offeringScopeChanges([
-      { column: 'boardName', type: 'equals', value: 'board-2', valueType: 'enum' },
-      { column: 'configurationStatus', type: 'equals', value: 0, valueType: 'enum' },
-    ], { boardId: 'board-1', mediumId: 'medium-1' })).toMatchObject({
-      boardId: 'board-2', mediumId: '', stageId: '', standardId: '', configurationStatus: '0',
+    expect(
+      offeringScopeChanges(
+        [
+          { column: 'boardName', type: 'equals', value: 'board-2', valueType: 'enum' },
+          { column: 'configurationStatus', type: 'equals', value: 0, valueType: 'enum' },
+        ],
+        { boardId: 'board-1', mediumId: 'medium-1' }
+      )
+    ).toMatchObject({
+      boardId: 'board-2',
+      mediumId: '',
+      stageId: '',
+      standardId: '',
+      configurationStatus: '0',
+    });
+  });
+  it('retains compulsory Board and Medium when removable table criteria are cleared', () => {
+    expect(
+      offeringScopeChanges([], {
+        boardId: 'board-2',
+        mediumId: 'medium-2',
+        stageId: 'stage-2',
+      })
+    ).toEqual({
+      boardId: 'board-2',
+      mediumId: 'medium-2',
+      stageId: '',
+      standardId: '',
+      availabilityStatus: '',
+      configurationStatus: '',
+    });
+  });
+  it('retains parent context when removing Class while keeping another active criterion', () => {
+    expect(
+      offeringScopeChanges(
+        [{ column: 'availabilityStatus', type: 'equals', value: 0, valueType: 'enum' }],
+        { boardId: 'board-2', mediumId: 'medium-2', stageId: '' }
+      )
+    ).toEqual({
+      boardId: 'board-2',
+      mediumId: 'medium-2',
+      stageId: '',
+      standardId: '',
+      availabilityStatus: '0',
+      configurationStatus: '',
+    });
+  });
+  it('clears dependent school level and Class for an explicit Medium column change', () => {
+    expect(
+      offeringScopeChanges(
+        [
+          { column: 'mediumName', type: 'equals', value: 'medium-2', valueType: 'enum' },
+          { column: 'stageName', type: 'equals', value: 'old-stage', valueType: 'enum' },
+          { column: 'standardName', type: 'equals', value: 'old-class', valueType: 'enum' },
+        ],
+        { boardId: 'board-1', mediumId: 'medium-1', stageId: 'old-stage' }
+      )
+    ).toMatchObject({
+      boardId: 'board-1',
+      mediumId: 'medium-2',
+      stageId: '',
+      standardId: '',
     });
   });
 });

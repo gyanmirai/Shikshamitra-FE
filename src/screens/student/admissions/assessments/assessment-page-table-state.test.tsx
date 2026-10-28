@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
 
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -11,6 +12,7 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import AdmissionAssessmentsScreen from '../admission-assessments';
 
 const mocks = vi.hoisted(() => ({
+  table: null as Pick<ICustomizableTableProps, 'filters' | 'onServerFilter'> | null,
   workbench: {
     academic: { academicYearId: 'year', boardId: '', mediumId: '', standardId: '' },
     scopes: {
@@ -62,18 +64,23 @@ vi.mock('./assessment-applicant-table', () => ({
     items,
     errorContent,
     noDataText,
+    filters,
+    onServerFilter,
   }: {
     items: { applicantName: string }[];
     errorContent?: ReactNode;
     noDataText?: ReactNode;
-  }) => (
-    <div>
-      {items.map((row) => (
-        <span key={row.applicantName}>{row.applicantName}</span>
-      ))}
-      {errorContent || noDataText}
-    </div>
-  ),
+  } & Pick<ICustomizableTableProps, 'filters' | 'onServerFilter'>) => {
+    mocks.table = { filters, onServerFilter };
+    return (
+      <div>
+        {items.map((row) => (
+          <span key={row.applicantName}>{row.applicantName}</span>
+        ))}
+        {errorContent || noDataText}
+      </div>
+    );
+  },
 }));
 vi.mock('../admission-query-error', () => ({ AdmissionQueryError: () => null }));
 vi.mock('./assessment-session-setup-drawer', () => ({ AssessmentSessionSetupDrawer: () => null }));
@@ -91,9 +98,37 @@ vi.mock('src/redux/student/admissions/admission-assessment-planning-api', () => 
 }));
 
 beforeEach(() => {
+  mocks.workbench.state.status = 'all';
+  mocks.workbench.state.columnFilters = '';
+  mocks.workbench.updateWorkbench.mockClear();
   mocks.workbench.scopes.isError = false;
   mocks.workbench.applicants.isError = false;
   mocks.workbench.applicants.currentData = undefined;
+});
+
+it('keeps precise Status filtering independent of the progress-tab chip and resets paging', () => {
+  mocks.workbench.state.status = 'complete';
+  renderPage();
+  const status = {
+    column: 'status',
+    type: 'equals',
+    value: 'waived',
+    valueType: 'enum',
+    label: 'Status',
+  };
+  expect(mocks.table!.filters).toContainEqual(
+    expect.objectContaining({ column: 'assessmentProgress', value: 'complete' })
+  );
+  mocks.table!.onServerFilter!([...(mocks.table!.filters ?? []), status]);
+  expect(mocks.workbench.updateWorkbench).toHaveBeenLastCalledWith({
+    assessmentFilters: '[{"column":"status","type":"equals","value":"waived","valueType":"enum"}]',
+    assessmentStatus: 'complete',
+    assessmentPage: 0,
+  });
+  mocks.table!.onServerFilter!([status]);
+  expect(mocks.workbench.updateWorkbench).toHaveBeenLastCalledWith(
+    expect.objectContaining({ assessmentStatus: undefined })
+  );
 });
 const renderPage = () => {
   const store = configureStore({ reducer: () => ({ auth: { permissions: [] } }) });

@@ -47,6 +47,21 @@ vi.mock('src/components/scrollbar', async () => {
   };
 });
 vi.mock('src/components/form-section-card', () => ({
+  FormSectionHeader: ({
+    title,
+    action,
+    description,
+  }: {
+    title: string;
+    action?: React.ReactNode;
+    description?: string;
+  }) => (
+    <div>
+      <h3>{title}</h3>
+      {description}
+      {action}
+    </div>
+  ),
   FormSectionCard: ({ title, children }: { title: string; children: React.ReactNode }) => (
     <section aria-label={title}>
       <h3>{title}</h3>
@@ -315,7 +330,7 @@ describe('single-student setup page', () => {
     expect(screen.getByRole('button', { name: 'Details & History' })).toBeDisabled();
   });
 
-  it('groups only Class & Numbers and App Login on top, followed by full-width Fees and Documents', () => {
+  it('stacks compact academic, App Login, Fees and Documents sections without stretched side-by-side cards', () => {
     const { container } = renderPage();
     const academic = container.querySelector('#quick-setup-academic')!;
     const login = container.querySelector('#quick-setup-login')!;
@@ -323,9 +338,7 @@ describe('single-student setup page', () => {
     const documents = screen.getByRole('region', { name: 'Admission & Documents' });
 
     expect(academic.parentElement).toBe(login.parentElement);
-    expect(academic.parentElement?.children).toHaveLength(2);
-    expect(fees.parentElement).not.toBe(academic.parentElement);
-    expect(fees.parentElement).toBe(academic.parentElement?.parentElement);
+    expect(fees.parentElement).toBe(academic.parentElement);
     expect(academic.compareDocumentPosition(login)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(login.compareDocumentPosition(fees)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(fees.compareDocumentPosition(documents)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);

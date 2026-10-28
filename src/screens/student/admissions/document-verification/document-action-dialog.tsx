@@ -19,17 +19,26 @@ export function DocumentActionDialog({
   summary,
   requirement,
   onClose,
+  onSuccess = onClose,
+  canSubmit = true,
+  title = documentActionLabels[action],
+  submitLabel = documentActionLabels[action],
 }: {
   action: DocumentAction;
   summary: ApplicationDocumentVerification;
   requirement: AdmissionDocumentRequirement;
   onClose: () => void;
+  onSuccess?: () => void;
+  canSubmit?: boolean;
+  title?: string;
+  submitLabel?: string;
 }) {
   const { formik, error, snapshot, extensions, maxFileSizeMb } = useDocumentActionForm({
     action,
     summary,
     requirement,
-    onSuccess: onClose,
+    onSuccess,
+    canSubmit,
   });
   const cancel = () => {
     if (!formik.dirty || window.confirm('You have unsaved changes. Do you want to discard them?'))
@@ -38,11 +47,23 @@ export function DocumentActionDialog({
   return (
     <CustomDialog
       open
-      title={documentActionLabels[action]}
+      title={title}
+      titleInfo={
+        action === 'reject'
+          ? 'Give a reason so admissions staff can provide a corrected document.'
+          : undefined
+      }
       maxWidth="sm"
       handleClose={onClose}
       hasUnsavedChanges={formik.dirty}
       disableClose={formik.isSubmitting}
+      formProps={{
+        noValidate: true,
+        onSubmit: (event) => {
+          event.preventDefault();
+          formik.handleSubmit();
+        },
+      }}
     >
       <DialogScrollContent>
         {error && (
@@ -64,17 +85,28 @@ export function DocumentActionDialog({
         />
       </DialogScrollContent>
       <DialogActions>
-        <Button size="small" variant="outlined" onClick={cancel} disabled={formik.isSubmitting}>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={cancel}
+          disabled={formik.isSubmitting}
+          startIcon={<Iconify icon="mdi:close" />}
+        >
           Cancel
         </Button>
         <Button
+          type="submit"
           size="small"
           variant="contained"
-          disabled={formik.isSubmitting}
-          onClick={() => formik.handleSubmit()}
-          startIcon={<Iconify icon="mdi:content-save-outline" />}
+          color={action === 'reject' ? 'error' : 'inherit'}
+          disabled={!canSubmit || formik.isSubmitting}
+          loading={formik.isSubmitting}
+          loadingPosition="start"
+          startIcon={
+            <Iconify icon={action === 'reject' ? 'mdi:close' : 'mdi:content-save-outline'} />
+          }
         >
-          {formik.isSubmitting ? 'Saving…' : documentActionLabels[action]}
+          {submitLabel}
         </Button>
       </DialogActions>
     </CustomDialog>

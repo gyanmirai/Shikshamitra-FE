@@ -1,5 +1,5 @@
 import { vi, it, expect, describe } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import { BulkAdmissionOfferingActivation } from './bulk-admission-offering-activation';
 
@@ -52,9 +52,13 @@ describe('Bulk activation controls', () => {
     expect(screen.getByText('Clear').closest('button')).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Activate' })).toBeDisabled();
-    expect(screen.getByRole('status', { hidden: true })).toHaveTextContent(
-      'Activating 1 of 2 offerings'
-    );
+    const dialog = screen.getByRole('dialog', { name: 'Activate Admission Offerings?' });
+    expect(
+      within(dialog).getByRole('status', { name: 'Activating 1 of 2 offerings…' })
+    ).toBeVisible();
+    expect(
+      within(screen.getByRole('button', { name: 'Activate' })).queryByRole('progressbar')
+    ).not.toBeInTheDocument();
   });
   it('keeps per-offering failure reasons visible and offers retry through the selected action', () => {
     const activation = {

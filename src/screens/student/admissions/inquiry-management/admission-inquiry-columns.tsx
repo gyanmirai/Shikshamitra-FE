@@ -155,14 +155,6 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       render: (value) => (value ? String(value) : '—'),
     },
     {
-      id: 'email',
-      label: 'Email',
-      minWidth: 220,
-      filterType: 'string',
-      render: (value) => (value ? String(value) : '—'),
-    },
-
-    {
       id: 'source',
       label: 'Source',
       minWidth: 130,

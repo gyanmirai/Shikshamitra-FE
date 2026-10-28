@@ -45,6 +45,8 @@ type Handlers = {
   onArchive: (workflow: AdmissionWorkflow) => void;
   onReopen: (workflow: AdmissionWorkflow) => void;
   onDelete: (workflow: AdmissionWorkflow) => void;
+  onPublish: (workflow: AdmissionWorkflow) => void;
+  publishingId?: string | null;
 };
 
 export function createWorkflowColumns(
@@ -137,8 +139,8 @@ export function createWorkflowColumns(
       label: 'Actions',
       width: 160,
       minWidth: 150,
-      headerSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
-      cellSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
+      headerSx: { width: { xs: 120, sm: 160 }, minWidth: { xs: 120, sm: 150 } },
+      cellSx: { width: { xs: 120, sm: 160 }, minWidth: { xs: 120, sm: 150 } },
       align: 'right',
       sticky: true,
       stickyPosition: 'right',
@@ -158,6 +160,9 @@ export function createWorkflowColumns(
             onArchive={() => handlers.onArchive(workflow)}
             onReopen={() => handlers.onReopen(workflow)}
             onDelete={() => handlers.onDelete(workflow)}
+            onPublish={() => handlers.onPublish(workflow)}
+            publishing={handlers.publishingId === workflow.id}
+            busy={Boolean(handlers.publishingId)}
           />
         );
       },

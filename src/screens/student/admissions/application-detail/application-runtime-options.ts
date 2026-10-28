@@ -13,7 +13,7 @@ export function parseRuntimeOptionsSource(
   if (!value) return null;
   try {
     const parsed = JSON.parse(value) as { source?: unknown; parentField?: unknown };
-    return typeof parsed.source === 'string'
+    return parsed && typeof parsed.source === 'string'
       ? {
           source: parsed.source,
           parentField: typeof parsed.parentField === 'string' ? parsed.parentField : undefined,

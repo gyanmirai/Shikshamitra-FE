@@ -28,6 +28,7 @@ import {
 } from '@mui/material';
 
 import { StudentCustomRuntimeField } from './student-custom-runtime-field';
+import { dependentAdmissionFieldValues } from '../admissions/admission-field-dependencies';
 import { StudentRegistrationFormFields } from './student-registration-form-fields';
 import {
   profileRuleValues,
@@ -386,7 +387,7 @@ export function CustomRecordChangeForm({
                                         : undefined
                                     }
                                     onBlur={() => form.setFieldTouched(key, true)}
-                                    onChange={(value) =>
+                                    onChange={(value) => {
                                       form.setFieldValue(
                                         key,
                                         entryIndex != null
@@ -396,8 +397,28 @@ export function CustomRecordChangeForm({
                                               serializeProfileField(field, value)
                                             )
                                           : value
+                                      );
+                                      Object.entries(
+                                        dependentAdmissionFieldValues(
+                                          source.definition?.sections.flatMap(
+                                            (item) => item.fields
+                                          ) ?? [],
+                                          field.code,
+                                          profileRuleValues(values),
+                                          entryIndex,
+                                          section.fields.map((item) => item.code)
+                                        )
                                       )
-                                    }
+                                        .filter(([code]) =>
+                                          source.editableFieldCodes.includes(code)
+                                        )
+                                        .forEach(([code, nextValue]) =>
+                                          form.setFieldValue(
+                                            fieldKey(source.formInstanceId, code),
+                                            nextValue
+                                          )
+                                        );
+                                    }}
                                   />
                                 </Grid>
                               );

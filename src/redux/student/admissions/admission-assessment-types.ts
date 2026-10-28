@@ -129,6 +129,21 @@ export type AssessmentSessionListQuery = {
 };
 
 export type AssessmentAttendance = 'pending' | 'present' | 'absent';
+export type AssessmentDisplayStatus =
+  | 'notBooked'
+  | 'scheduled'
+  | 'attendancePending'
+  | 'resultPending'
+  | 'reviewPending'
+  | 'ongoing'
+  | 'passed'
+  | 'failed'
+  | 'absent'
+  | 'waived'
+  | 'retakeRequired'
+  | 'unavailable';
+export type AssessmentDisplayAttendance =
+  AssessmentAttendance | 'notMarked' | 'notRequired' | 'notApplicable';
 export type AssessmentOutcome = 'pending' | 'passed' | 'failed' | 'absent' | 'retake' | 'waived';
 /** Server-resolved configuration, frozen when the attempt is created. */
 export type AssessmentEffectiveProfile = AdmissionAssessmentClassProfile;

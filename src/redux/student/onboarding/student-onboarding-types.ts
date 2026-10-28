@@ -145,6 +145,8 @@ export type StudentOnboardingCase = {
   lastError?: string | null;
   primaryBlocker?: string | null;
   progressPercent: number;
+  requiredServiceHandoffs?: StudentOnboardingServiceHandoff[];
+  requiredCredentialDeliveryConfirmed?: boolean | null;
   isOverdue: boolean;
   steps: StudentOnboardingStep[];
   events: StudentOnboardingEvent[];
@@ -301,7 +303,7 @@ export type StudentCredentialEmail = {
   id: string;
   accountType: 'student' | 'guardian';
   email: string;
-  status: 'NotRequested' | 'Pending' | 'Sent' | 'Failed' | 'Cancelled' | 'Blocked';
+  status: 'NotRequested' | 'Pending' | 'Processing' | 'Sent' | 'Failed' | 'Cancelled' | 'Blocked';
   message?: string | null;
   sentAt?: string | null;
   attemptCount: number;
@@ -316,6 +318,7 @@ export type StudentCredentialsRecipient = {
   name?: string | null;
   email?: string | null;
   canSend: boolean;
+  canSendExistingParentHelp?: boolean;
   isMainContact?: boolean;
   blockedReason?: string | null;
   delivery?: StudentCredentialEmail | null;
@@ -342,6 +345,8 @@ export type UpdateStudentCredentialsEmail = {
 
 export type StudentCredentialsWorkspace = {
   caseId: string;
+  studentAccessEnabled?: boolean;
+  canEnableStudentAccess?: boolean;
   guardianAccessEnabled?: boolean;
   concurrencyStamp: string;
   recipients: StudentCredentialsRecipient[];
@@ -349,7 +354,7 @@ export type StudentCredentialsWorkspace = {
 };
 
 export type StudentSiblingParentSelection = {
-  relationship: 'father' | 'mother';
+  relationship: 'father' | 'mother' | 'guardian';
   expectedEmail: string;
   expectedUserId: string;
 };
@@ -362,6 +367,7 @@ export type StudentGuardianAccessSelection = {
 export type StudentParentSiblingContext = {
   enabled: boolean;
   familyConfirmed: boolean;
+  requiresOnboardingConfirmation?: boolean;
   isLinked: boolean;
   requiresSelection: boolean;
   canLink: boolean;
@@ -375,12 +381,12 @@ export type StudentParentSiblingContext = {
     | 'SetupPending'
     | 'SetupFailed'
     | 'ReviewRequired';
-  linkedRelationship?: 'father' | 'mother' | null;
-  selectedRelationship?: 'father' | 'mother' | null;
+  linkedRelationship?: 'father' | 'mother' | 'guardian' | null;
+  selectedRelationship?: 'father' | 'mother' | 'guardian' | null;
   blockedReason?: string | null;
   canRetrySetup: boolean;
   candidates: {
-    relationship: 'father' | 'mother';
+    relationship: 'father' | 'mother' | 'guardian';
     name?: string | null;
     email: string;
     userId: string;
@@ -389,6 +395,7 @@ export type StudentParentSiblingContext = {
 };
 
 export type SendStudentCredentials = {
+  sendExistingParentHelp?: boolean;
   id: string;
   accountType: StudentCredentialsRecipient['accountType'];
   relationship: StudentCredentialsRecipient['relationship'];

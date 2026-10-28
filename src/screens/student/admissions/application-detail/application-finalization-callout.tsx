@@ -14,8 +14,8 @@ export function ApplicationFinalizationCallout({
     <>
       <Divider sx={{ my: compact ? 1 : 2 }} />
       <Typography variant="body2" color="text.secondary">
-        The application is approved and its journey is complete. Finalize admission to create or
-        link the Student identity. Placement and enrollment happen later.
+        The application is approved. Finalization checks the completed journey and creates or links
+        the Student identity for Onboarding.
       </Typography>
       <Button
         variant="contained"

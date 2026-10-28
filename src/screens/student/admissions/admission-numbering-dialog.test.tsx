@@ -6,6 +6,7 @@ import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { shikshaMitraToast } from 'src/components/toast';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
@@ -72,6 +73,94 @@ function setup(overrides: Partial<React.ComponentProps<typeof AdmissionNumbering
   return { ...props, user: userEvent.setup() };
 }
 describe('application numbering dialog', () => {
+  it.each([
+    ['Academic year wise', 2],
+    ['Calendar year wise', 1],
+    ['Continuous numbering', 0],
+  ] as const)('sets a valid year/reset pair together for %s', async (label, cycle) => {
+    const { user, onSave, onPreview } = setup({
+      settings: { ...settings, yearFormat: 1, resetPolicy: 1 },
+    });
+    await user.click(screen.getByRole('combobox', { name: 'Numbering cycle' }));
+    await user.click(screen.getByRole('option', { name: label }));
+    expect(screen.queryByRole('combobox', { name: 'Reset counter' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Year format' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(onPreview).toHaveBeenLastCalledWith(
+        expect.objectContaining({ yearFormat: cycle, resetPolicy: cycle })
+      )
+    );
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          yearFormat: cycle,
+          resetPolicy: cycle,
+          expectedVersion: settings.expectedVersion,
+        })
+      )
+    );
+  });
+
+  it('preserves a saved continuous counter with a year and only changes the advanced year explicitly', async () => {
+    const { user, onSave, onPreview } = setup({
+      settings: { ...settings, resetPolicy: 0, yearFormat: 2, sequenceLocked: true },
+    });
+    expect(screen.getByRole('combobox', { name: 'Numbering cycle' })).toHaveTextContent(
+      'Continuous numbering'
+    );
+    expect(screen.getByRole('combobox', { name: 'Year in number' })).toHaveTextContent(
+      'Academic year'
+    );
+    await waitFor(() =>
+      expect(onPreview).toHaveBeenLastCalledWith(
+        expect.objectContaining({ yearFormat: 2, resetPolicy: 0 })
+      )
+    );
+    expect(onSave).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('combobox', { name: 'Year in number' }));
+    await user.click(screen.getByRole('option', { name: 'No year' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({ yearFormat: 0, resetPolicy: 0 })
+      )
+    );
+  });
+
+  it('locks the used cycle while retaining editable future format and the real next-number preview', async () => {
+    const { user, onSave } = setup({ settings: { ...settings, sequenceLocked: true } });
+    expect(screen.getByRole('combobox', { name: 'Numbering cycle' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(screen.getByText(/Numbering cycle is locked because application numbers/)).toBeVisible();
+    expect(screen.getByLabelText('Starting number *')).toBeDisabled();
+    expect(screen.getByLabelText('Prefix *')).toBeEnabled();
+    await user.type(screen.getByLabelText('Prefix *'), 'X');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prefix: 'DDVSX',
+          resetPolicy: 2,
+          yearFormat: 2,
+          startingNumber: 1,
+        })
+      )
+    );
+  });
+
+  it('does not change the draft merely by expanding advanced settings', async () => {
+    const { user, onSave } = setup({
+      settings: { ...settings, resetPolicy: 0, yearFormat: 0, isConfigured: true },
+    });
+    await user.click(screen.getByRole('button', { name: 'Advanced Settings' }));
+    expect(screen.getByRole('combobox', { name: 'Year in number' })).toHaveTextContent('No year');
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
   it('shows the actual server next number, with no manual number entry', async () => {
     const { onPreview } = setup();
     expect(screen.getByRole('dialog', { name: 'Application Numbering' })).toBeVisible();
@@ -124,6 +213,10 @@ describe('application numbering dialog', () => {
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
     expect(screen.getByLabelText('Prefix *')).toBeDisabled();
+    expect(screen.getByRole('combobox', { name: 'Numbering cycle' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     await act(async () => finish(settings));
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });
@@ -153,6 +246,9 @@ describe('application numbering dialog', () => {
   it('offers retry after load failure and does not enable submission', async () => {
     const { user, onRetry } = setup({ settings: undefined, loadError: true });
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    render(<div role="alert">{vi.mocked(shikshaMitraToast.error).mock.lastCall![0].message}</div>);
+    expect(screen.getByRole('alert')).toHaveTextContent('Unable to load numbering settings.');
     await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(onRetry).toHaveBeenCalledOnce();
   });

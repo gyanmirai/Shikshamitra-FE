@@ -14,6 +14,7 @@ import WarningAmber from '@mui/icons-material/WarningAmber';
 import { Box, Typography, DialogTitle } from '@mui/material';
 
 import { Iconify } from '../iconify';
+import { FormBusyRegion } from '../form-busy-region';
 
 import type { ConfirmDialogProps } from './types';
 
@@ -35,12 +36,15 @@ export function ConfirmDialog({
   disableBackdropClick = true,
   disableCancel = false,
   cancelText = 'Cancel',
+  bodyBusy,
+  busyLabel = 'Working…',
   ...other
 }: ConfirmDialogProps) {
   const theme = useTheme();
   const titleId = React.useId();
   const contentId = React.useId();
   const isBusy =
+    bodyBusy ||
     disableCancel ||
     (isValidElement(action) && Boolean((action.props as { loading?: boolean }).loading));
 
@@ -72,9 +76,15 @@ export function ConfirmDialog({
       {content && (
         <DialogContent id={contentId} sx={{ typography: 'body2', padding: '8px 16px 16px' }}>
           {' '}
-          <Box component="fieldset" disabled={isBusy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
-            <Box inert={isBusy || undefined}>{content}</Box>
-          </Box>
+          {bodyBusy !== undefined ? (
+            <FormBusyRegion busy={Boolean(isBusy)} label={busyLabel}>
+              <Box sx={{ minHeight: 64 }}>{content}</Box>
+            </FormBusyRegion>
+          ) : (
+            <Box component="fieldset" disabled={isBusy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
+              <Box inert={isBusy || undefined}>{content}</Box>
+            </Box>
+          )}
         </DialogContent>
       )}
       {/* <Divider /> */}
@@ -93,7 +103,10 @@ export function ConfirmDialog({
           {cancelText}
         </Button>
         {isValidElement(action)
-          ? cloneElement(action as React.ReactElement<any>, { size: 'small' })
+          ? cloneElement(action as React.ReactElement<any>, {
+              size: 'small',
+              ...(bodyBusy ? { disabled: true, loading: false } : {}),
+            })
           : action}
       </DialogActions>
     </Dialog>

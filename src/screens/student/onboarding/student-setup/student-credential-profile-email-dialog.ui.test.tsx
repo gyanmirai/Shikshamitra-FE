@@ -139,6 +139,20 @@ it('locks fields and Cancel during save', () => {
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
 });
+it('identifies the linked account being edited without changing its current login', () => {
+  renderDialog({
+    ...student,
+    accountType: 'guardian',
+    relationship: 'father',
+    name: 'Raj Patel',
+    email: 'current@example.test',
+    hasLinkedAccount: true,
+  });
+  expect(screen.getByText('Raj Patel · Father')).toBeVisible();
+  expect(screen.getByText('Current login: current@example.test')).toBeVisible();
+  expect(screen.getByText('Password and sibling access stay unchanged.')).toBeVisible();
+  expect(state.save).not.toHaveBeenCalled();
+});
 
 it('keeps email editing unavailable when the recipient cannot edit', () => {
   renderDialog({ ...student, canEditEmail: false });
@@ -179,4 +193,113 @@ it('cancels pending verification without changing the saved email or sending cre
     cancelPendingChange: true,
     confirmSharedParent: false,
   });
+});
+
+it('labels and saves the actual Guardian profile rather than Mother', async () => {
+  const guardian: StudentCredentialsRecipient = {
+    ...student,
+    accountType: 'guardian',
+    relationship: 'guardian',
+    name: 'Meera',
+  };
+  state.save.mockReturnValue({
+    unwrap: async () => ({ recipients: [{ ...guardian, email: 'meera@example.test' }] }),
+  });
+  renderDialog(guardian);
+  expect(screen.getByText('Meera · Guardian')).toBeVisible();
+  expect(screen.getByText('Student: Jay')).toBeVisible();
+  expect(screen.queryByText(/Mother/)).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole('textbox', { name: /^Email/ }), {
+    target: { value: 'meera@example.test' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(state.save).toHaveBeenCalledOnce());
+  expect(state.save.mock.calls[0][0]).toMatchObject({
+    relationship: 'guardian',
+    expectedEmail: null,
+    email: 'meera@example.test',
+  });
+});
+
+it('updates a linked Guardian through owner verification with its own current email and token', async () => {
+  const guardian: StudentCredentialsRecipient = {
+    ...student,
+    accountType: 'guardian',
+    relationship: 'guardian',
+    name: 'Meera',
+    email: 'old-aunt@example.test',
+    hasLinkedAccount: true,
+  };
+  state.save.mockReturnValue({
+    unwrap: async () => ({
+      recipients: [
+        { ...guardian, pendingEmail: 'new-aunt@example.test', emailChangeStatus: 'Pending' },
+      ],
+    }),
+  });
+  renderDialog(guardian);
+  fireEvent.change(screen.getByRole('textbox', { name: /^Email/ }), {
+    target: { value: 'new-aunt@example.test' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(state.save).toHaveBeenCalledOnce());
+  expect(state.save.mock.calls[0][0]).toMatchObject({
+    relationship: 'guardian',
+    expectedEmail: 'old-aunt@example.test',
+    email: 'new-aunt@example.test',
+    emailEditToken: 'profile-token',
+  });
+  expect(state.success).toHaveBeenCalledWith({
+    message: 'Verify the new email before the login changes.',
+  });
+});
+
+it('shows duplicate-login business validation at the email field and preserves the draft', async () => {
+  state.save.mockReturnValue({
+    unwrap: async () => {
+      throw Object.assign(new Error('Request rejected'), {
+        status: 400,
+        data: {
+          code: 'Students.Onboarding.PortalAccountInvalid',
+          detail: 'One or more business rules were violated.',
+          data: {
+            Reason: 'This email already belongs to another app login. Use a different email.',
+          },
+        },
+      });
+    },
+  });
+  renderDialog();
+  fireEvent.change(screen.getByRole('textbox', { name: /^Email/ }), {
+    target: { value: 'duplicate@example.test' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  expect(
+    await screen.findByText(
+      'This email already belongs to another app login. Use a different email.'
+    )
+  ).toBeVisible();
+  expect(screen.getByRole('textbox', { name: /^Email/ })).toHaveAttribute('aria-invalid', 'true');
+  expect(state.close).not.toHaveBeenCalled();
+});
+
+it.each([
+  'Student and adult app logins need different saved email addresses.',
+  'This email is already used by a conflicting, inactive or restricted account. Existing accounts cannot be merged or repurposed through a profile email change.',
+])('keeps the saved-email collision at the field: %s', async (reason) => {
+  state.save.mockReturnValue({
+    unwrap: async () => {
+      throw Object.assign(new Error('Request rejected'), { status: 400, data: { detail: reason } });
+    },
+  });
+  renderDialog();
+  fireEvent.change(screen.getByRole('textbox', { name: /^Email/ }), {
+    target: { value: 'duplicate@example.test' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() =>
+    expect(screen.getByRole('textbox', { name: /^Email/ })).toHaveAttribute('aria-invalid', 'true')
+  );
+  expect(state.error).not.toHaveBeenCalled();
+  expect(state.close).not.toHaveBeenCalled();
 });

@@ -1,6 +1,5 @@
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { readPaymentCompletionPolicy } from 'src/redux/student/admissions/admission-payment-completion-policy';
 import {
   DEFAULT_DOCUMENT_POLICY,
   readAdmissionDocumentPolicy,
@@ -59,8 +58,8 @@ export function normalizeStageConfiguration(stage: AdmissionWorkflowStage): Admi
       })),
     };
   } else if (stage.stageType === 4) {
-    if (!readPaymentCompletionPolicy(stage.configurationJson)) return stage;
     delete next.payment;
+    delete next.paymentCompletion;
   } else return stage;
   const configurationJson = Object.keys(next).length ? JSON.stringify(next) : undefined;
   return configurationJson === stage.configurationJson && !stage.allowManualSkip

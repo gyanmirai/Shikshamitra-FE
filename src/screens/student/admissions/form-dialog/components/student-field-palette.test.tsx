@@ -36,7 +36,7 @@ const fields = [
 ];
 
 describe('StudentFieldPalette', () => {
-  it('explains captured admission fields and keeps previous school fields available', async () => {
+  it('omits the context banner while keeping inherited fields disabled and previous school fields available', async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
     const onAddSection = vi.fn();
@@ -45,11 +45,13 @@ describe('StudentFieldPalette', () => {
       'Preference.Medium',
       'Preference.Class',
       'Preference.Campus',
+      'Preference.TransportRequired',
+      'Preference.PickupArea',
       'PreviousSchool.LastClass',
     ].map((key) => ({
       key,
       displayName: key,
-      fieldType: 0 as const,
+      fieldType: key === 'Preference.TransportRequired' ? (9 as const) : (0 as const),
       readOnly: false,
       description: '',
     }));
@@ -58,16 +60,10 @@ describe('StudentFieldPalette', () => {
         <StudentFieldPalette fields={catalogue} onAdd={onAdd} onAddSection={onAddSection} />
       </ThemeProvider>
     );
-    expect(screen.getByRole('note')).toHaveTextContent('No need to add them again');
-    const context = screen.getByRole('button', { name: 'Board, medium and class' });
-    expect(context).toHaveAttribute('aria-expanded', 'true');
-    await user.click(context);
-    expect(context).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByRole('note', { hidden: true })).not.toBeVisible();
-    context.focus();
-    await user.keyboard('{Enter}');
-    expect(context).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('note')).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Board, medium and class' })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Admission preferences (4)' }));
     catalogue.slice(0, 3).forEach((field) => {
       expect(
@@ -76,11 +72,66 @@ describe('StudentFieldPalette', () => {
     });
     await user.click(screen.getByRole('button', { name: 'Add Admission preferences section' }));
     expect(onAddSection).toHaveBeenCalledWith('Admission preferences', [catalogue[3]]);
+    await user.click(screen.getByRole('button', { name: 'Add Transport preferences section' }));
+    expect(onAddSection).toHaveBeenLastCalledWith('Transport preferences', catalogue.slice(4, 6));
     await user.type(screen.getByRole('textbox', { name: 'Search student fields' }), 'lastclass');
-    expect(screen.getByRole('note')).toBeVisible();
-    expect(context).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.queryByRole('button', { name: 'Board, medium and class' })
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Add PreviousSchool.LastClass' }));
-    expect(onAdd).toHaveBeenCalledWith(catalogue[4]);
+    expect(onAdd).toHaveBeenCalledWith(catalogue[6]);
+  });
+  it('finds transport fields by their separate category and adds its full pack when searching one field', async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    const onAddSection = vi.fn();
+    const transportFields = [
+      {
+        key: 'Preference.TransportRequired',
+        displayName: 'Transport needed',
+        fieldType: 9 as const,
+      },
+      { key: 'Preference.PickupArea', displayName: 'Preferred pickup area', fieldType: 0 as const },
+    ].map((field) => ({ ...field, description: '', readOnly: false }));
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentFieldPalette fields={transportFields} onAdd={onAdd} onAddSection={onAddSection} />
+      </ThemeProvider>
+    );
+    const search = screen.getByRole('textbox', { name: 'Search student fields' });
+    await user.type(search, 'transport preferences');
+    expect(screen.getByRole('button', { name: 'Add Preferred pickup area' })).toBeVisible();
+    await user.clear(search);
+    await user.type(search, 'pickup');
+    expect(screen.queryByRole('button', { name: 'Add Transport needed' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Add Preferred pickup area' }));
+    expect(onAdd).toHaveBeenCalledWith(transportFields[1]);
+    await user.click(screen.getByRole('button', { name: 'Add Transport preferences section' }));
+    expect(onAddSection).toHaveBeenCalledWith('Transport preferences', transportFields);
+  });
+  it('disables the transport pack when both linked fields are already used', () => {
+    const transportFields = ['Preference.TransportRequired', 'Preference.PickupArea'].map(
+      (key) => ({
+        key,
+        displayName: key,
+        description: '',
+        fieldType: 0 as const,
+        readOnly: false,
+      })
+    );
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentFieldPalette
+          fields={transportFields}
+          usedBindings={transportFields.map((field) => field.key.toLowerCase())}
+          onAdd={vi.fn()}
+          onAddSection={vi.fn()}
+        />
+      </ThemeProvider>
+    );
+    expect(
+      screen.getByRole('button', { name: 'Add Transport preferences section' })
+    ).toBeDisabled();
   });
   it('keeps address packs inside the related expandable category', async () => {
     const user = userEvent.setup();

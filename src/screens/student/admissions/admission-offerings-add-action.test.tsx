@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import AdmissionOfferingsScreen from './admission-offerings';
 
@@ -25,8 +25,16 @@ vi.mock('./admission-offering-more-filters', () => ({
   AdmissionOfferingMoreFilters: () => <button type="button">Filters</button>,
 }));
 vi.mock('./admission-offering-table', () => ({
-  AdmissionOfferingTable: ({ loading, filteredEmpty }: { loading: boolean; filteredEmpty?: boolean }) => (
-    <div data-testid="offering-table-loading" data-filtered-empty={filteredEmpty}>{String(loading)}</div>
+  AdmissionOfferingTable: ({
+    loading,
+    filteredEmpty,
+  }: {
+    loading: boolean;
+    filteredEmpty?: boolean;
+  }) => (
+    <div data-testid="offering-table-loading" data-filtered-empty={filteredEmpty}>
+      {String(loading)}
+    </div>
   ),
 }));
 vi.mock('./admission-offering-dialog', () => ({
@@ -153,10 +161,26 @@ describe('Admission Offerings add action', () => {
   it('uses the table empty state for filtered results without a repeated information banner', () => {
     const state = screenState();
     state.filters.boardId = 'board-1';
+    state.filters.mediumId = 'medium-1';
+    state.filters.standardId = 'class-1';
     useAdmissionOfferingsScreen.mockReturnValue(state);
     render(<AdmissionOfferingsScreen />);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.getByTestId('offering-table-loading')).toHaveAttribute('data-filtered-empty', 'true');
+    expect(screen.getByTestId('offering-table-loading')).toHaveAttribute(
+      'data-filtered-empty',
+      'true'
+    );
+  });
+  it('does not classify an empty compulsory Board and Medium context as removable filters', () => {
+    const state = screenState();
+    state.filters.boardId = 'board-1';
+    state.filters.mediumId = 'medium-1';
+    useAdmissionOfferingsScreen.mockReturnValue(state);
+    render(<AdmissionOfferingsScreen />);
+    expect(screen.getByTestId('offering-table-loading')).toHaveAttribute(
+      'data-filtered-empty',
+      'false'
+    );
   });
   it('leaves table rows intact when only the edit detail request is loading', () => {
     useAdmissionOfferingsScreen.mockReturnValue({
@@ -189,5 +213,10 @@ describe('Admission Offerings add action', () => {
     render(<AdmissionOfferingsScreen />);
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Activate' })).toBeDisabled();
+    const dialog = screen.getByRole('dialog', { name: 'Activate Admission Offering?' });
+    expect(within(dialog).getByRole('status', { name: 'Activating offering…' })).toBeVisible();
+    expect(
+      within(screen.getByRole('button', { name: 'Activate' })).queryByRole('progressbar')
+    ).not.toBeInTheDocument();
   });
 });

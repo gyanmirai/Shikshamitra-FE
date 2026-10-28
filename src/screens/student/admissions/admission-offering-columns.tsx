@@ -133,7 +133,7 @@ export const buildAdmissionOfferingColumns = (
   },
   {
     id: 'availabilityStatus',
-    label: 'Availability',
+    label: 'Status',
     isFilter: true,
     filterType: 'enum',
     filterOperators: ['equals'],
@@ -151,49 +151,7 @@ export const buildAdmissionOfferingColumns = (
       </Label>
     ),
   },
-  {
-    id: 'configurationStatus',
-    isFilter: true,
-    filterType: 'enum',
-    filterOperators: ['equals'],
-    enumOptions: options.configurationStatus ?? [],
-    isSort: false,
-    label: 'Configuration',
-    stickyOnMobile: false,
-    sticky: true,
-    stickyPosition: 'right',
-    minWidth: 130,
-    render: (value, row) => {
-      const availability = Number((row as AdmissionOfferingListItem).availabilityStatus);
-      const configuration = value === 1 ? 'Ready' : 'Missing config';
-      const configurationLabel = (
-        <Label color={value === 1 ? 'success' : 'warning'}>{configuration}</Label>
-      );
-      return (
-        <>
-          <CustomTooltip
-            title={`Availability: ${availabilityLabels[availability]} · Configuration: ${configuration}`}
-            arrow
-          >
-            <Box
-              sx={{
-                display: { xs: 'flex', sm: 'none' },
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: 0.5,
-              }}
-            >
-              <Label color={availabilityColors[availability]}>
-                {availabilityLabels[availability]}
-              </Label>
-              {configurationLabel}
-            </Box>
-          </CustomTooltip>
-          <Box sx={{ display: { xs: 'none', sm: 'block' } }}>{configurationLabel}</Box>
-        </>
-      );
-    },
-  },
+
   {
     id: 'actions',
     label: 'Actions',

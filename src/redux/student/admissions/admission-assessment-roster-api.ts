@@ -3,7 +3,11 @@ import { studentAdmissionsCrmType as tags } from 'src/redux/tagTypes';
 
 import { ASSESSMENTS_URL, unwrapAssessment } from './admission-assessment-types';
 
-import type { ApplicationAssessment } from './admission-assessment-types';
+import type {
+  ApplicationAssessment,
+  AssessmentDisplayStatus,
+  AssessmentDisplayAttendance,
+} from './admission-assessment-types';
 
 export type AssessmentProgress = 'pending' | 'ongoing' | 'complete';
 export type AssessmentQueue =
@@ -13,6 +17,8 @@ export type AssessmentRosterItem = {
   workflowStageDefinitionId?: string;
   className?: string;
   status?: AssessmentProgress;
+  displayStatus?: AssessmentDisplayStatus;
+  displayAttendance?: AssessmentDisplayAttendance;
   offeringName?: string;
   workflowVersion?: number;
   interviewerName?: string | null;

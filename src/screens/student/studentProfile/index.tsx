@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
+import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
 import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
@@ -13,6 +14,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import StudentDirectory from 'src/screens/student/records/student-directory';
+import SchoolExitDrawer from 'src/screens/student/records/school-exit-drawer';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { recordsQueryUrl } from 'src/screens/student/records/records-url-state';
 import { directoryStudentName } from 'src/screens/student/records/student-directory-columns';
@@ -99,6 +101,10 @@ export function StudentProfile() {
     currentYearRef.current = currentYear;
   }, [currentYear]);
   const [editingYear, setEditingYear] = useState<ProfileAcademicYearContext | undefined>();
+  const [exitRequest, setExitRequest] = useState<{
+    student: StudentDirectoryItem;
+    academicYearId: string;
+  } | null>(null);
   const requestProfileNavigation = useRef<(proceed: () => void) => void>((proceed) => proceed());
   const registerNavigationGuard = useCallback((guard: ((proceed: () => void) => void) | null) => {
     requestProfileNavigation.current = guard ?? ((proceed) => proceed());
@@ -113,6 +119,9 @@ export function StudentProfile() {
   const canChange =
     hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
     hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
+  const canExit =
+    hasGrantedPermission(permissions, 'Students.Records.Transitions.View') &&
+    hasGrantedPermission(permissions, 'Students.Records.Transitions.Add');
   const canViewAttendance = hasGrantedPermission(
     permissions,
     studentPermissions.attendance.markAttendance
@@ -172,7 +181,7 @@ export function StudentProfile() {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
       <StudentDirectory
         rowActions={
-          canChange || canViewAttendance
+          canChange || canViewAttendance || canExit
             ? (row) => [
                 ...(canChange
                   ? [
@@ -194,13 +203,14 @@ export function StudentProfile() {
                       },
                     ]
                   : []),
-                ...(canChange
+                ...(canExit && currentYear?.id && [6, 'Enrolled', 'Active'].includes(row.status)
                   ? [
                       {
                         id: 'change-status',
-                        label: 'Change Status',
-                        icon: 'mdi:account-edit-outline',
-                        href: `${studentPaths.records.changes}?mode=new&student=${encodeURIComponent(row.studentId)}&section=status`,
+                        label: 'School Exit',
+                        icon: 'mdi:account-arrow-right-outline',
+                        onClick: () =>
+                          setExitRequest({ student: row, academicYearId: currentYear.id }),
                       },
                     ]
                   : []),
@@ -208,6 +218,19 @@ export function StudentProfile() {
             : undefined
         }
       />
+      {exitRequest && (
+        <SchoolExitDrawer
+          studentId={exitRequest.student.studentId}
+          academicYearId={exitRequest.academicYearId}
+          studentName={directoryStudentName(exitRequest.student)}
+          grNumber={exitRequest.student.grNumber ?? String(exitRequest.student.grNo ?? '')}
+          className={[exitRequest.student.standardName, exitRequest.student.divisionName]
+            .filter(Boolean)
+            .join(' / ')}
+          status={exitRequest.student.status}
+          onClose={() => setExitRequest(null)}
+        />
+      )}
     </Box>
   );
 }

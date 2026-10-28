@@ -14,6 +14,23 @@ import {
 } from './admission-form-template-catalog';
 
 describe('admission form template catalogue', () => {
+  it.each([
+    ['admission-inquiry', 'CLASS_INTERESTED', { source: 'Standards' }],
+    ['admission-application', 'CLASS_APPLYING_FOR', { source: 'Standards' }],
+    ['student-registration', 'CLASS', { source: 'StandardsByMedium', parentField: 'MEDIUM' }],
+  ] as const)('uses Institute Setup class IDs in %s', (templateId, code, source) => {
+    const fields = getSystemAdmissionFormTemplate(templateId).sections.flatMap(
+      (section) => section.fields
+    );
+    expect(JSON.parse(fields.find((field) => field.code === code)!.optionsJson!)).toEqual(source);
+    fields
+      .filter((field) => field.bindingKey === 'PreviousSchool.LastClass')
+      .forEach((field) => {
+        expect(field.fieldType).toBe(0);
+        expect(field.optionsJson).toBeUndefined();
+      });
+  });
+
   it('keeps consent sections available without offering a standalone consent form', () => {
     expect(SYSTEM_ADMISSION_FORM_TEMPLATES.some((item) => item.id === 'consent-declaration')).toBe(
       false

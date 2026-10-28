@@ -255,3 +255,29 @@ it('preserves the server-selected parent on recovery and never silently swaps th
     ).selection
   ).toBeUndefined();
 });
+
+it('keeps explicit no-proof existing Guardian linking after activation without fabricating a new guardian access choice', () => {
+  const current: StudentCredentialsWorkspace = {
+    ...workspace,
+    recipients: [
+      {
+        accountType: 'guardian',
+        relationship: 'guardian',
+        email: 'aunt@example.test',
+        canSend: false,
+      },
+    ],
+    parentSibling: {
+      ...workspace.parentSibling!,
+      familyConfirmed: false,
+      requiresOnboardingConfirmation: true,
+      candidates: [{ ...father, relationship: 'guardian', email: 'aunt@example.test' }],
+    },
+  };
+  expect(
+    getStudentParentSiblingActivationState('case-1', current, false, 'guardian', {
+      expectedEmail: 'aunt@example.test',
+      confirmRecipientAccess: true,
+    })
+  ).toEqual({ caseId: 'case-1', loaded: true });
+});

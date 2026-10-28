@@ -20,23 +20,7 @@ const options = (items: string[]) =>
 const yesNo = options(['Yes', 'No']);
 const gender = options(['Male', 'Female']);
 const category = options(['General', 'OBC', 'SC', 'ST', 'EWS', 'Other']);
-const classOptions = options([
-  'Nursery',
-  'LKG',
-  'UKG',
-  'Class 1',
-  'Class 2',
-  'Class 3',
-  'Class 4',
-  'Class 5',
-  'Class 6',
-  'Class 7',
-  'Class 8',
-  'Class 9',
-  'Class 10',
-  'Class 11',
-  'Class 12',
-]);
+const classOptions = JSON.stringify({ source: 'StandardsByMedium', parentField: 'MEDIUM' });
 const bloodGroups = options(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
 
 const validation = {
@@ -524,8 +508,7 @@ export function getRegistrationFormTemplate(): CreateUpdateAdmissionForm {
         {
           code: 'LAST_CLASS_PASSED',
           label: 'Last Class Passed',
-          fieldType: 6,
-          optionsJson: classOptions,
+          fieldType: 0,
         },
         { code: 'PREVIOUS_SCHOOL_ADDRESS', label: 'Previous School Address', fieldType: 1 },
         { code: 'TRANSFER_CERTIFICATE_NO', label: 'Transfer Certificate No.' },
