@@ -201,6 +201,24 @@ const parseStageIds = (value: string) =>
     .map((item) => item.trim())
     .filter(Boolean) || [];
 
+const revealCorrectionAccordions = (target?: HTMLElement | null) => {
+  const ancestors: HTMLElement[] = [];
+  for (
+    let accordion = target?.closest<HTMLElement>('.MuiAccordion-root');
+    accordion;
+    accordion = accordion.parentElement?.closest<HTMLElement>('.MuiAccordion-root')
+  ) {
+    ancestors.unshift(accordion);
+  }
+  ancestors.forEach((accordion) => {
+    // Query only this ancestor's summary, never a nested or unrelated disclosure.
+    const summary = Array.from(
+      accordion.querySelectorAll<HTMLElement>('.MuiAccordionSummary-root')
+    ).find((candidate) => candidate.closest('.MuiAccordion-root') === accordion);
+    if (summary?.getAttribute('aria-expanded') === 'false') summary.click();
+  });
+};
+
 export function FinalizeWorkflow({
   application,
   returnHref,
@@ -355,6 +373,7 @@ export function FinalizeWorkflow({
 
   useEffect(() => {
     if (!focusIssue || focusIssue.step !== step) return undefined;
+    let focusFrame: number | undefined;
     const frame = requestAnimationFrame(() => {
       const panel = workflowRoot.current?.querySelector<HTMLElement>(
         '[data-onboarding-active-step]'
@@ -369,21 +388,30 @@ export function FinalizeWorkflow({
         const field = workflowRoot.current?.querySelector<HTMLElement>(
           `[name="${focusIssue.field}"]`
         );
-        const accordion = field?.closest('.MuiAccordion-root');
-        accordion?.querySelector<HTMLElement>('[aria-expanded="false"]')?.click();
+        revealCorrectionAccordions(field);
         focusFirstFormikError(errors, workflowRoot.current ?? undefined);
+        setFocusIssue(null);
       } else if (focusIssue.selector) {
         const target =
           workflowRoot.current?.querySelector<HTMLElement>(focusIssue.selector) ??
           (focusIssue.step === 3
             ? workflowRoot.current?.querySelector<HTMLElement>('[data-onboarding-salary]')
             : panel);
-        target?.scrollIntoView?.({ block: 'center' });
-        target?.focus();
+        revealCorrectionAccordions(target);
+        // Allow React to render expanded contents before attempting focus.
+        focusFrame = requestAnimationFrame(() => {
+          target?.scrollIntoView?.({ block: 'center' });
+          target?.focus();
+          setFocusIssue(null);
+        });
+      } else {
+        setFocusIssue(null);
       }
-      setFocusIssue(null);
     });
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      if (focusFrame !== undefined) cancelAnimationFrame(focusFrame);
+    };
     // Only an explicit correction request changes focus, never background revalidation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusIssue, step]);

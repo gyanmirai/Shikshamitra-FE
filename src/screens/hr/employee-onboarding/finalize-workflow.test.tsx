@@ -5,6 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { FinalizeWorkflow } from './finalize-workflow';
@@ -27,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   organizationLoading: false,
   assignmentValid: true,
   salaryBusy: false,
+  customizationReview: false,
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { error: mocks.error, success: mocks.success, warning: mocks.warning },
@@ -153,8 +155,12 @@ vi.mock('src/redux/hr/employeeOnboardingApi', async (importOriginal) => ({
 vi.mock('../payroll/structure/SalaryStructureBuilder', () => ({
   SalaryStructureBuilder: ({ onboarding, onEditorStateChange }: any) => {
     const [amount, setAmount] = useState('');
+    const [customizing, setCustomizing] = useState(false);
+    const [customValue, setCustomValue] = useState('5000');
+    const [customReason, setCustomReason] = useState('');
+    const withCustomization = mocks.customizationReview;
     const busy = mocks.salaryBusy;
-    const { invalidatePreviewKey, onSalaryChange } = onboarding;
+    const { invalidatePreviewKey, onSalaryChange, onReadinessChange } = onboarding;
     useEffect(
       () => onEditorStateChange({ dirty: Boolean(amount), busy }),
       [amount, onEditorStateChange, busy]
@@ -162,6 +168,19 @@ vi.mock('../payroll/structure/SalaryStructureBuilder', () => ({
     useEffect(() => {
       if (invalidatePreviewKey) onSalaryChange(null);
     }, [invalidatePreviewKey, onSalaryChange]);
+    useEffect(() => {
+      onReadinessChange?.(
+        withCustomization && customValue !== '5000' && !customReason
+          ? [
+              {
+                key: 'salary-reason',
+                message: 'Add a reason for the staff-specific salary customization.',
+                selector: '[name="customizationReason"]',
+              },
+            ]
+          : []
+      );
+    }, [withCustomization, customValue, customReason, onReadinessChange]);
     return (
       <>
         <StatutoryProfileFields form={onboarding.statutoryForm} />
@@ -188,6 +207,47 @@ vi.mock('../payroll/structure/SalaryStructureBuilder', () => ({
         >
           Prepare salary preview
         </button>
+        {withCustomization && (
+          <>
+            <Accordion>
+              <AccordionSummary>Additional review information</AccordionSummary>
+              <AccordionDetails>Unrelated context</AccordionDetails>
+            </Accordion>
+            <Accordion>
+              <AccordionSummary>Staff-specific customization</AccordionSummary>
+              <AccordionDetails>
+                <button type="button" onClick={() => setCustomizing(true)}>
+                  Customize
+                </button>
+                {customizing && (
+                  <>
+                    <label htmlFor="fixture-custom-value">
+                      Value
+                      <input
+                        id="fixture-custom-value"
+                        value={customValue}
+                        onChange={(event) => setCustomValue(event.target.value)}
+                      />
+                    </label>
+                    <label htmlFor="fixture-custom-reason">
+                      Customization reason
+                      <input
+                        id="fixture-custom-reason"
+                        name="customizationReason"
+                        value={customReason}
+                        onChange={(event) => setCustomReason(event.target.value)}
+                      />
+                    </label>
+                    <Accordion>
+                      <AccordionSummary>Advanced customization help</AccordionSummary>
+                      <AccordionDetails>Nested context</AccordionDetails>
+                    </Accordion>
+                  </>
+                )}
+              </AccordionDetails>
+            </Accordion>
+          </>
+        )}
       </>
     );
   },
@@ -247,6 +307,7 @@ beforeEach(() => {
   mocks.organizationLoading = false;
   mocks.assignmentValid = true;
   mocks.salaryBusy = false;
+  mocks.customizationReview = false;
   mocks.finalize.mockReturnValue({
     unwrap: () =>
       Promise.resolve({
@@ -421,6 +482,40 @@ async function salaryStep(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: 'Prepare salary preview' }));
 }
 
+it('reveals collapsed customization before focusing its reason without toggling other or already-open accordions', async () => {
+  mocks.customizationReview = true;
+  const user = userEvent.setup();
+  render(content());
+  await salaryStep(user);
+  const customization = screen.getByRole('button', { name: 'Staff-specific customization' });
+  const unrelated = screen.getByRole('button', { name: 'Additional review information' });
+  await user.click(customization);
+  await user.click(screen.getByRole('button', { name: 'Customize' }));
+  await user.clear(screen.getByLabelText('Value'));
+  await user.type(screen.getByLabelText('Value'), '6000');
+  await user.click(customization);
+  const reason = screen.getByLabelText('Customization reason');
+  expect(reason).not.toBeVisible();
+  expect(customization).toHaveAttribute('aria-expanded', 'false');
+  const correction = screen.getByRole('button', {
+    name: /Review: Add a reason for the staff-specific salary customization/,
+  });
+  await user.click(correction);
+  await waitFor(() => expect(reason).toHaveFocus());
+  expect(reason).toBeVisible();
+  expect(customization).toHaveAttribute('aria-expanded', 'true');
+  expect(unrelated).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.getByRole('button', { name: 'Advanced customization help' })).toHaveAttribute(
+    'aria-expanded',
+    'false'
+  );
+  expect(screen.getByLabelText('Value')).toHaveValue('6000');
+  await user.click(correction);
+  await waitFor(() => expect(reason).toHaveFocus());
+  expect(customization).toHaveAttribute('aria-expanded', 'true');
+  expect(mocks.finalize).not.toHaveBeenCalled();
+});
+
 it('explains both off-mode reasons, focuses the exact correction and submits only after they are provided', async () => {
   const user = userEvent.setup();
   render(content());
@@ -454,6 +549,42 @@ it('explains both off-mode reasons, focuses the exact correction and submits onl
     })
   );
 });
+
+it.each(['PF', 'ESIC'])(
+  'keeps an invalid retained %s off-reason accessible after switching the scheme on',
+  async (scheme) => {
+    const user = userEvent.setup();
+    render(content());
+    await salaryStep(user);
+    const toggle = screen.getByRole('switch', { name: `Apply ${scheme}` });
+    await user.click(toggle);
+    const longReason = 'x'.repeat(501);
+    fireEvent.change(screen.getByLabelText(`Reason for turning ${scheme} off`), {
+      target: { value: longReason },
+    });
+    await user.click(toggle);
+    const retained = screen.getByLabelText(`Retained ${scheme} off-reason`);
+    expect(retained).toHaveValue(longReason);
+    expect(toggle).toBeChecked();
+    expect(
+      screen.getByText(
+        `${scheme} is on. This retained off-reason is not used while ${scheme} is on. Correct any error or clear the reason.`
+      )
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Finalize' })).toBeDisabled();
+    await user.click(
+      screen.getByRole('button', {
+        name: `Review: ${scheme} off-reason cannot exceed 500 characters.`,
+      })
+    );
+    await waitFor(() => expect(retained).toHaveFocus());
+    expect(retained).toHaveAttribute('aria-invalid', 'true');
+    await user.clear(retained);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Finalize' })).toBeEnabled());
+    expect(toggle).toBeChecked();
+    expect(mocks.finalize).not.toHaveBeenCalled();
+  }
+);
 
 it('invalidates completed earlier steps after background changes and takes the correction link to its role field', async () => {
   const user = userEvent.setup();

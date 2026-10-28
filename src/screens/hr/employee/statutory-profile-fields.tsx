@@ -41,7 +41,7 @@ export const statutoryProfileSchema = Yup.object({
     .matches(/^(\d{12})?$/, 'UAN must contain 12 digits.'),
   pfDisabledReason: Yup.string()
     .nullable()
-    .max(500)
+    .max(500, 'PF off-reason cannot exceed 500 characters.')
     .when('applyPf', {
       is: false,
       then: (schema) => schema.trim().required('Enter a reason for turning PF off.'),
@@ -57,7 +57,7 @@ export const statutoryProfileSchema = Yup.object({
     }),
   esicDisabledReason: Yup.string()
     .nullable()
-    .max(500)
+    .max(500, 'ESIC off-reason cannot exceed 500 characters.')
     .when('applyEsic', {
       is: false,
       then: (schema) => schema.trim().required('Enter a reason for turning ESIC off.'),
@@ -308,7 +308,25 @@ export function StatutoryProfileFields({
                     {scheme.code === 'PF' && field('uanNumber', 'UAN', readOnly)}
                   </Box>
                 )}
-                {!apply && field(scheme.reason, `Reason for turning ${scheme.code} off`, readOnly)}
+                {(!apply ||
+                  Boolean(form.values[scheme.reason]) ||
+                  Boolean(form.errors[scheme.reason])) && (
+                  <Stack spacing={0.5}>
+                    {field(
+                      scheme.reason,
+                      apply
+                        ? `Retained ${scheme.code} off-reason`
+                        : `Reason for turning ${scheme.code} off`,
+                      readOnly
+                    )}
+                    {apply && (
+                      <Typography variant="caption" color="text.secondary">
+                        {scheme.code} is on. This retained off-reason is not used while{' '}
+                        {scheme.code} is on. Correct any error or clear the reason.
+                      </Typography>
+                    )}
+                  </Stack>
+                )}
                 {(!apply || (!compact && !registered)) && (
                   <Alert
                     severity="warning"

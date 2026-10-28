@@ -443,6 +443,29 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     );
   });
 
+  it('publishes the customization-reason target even after the salary customization section is collapsed', async () => {
+    const user = userEvent.setup();
+    const onReadinessChange = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder onSalaryChange={vi.fn()} onReadinessChange={onReadinessChange} />
+      </ThemeProvider>
+    );
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '18000');
+    const customization = screen.getByRole('button', { name: 'Staff-specific customization' });
+    await user.click(customization);
+    await user.click(screen.getByRole('button', { name: 'Customize' }));
+    await user.clear(screen.getByLabelText('Value'));
+    await user.type(screen.getByLabelText('Value'), '6000');
+    await user.click(customization);
+    expect(screen.getByLabelText(/Customization reason/)).not.toBeVisible();
+    expect(onReadinessChange).toHaveBeenLastCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ key: 'salary-reason', selector: '[name="customizationReason"]' }),
+      ])
+    );
+  });
+
   it('navigates salary sections and refreshes options without discarding salary or statutory drafts', async () => {
     const user = userEvent.setup();
     const onSalaryChange = vi.fn();
