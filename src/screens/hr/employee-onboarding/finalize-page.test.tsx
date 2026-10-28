@@ -24,7 +24,7 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 // Exercise the real query/page boundary independently of the separately tested full wizard.
-vi.mock('./index', () => ({
+vi.mock('./finalize-workflow', () => ({
   FinalizeWorkflow: ({ application, readReady, readError, onRetry, onFinalized }: any) => {
     const [draft, setDraft] = useState(application.fullName);
     return (

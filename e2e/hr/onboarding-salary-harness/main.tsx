@@ -10,8 +10,8 @@ import { hrPermissions } from 'src/constants/hr-menus';
 import { Box, Alert, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { FinalizeWorkflow } from 'src/screens/hr/employee-onboarding';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { FinalizeWorkflow } from 'src/screens/hr/employee-onboarding/finalize-workflow';
 
 const state = {
   auth: {
