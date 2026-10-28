@@ -32,6 +32,7 @@ export const financePaths = {
   accounts: {
     root: '/finance/accounts',
     activity: '/finance/accounts/activity',
+    cashManagement: '/finance/accounts/cash-management',
     draftPostings: '/finance/draft-postings',
     reconciliation: '/finance/reconciliation',
     incomeAndExpense: '/finance/income-and-expense',
@@ -182,6 +183,7 @@ export const financePermissions = {
   accounts: {
     root: `${defaultModulePermissionName}${defaultFinancePermissionName}Accounts`,
     activity: `${defaultFinancePermissionName}Accounts.Activity.View`,
+    cashManagement: 'Finance.Accounts.CashManagement',
     draftPostings: `${defaultFinancePermissionName}Accounts.Reconciliation`,
     reconciliation: `${defaultFinancePermissionName}Accounts.Reconciliation`,
     reconciliationAdd: `${defaultFinancePermissionName}Accounts.Reconciliation.Add`,
@@ -474,6 +476,13 @@ const financeModule = {
               _action: 'expense-tracking',
               permissionName: `${financePermissions.accounts.expense}.View`,
               icon: menuIconView('mdi:cash-minus'),
+            },
+            {
+              title: 'Cash Management',
+              path: financePaths.accounts.cashManagement,
+              _action: 'cash-management',
+              permissionName: financePermissions.accounts.cashManagement + '.View',
+              icon: menuIconView('mdi:cash-check'),
             },
             {
               title: 'Verify pending receipts',

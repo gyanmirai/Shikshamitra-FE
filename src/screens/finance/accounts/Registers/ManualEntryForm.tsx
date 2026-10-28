@@ -1,19 +1,22 @@
 import type { Dayjs } from 'dayjs';
+import type { AccountsManualEntry } from 'src/redux/finance/accountsActivityApi';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { DatePicker } from '@mui/x-date-pickers';
 import { useRef, useState, useEffect } from 'react';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { useGetCashOptionsQuery } from 'src/redux/finance/cashManagementApi';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import { PaymentMethod, PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
@@ -36,6 +39,20 @@ import { useFinancePermissions } from '../../hooks/useFinancePermissions';
 
 import type { AcademicPeriod } from './academicMonths';
 
+type ManualEntryValues = {
+  name: string;
+  counterparty: string;
+  categoryId: string;
+  amount: string;
+  paymentMethod: number;
+  paymentDate: string;
+  cashPaymentDateTime: string;
+  bankAccountId: string;
+  cashCollectionId: string;
+  paymentReference: string;
+  notes: string;
+};
+
 export default function ManualEntryForm({
   direction,
   period,
@@ -53,15 +70,47 @@ export default function ManualEntryForm({
   );
   const [create, { isLoading }] = useCreateAccountsManualEntryMutation();
   const [failure, setFailure] = useState('');
+  const [stale, setStale] = useState(false);
+  const [uncertain, setUncertain] = useState(false);
+  const [refreshingCash, setRefreshingCash] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const submitting = useRef(false);
-  const requestKey = useRef<string | null>(null);
+  const requestKey = useRef<{ fingerprint: string; key: string } | null>(null);
+  const pendingEntry = useRef<{
+    academicYearId: string;
+    direction: 'income' | 'expense';
+    body: AccountsManualEntry;
+  } | null>(null);
   const nameInput = useRef<HTMLInputElement>(null);
-  const options = useGetFinanceRoutingOptionsQuery(
-    { academicYearId: period.id, operation: income ? 'income-entry' : 'expense-entry' },
-    { skip: !access.canAdd, refetchOnMountOrArgChange: true }
-  );
-  const formik = useFormik({
+  const submitEntry = async (payload: NonNullable<typeof pendingEntry.current>) => {
+    submitting.current = true;
+    setFailure('');
+    try {
+      await create(payload).unwrap();
+      shikshaMitraToast.success({
+        message: income
+          ? payload.body.paymentMethod === PaymentMethod.CASH
+            ? 'Cash income recorded. Awaiting independent Cash Management approval.'
+            : 'Income added.'
+          : 'Expense paid and recorded.',
+      });
+      onClose();
+    } catch (error) {
+      const problem = parseApiProblemDetail(error);
+      setFailure(problem.detail);
+      setStale(problem.errorCode === 'Finance:CashManagement:Stale');
+      const status = (error as { status?: string | number })?.status;
+      setUncertain(
+        problem.errorCode !== 'Finance:CashManagement:Stale' &&
+          (typeof status === 'number'
+            ? status >= 500
+            : ['FETCH_ERROR', 'TIMEOUT_ERROR', 'PARSING_ERROR'].includes(String(status)))
+      );
+    } finally {
+      submitting.current = false;
+    }
+  };
+  const formik = useFormik<ManualEntryValues>({
     initialValues: {
       name: '',
       counterparty: '',
@@ -69,22 +118,57 @@ export default function ManualEntryForm({
       amount: '',
       paymentMethod: PaymentMethod.CASH,
       paymentDate: entryDate(period, month),
+      cashPaymentDateTime: (dayjs(entryDate(period, month)).isSame(dayjs(), 'day')
+        ? dayjs()
+        : dayjs(entryDate(period, month)).startOf('day')
+      ).toISOString(),
       bankAccountId: '',
+      cashCollectionId: '',
       paymentReference: '',
       notes: '',
     },
-    validationSchema: manualEntrySchema,
+    validate: async (values) => {
+      if (uncertain && pendingEntry.current) return {};
+      try {
+        await manualEntrySchema.validate(values, { abortEarly: false, context: { direction } });
+        const source = cashOptions.currentData?.cashSources.find(
+          (item) => item.id === values.cashCollectionId
+        );
+        if (
+          !income &&
+          values.paymentMethod === PaymentMethod.CASH &&
+          source &&
+          Number(values.amount) > source.remainingAmount
+        )
+          return { amount: 'Amount exceeds the available cash source balance.' };
+        return {};
+      } catch (error: any) {
+        return Object.fromEntries(error.inner.map((item: any) => [item.path, item.message]));
+      }
+    },
     onSubmit: async (values) => {
       if (!access.canAdd) return;
+      if (submitting.current || stale || refreshingCash) return;
+      if (uncertain && pendingEntry.current) {
+        await submitEntry(pendingEntry.current);
+        return;
+      }
       if (submitting.current || options.isError || options.isFetching || !options.currentData)
         return;
-      const date = dayjs(values.paymentDate);
+      const date = dayjs(
+        values.paymentMethod === PaymentMethod.CASH
+          ? values.cashPaymentDateTime
+          : values.paymentDate
+      );
       if (
         !date.isValid() ||
         date.isBefore(dayjs(period.startDate), 'day') ||
         date.isAfter(dayjs(period.endDate), 'day')
       ) {
-        formik.setFieldError('paymentDate', 'Select a date within this academic year.');
+        formik.setFieldError(
+          values.paymentMethod === PaymentMethod.CASH ? 'cashPaymentDateTime' : 'paymentDate',
+          'Select a date within this academic year.'
+        );
         return;
       }
       const categories = income
@@ -101,35 +185,84 @@ export default function ManualEntryForm({
         formik.setFieldError('bankAccountId', 'Select an available school bank account.');
         return;
       }
-      submitting.current = true;
-      setFailure('');
-      try {
-        await create({
-          academicYearId: period.id,
-          direction,
-          body: {
-            ...values,
-            name: values.name.trim(),
-            counterparty: values.counterparty.trim(),
-            amount: Number(values.amount),
-            paymentDate: `${date.format('YYYY-MM-DD')}T12:00:00+05:30`,
-            bankAccountId:
-              values.paymentMethod === PaymentMethod.CASH ? undefined : values.bankAccountId,
-            idempotencyKey: requestKey.current ?? (requestKey.current = crypto.randomUUID()),
-            categoryTags: [],
-          },
-        }).unwrap();
-        shikshaMitraToast.success({ message: income ? 'Income added.' : 'Expense added.' });
-        onClose();
-      } catch (error) {
-        setFailure(parseApiProblemDetail(error).detail);
-      } finally {
-        submitting.current = false;
+      const source = cashOptions.currentData?.cashSources.find(
+        (item) => item.id === values.cashCollectionId
+      );
+      if (!income && values.paymentMethod === PaymentMethod.CASH) {
+        if (cashOptions.isFetching || cashOptions.isError || !source) {
+          formik.setFieldError('cashCollectionId', 'Select an available pending cash source.');
+          return;
+        }
+        if (Number(values.amount) > source.remainingAmount) {
+          formik.setFieldError('amount', 'Amount exceeds the available cash source balance.');
+          return;
+        }
       }
+      const fingerprint = JSON.stringify({ values, stamp: source?.concurrencyStamp });
+      if (requestKey.current?.fingerprint !== fingerprint)
+        requestKey.current = { fingerprint, key: crypto.randomUUID() };
+      const { cashPaymentDateTime, ...entryValues } = values;
+      pendingEntry.current = {
+        academicYearId: period.id,
+        direction,
+        body: {
+          ...entryValues,
+          name: values.name.trim(),
+          counterparty: values.counterparty.trim(),
+          amount: Number(values.amount),
+          paymentDate:
+            values.paymentMethod === PaymentMethod.CASH
+              ? dayjs(cashPaymentDateTime).toISOString()
+              : `${date.format('YYYY-MM-DD')}T12:00:00+05:30`,
+          bankAccountId:
+            values.paymentMethod === PaymentMethod.CASH ? undefined : values.bankAccountId,
+          idempotencyKey: requestKey.current!.key,
+          cashCollectionId:
+            !income && values.paymentMethod === PaymentMethod.CASH ? source?.id : undefined,
+          cashConcurrencyStamp:
+            !income && values.paymentMethod === PaymentMethod.CASH
+              ? source?.concurrencyStamp
+              : undefined,
+          categoryTags: [],
+        },
+      };
+      await submitEntry(pendingEntry.current);
     },
   });
+  const cashExpense = !income && formik.values.paymentMethod === PaymentMethod.CASH;
+  const options = useGetFinanceRoutingOptionsQuery(
+    {
+      academicYearId: period.id,
+      operation: income ? 'income-entry' : cashExpense ? 'cash-expense' : 'expense-entry',
+    },
+    { skip: !access.canAdd, refetchOnMountOrArgChange: true }
+  );
+  const cashOptions = useGetCashOptionsQuery(
+    { academicYearId: period.id, operation: 'expense' },
+    { skip: !access.canAdd || !cashExpense, refetchOnMountOrArgChange: true }
+  );
   const locked = isLoading || formik.isSubmitting;
-  const blocking = !access.canAdd || locked || options.isFetching;
+  const blocking = !access.canAdd || locked || options.isFetching || refreshingCash;
+  const fieldsBlocked = blocking || uncertain || stale;
+  const refreshCashSources = async () => {
+    setRefreshingCash(true);
+    try {
+      const result = await cashOptions.refetch();
+      if (result.error) {
+        setFailure(parseApiProblemDetail(result.error).detail);
+        return;
+      }
+      requestKey.current = null;
+      pendingEntry.current = null;
+      setStale(false);
+      setUncertain(false);
+      setFailure('');
+    } catch (error) {
+      setFailure(parseApiProblemDetail(error).detail);
+    } finally {
+      setRefreshingCash(false);
+    }
+  };
   useEffect(() => {
     if (!options.isFetching && !options.isError) nameInput.current?.focus();
   }, [options.isFetching, options.isError]);
@@ -140,7 +273,7 @@ export default function ManualEntryForm({
     return () => window.removeEventListener('beforeunload', warn);
   }, [formik.dirty, locked]);
   const requestClose = () => {
-    if (blocking) return;
+    if (locked) return;
     if (formik.dirty) setDiscardOpen(true);
     else onClose();
   };
@@ -167,14 +300,14 @@ export default function ManualEntryForm({
       value={formik.values[name]}
       onChange={formik.handleChange}
       onBlur={formik.handleBlur}
-      disabled={blocking}
+      disabled={fieldsBlocked}
       {...fieldError(name)}
       {...(name === 'notes' ? { multiline: true, minRows: 2 } : {})}
     />
   );
   return (
     <>
-      <Box inert={blocking} sx={{ flexShrink: 0 }}>
+      <Box inert={locked} sx={{ flexShrink: 0 }}>
         <CustomBreadcrumbs
           description="Record a school transaction with its category and payment details."
           heading={income ? 'Add Income' : 'Add Expense'}
@@ -215,6 +348,17 @@ export default function ManualEntryForm({
             {failure && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {failure}
+                {stale && (
+                  <Button disabled={locked || refreshingCash} onClick={refreshCashSources}>
+                    Refresh cash sources
+                  </Button>
+                )}
+              </Alert>
+            )}
+            {uncertain && (
+              <Alert severity="warning">
+                The payment outcome is uncertain. Retry submits the original request. Fields stay
+                locked until its outcome is resolved.
               </Alert>
             )}
             {options.isError && (
@@ -222,7 +366,7 @@ export default function ManualEntryForm({
                 severity="error"
                 sx={{ mb: 2 }}
                 action={
-                  <Button disabled={blocking} onClick={() => options.refetch()}>
+                  <Button disabled={fieldsBlocked} onClick={() => options.refetch()}>
                     Retry
                   </Button>
                 }
@@ -232,7 +376,7 @@ export default function ManualEntryForm({
             )}
             <Box
               component="fieldset"
-              disabled={blocking}
+              disabled={fieldsBlocked}
               sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}
             >
               <Stack spacing={1.5}>
@@ -258,7 +402,7 @@ export default function ManualEntryForm({
                         onBlur={formik.handleBlur}
                         isSearch
                         isLoading={options.isFetching}
-                        disabled={blocking || options.isError}
+                        disabled={fieldsBlocked || options.isError}
                         {...fieldError('categoryId')}
                       />
                     </Grid>
@@ -268,7 +412,7 @@ export default function ManualEntryForm({
                   </Grid>
                 </FormSectionCard>
                 <FormSectionCard
-                  descriptionTooltip="Cash entries do not require a bank account. For other payment methods, select an eligible school bank account."
+                  descriptionTooltip="Cash expenses are actual payments funded from a pending collection receipt. Final approval deposits the remainder as Income. Other methods require an eligible school bank account."
                   icon="mdi:bank-transfer"
                   title="Payment details"
                 >
@@ -292,34 +436,68 @@ export default function ManualEntryForm({
                             formik.setFieldValue('amount', values.value);
                         }}
                         onBlur={formik.handleBlur}
-                        disabled={blocking}
+                        disabled={fieldsBlocked}
                         {...fieldError('amount')}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <DatePicker
-                        label="Payment date"
-                        value={dayjs(formik.values.paymentDate)}
-                        minDate={dayjs(period.startDate)}
-                        maxDate={dayjs(period.endDate)}
-                        onChange={(value: Dayjs | null) =>
-                          formik.setFieldValue(
-                            'paymentDate',
-                            value?.isValid() ? value.format('YYYY-MM-DD') : ''
-                          )
-                        }
-                        disabled={blocking}
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            size: 'small',
-                            required: true,
-                            name: 'paymentDate',
-                            onBlur: formik.handleBlur,
-                            ...fieldError('paymentDate'),
-                          },
-                        }}
-                      />
+                      {formik.values.paymentMethod === PaymentMethod.CASH ? (
+                        <DateTimePicker
+                          label="Payment date"
+                          value={dayjs(formik.values.cashPaymentDateTime)}
+                          minDateTime={dayjs(period.startDate).startOf('day')}
+                          maxDateTime={
+                            dayjs(period.endDate).endOf('day').isBefore(dayjs())
+                              ? dayjs(period.endDate).endOf('day')
+                              : dayjs()
+                          }
+                          disabled={fieldsBlocked}
+                          onChange={(value: Dayjs | null) => {
+                            formik.setFieldValue(
+                              'cashPaymentDateTime',
+                              value?.isValid() ? value.toISOString() : ''
+                            );
+                            formik.setFieldValue(
+                              'paymentDate',
+                              value?.isValid() ? value.format('YYYY-MM-DD') : ''
+                            );
+                          }}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: 'small',
+                              required: true,
+                              name: 'cashPaymentDateTime',
+                              onBlur: formik.handleBlur,
+                              ...fieldError('cashPaymentDateTime'),
+                            },
+                          }}
+                        />
+                      ) : (
+                        <DatePicker
+                          label="Payment date"
+                          value={dayjs(formik.values.paymentDate)}
+                          minDate={dayjs(period.startDate)}
+                          maxDate={dayjs(period.endDate)}
+                          onChange={(value: Dayjs | null) =>
+                            formik.setFieldValue(
+                              'paymentDate',
+                              value?.isValid() ? value.format('YYYY-MM-DD') : ''
+                            )
+                          }
+                          disabled={fieldsBlocked}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: 'small',
+                              required: true,
+                              name: 'paymentDate',
+                              onBlur: formik.handleBlur,
+                              ...fieldError('paymentDate'),
+                            },
+                          }}
+                        />
+                      )}
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <CustomSelect
@@ -332,15 +510,53 @@ export default function ManualEntryForm({
                         }))}
                         onChange={(value) => {
                           formik.setFieldValue('paymentMethod', Number(value));
+                          formik.setFieldValue('cashCollectionId', '');
                           if (Number(value) === PaymentMethod.CASH)
                             formik.setFieldValue('bankAccountId', '');
                         }}
-                        disabled={blocking}
+                        disabled={fieldsBlocked}
                         name="paymentMethod"
                         onBlur={formik.handleBlur}
                         {...fieldError('paymentMethod')}
                       />
                     </Grid>
+                    {cashExpense && (
+                      <Grid size={12}>
+                        {cashOptions.isError && (
+                          <Alert
+                            severity="error"
+                            action={<Button onClick={() => cashOptions.refetch()}>Retry</Button>}
+                          >
+                            Pending cash sources could not be loaded.
+                          </Alert>
+                        )}
+                        <CustomSelect
+                          label="Cash source receipt"
+                          required
+                          name="cashCollectionId"
+                          value={formik.values.cashCollectionId}
+                          options={(cashOptions.currentData?.cashSources ?? []).map((item) => ({
+                            ...item,
+                            label: `${item.label} · Available pending cash ${formatNumber(item.remainingAmount, 'INR')}`,
+                          }))}
+                          labelKey="label"
+                          valueKey="id"
+                          isSearch
+                          isLoading={cashOptions.isFetching}
+                          disabled={fieldsBlocked || cashOptions.isError || cashOptions.isFetching}
+                          onChange={(value) => formik.setFieldValue('cashCollectionId', value)}
+                          onBlur={formik.handleBlur}
+                          {...fieldError('cashCollectionId')}
+                        />
+                        {!cashOptions.isFetching &&
+                          !cashOptions.isError &&
+                          cashOptions.currentData?.cashSources.length === 0 && (
+                            <Alert severity="info">
+                              No pending cash receipts with remaining cash are available.
+                            </Alert>
+                          )}
+                      </Grid>
+                    )}
                     {formik.values.paymentMethod !== PaymentMethod.CASH && (
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <CustomSelect
@@ -357,13 +573,17 @@ export default function ManualEntryForm({
                           onBlur={formik.handleBlur}
                           isSearch
                           isLoading={options.isFetching}
-                          disabled={blocking || options.isError}
+                          disabled={fieldsBlocked || options.isError}
                           {...fieldError('bankAccountId')}
                         />
                       </Grid>
                     )}
                     <Grid size={12}>
-                      {text('paymentReference', 'Payment reference (optional)')}
+                      {text(
+                        'paymentReference',
+                        cashExpense ? 'Payment reference' : 'Payment reference (optional)',
+                        cashExpense
+                      )}
                     </Grid>
                   </Grid>
                 </FormSectionCard>
@@ -416,7 +636,7 @@ export default function ManualEntryForm({
           <Button
             size="small"
             variant="outlined"
-            disabled={blocking}
+            disabled={locked}
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             onClick={requestClose}
           >
@@ -428,7 +648,20 @@ export default function ManualEntryForm({
             variant="contained"
             loading={locked}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
-            disabled={blocking || options.isError || !options.currentData}
+            disabled={
+              locked ||
+              stale ||
+              refreshingCash ||
+              !access.canAdd ||
+              (!uncertain &&
+                (options.isFetching ||
+                  options.isError ||
+                  !options.currentData ||
+                  (cashExpense &&
+                    (cashOptions.isError ||
+                      cashOptions.isFetching ||
+                      !cashOptions.currentData?.cashSources.length))))
+            }
           >
             Submit
           </LoadingButton>
@@ -438,7 +671,11 @@ export default function ManualEntryForm({
         open={discardOpen}
         icon="warning"
         title="Discard unsaved changes?"
-        content={`Your ${income ? 'income' : 'expense'} entry has unsaved changes. Leaving will discard them.`}
+        content={
+          uncertain
+            ? 'The payment outcome is uncertain. Review the register before creating another payment if you leave; this exact retry request will be lost.'
+            : `Your ${income ? 'income' : 'expense'} entry has unsaved changes. Leaving will discard them.`
+        }
         onClose={() => setDiscardOpen(false)}
         action={
           <Button

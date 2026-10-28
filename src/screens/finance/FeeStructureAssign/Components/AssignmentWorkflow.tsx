@@ -1,7 +1,9 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
+import type { TooltipProps } from '@mui/material/Tooltip';
 import type {
   AssignmentRequest,
   AssignmentBulkResult,
@@ -11,12 +13,14 @@ import type {
 import * as Yup from 'yup';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { DetailField, DetailSection } from 'src/components/detail-view';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -26,6 +30,7 @@ import {
   Stack,
   Alert,
   Button,
+  Tooltip,
   ListItem,
   Skeleton,
   TextField,
@@ -61,6 +66,41 @@ interface AssignmentValues {
 }
 const initialValues: AssignmentValues = { structureId: '', requests: [] };
 const steps = ['Structure & policies', 'Fees & dates', 'Review & assign'];
+const studentNameTooltipSlots: TooltipProps['slotProps'] = {
+  tooltip: {
+    sx: {
+      maxWidth: 'min(300px, calc(100vw - 32px))',
+      overflowWrap: 'anywhere',
+      whiteSpace: 'normal',
+    },
+  },
+  popper: {
+    modifiers: [
+      {
+        name: 'flip',
+        options: { fallbackPlacements: ['top'], rootBoundary: 'viewport', padding: 8 },
+      },
+      {
+        name: 'preventOverflow',
+        options: { rootBoundary: 'viewport', padding: 8, altAxis: true, tether: false },
+      },
+    ],
+  },
+};
+
+function AssignmentDetailsRegion({ bounded, children }: { bounded: boolean; children: ReactNode }) {
+  return bounded ? (
+    <Scrollbar
+      sx={{ minHeight: 0, flex: 1, overscrollBehavior: 'contain' }}
+      ariaLabel="Student fee details"
+      scrollableNodeProps={{ tabIndex: 0 }}
+    >
+      {children}
+    </Scrollbar>
+  ) : (
+    children
+  );
+}
 
 // Observe the shared Formik values without creating another form-state owner.
 function AssignmentDirtyState({ dirty }: { dirty: boolean }) {
@@ -126,6 +166,8 @@ export default function AssignmentWorkflow({
     { skip: !academicYearId || !viewing }
   );
   const [activeStep, setActiveStep] = useState(0);
+  const [reachedStep, setReachedStep] = useState(0);
+  const [structureValidated, setStructureValidated] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.studentId ?? '');
   const [studentSearch, setStudentSearch] = useState('');
@@ -140,6 +182,7 @@ export default function AssignmentWorkflow({
   const [previewClock, setPreviewClock] = useState(Date.now);
   const [retryingConfirmation, setRetryingConfirmation] = useState(false);
   const generation = useRef(0);
+  const reviewedValues = useRef<string | undefined>(undefined);
   const operation = useRef(false);
   const [previewBulk, previewState] = useAssignmentBulkPreviewMutation();
   const [commitBulk, commitState] = useAssignmentBulkCommitMutation();
@@ -188,6 +231,7 @@ export default function AssignmentWorkflow({
   );
   const invalidate = () => {
     generation.current += 1;
+    reviewedValues.current = undefined;
     setPreview(undefined);
     setShowResults(false);
     setError('');
@@ -202,6 +246,28 @@ export default function AssignmentWorkflow({
     const items = values.requests.filter((r) => !committedIds.has(r.studentId));
     if (!items.length) return;
     const candidate = candidates.data?.find((item) => item.id === values.structureId);
+    if (!candidate) {
+      setStructureValidated(false);
+      setError('Reload the selected fee structure.');
+      setActiveStep(0);
+      return;
+    }
+    const missingReason = items.find(
+      (request) =>
+        request.policies?.some(
+          (policy) =>
+            policy.versionId !==
+            (candidate.policies?.find((defaultPolicy) => defaultPolicy.family === policy.family)
+              ?.versionId ?? null)
+        ) && !request.policyOverrideReason?.trim()
+    );
+    if (missingReason) {
+      setStructureValidated(false);
+      setSelectedStudentId(missingReason.studentId);
+      setActiveStep(0);
+      setError('Enter a policy override reason.');
+      return;
+    }
     const invalidRequest =
       candidate &&
       items.find(
@@ -234,7 +300,10 @@ export default function AssignmentWorkflow({
             }
           : await previewBulk({ items }).unwrap();
       if (ticket === generation.current) {
+        reviewedValues.current = JSON.stringify(values);
+        setStructureValidated(true);
         setPreview(result);
+        setReachedStep(2);
         setActiveStep(2);
       }
     } catch (e) {
@@ -244,6 +313,12 @@ export default function AssignmentWorkflow({
 
   const runCommit = async (values: AssignmentValues) => {
     setError('');
+    if (reviewedValues.current !== JSON.stringify(values)) {
+      invalidate();
+      setActiveStep(1);
+      setError('Assignment inputs changed. Preview again before assigning fees.');
+      return;
+    }
     // A lost response may already have committed. Let the server resolve an
     // identical retry even after expiry; never block retrieval of saved evidence.
     if (!retryingConfirmation && expiredAt <= Date.now()) {
@@ -437,8 +512,9 @@ export default function AssignmentWorkflow({
     );
 
   return (
-    <Box sx={{ flex: 1, minHeight: 0, pt: 2, bgcolor: 'background.paper' }}>
+    <Box sx={{ display: 'flex', flex: 1, minHeight: 0, pt: 2, bgcolor: 'background.paper' }}>
       <CustomStepperWithFormik
+        contentScrollMode={isBulk ? 'regions' : 'step'}
         initialValues={initialValues}
         steps={steps}
         activeStep={activeStep}
@@ -450,15 +526,34 @@ export default function AssignmentWorkflow({
         }
         showSaveButton={false}
         onCancel={onClose}
-        isStepClickable={(index) => !busy && !complete && !showResults && index < activeStep}
-        onStepClick={(index) => {
-          invalidate();
-          setActiveStep(index);
+        validateForwardStepClick
+        isStepClickable={(index) => !busy && !complete && !showResults && index <= reachedStep}
+        onStepClick={async (index, _label, formik) => {
+          if (operation.current || busy || index === activeStep) return;
+          if (
+            index !== 2 ||
+            (preview &&
+              reviewedValues.current === JSON.stringify(formik.values) &&
+              (retryingConfirmation || !previewExpired))
+          ) {
+            setError('');
+            setActiveStep(index);
+            return;
+          }
+          operation.current = true;
+          setOperationPhase('preview');
+          try {
+            await runPreview(formik.values);
+          } finally {
+            operation.current = false;
+            setOperationPhase(undefined);
+          }
         }}
-        completedSteps={complete ? [0, 1, 2] : Array.from({ length: activeStep }, (_, i) => i)}
+        completedSteps={
+          complete ? [0, 1, 2] : [...(structureValidated ? [0] : []), ...(preview ? [1, 2] : [])]
+        }
         backButtonProps={{ disabled: complete, startIcon: <Iconify icon="mdi:arrow-left" /> }}
         handleBack={() => {
-          invalidate();
           setActiveStep(Math.max(0, activeStep - 1));
         }}
         nextButtonLabel={activeStep === 0 ? 'Next' : 'Preview assignments'}
@@ -523,6 +618,8 @@ export default function AssignmentWorkflow({
             }
 
             setError('');
+            setReachedStep((previous) => Math.max(previous, 1));
+            setStructureValidated(true);
             setActiveStep(activeStep + 1);
             return;
           }
@@ -600,7 +697,15 @@ export default function AssignmentWorkflow({
           const { values } = formik;
           const candidate = candidates.data?.find((c) => c.id === values.structureId);
           return (
-            <Stack spacing={2} sx={{ p: 2, minWidth: 0 }}>
+            <Stack
+              spacing={2}
+              sx={{
+                p: 2,
+                minWidth: 0,
+                ...(isBulk && { flex: 1, minHeight: 0, overflow: 'hidden' }),
+                '& > .MuiAlert-root, & > section': { flexShrink: 0 },
+              }}
+            >
               {activeStep === 2 &&
                 !showResults &&
                 !busy &&
@@ -680,6 +785,8 @@ export default function AssignmentWorkflow({
                     noOptionsMessage="No published structure for this student and year"
                     onChange={(value) => {
                       invalidate();
+                      setReachedStep(0);
+                      setStructureValidated(false);
                       setShowInputErrors(false);
                       setOutcomes(undefined);
                       formik.setValues({
@@ -725,8 +832,9 @@ export default function AssignmentWorkflow({
                 (() => {
                   const configuringBulk = isBulk && activeStep < 2;
                   const student = configuringBulk
-                    ? students.find((item) => !committedIds.has(item.studentId)) ?? students[0]
-                    : students.find((item) => item.studentId === selectedStudentId) ?? students[0];
+                    ? (students.find((item) => !committedIds.has(item.studentId)) ?? students[0])
+                    : (students.find((item) => item.studentId === selectedStudentId) ??
+                      students[0]);
                   const request = values.requests.find((r) => r.studentId === student.studentId);
                   const studentPreview = preview?.results.find(
                     (r) => r.studentId === student.studentId
@@ -738,6 +846,7 @@ export default function AssignmentWorkflow({
                   const page = Math.min(studentPage, Math.max(1, Math.ceil(filtered.length / 20)));
                   const updateRequest = (next: AssignmentRequest) => {
                     invalidate();
+                    if (activeStep === 0) setStructureValidated(false);
                     formik.setFieldValue(
                       'requests',
                       values.requests.map((r) => {
@@ -755,14 +864,31 @@ export default function AssignmentWorkflow({
                         display: 'grid',
                         gridTemplateColumns: {
                           xs: 'minmax(0, 1fr)',
-                          md: isBulk ? '260px minmax(0, 1fr)' : 'minmax(0, 1fr)',
+                          sm: isBulk ? '240px minmax(0, 1fr)' : 'minmax(0, 1fr)',
                         },
+                        ...(isBulk && {
+                          flex: '1 1 0',
+                          minHeight: 0,
+                          overflow: 'hidden',
+                          gridTemplateRows: {
+                            xs: 'minmax(0, 0.95fr) minmax(0, 1.05fr)',
+                            sm: 'minmax(0, 1fr)',
+                          },
+                        }),
                         gap: 2,
-                        alignItems: 'start',
+                        alignItems: 'stretch',
                       }}
                     >
                       {isBulk && (
-                        <DetailSection title="Selected students" icon="mdi:account-group-outline">
+                        <FormSectionCard
+                          title="Selected students"
+                          icon="mdi:account-group-outline"
+                          iconSize={16}
+                          iconContainerSize={28}
+                          contentSpacing={1}
+                          sx={{ minWidth: 0, minHeight: 0, overflow: 'hidden', p: 1.5 }}
+                          contentSx={{ height: '100%', minHeight: 0 }}
+                        >
                           <TextField
                             size="small"
                             fullWidth
@@ -780,208 +906,275 @@ export default function AssignmentWorkflow({
                               : `${committedIds.size} assigned · ${students.length - committedIds.size} remaining`}
                           </Typography>
                           {activeStep === 2 && batchTotals.length > 0 && (
-                            <Box sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              justifyContent="space-between"
+                              spacing={1}
+                              sx={{
+                                borderBottom: 1,
+                                borderColor: 'divider',
+                                pb: 1,
+                                flexWrap: 'wrap',
+                              }}
+                            >
                               <Typography variant="caption" color="text.secondary">
                                 {showResults ? 'Confirmed total' : 'Ready total'}
                               </Typography>
                               {batchTotals.map((item) => (
                                 <Typography
                                   key={item.currency}
-                                  variant="h6"
+                                  variant="subtitle1"
                                   sx={{ fontVariantNumeric: 'tabular-nums' }}
                                 >
                                   {formatNumber(item.total, item.currency)}
                                 </Typography>
                               ))}
-                            </Box>
+                            </Stack>
                           )}
-                          <List disablePadding aria-label="Selected students">
-                            {filtered.slice((page - 1) * 20, page * 20).map((item) => {
-                              if (configuringBulk) {
-                                return (
-                                  <ListItem key={item.studentId} sx={{ px: 1.5 }}>
-                                    <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                                      {item.studentName || 'Student'}
-                                    </Typography>
-                                  </ListItem>
-                                );
-                              }
-                              const saved = outcomes?.results.find(
-                                (r) => r.studentId === item.studentId
-                              );
-                              const checked = preview?.results.find(
-                                (r) => r.studentId === item.studentId
-                              );
-                              const input = values.requests.find(
-                                (r) => r.studentId === item.studentId
-                              );
-                              const needsInput =
-                                !saved?.result &&
-                                candidate &&
-                                input &&
-                                (variableAssignmentError(candidate, input) ||
-                                  assignmentServiceDateError(candidate, input, yearBounds));
-                              const needsAttention =
-                                !saved?.result &&
-                                !checked?.preview &&
-                                (saved?.errorMessage || checked?.errorMessage || needsInput);
-                              return (
-                                <ListItemButton
-                                  key={item.studentId}
-                                  selected={item.studentId === student.studentId}
-                                  disabled={busy}
-                                  aria-label={`Select ${item.studentName || 'student'}`}
-                                  aria-current={
-                                    item.studentId === student.studentId ? 'true' : undefined
-                                  }
-                                  onClick={() => setSelectedStudentId(item.studentId)}
-                                  sx={{ borderRadius: 1, mb: 0.5, px: 1.5 }}
-                                >
-                                  <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-                                    <Typography
-                                      variant="subtitle2"
-                                      sx={{ overflowWrap: 'anywhere' }}
-                                    >
-                                      {item.studentName || 'Student'}
-                                    </Typography>
-                                    <Label
-                                      color={
-                                        saved?.result
-                                          ? 'success'
-                                          : needsAttention
-                                            ? 'warning'
-                                            : 'default'
-                                      }
-                                    >
-                                      {saved?.result
-                                        ? saved.outcome === 'AlreadyAssigned'
-                                          ? 'Already assigned'
-                                          : 'Assigned'
-                                        : needsAttention
-                                          ? 'Needs attention'
-                                          : checked?.preview
-                                            ? 'Ready to assign'
-                                            : 'Configure'}
-                                    </Label>
-                                    {needsAttention && (
-                                      <Typography
-                                        variant="caption"
-                                        color="error.main"
-                                        sx={{ overflowWrap: 'anywhere' }}
+                          <Scrollbar
+                            sx={{ flex: '1 1 0', minHeight: 0, overscrollBehavior: 'contain' }}
+                            ariaLabel="Selected students list"
+                            scrollableNodeProps={{ tabIndex: 0 }}
+                          >
+                            <List disablePadding aria-label="Selected students">
+                              {filtered.slice((page - 1) * 20, page * 20).map((item) => {
+                                if (configuringBulk) {
+                                  return (
+                                    <ListItem key={item.studentId} sx={{ px: 1.5 }}>
+                                      <Tooltip
+                                        disableInteractive
+                                        title={item.studentName || 'Student'}
+                                        placement="bottom"
+                                        slotProps={studentNameTooltipSlots}
                                       >
-                                        {needsInput || saved?.errorMessage || checked?.errorMessage}
-                                      </Typography>
-                                    )}
-                                    {checked?.preview && !saved?.result && (
-                                      <Typography variant="caption">
-                                        {formatNumber(checked.preview.proratedTotal, 'INR')}
-                                      </Typography>
-                                    )}
-                                  </Stack>
-                                </ListItemButton>
-                              );
-                            })}
-                          </List>
-                          {!filtered.length && (
-                            <Typography variant="body2" color="text.secondary">
-                              No matching students.
-                            </Typography>
-                          )}
+                                        <Typography
+                                          variant="body2"
+                                          sx={{
+                                            overflowWrap: 'anywhere',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                          }}
+                                        >
+                                          {item.studentName || 'Student'}
+                                        </Typography>
+                                      </Tooltip>
+                                    </ListItem>
+                                  );
+                                }
+                                const saved = outcomes?.results.find(
+                                  (r) => r.studentId === item.studentId
+                                );
+                                const checked = preview?.results.find(
+                                  (r) => r.studentId === item.studentId
+                                );
+                                const input = values.requests.find(
+                                  (r) => r.studentId === item.studentId
+                                );
+                                const needsInput =
+                                  !saved?.result &&
+                                  candidate &&
+                                  input &&
+                                  (variableAssignmentError(candidate, input) ||
+                                    assignmentServiceDateError(candidate, input, yearBounds));
+                                const needsAttention =
+                                  !saved?.result &&
+                                  !checked?.preview &&
+                                  (saved?.errorMessage || checked?.errorMessage || needsInput);
+                                return (
+                                  <ListItemButton
+                                    key={item.studentId}
+                                    selected={item.studentId === student.studentId}
+                                    disabled={busy}
+                                    aria-label={`Select ${item.studentName || 'student'}`}
+                                    aria-current={
+                                      item.studentId === student.studentId ? 'true' : undefined
+                                    }
+                                    onClick={() => setSelectedStudentId(item.studentId)}
+                                    sx={{
+                                      borderRadius: 1,
+                                      mb: 0.5,
+                                      px: 1.5,
+                                      border: 1,
+                                      borderColor:
+                                        item.studentId === student.studentId
+                                          ? 'primary.main'
+                                          : 'transparent',
+                                      '&.Mui-selected': { bgcolor: 'action.selected' },
+                                    }}
+                                  >
+                                    <Stack spacing={0.5} sx={{ minWidth: 0, width: '100%' }}>
+                                      <Tooltip
+                                        disableInteractive
+                                        title={item.studentName || 'Student'}
+                                        placement="bottom"
+                                        slotProps={studentNameTooltipSlots}
+                                      >
+                                        <Typography
+                                          variant="subtitle2"
+                                          sx={{
+                                            overflowWrap: 'anywhere',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                          }}
+                                        >
+                                          {item.studentName || 'Student'}
+                                        </Typography>
+                                      </Tooltip>
+                                      <Label
+                                        color={
+                                          saved?.result
+                                            ? 'success'
+                                            : needsAttention
+                                              ? 'warning'
+                                              : 'default'
+                                        }
+                                      >
+                                        {saved?.result
+                                          ? saved.outcome === 'AlreadyAssigned'
+                                            ? 'Already assigned'
+                                            : 'Assigned'
+                                          : needsAttention
+                                            ? 'Needs attention'
+                                            : checked?.preview
+                                              ? 'Ready to assign'
+                                              : 'Configure'}
+                                      </Label>
+                                      {needsAttention && (
+                                        <Typography
+                                          variant="caption"
+                                          color="error.main"
+                                          sx={{ overflowWrap: 'anywhere' }}
+                                        >
+                                          {needsInput ||
+                                            saved?.errorMessage ||
+                                            checked?.errorMessage}
+                                        </Typography>
+                                      )}
+                                      {checked?.preview && !saved?.result && (
+                                        <Typography variant="caption">
+                                          {formatNumber(checked.preview.proratedTotal, 'INR')}
+                                        </Typography>
+                                      )}
+                                    </Stack>
+                                  </ListItemButton>
+                                );
+                              })}
+                            </List>
+                            {!filtered.length && (
+                              <Typography variant="body2" color="text.secondary">
+                                No matching students.
+                              </Typography>
+                            )}
+                          </Scrollbar>
                           {filtered.length > 20 && (
                             <Pagination
                               size="small"
+                              siblingCount={0}
                               count={Math.ceil(filtered.length / 20)}
                               page={page}
                               disabled={busy}
                               onChange={(_, next) => setStudentPage(next)}
                             />
                           )}
-                        </DetailSection>
+                        </FormSectionCard>
                       )}
-                      <Stack spacing={2} sx={{ minWidth: 0 }}>
-                        {configuringBulk ? (
-                          <Typography variant="body2" color="text.secondary">
-                            The same policies, fees and dates apply to all{' '}
-                            {committedIds.size ? 'remaining' : 'selected'} students.
-                          </Typography>
-                        ) : (isBulk || (outcome && (showResults || outcome.result))) && (
-                          <Stack
-                            direction="row"
-                            justifyContent="space-between"
-                            alignItems="center"
-                            spacing={1}
-                          >
-                            {isBulk && (
-                              <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere' }}>
-                                {student.studentName || 'Student'}
-                              </Typography>
-                            )}
-                            {outcome && (showResults || outcome.result) && (
-                              <Label color={outcome.result ? 'success' : 'warning'}>
-                                {outcome.outcome === 'AlreadyAssigned'
-                                  ? 'Already assigned'
-                                  : outcome.outcome}
-                              </Label>
-                            )}
-                          </Stack>
-                        )}
-                        {outcome?.result ? (
-                          <AssignmentReview data={outcome.result.assignment} committed />
-                        ) : (
-                          <>
-                            {activeStep === 0 && candidate && request && (
-                              <AssignmentPolicies
-                                key={request.studentId}
-                                studentId={request.studentId}
-                                academicYearId={academicYearId}
-                                defaults={candidate.policies ?? []}
-                                selections={request.policies ?? []}
-                                reason={request.policyOverrideReason ?? ''}
-                                canOverride={canOverridePolicies}
-                                disabled={busy}
-                                flat
-                                onChange={(policies, policyOverrideReason) =>
-                                  updateRequest({ ...request, policies, policyOverrideReason })
-                                }
-                              />
-                            )}
-                            {activeStep === 1 && candidate && request && (
-                              <DetailSection title="Fees & dates" icon="mdi:format-list-checks">
-                                <AssignmentStudentInputs
-                                  key={student.studentId}
-                                  candidate={candidate}
-                                  request={request}
-                                  onChange={updateRequest}
-                                  canOverrideDates={canOverrideDates}
-                                  allowTransportSource={!isBulk}
+                      <AssignmentDetailsRegion bounded={isBulk}>
+                        <Stack spacing={2} sx={{ minWidth: 0, pr: isBulk ? 1 : 0 }}>
+                          {configuringBulk ? (
+                            <Typography variant="body2" color="text.secondary">
+                              The same policies, fees and dates apply to all{' '}
+                              {committedIds.size ? 'remaining' : 'selected'} students.
+                            </Typography>
+                          ) : (
+                            (isBulk || (outcome && (showResults || outcome.result))) && (
+                              <Stack
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                spacing={1}
+                              >
+                                {isBulk && (
+                                  <Typography
+                                    component="h2"
+                                    variant="subtitle1"
+                                    sx={{ overflowWrap: 'anywhere', minWidth: 0 }}
+                                  >
+                                    {student.studentName || 'Student'}
+                                  </Typography>
+                                )}
+                                {outcome && (showResults || outcome.result) && (
+                                  <Label color={outcome.result ? 'success' : 'warning'}>
+                                    {outcome.outcome === 'AlreadyAssigned'
+                                      ? 'Already assigned'
+                                      : outcome.outcome}
+                                  </Label>
+                                )}
+                              </Stack>
+                            )
+                          )}
+                          {outcome?.result ? (
+                            <AssignmentReview data={outcome.result.assignment} committed />
+                          ) : (
+                            <>
+                              {activeStep === 0 && candidate && request && (
+                                <AssignmentPolicies
+                                  key={request.studentId}
+                                  studentId={request.studentId}
+                                  academicYearId={academicYearId}
+                                  defaults={candidate.policies ?? []}
+                                  selections={request.policies ?? []}
+                                  reason={request.policyOverrideReason ?? ''}
+                                  canOverride={canOverridePolicies}
                                   disabled={busy}
-                                  yearBounds={yearBounds}
-                                  showErrors={showInputErrors}
                                   flat
+                                  onChange={(policies, policyOverrideReason) =>
+                                    updateRequest({ ...request, policies, policyOverrideReason })
+                                  }
                                 />
-                              </DetailSection>
-                            )}
-                            {outcome?.errorMessage && !studentPreview?.preview && (
-                              <Alert severity="error">
-                                {student.studentName || 'Student'}: {outcome.errorMessage}
-                              </Alert>
-                            )}
-                            {studentPreview?.errorMessage && (
-                              <Alert severity="error">
-                                {student.studentName || 'Student'}: {studentPreview.errorMessage}
-                              </Alert>
-                            )}
-                            {activeStep === 2 && !showResults && studentPreview?.preview && (
-                              <AssignmentReview data={studentPreview.preview} />
-                            )}
-                            {showResults && !outcome && (
-                              <Alert severity="error">
-                                Not assigned. Review this student and preview again.
-                              </Alert>
-                            )}
-                          </>
-                        )}
-                      </Stack>
+                              )}
+                              {activeStep === 1 && candidate && request && (
+                                <DetailSection title="Fees & dates" icon="mdi:format-list-checks">
+                                  <AssignmentStudentInputs
+                                    key={student.studentId}
+                                    candidate={candidate}
+                                    request={request}
+                                    onChange={updateRequest}
+                                    canOverrideDates={canOverrideDates}
+                                    allowTransportSource={!isBulk}
+                                    disabled={busy}
+                                    yearBounds={yearBounds}
+                                    showErrors={showInputErrors}
+                                    flat
+                                  />
+                                </DetailSection>
+                              )}
+                              {outcome?.errorMessage && !studentPreview?.preview && (
+                                <Alert severity="error">
+                                  {student.studentName || 'Student'}: {outcome.errorMessage}
+                                </Alert>
+                              )}
+                              {studentPreview?.errorMessage && (
+                                <Alert severity="error">
+                                  {student.studentName || 'Student'}: {studentPreview.errorMessage}
+                                </Alert>
+                              )}
+                              {activeStep === 2 && !showResults && studentPreview?.preview && (
+                                <AssignmentReview data={studentPreview.preview} />
+                              )}
+                              {showResults && !outcome && (
+                                <Alert severity="error">
+                                  Not assigned. Review this student and preview again.
+                                </Alert>
+                              )}
+                            </>
+                          )}
+                        </Stack>
+                      </AssignmentDetailsRegion>
                     </Box>
                   );
                 })()}

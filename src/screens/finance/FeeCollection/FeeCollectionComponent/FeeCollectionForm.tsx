@@ -1129,7 +1129,7 @@ const FeeCollectComponentForm = ({
       const collectResponse = await submitCollection(prepareCollectionCommand(true));
 
       shikshaMitraToast.success({
-        message: collectResponse.auditSummary?.headline || 'Fee collected successfully',
+        message: formik.values.payment.paymentMethod === 'Cash' ? 'Receipt generated and fees settled. Cash Income awaits independent Cash Management approval.' : collectResponse.auditSummary?.headline || 'Fee collected successfully',
       });
       setFinalReviewOpen(false);
       submissionRef.current = null;

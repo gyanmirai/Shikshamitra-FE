@@ -139,7 +139,7 @@ describe('Fee Structure editor contract', () => {
     expect(source.concessionApplicableFeeHeadIds).toEqual(['head']);
   });
 
-  it('does not reintroduce a removed optional policy', () => {
+  it('preserves an explicitly empty policy selection when reopening an incomplete draft', () => {
     const saved = { ...structureCandidate(), refundPolicyId: null, refundPolicyVersionId: null };
     expect(structureCandidate(saved).refundPolicyId).toBeNull();
     expect(structureCandidate(saved).refundPolicyVersionId).toBeNull();

@@ -521,6 +521,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
           financeModuleType.charges,
           financeModuleType.financeAudit,
           financeModuleType.incomeTracking,
+          financeModuleType.cashManagement,
           financeModuleType.accountPosting,
           financeModuleType.draftPosting,
           ...(!error && admissionAccountId

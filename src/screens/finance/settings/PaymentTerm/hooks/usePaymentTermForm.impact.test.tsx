@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 
-import { act, renderHook, waitFor } from '@testing-library/react';
-import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { act, waitFor, renderHook } from '@testing-library/react';
+
 import { usePaymentTermForm } from './usePaymentTermForm';
 
 vi.mock(
@@ -67,5 +68,19 @@ describe('Payment term default replacement', () => {
     expect((window as any).paymentTermWrites).toHaveLength(2);
     expect((window as any).paymentTermWrites[1].body.isDefault).toBe(true);
     expect(onClose).toHaveBeenCalledWith(null, true);
+  });
+
+  it('trims the name in an edit revision without changing the existing code', async () => {
+    const { result } = renderHook(() => usePaymentTermForm(editData, vi.fn()), { wrapper });
+    await waitFor(() => expect(result.current.formik.values.paymentTermName).toBe('monthly'));
+    const code = result.current.formik.values.paymentTermCode;
+    await act(async () => {
+      await result.current.formik.setFieldValue('paymentTermName', '  monthly revised \t');
+    });
+    await act(async () => { await result.current.handleSubmit(); });
+    expect((window as any).paymentTermWrites).toHaveLength(2);
+    expect((window as any).paymentTermWrites[1].body).toMatchObject({
+      name: 'monthly revised', code,
+    });
   });
 });

@@ -21,9 +21,11 @@ import {
   IconButton,
   Typography,
   DialogActions,
+  FormHelperText,
 } from '@mui/material';
 
 import { policyImpactRows } from '../policyImpactModel';
+import { structurePolicyError } from '../feeStructureModel';
 
 import type { StructurePolicyFamily } from '../feeStructureModel';
 import type { PolicyImpactRow, ImpactPolicyData } from '../policyImpactModel';
@@ -48,7 +50,7 @@ interface Props {
   writable: boolean;
   locked: boolean;
   busy: boolean;
-  onChange: (family: StructurePolicyFamily, version: string | null) => void;
+  onChange: (family: StructurePolicyFamily, version: string) => void;
   onView: (family: StructurePolicyFamily) => void;
 }
 
@@ -67,38 +69,36 @@ export default function FeeStructurePoliciesStep({
   const selectedFamily = impacts.find((impact) => impact.key === choosing);
   const options = choosing
     ? settings.policies
-      .filter((policy) => policy.family === choosing)
-      .map((policy) => {
-        const rows = policyImpactRows(
-          choosing,
-          {
-            ...candidate,
-            [`${choosing}PolicyId`]: policy.id,
-            [`${choosing}PolicyVersionId`]: policy.versionId,
-          },
-          settings,
-          catalogs[choosing].items?.find(
-            (item) => item.id === policy.id && item.currentVersionId === policy.versionId
-          )
-        );
-        const matches = rows?.filter((row) =>
-          choosing === 'collection'
-            ? row.treatment === 'Late fee applies'
-            : row.treatment !== 'Excluded'
-        ).length;
-        return {
-          ...policy,
-          _id: policy.versionId,
-          coverage: rows
-            ? choosing === 'collection'
-              ? `Late fees on ${matches} of ${rows.length} fee heads`
-              : `${matches} of ${rows.length} fee heads match`
-            : 'Exact-version coverage unavailable',
-        };
-      })
+        .filter((policy) => policy.family === choosing)
+        .map((policy) => {
+          const rows = policyImpactRows(
+            choosing,
+            {
+              ...candidate,
+              [`${choosing}PolicyId`]: policy.id,
+              [`${choosing}PolicyVersionId`]: policy.versionId,
+            },
+            settings,
+            catalogs[choosing].items?.find(
+              (item) => item.id === policy.id && item.currentVersionId === policy.versionId
+            )
+          );
+          const matches = rows?.filter((row) =>
+            choosing === 'collection'
+              ? row.treatment === 'Late fee applies'
+              : row.treatment !== 'Excluded'
+          ).length;
+          return {
+            ...policy,
+            _id: policy.versionId,
+            coverage: rows
+              ? choosing === 'collection'
+                ? `Late fees on ${matches} of ${rows.length} fee heads`
+                : `${matches} of ${rows.length} fee heads match`
+              : 'Exact-version coverage unavailable',
+          };
+        })
     : [];
-  const collectionAttached =
-    !!candidate.collectionPolicyId && !!candidate.collectionPolicyVersionId;
   const refundMismatch =
     !!candidate.refundPolicyVersionId &&
     impacts.some(
@@ -107,7 +107,6 @@ export default function FeeStructurePoliciesStep({
         !!impact.rows?.length &&
         impact.rows.every((row) => row.treatment === 'Excluded')
     );
-  const ready = collectionAttached && !refundMismatch;
   return (
     <>
       <Stack spacing={2} sx={{ width: 1, maxWidth: 'md', mx: 'auto', py: 1, minWidth: 0 }}>
@@ -118,24 +117,19 @@ export default function FeeStructurePoliciesStep({
           sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2, minWidth: 0 }}
         >
           <Stack spacing={2}>
-            {!ready && (
-              <Box>
-                {collectionAttached
-                  ? 'Review refund coverage before continuing.'
-                  : 'Collection Policy is required'}
-              </Box>
-            )}
             <Stack spacing={2} divider={<Divider />}>
               {impacts.map((impact) => {
                 const { key } = impact;
                 const version = candidate[`${key}PolicyVersionId`];
+                const requiredError = locked ? '' : structurePolicyError(candidate, key);
+                const requiredErrorId = `structure-${key}-policy-required`;
                 const allowed =
                   writable && !!settings.permissions[key] && !!settings.permissions[`${key}Read`];
                 const policy = locked
                   ? undefined
                   : settings.policies.find(
-                    (item) => item.family === key && item.versionId === version
-                  );
+                      (item) => item.family === key && item.versionId === version
+                    );
                 const mismatched = key === 'refund' && refundMismatch;
                 const matchedHeads =
                   impact.rows?.filter((row) =>
@@ -147,7 +141,16 @@ export default function FeeStructurePoliciesStep({
                   policy?.versionNumber ??
                   / · v(\d+)(?: · Default)?$/.exec(impact.policyLabel)?.[1];
                 return (
-                  <Box component="section" key={key} sx={{ minWidth: 0 }}>
+                  <Box
+                    component="section"
+                    key={key}
+                    role="group"
+                    aria-label={impact.label}
+                    aria-describedby={requiredError ? requiredErrorId : undefined}
+                    data-invalid={!!requiredError}
+                    tabIndex={requiredError ? -1 : undefined}
+                    sx={{ minWidth: 0 }}
+                  >
                     <FormSectionHeader
                       descriptionTooltip={impact.description}
                       descriptionTooltipLabel={`${impact.label} information`}
@@ -163,7 +166,7 @@ export default function FeeStructurePoliciesStep({
                         >
                           <span>{impact.label}</span>
                           <Typography component="span" variant="caption" color="text.secondary">
-                            {key === 'collection' ? 'Required' : 'Optional'}
+                            Required
                           </Typography>
                         </Stack>
                       }
@@ -188,6 +191,7 @@ export default function FeeStructurePoliciesStep({
                                   type="button"
                                   size="small"
                                   disabled={!allowed || busy}
+                                  sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
                                   aria-label={`${version ? 'Change' : 'Select'} ${impact.label}`}
                                   onClick={() => setChoosing(key)}
                                 >
@@ -210,6 +214,7 @@ export default function FeeStructurePoliciesStep({
                                 type="button"
                                 size="small"
                                 disabled={busy || !version}
+                                sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
                                 aria-label={`View ${impact.label} fee head impact`}
                                 onClick={() => onView(key)}
                               >
@@ -227,10 +232,13 @@ export default function FeeStructurePoliciesStep({
                       >
                         {version
                           ? policy?.name || impact.policyLabel
-                          : key === 'collection'
-                            ? 'Choose a collection policy before review.'
-                            : 'No refund policy attached'}
+                          : `Choose a ${key} policy before review.`}
                       </Typography>
+                      {requiredError && (
+                        <FormHelperText id={requiredErrorId} error sx={{ m: 0 }}>
+                          {requiredError}
+                        </FormHelperText>
+                      )}
                       {version && (
                         <Typography variant="caption" color="text.secondary">
                           {versionNumber ? `Version ${versionNumber}` : 'Attached version'}
@@ -252,8 +260,7 @@ export default function FeeStructurePoliciesStep({
                       )}
                       {mismatched && (
                         <Alert severity="error">
-                          No matching fee heads. Choose another refund policy or remove it before
-                          publishing.
+                          No matching fee heads. Choose another refund policy before publishing.
                         </Alert>
                       )}
                       {!settings.permissions[`${key}Read`] && (
@@ -261,24 +268,6 @@ export default function FeeStructurePoliciesStep({
                           You do not have permission to browse this policy family.
                         </Typography>
                       )}
-                      {version &&
-                        writable &&
-                        settings.permissions[key] &&
-                        !settings.permissions[`${key}Read`] && (
-                          <Box>
-                            <Button
-                              type="button"
-                              size="small"
-                              color="error"
-                              variant="text"
-                              startIcon={<Iconify icon={GlobalIcons.delete} />}
-                              disabled={busy}
-                              onClick={() => onChange(key, null)}
-                            >
-                              Remove {impact.label}
-                            </Button>
-                          </Box>
-                        )}
                       {catalogs[key].error && (
                         <Alert
                           severity="error"
@@ -420,24 +409,6 @@ export default function FeeStructurePoliciesStep({
             )}
           </DialogScrollContent>
           <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)', flexWrap: 'wrap' }}>
-            {candidate[`${choosing}PolicyVersionId`] &&
-              writable &&
-              settings.permissions[choosing] && (
-                <Button
-                  type="button"
-                  size="small"
-                  color="error"
-                  variant="text"
-                  startIcon={<Iconify icon={GlobalIcons.delete} />}
-                  disabled={busy}
-                  onClick={() => {
-                    onChange(choosing, null);
-                    setChoosing(undefined);
-                  }}
-                >
-                  Remove {selectedFamily.label}
-                </Button>
-              )}
             <Box sx={{ flex: 1 }} />
             <Button
               type="button"

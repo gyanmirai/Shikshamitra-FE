@@ -1,3 +1,4 @@
+import { prorationPolicyErrorMessage } from './proration-policy-error';
 import { isGenericPermissionMessage, normalizePermissionDeniedError } from './permission-denied';
 import {
   duplicateDivisionCode,
@@ -135,6 +136,10 @@ const GENERIC_MESSAGES = new Set([
   'validation error',
 ]);
 
+const PRORATION_HTTP_TITLES = new Set([
+  'bad request', 'conflict', 'not found', 'invalid request', 'request failed', 'validation failed',
+]);
+
 const normalizeMessage = (value: string) => value.trim().toLowerCase().replace(/[.]+$/, '');
 
 const isGenericMessage = (value: string) =>
@@ -241,6 +246,9 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
         KNOWN_ERROR_MESSAGES[errorCode.replace(/\./g, ':')]
       : undefined;
   const specificCandidate = candidates.find((candidate) => !isGenericMessage(candidate));
+  const prorationMessage = prorationPolicyErrorMessage(errorCode, businessData);
+  const prorationCandidate = prorationMessage && candidates.find((candidate) =>
+    !isGenericMessage(candidate) && !PRORATION_HTTP_TITLES.has(normalizeMessage(candidate)));
 
   const detail =
     (isDivisionDuplicate &&
@@ -249,6 +257,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
       )) ||
     duplicateStandardMessage ||
     duplicateCategoryMessage ||
+    (prorationMessage && (prorationCandidate || prorationMessage)) ||
     knownMessage ||
     specificCandidate ||
     candidates[0] ||

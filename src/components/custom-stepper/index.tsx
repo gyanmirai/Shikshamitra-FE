@@ -140,6 +140,8 @@ export default CustomStepper;
 
 interface CustomStepperWithFormikProps {
   scrollbarHeight?: string;
+  /** Use regions when the active step supplies independently scrolling workspace panels. */
+  contentScrollMode?: 'step' | 'regions';
   activeStep: number;
   initialValues: any;
   steps: string[];
@@ -344,6 +346,7 @@ const markTouchedFromErrors = (errors: any): any => {
 
 export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = ({
   scrollbarHeight = 'auto',
+  contentScrollMode = 'step',
   activeStep,
   initialValues,
   steps,
@@ -688,30 +691,50 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         submitCurrentStep();
       }}
     >
-      <Scrollbar
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: 'auto',
-          position: 'relative',
-          ...(scrollbarHeight !== 'auto' && scrollbarHeight
-            ? { flex: 'none', height: scrollbarHeight }
-            : {}),
-          '& .simplebar-content': {
+      {contentScrollMode === 'regions' ? (
+        <Box
+          sx={{
             display: 'flex',
             flexDirection: 'column',
-            minHeight: '100%',
-          },
-        }}
-      >
-        {formik &&
-          renderItem({
-            formik,
-            activeStep,
-            isBackClick,
-            footer: footerPlacement === 'content' ? renderFooter() : undefined,
-          })}
-      </Scrollbar>
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden',
+          }}
+        >
+          {formik &&
+            renderItem({
+              formik,
+              activeStep,
+              isBackClick,
+              footer: footerPlacement === 'content' ? renderFooter() : undefined,
+            })}
+        </Box>
+      ) : (
+        <Scrollbar
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            position: 'relative',
+            ...(scrollbarHeight !== 'auto' && scrollbarHeight
+              ? { flex: 'none', height: scrollbarHeight }
+              : {}),
+            '& .simplebar-content': {
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '100%',
+            },
+          }}
+        >
+          {formik &&
+            renderItem({
+              formik,
+              activeStep,
+              isBackClick,
+              footer: footerPlacement === 'content' ? renderFooter() : undefined,
+            })}
+        </Scrollbar>
+      )}
 
       {footerPlacement === 'outside' && renderFooter()}
     </Box>

@@ -98,16 +98,23 @@ describe('Fee assignment student table', () => {
     fireEvent.click(view.getByRole('checkbox', { name: 'Select eligible students on this page' }));
     expect(view.getByRole('checkbox', { name: 'Select Eligible' })).toBeChecked();
     fireEvent.click(view.getByRole('button', { name: 'Assign structure' }));
-    expect(onBulkAssign).toHaveBeenCalledWith([expect.objectContaining({ studentId: 's1' })], 'class-a');
+    expect(onBulkAssign).toHaveBeenCalledWith(
+      [expect.objectContaining({ studentId: 's1' })],
+      'class-a'
+    );
 
     state.context.selectedStandardId = 'all-classes';
-    view.rerender(<FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={onBulkAssign} />);
+    view.rerender(
+      <FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={onBulkAssign} />
+    );
     expect(view.getByRole('checkbox', { name: 'Select Eligible' })).toBeDisabled();
     expect(view.getByRole('checkbox', { name: 'Select Eligible' })).not.toBeChecked();
     expect(view.queryByRole('button', { name: 'Assign structure' })).not.toBeInTheDocument();
 
     state.context.selectedStandardId = 'class-b';
-    view.rerender(<FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={onBulkAssign} />);
+    view.rerender(
+      <FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={onBulkAssign} />
+    );
     expect(view.getByRole('checkbox', { name: 'Select Eligible' })).toBeEnabled();
     expect(view.getByRole('checkbox', { name: 'Select Eligible' })).not.toBeChecked();
   });
@@ -152,6 +159,47 @@ describe('Fee assignment student table', () => {
     expect(state.query.filters).toBeUndefined();
   });
 
+  it('excludes assigned students from header selection and drops stale selections after assignment', () => {
+    state.context.selectedStandardId = 'class-a';
+    state.items = [
+      { enrollmentId: 'e1', studentId: 's1', studentName: 'Eligible', isActive: true },
+      {
+        enrollmentId: 'e2',
+        studentId: 's2',
+        studentName: 'Already assigned',
+        isActive: true,
+        isFeeStructureAssigned: true,
+      },
+    ];
+    const onBulkAssign = vi.fn();
+    const view = render(
+      <FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={onBulkAssign} />
+    );
+    const header = () =>
+      view.getByRole('checkbox', { name: 'Select eligible students on this page' });
+    fireEvent.click(header());
+    expect(header()).toBeChecked();
+    expect(view.getByRole('checkbox', { name: 'Select Already assigned' })).not.toBeChecked();
+    fireEvent.click(view.getByRole('button', { name: 'Assign structure' }));
+    expect(onBulkAssign).toHaveBeenCalledWith(
+      [expect.objectContaining({ studentId: 's1' })],
+      'class-a'
+    );
+
+    state.items = state.items.map((item) => ({ ...item, isFeeStructureAssigned: true }));
+    view.rerender(
+      <FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={onBulkAssign} />
+    );
+    expect(header()).toBeDisabled();
+    expect(header()).not.toBeChecked();
+    expect(view.getByRole('checkbox', { name: 'Select Eligible' })).toBeDisabled();
+    expect(view.getByRole('checkbox', { name: 'Select Eligible' })).not.toBeChecked();
+    expect(view.queryByRole('button', { name: 'Assign structure' })).not.toBeInTheDocument();
+    expect(state.table.rowProps(state.items[0])).toMatchObject({
+      'data-assignment-status': 'assigned',
+    });
+  });
+
   it('provides typed controls for every student field and excludes action controls from export', () => {
     render(<FeeStructureAssignTable onAssignStructure={vi.fn()} />);
     [
@@ -174,7 +222,7 @@ describe('Fee assignment student table', () => {
     expect(state.table.columns.find((column: any) => column.id === 'rollNumber')).toMatchObject({
       filterType: 'number',
       align: 'left',
-      cellSx: { textAlign: 'right', verticalAlign: 'middle' },
+      cellSx: { textAlign: 'left', verticalAlign: 'middle' },
     });
     ['isActive', 'isFeeStructureAssigned'].forEach((id) => {
       expect(state.table.columns.find((column: any) => column.id === id)).toMatchObject({
@@ -195,6 +243,12 @@ describe('Fee assignment student table', () => {
       serverSideSort: true,
       serverSideSortMode: 'single',
     });
+    const action = state.table.columns.find((column: any) => column.id === 'action').render(
+      undefined,
+      { studentId: 'eligible', studentName: 'Eligible', isActive: true }
+    );
+    expect(action.props.variant).toBe('outlined');
+    expect(action.props.startIcon).toBeTruthy();
   });
 
   it('scopes dependency-review links to the requested fee head and exposes a clear action', () => {

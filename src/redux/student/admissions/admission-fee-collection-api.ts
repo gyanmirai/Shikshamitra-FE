@@ -30,6 +30,7 @@ const changedTags = (applicationId: string) => [
   receiptType.receipt,
   financeModuleType.financeAudit,
   financeModuleType.incomeTracking,
+  financeModuleType.cashManagement,
   financeModuleType.accountPosting,
   financeModuleType.draftPosting,
   { type: studentAdmissionsCrmType.admissionApplication, id: applicationId },

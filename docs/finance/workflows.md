@@ -17,6 +17,18 @@ Existing backend operations that share one permission identifier remain one capa
 
 # Trace Finance frontend workflows
 
+## Required fee setup selections and names
+
+Fee-head Income Category choices contain real categories only; the required selector has no
+None option. Empty/loading states do not supply an empty-ID choice, and missing selection still
+blocks submission with the existing field validation.
+
+Payment Terms trim names before validation, generated-code derivation and submission. Duplicate
+comparison normalizes whitespace and case within the backend's tenant/academic-year scope.
+Create, edit and revision requests retain the trimmed display name. A server duplicate-name
+response stays attached to the name field while the user makes whitespace/case-only changes;
+a genuinely different name clears that conflict without losing the installment schedule.
+
 ## Copy policies, refund details and Demand Draft dates
 
 Copy Fee Structure checks linked policies before enabling submission. Each supported policy
@@ -221,6 +233,10 @@ empty or on/after the start date. Invalid or incomplete typing and
 dates outside the common picker range (1900–2099) block submission. Changing the
 start revalidates the end. Submission preserves the selected calendar days as UTC
 start-of-day/end-of-day timestamps; an empty end is sent as `null`.
+
+## Cash Management
+
+Cash collections generate their official receipt immediately. Existing Add Expense selects a pending cash source and actual payment time; the paid expense immediately reduces pending cash. The single [Cash Management workspace](./references/cash-management.md) shows collected, expenses paid, and remaining to deposit. Approval selects the receiving bank and finalizes only the remaining deposit as Income, leaving held cash zero. A fully spent receipt accepts counted amount zero. Administrators may approve their own collection when the server permits it; other collectors require a different reviewer. Legacy approved-held/transit records retain their server-authorized deposit and credit actions. Definitive stale-state responses refresh the latest balance without replacing the draft; uncertain responses retain the exact original request for retry.
 
 ## Accounts source activity
 

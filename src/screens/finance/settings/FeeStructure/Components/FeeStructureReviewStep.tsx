@@ -5,7 +5,6 @@ import type {
 } from 'src/redux/finance/feeStructureWorkspace';
 
 import dayjs from 'dayjs';
-import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
@@ -13,6 +12,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomAccordion from 'src/components/custom-accordian';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { DetailField, DetailSection } from 'src/components/detail-view';
 import {
   Box,
@@ -41,7 +41,6 @@ interface Props {
   tableId: string;
   onReview: () => void;
   onNavigate: (step: number) => void;
-  onRemoveRefund?: () => void;
 }
 
 const date = (value: string | null | undefined) =>
@@ -59,9 +58,7 @@ export default function FeeStructureReviewStep({
   tableId,
   onReview,
   onNavigate,
-  onRemoveRefund,
 }: Props) {
-  const [details, setDetails] = useState(false);
   return (
     <Stack spacing={2}>
       <DetailSection
@@ -119,6 +116,7 @@ export default function FeeStructureReviewStep({
                 <span>
                   <IconButton
                     size="small"
+                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
                     disabled={busy}
                     aria-label={`${writable ? 'Edit' : 'View'} ${impact.label}`}
                     onClick={() => onNavigate(1)}
@@ -137,11 +135,15 @@ export default function FeeStructureReviewStep({
         ))}
       </Box>
 
-      <DetailSection
-        helpText="These checks describe structure configuration. Student eligibility and transactions are calculated in their own workflows."
+      <FormSectionCard
+        descriptionTooltip="These checks describe structure configuration. Student eligibility and transactions are calculated in their own workflows."
         icon={GlobalIcons.publish}
         title={locked ? 'Publication Validation' : 'Publish Readiness'}
-
+        iconSize={16}
+        iconContainerSize={28}
+        titleTypographyProps={{ variant: 'subtitle1', fontWeight: 700 }}
+        contentSpacing={1}
+        sx={{ p: 1.5, minWidth: 0 }}
         action={
           <LoadingButton
             size="small"
@@ -193,19 +195,6 @@ export default function FeeStructureReviewStep({
                             ? 'Review Policies'
                             : 'Review Fee Heads'}
                         </Button>
-                        {/refund/i.test(message) && onRemoveRefund && (
-                          <CustomTooltip title="Remove Refund Policy">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              aria-label="Remove Refund Policy"
-                              disabled={busy}
-                              onClick={onRemoveRefund}
-                            >
-                              <Iconify icon={GlobalIcons.delete} />
-                            </IconButton>
-                          </CustomTooltip>
-                        )}
                       </Stack>
                     </Box>
                   ))}
@@ -216,33 +205,43 @@ export default function FeeStructureReviewStep({
               <Typography variant="body2">No issues block publication.</Typography>
             )}
             {!!preview.warnings.length && (
-              <CustomAccordion
-                title={`${preview.warnings.length} warning${preview.warnings.length === 1 ? '' : 's'}`}
-                summary={
-                  <AccordionSummary
-                    id={`${tableId}-warnings-summary`}
-                    aria-controls={`${tableId}-warnings-content`}
-                    expandIcon={<Iconify icon="mdi:chevron-down" />}
-                  >
-                    <Typography variant="subtitle2">
-                      {preview.warnings.length} warning{preview.warnings.length === 1 ? '' : 's'}
-                    </Typography>
-                  </AccordionSummary>
-                }
-                content={
-                  <Stack spacing={1}>
-                    {preview.warnings.map((message, index) => (
-                      <Typography key={`${index}-${message}`} variant="body2">
-                        {message}
+              <Box
+                sx={{ border: 1, borderColor: 'warning.main', borderRadius: 1, overflow: 'hidden' }}
+              >
+                <CustomAccordion
+                  title={`${preview.warnings.length} warning${preview.warnings.length === 1 ? '' : 's'}`}
+                  summary={
+                    <AccordionSummary
+                      id={`${tableId}-warnings-summary`}
+                      aria-controls={`${tableId}-warnings-content`}
+                      expandIcon={<Iconify icon="mdi:chevron-down" />}
+                      sx={{
+                        minHeight: 44,
+                        '&.Mui-expanded': { minHeight: 44 },
+                        '& .MuiAccordionSummary-content': { my: 1 },
+                        '& .MuiAccordionSummary-content.Mui-expanded': { my: 1 },
+                      }}
+                    >
+                      <Typography variant="subtitle2">
+                        {preview.warnings.length} warning{preview.warnings.length === 1 ? '' : 's'}
                       </Typography>
-                    ))}
-                  </Stack>
-                }
-              />
+                    </AccordionSummary>
+                  }
+                  content={
+                    <Stack spacing={1}>
+                      {preview.warnings.map((message, index) => (
+                        <Typography key={`${index}-${message}`} variant="body2">
+                          {message}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  }
+                />
+              </Box>
             )}
           </>
         )}
-      </DetailSection>
+      </FormSectionCard>
       {preview && (
         <>
           <DetailSection
@@ -250,14 +249,19 @@ export default function FeeStructureReviewStep({
             title="Policy Coverage"
             helpText="Collection, refund, and accounting treatment for each fee head in this review."
             action={
-              <Button
-                size="small"
-                startIcon={<Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} />}
-                disabled={busy}
-                onClick={() => onNavigate(1)}
-              >
-                {writable ? 'Edit Policies' : 'View Policies'}
-              </Button>
+              <CustomTooltip title={writable ? 'Edit policies' : 'View policies'} placement="right">
+                <span>
+                  <IconButton
+                    size="small"
+                    aria-label={writable ? 'Edit policies' : 'View policies'}
+                    disabled={busy}
+                    onClick={() => onNavigate(1)}
+                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
+                  >
+                    <Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} />
+                  </IconButton>
+                </span>
+              </CustomTooltip>
             }
           >
             <CustomizableTable
@@ -310,24 +314,32 @@ export default function FeeStructureReviewStep({
               ]}
             />
           </DetailSection>
-          <DetailSection
+          <FormSectionCard
             icon={GlobalIcons.calendar}
             title="Payment Schedules"
-            helpText="Expand a fee head to review its payment term version, service periods, due dates, and installment amounts. Show Details adds demand dates and allocation percentages."
+            iconSize={16}
+            iconContainerSize={28}
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 700 }}
+            descriptionTooltip="Expand a fee head to review its payment term version, service periods, demand and due dates, allocation percentages, and installment amounts."
+            contentSpacing={1}
+            sx={{ p: 1.5, minWidth: 0 }}
             action={
-              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                <Button size="small" onClick={() => setDetails(!details)} aria-pressed={details}>
-                  {details ? 'Hide Details' : 'Show Details'}
-                </Button>
-                <Button
-                  size="small"
-                  startIcon={<Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} />}
-                  disabled={busy}
-                  onClick={() => onNavigate(0)}
-                >
-                  {writable ? 'Edit Fee Heads' : 'View Fee Heads'}
-                </Button>
-              </Stack>
+              <CustomTooltip
+                title={writable ? 'Edit fee heads' : 'View fee heads'}
+                placement="right"
+              >
+                <span>
+                  <IconButton
+                    size="small"
+                    aria-label={writable ? 'Edit fee heads' : 'View fee heads'}
+                    disabled={busy}
+                    onClick={() => onNavigate(0)}
+                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
+                  >
+                    <Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} />
+                  </IconButton>
+                </span>
+              </CustomTooltip>
             }
           >
             {!preview.schedules.length && (
@@ -336,123 +348,136 @@ export default function FeeStructureReviewStep({
               </Typography>
             )}
             {preview.schedules.map((schedule) => (
-              <CustomAccordion
+              <Box
                 key={schedule.feeHeadId}
-                title={schedule.feeHeadName}
-                summary={
-                  <AccordionSummary
-                    id={`${tableId}-schedule-${schedule.feeHeadId}-summary`}
-                    aria-controls={`${tableId}-schedule-${schedule.feeHeadId}-content`}
-                    expandIcon={<Iconify icon="mdi:chevron-down" />}
-                  >
-                    <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-                      <Typography
-                        component="h3"
-                        variant="subtitle2"
-                        sx={{ overflowWrap: 'anywhere' }}
+                sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}
+              >
+                <CustomAccordion
+                  title={schedule.feeHeadName}
+                  summary={
+                    <AccordionSummary
+                      id={`${tableId}-schedule-${schedule.feeHeadId}-summary`}
+                      aria-controls={`${tableId}-schedule-${schedule.feeHeadId}-content`}
+                      expandIcon={<Iconify icon="mdi:chevron-down" />}
+                      sx={{
+                        minHeight: 44,
+                        '&.Mui-expanded': { minHeight: 44 },
+                        '& .MuiAccordionSummary-content': { my: 1 },
+                        '& .MuiAccordionSummary-content.Mui-expanded': { my: 1 },
+                      }}
+                    >
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        useFlexGap
+                        flexWrap="wrap"
+                        alignItems="baseline"
+                        sx={{ minWidth: 0 }}
                       >
-                        {schedule.feeHeadName}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ overflowWrap: 'anywhere' }}
-                      >
-                        {schedule.paymentTermName} · Version {schedule.versionNumber} ·{' '}
-                        {schedule.installments.length} installment
-                        {schedule.installments.length === 1 ? '' : 's'}
-                      </Typography>
-                    </Stack>
-                  </AccordionSummary>
-                }
-                content={
-                  <CustomizableTable
-                    tableTitle={`${schedule.feeHeadName} installments`}
-                    tableId={`${tableId}-installments-${schedule.feeHeadId}-${details ? 'detail' : 'summary'}`}
-                    data={schedule.installments.map((line) => ({
-                      ...line,
-                      _id: `${schedule.feeHeadId}-${line.sequence}`,
-                    }))}
-                    showToolbar={false}
-                    isPagination={schedule.installments.length > 12}
-                    isFilter={false}
-                    isSearch={false}
-                    isShowedDense={false}
-                    columns={[
-                      {
-                        id: 'name',
-                        label: 'Installment',
-                        filterType: 'string' as const,
-                        width: '20%',
-                        minWidth: 140,
-                        isSort: false,
-                        isFilter: true,
-                      },
-                      {
-                        id: 'coverageStartDate',
-                        label: 'Service period',
-                        filterType: 'string' as const,
-                        width: '38%',
-                        minWidth: 240,
-                        isSort: false,
-                        isFilter: true,
-                        render: (_value, row) =>
-                          `${date(row.coverageStartDate)} – ${date(row.coverageEndDate)}`,
-                      },
-                      ...(details
-                        ? [
-                            {
-                              id: 'demandDate',
-                              label: 'Demand date',
-                              filterType: 'date' as const,
-                              minWidth: 140,
-                              isSort: false,
-                              isFilter: true,
-                              render: (value: string) => date(value),
-                            },
-                            {
-                              cellSx: { textAlign: 'right' as const },
-                              id: 'allocationPercentage',
-                              label: 'Allocation (%)',
-                              filterType: 'number' as const,
-                              minWidth: 120,
-                              align: 'left' as const,
-                              isSort: false,
-                              isFilter: true,
-                            },
-                          ]
-                        : []),
-                      {
-                        id: 'dueDate',
-                        label: 'Due date',
-                        filterType: 'date' as const,
-                        width: '22%',
-                        minWidth: 140,
-                        isSort: false,
-                        isFilter: true,
-                        render: (value) => date(value),
-                      },
-                      {
-                        cellSx: { textAlign: 'right' as const },
-                        id: 'calculatedAmount',
-                        label: 'Amount (₹)',
-                        filterType: 'number' as const,
-                        width: '20%',
-                        minWidth: 150,
-                        align: 'left',
-                        isSort: false,
-                        isFilter: true,
-                        render: (_value, row) =>
-                          structureMoney(
-                            row.calculatedAmount == null ? null : Number(row.calculatedAmount)
-                          ),
-                      },
-                    ]}
-                  />
-                }
-              />
+                        <Typography
+                          component="h3"
+                          variant="subtitle2"
+                          sx={{ overflowWrap: 'anywhere' }}
+                        >
+                          {schedule.feeHeadName}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ overflowWrap: 'anywhere' }}
+                        >
+                          {schedule.paymentTermName} · Version {schedule.versionNumber} ·{' '}
+                          {schedule.installments.length} installment
+                          {schedule.installments.length === 1 ? '' : 's'}
+                        </Typography>
+                      </Stack>
+                    </AccordionSummary>
+                  }
+                  content={
+                    <CustomizableTable
+                      tableTitle={`${schedule.feeHeadName} installments`}
+                      tableId={`${tableId}-installments-${schedule.feeHeadId}`}
+                      data={schedule.installments.map((line) => ({
+                        ...line,
+                        _id: `${schedule.feeHeadId}-${line.sequence}`,
+                      }))}
+                      showToolbar={false}
+                      isPagination={schedule.installments.length > 12}
+                      isFilter={false}
+                      isSearch={false}
+                      isShowedDense={false}
+                      columns={[
+                        {
+                          id: 'name',
+                          label: 'Installment',
+                          filterType: 'string' as const,
+                          width: '20%',
+                          minWidth: 140,
+                          isSort: false,
+                          isFilter: true,
+                        },
+                        {
+                          id: 'coverageStartDate',
+                          label: 'Service period',
+                          filterType: 'string' as const,
+                          width: '38%',
+                          minWidth: 240,
+                          isSort: false,
+                          isFilter: true,
+                          render: (_value, row) =>
+                            `${date(row.coverageStartDate)} – ${date(row.coverageEndDate)}`,
+                        },
+                        {
+                          id: 'demandDate',
+                          label: 'Demand date',
+                          filterType: 'date' as const,
+                          minWidth: 140,
+                          isSort: false,
+                          isFilter: true,
+                          render: (value: string) => date(value),
+                        },
+                        {
+                          cellSx: { textAlign: 'right' as const },
+                          id: 'allocationPercentage',
+                          label: 'Allocation (%)',
+                          filterType: 'number' as const,
+                          minWidth: 120,
+                          align: 'left' as const,
+                          isSort: false,
+                          isFilter: true,
+                        },
+                        {
+                          id: 'dueDate',
+                          label: 'Due date',
+                          filterType: 'date' as const,
+                          width: '22%',
+                          minWidth: 140,
+                          isSort: false,
+                          isFilter: true,
+                          render: (value) => date(value),
+                        },
+                        {
+                          cellSx: { textAlign: 'right' as const },
+                          id: 'calculatedAmount',
+                          label: 'Amount (₹)',
+                          filterType: 'number' as const,
+                          width: '20%',
+                          minWidth: 150,
+                          align: 'left',
+                          isSort: false,
+                          isFilter: true,
+                          render: (_value, row) =>
+                            structureMoney(
+                              row.calculatedAmount == null ? null : Number(row.calculatedAmount)
+                            ),
+                        },
+                      ]}
+                    />
+                  }
+                />
+              </Box>
             ))}
-          </DetailSection>
+          </FormSectionCard>
         </>
       )}
     </Stack>

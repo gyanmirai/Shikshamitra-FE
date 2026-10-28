@@ -38,6 +38,7 @@ const FINANCE_GROUPS: Record<string, Record<FinancePermissionAction, string[]>> 
   'Finance.Settings.FeeStructure': CRUD,
   'Finance.Settings.ConcessionType': SETTINGS,
   'Finance.Settings.ChargeCategory': SETTINGS,
+  'Finance.Accounts.CashManagement': { View: ['View'], Add: ['Approve', 'Deposit', 'Reconcile'], Delete: [] },
   'Finance.Accounts.Activity': { ...CRUD, Add: [], Delete: [] },
   'Finance.Accounts.Reconciliation': { ...CRUD, Delete: [] },
   'Finance.Accounts.IncomeTracking': CRUD,

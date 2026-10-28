@@ -6,7 +6,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { SvgColor } from 'src/components/svg-color';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useResponsive } from 'src/hooks/use-responsive';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
@@ -252,89 +251,71 @@ export default function ClassAccordionPanel({
                 .toLowerCase()
                 .includes(search.toLowerCase())
             )
-            .map(({ card, key, isLocal }) => {
+            .map(({ card, key }) => {
               const name = (names[key] ?? card.name) || 'New fee structure';
               const selected = key === activeKey;
-              const unsaved = dirtyKeys.has(key) || (isLocal && !card._id);
               return (
-                <CustomTooltip key={key} title={name} describeChild placement="right">
-                  <ListItemButton
-                    selected={selected}
-                    disabled={busy}
-                    aria-current={selected ? 'true' : undefined}
-                    onClick={() => {
-                      setSelectedKey(key);
-                      setListOpen(false);
-                    }}
-                    sx={(theme) => ({
-                      borderRadius: 2,
-                      minHeight: 56,
+                <ListItemButton
+                  key={key}
+                  selected={selected}
+                  disabled={busy}
+                  aria-current={selected ? 'true' : undefined}
+                  onClick={() => {
+                    setSelectedKey(key);
+                    setListOpen(false);
+                  }}
+                  sx={(theme) => ({
+                    borderRadius: 2,
+                    minHeight: 56,
+                    minWidth: 0,
+                    display: 'grid',
+                    gridTemplateColumns: '24px minmax(0, 1fr)',
+                    columnGap: 1,
+                    p: 1.25,
+                    mb: 1,
+                    bgcolor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: selected ? 'primary.main' : 'transparent',
+                    transition: theme.transitions.create(['background-color', 'border-color'], {
+                      duration: theme.transitions.duration.shorter,
+                    }),
+                    '&.Mui-selected': {
+                      bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.12),
+                    },
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                    '&.Mui-selected:hover': {
+                      bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
+                    },
+                    '&.Mui-focusVisible': {
+                      outline: '2px solid',
+                      outlineColor: 'primary.main',
+                      outlineOffset: 2,
+                    },
+                    '@media (prefers-reduced-motion: reduce)': {
+                      transition: 'none',
+                    },
+                  })}
+                >
+                  <SvgColor
+                    src={`${CONFIG.site.basePath}/assets/icons/navbar/ic-file.svg`}
+                    width={24}
+                    aria-hidden="true"
+                    sx={{ color: selected ? 'primary.main' : 'text.secondary', flexShrink: 0 }}
+                  />
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
                       minWidth: 0,
-                      display: 'grid',
-                      gridTemplateColumns: '24px minmax(0, 1fr) 8px',
-                      columnGap: 1,
-                      p: 1.25,
-                      mb: 1,
-                      bgcolor: 'background.paper',
-                      border: '1px solid',
-                      borderColor: selected ? 'primary.main' : 'transparent',
-                      transition: theme.transitions.create(['background-color', 'border-color'], {
-                        duration: theme.transitions.duration.shorter,
-                      }),
-                      '&.Mui-selected': {
-                        bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.12),
-                      },
-                      '&:hover': {
-                        bgcolor: 'action.hover',
-                      },
-                      '&.Mui-selected:hover': {
-                        bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
-                      },
-                      '&.Mui-focusVisible': {
-                        outline: '2px solid',
-                        outlineColor: 'primary.main',
-                        outlineOffset: 2,
-                      },
-                      '@media (prefers-reduced-motion: reduce)': {
-                        transition: 'none',
-                      },
-                    })}
+                      overflowWrap: 'anywhere',
+                      color: selected ? 'primary.main' : 'text.primary',
+                      fontWeight: selected ? 700 : 500,
+                    }}
                   >
-                    <SvgColor
-                      src={`${CONFIG.site.basePath}/assets/icons/navbar/ic-file.svg`}
-                      width={24}
-                      aria-hidden="true"
-                      sx={{ color: selected ? 'primary.main' : 'text.secondary', flexShrink: 0 }}
-                    />
-                    <Typography
-                      variant="subtitle2"
-                      noWrap
-                      sx={{
-                        minWidth: 0,
-                        color: selected ? 'primary.main' : 'text.primary',
-                        fontWeight: selected ? 700 : 500,
-                      }}
-                    >
-                      {name}
-                    </Typography>
-                    {unsaved && (
-                      <CustomTooltip title="Unsaved changes">
-                        <Box
-                          component="span"
-                          role="img"
-                          aria-label="Unsaved changes"
-                          sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            bgcolor: 'warning.main',
-                            flexShrink: 0,
-                          }}
-                        />
-                      </CustomTooltip>
-                    )}
-                  </ListItemButton>
-                </CustomTooltip>
+                    {name}
+                  </Typography>
+                </ListItemButton>
               );
             })}
         </List>

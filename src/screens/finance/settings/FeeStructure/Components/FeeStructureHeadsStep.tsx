@@ -23,6 +23,7 @@ import { amountError, paymentTermError } from '../feeStructureModel';
 
 interface Props {
   adding: boolean;
+  onAdd: () => void;
   onCloseAdd: () => void;
   formik: FormikProps<StructureCandidate>;
   settings: StructureSettings;
@@ -50,6 +51,7 @@ interface Props {
 
 export default function FeeStructureHeadsStep({
   adding,
+  onAdd,
   onCloseAdd,
   formik,
   settings,
@@ -140,6 +142,19 @@ export default function FeeStructureHeadsStep({
         title="Fee Heads"
         titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
         contentSx={{ minWidth: 0 }}
+        action={
+          writable && (
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+              disabled={busy || headsLoading || headsError || !settings.permissions.headsRead}
+              onClick={onAdd}
+            >
+              Fee Head
+            </Button>
+          )
+        }
       >
         {(!settings.permissions.headsRead || headsError) && (
           <Alert
@@ -238,7 +253,7 @@ export default function FeeStructureHeadsStep({
               id: 'amount',
               label: 'Annual amount',
               minWidth: 160,
-              align: 'right',
+              align: 'left',
               isFilter: false,
               isSort: false,
               render: (_value, row) => (
@@ -267,7 +282,7 @@ export default function FeeStructureHeadsStep({
                     <FormHelperText
                       error
                       id={`${validationId}-${row.feeHeadId}-amount-error`}
-                      sx={{ m: 0, textAlign: 'right' }}
+                      sx={{ m: 0, textAlign: 'left' }}
                     >
                       {row.amountError}
                     </FormHelperText>
@@ -336,7 +351,10 @@ export default function FeeStructureHeadsStep({
                   directActionLimit={2}
                   collapseOnOverflow={false}
                   moreLabel={`More actions for ${row.feeHeadName}`}
-                  sx={{ justifyContent: 'center' }}
+                  sx={{
+                    justifyContent: 'center',
+                    '& .MuiIconButton-root': { border: 1, borderColor: 'divider', borderRadius: 1 },
+                  }}
                   actions={[
                     ...(writable
                       ? [

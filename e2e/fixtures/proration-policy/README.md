@@ -8,6 +8,12 @@ node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin
 
 Open http://localhost:4186. This fixture uses the actual form, validation, payload mapper, summary, and saved-policy drawer with synthetic fee heads. It does not write to the backend.
 
+Use `/?clone=default` for the production Proration Policy workspace and row menu with an
+Active default, five configured fee heads, and an existing Draft Copy. Cloning the default
+adds Copy 2, then Copy 3, as independent nondefault Drafts. `/?clone=blocked` returns a
+generic RFC problem with the unavailable-fee-head code to verify the actionable error toast.
+These mocked responses validate frontend wiring; backend regression tests own clone rules.
+
 Use **Open create drawer** to verify the complete production drawer and **Reopen saved policy**
 after saving to verify edit hydration. Queries and mutations are served by `mock-service.ts`
 in memory. Reloading clears saved fixture policies. The component preview below the launcher

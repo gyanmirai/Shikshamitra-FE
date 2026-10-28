@@ -61,6 +61,7 @@ const policyOptions: AssignmentPolicy[] = [
   },
 ];
 const stamps = new Map<string, number>();
+const bulkSidebar = new URLSearchParams(window.location.search).has('bulkSidebar');
 
 export const candidate: AssignmentCandidate = {
   policies: policyOptions.filter((p) => p.versionId !== 'alternate-v1'),
@@ -98,6 +99,16 @@ export const candidate: AssignmentCandidate = {
     },
   ],
 };
+if (bulkSidebar) {
+  candidate.heads.push(
+    ...Array.from({ length: 6 }, (_, index) => ({
+      ...candidate.heads[0],
+      feeHeadId: `activity-${index}`,
+      feeHeadName: `Academic activity ${index + 1}`,
+    }))
+  );
+  candidate.total = candidate.heads.reduce((sum, head) => sum + (head.configuredAmount ?? 0), 0);
+}
 // Keep existing fixed fixtures stable; opt into variable pricing for browser checks.
 if (new URLSearchParams(window.location.search).has('variableFees')) {
   candidate.heads[1] = {
@@ -132,7 +143,7 @@ function preview(input: AssignmentRequest): AssignmentPreview {
       obligation: included ? effectiveAmount! : 0,
       zeroAmountReason: input.variableFeeHeads?.find((h) => h.feeHeadId === head.feeHeadId)
         ?.zeroAmountReason,
-      paymentTermName: 'Two installments',
+      paymentTermName: bulkSidebar ? 'Twelve installments' : 'Two installments',
       paymentTermVersionNumber: 3,
       servicePeriod: input.servicePeriods.find((p) => p.feeHeadId === head.feeHeadId) ?? {
         feeHeadId: head.feeHeadId,
@@ -145,13 +156,21 @@ function preview(input: AssignmentRequest): AssignmentPreview {
   const lines = heads
     .filter((h) => h.included)
     .flatMap((h) =>
-      [60, 40].map((share, i) => ({
+      (bulkSidebar ? [...Array<number>(11).fill(8), 12] : [60, 40]).map((share, i) => ({
         feeHeadId: h.feeHeadId,
         feeHeadName: h.feeHeadName,
         installmentLabel: `Installment ${i + 1}`,
         sequence: i + 1,
-        dueDate: i === 0 ? '2026-04-10' : '2026-10-10',
-        demandDate: i === 0 ? '2026-04-01' : '2026-10-01',
+        dueDate: bulkSidebar
+          ? new Date(Date.UTC(2026, 3 + i, 10)).toISOString().slice(0, 10)
+          : i === 0
+            ? '2026-04-10'
+            : '2026-10-10',
+        demandDate: bulkSidebar
+          ? new Date(Date.UTC(2026, 3 + i, 1)).toISOString().slice(0, 10)
+          : i === 0
+            ? '2026-04-01'
+            : '2026-10-01',
         allocationPercentage: share,
         scheduledAmount: (h.effectiveAmount! * share) / 100,
         proratedAmount: (h.obligation * share) / 100,

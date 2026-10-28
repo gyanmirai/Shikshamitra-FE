@@ -15,6 +15,8 @@ Backend Finance docs own product and API truth at [Finance backend docs](../../.
 
 Active Fee Structure editor, typed client and browser checks: [workspace implementation](./references/fee-structure-workspace.md).
 
+The single Accounts cash workspace, expense source picker and deposit actions: [Cash Management](./references/cash-management.md).
+
 Variable structure pricing and manual student entry: [variable fee assignment](./references/variable-fee-assignment.md).
 
 ## Read order

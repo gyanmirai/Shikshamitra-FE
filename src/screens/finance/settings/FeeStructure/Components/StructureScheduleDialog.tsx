@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { formatNumber } from 'src/utils/formate_number';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -18,7 +19,7 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
-import { Box, Alert, Stack, Button, Typography, DialogActions } from '@mui/material';
+import { Box, Alert, Stack, Button, IconButton, Typography, DialogActions } from '@mui/material';
 
 import { structureScheduleAmounts } from './structureScheduleAmounts';
 
@@ -414,15 +415,17 @@ export default function StructureScheduleDialog({
           )}
           <Box sx={{ flex: 1 }} />
           {readOnly && onEdit && (
-            <Button
-              size="small"
-              variant="contained"
-              type="button"
-              startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
-              onClick={onEdit}
-            >
-              Edit Installments
-            </Button>
+            <CustomTooltip title="Edit installments" placement="right">
+              <IconButton
+                size="small"
+                type="button"
+                aria-label="Edit installments"
+                onClick={onEdit}
+                sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
+              >
+                <Iconify icon={GlobalIcons.edit} width={18} />
+              </IconButton>
+            </CustomTooltip>
           )}
           <Button
             size="small"

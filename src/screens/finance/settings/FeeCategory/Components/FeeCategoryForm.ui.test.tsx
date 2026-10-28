@@ -1,9 +1,14 @@
 import type { ReactNode } from 'react';
 
-import { vi, it, expect, describe } from 'vitest';
+import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import FeeCategoryForm from './FeeCategoryForm';
+
+const routing = vi.hoisted(() => ({
+  result: { data: { items: [{ id: 'income-1', name: 'School Fee Income [ABC123]' }] },
+    isLoading: false, isFetching: false },
+}));
 
 vi.mock('src/screens/finance/hooks/useFinancePermissions', () => ({
   useFinancePermissions: () => ({ canView: true, canAdd: true }),
@@ -27,11 +32,7 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
   default: ({ type, params }: { type: string; params?: { operation?: string } }) => {
     if (type === 'mutation') return [vi.fn(), { isLoading: false }];
     if (params?.operation === 'fee-head') {
-      return {
-        data: { items: [{ id: 'income-1', name: 'School Fee Income [ABC123]' }] },
-        isLoading: false,
-        isFetching: false,
-      };
+      return routing.result;
     }
     return { data: { items: [] }, isLoading: false, isFetching: false };
   },
@@ -58,6 +59,34 @@ const renderForm = () =>
   render(<FeeCategoryForm open={{ value: true } as never} onClose={vi.fn()} editData={null} />);
 
 describe('Fee category editor', () => {
+  beforeEach(() => {
+    routing.result = { data: { items: [{ id: 'income-1', name: 'School Fee Income [ABC123]' }] },
+      isLoading: false, isFetching: false };
+  });
+
+  it('offers only real income categories and keeps the selection required', async () => {
+    renderForm();
+    const incomeCategory = screen.getByRole('combobox', { name: 'Income Category *' });
+    fireEvent.mouseDown(incomeCategory);
+    expect(await screen.findByRole('option', { name: /School Fee Income/ })).toBeVisible();
+    expect(screen.queryByRole('option', { name: 'None' })).toBeNull();
+    fireEvent.keyDown(incomeCategory, { key: 'Escape' });
+    fireEvent.blur(incomeCategory);
+    expect(await screen.findByText('Income Category is required')).toBeVisible();
+  });
+
+  it('keeps an empty category list empty and shows its loading state', async () => {
+    routing.result = { data: { items: [] }, isLoading: true, isFetching: true };
+    const view = renderForm();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Income Category *' }));
+    expect(await screen.findByText('Loading…')).toBeVisible();
+    expect(screen.queryByRole('option')).toBeNull();
+    routing.result = { data: { items: [] }, isLoading: false, isFetching: false };
+    view.rerender(<FeeCategoryForm open={{ value: true } as never} onClose={vi.fn()} editData={null} />);
+    expect(await screen.findByText('No income categories found')).toBeVisible();
+    expect(screen.queryByRole('option')).toBeNull();
+  });
+
   it('blocks removal of an assigned fee head without showing a usage warning while editing', () => {
     const head = {
       id: 'assigned-head',
@@ -100,6 +129,8 @@ describe('Fee category editor', () => {
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.queryByRole('region', { name: 'Usage of FH3' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'View usage' })).toBeNull();
+    expect(screen.getAllByRole('combobox', { name: 'Income Category *' })[0])
+      .toHaveValue('School Fee Income');
   });
 
   it('groups category fields and keeps both descriptions visible', () => {

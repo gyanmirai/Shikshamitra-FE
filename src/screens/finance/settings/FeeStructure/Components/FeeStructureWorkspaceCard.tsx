@@ -45,6 +45,7 @@ import {
   structureError,
   paymentTermError,
   structureCandidate,
+  structurePolicyError,
   buildStructureChanges,
 } from '../feeStructureModel';
 
@@ -81,7 +82,7 @@ const families: {
     label: 'Refund Policy',
     description:
       'Defines eligibility for matching heads. Attaching a policy does not approve a refund.',
-    empty: 'No refund policy attached',
+    empty: 'Select a policy before review. Drafts may be incomplete.',
   },
 ];
 
@@ -124,7 +125,7 @@ export default function FeeStructureWorkspaceCard({
     if (workflowKeys.includes(savedStep))
       setTab(
         savedStep === 'review' &&
-          !initialData.record.collectionPolicyVersionId &&
+          families.some(({ key }) => structurePolicyError(initialData.record!, key)) &&
           initialData.record.status !== FeeStructureLockStatusType.Locked
           ? 'policies'
           : savedStep
@@ -303,13 +304,17 @@ export default function FeeStructureWorkspaceCard({
       ?.querySelector<HTMLElement>('[aria-invalid="true"], [data-invalid="true"]')
       ?.focus();
   }, [tab, submitted, error]);
-  const publishBlockReason = dirty
-    ? 'Save draft before publishing.'
-    : preview?.errors.length
-      ? `Resolve ${preview.errors.length} issue${preview.errors.length === 1 ? '' : 's'} before publishing.`
-      : !preview?.isReady
-        ? 'Run the readiness check before publishing.'
-        : '';
+  const policiesValid = families.every(({ key }) => !structurePolicyError(candidate, key));
+  const publishBlockReason =
+    !locked && !policiesValid
+      ? 'Select a Collection Policy and a Refund Policy before publishing.'
+      : dirty
+        ? 'Save draft before publishing.'
+        : preview?.errors.length
+          ? `Resolve ${preview.errors.length} issue${preview.errors.length === 1 ? '' : 's'} before publishing.`
+          : !preview?.isReady
+            ? 'Run the readiness check before publishing.'
+            : '';
   const writable =
     !viewOnly &&
     editing &&
@@ -387,7 +392,7 @@ export default function FeeStructureWorkspaceCard({
       setPreview(record.publicationReview);
       return;
     }
-    if (!validateFields()) return;
+    if (!validateFields() || !validatePolicies()) return;
     setError('');
     generation.current += 1;
     const requestGeneration = generation.current;
@@ -418,6 +423,13 @@ export default function FeeStructureWorkspaceCard({
       return false;
     }
     return true;
+  };
+  const validatePolicies = () => {
+    if (locked || policiesValid) return true;
+    focusErrorPending.current = true;
+    setTab('policies');
+    setError('Select a Collection Policy and a Refund Policy before continuing.');
+    return false;
   };
   const save = async (): Promise<boolean> => {
     if (navigationBusy || !validateFields()) return false;
@@ -455,14 +467,11 @@ export default function FeeStructureWorkspaceCard({
   };
   const navigate = (step: number) => {
     if (navigationBusy || step === activeStep) return;
-    if (step === 2 && !locked && !candidate.collectionPolicyVersionId) {
-      setTab('policies');
-      return;
-    }
+    if (step === 2 && !validatePolicies()) return;
     setTab(workflowKeys[step]);
   };
   const saveAndNext = async () => {
-    if (tab === 'policies' && !candidate.collectionPolicyVersionId) return;
+    if (tab === 'policies' && !validatePolicies()) return;
     if (!(await save())) return;
     // Stay in edit mode after saving so the next stage remains usable.
     setEditing(true);
@@ -541,7 +550,7 @@ export default function FeeStructureWorkspaceCard({
     JSON.stringify(candidate.feeHeads) === JSON.stringify(savedCandidate.feeHeads);
   const policiesSaved =
     !!record &&
-    !!candidate.collectionPolicyVersionId &&
+    (locked || policiesValid) &&
     families.every(
       ({ key }) =>
         candidate[`${key}PolicyId`] === savedCandidate[`${key}PolicyId`] &&
@@ -597,23 +606,6 @@ export default function FeeStructureWorkspaceCard({
               flexWrap="wrap"
               sx={{ ml: 'auto' }}
             >
-              {writable && tab === 'heads' && (
-                <Button
-                  aria-label="Add Fee Head"
-                  size="small"
-                  variant="contained"
-                  startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-                  disabled={
-                    navigationBusy ||
-                    heads.isFetching ||
-                    heads.isError ||
-                    !settings?.permissions.headsRead
-                  }
-                  onClick={addHeadDialog.onTrue}
-                >
-                  Add Fee Head
-                </Button>
-              )}
               {!viewOnly && locked && settings?.permissions.add && settings?.permissions.edit && (
                 <LoadingButton
                   size="small"
@@ -629,6 +621,9 @@ export default function FeeStructureWorkspaceCard({
               <AdaptiveThreeDotsActions
                 directActionLimit={3}
                 moreLabel="More structure actions"
+                sx={{
+                  '& .MuiIconButton-root': { border: 1, borderColor: 'divider', borderRadius: 1 },
+                }}
                 actions={[
                   ...(!viewOnly && !locked && !editing && settings?.permissions.edit
                     ? [
@@ -728,7 +723,7 @@ export default function FeeStructureWorkspaceCard({
               completedSteps={completedSteps}
               errors={[
                 Boolean((submitted || Object.keys(formik.errors).length > 0) && !headsValid),
-                Boolean(!locked && !candidate.collectionPolicyVersionId),
+                Boolean(!locked && !policiesValid),
                 Boolean(preview?.errors.length),
               ]}
               onStepClick={navigate}
@@ -762,7 +757,7 @@ export default function FeeStructureWorkspaceCard({
                 title: activeStep === 2 ? publishBlockReason || undefined : undefined,
                 disabled:
                   navigationBusy ||
-                  (!locked && activeStep === 1 && !candidate.collectionPolicyVersionId) ||
+                  (!locked && activeStep === 1 && !policiesValid) ||
                   (writable && !record && families.some(({ key }) => catalogs[key].loading)),
                 sx: {
                   ...(activeStep === 2 && !canPublish && { display: 'none' }),
@@ -779,6 +774,7 @@ export default function FeeStructureWorkspaceCard({
                   {tab === 'heads' && (
                     <FeeStructureHeadsStep
                       adding={addHeadDialog.value}
+                      onAdd={addHeadDialog.onTrue}
                       onCloseAdd={addHeadDialog.onFalse}
                       formik={formik}
                       settings={settings}
@@ -850,14 +846,15 @@ export default function FeeStructureWorkspaceCard({
                       locked={!!locked}
                       busy={navigationBusy}
                       onChange={(key, version) => {
-                        defaultsHandled.current.add(key);
                         const policy = settings.policies.find(
                           (item) => item.family === key && item.versionId === version
                         );
+                        if (!policy?.id || !policy.versionId) return;
+                        defaultsHandled.current.add(key);
                         change({
                           ...candidate,
-                          [`${key}PolicyId`]: policy?.id ?? null,
-                          [`${key}PolicyVersionId`]: policy?.versionId ?? null,
+                          [`${key}PolicyId`]: policy.id,
+                          [`${key}PolicyVersionId`]: policy.versionId,
                         });
                       }}
                       onView={setImpactFamily}
@@ -876,19 +873,6 @@ export default function FeeStructureWorkspaceCard({
                       tableId={`structure-review-${record?.id ?? `${initialData.classId}-${index}`}`}
                       onReview={review}
                       onNavigate={navigate}
-                      onRemoveRefund={
-                        writable && settings.permissions.refund && candidate.refundPolicyVersionId
-                          ? () => {
-                              defaultsHandled.current.add('refund');
-                              change({
-                                ...candidate,
-                                refundPolicyId: null,
-                                refundPolicyVersionId: null,
-                              });
-                              setTab('policies');
-                            }
-                          : undefined
-                      }
                     />
                   )}
                 </Box>

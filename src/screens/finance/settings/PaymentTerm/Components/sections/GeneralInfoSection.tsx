@@ -19,6 +19,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { normalizePaymentTermName } from '../../paymentTermName';
+
 import type { IPaymentTerm } from '../../type';
 import type { IBoard } from '../../hooks/usePaymentTermForm';
 
@@ -37,7 +39,9 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
   const defaultSelectionDisabled = formik.values.status !== 'Active';
   const conflict = formik.status?.nameConflict;
   const nameError =
-    (conflict?.name === formik.values.paymentTermName && conflict.message) ||
+    (conflict &&
+      normalizePaymentTermName(conflict.name) ===
+        normalizePaymentTermName(formik.values.paymentTermName) && conflict.message) ||
     (formik.touched.paymentTermName && formik.errors.paymentTermName);
 
   return (
@@ -60,7 +64,10 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
               placeholder="e.g. Monthly installments"
               value={formik.values.paymentTermName || ''}
               onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
+              onBlur={(event) => {
+                formik.setFieldValue('paymentTermName', formik.values.paymentTermName.trim());
+                formik.handleBlur(event);
+              }}
               error={Boolean(nameError)}
               helperText={nameError}
               inputProps={{ maxLength: 100 }}

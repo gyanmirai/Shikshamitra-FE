@@ -56,7 +56,27 @@ const store = configureStore({
   middleware: (getDefault) => getDefault().concat(api.middleware),
 });
 function Fixture() {
-  const [students, setStudents] = React.useState<IFeeStructureData[]>([]);
+  const bulkSidebar = new URLSearchParams(window.location.search).has('bulkSidebar');
+  const bulkStudents: IFeeStructureData[] = Array.from({ length: 45 }, (_, index) => ({
+    id: `bulk-${index}`,
+    studentId: `bulk-${index}`,
+    studentName:
+      index === 0
+        ? 'Aarav Venkatasubramanian Chandrasekharan Krishnamurthy Narayanaswamy'
+        : index === 1
+          ? 'MeeraAnnapoornaVenkataramanSubramanianChandrasekharanRamakrishnan'
+          : `Selected Student ${String(index + 1).padStart(2, '0')}`,
+    grNumber: `GR-${2001 + index}`,
+    rollNumber: index + 1,
+    standardDivision: 'Class 5 - A',
+    boardName: 'CBSE',
+    mediumName: 'English',
+    stageName: 'Primary',
+    isFeeStructureAssigned: false,
+  }));
+  const [students, setStudents] = React.useState<IFeeStructureData[]>(
+    bulkSidebar ? bulkStudents : []
+  );
   const { setMode } = useColorScheme();
   return (
     <Stack sx={{ height: '100vh', p: { xs: 1, md: 2 }, bgcolor: 'background.neutral' }} spacing={1}>
@@ -64,6 +84,9 @@ function Fixture() {
       <Stack direction="row" spacing={1}>
         <Button onClick={() => setMode('light')}>Light</Button>
         <Button onClick={() => setMode('dark')}>Dark</Button>
+        {bulkSidebar && (
+          <Button onClick={() => setStudents(bulkStudents)}>Open bulk assignment</Button>
+        )}
       </Stack>
       <Typography variant="h5">Assign fee structure · 2026–27</Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
