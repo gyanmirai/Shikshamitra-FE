@@ -54,7 +54,7 @@ vi.mock('./components/LeavePoliciesPanel', () => ({ LeavePoliciesPanel: () => nu
 vi.mock('./components/PolicyAuditDrawer', () => ({ PolicyAuditDrawer: () => null }));
 vi.mock('./components/PolicyImpactDrawer', () => ({ PolicyImpactDrawer: () => null }));
 vi.mock('./components/PolicyVersionDrawer', () => ({ PolicyVersionDrawer: () => null }));
-vi.mock('./components/ManualHolidayDialog', () => ({ ManualHolidayDialog: () => null }));
+vi.mock('./components/ManualHolidayDrawer', () => ({ ManualHolidayDrawer: () => null }));
 vi.mock('./components/CalendarPolicyDrawer', () => ({
   CalendarPolicyDrawer: () => <p>Unsaved policy editor</p>,
 }));

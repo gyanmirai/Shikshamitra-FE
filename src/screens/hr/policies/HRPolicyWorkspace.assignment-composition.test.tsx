@@ -32,7 +32,7 @@ vi.mock('./components/PolicyTable', () => ({ PolicyTable: () => null }));
 vi.mock('./components/LeavePoliciesPanel', () => ({ LeavePoliciesPanel: () => null }));
 vi.mock('./components/PolicyAuditDrawer', () => ({ PolicyAuditDrawer: () => null }));
 vi.mock('./components/PolicyVersionDrawer', () => ({ PolicyVersionDrawer: () => null }));
-vi.mock('./components/ManualHolidayDialog', () => ({ ManualHolidayDialog: () => null }));
+vi.mock('./components/ManualHolidayDrawer', () => ({ ManualHolidayDrawer: () => null }));
 
 const conflict = {
   assignmentId: 'conflict-1',

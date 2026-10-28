@@ -27,7 +27,6 @@ import {
   Typography,
   IconButton,
   FormControl,
-  DialogTitle,
   CircularProgress,
   FormControlLabel,
 } from '@mui/material';
@@ -646,28 +645,5 @@ export function SectionTable({
       })}
       noDataText={tableProps.noDataText ?? 'No records available.'}
     />
-  );
-}
-
-// --- DrawerTitle (for dialogs) -------------------------------------------------
-
-export function DrawerDialogTitle({
-  children,
-  onClose,
-}: {
-  children: React.ReactNode;
-  onClose: () => void;
-}) {
-  return (
-    <DialogTitle sx={{ pr: 6 }}>
-      {children}
-      <IconButton
-        aria-label="Close dialog"
-        onClick={onClose}
-        sx={{ position: 'absolute', top: 12, right: 12 }}
-      >
-        <Iconify icon="mdi:close" />
-      </IconButton>
-    </DialogTitle>
   );
 }

@@ -1,6 +1,16 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
-import { attendance, calendars, leave, payroll } from './data';
+import {
+  year,
+  attendance,
+  calendars,
+  leave,
+  payroll,
+  versions,
+  policyImpact,
+  manualAttendanceDay,
+  pfRules,
+} from './data';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = fileURLToPath(new URL('../../../', import.meta.url));
@@ -21,7 +31,10 @@ export default defineConfig({
           if (path === '/api/hr/table-query') {
             let body = '';
             for await (const chunk of request) body += chunk;
-            const table = JSON.parse(body).table;
+            const parsed = JSON.parse(body);
+            const table = parsed.table;
+            if (table === 'hr-manual-attendance')
+              return response.end(JSON.stringify(manualAttendanceDay(parsed.query)));
             return page(
               table === 'hr-policy-attendance'
                 ? attendance
@@ -29,8 +42,13 @@ export default defineConfig({
                   ? payroll
                   : table === 'hr-policy-leave'
                     ? leave
-                    : []
+                    : table === 'hr-pf-rules'
+                      ? pfRules
+                      : []
             );
+          }
+          if (path === '/api/hr/policies/impact-preview' && request.method === 'POST') {
+            return response.end(JSON.stringify(policyImpact));
           }
           if (request.method !== 'GET') {
             response.statusCode = 405;
@@ -38,8 +56,41 @@ export default defineConfig({
               JSON.stringify({ error: { message: 'Synthetic fixture refuses policy writes.' } })
             );
           }
+          if (path.startsWith('/api/hr/setup-review/')) {
+            return response.end(
+              JSON.stringify({
+                academicYearId: year.id,
+                section: path.split('/').at(-1),
+                configurationState: 'valid',
+                reviewState: 'reviewed',
+                fingerprint: 'synthetic-fingerprint',
+                concurrencyStamp: 'synthetic-stamp',
+                canReview: false,
+                starterInitialized: true,
+                tenantStarterEnabled: true,
+                details: [],
+                notices: [],
+              })
+            );
+          }
           if (path.includes('holiday-import-preview') || path.endsWith('/holidays'))
             return response.end('[]');
+          if (path === '/api/leave-management/year-end-settlements') return response.end('[]');
+          if (path === '/api/payroll/pf-rules/coverage')
+            return response.end(JSON.stringify({ hasSchoolWideScope: true, history: [] }));
+          if (path === '/api/payroll/pf-rules') return page(pfRules);
+          if (path === '/api/hr/attendance/take-attendance/day')
+            return response.end(
+              JSON.stringify(
+                manualAttendanceDay(
+                  Object.fromEntries(new URL(request.url, 'http://127.0.0.1').searchParams)
+                )
+              )
+            );
+          if (path.endsWith('/restore-preview')) {
+            return response.end(JSON.stringify({ ...policyImpact, blockingWarnings: [] }));
+          }
+          if (path.endsWith('/versions')) return page(versions);
           if (path === '/api/hr/work-calendar-policies') return page(calendars);
           if (path === '/api/hr/attendance/policies') return page(attendance);
           if (path === '/api/hr/payroll/policies') return page(payroll);

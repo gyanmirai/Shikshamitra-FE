@@ -160,12 +160,18 @@ Failures retain a Retry action, and navigation or changing month/year clears pen
 
 ## Policy, dashboard, and report behavior
 
+School PF coverage is an effective-month school setting separate from PF contribution rules.
+The PF Rule page explains a missing current record only after coverage loads successfully; loading and retryable errors never imply that coverage is missing.
+Coverage changes retain the existing school-wide scope, action grant, evidence requirement, concurrency reference, and retry key.
+
 Policy workspaces show page-specific guidance, keep save errors next to the submit action, and search employee assignment targets through the server after two characters.
 Work calendars prevent all seven days from becoming weekly offs and constrain effective-date years to 1900 through 2100 before submission.
 The leave-policy impact drawer is read-only, and archive confirmation is a separate explicit action.
 Attendance advanced-rule disclosure preserves both draft values and the save payload; a separate cancelable reset lists the values it will replace with existing form defaults.
 Changing the selected work calendar preserves the explicit default-policy choice.
 Dirty policy drawers and the leave editor use Keep editing / Discard changes for local dismissal while retaining existing navigation guards and save locks.
+Calendar, attendance, payroll, assignment, and leave policy forms open in right-side drawers, including leave creation, editing, and duplication.
+Manual holiday editing, version restoration, and assignment-conflict details use supporting drawers with a fixed header, scrollable body, and stable actions; focused discard and lifecycle confirmations remain separate decisions.
 Saved leave rules open separately from the qualitative impact checklist, whose affected-record measures remain Not calculated until an authoritative server assessment exists.
 Leave create/duplicate, edit, set-default and archive/restore controls use their exact existing action grants.
 Assignment previews show current policies, the server-resolved proposed winner and the selected form values separately. Group previews cover only the selected group unless accessible sample staff are selected; a staff sample includes matching groups and staff override precedence. Loading, denied access and unresolved new-assignment ID ties never borrow selected form values as a winner.

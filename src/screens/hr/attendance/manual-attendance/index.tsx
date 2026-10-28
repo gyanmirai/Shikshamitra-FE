@@ -1,7 +1,6 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
-import { hrPaths } from 'src/constants/hr-menus';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -9,6 +8,7 @@ import dayjs from 'dayjs';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { hrPaths } from 'src/constants/hr-menus';
 import { RestartAlt } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';
@@ -1411,7 +1411,7 @@ const ManualAttendanceScreen = () => {
   // Render
   // -------------------------------------------------------------------------
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Mark Attendance"
         links={[
@@ -1423,176 +1423,199 @@ const ManualAttendanceScreen = () => {
 
       {/* ── Top toolbar ── */}
       <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
+        role="region"
+        aria-label="Attendance filters and actions"
         sx={{
           p: 1,
-          gap: 2,
-          pb: isOutsideAcademicYear ? 1.5 : 1,
-          borderRadius: '8px',
+          borderRadius: 1,
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
           mb: 1,
-          flexWrap: 'wrap',
+          flexShrink: 0,
         }}
       >
-        <DatePicker
-          label="Date"
-          disabled={isUpdating || substitution.opening}
-          value={date}
-          onChange={handleDateChange}
-          format="DD-MM-YYYY"
-          minDate={dayjs(currentYear?.startDate)}
-          maxDate={dayjs(currentYear?.endDate)}
-          slotProps={{
-            textField: {
-              size: 'small',
-              helperText: isOutsideAcademicYear ? 'Date must be within current academic year' : ' ',
-            },
-          }}
-        />
-
-        <Box sx={{ flexGrow: 1 }} />
-
-        {/* Reset */}
-        {isHoliday && <Label color="default">{holidayReason || 'Holiday'}</Label>}
-
-        {!isLocked && !isHoliday && !isFutureDate && !isOutsideAcademicYear && (
-          <Button
-            size="small"
-            variant="outlined"
-            color="inherit"
-            startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
-            disabled={!canMutateCurrentDay || employeeData.length === 0 || !isDirty}
-            onClick={() => resetConfirmDialog.onTrue()}
-            sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
-          >
-            Reset
-          </Button>
-        )}
-
-        {/* Lock / Unlock */}
-        <CustomTooltip
-          title={
-            !canMutateCurrentDay
-              ? 'Wait for attendance to finish loading'
-              : isHoliday
-                ? holidayReason || 'Holiday dates cannot be locked'
-                : isLocked
-                  ? 'Attendance is locked — click to unlock'
-                  : 'Click to lock attendance'
-          }
-          arrow
-          placement="top"
+        <Stack
+          direction={{ xs: 'column', lg: 'row' }}
+          spacing={1}
+          alignItems={{ xs: 'stretch', lg: 'center' }}
+          justifyContent="space-between"
         >
-          <span>
-            <Button
-              size="small"
-              variant={isLocked ? 'contained' : 'outlined'}
-              color={isLocked ? 'error' : 'inherit'}
-              startIcon={
-                <Iconify
-                  icon={isLocked ? 'eva:lock-fill' : 'eva:unlock-fill'}
-                  sx={{ fontSize: '16px' }}
-                />
-              }
-              onClick={() => lockConfirmDialog.onTrue()}
-              disabled={!canMutateCurrentDay || isHoliday || isLocking || isUnlocking || isUpdating}
-              sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
-            >
-              {isLocked ? 'Locked' : 'Lock'}
-            </Button>
-          </span>
-        </CustomTooltip>
-
-        {/* Save */}
-        {!isLocked && (
-          <Button
-            size="small"
-            variant="contained"
-            loading={isUpdating}
-            startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
-            onClick={handleSave}
-            disabled={
-              isHoliday ||
-              !canMutateCurrentDay ||
-              isFutureDate ||
-              isOutsideAcademicYear ||
-              employeeData.length === 0 ||
-              !isDirty
-            }
-            sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            alignItems={{ xs: 'stretch', sm: 'center' }}
+            sx={{ flex: 1, minWidth: 0 }}
           >
-            Save
-          </Button>
-        )}
+            <DatePicker
+              label="Date"
+              disabled={isUpdating || substitution.opening}
+              value={date}
+              onChange={handleDateChange}
+              format="DD-MM-YYYY"
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  sx: { width: { xs: 1, sm: 200 } },
+                  helperText: isOutsideAcademicYear
+                    ? 'Date must be within current academic year'
+                    : undefined,
+                },
+              }}
+            />
+
+            <CustomSelect
+              label="Staff group"
+              value={draftFilters.group}
+              disabled={isDirty || isFetching}
+              options={[
+                { id: 'all', name: 'All groups' },
+                { id: 'true', name: 'Teaching' },
+                { id: 'false', name: 'Non Teaching' },
+              ]}
+              valueKey="id"
+              labelKey="name"
+              onChange={(value) =>
+                setDraftFilters((current) => ({ ...current, group: String(value) }))
+              }
+              formControlProps={{ sx: { width: { xs: 1, sm: 180 }, flexShrink: 0 } }}
+            />
+            <TextField
+              fullWidth
+              size="small"
+              label="Department contains"
+              value={draftFilters.department}
+              disabled={isDirty || isFetching}
+              onChange={(event) =>
+                setDraftFilters((current) => ({ ...current, department: event.target.value }))
+              }
+              sx={{ width: { xs: 1, sm: 220 } }}
+            />
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={isDirty || isFetching}
+                onClick={() =>
+                  setQuery((current) => ({
+                    ...current,
+                    skipCount: 0,
+                    department: draftFilters.department.trim(),
+                    isTeaching:
+                      draftFilters.group === 'all' ? undefined : draftFilters.group === 'true',
+                  }))
+                }
+              >
+                Apply filters
+              </Button>
+              <Button
+                size="small"
+                disabled={isDirty || isFetching}
+                onClick={() => {
+                  setDraftFilters({ group: 'all', department: '' });
+                  setQuery((current) => ({
+                    ...current,
+                    skipCount: 0,
+                    department: '',
+                    isTeaching: undefined,
+                  }));
+                }}
+              >
+                Clear filters
+              </Button>
+            </Stack>
+          </Stack>
+          <Stack
+            direction="row"
+            spacing={1}
+            justifyContent="flex-end"
+            alignItems="center"
+            useFlexGap
+            flexWrap="wrap"
+            sx={{ flexShrink: 0 }}
+          >
+            {/* Reset */}
+            {isHoliday && <Label color="default">{holidayReason || 'Holiday'}</Label>}
+
+            {!isLocked && !isHoliday && !isFutureDate && !isOutsideAcademicYear && (
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
+                disabled={!canMutateCurrentDay || employeeData.length === 0 || !isDirty}
+                onClick={() => resetConfirmDialog.onTrue()}
+              >
+                Reset
+              </Button>
+            )}
+
+            {/* Lock / Unlock */}
+            <CustomTooltip
+              title={
+                !canMutateCurrentDay
+                  ? 'Wait for attendance to finish loading'
+                  : isHoliday
+                    ? holidayReason || 'Holiday dates cannot be locked'
+                    : isLocked
+                      ? 'Attendance is locked — click to unlock'
+                      : 'Click to lock attendance'
+              }
+              arrow
+              placement="top"
+            >
+              <span>
+                <Button
+                  size="small"
+                  variant={isLocked ? 'contained' : 'outlined'}
+                  color={isLocked ? 'error' : 'inherit'}
+                  startIcon={
+                    <Iconify
+                      icon={isLocked ? 'eva:lock-fill' : 'eva:unlock-fill'}
+                      sx={{ fontSize: '16px' }}
+                    />
+                  }
+                  onClick={() => lockConfirmDialog.onTrue()}
+                  disabled={
+                    !canMutateCurrentDay || isHoliday || isLocking || isUnlocking || isUpdating
+                  }
+                >
+                  {isLocked ? 'Locked' : 'Lock'}
+                </Button>
+              </span>
+            </CustomTooltip>
+
+            {/* Save */}
+            {!isLocked && (
+              <Button
+                size="small"
+                variant="contained"
+                loading={isUpdating}
+                startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
+                onClick={handleSave}
+                disabled={
+                  isHoliday ||
+                  !canMutateCurrentDay ||
+                  isFutureDate ||
+                  isOutsideAcademicYear ||
+                  employeeData.length === 0 ||
+                  !isDirty
+                }
+              >
+                Save
+              </Button>
+            )}
+          </Stack>
+        </Stack>
       </Box>
 
       {/* ── Table ── */}
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1}
-        useFlexGap
-        flexWrap="wrap"
-        sx={{ mb: 1 }}
-      >
-        <CustomSelect
-          label="Staff group"
-          value={draftFilters.group}
-          disabled={isDirty || isFetching}
-          options={[
-            { id: 'all', name: 'All groups' },
-            { id: 'true', name: 'Teaching' },
-            { id: 'false', name: 'Non Teaching' },
-          ]}
-          valueKey="id"
-          labelKey="name"
-          onChange={(value) => setDraftFilters((current) => ({ ...current, group: String(value) }))}
-          sx={{ minWidth: 180 }}
-        />
-        <TextField
-          size="small"
-          label="Department contains"
-          value={draftFilters.department}
-          disabled={isDirty || isFetching}
-          onChange={(event) =>
-            setDraftFilters((current) => ({ ...current, department: event.target.value }))
-          }
-        />
-        <Button
-          size="small"
-          variant="outlined"
-          disabled={isDirty || isFetching}
-          onClick={() =>
-            setQuery((current) => ({
-              ...current,
-              skipCount: 0,
-              department: draftFilters.department.trim(),
-              isTeaching: draftFilters.group === 'all' ? undefined : draftFilters.group === 'true',
-            }))
-          }
-        >
-          Apply filters
-        </Button>
-        <Button
-          size="small"
-          disabled={isDirty || isFetching}
-          onClick={() => {
-            setDraftFilters({ group: 'all', department: '' });
-            setQuery((current) => ({
-              ...current,
-              skipCount: 0,
-              department: '',
-              isTeaching: undefined,
-            }));
-          }}
-        >
-          Clear filters
-        </Button>
-      </Stack>
       {query.department || query.isTeaching !== undefined ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, px: 1 }}>
           Applied filters:{' '}
           {query.isTeaching === undefined
             ? 'All groups'
