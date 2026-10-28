@@ -27,11 +27,13 @@ import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { emptyStatutoryProfile } from 'src/redux/hr/statutory-profile-api';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
+import { schemaFieldErrors } from 'src/screens/hr/components/form-validation';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
@@ -73,6 +75,7 @@ import {
 import { getOnboardingErrorMessage } from './error-message';
 import { FinalizePageHeader } from './finalize-page-header';
 import { AcademicPermissionCard } from './academic-permission-card';
+import { finalizeIssues, type FinalizeIssue } from './finalize-readiness';
 import { useFinalizeRoles, FinalizeRoleField } from './finalize-role-field';
 import { statutoryProfileSchema } from '../employee/statutory-profile-fields';
 import { SalaryStructureBuilder } from '../payroll/structure/SalaryStructureBuilder';
@@ -93,6 +96,7 @@ import {
 } from './employeeOnboardingAcademicPermission';
 
 import type { FinalizeFormState } from './finalize-validation';
+import type { OnboardingSalaryIssue } from '../payroll/structure/SalaryStructureBuilder';
 
 type FinalizedEmployeeResult = {
   id: string;
@@ -229,6 +233,12 @@ export function FinalizeWorkflow({
   const [step, setStep] = useState(0);
   const [maxStepVisited, setMaxStepVisited] = useState(0);
   const [academicTouched, setAcademicTouched] = useState(false);
+  const [reviewTouched, setReviewTouched] = useState(false);
+  const [salaryIssues, setSalaryIssues] = useState<OnboardingSalaryIssue[]>([]);
+  const [finalizeError, setFinalizeError] = useState('');
+  const [previewInvalidation, setPreviewInvalidation] = useState(0);
+  const [focusIssue, setFocusIssue] = useState<FinalizeIssue | null>(null);
+  const workflowRoot = useRef<HTMLDivElement>(null);
   const [workAssignment, setWorkAssignment] = useState<EmployeeWorkAssignment>(emptyWorkAssignment);
   const [workAssignmentValid, setWorkAssignmentValid] = useState(false);
   const [workAssignmentConfirmed, setWorkAssignmentConfirmed] = useState(false);
@@ -251,12 +261,15 @@ export function FinalizeWorkflow({
   } = useAcademicOrganizationOptions(currentYear?.id);
   const [finalizeApplication, { isLoading }] = useFinalizeEmployeeApplicationMutation();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canManageStatutory =
-    hasGrantedPermission(permissions, hrPermissions.payroll.compensationRevisionActions.manage) &&
-    hasGrantedPermission(
-      permissions,
-      hrPermissions.payroll.settings.statutorySchemeActions.manageEnrollment
-    );
+  const canManageSalary = hasGrantedPermission(
+    permissions,
+    hrPermissions.payroll.compensationRevisionActions.manage
+  );
+  const canManageEnrollment = hasGrantedPermission(
+    permissions,
+    hrPermissions.payroll.settings.statutorySchemeActions.manageEnrollment
+  );
+  const canManageStatutory = canManageSalary && canManageEnrollment;
   const statutoryForm = useFormik({
     initialValues: emptyStatutoryProfile,
     validationSchema: statutoryProfileSchema,
@@ -336,6 +349,45 @@ export function FinalizeWorkflow({
     }
   }, [step, maxStepVisited]);
 
+  useEffect(() => {
+    if (salary && previewInvalidation > 0) setFinalizeError('');
+  }, [salary, previewInvalidation]);
+
+  useEffect(() => {
+    if (!focusIssue || focusIssue.step !== step) return undefined;
+    const frame = requestAnimationFrame(() => {
+      const panel = workflowRoot.current?.querySelector<HTMLElement>(
+        '[data-onboarding-active-step]'
+      );
+      panel?.focus();
+      panel?.scrollIntoView?.({ block: 'start' });
+      if (focusIssue.field) {
+        const errors = { [focusIssue.field]: focusIssue.message };
+        const targetForm = focusIssue.step === 1 ? formik : statutoryForm;
+        targetForm.setFieldTouched(focusIssue.field, true, false);
+        targetForm.setFieldError(focusIssue.field, focusIssue.message);
+        const field = workflowRoot.current?.querySelector<HTMLElement>(
+          `[name="${focusIssue.field}"]`
+        );
+        const accordion = field?.closest('.MuiAccordion-root');
+        accordion?.querySelector<HTMLElement>('[aria-expanded="false"]')?.click();
+        focusFirstFormikError(errors, workflowRoot.current ?? undefined);
+      } else if (focusIssue.selector) {
+        const target =
+          workflowRoot.current?.querySelector<HTMLElement>(focusIssue.selector) ??
+          (focusIssue.step === 3
+            ? workflowRoot.current?.querySelector<HTMLElement>('[data-onboarding-salary]')
+            : panel);
+        target?.scrollIntoView?.({ block: 'center' });
+        target?.focus();
+      }
+      setFocusIssue(null);
+    });
+    return () => cancelAnimationFrame(frame);
+    // Only an explicit correction request changes focus, never background revalidation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusIssue, step]);
+
   if (!application || !initialValues) {
     return null;
   }
@@ -390,8 +442,12 @@ export function FinalizeWorkflow({
     )
       return;
     if (step === 0 && (!workAssignmentValid || !workAssignmentConfirmed)) {
-      shikshaMitraToast.warning({
-        message: 'Review and confirm the organization / work assignment.',
+      setReviewTouched(true);
+      setFocusIssue({
+        key: 'assignment',
+        step: 0,
+        message: '',
+        selector: '[data-work-assignment]',
       });
       return;
     }
@@ -416,7 +472,13 @@ export function FinalizeWorkflow({
     }
   };
 
-  const isStepClickable = (index: number) => index <= maxStepVisited;
+  const isStepClickable = (index: number) =>
+    readReady &&
+    !completed &&
+    !finalizeSaving &&
+    !isLoading &&
+    !salaryEditor.busy &&
+    index <= maxStepVisited;
   const handleStepClick = async (index: number) => {
     if (
       completedRef.current ||
@@ -442,18 +504,50 @@ export function FinalizeWorkflow({
     setStep(index);
   };
 
+  const staffErrors = schemaFieldErrors(finalizeEmployeeFieldsSchema, form);
+  const statutoryErrors = schemaFieldErrors(statutoryProfileSchema, statutoryForm.values);
+  const academicError = isStep2Valid
+    ? undefined
+    : !currentYear?.id
+      ? 'Select an academic year before assigning teaching access.'
+      : organizationsLoading
+        ? 'Wait for academic organizations to finish loading.'
+        : academicPermissionScopeRows.unresolvedStageIds.length
+          ? 'Some selected academic organizations are unavailable. Review and select available organizations.'
+          : 'Select at least one academic organization for teaching access.';
+  const issues = finalizeIssues({
+    workAssignmentValid,
+    workAssignmentConfirmed,
+    staffErrors,
+    roleError:
+      roleLookup.selectionError ||
+      (!roleLookup.ready
+        ? 'Wait for roles to finish loading, or retry the role lookup.'
+        : undefined),
+    academicError,
+    canManageSalary,
+    canManageEnrollment,
+    statutoryErrors,
+    salaryIssues,
+    hasSalary: Boolean(salary),
+    salaryMonthCurrent: salary?.effectiveMonth.slice(0, 7) === salaryMonth,
+  });
   const canSubmit =
     readReady &&
     !completed &&
-    workAssignmentValid &&
-    workAssignmentConfirmed &&
-    roleLookup.ready &&
-    !roleLookup.selectionError &&
-    finalizeEmployeeFieldsSchema.isValidSync(form, { abortEarly: false }) &&
-    isStep2Valid &&
-    canManageStatutory &&
-    Boolean(salary) &&
-    !salaryEditor.busy;
+    !finalizeSaving &&
+    !isLoading &&
+    !salaryEditor.busy &&
+    issues.length === 0;
+  const reviewIssue = (issue: FinalizeIssue) => {
+    if (!readReady || completedRef.current || finalizationPending.current || salaryEditor.busy)
+      return;
+    setMaxStepVisited((current) => Math.max(current, issue.step));
+    setStep(issue.step);
+    setReviewTouched(true);
+    setAcademicTouched(true);
+    setFocusIssue(issue);
+  };
 
   const handleFinalize = async () => {
     if (!workAssignmentValid || !workAssignmentConfirmed) {
@@ -502,9 +596,14 @@ export function FinalizeWorkflow({
       });
       return;
     }
+    if (issues.length) {
+      reviewIssue(issues[0]);
+      return;
+    }
     if (finalizationPending.current) return;
     finalizationPending.current = true;
     setFinalizeSaving(true);
+    setFinalizeError('');
     try {
       if (!alive.current || !readyRef.current || completedRef.current) return;
       const result = await finalizeApplication({
@@ -584,19 +683,40 @@ export function FinalizeWorkflow({
       });
     } catch (error) {
       if (!alive.current) return;
-      shikshaMitraToast.error({
-        message: getOnboardingErrorMessage(error, 'Could not finalize onboarding'),
+      setFinalizeError(
+        getOnboardingErrorMessage(
+          error,
+          'Could not finalize onboarding. Your entries are retained. Review the requirements and retry Finalize.'
+        )
+      );
+      setFocusIssue({
+        key: 'server-error',
+        step: 3,
+        message: '',
+        selector: '[data-finalization-error]',
       });
+      // Server policy version checks remain authoritative; a stale preview must be rebuilt.
+      if (parseApiProblemDetail(error).errorCode === 'HR:Payroll:CompensationPreviewStale') {
+        setSalary(null);
+        setPreviewInvalidation((current) => current + 1);
+      }
     } finally {
       finalizationPending.current = false;
       setFinalizeSaving(false);
     }
   };
 
-  const steps = ['Review', 'Staff fields', 'Academic Permission', 'Salary and confirm'];
+  const steps = ['Review', 'Staff Fields', 'Academic Permission', 'Salary and Confirm'];
+  const stepValid = [
+    workAssignmentValid && workAssignmentConfirmed,
+    !Object.keys(staffErrors).length && roleLookup.ready && !roleLookup.selectionError,
+    isStep2Valid,
+    canSubmit,
+  ];
 
   return (
     <Box
+      ref={workflowRoot}
       data-testid="employee-onboarding-finalize-page"
       aria-busy={!readReady || finalizeSaving || isLoading || salaryEditor.busy}
       sx={{
@@ -615,9 +735,11 @@ export function FinalizeWorkflow({
         busy={finalizeSaving || isLoading || salaryEditor.busy}
       />
       {navigation.confirmation}
-      {(finalizeSaving || isLoading) && (
+      {(finalizeSaving || isLoading || salaryEditor.busy) && (
         <Typography role="status" variant="body2">
-          Finalizing staff onboarding…
+          {salaryEditor.busy
+            ? 'Preparing salary. Your entries are retained.'
+            : 'Finalizing staff onboarding.'}
         </Typography>
       )}
       {!readReady &&
@@ -648,8 +770,8 @@ export function FinalizeWorkflow({
       )}
       <Box
         component="fieldset"
-        disabled={!readReady || completed || finalizeSaving || isLoading}
-        inert={!readReady || completed || finalizeSaving || isLoading}
+        disabled={!readReady || completed || finalizeSaving || isLoading || salaryEditor.busy}
+        inert={!readReady || completed || finalizeSaving || isLoading || salaryEditor.busy}
         sx={{
           p: 0,
           m: 0,
@@ -662,6 +784,12 @@ export function FinalizeWorkflow({
         }}
       >
         <CustomStepperWithFormik
+          viewMode="vertical"
+          completedSteps={stepValid.flatMap((valid, index) =>
+            valid && index < maxStepVisited ? [index] : []
+          )}
+          errors={stepValid.map((valid, index) => !valid && index < maxStepVisited)}
+          loadingLabel="Finalizing staff onboarding…"
           scrollbarHeight="auto"
           showSaveButton={false}
           nextButtonLabel="Next"
@@ -688,16 +816,35 @@ export function FinalizeWorkflow({
           handleNext={handleStepperNext}
           validationSchema={Yup.object({})}
           finalButtonLabel="Finalize"
-          saveAndNextButtonProps={{ loading: finalizeSaving || isLoading }}
+          saveAndNextButtonProps={{
+            loading: finalizeSaving || isLoading,
+            disabled: salaryEditor.busy,
+            'aria-describedby': step === 3 ? 'onboarding-readiness' : undefined,
+          }}
           disableSubmit={!canSubmit}
           backButtonProps={{
             disabled: finalizeSaving || isLoading || salaryEditor.busy || completed,
           }}
           renderItem={({ activeStep: currentStep }) => (
-            <Box sx={{ p: 2 }}>
+            <Box
+              data-onboarding-active-step
+              tabIndex={-1}
+              aria-label={steps[currentStep]}
+              sx={{
+                p: { xs: 1.5, md: 2 },
+                minWidth: 0,
+                width: 1,
+                maxWidth: 1200,
+                mx: 'auto',
+                overflowWrap: 'anywhere',
+              }}
+            >
+              <Typography component="h2" variant="subtitle1" sx={{ mb: 2 }}>
+                Step {currentStep + 1} of {steps.length}: {steps[currentStep]}
+              </Typography>
               {currentStep === 0 && (
                 <Grid container spacing={1} mb={1}>
-                  <Grid size={{ xs: 12 }}>
+                  <Grid size={{ xs: 12 }} data-work-assignment tabIndex={-1}>
                     <WorkAssignmentField
                       value={workAssignment}
                       currentYear={currentYear}
@@ -713,12 +860,19 @@ export function FinalizeWorkflow({
                         },
                       }}
                     />
+                    {reviewTouched && (!workAssignmentValid || !workAssignmentConfirmed) && (
+                      <Alert severity="error" sx={{ mt: 1 }}>
+                        {!workAssignmentValid
+                          ? 'Resolve the work assignment requirements above, then confirm the assignment.'
+                          : 'Confirm the organization / work assignment before continuing.'}
+                      </Alert>
+                    )}
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Card
                       variant="outlined"
                       sx={{
-                        p: 2.5,
+                        p: 2,
                         borderRadius: 2,
                         height: '100%',
                         bgcolor: 'background.paper',
@@ -796,7 +950,7 @@ export function FinalizeWorkflow({
                     <Card
                       variant="outlined"
                       sx={{
-                        p: 2.5,
+                        p: 2,
                         borderRadius: 2,
                         height: '100%',
                         bgcolor: 'background.paper',
@@ -916,7 +1070,7 @@ export function FinalizeWorkflow({
                     <Card
                       variant="outlined"
                       sx={{
-                        p: 2.5,
+                        p: 2,
                         borderRadius: 2,
                         borderColor: 'divider',
                       }}
@@ -1005,27 +1159,9 @@ export function FinalizeWorkflow({
                             ))}
                           </Grid>
                         ) : (
-                          <Stack
-                            alignItems="center"
-                            justifyContent="center"
-                            spacing={1}
-                            sx={{
-                              py: 3,
-                              borderRadius: 1.5,
-                              border: '1px dashed',
-                              borderColor: 'divider',
-                              bgcolor: 'action.hover',
-                            }}
-                          >
-                            <Iconify
-                              icon="lucide:file-text"
-                              width={28}
-                              sx={{ color: 'text.disabled' }}
-                            />
-                            <Typography variant="body2" color="text.secondary" align="center">
-                              No work experience was submitted in the application.
-                            </Typography>
-                          </Stack>
+                          <Typography variant="body2" color="text.secondary">
+                            No work experience was submitted in the application.
+                          </Typography>
                         )}
                       </Stack>
                     </Card>
@@ -1124,6 +1260,7 @@ export function FinalizeWorkflow({
                         >
                           <InputLabel id="fin-religion-label">Religion *</InputLabel>
                           <Select
+                            name="religion"
                             labelId="fin-religion-label"
                             value={form.religion ?? ''}
                             onChange={(e) => formik.setFieldValue('religion', e.target.value)}
@@ -1352,6 +1489,8 @@ export function FinalizeWorkflow({
                           Aadhaar No. *
                         </FormLabel>
                         <OTPInput
+                          name="adharNo"
+                          aria-label="Aadhaar number"
                           maxLength={12}
                           value={String(formik.values.adharNo || '')}
                           onChange={(val) => {
@@ -1456,6 +1595,8 @@ export function FinalizeWorkflow({
                           PAN No. *
                         </FormLabel>
                         <OTPInput
+                          name="panNo"
+                          aria-label="PAN number"
                           maxLength={10}
                           value={String(formik.values.panNo ?? '').toUpperCase()}
                           onChange={(val) => {
@@ -1554,6 +1695,7 @@ export function FinalizeWorkflow({
                   <SectionCard title="Professional Details">
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
                       <DatePicker
+                        name="doj"
                         label="Date of Joining *"
                         value={formik.values.doj ? dayjs(formik.values.doj) : null}
                         onChange={(value) => {
@@ -1655,6 +1797,7 @@ export function FinalizeWorkflow({
                       >
                         <InputLabel id="fin-shift-label">Shift *</InputLabel>
                         <Select
+                          name="shiftId"
                           labelId="fin-shift-label"
                           value={form.shiftId}
                           onChange={(e) => {
@@ -1739,7 +1882,7 @@ export function FinalizeWorkflow({
                         }}
                         error={formik.touched.countryName && Boolean(formik.errors.countryName)}
                         helperText={formik.touched.countryName && formik.errors.countryName}
-                        textFieldProps={{ label: 'Country *' }}
+                        textFieldProps={{ name: 'countryName', label: 'Country *' }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
@@ -1754,7 +1897,7 @@ export function FinalizeWorkflow({
                         }}
                         error={formik.touched.stateName && Boolean(formik.errors.stateName)}
                         helperText={formik.touched.stateName && formik.errors.stateName}
-                        textFieldProps={{ label: 'State *' }}
+                        textFieldProps={{ name: 'stateName', label: 'State *' }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
@@ -1768,7 +1911,7 @@ export function FinalizeWorkflow({
                         }}
                         error={formik.touched.city && Boolean(formik.errors.city)}
                         helperText={formik.touched.city && formik.errors.city}
-                        textFieldProps={{ label: 'City *' }}
+                        textFieldProps={{ name: 'city', label: 'City *' }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
@@ -1866,6 +2009,8 @@ export function FinalizeWorkflow({
               )}
 
               <Box
+                data-onboarding-salary
+                tabIndex={-1}
                 component="fieldset"
                 disabled={finalizeSaving || isLoading}
                 inert={finalizeSaving || isLoading}
@@ -1882,7 +2027,12 @@ export function FinalizeWorkflow({
                     formik={formik}
                     dateOfJoining={form.doj}
                     initialMonth={salaryMonth}
-                    onboarding={{ statutoryForm, onSalaryChange: setSalary }}
+                    onboarding={{
+                      statutoryForm,
+                      onSalaryChange: setSalary,
+                      onReadinessChange: setSalaryIssues,
+                      invalidatePreviewKey: previewInvalidation,
+                    }}
                     onEditorStateChange={setSalaryEditor}
                   />
                 )}
@@ -1926,19 +2076,69 @@ export function FinalizeWorkflow({
                     Finalize saves the staff and salary together. The staff remains Inactive until
                     an authorized HR user activates them. Logging in does not activate staff.
                   </HrNotice>
-                  {!canManageStatutory && (
-                    <Alert severity="warning">
-                      Salary management and statutory enrollment permissions are required to
-                      finalize onboarding.
+                  {finalizeError && (
+                    <Alert data-finalization-error tabIndex={-1} severity="error" role="alert">
+                      {finalizeError} Your entries are retained. Review the requirements and retry
+                      Finalize.
                     </Alert>
                   )}
-                  {!canSubmit && (
-                    <Typography variant="body2" color="text.secondary">
-                      {form.isTeaching
-                        ? 'Complete required staff fields, Academic Permission, and a valid salary preview before finalizing.'
-                        : 'Complete required staff fields and a valid salary preview before finalizing.'}
+                  <Box
+                    id="onboarding-readiness"
+                    role="region"
+                    aria-label="Finalization requirements"
+                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, p: 1.5 }}
+                  >
+                    <Typography component="h3" variant="subtitle2">
+                      {issues.length ? 'Before You Finalize' : 'Ready to Finalize'}
                     </Typography>
-                  )}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      role="status"
+                      sx={{ mt: 0.5 }}
+                    >
+                      {!readReady
+                        ? 'Refresh the application details before finalizing.'
+                        : finalizeSaving || isLoading
+                          ? 'Finalizing staff onboarding.'
+                          : completed
+                            ? 'Staff and salary were saved.'
+                            : salaryEditor.busy
+                              ? 'Wait for salary setup to finish.'
+                              : issues.length
+                                ? `${issues.length} requirement${issues.length === 1 ? '' : 's'} need attention. Select a requirement to review it.`
+                                : 'All required details and the current salary preview are ready.'}
+                    </Typography>
+                    {issues.length > 0 && (
+                      <Box component="ul" sx={{ pl: 2.5, mb: 0, mt: 1 }}>
+                        {issues.map((issue) => (
+                          <Box component="li" key={issue.key} sx={{ mb: 0.5 }}>
+                            {issue.key.endsWith('permission') ? (
+                              <Typography variant="body2">{issue.message}</Typography>
+                            ) : (
+                              <Button
+                                type="button"
+                                size="small"
+                                color="inherit"
+                                disabled={
+                                  !readReady || finalizeSaving || isLoading || salaryEditor.busy
+                                }
+                                onClick={() => reviewIssue(issue)}
+                                sx={{
+                                  height: 'auto',
+                                  textAlign: 'left',
+                                  justifyContent: 'flex-start',
+                                  whiteSpace: 'normal',
+                                }}
+                              >
+                                Review: {issue.message}
+                              </Button>
+                            )}
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
                 </Stack>
               )}
             </Box>

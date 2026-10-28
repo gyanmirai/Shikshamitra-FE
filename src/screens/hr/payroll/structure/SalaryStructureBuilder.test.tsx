@@ -13,24 +13,26 @@ import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 
 vi.mock('src/redux/hr/esi-policy-api', () => ({
   useGetEsiPolicyOptionsQuery: () => ({
-    data: [
-      {
-        id: 'esi-policy-1',
-        name: 'Standard ESIC',
-        code: 'STANDARD_ESIC',
-        isDefault: true,
-        isArchived: false,
-        versions: [
+    data: mocks.esiPolicyAvailable
+      ? [
           {
-            id: mocks.esiRuleVersionId,
-            version: 1,
-            effectiveFrom: '2025-01-01',
-            employeePercentage: 0.75,
-            employerPercentage: 3.25,
+            id: 'esi-policy-1',
+            name: 'Standard ESIC',
+            code: 'STANDARD_ESIC',
+            isDefault: true,
+            isArchived: false,
+            versions: [
+              {
+                id: mocks.esiRuleVersionId,
+                version: 1,
+                effectiveFrom: '2025-01-01',
+                employeePercentage: 0.75,
+                employerPercentage: 3.25,
+              },
+            ],
           },
-        ],
-      },
-    ],
+        ]
+      : [],
     isLoading: false,
     isError: false,
     refetch: () => mocks.refetchSetup(),
@@ -46,6 +48,8 @@ const mocks = vi.hoisted(() => ({
   templatesUnavailable: false,
   templateErrorStatus: 503,
   esiRuleVersionId: 'esi-rule-1',
+  pfRuleAvailable: true,
+  esiPolicyAvailable: true,
   revisionsFetching: false,
   revisions: [] as any[],
   readiness: { canActivate: false, blockerCodes: [] as string[] },
@@ -115,7 +119,9 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 vi.mock('src/redux/PF/PFApi', () => ({
   useGetPFQuery: () => ({
-    data: { items: [{ id: 'pf-rule', name: 'School PF', isActive: true }] },
+    data: {
+      items: mocks.pfRuleAvailable ? [{ id: 'pf-rule', name: 'School PF', isActive: true }] : [],
+    },
     isError: false,
     refetch: () => mocks.refetchSetup(),
   }),
@@ -214,7 +220,15 @@ const renderBuilder = (props: Partial<React.ComponentProps<typeof SalaryStructur
     </ThemeProvider>
   );
 
-function OnboardingBuilder({ onSalaryChange }: { onSalaryChange: (value: any) => void }) {
+function OnboardingBuilder({
+  onSalaryChange,
+  onReadinessChange,
+  invalidatePreviewKey,
+}: {
+  onSalaryChange: (value: any) => void;
+  onReadinessChange?: (value: any) => void;
+  invalidatePreviewKey?: number;
+}) {
   const statutoryForm = useFormik<StaffStatutoryProfile>({
     initialValues: {
       applyPf: true,
@@ -232,7 +246,7 @@ function OnboardingBuilder({ onSalaryChange }: { onSalaryChange: (value: any) =>
       formik={formik}
       dateOfJoining="2026-11-18"
       initialMonth="2026-11"
-      onboarding={{ statutoryForm, onSalaryChange }}
+      onboarding={{ statutoryForm, onSalaryChange, onReadinessChange, invalidatePreviewKey }}
     />
   );
 }
@@ -247,6 +261,8 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     mocks.templatesUnavailable = false;
     mocks.templateErrorStatus = 503;
     mocks.esiRuleVersionId = 'esi-rule-1';
+    mocks.pfRuleAvailable = true;
+    mocks.esiPolicyAvailable = true;
     mocks.revisions = [];
     mocks.revisionsFetching = false;
     mocks.canManageSalary = true;
@@ -273,6 +289,158 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     mocks.canViewEsi = true;
     mocks.canManageEsi = true;
     mocks.updateEnrollment.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });
+  });
+
+  it('requires both off reasons and a fresh preview, while allowing off-mode salary without registration numbers', async () => {
+    const user = userEvent.setup();
+    const onSalaryChange = vi.fn();
+    const onReadinessChange = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder onSalaryChange={onSalaryChange} onReadinessChange={onReadinessChange} />
+      </ThemeProvider>
+    );
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '18000');
+    await user.click(screen.getByLabelText('Apply PF'));
+    await user.click(screen.getByLabelText('Apply ESIC'));
+    expect(screen.getByRole('button', { name: 'Preview salary' })).toBeDisabled();
+    expect(onSalaryChange).toHaveBeenLastCalledWith(null);
+    await user.type(screen.getByLabelText('Reason for turning PF off'), 'Not enrolled');
+    await user.type(screen.getByLabelText('Reason for turning ESIC off'), 'Not enrolled');
+    expect(screen.getByRole('button', { name: 'Preview salary' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await waitFor(() =>
+      expect(onSalaryChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          pfApplicable: false,
+          pfRuleId: null,
+          esiPolicyId: 'esi-policy-1',
+        })
+      )
+    );
+    expect(mocks.calculate.mock.calls[0][0].statutoryProfileOverride).toEqual(
+      expect.objectContaining({
+        applyPf: false,
+        applyEsic: false,
+        pfNumber: '',
+        esicInsuranceNumber: '',
+        pfDisabledReason: 'Not enrolled',
+        esicDisabledReason: 'Not enrolled',
+      })
+    );
+    await user.type(screen.getByLabelText('Reason for turning PF off'), ' again');
+    await waitFor(() => expect(onSalaryChange).toHaveBeenLastCalledWith(null));
+    expect(onReadinessChange).toHaveBeenLastCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'salary-preview',
+          message: expect.stringContaining('Refresh'),
+        }),
+      ])
+    );
+    expect(mocks.saveSalary).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['empty templates', 'templatesEmpty', 'templates-empty'],
+    ['failed templates', 'templatesError', 'templates-error'],
+    ['removed template', 'templatesUnavailable', 'templates-error'],
+    ['refreshing templates', 'templatesFetching', 'templates-loading'],
+  ] as const)('publishes the specific %s blocker to finalization', async (_label, flag, key) => {
+    mocks[flag] = true;
+    const onReadinessChange = vi.fn();
+    const onSalaryChange = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder onSalaryChange={onSalaryChange} onReadinessChange={onReadinessChange} />
+      </ThemeProvider>
+    );
+    await waitFor(() =>
+      expect(onReadinessChange).toHaveBeenLastCalledWith(
+        expect.arrayContaining([expect.objectContaining({ key })])
+      )
+    );
+    expect(onSalaryChange).toHaveBeenLastCalledWith(null);
+  });
+
+  it('keeps an effective ESIC policy mandatory even with both schemes off and reasons complete', async () => {
+    mocks.esiPolicyAvailable = false;
+    const user = userEvent.setup();
+    const onReadinessChange = vi.fn();
+    const onSalaryChange = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder onSalaryChange={onSalaryChange} onReadinessChange={onReadinessChange} />
+      </ThemeProvider>
+    );
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '18000');
+    await user.click(screen.getByLabelText('Apply PF'));
+    await user.click(screen.getByLabelText('Apply ESIC'));
+    await user.type(screen.getByLabelText('Reason for turning PF off'), 'Not enrolled');
+    await user.type(screen.getByLabelText('Reason for turning ESIC off'), 'Not enrolled');
+    expect(screen.getByRole('button', { name: 'Preview salary' })).toBeDisabled();
+    expect(onReadinessChange).toHaveBeenLastCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'esi-policy',
+          message: expect.stringContaining('even when ESIC is off'),
+        }),
+      ])
+    );
+    expect(onSalaryChange).toHaveBeenLastCalledWith(null);
+    expect(mocks.calculate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a removed active PF rule and permits an authorized off declaration without that rule', async () => {
+    const user = userEvent.setup();
+    const onReadinessChange = vi.fn();
+    const onSalaryChange = vi.fn();
+    const content = () => (
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder onSalaryChange={onSalaryChange} onReadinessChange={onReadinessChange} />
+      </ThemeProvider>
+    );
+    const mounted = render(content());
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '18000');
+    mocks.pfRuleAvailable = false;
+    mounted.rerender(content());
+    expect(screen.getByRole('button', { name: 'Preview salary' })).toBeDisabled();
+    expect(onReadinessChange).toHaveBeenLastCalledWith(
+      expect.arrayContaining([expect.objectContaining({ key: 'pf-rule' })])
+    );
+    await user.click(screen.getByLabelText('Apply PF'));
+    await user.type(screen.getByLabelText('Reason for turning PF off'), 'Not enrolled');
+    expect(screen.getByRole('button', { name: 'Preview salary' })).toBeEnabled();
+  });
+
+  it('invalidates the published salary when finalization reports a stale policy, preserving inputs', async () => {
+    const user = userEvent.setup();
+    const onSalaryChange = vi.fn();
+    const content = (invalidatePreviewKey = 0) => (
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder
+          onSalaryChange={onSalaryChange}
+          invalidatePreviewKey={invalidatePreviewKey}
+        />
+      </ThemeProvider>
+    );
+    const mounted = render(content());
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '18000');
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await waitFor(() =>
+      expect(onSalaryChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ monthlyAmount: 18000 })
+      )
+    );
+    mounted.rerender(content(1));
+    await waitFor(() => expect(onSalaryChange).toHaveBeenLastCalledWith(null));
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('\u20b9 18,000');
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await waitFor(() =>
+      expect(onSalaryChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ monthlyAmount: 18000 })
+      )
+    );
   });
 
   it('navigates salary sections and refreshes options without discarding salary or statutory drafts', async () => {
