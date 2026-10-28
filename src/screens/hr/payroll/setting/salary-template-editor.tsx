@@ -17,6 +17,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { getIn, useFormik, setNestedObjectValues } from 'formik';
+import { salaryPreviewError } from 'src/utils/salary-preview-error';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
@@ -350,6 +351,7 @@ function SalaryTemplateWorkflow({
     result: SalaryTemplatePreview;
   } | null>(null);
   const [previewError, setPreviewError] = useState('');
+  const [previewFields, setPreviewFields] = useState<string[]>([]);
   const [hasPreviewed, setHasPreviewed] = useState(false);
   const requestSequence = useRef(0);
   const operationKeyRef = useRef('');
@@ -378,6 +380,7 @@ function SalaryTemplateWorkflow({
     requestSequence.current += 1;
     setPreview(null);
     setPreviewError('');
+    setPreviewFields([]);
   }, [inputSignature]);
   useEffect(() => {
     operationKeyRef.current = '';
@@ -574,7 +577,9 @@ function SalaryTemplateWorkflow({
       }
     } catch (error) {
       if (sequence === requestSequence.current && signature === latestSignature.current) {
-        setPreviewError(parseApiProblemDetail(error).detail);
+        const parsed = parseApiProblemDetail(error);
+        setPreviewError(parsed.detail);
+        setPreviewFields(salaryPreviewError(parsed.errorCode)?.fields ?? []);
       }
     }
   };
@@ -596,6 +601,7 @@ function SalaryTemplateWorkflow({
       const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       const target =
         region?.querySelector<HTMLElement>('[aria-invalid="true"]:not([type="hidden"])') ||
+        region?.querySelector<HTMLElement>('[role="spinbutton"]') ||
         (active && region?.contains(active) && !active.matches(':disabled') ? active : null) ||
         region?.querySelector<HTMLElement>(
           'input:not([type="hidden"]):not([disabled]), [role="combobox"]:not([aria-disabled="true"])'
@@ -741,6 +747,28 @@ function SalaryTemplateWorkflow({
             calculating={calculationState.isLoading}
             archived={template?.status === 'ARCHIVED'}
             previewError={previewError}
+            previewFields={previewFields}
+            onCorrect={(field) => {
+              const firstRule = formik.values.rules.find(
+                (rule) => rule.lineKind === (field === 'deductions' ? 'DEDUCTION' : 'EARNING')
+              );
+              if ((field === 'rules' || field === 'deductions') && firstRule) {
+                setExpanded((current) => new Set(current).add(firstRule.componentId));
+              }
+              setPendingFocus(
+                field === 'rules' || field === 'deductions'
+                  ? firstRule
+                    ? `salary-rule-${firstRule.componentId}`
+                    : field === 'deductions'
+                      ? 'salary-deductions'
+                      : 'salary-earnings'
+                  : field === 'pfRuleId'
+                    ? 'salary-default-pf-rule'
+                    : field === 'effectiveMonth'
+                      ? 'salary-preview-effective-month'
+                      : 'salary-preview-monthly-amount'
+              );
+            }}
             calculation={previewCurrent ? preview?.result.calculation : undefined}
             versions={versionData?.items || []}
           />

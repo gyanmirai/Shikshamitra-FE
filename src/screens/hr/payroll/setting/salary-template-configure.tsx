@@ -190,6 +190,7 @@ export default function SalaryTemplateConfigure({
                       size="small"
                       notched
                       labelId="salary-template-pf"
+                      id="salary-default-pf-rule"
                       label="Default PF rule"
                       {...formik.getFieldProps('defaultPfRuleId')}
                       error={

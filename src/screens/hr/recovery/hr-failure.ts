@@ -1,3 +1,5 @@
+import { salaryPreviewError } from 'src/utils/salary-preview-error';
+
 /** User-facing HR recovery contract. Never keep request bodies, files or raw exceptions here. */
 export type HrSetup =
   | 'salary'
@@ -190,7 +192,10 @@ export function normalizeHrFailure(error: unknown): HrFailure {
         'Your entries are still in the form. Check the saved record or history before retrying to avoid a duplicate change.',
     };
   const mapped = typeof code === 'string' ? known[code] : undefined;
+  const preview = salaryPreviewError(code, body.data ?? business.data);
+  if (preview) preview.fields.forEach((name) => add(name, preview.message));
   const message =
+    preview?.message ??
     fields[0]?.message ??
     safeHrText(business.data?.Reason) ??
     safeHrText(body.data?.Reason) ??
@@ -207,7 +212,7 @@ export function normalizeHrFailure(error: unknown): HrFailure {
     title: Number(status) === 409 ? 'Review the Latest Record' : 'Action Could Not Be Completed',
     message,
     fields,
-    setup: mapped?.setup,
+    setup: mapped?.setup ?? (preview ? 'templates' : undefined),
     guidance:
       Number(status) === 409
         ? 'The request conflicts with the current saved state. Keep your entries, review the latest record, and try again when the conflict is resolved.'
