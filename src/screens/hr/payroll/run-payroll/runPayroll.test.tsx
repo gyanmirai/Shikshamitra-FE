@@ -30,9 +30,30 @@ const mocks = vi.hoisted(() => ({
   unmark: vi.fn(),
   lock: vi.fn(),
   confirmLock: null as null | (() => Promise<void>),
+  reviewHandler: null as null | (() => Promise<void>),
   adjustment: vi.fn(),
 }));
 vi.mock('./payroll-registration-readiness', () => ({ PayrollRegistrationReadiness: () => null }));
+vi.mock('@mui/lab', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@mui/lab')>();
+  return {
+    ...actual,
+    LoadingButton: ({ children, onClick, ...props }: any) => {
+      if (children === 'Mark Reviewed' || children === 'Unmark') {
+        if (
+          children ===
+          (mocks.preview.data?.items[0]?.reviewStatus === 'PENDING' ? 'Mark Reviewed' : 'Unmark')
+        )
+          mocks.reviewHandler = onClick;
+      }
+      return (
+        <actual.LoadingButton {...props} onClick={onClick}>
+          {children}
+        </actual.LoadingButton>
+      );
+    },
+  };
+});
 
 vi.mock('react-redux', () => ({ useSelector: (selector: any) => selector(mocks.state) }));
 vi.mock('next/navigation', () => ({
@@ -135,6 +156,7 @@ beforeEach(() => {
       hrPermissions.root,
       hrPermissions.payroll.root,
       hrPermissions.payroll.runPayrollLock,
+      `${hrPermissions.payroll.runPayroll}.Add`,
       hrPermissions.payroll.runPayrollAdjustments,
       hrPermissions.payroll.runPayrollViewAudit,
       hrPermissions.payroll.settings.root,
@@ -196,6 +218,377 @@ beforeEach(() => {
 });
 
 describe('Run Payroll preview feedback', () => {
+  it.each(['other employee', 'same employee reopened'])(
+    'does not reset a later drawer session after an adjustment saves: %s',
+    async (selection) => {
+      let complete!: (result: object) => void;
+      mocks.adjustment.mockReturnValue({
+        unwrap: () =>
+          new Promise((resolve) => {
+            complete = resolve;
+          }),
+      });
+      mocks.preview.data.items.push({
+        ...mocks.preview.data.items[0],
+        employeeId: 'employee-2',
+        employeeName: 'Other Staff',
+      });
+      render(view());
+      await userEvent.click(screen.getAllByRole('button', { name: 'View employee' })[0]);
+      fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'First draft' } });
+      fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '50' } });
+      fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'First reason' } });
+      await userEvent.click(screen.getByRole('button', { name: 'Add adjustment' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Close details' }));
+      await waitFor(() =>
+        expect(screen.getAllByRole('button', { name: 'View employee' })).toHaveLength(2)
+      );
+      await userEvent.click(
+        screen.getAllByRole('button', { name: 'View employee' })[
+          selection === 'other employee' ? 1 : 0
+        ]
+      );
+      fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New session draft' } });
+      await act(async () => {
+        complete({});
+      });
+      expect(screen.getByLabelText('Name')).toHaveValue('New session draft');
+      expect(mocks.load).not.toHaveBeenCalled();
+      expect(mocks.success).not.toHaveBeenCalled();
+    }
+  );
+
+  it('ignores a late adjustment error for a new draft and allows retry once the old request settles', async () => {
+    let reject!: (reason: object) => void;
+    mocks.adjustment.mockReturnValueOnce({
+      unwrap: () =>
+        new Promise((_resolve, fail) => {
+          reject = fail;
+        }),
+    });
+    mocks.adjustment.mockReturnValueOnce({ unwrap: () => Promise.resolve({}) });
+    render(view());
+    await userEvent.click(screen.getByRole('button', { name: 'View employee' }));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'First draft' } });
+    fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '50' } });
+    fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'First reason' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Add adjustment' }));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Retry draft' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Add adjustment' }));
+    expect(mocks.adjustment).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      reject({ data: { message: 'Old save failed' } });
+    });
+    expect(mocks.error).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Name')).toHaveValue('Retry draft');
+    await userEvent.click(screen.getByRole('button', { name: 'Add adjustment' }));
+    expect(mocks.adjustment).toHaveBeenCalledTimes(2);
+    expect(mocks.load).toHaveBeenCalledExactlyOnceWith(true);
+    expect(screen.getByLabelText('Name')).toHaveValue('');
+  });
+
+  it.each(['PENDING', 'REVIEWED'])(
+    'guards an already captured review handler after Add permission revocation: %s',
+    async (status) => {
+      mocks.preview.data.items[0].reviewStatus = status;
+      const ui = render(view());
+      await userEvent.click(screen.getByRole('checkbox'));
+      const oldHandler = mocks.reviewHandler;
+      mocks.state.auth.permissions = mocks.state.auth.permissions.filter(
+        ({ name }) => name !== `${hrPermissions.payroll.runPayroll}.Add`
+      );
+      ui.rerender(view());
+      expect(
+        screen.getByRole('button', { name: status === 'PENDING' ? 'Mark Reviewed' : 'Unmark' })
+      ).toBeDisabled();
+      await act(async () => {
+        await oldHandler?.();
+      });
+      expect(mocks.mark).not.toHaveBeenCalled();
+      expect(mocks.unmark).not.toHaveBeenCalled();
+      expect(mocks.load).not.toHaveBeenCalled();
+      if (status === 'REVIEWED') {
+        expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeEnabled();
+      }
+    }
+  );
+
+  it.each(['add', 'update', 'delete'])(
+    'keeps a new adjustment draft when an earlier %s completes',
+    async (operation) => {
+      let complete!: (result: object) => void;
+      mocks.adjustment.mockReturnValue({
+        unwrap: () =>
+          new Promise((resolve) => {
+            complete = resolve;
+          }),
+      });
+      mocks.preview.data.items[0].payrollAdjustments = [
+        {
+          id: 'adjustment-1',
+          name: 'Existing',
+          amount: 50,
+          isEarning: true,
+          reason: 'Existing reason',
+        },
+      ];
+      render(view());
+      await userEvent.click(screen.getByRole('button', { name: 'View employee' }));
+      if (operation !== 'add')
+        await userEvent.click(screen.getByRole('button', { name: 'Edit adjustment' }));
+      else {
+        fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'First draft' } });
+        fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '50' } });
+        fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'First reason' } });
+      }
+      await userEvent.click(
+        screen.getByRole('button', {
+          name:
+            operation === 'delete'
+              ? 'Remove adjustment'
+              : operation === 'update'
+                ? 'Save adjustment'
+                : 'Add adjustment',
+        })
+      );
+      expect(mocks.adjustment).toHaveBeenCalledTimes(1);
+      fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New draft' } });
+      await act(async () => {
+        complete({});
+      });
+      expect(screen.getByLabelText('Name')).toHaveValue('New draft');
+      expect(mocks.load).not.toHaveBeenCalled();
+      expect(mocks.success).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(['month', 'year', 'return', 'unmount'])(
+    'ignores an adjustment completion after context %s',
+    async (change) => {
+      let complete!: (result: object) => void;
+      mocks.adjustment.mockReturnValue({
+        unwrap: () =>
+          new Promise((resolve) => {
+            complete = resolve;
+          }),
+      });
+      const ui = render(view());
+      await userEvent.click(screen.getByRole('button', { name: 'View employee' }));
+      fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'First draft' } });
+      fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '50' } });
+      fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'First reason' } });
+      await userEvent.click(screen.getByRole('button', { name: 'Add adjustment' }));
+      expect(mocks.adjustment).toHaveBeenCalledTimes(1);
+      if (change === 'unmount') ui.unmount();
+      else {
+        if (change === 'year')
+          mocks.state.globalState.currentYear = { id: 'year-2', name: '2027-28' };
+        else mocks.query = 'month=2026-09';
+        ui.rerender(view());
+        if (change === 'return') {
+          mocks.query = 'month=2026-08';
+          ui.rerender(view());
+        }
+      }
+      await act(async () => {
+        complete({});
+      });
+      expect(mocks.load).not.toHaveBeenCalled();
+      expect(mocks.success).not.toHaveBeenCalled();
+      expect(mocks.error).not.toHaveBeenCalled();
+      expect(mocks.replace).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(
+    ['review', 'lock'].flatMap((action) =>
+      ['month', 'year', 'return', 'unmount'].map((change) => ({ action, change }))
+    )
+  )('ignores a late $action result after payroll context $change', async ({ action, change }) => {
+    let complete!: (value: object) => void;
+    const request = {
+      unwrap: () =>
+        new Promise((resolve) => {
+          complete = resolve;
+        }),
+    };
+    if (action === 'review') {
+      mocks.preview.data.items[0].reviewStatus = 'PENDING';
+      mocks.mark.mockReturnValue(request);
+    } else mocks.lock.mockReturnValue(request);
+    const ui = render(view());
+    await userEvent.click(screen.getByRole('checkbox'));
+    if (action === 'review')
+      await userEvent.click(screen.getByRole('button', { name: 'Mark Reviewed' }));
+    else {
+      await userEvent.click(screen.getByRole('button', { name: 'Lock Reviewed' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Yes, lock reviewed' }));
+    }
+    if (change === 'unmount') ui.unmount();
+    else {
+      if (change === 'year')
+        mocks.state.globalState.currentYear = { id: 'year-2', name: '2027-28' };
+      else mocks.query = 'month=2026-09';
+      mocks.preview = {
+        ...mocks.preview,
+        runId: 'september-run',
+        data: {
+          ...mocks.preview.data,
+          items: [...mocks.preview.data.items],
+          readiness: { ...mocks.preview.data.readiness, month: '2026-09' },
+        },
+      };
+      ui.rerender(view());
+      if (change === 'return') {
+        mocks.query = 'month=2026-08';
+        ui.rerender(view());
+      }
+      await userEvent.click(screen.getByRole('checkbox'));
+    }
+    await act(async () => {
+      complete({ employeesProcessed: 1 });
+    });
+    if (change !== 'unmount') expect(screen.getByRole('checkbox')).toBeChecked();
+    expect(mocks.load).not.toHaveBeenCalled();
+    expect(mocks.success).not.toHaveBeenCalled();
+    expect(mocks.error).not.toHaveBeenCalled();
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
+  it('retains critical blockers after review and reloads the existing generation', async () => {
+    mocks.preview.data.items[0].reviewStatus = 'PENDING';
+    mocks.preview.data.items[0].issueCodes = ['NO_WORKING_DAYS'];
+    const ui = render(view());
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Mark Reviewed' }));
+    expect(mocks.mark).toHaveBeenCalledWith(
+      expect.objectContaining({ previewRunId: 'run-1', employeeIds: ['employee-1'] })
+    );
+    expect(mocks.load).toHaveBeenCalledWith();
+    mocks.preview = {
+      ...mocks.preview,
+      data: {
+        ...mocks.preview.data,
+        items: [{ ...mocks.preview.data.items[0], reviewStatus: 'REVIEWED' }],
+      },
+    };
+    ui.rerender(view());
+    expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
+    expect(screen.getByText(/Marking reviewed does not resolve these issues/)).toBeVisible();
+  });
+
+  it('keeps selection and durable partial-lock feedback without claiming full success', async () => {
+    mocks.lock.mockReturnValue({
+      unwrap: () => Promise.resolve({ employeesProcessed: 0, employeesFailed: 1 }),
+    });
+    const ui = render(view());
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Lock Reviewed' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Yes, lock reviewed' }));
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      '0 staff payrolls locked; 1 could not be locked'
+    );
+    expect(screen.getByRole('checkbox')).toBeChecked();
+    expect(mocks.success).not.toHaveBeenCalled();
+    expect(mocks.load).toHaveBeenCalledWith();
+    mocks.query = 'month=2026-09';
+    ui.rerender(view());
+    mocks.query = 'month=2026-08';
+    ui.rerender(view());
+    expect(
+      screen.queryByText(/staff payrolls locked; 1 could not be locked/)
+    ).not.toBeInTheDocument();
+  });
+
+  it('blocks repeated lock submission while awaiting the first result', async () => {
+    let complete!: (result: object) => void;
+    mocks.lock.mockReturnValue({
+      unwrap: () =>
+        new Promise((resolve) => {
+          complete = resolve;
+        }),
+    });
+    render(view());
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Lock Reviewed' }));
+    let first!: Promise<void>;
+    await act(async () => {
+      first = mocks.confirmLock!();
+      await mocks.confirmLock!();
+    });
+    expect(mocks.lock).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      complete({ employeesProcessed: 1 });
+      await first;
+    });
+    expect(mocks.load).toHaveBeenCalledTimes(1);
+  });
+
+  it('explains selection and independent review and lock permissions', async () => {
+    mocks.preview.data.items[0].reviewStatus = 'PENDING';
+    const ui = render(view());
+    expect(screen.getByText(/Select staff rows to lock/)).toBeVisible();
+    await userEvent.click(screen.getByRole('checkbox'));
+    expect(screen.getByText(/Mark the selected pending rows reviewed/)).toBeVisible();
+    mocks.state.auth.permissions = mocks.state.auth.permissions.filter(
+      ({ name }) => name !== `${hrPermissions.payroll.runPayroll}.Add`
+    );
+    ui.rerender(view());
+    expect(screen.getByRole('button', { name: 'Mark Reviewed' })).toBeDisabled();
+    expect(screen.getByText(/You do not have permission to review payroll/)).toBeVisible();
+    mocks.preview.data.items[0].reviewStatus = 'REVIEWED';
+    mocks.preview = {
+      ...mocks.preview,
+      data: { ...mocks.preview.data, items: [...mocks.preview.data.items] },
+    };
+    ui.rerender(view());
+    expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeEnabled();
+    mocks.state.auth.permissions = mocks.state.auth.permissions.filter(
+      ({ name }) => name !== hrPermissions.payroll.runPayrollLock
+    );
+    ui.rerender(view());
+    expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
+    expect(screen.getByText(/You do not have permission to lock payroll/)).toBeVisible();
+  });
+
+  it.each(['NO_WORKING_DAYS', 'ATTENDANCE_SALARY_DEDUCTION_CONFIGURATION'])(
+    'explains the backend blocker %s and does not offer to lock it',
+    async (code) => {
+      mocks.preview.data.items[0].issueCodes = [code];
+      render(view());
+      await userEvent.click(screen.getByRole('checkbox'));
+      expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
+      expect(screen.getByText(/Marking reviewed does not resolve these issues/)).toBeVisible();
+      expect(mocks.lock).not.toHaveBeenCalled();
+    }
+  );
+
+  it('explains mixed selections and submits only eligible reviewed rows', async () => {
+    mocks.preview.data.items = [
+      mocks.preview.data.items[0],
+      { ...mocks.preview.data.items[0], employeeId: 'pending', reviewStatus: 'PENDING' },
+      { ...mocks.preview.data.items[0], employeeId: 'blocked', issueCodes: ['NO_WORKING_DAYS'] },
+      {
+        ...mocks.preview.data.items[0],
+        employeeId: 'locked',
+        reviewStatus: 'LOCKED',
+        isLocked: true,
+      },
+    ];
+    render(view());
+    const boxes = screen.getAllByRole('checkbox');
+    expect(boxes[3]).toBeDisabled();
+    await userEvent.click(boxes[0]);
+    await userEvent.click(boxes[1]);
+    await userEvent.click(boxes[2]);
+    expect(screen.getByText(/Ready to lock: 1 row\(s\) from your selection of 3/)).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Lock Reviewed' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Yes, lock reviewed' }));
+    expect(mocks.lock).toHaveBeenCalledWith(
+      expect.objectContaining({ employeeIds: ['employee-1'], previewRunId: 'run-1' })
+    );
+  });
+
   it('uses the safe failure reason for explicit feedback and a permission-gated setup action', async () => {
     const ui = render(view());
     await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));

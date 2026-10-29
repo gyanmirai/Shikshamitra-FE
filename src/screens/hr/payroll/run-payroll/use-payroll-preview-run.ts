@@ -29,6 +29,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
   const key = `${academicYearId}:${month}`;
   const context = useRef({ key });
   if (context.current.key !== key) context.current = { key };
+  const renderedContext = context.current;
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -183,13 +184,15 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
   const loadPreview = useCallback(
     async (refresh = false): Promise<PayrollPreviewStatus | null> => {
       if (
+        !mounted.current ||
+        context.current !== renderedContext ||
         !month ||
         !academicYearId ||
         requestLock.current === context.current ||
         (!hasError && matches && ['QUEUED', 'RUNNING'].includes(status.status))
       )
         return null;
-      const requestedContext = context.current;
+      const requestedContext = renderedContext;
       const stillCurrent = () => mounted.current && context.current === requestedContext;
       requestLock.current = requestedContext;
       setRequest({ context: requestedContext, id: '', awaitingUrl: true });
@@ -224,6 +227,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
       key,
       matches,
       month,
+      renderedContext,
       pageQuery,
       start,
       status,

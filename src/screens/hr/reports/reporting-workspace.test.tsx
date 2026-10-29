@@ -9,6 +9,7 @@ import { act, screen, cleanup, waitFor, fireEvent } from '@testing-library/react
 
 import { ReportLibrary } from './workspace/ReportLibrary';
 import { ReportGenerate } from './workspace/ReportGenerate';
+import { ReportAdvancedEditor } from './workspace/ReportAdvancedEditor';
 import {
   displayReportValue,
   reportListPagination,
@@ -90,6 +91,78 @@ function render(component: React.ReactNode) {
     <ThemeProvider theme={createTheme(defaultSettings)}>{component}</ThemeProvider>
   );
 }
+
+it.each(['payroll_statement', 'payroll_register'])(
+  'does not offer draft inclusion for a saved %s template',
+  (dataSource) => {
+    render(
+      <ReportGenerate
+        template={{
+          ...template,
+          definition: {
+            ...template.definition,
+            dataSource,
+            parameters: ['period', 'includeDrafts'],
+          },
+        }}
+      />
+    );
+    expect(screen.queryByLabelText('Include draft payroll')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Only issued payslips from locked payroll are included.')
+    ).toBeVisible();
+  }
+);
+
+it('preserves explicit generic payroll preview controls', () => {
+  render(
+    <ReportGenerate
+      template={{
+        ...template,
+        definition: {
+          ...template.definition,
+          dataSource: 'payroll',
+          parameters: ['period', 'includeDrafts'],
+        },
+      }}
+    />
+  );
+  const draftControl = screen.getByLabelText('Include draft payroll');
+  expect(draftControl).toBeEnabled();
+  expect(screen.getByText('Include draft payroll')).toBeVisible();
+  fireEvent.click(draftControl);
+  expect(draftControl).toBeChecked();
+  expect(
+    screen.queryByText('Only issued payslips from locked payroll are included.')
+  ).not.toBeInTheDocument();
+});
+
+it('does not let an older salary-document catalogue enable draft parameters in the editor', () => {
+  render(
+    <ReportAdvancedEditor
+      section="advanced"
+      design={{
+        ...template.definition,
+        dataSource: 'payroll_register',
+        parameters: ['period', 'includeDrafts'],
+      }}
+      dataset={{
+        id: 'payroll_register',
+        label: 'Payroll register',
+        category: 'Payroll',
+        rowMeaning: 'Issued payslips',
+        fields: [],
+        layouts: ['detail'],
+        parameters: ['period', 'includeDrafts'],
+        requiredParameters: ['period'],
+        summaryFunctions: [],
+      }}
+      onChange={vi.fn()}
+    />
+  );
+  expect(screen.queryByLabelText('Include draft payroll')).not.toBeInTheDocument();
+  expect(screen.getByRole('checkbox', { name: 'Reporting period' })).toBeDisabled();
+});
 
 it('keeps template configuration separate from report generation', () => {
   render(<ReportLibrary templates={[template]} />);

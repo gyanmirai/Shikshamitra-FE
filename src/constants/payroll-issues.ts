@@ -84,6 +84,16 @@ export const PAYROLL_ISSUE_LABELS: Record<
     color: 'error',
   },
   NO_ATTENDANCE: { label: 'No attendance', severity: 'CRITICAL', color: 'error' },
+  NO_WORKING_DAYS: {
+    label: 'No working days. Review the work calendar and employment dates for this month.',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ATTENDANCE_SALARY_DEDUCTION_CONFIGURATION: {
+    label: 'Attendance deductions need setup. Review the effective attendance policy.',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
   LOW_ATTENDANCE: { label: 'Low attendance', severity: 'WARNING', color: 'warning' },
   NEGATIVE_NET_PAY: { label: 'Negative net pay', severity: 'CRITICAL', color: 'error' },
   NO_PREVIOUS_MONTH_COMPARISON: { label: 'No previous month', severity: 'INFO', color: 'info' },

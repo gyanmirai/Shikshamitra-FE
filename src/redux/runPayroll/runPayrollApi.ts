@@ -10,7 +10,7 @@ export const runPayrollApi = employeeApi.injectEndpoints({
         method: 'POST',
         body: { month, academicYearId, employeeIds, previewRunId },
       }),
-      invalidatesTags: [employeeType.runPayroll],
+      invalidatesTags: [employeeType.runPayroll, employeeType.salarySlip],
     }),
 
     markPayrollReviewed: builder.mutation({

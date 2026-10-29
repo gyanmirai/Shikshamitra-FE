@@ -1,24 +1,44 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { skipToken } from '@reduxjs/toolkit/query';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { hrPermissions } from 'src/constants/hr-menus';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-import { HrNotice } from 'src/screens/hr/components/hr-notice';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
+import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
+import { useGetEmployeeSalarySlipQuery } from 'src/redux/runPayroll/runPayrollApi';
 import { Box, Card, Grid, Stack, Button, Avatar, Skeleton, CardHeader } from '@mui/material';
 import {
-  useGetEmployeeSalarySlipQuery,
-  useLazyGetEmployeeSalarySlipPdfQuery,
-} from 'src/redux/runPayroll/runPayrollApi';
+  useGetPayslipDocumentsQuery,
+  useLazyGetPayslipDocumentPdfQuery,
+} from 'src/redux/hr/payslip-api';
 
 import { toSalarySlipMonthYear } from './payroll-summary-utils';
+import { usePayslipActions } from '../payroll/salarySlip-generate/use-payslip-actions';
+import PayslipAvailabilityNotice from '../payroll/salarySlip-generate/payslip-availability-notice';
+import {
+  buildPayslipSelection,
+  payslipMatchesSelection,
+} from '../payroll/salarySlip-generate/payslip-selection';
+
+const PayslipPdfViewer = dynamic(
+  () => import('../payroll/salarySlip-generate/payslip-pdf-viewer'),
+  { ssr: false }
+);
+const onPdfReady = () => undefined;
 
 const enterCurve = [0.22, 1, 0.36, 1] as const;
 
@@ -36,43 +56,50 @@ const PayrollSummary = ({ employee }: any) => {
   const [monthYear, setMonthYear] = useState<null | Dayjs>(dayjs());
   const employeeId = employee?.id;
   const salarySlipMonth = toSalarySlipMonthYear(monthYear);
-
-  const {
-    data: salarySlip,
-    isFetching,
-    isError,
-  } = useGetEmployeeSalarySlipQuery(
-    { employeeId, monthYear: salarySlipMonth },
-    { skip: !employeeId || !salarySlipMonth }
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canView = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.payroll.generateSalarySlip}.View`
   );
-  const [getSalarySlipPdf, { isFetching: isDownloading }] = useLazyGetEmployeeSalarySlipPdfQuery();
-
-  const hasSalarySlip = !!salarySlip;
+  const selection = buildPayslipSelection(employeeId, monthYear);
+  const args =
+    canView && selection
+      ? { employeeId: selection.employeeId, monthYear: selection.monthYear }
+      : skipToken;
+  const documents = useGetPayslipDocumentsQuery(args, {
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
+  const currentDocument = documents.currentData?.find((document) => document.isCurrent);
+  const documentKnown = documents.isSuccess && !documents.isFetching && !documents.isError;
+  const summary = useGetEmployeeSalarySlipQuery(currentDocument ? args : skipToken);
+  const salarySlip = payslipMatchesSelection(summary.currentData, selection)
+    ? summary.currentData
+    : null;
+  const isFetching = documents.isFetching || (!!currentDocument && summary.isFetching);
+  const isError = documents.isError || (!!currentDocument && summary.isError);
+  const hasSalarySlip =
+    canView && documentKnown && !!currentDocument && !!salarySlip && !isFetching && !isError;
   const earnings = salarySlip?.earnings || [];
   const deductions = salarySlip?.deductions || [];
+  const [loadDocument] = useLazyGetPayslipDocumentPdfQuery();
+  const documentId = hasSalarySlip ? currentDocument?.id : null;
+  const loadPdf = useCallback(
+    () => (documentId ? loadDocument(documentId).unwrap() : Promise.resolve(null)),
+    [documentId, loadDocument]
+  );
+  const documentKey = documentId && selection ? `${selection.key}:${documentId}` : null;
+  const actions = usePayslipActions({
+    selectionKey: documentKey,
+    loadPdf: documentKey ? loadPdf : null,
+    fileName: `Payslip_${monthYear?.format('YYYY-MM') ?? ''}_R${currentDocument?.revision ?? ''}.pdf`,
+  });
+  const [previewSelection, setPreviewSelection] = useState<string | null>(null);
+  useEffect(() => setPreviewSelection(null), [documentKey]);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const canUsePdf = hasSalarySlip && !!actions.pdfUrl && !actions.isLoading && !actions.error;
 
-  const handleDownload = async () => {
-    if (!employeeId || !salarySlipMonth || !hasSalarySlip || isDownloading) return;
-
-    const blob = await getSalarySlipPdf({ employeeId, monthYear: salarySlipMonth }).unwrap();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const employeeName = (
-      employee?.fullName ||
-      employee?.name ||
-      salarySlip?.employeeName ||
-      'Employee'
-    )
-      .trim()
-      .replace(/[<>:"/\\|?*]/g, '-')
-      .replace(/\s+/g, '-');
-    link.href = url;
-    link.download = `Payslip_${employeeName}_${monthYear?.format('MMM-YYYY') || 'unknown'}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
-  };
+  if (!canView) return <HrNotice>You do not have access to payslips.</HrNotice>;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
@@ -108,7 +135,10 @@ const PayrollSummary = ({ employee }: any) => {
                       startIcon={<Iconify icon="solar:eye-linear" />}
                       variant="outlined"
                       color="inherit"
-                      disabled={!hasSalarySlip}
+                      disabled={!canUsePdf}
+                      onClick={() => {
+                        if (canUsePdf) setPreviewSelection(documentKey);
+                      }}
                     >
                       Preview
                     </Button>
@@ -117,10 +147,12 @@ const PayrollSummary = ({ employee }: any) => {
                       startIcon={<Iconify icon="solar:download-linear" />}
                       variant="outlined"
                       color="inherit"
-                      disabled={!hasSalarySlip || isDownloading}
-                      onClick={handleDownload}
+                      disabled={!canUsePdf}
+                      onClick={() => {
+                        if (canUsePdf) actions.handleDownload();
+                      }}
                     >
-                      {isDownloading ? 'Downloading...' : 'Download'}
+                      Download
                     </Button>
                     <Button
                       size="small"
@@ -145,11 +177,47 @@ const PayrollSummary = ({ employee }: any) => {
               </Card>
             </motion.div>
 
+            {actions.isLoading && hasSalarySlip && (
+              <HrLoadingNotice>Loading the issued payslip PDF.</HrLoadingNotice>
+            )}
+            {actions.error && hasSalarySlip && (
+              <HrNotice
+                severity="error"
+                action={
+                  <Button size="small" onClick={actions.retry}>
+                    Retry PDF
+                  </Button>
+                }
+              >
+                {actions.error}
+              </HrNotice>
+            )}
+            {selection && documentKnown && !currentDocument && (
+              <PayslipAvailabilityNotice
+                key={selection.key}
+                employeeId={selection.employeeId}
+                monthYear={selection.monthYear}
+                reload={() => documents.refetch()}
+              />
+            )}
             {isFetching ? (
               <PayrollSummarySkeleton />
             ) : isError ? (
-              <HrNotice severity="info">
-                No finalized salary slip found for this staff member and month.
+              <HrNotice
+                severity="error"
+                action={
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      documents.refetch();
+                      if (currentDocument && !summary.isUninitialized) summary.refetch();
+                    }}
+                  >
+                    Retry
+                  </Button>
+                }
+              >
+                The payslip could not be loaded. Retry to check this staff member and month.
               </HrNotice>
             ) : hasSalarySlip ? (
               <>
@@ -225,6 +293,26 @@ const PayrollSummary = ({ employee }: any) => {
           </Box>
         </motion.div>
       </Scrollbar>
+      <CustomDialog
+        open={canUsePdf && previewSelection === documentKey}
+        handleClose={() => setPreviewSelection(null)}
+        title="Payslip Preview"
+        titleInfo="View the issued payslip for the selected staff member and pay period."
+        maxWidth="md"
+        hasForm={false}
+        guardUnsavedChanges={false}
+      >
+        {canUsePdf && actions.pdfUrl && previewSelection === documentKey && (
+          <Box sx={{ p: 2 }}>
+            <PayslipPdfViewer
+              url={actions.pdfUrl}
+              title={`Official payslip PDF, ${salarySlipMonth}`}
+              contentRef={contentRef}
+              onReady={onPdfReady}
+            />
+          </Box>
+        )}
+      </CustomDialog>
     </Box>
   );
 };

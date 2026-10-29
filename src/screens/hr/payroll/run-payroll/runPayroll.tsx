@@ -208,6 +208,10 @@ const RunPayroll = () => {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canReviewPayroll = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.payroll.runPayroll}.Add`
+  );
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const canLockPayroll = hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollLock);
   const canAdjustPayroll = hasGrantedPermission(
@@ -233,6 +237,12 @@ const RunPayroll = () => {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [activeRow, setActiveRow] = useState<PayrollRow | null>(null);
   const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
+  const mutationPending = useRef(false);
+  const [lockFeedback, setLockFeedback] = useState<{
+    context: string;
+    message: string;
+    failed: boolean;
+  } | null>(null);
   const [readinessDrawerContext, setReadinessDrawerContext] = useState<string | null>(null);
   const [auditOpen, setAuditOpen] = useState(false);
   const [adjustmentDraft, setAdjustmentDraft] = useState({
@@ -267,6 +277,9 @@ const RunPayroll = () => {
   if (previewContext.current.key !== previewContextKey) {
     previewContext.current = { key: previewContextKey };
   }
+  const renderedPreviewContext = previewContext.current;
+  const actionAccess = useRef({ canReviewPayroll, canLockPayroll, canAdjustPayroll });
+  actionAccess.current = { canReviewPayroll, canLockPayroll, canAdjustPayroll };
   const previewMounted = useRef(true);
   const explicitRequest = useRef(false);
   const notifiedRuns = useRef(new Set<string>());
@@ -283,9 +296,10 @@ const RunPayroll = () => {
     setPendingPreview(null);
     explicitRequest.current = false;
     setReadinessDrawerContext(null);
+    setLockFeedback(null);
   }, [previewContextKey]);
   const requestPreview = useCallback(async () => {
-    if (explicitRequest.current || previewBusy) return;
+    if (explicitRequest.current || previewBusy || mutationPending.current) return;
     const requestedContext = previewContext.current;
     explicitRequest.current = true;
     setPendingPreview({ key: requestedContext.key, id: null });
@@ -349,16 +363,19 @@ const RunPayroll = () => {
   const [createAdjustment, { isLoading: createAdjustmentLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreatePayrollAdjustmentMutation,
+    popupConfig: { error: false },
   });
 
   const [updateAdjustment, { isLoading: updateAdjustmentLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdatePayrollAdjustmentMutation,
+    popupConfig: { error: false },
   });
 
   const [deleteAdjustment, { isLoading: deleteAdjustmentLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeletePayrollAdjustmentMutation,
+    popupConfig: { error: false },
   });
 
   const { data: payrollAuditEvents, isLoading: payrollAuditLoading } = useGetHrAuditEventsQuery(
@@ -510,6 +527,55 @@ const RunPayroll = () => {
         .map((row) => row.id),
     [selectedRows]
   );
+  const payrollActionBusy =
+    markLoading ||
+    unmarkLoading ||
+    lockLoading ||
+    createAdjustmentLoading ||
+    updateAdjustmentLoading ||
+    deleteAdjustmentLoading;
+  const lockExplanation = (() => {
+    if (!canLockPayroll)
+      return 'You do not have permission to lock payroll. Contact an HR administrator to review your access.';
+    if (payrollActionBusy)
+      return 'A payroll action is in progress. Wait for it to finish before locking.';
+    if (!preview.isCurrent) {
+      if (preview.isPreparing)
+        return 'Payroll preview is being prepared. Wait for the current rows before locking.';
+      if (preview.fetching)
+        return 'Payroll rows are loading. Wait for the current page before locking.';
+      if (preview.error)
+        return 'Payroll preview is unavailable. Retry the preview before reviewing or locking.';
+      if (preview.isStale)
+        return 'Payroll inputs changed. Refresh the preview, then review the updated rows before locking.';
+      return 'Load a current payroll preview before reviewing or locking.';
+    }
+    if (!pendingRows.length)
+      return tableData.length
+        ? 'These payroll rows are already locked.'
+        : 'No staff rows are available on this page. Check the month and filters.';
+    if (!selectedRows.length)
+      return 'Select staff rows to lock. Only reviewed rows without critical issues can be locked.';
+    if (!selectedReviewedIds.length)
+      return canReviewPayroll
+        ? 'Mark the selected pending rows reviewed after checking their amounts and issues.'
+        : 'The selected rows need review. Ask an authorized payroll reviewer to review them first.';
+    if (!lockableIds.length) {
+      const labels = [
+        ...new Set(
+          selectedRows
+            .filter((row) => row.status === 'REVIEWED')
+            .flatMap((row) =>
+              row.issueCodes
+                .filter((code) => ISSUE_LABELS[code]?.severity === 'CRITICAL')
+                .map((code) => ISSUE_LABELS[code].label)
+            )
+        ),
+      ];
+      return `Locking is blocked: ${labels.join(' ')} Marking reviewed does not resolve these issues. Open staff details to review the blockers.`;
+    }
+    return `Ready to lock: ${lockableIds.length} row(s) from your selection of ${selectedRows.length}. Pending rows and rows with critical issues will remain unlocked.`;
+  })();
   const activeRowIsCurrent = Boolean(
     activeRow && tableData.includes(activeRow) && preview.isCurrent
   );
@@ -541,10 +607,43 @@ const RunPayroll = () => {
     setEditingAdjustmentId(null);
   }, [activeRow?.id]);
 
+  // Retain an operation's exact drawer/draft identity, including an away-and-back selection.
+  // A completion may only reset the draft that was submitted, never later user input.
+  const adjustmentSession = useRef({
+    employeeId: activeRow?.id,
+    draft: adjustmentDraft,
+    editingId: editingAdjustmentId,
+  });
+  if (
+    adjustmentSession.current.employeeId !== activeRow?.id ||
+    adjustmentSession.current.draft !== adjustmentDraft ||
+    adjustmentSession.current.editingId !== editingAdjustmentId
+  ) {
+    adjustmentSession.current = {
+      employeeId: activeRow?.id,
+      draft: adjustmentDraft,
+      editingId: editingAdjustmentId,
+    };
+  }
+  const renderedAdjustmentSession = adjustmentSession.current;
+
   const runReviewMutation = useCallback(
     async (mutation: any, employeeIds: string[], fallbackMessage: string) => {
-      if (!selectedMonthKey || !academicYearId || employeeIds.length === 0 || !preview.isCurrent)
+      if (
+        !previewMounted.current ||
+        previewContext.current !== renderedPreviewContext ||
+        !actionAccess.current.canReviewPayroll ||
+        !canReviewPayroll ||
+        payrollActionBusy ||
+        mutationPending.current ||
+        !selectedMonthKey ||
+        !academicYearId ||
+        employeeIds.length === 0 ||
+        !preview.isCurrent
+      )
         return;
+      mutationPending.current = true;
+      const requestedContext = previewContext.current;
       try {
         const res = await mutation({
           month: selectedMonthKey,
@@ -552,16 +651,37 @@ const RunPayroll = () => {
           employeeIds,
           previewRunId: preview.runId,
         }).unwrap();
+        if (!previewMounted.current || previewContext.current !== requestedContext) return;
         shikshaMitraToast.success({ message: res?.message || fallbackMessage });
         await loadPreview();
       } catch (error: unknown) {
+        if (!previewMounted.current || previewContext.current !== requestedContext) return;
         shikshaMitraToast.error({ message: getPayrollMutationErrorMessage(error) });
+      } finally {
+        mutationPending.current = false;
       }
     },
-    [academicYearId, loadPreview, preview.isCurrent, preview.runId, selectedMonthKey]
+    [
+      academicYearId,
+      canReviewPayroll,
+      payrollActionBusy,
+      loadPreview,
+      preview.isCurrent,
+      preview.runId,
+      renderedPreviewContext,
+      selectedMonthKey,
+    ]
   );
 
   const addPayrollAdjustment = useCallback(async () => {
+    if (
+      !previewMounted.current ||
+      previewContext.current !== renderedPreviewContext ||
+      adjustmentSession.current !== renderedAdjustmentSession ||
+      !actionAccess.current.canAdjustPayroll
+    )
+      return;
+    if (payrollActionBusy || mutationPending.current) return;
     if (!activeRow || !selectedMonthKey || !academicYearId) return;
     if (!activeRowIsCurrent) return;
     if (!canAdjustPayroll || activeRow.status !== 'REVIEWED') {
@@ -581,6 +701,13 @@ const RunPayroll = () => {
       return;
     }
 
+    const requestedContext = previewContext.current;
+    const requestedSession = adjustmentSession.current;
+    const stillCurrent = () =>
+      previewMounted.current &&
+      previewContext.current === requestedContext &&
+      adjustmentSession.current === requestedSession;
+    mutationPending.current = true;
     try {
       const payload = {
         month: selectedMonthKey,
@@ -596,6 +723,7 @@ const RunPayroll = () => {
       } else {
         await createAdjustment(payload).unwrap();
       }
+      if (!stillCurrent()) return;
       shikshaMitraToast.success({
         message: editingAdjustmentId ? 'Payroll adjustment updated.' : 'Payroll adjustment added.',
       });
@@ -603,11 +731,14 @@ const RunPayroll = () => {
       setEditingAdjustmentId(null);
       await loadPreview(true);
     } catch (error: any) {
+      if (!stillCurrent()) return;
       shikshaMitraToast.error({
         message:
           error?.data?.message ||
           (editingAdjustmentId ? 'Failed to update adjustment.' : 'Failed to add adjustment.'),
       });
+    } finally {
+      mutationPending.current = false;
     }
   }, [
     activeRow,
@@ -618,20 +749,39 @@ const RunPayroll = () => {
     createAdjustment,
     editingAdjustmentId,
     loadPreview,
+    payrollActionBusy,
+    renderedAdjustmentSession,
+    renderedPreviewContext,
     selectedMonthKey,
     updateAdjustment,
   ]);
 
   const removePayrollAdjustment = useCallback(
     async (id: string) => {
+      if (
+        !previewMounted.current ||
+        previewContext.current !== renderedPreviewContext ||
+        adjustmentSession.current !== renderedAdjustmentSession ||
+        !actionAccess.current.canAdjustPayroll
+      )
+        return;
+      if (payrollActionBusy || mutationPending.current) return;
       if (!activeRowCanAdjust) {
         shikshaMitraToast.error({
           message: 'Payroll adjustments are available only for reviewed, unlocked rows.',
         });
         return;
       }
+      const requestedContext = previewContext.current;
+      const requestedSession = adjustmentSession.current;
+      const stillCurrent = () =>
+        previewMounted.current &&
+        previewContext.current === requestedContext &&
+        adjustmentSession.current === requestedSession;
+      mutationPending.current = true;
       try {
         await deleteAdjustment(id).unwrap();
+        if (!stillCurrent()) return;
         shikshaMitraToast.success({ message: 'Payroll adjustment removed.' });
         if (editingAdjustmentId === id) {
           setAdjustmentDraft({ name: '', amount: '', isEarning: 'true', reason: '' });
@@ -639,12 +789,23 @@ const RunPayroll = () => {
         }
         await loadPreview(true);
       } catch (error: any) {
+        if (!stillCurrent()) return;
         shikshaMitraToast.error({
           message: error?.data?.message || 'Failed to remove adjustment.',
         });
+      } finally {
+        mutationPending.current = false;
       }
     },
-    [activeRowCanAdjust, deleteAdjustment, editingAdjustmentId, loadPreview]
+    [
+      activeRowCanAdjust,
+      deleteAdjustment,
+      editingAdjustmentId,
+      loadPreview,
+      payrollActionBusy,
+      renderedAdjustmentSession,
+      renderedPreviewContext,
+    ]
   );
 
   const startEditingAdjustment = useCallback(
@@ -1208,7 +1369,7 @@ const RunPayroll = () => {
                     variant="contained"
                     loading={previewBusy}
                     size="small"
-                    disabled={!month.isValid() || !academicYearId}
+                    disabled={payrollActionBusy || !month.isValid() || !academicYearId}
                     startIcon={
                       <Iconify icon={isDataForSelectedMonth ? 'mdi:refresh' : 'mdi:calculator'} />
                     }
@@ -1260,7 +1421,12 @@ const RunPayroll = () => {
                     variant="outlined"
                     color="info"
                     loading={markLoading}
-                    disabled={!preview.isCurrent || !selectedPendingIds.length}
+                    disabled={
+                      payrollActionBusy ||
+                      !canReviewPayroll ||
+                      !preview.isCurrent ||
+                      !selectedPendingIds.length
+                    }
                     startIcon={<Iconify icon="solar:check-circle-bold" />}
                     title="Acknowledges the displayed payroll warnings for these rows."
                     onClick={() =>
@@ -1279,7 +1445,12 @@ const RunPayroll = () => {
                     color="warning"
                     startIcon={<Iconify icon="mdi:undo" />}
                     loading={unmarkLoading}
-                    disabled={!preview.isCurrent || !selectedReviewedIds.length}
+                    disabled={
+                      payrollActionBusy ||
+                      !canReviewPayroll ||
+                      !preview.isCurrent ||
+                      !selectedReviewedIds.length
+                    }
                     onClick={() =>
                       runReviewMutation(
                         unmarkReviewed,
@@ -1294,7 +1465,13 @@ const RunPayroll = () => {
                     size="small"
                     variant="contained"
                     color="success"
-                    disabled={!preview.isCurrent || !canLockPayroll || !lockableIds.length}
+                    disabled={
+                      payrollActionBusy ||
+                      !preview.isCurrent ||
+                      !canLockPayroll ||
+                      !lockableIds.length
+                    }
+                    aria-describedby="payroll-lock-explanation"
                     startIcon={<Iconify icon="solar:lock-bold" />}
                     onClick={() => {
                       if (preview.isCurrent) setLockConfirmOpen(true);
@@ -1306,11 +1483,25 @@ const RunPayroll = () => {
               </Stack>
             </Stack>
 
-            {!preview.isCurrent && preview.data ? (
-              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75 }}>
-                Review, adjustments, and locking require a current loaded preview.
+            <Typography
+              id="payroll-lock-explanation"
+              variant="body2"
+              color="text.secondary"
+              sx={{ mb: 0.75, overflowWrap: 'anywhere' }}
+            >
+              {lockExplanation}
+            </Typography>
+            {!canReviewPayroll && (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
+                You do not have permission to review payroll. Contact an HR administrator to review
+                your access.
               </Typography>
-            ) : null}
+            )}
+            {lockFeedback?.context === previewContextKey && (
+              <HrNotice severity={lockFeedback.failed ? 'warning' : 'error'}>
+                {lockFeedback.message}
+              </HrNotice>
+            )}
             <Box sx={{ height: 2, flexShrink: 0 }}>
               {preview.data && (preview.isPreparing || preview.fetching) ? (
                 <LinearProgress
@@ -2143,6 +2334,7 @@ const RunPayroll = () => {
                                           <span>
                                             <IconButton
                                               size="small"
+                                              aria-label="Edit adjustment"
                                               disabled={
                                                 isSystemGenerated ||
                                                 updateAdjustmentLoading ||
@@ -2164,6 +2356,7 @@ const RunPayroll = () => {
                                           <span>
                                             <IconButton
                                               size="small"
+                                              aria-label="Remove adjustment"
                                               disabled={
                                                 isSystemGenerated || deleteAdjustmentLoading
                                               }
@@ -2425,14 +2618,21 @@ const RunPayroll = () => {
                   );
                 })
               ) : (
-                <HrNotice severity="info">No payroll lock audit events found for this month.</HrNotice>
+                <HrNotice severity="info">
+                  No payroll lock audit events found for this month.
+                </HrNotice>
               )}
             </Stack>
           </Drawer>
 
           <ConfirmDialog
             open={lockConfirmOpen}
-            onClose={() => setLockConfirmOpen(false)}
+            onClose={() => {
+              if (!lockLoading) setLockConfirmOpen(false);
+            }}
+            disableCancel={lockLoading}
+            disableBackdropClick={lockLoading}
+            disableEscapeKeyDown={lockLoading}
             title="Lock reviewed payroll rows"
             icon="warning"
             content={
@@ -2448,16 +2648,25 @@ const RunPayroll = () => {
                 variant="contained"
                 color="error"
                 loading={lockLoading}
-                disabled={!canLockPayroll || !preview.isCurrent}
+                disabled={
+                  payrollActionBusy || !lockableIds.length || !canLockPayroll || !preview.isCurrent
+                }
                 onClick={async () => {
                   if (
+                    !previewMounted.current ||
+                    previewContext.current !== renderedPreviewContext ||
+                    !actionAccess.current.canLockPayroll ||
                     !selectedMonthKey ||
+                    payrollActionBusy ||
+                    mutationPending.current ||
                     !academicYearId ||
                     !lockableIds.length ||
                     !canLockPayroll ||
                     !preview.isCurrent
                   )
                     return;
+                  mutationPending.current = true;
+                  const requestedContext = previewContext.current;
                   try {
                     const res = await generateAndLockPayroll({
                       month: selectedMonthKey,
@@ -2465,16 +2674,36 @@ const RunPayroll = () => {
                       employeeIds: lockableIds,
                       previewRunId: preview.runId,
                     }).unwrap();
-                    shikshaMitraToast.success({
-                      message: res?.message || 'Payroll locked successfully.',
-                    });
+                    if (!previewMounted.current || previewContext.current !== requestedContext)
+                      return;
+                    const hasFailures = Number(res?.employeesFailed) > 0;
+                    if (hasFailures) {
+                      setLockFeedback({
+                        context: previewContextKey,
+                        failed: true,
+                        message: `${Number(res?.employeesProcessed) || 0} staff payrolls locked; ${Number(res.employeesFailed)} could not be locked. Review the remaining rows and retry. Issued payslips are available for successfully locked staff.`,
+                      });
+                    } else {
+                      setLockFeedback(null);
+                      shikshaMitraToast.success({
+                        message:
+                          res?.message ||
+                          'Payroll locked successfully. Issued payslips are now available.',
+                      });
+                    }
                     setLockConfirmOpen(false);
-                    setSelectedEmployeeIds([]);
+                    if (!hasFailures) setSelectedEmployeeIds([]);
                     await loadPreview();
                   } catch (error: unknown) {
-                    shikshaMitraToast.error({
+                    if (!previewMounted.current || previewContext.current !== requestedContext)
+                      return;
+                    setLockFeedback({
+                      context: previewContextKey,
+                      failed: false,
                       message: getPayrollMutationErrorMessage(error),
                     });
+                  } finally {
+                    mutationPending.current = false;
                   }
                 }}
               >
