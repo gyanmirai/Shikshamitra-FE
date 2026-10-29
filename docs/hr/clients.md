@@ -50,6 +50,8 @@ Directory refreshes keep matching cached rows visible with a labelled progress b
 
 The reporting-manager field uses `employeeApi.getReportingManagerOptions` at `/employees/reporting-manager/options`, with server search and the existing employee cache tag. It retains the selected `kind` (`Employee` or `TenantAdministrator`) in Formik, includes `reportingManagerKind` on both onboarding and profile updates, and restores it from the reporting-manager response. Administrator login IDs are never sent to employee-detail reads. Deploy the [backend reporting-manager contract and migration](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md) before this selector.
 
+The separate `getEarningComponentOptions` and `getDeductionComponentOptions` queries retrieve complete dependency metadata from the existing paginated endpoints, preserving academic-year parameters and component cache tags. `payroll-component-options.ts` requires complete, consistent pages and stops on abort, request failure or lack of progress. Record tables retain their existing pagination; percentage forms subscribe only when those choices are needed.
+
 Use this table before searching `src/redux`:
 
 | Client                             | Endpoint families                                                                             | Backend owner                   |

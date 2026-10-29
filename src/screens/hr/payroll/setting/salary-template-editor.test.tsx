@@ -170,6 +170,18 @@ const renderEditor = (ui: React.ReactNode) =>
 const originalTemplate = structuredClone(mocks.template);
 
 describe('SalaryTemplateEditor', () => {
+  it('leaves loading navigation to the wizard instead of rendering an inert embedded Cancel action', () => {
+    mocks.catalogLoading = true;
+    renderEditor(
+      <HrSetupEditorContext.Provider value={() => {}}>
+        <SalaryTemplateEditor mode="create" onClose={() => {}} />
+      </HrSetupEditorContext.Provider>
+    );
+    expect(screen.getByRole('status', { name: 'Loading salary template' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Create Template' })).toBeNull();
+  });
+
   it('blocks picker refresh while a preview is pending and invalidates it after an allowed refresh', async () => {
     const user = userEvent.setup();
     const proof = await mocks.calculate().unwrap();

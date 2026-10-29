@@ -4,12 +4,13 @@ import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
@@ -29,7 +30,6 @@ import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
 import {
   SetupEditorBody,
   SetupEditorGuard,
-  SetupInlineDialog,
   SetupEditorActions,
   useHrSetupEditorState,
 } from 'src/screens/hr/setup/hr-setup-editor-context';
@@ -54,7 +54,8 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 import {
-  useGetEarningComponentsQuery,
+  useGetEarningComponentOptionsQuery,
+  useGetDeductionComponentOptionsQuery,
   useGetDeductionComponentsQuery,
   useAddDeductionComponentMutation,
   useUpdateDeductionComponentMutation,
@@ -83,12 +84,23 @@ interface PayElement {
 }
 
 const DeductionComponent = () => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canManage = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.payroll.settings.deductionComponents}.Add`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.payroll.settings.deductionComponents}.Delete`
+  );
   const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
   const exportTable = useHrTableExport('hr-deduction-components', tableQuery);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const confirm = useBoolean();
   const [editData, setEditData] = useState<any>(null);
+  const [editorSession, setEditorSession] = useState(0);
+  const [editorBusy, setEditorBusy] = useState(false);
   const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
   const isDeductionComponentOpen = useBoolean();
 
@@ -104,7 +116,7 @@ const DeductionComponent = () => {
     refetch: refetchDeleteImpactPreview,
   } = usePreviewDeductionComponentDeleteImpactQuery(
     { id: deleteInformation?.id || '', includeEmployees: true, maxResultCount: 5 },
-    { skip: !confirm.value || !deleteInformation?.id }
+    { skip: !canDelete || !confirm.value || !deleteInformation?.id }
   );
 
   const {
@@ -133,23 +145,16 @@ const DeductionComponent = () => {
   );
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  // Handles closing the incident form
+  const closeEditor = () => {
+    isDeductionComponentOpen.onFalse();
+    setEditData(null);
+    dispatch(setIsChanges(false));
+    setEditorBusy(false);
+  };
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        dispatch(setIsChanges(false));
-      }, 200); // Adjust timing based on your dialog close animation
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      isDeductionComponentOpen.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      isDeductionComponentOpen.onFalse();
-      setTimeout(() => {
-        setEditData(null);
-      }, 200);
-    }
+    if (!isSubmit && editorBusy) return;
+    if (isSubmit || !isChanges || window.confirm('Are you sure you want to leave this page?'))
+      closeEditor();
   };
 
   return (
@@ -162,14 +167,22 @@ const DeductionComponent = () => {
           { name: 'Deduction Component' },
         ]}
         action={
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            size="small"
-            onClick={isDeductionComponentOpen.onTrue}
-          >
-            Add deduction
-          </Button>
+          canManage && (
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              size="small"
+              disabled={editorBusy || deleteDeductionComponentLoading}
+              onClick={() => {
+                setEditData(null);
+                setEditorSession((value) => value + 1);
+                dispatch(setIsChanges(false));
+                isDeductionComponentOpen.onTrue();
+              }}
+            >
+              Add deduction
+            </Button>
+          )
         }
       />
       <Dialog
@@ -256,6 +269,7 @@ const DeductionComponent = () => {
             loading={deleteDeductionComponentLoading || deleteImpactPreviewLoading}
             disabled={!deleteImpactPreview?.previewHash || deleteImpactPreviewError}
             onClick={async () => {
+              if (!canDelete) return;
               await deleteDeductionComponent({
                 id: deleteInformation?.id || '',
                 previewHash: deleteImpactPreview?.previewHash,
@@ -386,13 +400,16 @@ const DeductionComponent = () => {
               return (
                 <ThreeDotsActions
                   showThreeDots={false}
-                  showEditIcon
-                  showDeleteIcon
+                  showEditIcon={canManage}
+                  showDeleteIcon={canDelete}
                   handleEditClick={() => {
+                    if (!canManage || editorBusy || deleteDeductionComponentLoading) return;
                     setEditData(row);
+                    setEditorSession((session) => session + 1);
                     isDeductionComponentOpen.onTrue();
                   }}
                   handleDeleteClick={() => {
+                    if (!canDelete || editorBusy || deleteDeductionComponentLoading) return;
                     setDeleteInformation(row as PayElement);
                     confirm.onTrue();
                   }}
@@ -407,10 +424,8 @@ const DeductionComponent = () => {
       <CustomDialog
         maxWidth="md"
         open={isDeductionComponentOpen.value}
-        handleClose={() => {
-          isDeductionComponentOpen.onFalse();
-          setEditData(null);
-        }}
+        disableClose={editorBusy}
+        handleClose={closeEditor}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
@@ -430,7 +445,12 @@ const DeductionComponent = () => {
           </Box>
         }
       >
-        <DeductionComponentForm editData={editData} handleClose={handleClose} />
+        <DeductionComponentForm
+          key={editorSession}
+          editData={editData}
+          handleClose={handleClose}
+          onBusyChange={setEditorBusy}
+        />
       </CustomDialog>
     </Box>
   );
@@ -495,27 +515,15 @@ const validationSchema = Yup.object({
 export const DeductionComponentForm = ({
   editData,
   handleClose,
+  onBusyChange,
 }: {
   editData: any;
   handleClose: (e: any, isSubmit: boolean) => void;
+  onBusyChange?: (busy: boolean) => void;
 }) => {
+  const requestPending = useRef(false);
+  const [requestBusy, setRequestBusy] = useState(false);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  const { data: getEarningComponentsData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEarningComponentsQuery,
-    params: {
-      academicYearId: currentYear?.id,
-    },
-  });
-
-  const { data: getDeductionComponentsData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetDeductionComponentsQuery,
-    params: {
-      academicYearId: currentYear?.id,
-    },
-  });
 
   const [addDeductionComponent, { isLoading: addDeductionComponentLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -563,6 +571,9 @@ export const DeductionComponentForm = ({
     enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
+      if (requestPending.current) return;
+      requestPending.current = true;
+      setRequestBusy(true);
       try {
         const payload = {
           deductionComponentName: values.deductionName,
@@ -604,27 +615,56 @@ export const DeductionComponentForm = ({
         }
       } catch (error) {
         console.error(error);
+      } finally {
+        requestPending.current = false;
+        setRequestBusy(false);
       }
     },
   });
 
   const confirmUpdate = async (applyMode: 'SyncedOnly' | 'ForceApply') => {
-    if (!editData || !pendingPayload || !impactPreview) return;
-
-    await updateDeductionComponent({
-      id: editData.id,
-      body: {
-        ...pendingPayload,
-        applyMode,
-        effectiveMonth: impactPreview.effectiveMonth,
-        previewHash: impactPreview.previewHash,
-      },
-    }).unwrap();
-    setImpactPreview(null);
-    setPendingPayload(null);
-    shikshaMitraToast.success({ message: 'Deduction Component updated successfully' });
-    handleClose(null, true);
+    if (!editData || !pendingPayload || !impactPreview || requestPending.current) return;
+    requestPending.current = true;
+    setRequestBusy(true);
+    try {
+      await updateDeductionComponent({
+        id: editData.id,
+        body: {
+          ...pendingPayload,
+          applyMode,
+          effectiveMonth: impactPreview.effectiveMonth,
+          previewHash: impactPreview.previewHash,
+        },
+      }).unwrap();
+      setImpactPreview(null);
+      setPendingPayload(null);
+      shikshaMitraToast.success({ message: 'Deduction Component updated successfully' });
+      handleClose(null, true);
+    } finally {
+      requestPending.current = false;
+      setRequestBusy(false);
+    }
   };
+
+  const {
+    currentData: getEarningComponentsData,
+    isError: earningOptionsError,
+    isFetching: earningOptionsFetching,
+    refetch: refetchEarningOptions,
+  } = useGetEarningComponentOptionsQuery(
+    { academicYearId: currentYear?.id },
+    { skip: formik.values.calculationType !== 'Percentage' }
+  );
+  const {
+    currentData: getDeductionComponentsData,
+    isError: deductionOptionsError,
+    isFetching: deductionOptionsFetching,
+    refetch: refetchDeductionOptions,
+  } = useGetDeductionComponentOptionsQuery(
+    { academicYearId: currentYear?.id },
+    { skip: formik.values.calculationType !== 'Percentage' }
+  );
+  const componentOptionsError = earningOptionsError || deductionOptionsError;
 
   const componentOptions = React.useMemo(() => {
     const options = [
@@ -662,13 +702,17 @@ export const DeductionComponentForm = ({
     return options;
   }, [editData, getEarningComponentsData, getDeductionComponentsData]);
 
+  const busy =
+    requestBusy ||
+    addDeductionComponentLoading ||
+    updateDeductionComponentLoading ||
+    previewUpdateImpactLoading ||
+    formik.isSubmitting;
+  useEffect(() => onBusyChange?.(busy), [busy, onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   useHrSetupEditorState({
     dirty: formik.dirty,
-    busy:
-      addDeductionComponentLoading ||
-      updateDeductionComponentLoading ||
-      previewUpdateImpactLoading ||
-      formik.isSubmitting,
+    busy,
     save: formik.submitForm,
   });
 
@@ -703,6 +747,7 @@ export const DeductionComponentForm = ({
                   fullWidth
                   label="Deduction Name *"
                   name="deductionName"
+                  disabled={busy}
                   value={formik.values.deductionName}
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
@@ -726,6 +771,7 @@ export const DeductionComponentForm = ({
                   fullWidth
                   label="Deduction Type *"
                   name="deductionType"
+                  disabled={busy}
                   value={formik.values.deductionType}
                   onChange={(e) => {
                     formik.handleChange(e);
@@ -757,6 +803,7 @@ export const DeductionComponentForm = ({
                   fullWidth
                   label="Description"
                   name="description"
+                  disabled={busy}
                   multiline
                   rows={2}
                   value={formik.values.description}
@@ -794,6 +841,7 @@ export const DeductionComponentForm = ({
                   fullWidth
                   label="Calculation Type *"
                   name="calculationType"
+                  disabled={busy}
                   value={formik.values.calculationType}
                   onChange={(e) => {
                     formik.setFieldValue('calculationType', e.target.value);
@@ -815,6 +863,26 @@ export const DeductionComponentForm = ({
 
             {formik.values.calculationType === 'Percentage' && (
               <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+                {componentOptionsError && (
+                  <Alert
+                    severity="error"
+                    sx={{ mb: 1 }}
+                    action={
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          if (earningOptionsError) refetchEarningOptions();
+                          if (deductionOptionsError) refetchDeductionOptions();
+                        }}
+                      >
+                        Retry
+                      </Button>
+                    }
+                  >
+                    Unable to load all calculation bases. Your entries are still here. Retry or ask
+                    your administrator to review access.
+                  </Alert>
+                )}
                 <ShakingTextField
                   error={
                     formik.touched.selectedDeductionComponent &&
@@ -822,10 +890,16 @@ export const DeductionComponentForm = ({
                   }
                 >
                   <Autocomplete
+                    disabled={busy}
                     options={[grossSalaryOption, ...componentOptions]}
                     groupBy={(option) => option.group}
                     getOptionLabel={(option) => option.componentName}
-                    filterOptions={(options) => options}
+                    loading={earningOptionsFetching || deductionOptionsFetching}
+                    noOptionsText={
+                      componentOptionsError
+                        ? 'Calculation bases could not be loaded. Retry above.'
+                        : 'No matching calculation bases'
+                    }
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     value={
                       [grossSalaryOption, ...componentOptions].find(
@@ -886,6 +960,7 @@ export const DeductionComponentForm = ({
                       required={formik.values.deductionType === 'Fixed'}
                       name="amount"
                       type="number"
+                      disabled={busy}
                       value={formik.values.amount}
                       onChange={(e) => {
                         const { value } = e.target;
@@ -925,6 +1000,7 @@ export const DeductionComponentForm = ({
                       fullWidth
                       label="Amount *"
                       name="amount"
+                      disabled={busy}
                       value={formik.values.amount || ''}
                       onChange={(e) => {
                         let val = e.target.value;
@@ -960,6 +1036,7 @@ export const DeductionComponentForm = ({
 
                 <Box display="flex" gap={1}>
                   <ToggleButtonGroup
+                    disabled={busy}
                     exclusive
                     size="small"
                     value={formik.values.showOnPayslip ? 'VISIBLE' : 'HIDDEN'}
@@ -1073,6 +1150,7 @@ export const DeductionComponentForm = ({
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               size="small"
               variant="outlined"
+              disabled={busy}
               onClick={(e: any) => handleClose(e, false)}
             >
               Cancel
@@ -1083,20 +1161,19 @@ export const DeductionComponentForm = ({
               type="submit"
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               onClick={(e: any) => formik.handleSubmit(e)}
-              loading={
-                addDeductionComponentLoading ||
-                updateDeductionComponentLoading ||
-                previewUpdateImpactLoading
-              }
+              loading={busy}
             >
               {editData ? 'Update' : 'Submit'}
             </LoadingButton>
           </DialogActions>
         </SetupEditorActions>
       </SetupEditorGuard>
-      <SetupInlineDialog
+      <Dialog
         open={Boolean(impactPreview)}
-        onClose={() => setImpactPreview(null)}
+        onClose={() => {
+          if (!busy) setImpactPreview(null);
+        }}
+        disableEscapeKeyDown={busy}
         maxWidth="sm"
         fullWidth
       >
@@ -1132,13 +1209,14 @@ export const DeductionComponentForm = ({
             size="small"
             variant="outlined"
             startIcon={<Iconify icon="mdi:arrow-left" />}
+            disabled={busy}
             onClick={() => setImpactPreview(null)}
           >
             Review
           </Button>
           <LoadingButton
             size="small"
-            loading={updateDeductionComponentLoading}
+            loading={busy}
             variant="outlined"
             startIcon={<Iconify icon="mdi:content-save-outline" />}
             onClick={() => confirmUpdate('SyncedOnly')}
@@ -1150,13 +1228,13 @@ export const DeductionComponentForm = ({
             color="warning"
             startIcon={<Iconify icon="mdi:content-save-all-outline" />}
             variant="contained"
-            loading={updateDeductionComponentLoading}
+            loading={busy}
             onClick={() => confirmUpdate('ForceApply')}
           >
             Force apply
           </LoadingButton>
         </DialogActions>
-      </SetupInlineDialog>
+      </Dialog>
     </>
   );
 };

@@ -4,7 +4,7 @@ import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
@@ -31,12 +31,12 @@ import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
 import {
   SetupEditorBody,
   SetupEditorGuard,
-  SetupInlineDialog,
   SetupEditorActions,
   useHrSetupEditorState,
 } from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   useGetEarningComponentsQuery,
+  useGetEarningComponentOptionsQuery,
   useAddEarningComponentMutation,
   useDeleteEarningComponentMutation,
   useUpdateEarningComponentMutation,
@@ -91,6 +91,14 @@ interface PayElement {
 
 const EarningComponent = () => {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canManage = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.payroll.settings.earningComponents}.Add`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.payroll.settings.earningComponents}.Delete`
+  );
   const canViewEsi = hasGrantedPermission(
     permissions,
     hrPermissions.payroll.settings.statutorySchemes
@@ -105,6 +113,8 @@ const EarningComponent = () => {
   const confirm = useBoolean();
 
   const [editData, setEditData] = useState<any>(null);
+  const [editorSession, setEditorSession] = useState(0);
+  const [editorBusy, setEditorBusy] = useState(false);
   const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
   const isEarningComponentOpen = useBoolean();
 
@@ -120,7 +130,7 @@ const EarningComponent = () => {
     refetch: refetchDeleteImpactPreview,
   } = usePreviewEarningComponentDeleteImpactQuery(
     { id: deleteInformation?.id || '', includeEmployees: true, maxResultCount: 5 },
-    { skip: !confirm.value || !deleteInformation?.id }
+    { skip: !canDelete || !confirm.value || !deleteInformation?.id }
   );
 
   const {
@@ -149,23 +159,16 @@ const EarningComponent = () => {
   );
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  // Handles closing the incident form
+  const closeEditor = () => {
+    isEarningComponentOpen.onFalse();
+    setEditData(null);
+    dispatch(setIsChanges(false));
+    setEditorBusy(false);
+  };
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        dispatch(setIsChanges(false));
-      }, 200); // Adjust timing based on your dialog close animation
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      isEarningComponentOpen.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      isEarningComponentOpen.onFalse();
-      setTimeout(() => {
-        setEditData(null);
-      }, 200);
-    }
+    if (!isSubmit && editorBusy) return;
+    if (isSubmit || !isChanges || window.confirm('Are you sure you want to leave this page?'))
+      closeEditor();
   };
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -183,14 +186,22 @@ const EarningComponent = () => {
                 ESIC treatment
               </Button>
             )}
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              size="small"
-              onClick={isEarningComponentOpen.onTrue}
-            >
-              Add earning
-            </Button>
+            {canManage && (
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                size="small"
+                disabled={editorBusy || deleteEarningComponentLoading}
+                onClick={() => {
+                  setEditData(null);
+                  setEditorSession((value) => value + 1);
+                  dispatch(setIsChanges(false));
+                  isEarningComponentOpen.onTrue();
+                }}
+              >
+                Add earning
+              </Button>
+            )}
           </Box>
         }
       />
@@ -278,6 +289,7 @@ const EarningComponent = () => {
             loading={deleteEarningComponentLoading || deleteImpactPreviewLoading}
             disabled={!deleteImpactPreview?.previewHash || deleteImpactPreviewError}
             onClick={async () => {
+              if (!canDelete) return;
               await deleteEarningComponent({
                 id: deleteInformation?.id || '',
                 previewHash: deleteImpactPreview?.previewHash,
@@ -424,13 +436,16 @@ const EarningComponent = () => {
                       </MenuItem>
                     </MenuList>
                   )}
-                  showEditIcon
-                  showDeleteIcon
+                  showEditIcon={canManage}
+                  showDeleteIcon={canDelete}
                   handleEditClick={() => {
+                    if (!canManage || editorBusy || deleteEarningComponentLoading) return;
                     setEditData(row);
+                    setEditorSession((session) => session + 1);
                     isEarningComponentOpen.onTrue();
                   }}
                   handleDeleteClick={() => {
+                    if (!canDelete || editorBusy || deleteEarningComponentLoading) return;
                     setDeleteInformation(row as PayElement);
                     confirm.onTrue();
                   }}
@@ -452,10 +467,8 @@ const EarningComponent = () => {
       <CustomDialog
         maxWidth="md"
         open={isEarningComponentOpen.value}
-        handleClose={() => {
-          isEarningComponentOpen.onFalse();
-          setEditData(null);
-        }}
+        disableClose={editorBusy}
+        handleClose={closeEditor}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
@@ -475,7 +488,12 @@ const EarningComponent = () => {
           </Box>
         }
       >
-        <EarningComponentForm editData={editData} handleClose={handleClose} />
+        <EarningComponentForm
+          key={editorSession}
+          editData={editData}
+          handleClose={handleClose}
+          onBusyChange={setEditorBusy}
+        />
       </CustomDialog>
     </Box>
   );
@@ -540,10 +558,14 @@ const validationSchema = Yup.object({
 export const EarningComponentForm = ({
   editData,
   handleClose,
+  onBusyChange,
 }: {
   editData: any;
   handleClose: (e: any, isSubmit: boolean) => void;
+  onBusyChange?: (busy: boolean) => void;
 }) => {
+  const requestPending = useRef(false);
+  const [requestBusy, setRequestBusy] = useState(false);
   const [addEarningComponent, { isLoading: addEarningComponentLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEarningComponentMutation,
@@ -596,6 +618,9 @@ export const EarningComponentForm = ({
     enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
+      if (requestPending.current) return;
+      requestPending.current = true;
+      setRequestBusy(true);
       try {
         const payload = {
           earningComponentName: values.earningName,
@@ -639,12 +664,17 @@ export const EarningComponentForm = ({
           await formik.setFieldTouched('selectedEarningComponent', true, false);
           formik.setFieldError('selectedEarningComponent', parsed.detail);
         }
+      } finally {
+        requestPending.current = false;
+        setRequestBusy(false);
       }
     },
   });
 
   const confirmUpdate = async (applyMode: 'SyncedOnly' | 'ForceApply') => {
-    if (!editData || !pendingPayload || !impactPreview) return;
+    if (!editData || !pendingPayload || !impactPreview || requestPending.current) return;
+    requestPending.current = true;
+    setRequestBusy(true);
 
     try {
       await updateEarningComponent({
@@ -668,38 +698,59 @@ export const EarningComponentForm = ({
         await formik.setFieldTouched('selectedEarningComponent', true, false);
         formik.setFieldError('selectedEarningComponent', parsed.detail);
       }
+    } finally {
+      requestPending.current = false;
+      setRequestBusy(false);
     }
   };
 
-  const { data: getEarningComponentsData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEarningComponentsQuery,
-    params: {
-      academicYearId: currentYear?.id,
-      pageSize: 200,
-    },
-  });
-
-  const componentOptions = React.useMemo(
-    () =>
-      getEligibleEarningDependencyOptions(
-        (getEarningComponentsData?.items || []).map((item: any) => ({
-          ...item,
-          componentName: item.earningComponentName || item.componentName,
-          group: 'Earning Components',
-        })),
-        editData?.id
-      ),
-    [editData?.id, getEarningComponentsData]
+  const {
+    currentData: getEarningComponentsData,
+    isError: componentOptionsError,
+    isFetching: componentOptionsFetching,
+    refetch: refetchComponentOptions,
+  } = useGetEarningComponentOptionsQuery(
+    { academicYearId: currentYear?.id },
+    { skip: formik.values.calculationType !== 'Percentage' }
   );
 
+  const componentOptions = React.useMemo(() => {
+    const options = getEligibleEarningDependencyOptions(
+      (getEarningComponentsData?.items || []).map((item: any) => ({
+        ...item,
+        componentName: item.earningComponentName || item.componentName,
+        group: 'Earning Components',
+      })),
+      editData?.id
+    );
+    const selectedId = editData?.selectedEarningComponentId || editData?.customComponentId;
+    if (
+      !getEarningComponentsData &&
+      selectedId &&
+      selectedId !== editData?.id &&
+      editData?.customComponent?.componentName &&
+      !options.some((item: any) => item.id === selectedId)
+    ) {
+      options.push({
+        id: selectedId,
+        componentName: editData.customComponent.componentName,
+        group: 'Earning Components',
+      });
+    }
+    return options;
+  }, [editData, getEarningComponentsData]);
+
+  const busy =
+    requestBusy ||
+    addEarningComponentLoading ||
+    updateEarningComponentLoading ||
+    previewUpdateImpactLoading ||
+    formik.isSubmitting;
+  useEffect(() => onBusyChange?.(busy), [busy, onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   useHrSetupEditorState({
     dirty: formik.dirty,
-    busy:
-      addEarningComponentLoading ||
-      updateEarningComponentLoading ||
-      previewUpdateImpactLoading ||
-      formik.isSubmitting,
+    busy,
     save: formik.submitForm,
   });
 
@@ -734,6 +785,7 @@ export const EarningComponentForm = ({
                   fullWidth
                   label="Earning Name *"
                   name="earningName"
+                  disabled={busy}
                   value={formik.values.earningName}
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
@@ -755,6 +807,7 @@ export const EarningComponentForm = ({
                   fullWidth
                   label="Earning Type *"
                   name="earningType"
+                  disabled={busy}
                   value={formik.values.earningType}
                   onChange={(e) => {
                     formik.handleChange(e);
@@ -784,6 +837,7 @@ export const EarningComponentForm = ({
                   fullWidth
                   label="Description"
                   name="description"
+                  disabled={busy}
                   multiline
                   rows={2}
                   value={formik.values.description}
@@ -821,6 +875,7 @@ export const EarningComponentForm = ({
                   fullWidth
                   label="Calculation Type *"
                   name="calculationType"
+                  disabled={busy}
                   value={formik.values.calculationType}
                   onChange={(e) => {
                     formik.setFieldValue('calculationType', e.target.value);
@@ -842,6 +897,20 @@ export const EarningComponentForm = ({
 
             {formik.values.calculationType === 'Percentage' && (
               <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+                {componentOptionsError && (
+                  <Alert
+                    severity="error"
+                    sx={{ mb: 1 }}
+                    action={
+                      <Button size="small" onClick={() => refetchComponentOptions()}>
+                        Retry
+                      </Button>
+                    }
+                  >
+                    Unable to load earning calculation bases. Your entries are still here. Retry or
+                    ask your administrator to review access.
+                  </Alert>
+                )}
                 <ShakingTextField
                   error={
                     formik.touched.selectedEarningComponent &&
@@ -849,10 +918,16 @@ export const EarningComponentForm = ({
                   }
                 >
                   <Autocomplete
+                    disabled={busy}
                     options={[grossSalaryOption, ...componentOptions]}
                     groupBy={(option) => option.group || 'Earning Components'}
                     getOptionLabel={(option) => option.componentName || ''}
-                    filterOptions={(options) => options}
+                    loading={componentOptionsFetching}
+                    noOptionsText={
+                      componentOptionsError
+                        ? 'Calculation bases could not be loaded. Retry above.'
+                        : 'No matching calculation bases'
+                    }
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     value={
                       [grossSalaryOption, ...componentOptions].find(
@@ -913,6 +988,7 @@ export const EarningComponentForm = ({
                       required={formik.values.earningType === 'Fixed'}
                       name="amount"
                       type="number"
+                      disabled={busy}
                       value={formik.values.amount}
                       onChange={(e) => {
                         const { value } = e.target;
@@ -952,6 +1028,7 @@ export const EarningComponentForm = ({
                       fullWidth
                       label="Amount *"
                       name="amount"
+                      disabled={busy}
                       value={formik.values.amount || ''}
                       onChange={(e) => {
                         let val = e.target.value;
@@ -986,6 +1063,7 @@ export const EarningComponentForm = ({
 
                 <Box display="flex" gap={1}>
                   <ToggleButtonGroup
+                    disabled={busy}
                     exclusive
                     size="small"
                     value={formik.values.showOnPayslip ? 'VISIBLE' : 'HIDDEN'}
@@ -1099,6 +1177,7 @@ export const EarningComponentForm = ({
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               size="small"
               variant="outlined"
+              disabled={busy}
               onClick={(e: any) => handleClose(e, false)}
             >
               Cancel
@@ -1109,20 +1188,19 @@ export const EarningComponentForm = ({
               type="submit"
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               onClick={(e: any) => formik.handleSubmit(e)}
-              loading={
-                addEarningComponentLoading ||
-                updateEarningComponentLoading ||
-                previewUpdateImpactLoading
-              }
+              loading={busy}
             >
               {editData ? 'Update' : 'Submit'}
             </LoadingButton>
           </DialogActions>
         </SetupEditorActions>
       </SetupEditorGuard>
-      <SetupInlineDialog
+      <Dialog
         open={Boolean(impactPreview)}
-        onClose={() => setImpactPreview(null)}
+        onClose={() => {
+          if (!busy) setImpactPreview(null);
+        }}
+        disableEscapeKeyDown={busy}
         maxWidth="sm"
         fullWidth
       >
@@ -1158,13 +1236,14 @@ export const EarningComponentForm = ({
             size="small"
             variant="outlined"
             startIcon={<Iconify icon="mdi:arrow-left" />}
+            disabled={busy}
             onClick={() => setImpactPreview(null)}
           >
             Review
           </Button>
           <LoadingButton
             size="small"
-            loading={updateEarningComponentLoading}
+            loading={busy}
             variant="outlined"
             startIcon={<Iconify icon="mdi:content-save-outline" />}
             onClick={() => confirmUpdate('SyncedOnly')}
@@ -1176,13 +1255,13 @@ export const EarningComponentForm = ({
             color="warning"
             startIcon={<Iconify icon="mdi:content-save-all-outline" />}
             variant="contained"
-            loading={updateEarningComponentLoading}
+            loading={busy}
             onClick={() => confirmUpdate('ForceApply')}
           >
             Force apply
           </LoadingButton>
         </DialogActions>
-      </SetupInlineDialog>
+      </Dialog>
     </>
   );
 };

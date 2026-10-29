@@ -21,6 +21,8 @@ import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
 import { HrSetupSessionProvider } from 'src/screens/hr/setup/hr-setup-session';
 import { HrSetupCoordinator } from 'src/screens/hr/setup/hr-setup-coordinator';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import EarningComponent from 'src/screens/hr/payroll/setting/earning-component';
+import DeductionComponent from 'src/screens/hr/payroll/setting/deduction-component';
 
 dayjs.extend(customParseFormat);
 const context = await (await fetch('/fixture/context')).json();
@@ -85,7 +87,13 @@ function Fixture() {
         </Typography>
         <Button onClick={() => setHr((value) => !value)}>{hr ? 'Leave HR' : 'Return to HR'}</Button>
         <Typography>Normal HR operations remain available after closing setup.</Typography>
-        {hr && <HrSetupCoordinator />}
+        {scenario === 'earning-components' ? (
+          <EarningComponent />
+        ) : scenario === 'deduction-components' ? (
+          <DeductionComponent />
+        ) : hr ? (
+          <HrSetupCoordinator />
+        ) : null}
       </Stack>
     </HrSetupSessionProvider>
   );
