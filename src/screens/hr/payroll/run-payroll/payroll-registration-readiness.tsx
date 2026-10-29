@@ -64,9 +64,10 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
       <AccordionDetails>
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
-            Editable staff payroll only. PF and ESIC are evaluated independently during calculation.
-            Missing numbers or a turned-off scheme produce a warning and zero applied contributions
-            when eligible.
+            Editable staff payroll only. Missing PF/ESIC numbers are follow-up warnings and do not
+            block payroll, locking, or payslip issuance. Eligible contributions still apply. Add the
+            numbers when available. PF and ESIC are evaluated independently; a turned-off scheme
+            applies no contributions.
           </Typography>
           {query.isError && (
             <Alert
