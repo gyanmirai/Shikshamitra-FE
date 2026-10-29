@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 import ConcessionDocumentList from './ConcessionDocumentList';
 
@@ -42,6 +42,16 @@ function Documents() {
 }
 
 describe('concession supporting documents', () => {
+  it('makes document requirements available from a keyboard-focusable info icon', async () => {
+    render(<Documents />);
+    const info = screen.getByRole('button', { name: 'Income proof requirements' });
+    act(() => info.focus());
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Mandatory · PDF · Max 1 MB');
+    expect(screen.getByRole('button', { name: 'Upload Income proof' })).toHaveAccessibleDescription(
+      'Income proof is required. Upload this document to continue.'
+    );
+  });
+
   it('identifies missing required documents and updates the adjacent status and filename after upload and remove', async () => {
     state.upload.mockReturnValue({
       unwrap: () => Promise.resolve({ url: '/files/income-proof.pdf' }),

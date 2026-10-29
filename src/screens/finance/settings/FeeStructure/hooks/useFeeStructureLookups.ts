@@ -11,6 +11,7 @@ import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolic
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import { useGetStructureContextQuery } from 'src/redux/finance/feeStructureWorkspace';
 import { useGetPaymentTermsQuery, useGetPaymentTermByIdQuery } from 'src/redux/finance/paymentTerm';
+import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
 
 import { selectablePaymentTerms } from '../feeStructureModel';
 
@@ -133,6 +134,14 @@ export default function useFeeStructureLookups(
     params: scheduleLine?.paymentTermId ?? '',
     options: { ...queryOptions, skip: !scheduleLine?.paymentTermId || !permissions.termsRead },
   });
+  const refreshPrerequisites = () => {
+    context.refetch?.();
+    if (academicYearId && permissions.headsRead && !heads.isUninitialized) heads.refetch?.();
+    if (academicYearId && permissions.termsRead) terms.retry();
+    if (academicYearId && policiesEnabled && permissions.collectionRead) collection.retry();
+    if (academicYearId && policiesEnabled && permissions.refundRead) refund.retry();
+  };
+  useRefreshFinancePrerequisites(refreshPrerequisites);
   const settings: StructureSettings | undefined = useMemo(
     () =>
       data
@@ -186,6 +195,7 @@ export default function useFeeStructureLookups(
     : undefined;
   return {
     settings,
+    refreshPrerequisites,
     context,
     heads,
     terms,

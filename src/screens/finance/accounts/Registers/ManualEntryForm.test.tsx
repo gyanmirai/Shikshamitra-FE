@@ -19,28 +19,43 @@ const mocks = vi.hoisted(() => ({
   error: false,
   canAdd: true,
   cashStamp: 'v1',
+  cashBalance: 100,
+  cashFetching: false,
+  cashError: false,
+  noCategories: false,
+  noBanks: false,
+  cashOptions: vi.fn(),
   routing: vi.fn(),
 }));
 vi.mock('src/redux/finance/accountsActivityApi', () => ({
   useCreateAccountsManualEntryMutation: () => [mocks.create, { isLoading: false }],
 }));
 vi.mock('src/redux/finance/cashManagementApi', () => ({
-  useGetCashOptionsQuery: () => ({
-    currentData: {
-      bankAccounts: [],
-      cashSources: [
-        {
-          id: 'cash-source',
-          label: 'Receipt CASH-001',
-          remainingAmount: 100,
-          concurrencyStamp: mocks.cashStamp,
-        },
-      ],
-    },
-    isFetching: false,
-    isError: false,
-    refetch: mocks.refetch,
-  }),
+  useGetCashOptionsQuery: (params: unknown, config: unknown) => {
+    mocks.cashOptions(params, config);
+    return {
+      currentData: {
+        bankAccounts: [],
+        cashSources: [
+          {
+            id: 'cash-source',
+            label: 'Receipt CASH-001',
+            remainingAmount: mocks.cashBalance,
+            concurrencyStamp: mocks.cashStamp,
+          },
+          {
+            id: 'cash-source-2',
+            label: 'Receipt CASH-002',
+            remainingAmount: 50.25,
+            concurrencyStamp: 'v3',
+          },
+        ],
+      },
+      isFetching: mocks.cashFetching,
+      isError: mocks.cashError,
+      refetch: mocks.refetch,
+    };
+  },
 }));
 vi.mock('src/redux/finance/financeRoutingApi', () => ({
   useGetFinanceRoutingOptionsQuery: (params: unknown) => {
@@ -52,14 +67,21 @@ vi.mock('src/redux/finance/financeRoutingApi', () => ({
       currentData: mocks.error
         ? undefined
         : {
-            incomeCategories: [{ id: 'income-category', label: 'Other income' }],
-            expenseCategories: [{ id: 'expense-category', label: 'Supplies' }],
-            bankAccounts: [{ id: 'bank', label: 'School bank' }],
+            incomeCategories: mocks.noCategories
+              ? []
+              : [{ id: 'income-category', label: 'Other income' }],
+            expenseCategories: mocks.noCategories
+              ? []
+              : [{ id: 'expense-category', label: 'Supplies' }],
+            bankAccounts: mocks.noBanks ? [] : [{ id: 'bank', label: 'School bank' }],
           },
     };
   },
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
+vi.mock('src/components/shaking-text-field', () => ({
+  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ heading, onBack }: any) => (
@@ -155,12 +177,17 @@ beforeEach(() => {
   mocks.fetching = false;
   mocks.error = false;
   mocks.cashStamp = 'v1';
+  mocks.cashBalance = 100;
+  mocks.cashFetching = false;
+  mocks.cashError = false;
   mocks.canAdd = true;
+  mocks.noCategories = false;
+  mocks.noBanks = false;
   mocks.unwrap.mockReset().mockResolvedValue({});
   mocks.create.mockImplementation(() => ({ unwrap: mocks.unwrap }));
 });
 
-function setup(direction: 'income' | 'expense' = 'income') {
+function setup(direction: 'income' | 'expense' = 'income', initialBankAccountId?: string) {
   const onClose = vi.fn();
   const store = configureStore({
     reducer: {
@@ -183,12 +210,23 @@ function setup(direction: 'income' | 'expense' = 'income') {
           period={{ id: 'year', startDate: '2026-06-01', endDate: '2027-05-31' }}
           month="2026-10"
           onClose={onClose}
+          initialBankAccountId={initialBankAccountId}
         />
       </ThemeProvider>
     </Provider>
   );
   return { ...view, onClose };
 }
+
+it('prefills a bank-originated entry as a noncash payment and clears the bank for cash', async () => {
+  setup('income', 'bank');
+  expect(screen.getByLabelText('Payment method')).toHaveValue('3');
+  expect(screen.getByLabelText('Receiving school bank account')).toHaveValue('bank');
+  fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: '0' } });
+  await waitFor(() =>
+    expect(screen.queryByLabelText('Receiving school bank account')).not.toBeInTheDocument()
+  );
+});
 async function fill(direction: 'income' | 'expense' = 'income') {
   fireEvent.change(
     screen.getByLabelText(direction === 'income' ? /^Income name/ : /^Expense purpose/),
@@ -205,14 +243,6 @@ async function fill(direction: 'income' | 'expense' = 'income') {
   fireEvent.change(screen.getByLabelText('Payment date'), {
     target: { value: '2026-10-14T15:45:00+05:30' },
   });
-  if (direction === 'expense') {
-    fireEvent.change(screen.getByLabelText('Cash source receipt'), {
-      target: { value: 'cash-source' },
-    });
-    fireEvent.change(screen.getByLabelText(/^Payment reference/), {
-      target: { value: 'BILL-1' },
-    });
-  }
   await waitFor(() => expect(screen.getByLabelText('Amount')).toHaveValue('12.34'));
 }
 
@@ -224,14 +254,37 @@ it('blocks manual entry submission without its exact Add permission', () => {
   expect(mocks.create).not.toHaveBeenCalled();
 });
 
-it('shows the pending balance only in receipt options without extra helper text', async () => {
+it('replaces the entry body with a prerequisite message only after categories resolve empty', () => {
+  mocks.noCategories = true;
+  setup('income');
+  expect(screen.getByRole('heading', { name: 'Add an income category first' })).toBeVisible();
+  expect(screen.queryByLabelText(/^Income name/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+});
+
+it('keeps the payment method switch available when noncash banks are empty', async () => {
+  mocks.noBanks = true;
+  setup('income', 'bank');
+  expect(screen.getByRole('heading', { name: 'Add a bank account first' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: '0' } });
+  await waitFor(() =>
+    expect(
+      screen.queryByRole('heading', { name: 'Add a bank account first' })
+    ).not.toBeInTheDocument()
+  );
+});
+
+it('shows pooled year cash without receipt or reference selection', () => {
   setup('expense');
-  expect(
-    screen.getByRole('option', { name: /Receipt CASH-001.*Available pending cash/ })
-  ).toHaveTextContent('100');
-  await fill('expense');
-  expect(screen.queryByText(/Available pending cash:/)).not.toBeInTheDocument();
-  expect(screen.queryByText(/Pending cash after payment/)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Cash source receipt')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/^Payment reference/)).not.toBeInTheDocument();
+  expect(screen.getByText(/Available cash:/)).toHaveTextContent('151');
+  expect(mocks.cashOptions).toHaveBeenLastCalledWith(
+    { academicYearId: 'year', operation: 'expense' },
+    expect.objectContaining({ skip: false })
+  );
 });
 
 it.each(['income', 'expense'] as const)(
@@ -301,14 +354,13 @@ it('requires a school bank for non-cash and clears it when changing back to cash
   expect(mocks.create.mock.calls[0][0].body.bankAccountId).toBe('bank');
 });
 
-it('uses cash category authority only for cash expenses and marks its reference required', async () => {
+it('uses cash category authority for cash and keeps the optional noncash reference', async () => {
   setup('expense');
   expect(mocks.routing).toHaveBeenLastCalledWith({
     academicYearId: 'year',
     operation: 'cash-expense',
   });
-  expect(screen.getByLabelText(/^Payment reference/)).toBeRequired();
-  expect(screen.queryByLabelText('Payment reference (optional)')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/^Payment reference/)).not.toBeInTheDocument();
   expect(
     screen.queryByText('Enter the bill or payment reference for this cash expense.')
   ).not.toBeInTheDocument();
@@ -375,32 +427,42 @@ it('shows lookup failure with Retry and blocks saving', () => {
   expect(mocks.refetch).toHaveBeenCalledOnce();
 });
 
-it('requires pending cash evidence and prevents an actual payment exceeding its source', async () => {
+it('allows spending across receipts and blocks an amount above pooled cash', async () => {
   setup('expense');
   await fill('expense');
-  fireEvent.change(screen.getByLabelText('Cash source receipt'), { target: { value: '' } });
+  fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '150.26' } });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-  expect(await screen.findByText('Select a pending cash source.')).toBeInTheDocument();
+  expect(await screen.findByText('Amount exceeds the available cash balance.')).toBeInTheDocument();
   expect(mocks.create).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByLabelText('Cash source receipt'), {
-    target: { value: 'cash-source' },
-  });
-  fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '100.01' } });
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-  expect(
-    await screen.findByText('Amount exceeds the available cash source balance.')
-  ).toBeInTheDocument();
-  expect(mocks.create).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '20.25' } });
+  fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '150.25' } });
   await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(mocks.create).toHaveBeenCalledOnce());
-  expect(mocks.create.mock.calls[0][0].body).toMatchObject({
-    cashCollectionId: 'cash-source',
-    cashConcurrencyStamp: 'v1',
-    amount: 20.25,
+  const { body } = mocks.create.mock.calls[0][0];
+  expect(body.amount).toBe(150.25);
+  expect(body).not.toHaveProperty('cashCollectionId');
+  expect(body).not.toHaveProperty('cashConcurrencyStamp');
+  expect(body).not.toHaveProperty('paymentReference');
+});
+
+it.each(['loading', 'error'] as const)('blocks cash expenses while pooled cash is %s', (state) => {
+  mocks.cashFetching = state === 'loading';
+  mocks.cashError = state === 'error';
+  setup('expense');
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+});
+
+it('omits a previously entered noncash reference after switching to Cash', async () => {
+  setup('expense');
+  await fill('expense');
+  fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: '3' } });
+  fireEvent.change(screen.getByLabelText('Payment reference (optional)'), {
+    target: { value: 'R'.repeat(101) },
   });
+  fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: '0' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(mocks.create).toHaveBeenCalledOnce());
+  expect(mocks.create.mock.calls[0][0].body).not.toHaveProperty('paymentReference');
 });
 
 it('submits the chosen actual cash payment instant after an after-noon collection', async () => {
@@ -417,10 +479,10 @@ it('submits the chosen actual cash payment instant after an after-noon collectio
   );
 });
 
-it('refreshes a definitive stale cash source without losing entered expense evidence', async () => {
+it('refreshes a definitive stale cash balance without losing entered expense evidence', async () => {
   mocks.unwrap.mockRejectedValueOnce({
     status: 409,
-    data: { code: 'Finance:CashManagement:Stale', detail: 'Cash source changed.' },
+    data: { code: 'Finance:CashManagement:Stale', detail: 'Cash balance changed.' },
   });
   mocks.refetch.mockImplementationOnce(async () => {
     mocks.cashStamp = 'v2';
@@ -432,7 +494,7 @@ it('refreshes a definitive stale cash source without losing entered expense evid
     target: { value: 'Keep these notes' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-  const refresh = await screen.findByRole('button', { name: 'Refresh cash sources' });
+  const refresh = await screen.findByRole('button', { name: 'Refresh cash balance' });
   const key = mocks.create.mock.calls[0][0].body.idempotencyKey;
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   fireEvent.click(refresh);
@@ -441,6 +503,6 @@ it('refreshes a definitive stale cash source without losing entered expense evid
   expect(screen.getByLabelText('Notes (optional)')).toHaveValue('Keep these notes');
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
-  expect(mocks.create.mock.calls[1][0].body.cashConcurrencyStamp).toBe('v2');
+  expect(mocks.create.mock.calls[1][0].body).not.toHaveProperty('cashConcurrencyStamp');
   expect(mocks.create.mock.calls[1][0].body.idempotencyKey).not.toBe(key);
 });

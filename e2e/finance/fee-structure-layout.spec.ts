@@ -49,7 +49,15 @@ import { test, expect } from '@playwright/test';
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
       ).toBe(true);
-      await workspace.getByRole('button', { name: 'Edit Draft', exact: true }).click();
+      await expect(workspace.getByRole('button', { name: 'Edit Draft', exact: true })).toHaveCount(
+        0
+      );
+      await expect(
+        workspace.getByRole('button', { name: 'Edit Tuition Fee', exact: true })
+      ).toBeVisible();
+      await expect(
+        workspace.getByRole('button', { name: 'Delete Tuition Fee', exact: true })
+      ).toBeVisible();
       await expect(
         workspace
           .getByRole('heading', { name: 'Fee Heads', exact: true })

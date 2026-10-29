@@ -9,6 +9,7 @@ import { Alert, Box, Button, CssBaseline, Stack, Typography } from '@mui/materia
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import CustomDialog from 'src/components/customDialog';
+import { Snackbar } from 'src/components/snackbar';
 import { useBoolean } from 'src/hooks/use-boolean';
 import confirmPopup, { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { financeModuleType } from 'src/redux/tagTypes';
@@ -53,6 +54,9 @@ function Fixture() {
         <Button onClick={() => { close(); resetFixture(); store.dispatch(api.util.resetApiState()); }}>Reset synthetic scenario</Button>
         <Button onClick={() => { close(); resetFixture('statuses'); store.dispatch(api.util.resetApiState()); }}>Mixed statuses</Button>
         <Button onClick={() => { close(); resetFixture('selection'); store.dispatch(api.util.resetApiState()); }}>Selection regression</Button>
+        <Button onClick={() => { close(); resetFixture('settled'); store.dispatch(api.util.resetApiState()); }}>Settled balances</Button>
+        <Button onClick={() => { close(); resetFixture('charge-receipt'); store.dispatch(api.util.resetApiState()); }}>Charge receipt regression</Button>
+        <Button onClick={() => { close(); resetFixture('charge-receipt-retry'); store.dispatch(api.util.resetApiState()); }}>Charge receipt retry regression</Button>
         <Button onClick={() => setMode('light')}>Light</Button><Button onClick={() => setMode('dark')}>Dark</Button>
         <Button onClick={() => setShowRequests(!showRequests)}>Request evidence</Button>
       </Stack>
@@ -60,7 +64,7 @@ function Fixture() {
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
         <FeeCollectionTable onAddFee={dialog} onDelete={() => {}} onCollectFee={open} onView={() => {}} onGiveAdjustment={() => {}} academicFilters={filters} />
       </Box>
-      {showRequests && <Box component="pre" sx={{ maxHeight: 250, overflow: 'auto', fontSize: 12 }}>{JSON.stringify(requests.filter((request) => request.method === 'POST'), null, 2)}</Box>}
+      {showRequests && <Box component="pre" sx={{ maxHeight: 250, overflow: 'auto', fontSize: 12 }}>{JSON.stringify(requests.filter((request) => request.method === 'POST' || request.url.endsWith('/pdf')), null, 2)}</Box>}
       <CustomDialog open={dialog.value} fullScreen title={`Collect Fees – ${student?.name ?? 'Student'}`} handleClose={close}>
         <Button onClick={() => { refreshSelectionBalances(); store.dispatch(api.util.invalidateTags([financeModuleType.feeDetails, financeModuleType.feeCollection])); }}>Refresh selection balances</Button>
         {dialog.value && <FeeCollectComponentForm student={student} onCancel={close} />}
@@ -72,7 +76,7 @@ function Fixture() {
 createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
     <ThemeProvider theme={createTheme(defaultSettings)}>
-      <LocalizationProvider dateAdapter={AdapterDayjs}><CssBaseline /><Fixture /></LocalizationProvider>
+      <LocalizationProvider dateAdapter={AdapterDayjs}><CssBaseline /><Snackbar /><Fixture /></LocalizationProvider>
     </ThemeProvider>
   </Provider>
 );

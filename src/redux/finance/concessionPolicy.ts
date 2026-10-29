@@ -31,6 +31,7 @@ export interface ConcessionPolicyVersionListResponse {
 }
 
 export interface ConcessionPolicyListArgs {
+  includeArchived?: boolean;
   academicYearId: string;
   status?: string;
   search?: string;

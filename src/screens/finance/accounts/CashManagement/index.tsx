@@ -1,42 +1,32 @@
 'use client';
 
+import type { Board } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
-import type { CashRow } from 'src/redux/finance/cashManagementApi';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
-import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useRef, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
+import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { Box, Card, Stack, Alert, Button, Typography } from '@mui/material';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import { useGetCashManagementQuery } from 'src/redux/finance/cashManagementApi';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
-import { Box, Card, Stack, Alert, Button, Typography, ButtonBase } from '@mui/material';
 import { useFinancePermissions } from 'src/screens/finance/hooks/useFinancePermissions';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 
 import CashDetails from './CashDetails';
-import CashApprovalDialog from './CashApprovalDialog';
+import CashBulkDepositDialog from './CashBulkDepositDialog';
+import { academicMonthOptions, defaultAcademicMonth } from '../Registers/academicMonths';
+import { bankAccountReturnTo, readBankAccountEntryContext } from '../bankAccountEntryContext';
 
-const statusOptions = [
-  { value: 'all', label: 'All cash', key: 'all', color: 'default' },
-  { value: '0', label: 'Pending approval', key: 'pending', color: 'warning' },
-  { value: '1', label: 'Approved', key: 'approved', color: 'success' },
-] as const;
-const moneyColumns = [
-  ['amount', 'Collected'],
-  ['spentAmount', 'Spent'],
-  ['depositedAmount', 'Deposited'],
-  ['remainingAmount', 'Remaining cash'],
-  ['inTransitAmount', 'In transit'],
-];
 const columns: IColumn[] = [
   {
     id: 'reference',
@@ -50,7 +40,13 @@ const columns: IColumn[] = [
     filterType: 'string',
   },
   { id: 'payerName', label: 'Payer', minWidth: 180, isFilter: true, filterType: 'string' },
-  ...moneyColumns.map(([id, label]) => ({
+  ...[
+    ['amount', 'Collected'],
+    ['spentAmount', 'Spent'],
+    ['depositedAmount', 'Deposited'],
+    ['remainingAmount', 'Remaining cash'],
+    ['inTransitAmount', 'In transit'],
+  ].map(([id, label]) => ({
     id,
     label,
     minWidth: 145,
@@ -67,7 +63,7 @@ const columns: IColumn[] = [
     minWidth: 220,
     isFilter: true,
     filterType: 'string',
-    render: (_value, row) => row.bankLabel || (row.status === 0 ? 'Awaiting approval' : '—'),
+    render: (value: string) => value || '—',
   },
   {
     id: 'collectedAt',
@@ -77,25 +73,6 @@ const columns: IColumn[] = [
     filterType: 'date',
     filterOperators: ['equals', 'after', 'before'],
     render: (value: string) => fDateTime(value),
-  },
-  {
-    id: 'status',
-    label: 'Status',
-    minWidth: 155,
-    align: 'left',
-    sticky: true,
-    stickyPosition: 'right',
-    isFilter: true,
-    filterType: 'enum',
-    enumOptions: [
-      { value: 0, label: 'Pending approval' },
-      { value: 1, label: 'Approved' },
-    ],
-    render: (value: number) => (
-      <Label color={value === 1 ? 'success' : 'warning'}>
-        {value === 1 ? 'Approved' : 'Pending approval'}
-      </Label>
-    ),
   },
 ];
 
@@ -107,6 +84,7 @@ function readFilters(raw: string | null): IParams['filters'] {
           (item) =>
             item &&
             typeof item.column === 'string' &&
+            item.column !== 'status' &&
             typeof item.type === 'string' &&
             'value' in item
         )
@@ -132,7 +110,7 @@ export default function CashManagement() {
     >
       <CustomBreadcrumbs
         heading="Cash Management"
-        description="Review collected cash and expenses, then approve the remaining deposit into a school bank account."
+        description="Review collected cash and expenses, then deposit available academic-year cash into a school bank account."
         links={[
           { name: 'Finance', href: financePaths.dashboard },
           { name: 'Accounts' },
@@ -146,7 +124,10 @@ export default function CashManagement() {
       ) : !currentYear?.id ? (
         <Alert severity="info">Select an academic year to review cash.</Alert>
       ) : (
-        <CashContent key={currentYear.id} academicYearId={currentYear.id} />
+        <CashContent
+          key={`${currentYear.id}:${currentYear.startDate}:${currentYear.endDate}`}
+          academicYearId={currentYear.id}
+        />
       )}
     </Box>
   );
@@ -154,14 +135,36 @@ export default function CashManagement() {
 
 export function CashContent({ academicYearId }: { academicYearId: string }) {
   const auth = useSelector((state: RootState) => state.auth);
-  const canApprove =
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const canDeposit =
     auth.permissionsInitialized &&
     !auth.loading &&
-    hasGrantedPermission(auth.permissions, `${financePermissions.accounts.cashManagement}.Approve`);
+    hasGrantedPermission(auth.permissions, `${financePermissions.accounts.cashManagement}.Deposit`);
   const params = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const status = ['0', '1'].includes(params.get('status') || '') ? params.get('status')! : 'all';
+  const entryContext = readBankAccountEntryContext(params, academicYearId, 'deposit');
+  const returnTo =
+    params.get('academicYearId') === academicYearId
+      ? bankAccountReturnTo(params.get('returnTo'))
+      : null;
+  const requestedCashId =
+    params.get('academicYearId') === academicYearId ? params.get('cashId') : null;
+  const months = academicMonthOptions(currentYear);
+  const requestedMonth = params.get('month');
+  const month =
+    requestedMonth === 'all' ||
+    (requestedMonth && months.some((item) => item.value === requestedMonth))
+      ? requestedMonth
+      : defaultAcademicMonth(months);
+  const boards: Board[] = currentYear?.boards ?? [];
+  const boardId = boards.some((item) => item.id === params.get('boardId'))
+    ? params.get('boardId')!
+    : 'all';
+  const mediums = boards.find((item) => item.id === boardId)?.educationMediums ?? [];
+  const mediumId = mediums.some((item) => item.id === params.get('mediumId'))
+    ? params.get('mediumId')!
+    : 'all';
   const search = (params.get('search') || '').slice(0, 200);
   const requestedPage = Number(params.get('page'));
   const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
@@ -169,42 +172,52 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
     ? Number(params.get('pageSize'))
     : 20;
   const filters = readFilters(params.get('filters'));
-  const tableFilters: IParams['filters'] = [
-    ...filters.filter((item) => item.column !== 'status'),
-    ...(status === 'all'
-      ? []
-      : [
-          {
-            column: 'status',
-            type: 'equals',
-            value: Number(status),
-            valueType: 'enum',
-            label: 'Status',
-            displayValue: status === '0' ? 'Pending approval' : 'Approved',
-          },
-        ]),
-  ];
-  const sortBy = params.get('sortBy') || undefined;
+  const sortBy = columns.some((column) => column.id === params.get('sortBy'))
+    ? params.get('sortBy')!
+    : undefined;
   const sortOrder = params.get('sortOrder') === 'desc' ? 'desc' : 'asc';
   const sorts: IParams['sorts'] = sortBy ? [{ column: sortBy, direction: sortOrder }] : [];
   const update = (values: Record<string, string | number | undefined>) => {
     const next = new URLSearchParams(params.toString());
+    next.delete('status');
     Object.entries(values).forEach(([key, value]) => {
-      if (value === undefined || value === '' || value === 'all') next.delete(key);
+      if (value === undefined || value === '' || (value === 'all' && key !== 'month'))
+        next.delete(key);
       else next.set(key, String(value));
     });
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   };
   const clearFilters = () =>
-    update({ search: undefined, filters: undefined, status: undefined, page: 1 });
+    update({
+      search: undefined,
+      filters: undefined,
+      boardId: undefined,
+      mediumId: undefined,
+      month: 'all',
+      page: 1,
+    });
   const [selected, setSelected] = useState<string | null>(null);
-  const [approving, setApproving] = useState<string | null>(null);
+  const deposit = useBoolean();
+  const openBankDeposit = deposit.onTrue;
+  const [depositAmount, setDepositAmount] = useState<number | null>(null);
+  const depositButton = useRef<HTMLButtonElement>(null);
+  const closeDeposit = () => {
+    deposit.onFalse();
+    if (entryContext) {
+      router.push(entryContext.returnTo);
+      return;
+    }
+    requestAnimationFrame(() => depositButton.current?.focus());
+  };
   const query = useGetCashManagementQuery(
     {
       academicYearId,
       page,
       pageSize,
-      status: status === 'all' ? undefined : (Number(status) as 0 | 1),
+      boardId: boardId === 'all' ? undefined : boardId,
+      mediumId: mediumId === 'all' ? undefined : mediumId,
+      month: month === 'all' ? undefined : Number(month.slice(5)),
+      year: month === 'all' ? undefined : Number(month.slice(0, 4)),
       search: search || undefined,
       filters: serializeFinanceTableFilters(filters),
       sortBy,
@@ -212,127 +225,152 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
     },
     { refetchOnMountOrArgChange: true }
   );
-  const summary = query.isError ? undefined : query.currentData?.summary;
-  const counts = query.isError ? undefined : query.currentData?.statusCounts;
-  const filtered = Boolean(search || filters.length || status !== 'all');
-  const actionsColumn: IColumn = {
-    id: 'actions',
-    label: 'Actions',
-    minWidth: 100,
-    align: 'left',
-    sticky: true,
-    stickyPosition: 'right',
-    isFilter: false,
-    isSort: false,
-    excludeFromExport: true,
-    render: (_value, value) => {
-      const row = value as CashRow;
-      const actions: AdaptiveThreeDotsAction[] = [];
-      if (canApprove && row.status === 0)
-        actions.push({
-          id: 'approve',
-          label: `Approve ${row.reference}`,
-          icon: GlobalIcons.approveDecision,
-          color: 'success.main',
-          disabled: query.isFetching || !row.canApprove,
-          tooltip: query.isFetching
-            ? 'Checking approval availability…'
-            : !row.canApprove
-              ? row.creatorId === auth.user?.sub
-                ? 'Another authorized reviewer must approve this cash.'
-                : 'Cash approval is unavailable. Refresh details to check availability.'
-              : `Approve ${row.reference}`,
-          onClick: () => setApproving(row.id),
-        });
-      actions.push({
-        id: 'view',
-        label: `View ${row.reference}`,
-        icon: GlobalIcons.eye,
-        onClick: () => setSelected(row.id),
-      });
-      return (
-        <AdaptiveThreeDotsActions
-          actions={actions}
-          moreLabel={`More actions for ${row.reference}`}
-          directActionLimit={2}
-          collapseOnOverflow={false}
-          sx={{ justifyContent: 'flex-end' }}
-        />
-      );
-    },
-  };
+  const summary = query.isError ? undefined : query.currentData?.yearSummary;
+  const availableCash = query.isError ? undefined : query.currentData?.availableCash;
+  const consumedDeposit = useRef('');
+  const requestedDepositKey = entryContext
+    ? `${academicYearId}:${entryContext.bankAccountId}:${entryContext.returnTo}`
+    : '';
+  useEffect(() => {
+    if (
+      !requestedDepositKey ||
+      !canDeposit ||
+      query.isFetching ||
+      query.isError ||
+      !availableCash ||
+      availableCash <= 0 ||
+      consumedDeposit.current === requestedDepositKey
+    )
+      return;
+    consumedDeposit.current = requestedDepositKey;
+    setDepositAmount(availableCash);
+    openBankDeposit();
+  }, [
+    requestedDepositKey,
+    canDeposit,
+    query.isFetching,
+    query.isError,
+    availableCash,
+    openBankDeposit,
+  ]);
+  const consumedCash = useRef('');
+  useEffect(() => {
+    if (!requestedCashId || consumedCash.current === requestedCashId) return;
+    consumedCash.current = requestedCashId;
+    setSelected(requestedCashId);
+  }, [requestedCashId]);
+  const filtered = Boolean(
+    search || filters.length || boardId !== 'all' || mediumId !== 'all' || month !== 'all'
+  );
   return (
     <>
-      <Card sx={{ flexShrink: 0, px: 1, boxShadow: 'var(--shadows-4)' }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} sx={{ minWidth: 0 }}>
-          <Box
-            role="group"
-            aria-label="Approval status"
-            sx={{ display: 'flex', gap: 2, overflowX: 'auto', flexShrink: 0 }}
+      {returnTo && (
+        <Stack direction="row" justifyContent="flex-end">
+          <Button
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.retrunIcon} />}
+            onClick={() => router.push(returnTo)}
           >
-            {statusOptions.map((option) => (
-              <ButtonBase
-                key={option.value}
-                aria-pressed={status === option.value}
-                onClick={() =>
-                  update({
-                    status: option.value,
-                    page: 1,
-                    filters: JSON.stringify(filters.filter((item) => item.column !== 'status')),
-                  })
-                }
-                sx={{
-                  minHeight: 44,
-                  gap: 1,
-                  px: 1,
-                  flexShrink: 0,
-                  typography: 'subtitle2',
-                  color: status === option.value ? 'text.primary' : 'text.secondary',
-                  borderBottom: 2,
-                  borderColor: status === option.value ? 'text.primary' : 'transparent',
-                  '&.Mui-focusVisible': {
-                    outline: '2px solid',
-                    outlineColor: 'primary.main',
-                    outlineOffset: -2,
-                  },
-                }}
-              >
-                {option.label}
-                <Label color={option.color}>{counts?.[option.key] ?? '—'}</Label>
-              </ButtonBase>
-            ))}
-          </Box>
-          <Stack
-            direction="row"
-            useFlexGap
-            flexWrap="wrap"
-            spacing={2}
-            sx={{ flex: 1, px: 1, py: 1, justifyContent: { md: 'flex-end' }, alignItems: 'center' }}
-          >
-            {(
-              [
-                ['collected', 'Collected'],
-                ['pendingApproval', 'Pending deposit'],
-                ['remaining', 'Remaining'],
-              ] as const
-            ).map(([key, label]) => (
-              <Stack key={key} direction="row" spacing={0.5} alignItems="baseline">
-                <Typography variant="caption" color="text.secondary">
-                  {label}
-                </Typography>
-                <Typography variant="subtitle2">
-                  {summary ? formatNumber(summary[key], 'INR') : '—'}
-                </Typography>
-              </Stack>
-            ))}
+            Back to bank account
+          </Button>
+        </Stack>
+      )}
+      {entryContext && !query.isFetching && !query.isError && availableCash === 0 && (
+        <Alert severity="info">There is no available cash to deposit for this academic year.</Alert>
+      )}
+      <Card sx={{ flexShrink: 0, p: 1 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+          <CustomSelect
+            label="Board"
+            size="small"
+            fullWidth
+            value={boardId}
+            options={[{ id: 'all', name: 'All boards' }, ...boards]}
+            valueKey="id"
+            labelKey="name"
+            onChange={(value) => update({ boardId: String(value), mediumId: undefined, page: 1 })}
+          />
+          <CustomSelect
+            label="Medium"
+            size="small"
+            fullWidth
+            value={mediumId}
+            options={[{ id: 'all', name: 'All mediums' }, ...mediums]}
+            valueKey="id"
+            labelKey="name"
+            disabled={boardId === 'all'}
+            onChange={(value) => update({ mediumId: String(value), page: 1 })}
+          />
+          <CustomSelect
+            label="Month"
+            size="small"
+            fullWidth
+            value={month}
+            options={[{ value: 'all', label: 'All months' }, ...months]}
+            disabled={!months.length}
+            onChange={(value) => update({ month: String(value), page: 1 })}
+          />
+        </Stack>
+      </Card>
+      {!months.length && (
+        <Alert severity="warning">Configure the academic-year dates to use the month filter.</Alert>
+      )}
+      <Card sx={{ flexShrink: 0, p: 1 }}>
+        <Stack
+          direction="row"
+          useFlexGap
+          flexWrap="wrap"
+          spacing={2}
+          alignItems="center"
+          justifyContent="flex-end"
+        >
+          {(
+            [
+              ['collected', 'Collected'],
+              ['spent', 'Spent'],
+              ['deposited', 'Deposited'],
+            ] as const
+          ).map(([key, label]) => (
+            <Stack key={key} direction="row" spacing={0.5} alignItems="baseline">
+              <Typography variant="caption" color="text.secondary">
+                {label}
+              </Typography>
+              <Typography variant="subtitle2">
+                {summary ? formatNumber(summary[key], 'INR') : '—'}
+              </Typography>
+            </Stack>
+          ))}
+          <Stack direction="row" spacing={0.5} alignItems="baseline">
+            <Typography variant="caption" color="text.secondary">
+              Academic-year cash available
+            </Typography>
+            <Typography variant="subtitle2">
+              {availableCash !== undefined ? formatNumber(availableCash, 'INR') : '—'}
+            </Typography>
           </Stack>
+          {canDeposit && (
+            <Button
+              ref={depositButton}
+              variant="contained"
+              color="inherit"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.bankAccount} />}
+              disabled={query.isFetching || query.isError || !(availableCash && availableCash > 0)}
+              onClick={() => {
+                setDepositAmount(availableCash!);
+                deposit.onTrue();
+              }}
+            >
+              Deposit cash
+            </Button>
+          )}
         </Stack>
       </Card>
       <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="cash-management"
           tableTitle="Cash Management"
-          columns={[...columns, actionsColumn]}
+          columns={columns}
           data={query.isError ? [] : (query.currentData?.items ?? [])}
           wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
           tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
@@ -346,9 +384,9 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
           page={page - 1}
           rowsPerPage={pageSize}
           rowsPerPageOptions={[10, 20, 50, 100]}
-          totalCount={query.currentData?.totalCount ?? 0}
+          totalCount={query.isError ? 0 : (query.currentData?.totalCount ?? 0)}
           searchTerm={search}
-          filters={tableFilters}
+          filters={filters}
           sorts={sorts}
           searchFieldProps={{
             placeholder: 'Search receipts or payers…',
@@ -358,19 +396,12 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
             if (value !== search) update({ search: value, page: 1 });
           }}
           onServerPagination={(next, size) => update({ page: next, pageSize: size })}
-          onServerFilter={(next) => {
-            const statuses = Array.from(
-              new Set(
-                next.filter((item) => item.column === 'status').map((item) => String(item.value))
-              )
-            );
-            const value = statuses.length === 1 ? statuses[0] : undefined;
+          onServerFilter={(next) =>
             update({
               filters: JSON.stringify(next.filter((item) => item.column !== 'status')),
-              status: value,
               page: 1,
-            });
-          }}
+            })
+          }
           onServerSort={(_column, next) =>
             update({ sortBy: next[0]?.column, sortOrder: next[0]?.direction, page: 1 })
           }
@@ -412,14 +443,19 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
         <CashDetails
           id={selected}
           academicYearId={academicYearId}
-          onClose={() => setSelected(null)}
+          onClose={() => {
+            setSelected(null);
+            if (returnTo && selected === requestedCashId) router.push(returnTo);
+          }}
         />
       )}
-      {approving && (
-        <CashApprovalDialog
-          id={approving}
+      {deposit.value && canDeposit && depositAmount !== null && (
+        <CashBulkDepositDialog
           academicYearId={academicYearId}
-          onClose={() => setApproving(null)}
+          amount={depositAmount}
+          initialBankAccountId={entryContext?.bankAccountId}
+          onClose={closeDeposit}
+          onRefresh={async () => (await query.refetch().unwrap()).availableCash}
         />
       )}
     </>

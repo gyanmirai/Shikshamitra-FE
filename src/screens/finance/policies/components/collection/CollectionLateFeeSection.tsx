@@ -50,6 +50,18 @@ export default function CollectionLateFeeSection({
   addSlab,
   removeSlab,
 }: CollectionLateFeeSectionProps) {
+  const selectedHeads = (formik.values.lateFeeApplyOnFeeHeads ?? []).map(
+    (id: string) =>
+      feeHeads.find((head) => head.id === id) ?? {
+        id,
+        name: 'Fee head name unavailable (saved selection)',
+        savedOnly: true,
+      }
+  );
+  const headOptions = [
+    ...feeHeads,
+    ...selectedHeads.filter((head: any) => !feeHeads.some((active) => active.id === head.id)),
+  ];
   const isLateFeeEnabled = Boolean(formik.values.enableLateFee);
   const { overlapIndices } = computeSlabIssues(
     formik.values.escalationRules,
@@ -129,13 +141,12 @@ export default function CollectionLateFeeSection({
                 <Autocomplete
                   multiple
                   size="small"
-                  options={feeHeads}
+                  options={headOptions}
+                  getOptionDisabled={(option) => Boolean(option.savedOnly)}
                   groupBy={(option) => option.feeCategoryName || 'Other'}
                   getOptionLabel={(option) => option.name || ''}
                   isOptionEqualToValue={(option, value) => option.id === value.id}
-                  value={feeHeads.filter((h) =>
-                    formik.values.lateFeeApplyOnFeeHeads?.includes(h.id)
-                  )}
+                  value={selectedHeads}
                   onChange={(_, newValue) => {
                     formik.setFieldValue(
                       'lateFeeApplyOnFeeHeads',

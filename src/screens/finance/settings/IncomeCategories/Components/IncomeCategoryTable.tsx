@@ -128,7 +128,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                   },
                 }}
                 size="small"
-                disabled={!access.canChangeStatus}
+                disabled={!access.canChangeStatus || income.isSystemCategory}
                 checked={income.isActive || false}
                 onClick={(event) => event.stopPropagation()}
                 onChange={() => handleOpenStatusConfirm(income)}
@@ -166,7 +166,10 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                   onClick: () => {
                     onEdit(row as IIncomeCategory);
                   },
-                  disabled: !access.canEdit,
+                  disabled: !access.canEdit || (row as IIncomeCategory).isSystemCategory,
+                  tooltip: (row as IIncomeCategory).isSystemCategory
+                    ? 'None is a built-in category and cannot be changed.'
+                    : undefined,
                 },
                 {
                   id: 'delete',
@@ -176,7 +179,9 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                     onDelete(row as IIncomeCategory);
                   },
                   disabled: !access.canDelete || !(row as IIncomeCategory).canDelete,
-                  tooltip: !access.canDelete
+                  tooltip: (row as IIncomeCategory).isSystemCategory
+                    ? 'None is a built-in category and cannot be deleted.'
+                    : !access.canDelete
                     ? 'You do not have permission to delete income categories.'
                     : (row as IIncomeCategory).isUsedInDownstream
                       ? (row as IIncomeCategory).deletionBlockedReason ||

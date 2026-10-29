@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   bulkCommit: vi.fn(),
   details: vi.fn(),
   update: vi.fn(),
+  candidateState: {} as Record<string, unknown>,
+  candidateRefetch: vi.fn(),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
@@ -124,6 +126,8 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   assignmentError: () => 'Preview again',
   assignmentErrorCode: () => '',
   useAssignmentCandidatesQuery: () => ({
+    ...mocks.candidateState,
+    refetch: mocks.candidateRefetch,
     data: [
       {
         id: 'structure',
@@ -196,12 +200,32 @@ async function selectStructure() {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.details.mockReturnValue({});
+  mocks.candidateState = {};
   mocks.preview.mockImplementation(() => ({ unwrap: async () => result() }));
   mocks.commit.mockImplementation(() => ({
     unwrap: async () => ({ assignmentId: 'assignment', outcome: 'Assigned', assignment: result() }),
   }));
 });
 describe('assignment review and commit boundaries', () => {
+  it('shows matching-structure setup with an intact footer and refresh on focus', () => {
+    mocks.candidateState = { currentData: [] };
+    mount();
+    expect(screen.getByText('Publish a fee structure first')).toBeVisible();
+    expect(screen.queryByRole('combobox', { name: 'Fee structure' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    fireEvent(window, new Event('focus'));
+    expect(mocks.candidateRefetch).toHaveBeenCalledOnce();
+    expect(mocks.preview).not.toHaveBeenCalled();
+  });
+  it.each(['isLoading', 'isFetching', 'isError', 'isUninitialized'])(
+    'preserves the assignment context for %s',
+    (flag) => {
+      mocks.candidateState = { currentData: [], [flag]: true };
+      mount();
+      expect(screen.queryByText('Publish a fee structure first')).toBeNull();
+      expect(screen.getByRole('combobox', { name: 'Fee structure' })).toBeVisible();
+    }
+  );
   it('keeps bulk student navigation separate from fee details and synchronizes the selected name', async () => {
     const longName = 'Meera Annapoorna Venkataraman Subramanian Chandrasekharan Ramakrishnan';
     const students = Array.from({ length: 25 }, (_, index) => ({

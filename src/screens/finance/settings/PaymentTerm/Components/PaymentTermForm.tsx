@@ -5,13 +5,15 @@ import { useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
+import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 import {
   Box,
   Alert,
@@ -22,7 +24,6 @@ import {
   DialogActions,
   CircularProgress,
 } from '@mui/material';
-import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 
 import { FormFooter } from './FormFooter';
 import { PaymentTermDefaultSummary } from './PaymentTermUsage';
@@ -55,6 +56,8 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
     formik,
     boards,
     checks,
+    calendarMissing,
+    refreshPrerequisites,
     isSubmitting,
     isLoadingDetail,
     handleSubmit,
@@ -136,12 +139,19 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
                       Unable to load default impact. Retry before saving.
                     </Alert>
                   )}
-                  <InstallmentSection
-                    formik={formik}
-                    board={boards.find((board) => board.id === formik.values.boardId)}
-                    onAdd={addInstallment}
-                    onRemove={removeInstallment}
-                  />
+                  {calendarMissing ? (
+                    <FinancePrerequisiteState
+                      requirements={[{ key: boards.length ? 'board-calendar' : 'board-setup' }]}
+                      onRefresh={refreshPrerequisites}
+                    />
+                  ) : (
+                    <InstallmentSection
+                      formik={formik}
+                      board={boards.find((board) => board.id === formik.values.boardId)}
+                      onAdd={addInstallment}
+                      onRemove={removeInstallment}
+                    />
+                  )}
                 </Stack>
               </Box>
             </Scrollbar>
@@ -171,6 +181,7 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
             isSubmitting={busy}
             disabled={
               isSubmitting ||
+              calendarMissing ||
               isLoadingDetail ||
               !formik.dirty ||
               !checks.isReadyToPublish ||
@@ -178,16 +189,18 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
               formik.isValidating
             }
             disabledReason={
-              isLoadingDetail
-                ? 'Loading payment term details'
-                : checks.validationMessage === ALLOCATION_TOTAL_ERROR
-                  ? ''
-                  : checks.validationMessage ||
-                    (!checks.isReadyToPublish
-                      ? 'Complete the required schedule fields before submitting.'
-                      : !formik.dirty
-                        ? 'Make a change before submitting'
-                        : 'Checking payment term validation')
+              calendarMissing
+                ? 'Set up the board calendar before submitting.'
+                : isLoadingDetail
+                  ? 'Loading payment term details'
+                  : checks.validationMessage === ALLOCATION_TOTAL_ERROR
+                    ? ''
+                    : checks.validationMessage ||
+                      (!checks.isReadyToPublish
+                        ? 'Complete the required schedule fields before submitting.'
+                        : !formik.dirty
+                          ? 'Make a change before submitting'
+                          : 'Checking payment term validation')
             }
             onCancel={requestClose}
             onSubmit={async () => {

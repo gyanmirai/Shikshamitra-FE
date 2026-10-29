@@ -13,9 +13,13 @@ import { useGetAdjustmentEligibilityQuery } from 'src/redux/finance/adjustments/
 import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import FeeHeadGroup from './feeHeadRefundTable/FeeHeadGroup';
+import { getRefundPrerequisite } from './refundPrerequisites';
 import { refundAllocationLabel } from './initialValuesAndValidation';
 import OverallSummaryCard from './feeHeadRefundTable/OverallSummaryCard';
 import RefundTableSkeleton from './feeHeadRefundTable/RefundTableSkeleton';
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
+import { isFinancePrerequisiteMissing } from '../../components/financePrerequisites';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 
 import type { IMonthItem, RefundFormik, IFeeHeadPayment } from './types';
 
@@ -64,6 +68,8 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   const isLoading = isAdj ? adjustmentEligibility.isLoading : refundEligibility.isLoading;
   const isFetching = isAdj ? adjustmentEligibility.isFetching : refundEligibility.isFetching;
   const refetchEligibility = isAdj ? adjustmentEligibility.refetch : refundEligibility.refetch;
+
+  useRefreshFinancePrerequisites(() => refetchEligibility(), !skipEligibility);
 
   const [showValidation, setShowValidation] = useState(false);
 
@@ -414,15 +420,30 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       </Typography>
     );
   if (isLoading || isFetching) return <RefundTableSkeleton compact={compact} />;
+  const prerequisite = isAdj
+    ? isFinancePrerequisiteMissing({
+        options: adjustmentEligibility.currentData?.feeHeads.flatMap((head) =>
+          head.months.filter((month) => month.adjustable > 0)
+        ),
+        ...adjustmentEligibility,
+      })
+      ? 'adjustment-balance'
+      : undefined
+    : getRefundPrerequisite(refundEligibility);
+  if (prerequisite)
+    return (
+      <FinancePrerequisiteState
+        requirements={[{ key: prerequisite }]}
+        onRefresh={() => refetchEligibility()}
+      />
+    );
+  if (!eligibility && !eligibilityError) return null;
   if (eligibilityError) {
     const { detail, errorCode } = parseApiProblemDetail(eligibilityError);
     const message =
-      !isAdj && errorCode === 'Finance:RefundPolicy:010016'
-        ? 'No refund is possible. This student has no paid fees eligible for a refund.'
-        : detail === 'Something went wrong' ||
-            detail === 'One or more business rules were violated.'
-          ? 'Unable to check refund eligibility. Please try again.'
-          : detail;
+      detail === 'Something went wrong' || detail === 'One or more business rules were violated.'
+        ? 'Unable to check refund eligibility. Please try again.'
+        : detail;
     const isBusinessRule =
       typeof errorCode === 'string' &&
       (errorCode.startsWith('Finance:FeeRefund:') || errorCode === 'Finance:RefundPolicy:010016');
@@ -439,32 +460,6 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         }
       >
         {message}
-      </Alert>
-    );
-  }
-
-  if (
-    !isAdj &&
-    refundEligibility.currentData &&
-    refundEligibility.currentData.totalRefundable <= 0
-  ) {
-    return (
-      <Alert severity="error" sx={{ borderRadius: 3 }}>
-        {refundEligibility.currentData.totalPaid <= 0
-          ? 'No refund is possible. This student has not paid any fees yet.'
-          : 'No refund is possible. No refundable paid balance remains for this student.'}
-      </Alert>
-    );
-  }
-
-  if (feeHeadsWithPayments.length === 0) {
-    return (
-      <Alert severity="error" sx={{ borderRadius: 3 }}>
-        {isAdj
-          ? 'No adjustable fee records found for this student. Adjustments can only be raised for students with adjustable fees.'
-          : eligibility && eligibility.totalPaid <= 0
-            ? 'No refund is possible. This student has not paid any fees yet.'
-            : 'No refund is possible. No refundable paid balance remains for this student.'}
       </Alert>
     );
   }

@@ -422,6 +422,37 @@ describe('Collect Fees presentation and shared ledger', () => {
     mocks.currentYear = { id: 'year-2026', year: 2026, name: '2026-2027' };
   });
 
+  it('explains why settled fees cannot be selected without asking for a selection', async () => {
+    mocks.data = buildForm(true);
+    mocks.data.charges = [];
+    render(<FeeCollectComponentForm student={student} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No outstanding fees or charges to collect. Items with no outstanding balance cannot be selected.'
+    );
+    expect(
+      screen.getByText('No payment is needed. There is no outstanding amount to collect.')
+    ).toBeVisible();
+    const feeGroup = screen.getByRole('checkbox', { name: 'Select Class 3 Tuition Fee' });
+    expect(feeGroup).toBeDisabled();
+    expect(feeGroup).not.toBeChecked();
+    fireEvent.click(feeGroup);
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Select at least one fee item or charge to collect')
+      ).not.toBeInTheDocument()
+    );
+    expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
+  }, 30_000);
+
+  it('does not report settled balances when unpaid charges or late fees remain', () => {
+    mocks.data = buildForm(true);
+    render(<FeeCollectComponentForm student={student} />);
+
+    expect(screen.queryByText(/No outstanding fees or charges to collect/)).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Select Additional Charges' })).toBeEnabled();
+  }, 30_000);
+
   it('shows student information and outstanding balance above the collection', () => {
     mocks.data.student = {
       ...mocks.data.student,
@@ -435,6 +466,26 @@ describe('Collect Fees presentation and shared ledger', () => {
     expect(screen.getByText('Diya')).toBeVisible();
     expect(screen.getByText(/GR 10092.*Class 3 A.*2026-2027/)).toBeVisible();
     expect(screen.getByText('Total outstanding')).toBeVisible();
+  }, 30_000);
+
+  it('keeps approved charges collectible without a scheduled fee assignment', () => {
+    mocks.data.student.isFeeStructureAssigned = false;
+    mocks.data.ledger = [];
+    mocks.data.charges = [
+      {
+        chargeId: 'charge-only',
+        sourceType: 'Charge',
+        sourceId: 'charge-only',
+        name: 'Library damage',
+        amount: 250,
+        paidAmount: 0,
+        pendingAmount: 250,
+        status: FeeCollectionStatusType.Pending,
+      },
+    ];
+    render(<FeeCollectComponentForm student={student} />);
+    expect(screen.queryByText('No Fee Structure Assigned')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Library damage').length).toBeGreaterThan(0);
   }, 30_000);
 
   it('preserves an edited partial amount and selection through grouping and sorting', async () => {

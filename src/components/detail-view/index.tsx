@@ -13,6 +13,8 @@ export function DetailSection({
   action,
   children,
   sx,
+  collapsible,
+  defaultExpanded,
 }: {
   title: string;
   icon: string;
@@ -20,9 +22,13 @@ export function DetailSection({
   action?: ReactNode;
   children: ReactNode;
   sx?: SxProps<Theme>;
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
 }) {
   return (
     <FormSectionCard
+      collapsible={collapsible}
+      defaultExpanded={defaultExpanded}
       title={title}
       icon={icon}
       iconSize={16}
@@ -49,9 +55,11 @@ export function DetailSection({
 export function DetailGrid({
   children,
   desktopColumns = 3,
+  desktopMinWidth = 960,
 }: {
   children: ReactNode;
   desktopColumns?: number;
+  desktopMinWidth?: number;
 }) {
   return (
     <Box
@@ -61,7 +69,7 @@ export function DetailGrid({
         gap: 2,
         '@container (min-width: 440px)': { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
         '@container (min-width: 680px)': { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
-        '@container (min-width: 960px)': {
+        [`@container (min-width: ${desktopMinWidth}px)`]: {
           gridTemplateColumns: `repeat(${desktopColumns}, minmax(0, 1fr))`,
         },
       }}

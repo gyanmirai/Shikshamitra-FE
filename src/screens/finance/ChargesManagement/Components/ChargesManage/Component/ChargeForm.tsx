@@ -16,13 +16,16 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetStudentsByScopeQuery } from 'src/redux/student';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
+import { isFinancePrerequisiteMissing } from 'src/screens/finance/components/financePrerequisites';
+import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
 import {
   usePostChargeMutation,
   useUpdateChargeMutation,
@@ -73,7 +76,14 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   );
 
   // Get charge categories data
-  const { data: chargeCategories, isLoading: chargeCategoriesLoading } = useQueryAndMutation({
+  const {
+    currentData: chargeCategories,
+    isLoading: chargeCategoriesLoading,
+    isFetching: chargeCategoriesFetching,
+    isError: chargeCategoriesError,
+    isUninitialized: chargeCategoriesUninitialized,
+    refetch: refetchChargeCategories,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargeCategoriesQuery,
     params: {
@@ -82,11 +92,21 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       pageSize: 100,
       isActive: true,
     },
+    options: { skip: !currentYear?.id },
   });
   const availableChargeCategories = useMemo(
     () => (chargeCategories?.items ?? []).filter((category: any) => category.isActive === true),
     [chargeCategories?.items]
   );
+  const missingChargeCategory = isFinancePrerequisiteMissing({
+    options: chargeCategories ? availableChargeCategories : undefined,
+    required: !isEdit,
+    isLoading: chargeCategoriesLoading,
+    isFetching: chargeCategoriesFetching,
+    isError: chargeCategoriesError,
+    isUninitialized: chargeCategoriesUninitialized,
+  });
+  useRefreshFinancePrerequisites(() => refetchChargeCategories(), Boolean(currentYear?.id));
   const [postCharge, { isLoading: postChargeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePostChargeMutation,
@@ -182,6 +202,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         .required('Student is required'),
     }),
     onSubmit: async (values) => {
+      if (missingChargeCategory) return;
       try {
         const payload = {
           chargeCategoryId: values.chargeCategoryId,
@@ -339,415 +360,431 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
           flexDirection="column"
           height="100%"
         >
-          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <Box sx={{ p: 1 }}>
-              <Grid container spacing={0}>
-                <Grid size={{ xs: 12 }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 1.5,
-                      mb: 1.5,
-                      borderRadius: 2,
-                      transition: 'box-shadow 0.2s ease',
-                      '&:hover': { boxShadow: 4 },
-                    }}
-                  >
-                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          Charge Details
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Configure amount, due date, and charge priority
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ mb: 2 }} />
-                    <Grid container spacing={2}>
-                      {/* Charge Category */}
-                      <Grid size={{ xs: 12, md: 3 }}>
-                        <ShakingTextField
-                          error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
-                        >
-                          <CustomSelect
-                            name="chargeCategoryId"
-                            label="Charge Category *"
-                            isLoading={chargeCategoriesLoading}
-                            options={availableChargeCategories}
-                            labelKey="name"
-                            valueKey="id"
-                            value={values.chargeCategoryId}
-                            onChange={(value) => setFieldValue('chargeCategoryId', value)}
-                            error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
-                            helperText={
-                              (touched.chargeCategoryId && errors.chargeCategoryId) || undefined
-                            }
-                            formControlProps={{ fullWidth: true }}
-                          />
-                        </ShakingTextField>
-                        {values.chargeCategoryId && (
-                          <Typography variant="body2" color="text.secondary">
-                            All charges start as Pending and require approval from an authorized
-                            person.
+          <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
+            {missingChargeCategory ? (
+              <FinancePrerequisiteState
+                requirements={[{ key: 'charge-category' }]}
+                onRefresh={() => refetchChargeCategories()}
+              />
+            ) : (
+              <Box sx={{ p: 1 }}>
+                <Grid container spacing={0}>
+                  <Grid size={{ xs: 12 }}>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 1.5,
+                        mb: 1.5,
+                        borderRadius: 2,
+                        transition: 'box-shadow 0.2s ease',
+                        '&:hover': { boxShadow: 4 },
+                      }}
+                    >
+                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            Charge Details
                           </Typography>
-                        )}
-                      </Grid>
-
-                      {/* Amount */}
-                      <Grid size={{ xs: 6, md: 3 }}>
-                        <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
-                          <NumericFormatCustom
-                            size="small"
-                            fullWidth
-                            label="Amount *"
-                            name="amount"
-                            value={values.amount || ''}
-                            decimalScale={2}
-                            allowLeadingZeros={false}
-                            valueIsNumericString
-                            onValueChange={(numericValues) => {
-                              setFieldValue('amount', numericValues.value);
-                            }}
-                            sx={{
-                              width: '100%',
-                              padding: '0',
-                              borderRadius: 1,
-                            }}
-                            error={!!(touched.amount && errors.amount)}
-                            helperText={((touched.amount && errors.amount) as string) || undefined}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-
-                      {/* Due Date */}
-                      <Grid size={{ xs: 6, md: 3 }}>
-                        <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
-                          <DatePicker
-                            label="Due Date *"
-                            name="dueDate"
-                            format="DD/MM/YYYY"
-                            minDate={dayjs().startOf('day')}
-                            maxDate={dayjs(currentYear?.endDate)}
-                            value={dayjs(values.dueDate) || null}
-                            onChange={(newValue) => setFieldValue('dueDate', newValue)}
-                            slotProps={{
-                              textField: {
-                                size: 'small',
-                                fullWidth: true,
-                                error: !!(touched.dueDate && errors.dueDate),
-                                helperText: (touched.dueDate && errors.dueDate) as string,
-                                onBlur: () => setFieldTouched('dueDate', true),
-                              },
-                            }}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-
-                      {/* Priority */}
-                      <Grid size={{ xs: 12, md: 3 }}>
-                        <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
-                          <CustomSelect
-                            name="priority"
-                            label="Priority *"
-                            options={[
-                              { id: '0', name: 'Low' },
-                              { id: '1', name: 'Medium' },
-                              { id: '2', name: 'High' },
-                            ]}
-                            labelKey="name"
-                            valueKey="id"
-                            value={values.priority}
-                            onChange={(value) => setFieldValue('priority', value)}
-                            error={!!(touched.priority && errors.priority) || false}
-                            helperText={(touched.priority && errors.priority) || undefined}
-                            formControlProps={{ fullWidth: true }}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-
-                      {/* Purpose/Description */}
-                      <Grid size={{ xs: 12 }}>
-                        <ShakingTextField
-                          error={
-                            !!(touched.purposeDescription && errors.purposeDescription) || false
-                          }
-                        >
-                          <TextField
-                            name="purposeDescription"
-                            label="Purpose/Description *"
-                            multiline
-                            minRows={3}
-                            fullWidth
-                            value={values.purposeDescription}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={!!(touched.purposeDescription && errors.purposeDescription)}
-                            helperText={
-                              ((touched.purposeDescription &&
-                                errors.purposeDescription) as string) || undefined
-                            }
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                    </Grid>
-                  </Paper>
-                </Grid>
-                {/* Student Information */}
-                <Grid size={{ xs: 12 }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 1.5,
-                      mb: 1.5,
-                      borderRadius: 2,
-                      transition: 'box-shadow 0.2s ease',
-                      '&:hover': { boxShadow: 4 },
-                    }}
-                  >
-                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                      <Iconify
-                        icon="solar:users-group-rounded-bold-duotone"
-                        width={18}
-                        sx={{ color: 'primary.main' }}
-                      />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          Student Selection
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Select board, medium, one or more classes, then choose students
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ mb: 2 }} />
-                    <Grid container spacing={2}>
-                      {/* Board */}
-                      <Grid size={{ xs: 6, md: 3 }}>
-                        <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
-                          <CustomSelect
-                            disabled={isEdit}
-                            label="Board *"
-                            options={boards}
-                            labelKey="name"
-                            valueKey="id"
-                            value={values.boardId}
-                            onChange={(val) => {
-                              setFieldValue('boardId', val);
-                              setFieldTouched('boardId', false);
-                              setFieldValue('educationMediumId', '');
-                              setFieldValue('classIds', []);
-                              setFieldValue('divisionIds', []);
-                              setFieldValue('selectedStudentIds', []);
-                            }}
-                            error={!!errors.boardId && touched.boardId}
-                            helperText={
-                              ((touched.boardId && errors.boardId) as string) || undefined
-                            }
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                      {/* Medium */}
-                      <Grid size={{ xs: 6, md: 3 }}>
-                        <ShakingTextField
-                          error={!!(touched.educationMediumId && errors.educationMediumId)}
-                        >
-                          <CustomSelect
-                            label="Medium *"
-                            disabled={!values.boardId || isEdit}
-                            options={mediums}
-                            labelKey="name"
-                            valueKey="id"
-                            value={values.educationMediumId}
-                            onChange={(val) => {
-                              setFieldValue('educationMediumId', val);
-                              setFieldTouched('educationMediumId', false);
-                              setFieldValue('classIds', []);
-                              setFieldValue('divisionIds', []);
-                              setFieldValue('selectedStudentIds', []);
-                            }}
-                            error={!!errors.educationMediumId && touched.educationMediumId}
-                            helperText={
-                              ((touched.educationMediumId && errors.educationMediumId) as string) ||
-                              undefined
-                            }
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                      {/* Class — multi-select */}
-                      <Grid size={{ xs: 6, md: 3 }}>
-                        <ShakingTextField error={!!(touched.classIds && errors.classIds) || false}>
-                          <CustomSelect
-                            name="classIds"
-                            label="Class *"
-                            options={classes || []}
-                            labelKey="name"
-                            valueKey="id"
-                            isLoading={classesLoading}
-                            value={values.classIds}
-                            disabled={!values.educationMediumId || isEdit}
-                            onChange={(value) => {
-                              setFieldValue('classIds', value);
-                              setFieldTouched('classIds', false);
-                              setFieldValue('divisionIds', []);
-                              setFieldValue('selectedStudentIds', []);
-                            }}
-                            error={!!(touched.classIds && errors.classIds) || false}
-                            helperText={
-                              (touched.classIds && (errors.classIds as string)) || undefined
-                            }
-                            formControlProps={{ sx: { width: '100%' } }}
-                            multiple
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                      {/* Division — only shown when exactly one class is selected */}
-                      {isSingleClass(values.classIds) && (
-                        <Grid size={{ xs: 6, md: 3 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Configure amount, due date, and charge priority
+                          </Typography>
+                        </Box>
+                      </Stack>
+                      <Divider sx={{ mb: 2 }} />
+                      <Grid container spacing={2}>
+                        {/* Charge Category */}
+                        <Grid size={{ xs: 12, md: 3 }}>
                           <ShakingTextField
-                            error={!!(touched.divisionIds && errors.divisionIds) || false}
+                            error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
                           >
                             <CustomSelect
-                              name="divisionIds"
-                              label="Division (optional)"
+                              name="chargeCategoryId"
+                              label="Charge Category *"
+                              isLoading={chargeCategoriesLoading}
+                              options={availableChargeCategories}
                               labelKey="name"
                               valueKey="id"
+                              value={values.chargeCategoryId}
+                              onChange={(value) => setFieldValue('chargeCategoryId', value)}
+                              error={
+                                !!(touched.chargeCategoryId && errors.chargeCategoryId) || false
+                              }
+                              helperText={
+                                (touched.chargeCategoryId && errors.chargeCategoryId) || undefined
+                              }
+                              formControlProps={{ fullWidth: true }}
+                            />
+                          </ShakingTextField>
+                          {values.chargeCategoryId && (
+                            <Typography variant="body2" color="text.secondary">
+                              All charges start as Pending and require approval from an authorized
+                              person.
+                            </Typography>
+                          )}
+                        </Grid>
+
+                        {/* Amount */}
+                        <Grid size={{ xs: 6, md: 3 }}>
+                          <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
+                            <NumericFormatCustom
+                              size="small"
+                              fullWidth
+                              label="Amount *"
+                              name="amount"
+                              value={values.amount || ''}
+                              decimalScale={2}
+                              allowLeadingZeros={false}
+                              valueIsNumericString
+                              onValueChange={(numericValues) => {
+                                setFieldValue('amount', numericValues.value);
+                              }}
+                              sx={{
+                                width: '100%',
+                                padding: '0',
+                                borderRadius: 1,
+                              }}
+                              error={!!(touched.amount && errors.amount)}
+                              helperText={
+                                ((touched.amount && errors.amount) as string) || undefined
+                              }
+                            />
+                          </ShakingTextField>
+                        </Grid>
+
+                        {/* Due Date */}
+                        <Grid size={{ xs: 6, md: 3 }}>
+                          <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
+                            <DatePicker
+                              label="Due Date *"
+                              name="dueDate"
+                              format="DD/MM/YYYY"
+                              minDate={dayjs().startOf('day')}
+                              maxDate={dayjs(currentYear?.endDate)}
+                              value={dayjs(values.dueDate) || null}
+                              onChange={(newValue) => setFieldValue('dueDate', newValue)}
+                              slotProps={{
+                                textField: {
+                                  size: 'small',
+                                  fullWidth: true,
+                                  error: !!(touched.dueDate && errors.dueDate),
+                                  helperText: (touched.dueDate && errors.dueDate) as string,
+                                  onBlur: () => setFieldTouched('dueDate', true),
+                                },
+                              }}
+                            />
+                          </ShakingTextField>
+                        </Grid>
+
+                        {/* Priority */}
+                        <Grid size={{ xs: 12, md: 3 }}>
+                          <ShakingTextField
+                            error={!!(touched.priority && errors.priority) || false}
+                          >
+                            <CustomSelect
+                              name="priority"
+                              label="Priority *"
+                              options={[
+                                { id: '0', name: 'Low' },
+                                { id: '1', name: 'Medium' },
+                                { id: '2', name: 'High' },
+                              ]}
+                              labelKey="name"
+                              valueKey="id"
+                              value={values.priority}
+                              onChange={(value) => setFieldValue('priority', value)}
+                              error={!!(touched.priority && errors.priority) || false}
+                              helperText={(touched.priority && errors.priority) || undefined}
+                              formControlProps={{ fullWidth: true }}
+                            />
+                          </ShakingTextField>
+                        </Grid>
+
+                        {/* Purpose/Description */}
+                        <Grid size={{ xs: 12 }}>
+                          <ShakingTextField
+                            error={
+                              !!(touched.purposeDescription && errors.purposeDescription) || false
+                            }
+                          >
+                            <TextField
+                              name="purposeDescription"
+                              label="Purpose/Description *"
+                              multiline
+                              minRows={3}
+                              fullWidth
+                              value={values.purposeDescription}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              error={!!(touched.purposeDescription && errors.purposeDescription)}
+                              helperText={
+                                ((touched.purposeDescription &&
+                                  errors.purposeDescription) as string) || undefined
+                              }
+                            />
+                          </ShakingTextField>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  </Grid>
+                  {/* Student Information */}
+                  <Grid size={{ xs: 12 }}>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 1.5,
+                        mb: 1.5,
+                        borderRadius: 2,
+                        transition: 'box-shadow 0.2s ease',
+                        '&:hover': { boxShadow: 4 },
+                      }}
+                    >
+                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                        <Iconify
+                          icon="solar:users-group-rounded-bold-duotone"
+                          width={18}
+                          sx={{ color: 'primary.main' }}
+                        />
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            Student Selection
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Select board, medium, one or more classes, then choose students
+                          </Typography>
+                        </Box>
+                      </Stack>
+                      <Divider sx={{ mb: 2 }} />
+                      <Grid container spacing={2}>
+                        {/* Board */}
+                        <Grid size={{ xs: 6, md: 3 }}>
+                          <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
+                            <CustomSelect
                               disabled={isEdit}
-                              options={allDivision}
-                              value={values.divisionIds}
-                              onChange={(value) => {
-                                setFieldValue('divisionIds', value);
-                                setFieldTouched('divisionIds', false);
+                              label="Board *"
+                              options={boards}
+                              labelKey="name"
+                              valueKey="id"
+                              value={values.boardId}
+                              onChange={(val) => {
+                                setFieldValue('boardId', val);
+                                setFieldTouched('boardId', false);
+                                setFieldValue('educationMediumId', '');
+                                setFieldValue('classIds', []);
+                                setFieldValue('divisionIds', []);
                                 setFieldValue('selectedStudentIds', []);
                               }}
-                              formControlProps={{ sx: { width: '100%' } }}
-                              error={!!(touched.divisionIds && errors.divisionIds)}
+                              error={!!errors.boardId && touched.boardId}
                               helperText={
-                                ((touched.divisionIds && errors.divisionIds) as string) || undefined
+                                ((touched.boardId && errors.boardId) as string) || undefined
                               }
+                            />
+                          </ShakingTextField>
+                        </Grid>
+                        {/* Medium */}
+                        <Grid size={{ xs: 6, md: 3 }}>
+                          <ShakingTextField
+                            error={!!(touched.educationMediumId && errors.educationMediumId)}
+                          >
+                            <CustomSelect
+                              label="Medium *"
+                              disabled={!values.boardId || isEdit}
+                              options={mediums}
+                              labelKey="name"
+                              valueKey="id"
+                              value={values.educationMediumId}
+                              onChange={(val) => {
+                                setFieldValue('educationMediumId', val);
+                                setFieldTouched('educationMediumId', false);
+                                setFieldValue('classIds', []);
+                                setFieldValue('divisionIds', []);
+                                setFieldValue('selectedStudentIds', []);
+                              }}
+                              error={!!errors.educationMediumId && touched.educationMediumId}
+                              helperText={
+                                ((touched.educationMediumId &&
+                                  errors.educationMediumId) as string) || undefined
+                              }
+                            />
+                          </ShakingTextField>
+                        </Grid>
+                        {/* Class — multi-select */}
+                        <Grid size={{ xs: 6, md: 3 }}>
+                          <ShakingTextField
+                            error={!!(touched.classIds && errors.classIds) || false}
+                          >
+                            <CustomSelect
+                              name="classIds"
+                              label="Class *"
+                              options={classes || []}
+                              labelKey="name"
+                              valueKey="id"
+                              isLoading={classesLoading}
+                              value={values.classIds}
+                              disabled={!values.educationMediumId || isEdit}
+                              onChange={(value) => {
+                                setFieldValue('classIds', value);
+                                setFieldTouched('classIds', false);
+                                setFieldValue('divisionIds', []);
+                                setFieldValue('selectedStudentIds', []);
+                              }}
+                              error={!!(touched.classIds && errors.classIds) || false}
+                              helperText={
+                                (touched.classIds && (errors.classIds as string)) || undefined
+                              }
+                              formControlProps={{ sx: { width: '100%' } }}
                               multiple
                             />
                           </ShakingTextField>
                         </Grid>
-                      )}
-                    </Grid>
-
-                    {/* Student list with multi-select checkboxes */}
-                    {values.classIds.length > 0 && (
-                      <Box mt={2}>
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          justifyContent="space-between"
-                          mb={1}
-                        >
-                          <Typography variant="subtitle2" color="text.secondary">
-                            {studentLoading || studentFetching
-                              ? 'Loading students…'
-                              : `${studentOptions.length} student(s) in scope — ${values.selectedStudentIds.length} selected`}
-                          </Typography>
-                          {studentOptions.length > 0 && (
-                            <Button
-                              size="small"
-                              variant="text"
-                              onClick={handleSelectAllStudents}
-                              disabled={isEdit}
+                        {/* Division — only shown when exactly one class is selected */}
+                        {isSingleClass(values.classIds) && (
+                          <Grid size={{ xs: 6, md: 3 }}>
+                            <ShakingTextField
+                              error={!!(touched.divisionIds && errors.divisionIds) || false}
                             >
-                              {allSelected ? 'Deselect All' : 'Select All'}
-                            </Button>
-                          )}
-                        </Stack>
-
-                        {studentOptions.length === 0 && !studentLoading && !studentFetching && (
-                          <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-                            No enrolled students found in the selected scope.
-                          </Typography>
-                        )}
-
-                        <Box
-                          sx={{
-                            maxHeight: 260,
-                            overflowY: 'auto',
-                            border: `1px solid ${theme.palette.divider}`,
-                            borderRadius: 1,
-                          }}
-                        >
-                          {studentOptions.map((student) => (
-                            <Stack
-                              key={student.studentId}
-                              direction="row"
-                              alignItems="center"
-                              spacing={1}
-                              sx={{
-                                px: 1.5,
-                                py: 0.75,
-                                cursor: isEdit ? 'default' : 'pointer',
-                                '&:hover': { bgcolor: isEdit ? 'inherit' : 'action.hover' },
-                                borderBottom: `1px solid ${theme.palette.divider}`,
-                                '&:last-child': { borderBottom: 'none' },
-                              }}
-                              onClick={() => !isEdit && handleToggleStudent(student.studentId)}
-                            >
-                              <Checkbox
-                                size="small"
-                                checked={isStudentSelected(student.studentId)}
+                              <CustomSelect
+                                name="divisionIds"
+                                label="Division (optional)"
+                                labelKey="name"
+                                valueKey="id"
                                 disabled={isEdit}
-                                onChange={() => !isEdit && handleToggleStudent(student.studentId)}
-                                onClick={(e) => e.stopPropagation()}
+                                options={allDivision}
+                                value={values.divisionIds}
+                                onChange={(value) => {
+                                  setFieldValue('divisionIds', value);
+                                  setFieldTouched('divisionIds', false);
+                                  setFieldValue('selectedStudentIds', []);
+                                }}
+                                formControlProps={{ sx: { width: '100%' } }}
+                                error={!!(touched.divisionIds && errors.divisionIds)}
+                                helperText={
+                                  ((touched.divisionIds && errors.divisionIds) as string) ||
+                                  undefined
+                                }
+                                multiple
                               />
-                              <Box flex={1}>
-                                <Typography variant="body2" fontWeight={500}>
-                                  {student.studentName}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {[
-                                    student.standardName,
-                                    student.divisionName,
-                                    student.grNo != null ? `GR: ${student.grNo}` : null,
-                                    student.rollNo != null ? `Roll: ${student.rollNo}` : null,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(' · ')}
-                                </Typography>
-                              </Box>
-                            </Stack>
-                          ))}
-                        </Box>
-
-                        {touched.selectedStudentIds && errors.selectedStudentIds && (
-                          <FormHelperText error sx={{ mt: 0.5, ml: 1 }}>
-                            {errors.selectedStudentIds as string}
-                          </FormHelperText>
+                            </ShakingTextField>
+                          </Grid>
                         )}
+                      </Grid>
 
-                        {values.selectedStudentIds.length > 0 && (
-                          <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
-                            {values.selectedStudentIds.slice(0, 5).map((id) => {
-                              const s = studentOptions.find((o) => o.studentId === id);
-                              return s ? (
-                                <Chip
-                                  key={id}
-                                  label={s.studentName}
-                                  size="small"
-                                  onDelete={isEdit ? undefined : () => handleToggleStudent(id)}
-                                />
-                              ) : null;
-                            })}
-                            {values.selectedStudentIds.length > 5 && (
-                              <Chip
-                                label={`+${values.selectedStudentIds.length - 5} more`}
+                      {/* Student list with multi-select checkboxes */}
+                      {values.classIds.length > 0 && (
+                        <Box mt={2}>
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            mb={1}
+                          >
+                            <Typography variant="subtitle2" color="text.secondary">
+                              {studentLoading || studentFetching
+                                ? 'Loading students…'
+                                : `${studentOptions.length} student(s) in scope — ${values.selectedStudentIds.length} selected`}
+                            </Typography>
+                            {studentOptions.length > 0 && (
+                              <Button
                                 size="small"
-                                variant="outlined"
-                              />
+                                variant="text"
+                                onClick={handleSelectAllStudents}
+                                disabled={isEdit}
+                              >
+                                {allSelected ? 'Deselect All' : 'Select All'}
+                              </Button>
                             )}
+                          </Stack>
+
+                          {studentOptions.length === 0 && !studentLoading && !studentFetching && (
+                            <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+                              No enrolled students found in the selected scope.
+                            </Typography>
+                          )}
+
+                          <Box
+                            sx={{
+                              maxHeight: 260,
+                              overflowY: 'auto',
+                              border: `1px solid ${theme.palette.divider}`,
+                              borderRadius: 1,
+                            }}
+                          >
+                            {studentOptions.map((student) => (
+                              <Stack
+                                key={student.studentId}
+                                direction="row"
+                                alignItems="center"
+                                spacing={1}
+                                sx={{
+                                  px: 1.5,
+                                  py: 0.75,
+                                  cursor: isEdit ? 'default' : 'pointer',
+                                  '&:hover': { bgcolor: isEdit ? 'inherit' : 'action.hover' },
+                                  borderBottom: `1px solid ${theme.palette.divider}`,
+                                  '&:last-child': { borderBottom: 'none' },
+                                }}
+                                onClick={() => !isEdit && handleToggleStudent(student.studentId)}
+                              >
+                                <Checkbox
+                                  size="small"
+                                  checked={isStudentSelected(student.studentId)}
+                                  disabled={isEdit}
+                                  onChange={() => !isEdit && handleToggleStudent(student.studentId)}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                <Box flex={1}>
+                                  <Typography variant="body2" fontWeight={500}>
+                                    {student.studentName}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {[
+                                      student.standardName,
+                                      student.divisionName,
+                                      student.grNo != null ? `GR: ${student.grNo}` : null,
+                                      student.rollNo != null ? `Roll: ${student.rollNo}` : null,
+                                    ]
+                                      .filter(Boolean)
+                                      .join(' · ')}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            ))}
                           </Box>
-                        )}
-                      </Box>
-                    )}
-                  </Paper>
+
+                          {touched.selectedStudentIds && errors.selectedStudentIds && (
+                            <FormHelperText error sx={{ mt: 0.5, ml: 1 }}>
+                              {errors.selectedStudentIds as string}
+                            </FormHelperText>
+                          )}
+
+                          {values.selectedStudentIds.length > 0 && (
+                            <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
+                              {values.selectedStudentIds.slice(0, 5).map((id) => {
+                                const s = studentOptions.find((o) => o.studentId === id);
+                                return s ? (
+                                  <Chip
+                                    key={id}
+                                    label={s.studentName}
+                                    size="small"
+                                    onDelete={isEdit ? undefined : () => handleToggleStudent(id)}
+                                  />
+                                ) : null;
+                              })}
+                              {values.selectedStudentIds.length > 5 && (
+                                <Chip
+                                  label={`+${values.selectedStudentIds.length - 5} more`}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              )}
+                            </Box>
+                          )}
+                        </Box>
+                      )}
+                    </Paper>
+                  </Grid>
                 </Grid>
-              </Grid>
-            </Box>
+              </Box>
+            )}
           </Scrollbar>
 
           {/* ── Sticky Finance Action Bar ── */}
@@ -782,6 +819,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                   type="button"
                   variant="contained"
                   loading={postChargeLoading || updateChargeLoading}
+                  disabled={missingChargeCategory}
                   startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
                   size="small"
                   onClick={handleSubmit}

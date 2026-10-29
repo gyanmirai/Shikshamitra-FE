@@ -2,17 +2,18 @@
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
-import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { LoadingButton } from 'src/components/loading-button';
-import { Box, Stack, Divider, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailGrid, DetailField } from 'src/components/detail-view';
+import { Box, Stack, Divider, Typography, DialogActions } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
-import type { IStudentFee, FeeCollectionFormValues } from '../../Components/type';
+import { allocatePayment, selectedChargesInOrder } from './paymentAllocationUtils';
+
+import type { IFeeCharge, IStudentFee, FeeCollectionFormValues } from '../../Components/type';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,8 @@ export interface FinalPaymentReviewDialogProps {
   loading?: boolean;
   formValues: FeeCollectionFormValues;
   student: IStudentFee | null;
+  feeHeadMap: Record<string, string>;
+  chargesData: IFeeCharge[];
   bankAccounts?: { id: string; name: string }[];
 }
 
@@ -79,9 +82,10 @@ const FinalPaymentReviewDialog = ({
   loading = false,
   formValues,
   student,
+  feeHeadMap,
+  chargesData,
   bankAccounts,
 }: FinalPaymentReviewDialogProps) => {
-  const theme = useTheme();
   const handleAccept = () => {
     if (loading) return;
     onConfirmCollect();
@@ -103,217 +107,224 @@ const FinalPaymentReviewDialog = ({
     [formValues.payment.details]
   );
 
-  const feeHeadCount = formValues.selectedItems.length;
-  const chargeCount = formValues.charges.length;
+  const { allocatedRows, unallocatedAmount } = useMemo(
+    () =>
+      allocatePayment(
+        formValues.selectedItems,
+        selectedChargesInOrder(chargesData, formValues.charges),
+        feeHeadMap,
+        paidAmount
+      ),
+    [formValues.selectedItems, formValues.charges, chargesData, feeHeadMap, paidAmount]
+  );
+
+  const paymentSummary = (
+    <Stack spacing={2.5}>
+      <Stack
+        component="ul"
+        aria-label="Payment breakdown"
+        spacing={2}
+        sx={{ m: 0, p: 0, listStyle: 'none' }}
+      >
+        {allocatedRows.map((row) => (
+          <Stack
+            key={row.key}
+            component="li"
+            direction="row"
+            justifyContent="space-between"
+            alignItems="baseline"
+            spacing={2}
+          >
+            <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+              <Typography variant="body1">
+                {row.type === 'fee' ? row.feeHeadName : row.chargeName}
+              </Typography>
+              {row.type === 'fee' && allocatedRows.length > 1 && (
+                <Typography variant="caption" color="text.secondary">
+                  {row.installmentLabel || row.period}
+                </Typography>
+              )}
+            </Box>
+            <Typography variant="body1" sx={{ flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+              {formatNumber(row.paidAmount, 'INR')}
+            </Typography>
+          </Stack>
+        ))}
+        {unallocatedAmount > 0 && (
+          <Stack component="li" direction="row" justifyContent="space-between" spacing={2}>
+            <Typography variant="body2" color="text.secondary">
+              Unallocated amount
+            </Typography>
+            <Typography variant="body2">{formatNumber(unallocatedAmount, 'INR')}</Typography>
+          </Stack>
+        )}
+      </Stack>
+
+      <Divider />
+
+      <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+        <Typography variant="body1">Total · {paymentMethod}</Typography>
+        <Typography
+          variant="h3"
+          sx={{
+            overflowWrap: 'anywhere',
+            textAlign: 'right',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {formatNumber(paidAmount, 'INR')}
+        </Typography>
+      </Stack>
+    </Stack>
+  );
+
+  if (isCash) {
+    return (
+      <CustomDialog
+        open={open}
+        handleClose={onClose}
+        disableClose={loading}
+        guardUnsavedChanges={false}
+        maxWidth="sm"
+        hasForm={false}
+        title="Review Cash Payment"
+        titleInfo="Review the student and allocated amounts before collecting cash and issuing an official receipt."
+        paperProps={{ sx: { backgroundImage: 'none' } }}
+      >
+        <DialogScrollContent>
+          <Stack spacing={2.5}>
+            <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+              <Typography variant="subtitle1">
+                {student?.name || formValues.studentName || 'Student'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {[student?.className, student?.division].filter(Boolean).join(' ')}
+                {student?.className || student?.division ? ' · ' : ''}
+                Roll #{student?.rollNumber || '—'}
+              </Typography>
+            </Box>
+
+            <Divider />
+
+            {paymentSummary}
+          </Stack>
+        </DialogScrollContent>
+
+        <DialogActions sx={{ p: 2, flexShrink: 0 }}>
+          {/* Full width is scoped to the supplied cash-review reference; keep theme button sizing. */}
+          <LoadingButton
+            type="button"
+            variant="contained"
+            color="inherit"
+            size="small"
+            fullWidth
+            loading={loading}
+            disabled={loading}
+            loadingPosition="start"
+            startIcon={<Iconify icon="mdi:receipt-text-check-outline" width={18} />}
+            onClick={handleAccept}
+          >
+            Collect &amp; issue receipt
+          </LoadingButton>
+        </DialogActions>
+      </CustomDialog>
+    );
+  }
 
   return (
     <CustomDialog
       open={open}
       handleClose={onClose}
       disableClose={loading}
+      guardUnsavedChanges={false}
       maxWidth="sm"
       hasForm={false}
-      title={
-        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-          <Box display="flex" flexDirection="column" gap={1}>
-            <Typography variant="h6" fontWeight={700} lineHeight={1.2} color="text.primary">
-              {isCash ? 'Confirm Cash Payment' : 'Payment Verification'}
+      title="Payment Verification"
+      titleInfo="Review the payment and reference details before recording a provisional receipt for finance verification."
+      paperProps={{ sx: { backgroundImage: 'none' } }}
+    >
+      <DialogScrollContent>
+        <Stack spacing={2}>
+          <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+            <Typography variant="subtitle1">
+              {student?.name || formValues.studentName || 'Student'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {[student?.className, student?.division].filter(Boolean).join(' ')}
+              {student?.className || student?.division ? ' · ' : ''}
+              Roll #{student?.rollNumber || '—'}
             </Typography>
           </Box>
-          <CustomTooltip
-            arrow
-            placement="right"
-            sx={{ textAlign: 'justify' }}
-            title={isCash ? 'Collect cash and generate an official receipt' : 'Record payment with a provisional receipt pending finance verification'}
+
+          <FormSectionCard
+            title="Payment Summary"
+            icon={GlobalIcons.paymentSummary}
+            descriptionTooltip="Fee and charge amounts allocated to this payment, in collection order."
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
           >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
-        </Box>
-      }
-    >
-      <Scrollbar sx={{ maxHeight: 'calc(100dvh - 260px)', px: 2.5, pt: 1.5, pb: 1 }}>
-        <Stack spacing={2.5}>
-          {/* ── Payment Summary Card ── */}
-          <Box
-            sx={{
-              p: 2.5,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              // bgcolor: alpha(theme.palette.background.default, 0.5),
-            }}
-          >
-            {/* Student */}
-            <Stack direction="row" alignItems="center" spacing={1.5} mb={2}>
-              <Box
-                sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 1,
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Iconify icon="solar:user-bold" width={18} sx={{ color: 'primary.main' }} />
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" fontWeight={700}>
-                  {student?.name ?? 'Student'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {student?.className} {student?.division} • Roll #{student?.rollNumber}
-                </Typography>
-              </Box>
-            </Stack>
+            {paymentSummary}
+          </FormSectionCard>
 
-            <Divider sx={{ mb: 2 }} />
-
-            {/* Amount & Method */}
-            <Stack spacing={1.5}>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" color="text.secondary">
-                  Amount
-                </Typography>
-                <Typography variant="h5" fontWeight={800} color="primary.main">
-                  {formatNumber(paidAmount, 'INR')}
-                </Typography>
-              </Box>
-
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" color="text.secondary">
-                  Payment Mode
-                </Typography>
-                <Label color={isCash ? 'success' : 'info'} variant="soft">
-                  {paymentMethod}
-                </Label>
-              </Box>
-
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" color="text.secondary">
-                  Fee Heads
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {feeHeadCount} item{feeHeadCount !== 1 ? 's' : ''}
-                  {chargeCount > 0 ? ` + ${chargeCount} charge${chargeCount !== 1 ? 's' : ''}` : ''}
-                </Typography>
-              </Box>
-            </Stack>
-
-            {/* Reference Details (non-cash) */}
-            {!isCash && detailEntries.length > 0 && (
-              <>
-                <Divider sx={{ my: 2 }} />
-                <Typography
-                  variant="caption"
-                  color="text.disabled"
-                  fontWeight={600}
-                  sx={{
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.6px',
-                    fontSize: '10px',
-                    mb: 1,
-                    display: 'block',
-                  }}
-                >
-                  Reference Details
-                </Typography>
-                <Stack spacing={0.75}>
-                  {detailEntries.map(([key, value]) => (
-                    <Box key={key} display="flex" justifyContent="space-between">
-                      <Typography variant="caption" color="text.secondary">
-                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}
-                      </Typography>
-                      <Typography variant="caption" fontWeight={600}>
-                        {formatDetailValue(key, value, bankAccounts)}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              </>
-            )}
-          </Box>
-
-          {/* ── Status Preview ── */}
-          {!isCash && (
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                bgcolor: alpha(
-                  theme.palette[isChequeOrDemandDraft(paymentMethod) ? 'info' : 'warning'].main,
-                  0.06
-                ),
-                border: `1px dashed ${alpha(
-                  theme.palette[isChequeOrDemandDraft(paymentMethod) ? 'info' : 'warning'].main,
-                  0.3
-                )}`,
-              }}
+          {detailEntries.length > 0 && (
+            <FormSectionCard
+              title="Reference Details"
+              icon={GlobalIcons.bankAccount}
+              descriptionTooltip="The payment references, dates, and receiving bank account entered for verification."
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+              sx={{ containerType: 'inline-size', boxShadow: 'none' }}
             >
-              <Stack direction="row" alignItems="flex-start" spacing={1.5}>
-                <Iconify
-                  icon={
-                    isChequeOrDemandDraft(paymentMethod)
-                      ? 'solar:inbox-archive-bold'
-                      : 'solar:info-circle-bold'
-                  }
-                  width={20}
-                  sx={{
-                    color: isChequeOrDemandDraft(paymentMethod) ? 'info.main' : 'warning.main',
-                    mt: 0.25,
-                    flexShrink: 0,
-                  }}
-                />
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight={700}
-                    color={isChequeOrDemandDraft(paymentMethod) ? 'info.dark' : 'warning.dark'}
-                    mb={0.5}
-                  >
-                    {isChequeOrDemandDraft(paymentMethod)
-                      ? 'Move to Reconciliation'
-                      : 'Payment Verification Required'}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" lineHeight={1.6}>
-                    {isChequeOrDemandDraft(paymentMethod)
-                      ? 'A provisional receipt is generated immediately and appears in Receipts. The finance team issues a linked official receipt after clearance and approval in reconciliation.'
-                      : 'A provisional receipt is generated immediately and appears in Receipts. Approval in reconciliation issues a linked official receipt.'}
-                  </Typography>
-                </Box>
-              </Stack>
-            </Box>
+              <DetailGrid>
+                {detailEntries.map(([key, value]) => (
+                  <DetailField
+                    key={key}
+                    label={key
+                      .replace(/([A-Z])/g, ' $1')
+                      .toLowerCase()
+                      .replace(/^./, (s) => s.toUpperCase())}
+                    value={formatDetailValue(key, value, bankAccounts)}
+                  />
+                ))}
+              </DetailGrid>
+            </FormSectionCard>
           )}
-        </Stack>
-      </Scrollbar>
 
-      {/* ── Footer Actions ── */}
-      <Box
-        sx={{
-          px: 2.5,
-          py: 1.75,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          // bgcolor: alpha(theme.palette.background.paper, 0.95),
-          backdropFilter: 'blur(8px)',
-        }}
-      >
-        <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
-          <LoadingButton
-            variant="contained"
-            color={isCash ? 'success' : 'warning'}
-            loading={loading}
-            disabled={loading}
-            loadingPosition="start"
-            onClick={isCash ? handleAccept : handlePending}
-            startIcon={<Iconify icon="solar:bill-check-bold" />}
-            size="small"
+          <FormSectionCard
+            title="Verification Status"
+            icon={GlobalIcons.history}
+            descriptionTooltip="When the provisional receipt becomes a linked official receipt."
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
           >
-            {isCash ? 'Collect & Issue Official Receipt' : 'Record & Issue Provisional Receipt'}
-          </LoadingButton>
+            <Stack spacing={1}>
+              <Typography variant="body2">
+                {isChequeOrDemandDraft(paymentMethod)
+                  ? 'Move to reconciliation'
+                  : 'Payment verification required'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {isChequeOrDemandDraft(paymentMethod)
+                  ? 'A provisional receipt is generated immediately and appears in Receipts. The finance team issues a linked official receipt after clearance and approval in reconciliation.'
+                  : 'A provisional receipt is generated immediately and appears in Receipts. Approval in reconciliation issues a linked official receipt.'}
+              </Typography>
+            </Stack>
+          </FormSectionCard>
         </Stack>
-      </Box>
+      </DialogScrollContent>
+
+      <DialogActions sx={{ p: 2, flexShrink: 0, justifyContent: 'flex-end' }}>
+        <LoadingButton
+          type="button"
+          variant="contained"
+          color="inherit"
+          size="small"
+          loading={loading}
+          disabled={loading}
+          loadingPosition="start"
+          onClick={handlePending}
+          startIcon={<Iconify icon={GlobalIcons.paymentSummary} width={18} />}
+        >
+          Record &amp; issue provisional receipt
+        </LoadingButton>
+      </DialogActions>
     </CustomDialog>
   );
 };

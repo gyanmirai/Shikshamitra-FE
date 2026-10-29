@@ -32,9 +32,12 @@ export type CashDeposit = {
   creditDate: string | null;
   createdBy: string;
   canConfirm: boolean;
+  bankAccountId?: string;
+  bankLabel?: string;
 };
 export type CashExpense = { id: string; name: string; amount: number; paymentDate: string };
 export type CashDetail = CashRow & {
+  supportingDocumentName?: string;
   notes?: string;
   approvedBy?: string;
   studentId?: string;
@@ -43,6 +46,8 @@ export type CashDetail = CashRow & {
   expenses: CashExpense[];
 };
 export type CashPage = {
+  availableCash: number;
+  yearSummary: CashPage['summary'];
   items: CashRow[];
   totalCount: number;
   page: number;
@@ -68,6 +73,14 @@ type Command = {
   concurrencyStamp: string;
   notes?: string;
 };
+export type CashBulkDepositInput = {
+  academicYearId: string;
+  bankAccountId: string;
+  expectedAmount: number;
+  idempotencyKey: string;
+  notes?: string;
+  file?: File;
+};
 const changedTags = [
   financeModuleType.cashManagement,
   financeModuleType.incomeTracking,
@@ -80,6 +93,10 @@ export const cashManagementApi = financeModuleApi.injectEndpoints({
       CashPage,
       {
         academicYearId: string;
+        boardId?: string;
+        mediumId?: string;
+        month?: number;
+        year?: number;
         page: number;
         pageSize: number;
         status?: 0 | 1;
@@ -95,6 +112,28 @@ export const cashManagementApi = financeModuleApi.injectEndpoints({
     getCashDetail: builder.query<CashDetail, { id: string; academicYearId: string }>({
       query: ({ id, ...params }) => ({ url: `/finance/cash-management/${id}`, params }),
       providesTags: [financeModuleType.cashManagement],
+    }),
+    downloadCashSupportingDocument: builder.mutation<Blob, { id: string; academicYearId: string }>({
+      query: ({ id, ...params }) => ({
+        url: `/finance/cash-management/${id}/supporting-document`,
+        params,
+        method: 'GET',
+        responseHandler: (response) => (response.ok ? response.blob() : response.json()),
+      }),
+    }),
+    bulkDepositCash: builder.mutation<
+      { amount: number; sourceCount: number },
+      CashBulkDepositInput
+    >({
+      query: ({ file, ...input }) => {
+        const body = new FormData();
+        Object.entries(input).forEach(([key, value]) => {
+          if (value !== undefined) body.append(key, String(value));
+        });
+        if (file) body.append('file', file);
+        return { url: '/finance/cash-management/bulk-deposit', method: 'POST', body };
+      },
+      invalidatesTags: (_, error) => (error ? [] : changedTags),
     }),
     getCashOptions: builder.query<
       CashOptions,
@@ -141,10 +180,13 @@ export const cashManagementApi = financeModuleApi.injectEndpoints({
       invalidatesTags: (_, error) => (error ? [] : changedTags),
     }),
   }),
+  overrideExisting: true,
 });
 export const {
   useGetCashManagementQuery,
+  useBulkDepositCashMutation,
   useGetCashDetailQuery,
+  useDownloadCashSupportingDocumentMutation,
   useGetCashOptionsQuery,
   useApproveCashMutation,
   useDepositCashMutation,

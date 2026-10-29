@@ -55,7 +55,6 @@ import PaymentTermDetailsDrawer from './Components/PaymentTermDetailsDrawer';
 import type { IPaymentTerm } from './type';
 import type { IBoard } from './hooks/usePaymentTermForm';
 
-type PaymentTermArchiveView = 'current' | 'archived';
 type PaymentTermDetailsTab = 'details' | 'versions';
 
 interface PaymentTermTableQuery {
@@ -98,7 +97,6 @@ const mapListItemToPaymentTerm = (item: PaymentTermListItem): IPaymentTerm => ({
 });
 
 const PaymentTerm = () => {
-  const [archiveView, setArchiveView] = useState<PaymentTermArchiveView>('current');
   const [tableQuery, setTableQuery] = useState<PaymentTermTableQuery>({
     page: 1,
     pageSize: 10,
@@ -140,7 +138,6 @@ const PaymentTerm = () => {
     if (cloneDialog.value) setCloneSourceYearId(previousYear?.id ?? '');
   }, [cloneDialog.value, targetAcademicYearId, previousYear?.id]);
   const cloneSourceYear = cloneSourceYears.find((year) => year.id === cloneSourceYearId);
-  const isArchived = archiveView === 'archived';
   const boards = useMemo<IBoard[]>(() => {
     if (!boardData?.items || !targetAcademicYearId) return [];
     return boardData.items.filter((board: IBoard) => board.academicYearId === targetAcademicYearId);
@@ -156,23 +153,11 @@ const PaymentTerm = () => {
     {
       academicYearId: targetAcademicYearId,
       boardId: selectedBoardId,
-      status: isArchived ? 'Archived' : 'Active',
-      includeArchived: isArchived,
+      includeArchived: true,
       search: tableQuery.search || undefined,
       filters: serializeFinanceTableFilters(tableQuery.filters),
       page: tableQuery.page,
       pageSize: tableQuery.pageSize,
-    },
-    { skip: !targetAcademicYearId || !selectedBoardId || !canView }
-  );
-  const archivedSummary = useGetPaymentTermsQuery(
-    {
-      academicYearId: targetAcademicYearId,
-      boardId: selectedBoardId,
-      status: 'Archived',
-      includeArchived: true,
-      page: 1,
-      pageSize: 1,
     },
     { skip: !targetAcademicYearId || !selectedBoardId || !canView }
   );
@@ -361,66 +346,33 @@ const PaymentTerm = () => {
                 ))}
               </Select>
             </FormControl>
-
-            <Stack direction="row" spacing={1}>
-              <Button
-                size="small"
-                variant={!isArchived ? 'contained' : 'outlined'}
-                onClick={() => {
-                  setTableQuery((current) => ({
-                    ...current,
-                    page: 1,
-                    filters: current.filters.filter((filter) => filter.column !== 'status'),
-                  }));
-                  setArchiveView('current');
-                }}
-              >
-                Current
-              </Button>
-              <Button
-                size="small"
-                variant={isArchived ? 'contained' : 'outlined'}
-                onClick={() => {
-                  setTableQuery((current) => ({
-                    ...current,
-                    page: 1,
-                    filters: current.filters.filter((filter) => filter.column !== 'status'),
-                  }));
-                  setArchiveView('archived');
-                }}
-              >
-                Archived ({archivedSummary.data?.totalCount ?? 0})
-              </Button>
-            </Stack>
           </Stack>
 
-          {!isArchived ? (
-            <Stack direction="row" spacing={1}>
-              {canClone ? (
-                <Button
-                  onClick={cloneDialog.onTrue}
-                  size="small"
-                  startIcon={<Iconify icon="mdi:content-copy" />}
-                  variant="outlined"
-                >
-                  Clone Previous Year
-                </Button>
-              ) : null}
-              {canCreate ? (
-                <Button
-                  onClick={() => {
-                    setSelectedPaymentTerm(null);
-                    addPaymentTermDrawer.onTrue();
-                  }}
-                  size="small"
-                  startIcon={<Add />}
-                  variant="contained"
-                >
-                  New Payment Term
-                </Button>
-              ) : null}
-            </Stack>
-          ) : null}
+          <Stack direction="row" spacing={1}>
+            {canClone ? (
+              <Button
+                onClick={cloneDialog.onTrue}
+                size="small"
+                startIcon={<Iconify icon="mdi:content-copy" />}
+                variant="outlined"
+              >
+                Clone Previous Year
+              </Button>
+            ) : null}
+            {canCreate ? (
+              <Button
+                onClick={() => {
+                  setSelectedPaymentTerm(null);
+                  addPaymentTermDrawer.onTrue();
+                }}
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+              >
+                New Payment Term
+              </Button>
+            ) : null}
+          </Stack>
         </Stack>
       </Card>
 
@@ -449,7 +401,6 @@ const PaymentTerm = () => {
           onFiltersChange={(filters) =>
             setTableQuery((current) => ({ ...current, page: 1, filters }))
           }
-          archived={isArchived}
           onPaginationChange={(page, pageSize) =>
             setTableQuery((current) => ({ ...current, page, pageSize }))
           }
@@ -596,8 +547,8 @@ const PaymentTerm = () => {
         disableCancel={restoreState.isLoading}
         content={
           <>
-            Restore <strong>{restoreTarget?.name}</strong>? It will return to the Current list and
-            become available for use again.
+            Restore <strong>{restoreTarget?.name}</strong>? Its status will return to Draft or
+            Active, based on its saved version.
           </>
         }
         action={

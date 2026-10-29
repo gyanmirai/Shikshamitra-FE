@@ -37,6 +37,17 @@ Selecting Cash hides the school bank selector for fees and charges, clears a pre
 
 ## Validation and rollout
 
+Each tenant/academic year has persisted Income and Expense categories named None. Only the
+Income Category dropdown in Fee Category's fee-head form and the Expense Category dropdown in
+Refund Policy offer None, always first, through their `fee-head` and `refund-policy` routing lookups.
+General category lists and other routing lookups exclude it. Selecting None is valid, while leaving
+a required category unselected is invalid. Stored None records remain protected from modification.
+Both dropdowns pin None first in the frontend even if the lookup response arrives in another order.
+The standalone Fee Head editor filters None out of its shared fee-head lookup. Refund Policy
+keeps an unavailable saved category visible and disabled after the live choices, so None stays first.
+Deploy/apply `AddNoneTransactionCategories` for existing years before using the updated selectors.
+New academic years initialize the two defaults automatically. No frontend placeholder is appended.
+
 Run the account settings form tests and charge validation tests, TypeScript, focused lint, and an authenticated browser check for every changed form. Verify retired-route navigation, required-field messages, year changes, empty options, failed lookups, inactive saved records, locked routing after partial approval, and exact payment/refund amounts.
 
 Deploy the backend migration before these clients. Review existing pending charges and active policies with missing mappings. Historical journal references remain backend compatibility evidence; General Accounts journal posting is currently unavailable.

@@ -6,7 +6,7 @@ import type { ProrationPolicySavePayload } from 'src/redux/finance/prorationPoli
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { useMemo, useEffect } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -18,11 +18,18 @@ import {
   useUpdateProrationPolicyMutation,
 } from 'src/redux/finance/prorationPolicy';
 
+import { prorationPolicyPrerequisites } from '../utils/policy-prerequisites';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 import {
   isProratedRule,
   isConfiguredRule,
   configurationErrors,
 } from '../components/proration/prorationRuleHelpers';
+import {
+  normalizePolicyName,
+  isDuplicatePolicyNameError,
+  DUPLICATE_POLICY_NAME_MESSAGE,
+} from '../utils/policy-name';
 
 import type {
   IProrationPolicy,
@@ -31,12 +38,6 @@ import type {
   IProrationFeeHeadRule,
   IProrationPolicyFormValues,
 } from '../types/finance-policy.types';
-
-import {
-  normalizePolicyName,
-  isDuplicatePolicyNameError,
-  DUPLICATE_POLICY_NAME_MESSAGE,
-} from '../utils/policy-name';
 
 interface FeeHeadLookup {
   id: string;
@@ -94,7 +95,7 @@ function buildFeeHeadRules(
   existingRules: IProrationFeeHeadRule[] = []
 ): IProrationFeeHeadRule[] {
   const rulesMap = new Map(existingRules.map((rule) => [rule.feeHeadId, rule]));
-  return feeHeads.map((head) => {
+  const activeRules = feeHeads.map((head): IProrationFeeHeadRule => {
     const existing = rulesMap.get(head.id);
     if (existing) {
       return {
@@ -117,6 +118,10 @@ function buildFeeHeadRules(
       configuration: {},
     };
   });
+  return [
+    ...activeRules,
+    ...existingRules.filter((rule) => !feeHeads.some((head) => head.id === rule.feeHeadId)),
+  ];
 }
 
 function getInitialValues(
@@ -362,26 +367,52 @@ export function useProrationPolicyForm({
       )?.policyName,
     [editData?.id, existingPoliciesData?.items, resolvedAcademicYearId]
   );
-  const {
-    data: feeHeadsData = [],
-    isLoading: isFeeHeadsLoading,
-    isError: isFeeHeadsError,
-  } = useGetActiveFeeHeadsQuery(resolvedAcademicYearId, {
+  const feeHeadsQuery = useGetActiveFeeHeadsQuery(resolvedAcademicYearId, {
     skip: !open || !resolvedAcademicYearId,
   });
+  const {
+    currentData: feeHeadsData = [],
+    isLoading: isFeeHeadsLoading,
+    isError: isFeeHeadsError,
+  } = feeHeadsQuery;
+  const refreshPrerequisites = () => {
+    if (open && resolvedAcademicYearId) feeHeadsQuery.refetch();
+  };
+  useRefreshFinancePrerequisites(refreshPrerequisites, open && Boolean(resolvedAcademicYearId));
 
   const feeHeads = useMemo<FeeHeadLookup[]>(
     () => feeHeadsData.map((head) => ({ id: head.id, name: head.name, feeType: 'Recurring' })),
     [feeHeadsData]
   );
+  // Capture initial lookup choices once per scope. Later setup refreshes append
+  // choices through the effect below without reinitializing entered form values.
+  const initialHeads = useRef<{ scope: string; heads?: FeeHeadLookup[] }>({
+    scope: resolvedAcademicYearId,
+  });
+  if (initialHeads.current.scope !== resolvedAcademicYearId)
+    initialHeads.current = { scope: resolvedAcademicYearId };
+  if (!initialHeads.current.heads && feeHeadsQuery.currentData)
+    initialHeads.current.heads = feeHeads;
   const [createPolicy, { isLoading: isCreating }] = useCreateProrationPolicyMutation();
   const [updatePolicy, { isLoading: isUpdating }] = useUpdateProrationPolicyMutation();
 
   const formik = useFormik<IProrationPolicyFormValues>({
-    initialValues: getInitialValues(policyDetails, editData, resolvedAcademicYearId, feeHeads),
+    initialValues: getInitialValues(
+      policyDetails,
+      editData,
+      resolvedAcademicYearId,
+      initialHeads.current.heads ?? []
+    ),
     validationSchema: formValidationSchema,
     enableReinitialize: true,
     onSubmit: async (values, { resetForm }) => {
+      if (
+        isFeeHeadsError ||
+        isFeeHeadsLoading ||
+        isPolicyLoading ||
+        prorationPolicyPrerequisites(values.feeHeadRules, feeHeadsQuery).length
+      )
+        return;
       try {
         const payload = toProrationPolicyPayload(values);
         if (editData?.id) {
@@ -406,13 +437,13 @@ export function useProrationPolicyForm({
   });
 
   useEffect(() => {
-    if (!feeHeads.length || policyDetails || editData?.id) return;
+    if (!feeHeads.length || isPolicyLoading) return;
     const rebuilt = buildFeeHeadRules(feeHeads, formik.values.feeHeadRules);
     const currentIds = formik.values.feeHeadRules.map((rule) => rule.feeHeadId).join(',');
     const rebuiltIds = rebuilt.map((rule) => rule.feeHeadId).join(',');
     if (currentIds !== rebuiltIds) formik.setFieldValue('feeHeadRules', rebuilt);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [feeHeads, policyDetails, editData?.id]);
+  }, [feeHeads, policyDetails, editData?.id, isPolicyLoading, formik.initialValues]);
 
   const handleCloseAttempt = () => {
     if (isCreating || isUpdating || isFeeHeadsLoading || isPolicyLoading || formik.isSubmitting)
@@ -428,6 +459,7 @@ export function useProrationPolicyForm({
       isFeeHeadsLoading ||
       isPolicyLoading ||
       isFeeHeadsError ||
+      prorationPolicyPrerequisites(formik.values.feeHeadRules, feeHeadsQuery).length ||
       formik.isSubmitting
     )
       return;
@@ -444,6 +476,8 @@ export function useProrationPolicyForm({
 
   return {
     formik,
+    prerequisites: prorationPolicyPrerequisites(formik.values.feeHeadRules, feeHeadsQuery),
+    refreshPrerequisites,
     feeHeads,
     isSaving: isCreating || isUpdating,
     isLoading: isFeeHeadsLoading || isPolicyLoading,

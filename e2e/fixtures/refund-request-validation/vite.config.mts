@@ -34,7 +34,6 @@ export default defineConfig({
     alias: [
       { find: 'next-auth/react', replacement: here + '/mock-auth.ts' },
       { find: './RefundGeneralInfoCard', replacement: here + '/mock-general.tsx' },
-      { find: './FeeRefundDetailForm', replacement: here + '/mock-details.tsx' },
       { find: 'src/redux/customQueryAndMutation', replacement: here + '/mock-mutation.ts' },
       {
         find: 'src/redux/finance/RefundManagement/feeRefundManage',

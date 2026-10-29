@@ -1,6 +1,7 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -9,8 +10,8 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { Box, Chip, Link, Stack, Switch, TextField, Typography } from '@mui/material';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
 import {
@@ -29,7 +30,11 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  onView,
   isLoading,
+  isRefreshing,
+  error,
+  onRetry,
   totalCount,
   onServerPagination,
   onServerSearch,
@@ -69,10 +74,17 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         sticky: true,
         stickyPosition: 'left',
         align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
+        render: (value, row) => (
+          <Link
+            component="button"
+            variant="body2"
+            onClick={(event) => {
+              event.stopPropagation();
+              onView(row as IBankAccount);
+            }}
+          >
             {value}
-          </Typography>
+          </Link>
         ),
       },
       {
@@ -82,11 +94,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         filterType: 'string' as const,
         minWidth: 130,
         align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
+        render: (value) => <Typography variant="body2">{value}</Typography>,
       },
       {
         id: 'branchAddress',
@@ -97,8 +105,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         align: 'left',
         render: (value) => (
           <Typography
-            variant="caption"
-            fontSize="13px"
+            variant="body2"
             sx={{
               maxWidth: 300,
               whiteSpace: 'nowrap',
@@ -117,11 +124,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         filterType: 'string' as const,
         minWidth: 190,
         align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
+        render: (value) => <Typography variant="body2">{value}</Typography>,
       },
       {
         id: 'accountType',
@@ -135,7 +138,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         align: 'left',
         minWidth: 80,
         render: (value) => (
-          <Typography variant="caption" fontSize="13px">
+          <Typography variant="body2">
             {value === BankAccountType.Saving ? 'Saving' : 'Current'}
           </Typography>
         ),
@@ -147,11 +150,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         filterType: 'string' as const,
         align: 'left',
         minWidth: 160,
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
+        render: (value) => <Typography variant="body2">{value}</Typography>,
       },
       {
         id: 'purpose',
@@ -186,11 +185,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         filterType: 'string' as const,
         minWidth: 120,
         align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
+        render: (value) => <Typography variant="body2">{value}</Typography>,
       },
       {
         id: 'maskedUpiId',
@@ -199,11 +194,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         filterType: 'string' as const,
         align: 'left',
         minWidth: 90,
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value || '-'}
-          </Typography>
-        ),
+        render: (value) => <Typography variant="body2">{value || '-'}</Typography>,
       },
       {
         id: 'isActive',
@@ -257,52 +248,65 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         isFilter: false,
         render(value, row) {
           return (
-            <AdaptiveThreeDotsActions
-              directActionLimit={3}
-              actions={[
-                {
-                  id: 'history',
-                  label: 'Version history',
-                  icon: 'solar:history-bold',
-                  onClick: () => setHistoryItem(row as IBankAccount),
-                },
-                {
-                  id: 'edit',
-                  label: 'Edit',
-                  icon: 'solar:pen-bold',
-                  onClick: () => {
-                    onEdit(row as IBankAccount);
+            <Box onClick={(event) => event.stopPropagation()}>
+              <AdaptiveThreeDotsActions
+                directActionLimit={2}
+                actions={[
+                  {
+                    id: 'view',
+                    label: 'View activity',
+                    icon: GlobalIcons.eye,
+                    onClick: () => onView(row as IBankAccount),
                   },
-                  disabled: !access.canEdit,
-                },
-                {
-                  id: 'delete',
-                  label: 'Delete',
-                  icon: 'solar:trash-bin-trash-bold',
-                  onClick: () => {
-                    onDelete(row as IBankAccount);
+                  {
+                    id: 'history',
+                    label: 'Version history',
+                    icon: 'solar:history-bold',
+                    onClick: () => setHistoryItem(row as IBankAccount),
                   },
-                  disabled: !access.canDelete || !(row as IBankAccount).canDelete,
-                  tooltip: (row as IBankAccount).isActive
-                    ? 'Deactivate this record before deleting it.'
-                    : 'This record is referenced by other Finance records and cannot be deleted.',
-                  color: 'error.main',
-                },
-              ]}
-              placement="right-top"
-            />
+                  {
+                    id: 'edit',
+                    label: 'Edit',
+                    icon: GlobalIcons.edit,
+                    onClick: () => {
+                      onEdit(row as IBankAccount);
+                    },
+                    disabled: !access.canEdit,
+                  },
+                  {
+                    id: 'delete',
+                    label: 'Delete',
+                    icon: GlobalIcons.delete,
+                    onClick: () => {
+                      onDelete(row as IBankAccount);
+                    },
+                    disabled: !access.canDelete || !(row as IBankAccount).canDelete,
+                    tooltip: (row as IBankAccount).isActive
+                      ? 'Deactivate this record before deleting it.'
+                      : 'This record is referenced by other Finance records and cannot be deleted.',
+                    color: 'error.main',
+                  },
+                ]}
+                placement="right-top"
+              />
+            </Box>
           );
         },
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [access.canChangeStatus, access.canDelete, access.canEdit]
+    [access.canChangeStatus, access.canDelete, access.canEdit, onView, onEdit, onDelete]
   );
 
   return (
     <>
       <CustomizableTable
         tableId="bank-account-data-table"
+        handleRowClick={(row) => onView(row as IBankAccount)}
+        getRowAction={(row) => ({
+          label: 'View activity',
+          onClick: () => onView(row as IBankAccount),
+        })}
         tableTitle="Bank Accounts"
         searchFieldProps={{ placeholder: 'Search bank, branch or holder...' }}
         noDataText={
@@ -330,6 +334,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         columns={columns}
         data={data || []}
         isLoading={isLoading}
+        isRefreshing={isRefreshing}
+        error={error}
+        onRetry={onRetry}
         serverSideFilter
         filters={filters}
         onServerFilter={onServerFilter}

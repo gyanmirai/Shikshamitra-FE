@@ -25,7 +25,7 @@ for (const width of [1440, 390]) {
     await amount2.fill('200');
     await page.getByRole('button', { name: 'Apply', exact: true }).nth(1).click();
     await expect(page.getByText('Required', { exact: true })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Submit', exact: true })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Submit', exact: true })).toBeDisabled();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
     ).toBe(true);
@@ -36,6 +36,19 @@ for (const width of [1440, 390]) {
         expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
       }
     }
+    const reason = page.getByRole('textbox', { name: /Refund reason/ });
+    await expect(reason).toHaveAttribute('required', '');
+    await reason.focus();
+    await reason.press('Tab');
+    await expect(page.getByText('Refund reason is required')).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await reason.fill('   ');
+    await reason.press('Tab');
+    await expect(page.getByText('Refund reason is required')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Submit', exact: true })).toBeDisabled();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await reason.fill('Excess fee payment');
+    await expect(page.getByRole('button', { name: 'Submit', exact: true })).toBeEnabled();
     await page.getByRole('button', { name: 'Submit', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Submit and Approve Refund?' });
     await expect(dialog).toBeVisible();

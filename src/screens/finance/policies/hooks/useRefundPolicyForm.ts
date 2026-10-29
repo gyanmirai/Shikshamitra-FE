@@ -22,6 +22,8 @@ import {
   useSimulateRefundPolicyMutation,
 } from 'src/redux/finance/refundPolicy';
 
+import { refundPolicyPrerequisites } from '../utils/policy-prerequisites';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 import {
   normalizePolicyName,
   isDuplicatePolicyNameError,
@@ -217,21 +219,25 @@ export function useRefundPolicyForm({
     }
   );
 
+  const feeHeadsQuery = useGetActiveFeeHeadsQuery(activeAcademicYearId, {
+    skip: !open || !activeAcademicYearId,
+  });
   const {
-    data: feeHeads = [],
+    currentData: feeHeads = [],
     isFetching: isFeeHeadsLoading,
     isError: isFeeHeadsError,
     refetch: refetchFeeHeads,
-  } = useGetActiveFeeHeadsQuery(activeAcademicYearId, { skip: !open || !activeAcademicYearId });
+  } = feeHeadsQuery;
+  const routingQuery = useGetFinanceRoutingOptionsQuery(
+    { academicYearId: activeAcademicYearId, operation: 'refund-policy' },
+    { skip: !open || !activeAcademicYearId }
+  );
   const {
     currentData: routingOptions,
     isFetching: isRoutingLoading,
     isError: isRoutingError,
     refetch: refetchRouting,
-  } = useGetFinanceRoutingOptionsQuery(
-    { academicYearId: activeAcademicYearId, operation: 'refund-policy' },
-    { skip: !open || !activeAcademicYearId }
-  );
+  } = routingQuery;
   const isOptionsError = isFeeHeadsError || isRoutingError;
   const isInitializing =
     isDetailLoading ||
@@ -247,6 +253,13 @@ export function useRefundPolicyForm({
     if (isFeeHeadsError) refetchFeeHeads();
     if (isRoutingError) refetchRouting();
   };
+
+  const refreshPrerequisites = () => {
+    if (!open || !activeAcademicYearId) return;
+    refetchFeeHeads();
+    refetchRouting();
+  };
+  useRefreshFinancePrerequisites(refreshPrerequisites, open && Boolean(activeAcademicYearId));
 
   // Mutations
   const [createPolicy, { isLoading: isCreating }] = useQueryAndMutation({
@@ -296,6 +309,7 @@ export function useRefundPolicyForm({
     onSubmit: async (values, { resetForm }) => {
       if (isFormInitializing || isLoadError || !activeAcademicYearId || (policyId && !detail))
         return;
+      if (refundPolicyPrerequisites(values, feeHeadsQuery, routingQuery).length) return;
       if (activeEdit && !values.changeReason?.trim()) {
         formik.setFieldError('changeReason', 'Change reason is required for an Active policy');
         return;
@@ -396,6 +410,15 @@ export function useRefundPolicyForm({
     if (targetStatus) {
       await formik.setFieldValue('status', targetStatus, false);
     }
+
+    if (
+      refundPolicyPrerequisites(
+        { ...formik.values, status: targetStatus || formik.values.status },
+        feeHeadsQuery,
+        routingQuery
+      ).length
+    )
+      return;
 
     const willBeActive = (targetStatus || formik.values.status) === 'Active';
     if (policyId && willBeActive && activeEdit && !formik.values.changeReason?.trim()) {
@@ -574,6 +597,8 @@ export function useRefundPolicyForm({
 
   return {
     formik,
+    prerequisites: refundPolicyPrerequisites(formik.values, feeHeadsQuery, routingQuery),
+    refreshPrerequisites,
     academicYears,
     policyId,
     activeEdit,

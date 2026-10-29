@@ -8,6 +8,12 @@ node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin
 
 Open `http://127.0.0.1:5177/` in the Codex in-app browser.
 
+Choose **Settled balances**, then open Collect Fee. With all fees and charges settled,
+the dialog shows “No outstanding fees or charges to collect. Items with no outstanding
+balance cannot be selected.” as informational feedback. Fee/charge checkboxes and Collect
+remain disabled, without the selection validation error. Switching back to the default
+scenario retains normal selection of pending fees and late fees.
+
 If the Windows dev dependency optimizer stalls, build and preview the same fixture instead
 (run these commands sequentially from the frontend root):
 
@@ -61,8 +67,9 @@ supplies an already-assigned student, so that workflow is never rendered.
    so full collection is ₹12,400. Tender ₹12,400 to pay all six principal items, or ₹12,396 to
    reproduce the reported tender while retaining ₹4 transport principal. Collect through the
    payment review dialogs.
-4. Confirm the HTML receipt contains tuition and transport, with no late fees. PDF generation
-   intentionally returns unavailable in this fixture.
+4. Confirm the receipt number and total in the payment summary. This original scenario
+   intentionally returns a PDF 404: confirm the receipt-specific payment-success warning and
+   retry action. Inspect request evidence to verify tuition/transport allocations and no late fees.
 5. Finish the receipt and reopen collection. Confirm selected principal items reflect the payment,
    while all four charges remain pending and selectable through All Charges.
 6. Use Request evidence on the grid to inspect captured POST requests. A fee-only payment must
@@ -73,6 +80,30 @@ supplies an already-assigned student, so that workflow is never rendered.
 The full synthetic ledger contains ₹24,000 tuition and ₹9,600 transport; its six selected
 installments reproduce the reported ₹12,396 payment. Reloading or resetting discards all
 synthetic payments and waivers. No production student data is changed.
+
+## Charge receipt preview regression
+
+Choose **Charge receipt regression** to supply paid fee installments and one unpaid ₹1,000
+manual charge. Open collection, expand Filters, select All Charges, and complete the cash
+review. The collection returns only `chargeReceiptId`; its PDF is served through the canonical
+`/v1/fee-receipts/{id}/pdf` contract. The embedded PDF is a minimal synthetic one-page document
+created by the fixture, so this proves browser preview/download and client routing rather than
+backend PDF generation. The original late-fee scenarios retain their unavailable-PDF behavior.
+
+Choose **Charge receipt retry regression** for the same charge with the first canonical PDF
+request returning 404. Verify the receipt-specific payment-success warning and **Retry receipt**.
+The retry succeeds without submitting another collection. **Request evidence** shows collection
+POSTs and receipt PDF GETs, including the canonical URL and number of retries.
+
+After building the fixture, run the focused browser regression suite:
+
+```powershell
+node node_modules/@playwright/test/cli.js test --config e2e/finance/charge-receipt-preview.config.ts
+```
+
+Its local report is saved in `.artifacts/charge-receipt-preview`. It covers the charge-only
+preview, valid PDF download bytes, refreshed paid charge state, cleared collection amount,
+absence of stale allocation/generic errors, and retry with exactly one collection POST.
 
 ## Selection and bank-label regression
 

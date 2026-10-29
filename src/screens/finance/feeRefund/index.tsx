@@ -17,8 +17,8 @@ import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { Box, Card, Stack, Button, TextField, Typography } from '@mui/material';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
@@ -59,7 +59,10 @@ const FeeRefund = () => {
   const academicFilters = useFinanceAcademicFilters();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const {
-    data: bankAccountsData,
+    currentData: bankAccountsData,
+    isError: bankAccountsError,
+    isUninitialized: bankAccountsUninitialized,
+    refetch: refetchBankAccounts,
     isLoading: bankAccountsLoading,
     isFetching: bankAccountsFetching,
   } = useGetFinanceRoutingOptionsQuery(
@@ -398,6 +401,11 @@ const FeeRefund = () => {
           expenseCategories={bankAccountsData?.expenseCategories ?? []}
           bankAccounts={bankAccountsData?.bankAccounts ?? []}
           bankAccountsLoading={bankAccountsLoading || bankAccountsFetching}
+          routingError={bankAccountsError}
+          routingUninitialized={bankAccountsUninitialized || !bankAccountsData}
+          onRefreshRouting={() => {
+            if (currentYear?.id) refetchBankAccounts();
+          }}
           loading={isProcessing}
           onClose={processDialog.onFalse}
           onSubmit={async (values) => {

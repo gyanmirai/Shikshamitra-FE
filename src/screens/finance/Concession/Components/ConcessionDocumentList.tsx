@@ -1,11 +1,12 @@
 import { Iconify } from 'src/components/iconify';
-import { CheckCircle } from '@mui/icons-material';
+import CheckCircle from '@mui/icons-material/CheckCircle';
 import React, { useId, useState, useEffect } from 'react';
 import UploadButton from 'src/components/upload-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetConcessionTypeByIdQuery } from 'src/redux/finance/concessionType';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { useUploadConcessionDocumentFileMutation } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 import {
   Box,
@@ -186,8 +187,8 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
                 }}
               >
                 <Stack spacing={0.75}>
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={600}>
+                  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                    <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
                       {doc.documentName}{' '}
                       {doc.isRequired && (
                         <Box component="span" color="error.main">
@@ -195,10 +196,11 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
                         </Box>
                       )}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      {getDocumentConstraintText(doc)}
-                    </Typography>
-                  </Box>
+                    <InfoTooltipIcon
+                      title={getDocumentConstraintText(doc)}
+                      label={`${doc.documentName} requirements`}
+                    />
+                  </Stack>
                   <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
                     {submitted?.url ? (
                       <Box

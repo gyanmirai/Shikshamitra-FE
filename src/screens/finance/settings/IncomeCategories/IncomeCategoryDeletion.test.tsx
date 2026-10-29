@@ -9,6 +9,7 @@ import FinanceIncomeCategoriesScreen from './index';
 const mocks = vi.hoisted(() => ({
   canDelete: true,
   isUsed: false,
+  isSystem: false,
   deletionReason: undefined as string | null | undefined,
   deleting: false,
   deleteCategory: vi.fn(),
@@ -47,9 +48,10 @@ vi.mock('src/redux/finance/incomeCategory', () => ({
       items: [
         {
           id: 'income',
-          name: 'Donations',
+          name: mocks.isSystem ? 'None' : 'Donations',
           isActive: true,
-          canDelete: !mocks.isUsed,
+          canDelete: !mocks.isUsed && !mocks.isSystem,
+          isSystemCategory: mocks.isSystem,
           isUsedInDownstream: mocks.isUsed,
           deletionBlockedReason: mocks.deletionReason,
           tags: [],
@@ -109,10 +111,20 @@ describe('Income category deletion', () => {
   beforeEach(() => {
     mocks.canDelete = true;
     mocks.isUsed = false;
+    mocks.isSystem = false;
     mocks.deletionReason = undefined;
     mocks.deleting = false;
     mocks.deleteCategory.mockReset();
     mocks.success.mockReset();
+  });
+
+  it('keeps the built-in None category available by disabling edit, status and deletion', () => {
+    mocks.isSystem = true;
+    render(<FinanceIncomeCategoriesScreen />);
+    expect(screen.getByRole('switch', { name: 'Deactivate None' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Version history' })).toBeEnabled();
   });
 
   it('allows an unused active category, then sends DELETE only after confirmation succeeds', async () => {

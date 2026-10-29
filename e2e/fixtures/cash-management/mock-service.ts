@@ -96,9 +96,19 @@ export const api = createApi({
           if (filter.type === 'equals') return text === String(expected).toLowerCase();
           return text.includes(String(expected).toLowerCase());
         });
-      const visible = matches && (params.status === undefined || params.status === row.status);
+      const visible = matches && (!params.month || params.month === 10);
       return {
         data: {
+          availableCash: row.remainingAmount,
+          yearSummary: {
+            collected: row.amount,
+            spent: row.spentAmount,
+            deposited: row.depositedAmount,
+            remaining: row.remainingAmount,
+            pendingApproval: 0,
+            approved: 0,
+            inTransit: row.inTransitAmount,
+          },
           items: visible ? [structuredClone(row)] : [],
           page: 1,
           pageSize: 20,
@@ -119,6 +129,38 @@ export const api = createApi({
           },
         },
       };
+    }
+    if (url.endsWith('/bulk-deposit') && body instanceof FormData) {
+      const key = String(body.get('idempotencyKey'));
+      if (completed.has(key)) return { data: completed.get(key) };
+      if (Number(body.get('expectedAmount')) !== row.remainingAmount)
+        return invalid('Cash changed. Refresh cash balance.', 'Finance:CashManagement:Stale');
+      if (row.remainingAmount <= 0 || body.get('bankAccountId') !== 'bank')
+        return invalid('Select a bank and positive balance.');
+      const amount = row.remainingAmount;
+      const date = new Date().toISOString();
+      Object.assign(row, {
+        status: 1,
+        bankAccountId: 'bank',
+        bankLabel: 'School current account • 4321',
+        remainingAmount: 0,
+        depositedAmount: row.depositedAmount + amount,
+        notes: body.get('notes') || undefined,
+      });
+      row.deposits.push({
+        id: `deposit-${version++}`,
+        amount,
+        creditedAmount: amount,
+        status: 1,
+        reference: 'Cash deposit',
+        depositDate: date,
+        creditDate: date,
+        createdBy: 'reviewer',
+        canConfirm: false,
+      });
+      const result = { amount, sourceCount: 1 };
+      completed.set(key, result);
+      return { data: result };
     }
     if (body) {
       if (body.idempotencyKey && completed.has(body.idempotencyKey))
@@ -181,13 +223,8 @@ export const api = createApi({
         row.inTransitAmount -= body.amount;
         row.depositedAmount += body.amount;
       } else if (url === '/expenses') {
-        if (
-          row.status !== 0 ||
-          body.cashCollectionId !== row.id ||
-          body.amount <= 0 ||
-          body.amount > row.remainingAmount
-        )
-          return invalid('Select a pending cash receipt with enough remaining cash.');
+        if (body.amount <= 0 || body.amount > row.remainingAmount)
+          return invalid('The academic-year cash balance is insufficient.');
         row.spentAmount += body.amount;
         row.remainingAmount -= body.amount;
         row.expenses.push({

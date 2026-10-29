@@ -42,24 +42,27 @@ export const CONCESSION_METHODS = [
 export const CONCESSION_SCOPES = [
   {
     value: 'AllOutstanding',
-    label: 'All outstanding installments',
-    caption: 'Apply across all current and future unpaid installments.',
+    label: 'All unpaid installments',
+    caption:
+      'Applies to all installments with an unpaid balance, including overdue, current, and upcoming installments. Partially paid installments are included.',
   },
   {
     value: 'CurrentInstallment',
-    label: 'Current unpaid installment',
-    caption: 'Apply to the earliest active unpaid installment.',
+    label: 'Current installment only',
+    caption:
+      'Applies only to the installment for the current billing period, if it has an unpaid balance.',
   },
   {
     value: 'FutureInstallments',
-    label: 'Future installments',
-    caption: 'Apply to unpaid installments after the earliest unpaid installment.',
+    label: 'Upcoming installments only',
+    caption:
+      'Applies to installments scheduled after the current billing period, if they have an unpaid balance.',
   },
   {
     value: 'AllFees',
-    label: 'All installments, including paid',
+    label: 'All installments (including paid)',
     caption:
-      'Apply to paid and unpaid installments. The paid portion is refundable; the policy controls automatic or manual refund request creation.',
+      'Applies to every installment, including those that are unpaid, partially paid, or fully paid.',
   },
 ];
 

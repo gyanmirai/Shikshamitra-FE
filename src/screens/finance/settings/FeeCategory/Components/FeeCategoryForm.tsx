@@ -9,21 +9,22 @@ import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
-import { feeHeadDependencyMessage } from '../../components/FeeHeadDependencies';
+import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
+import { setupOptionsMissing } from 'src/screens/finance/settings/components/financeSetupPrerequisites';
+import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
 import {
   useGetFeeCategoriesQuery,
   useAddFeeCategoryMutation,
@@ -49,6 +50,7 @@ import {
 
 import { feeCategoryValidationSchema } from './FeeCategoryValidation';
 import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
+import { feeHeadDependencyMessage } from '../../components/FeeHeadDependencies';
 
 import type { IFeeCategoryFormProps } from './type';
 
@@ -103,11 +105,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
     },
   });
 
-  const {
-    data: incomeCategoryData,
-    isLoading: isIncomeCategoryLoading,
-    isFetching: isIncomeCategoryFetching,
-  } = useQueryAndMutation({
+  const incomeCategoryQuery = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFinanceRoutingOptionsQuery,
     params: {
@@ -121,19 +119,34 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
     },
   });
 
+  const {
+    data: incomeCategoryData,
+    isLoading: isIncomeCategoryLoading,
+    isFetching: isIncomeCategoryFetching,
+  } = incomeCategoryQuery;
+  const refreshPrerequisites = () => {
+    if (!incomeCategoryQuery.isUninitialized) incomeCategoryQuery.refetch?.();
+  };
+  useRefreshFinancePrerequisites(refreshPrerequisites, !!open?.value);
+
   const incomeCategoryOptions = useMemo(
-    () => [
-      ...(incomeCategoryData?.items ?? []).map((category: any) => {
-        const displayName = String(category.name ?? '');
-        const match = displayName.match(/^(.*?)\s*\[([^\]]+)\]$/);
-        return {
-          id: category.id,
-          displayName,
-          name: match?.[1]?.trim() || displayName,
-          code: match?.[2] || '',
-        };
-      }),
-    ],
+    () =>
+      (incomeCategoryData?.items ?? [])
+        .map((category: any) => {
+          const displayName = String(category.name ?? '');
+          const match = displayName.match(/^(.*?)\s*\[([^\]]+)\]$/);
+          return {
+            id: category.id,
+            displayName,
+            name: match?.[1]?.trim() || displayName,
+            code: match?.[2] || '',
+          };
+        })
+        .sort(
+          (a: { name: string }, b: { name: string }) =>
+            Number(b.name.trim().toLowerCase() === 'none') -
+            Number(a.name.trim().toLowerCase() === 'none')
+        ),
     [incomeCategoryData]
   );
 
@@ -181,6 +194,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
       feeCategoriesData?.items
     ),
     onSubmit: async (values) => {
+      if (isIncomeSetupMissing(values)) return;
       // Check if updating an item that is used downstream
       if (editData?.isUsedInDownstream && editData?.id) {
         setPendingFormValues(values);
@@ -189,9 +203,24 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
       }
 
       // Proceed with submission if not used downstream
-      return performSubmission(values);
+      await performSubmission(values);
     },
   });
+
+  const isIncomeSetupMissing = (values: ReturnType<typeof getFeeCategoryInitialValues>) =>
+    setupOptionsMissing(
+      incomeCategoryQuery,
+      !!currentYear?.id &&
+        !!open?.value &&
+        values.feeHeads.some(
+          (head) =>
+            !categoryDetails?.feeHeads?.some(
+              (saved: any) =>
+                saved.id && saved.id === head.id && saved.incomeCategoryId === head.incomeCategoryId
+            )
+        )
+    );
+  const missingIncomeCategory = isIncomeSetupMissing(formik.values);
 
   useEffect(() => {
     const timer = setTimeout(
@@ -200,12 +229,15 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
     );
     return () => clearTimeout(timer);
   }, [formik.values.name]);
+  const { validateField } = formik;
+  const hasCategoryName = Boolean(formik.values.name);
   useEffect(() => {
-    if (formik.values.name) void formik.validateField('name');
-  }, [existingNamesSignature]);
+    if (hasCategoryName) validateField('name');
+  }, [existingNamesSignature, hasCategoryName, validateField]);
 
   // Perform the actual form submission -- single call creates/updates the category and all its fee heads together
   const performSubmission = async (values: any) => {
+    if (isIncomeSetupMissing(values)) return;
     try {
       const body = {
         name: values.name.trim().replace(/\s+/g, ' '),
@@ -285,7 +317,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
   }, [isSaving, onBusyChange]);
 
   const handleSubmit = async () => {
-    if (isSaving) return;
+    if (isSaving || missingIncomeCategory) return;
     const errors = await formik.validateForm();
     if (Object.keys(errors).length > 0) {
       await formik.setTouched({
@@ -366,6 +398,12 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
               <Skeleton variant="rounded" height={180} />
               <Skeleton variant="rounded" height={260} />
             </Stack>
+          ) : missingIncomeCategory ? (
+            <FinancePrerequisiteState
+              requirements={[{ key: 'income-category' }]}
+              onRefresh={refreshPrerequisites}
+              sx={{ flex: 1 }}
+            />
           ) : (
             <Scrollbar sx={{ flex: 1, minHeight: 0, bgcolor: 'background.neutral' }}>
               <Box sx={{ p: 2 }}>
@@ -651,6 +689,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                           );
                                           formik.setFieldTouched(
                                             `feeHeads.${idx}.incomeCategoryId`,
+                                            true,
                                             false
                                           );
                                         }}
@@ -886,7 +925,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
               size="small"
               onClick={handleSubmit}
               loading={isSaving}
-              disabled={isLoadingDetails}
+              disabled={isLoadingDetails || missingIncomeCategory}
             >
               {editData ? 'Update' : 'Submit'}
             </LoadingButton>

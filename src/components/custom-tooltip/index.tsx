@@ -26,6 +26,8 @@ const LightTooltip = styled(({ className, ...props }: TooltipProps) => (
 
 const CustomTooltip = ({ title, children, sx, ...props }: TooltipProps) => (
   <LightTooltip
+    // Give the pointer time to cross from the trigger to the interactive help.
+    leaveDelay={150}
     slotProps={{
       popper: {
         modifiers: [

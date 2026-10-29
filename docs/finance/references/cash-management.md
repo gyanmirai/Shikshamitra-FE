@@ -3,29 +3,73 @@ module: finance
 domain: cash-management
 content_type: Reference
 status: active
-updated_on: 2026-10-27
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Cash Management workspace
 
-Finance / Accounts has one new Cash Management submenu at `/finance/accounts/cash-management`, guarded by the exact `Finance.Accounts.CashManagement.View` grant. Its owning screen is `src/screens/finance/accounts/CashManagement/` and its client is `src/redux/finance/cashManagementApi.ts`.
+Finance / Accounts / Cash Management at `/finance/accounts/cash-management` requires
+`Finance.Accounts.CashManagement.View`. The screen is owned by
+`src/screens/finance/accounts/CashManagement/`; its RTK Query client is
+`src/redux/finance/cashManagementApi.ts`.
 
-The table separates approval status from bank deposit progress. All cash, Pending approval and Approved use the compact status-filter surface with server counts across all pages. Counts respect search and column criteria independently of the selected status. The original receipt/source leads the table; Status and Actions remain sticky at the right. In transit remains available through Columns and starts hidden. Text, numeric, date and status header filters and single-column sorting run on the server before paging. Search, filters, status, sorting and page selection are URL-backed. Loading, refresh, empty, retry and forbidden states use the shared Finance components.
+## Academic-year cash and display filters
 
-An eligible reviewer can select Approve directly in the Actions column; it loads current detail evidence and opens the existing counted-amount/bank dialog without opening the detail drawer. View and row activation retain the detail drawer. No Reject action or rejected status exists in this flow.
+The globally selected academic year owns the available cash balance. Board, dependent Medium,
+Month, search and column filters affect the displayed records only. Month options come from the
+selected year's actual start/end dates, using the shared Accounts register helper; the current
+month is selected when it belongs to that year, otherwise the first academic month is selected.
+All months is available. Changing Board clears Medium; changing a display filter resets pagination.
+Filters, sorting, search and page selection remain URL-backed. Retired approval-status criteria in
+saved URLs are ignored.
 
-Pending cash can fund paid expenses before approval. Approve Cash shows Collected amount, Expenses paid, and Remaining to deposit, prefills the counted amount with the remaining balance (including zero), and requires a matching count and an active receiving school bank account. Approval finalizes that deposit and confirms only the remainder as Income. For a collected receipt of 10000 and stationery expense of 2000, pending cash is 8000; final approval records Income/deposit 8000 and leaves held cash zero, with the original receipt 10000 and Expense 2000 unchanged. Fully spent cash can be finalized at zero without a positive Income or deposit. Pending summary uses the server's net remaining total.
+The right-aligned Collected, Spent, Deposited and Academic-year cash available metrics use
+the server's year-wide summary. The available amount and deposit action are independent of the
+visible page and every display filter. The table retains receipt/source, payer, collected, spent,
+deposited, remaining cash, receiving bank and collection date, with optional legacy transit through
+Columns. It has no Status or Actions column. Row activation opens the shared details drawer.
 
-Legacy approved-held cash retains Record Bank Deposit when `canDeposit` allows it. Legacy transit retains independent bank-credit confirmation when `canConfirm` allows it. New approval requires no additional deposit action. Server capability flags and exact action grants govern every action.
+## Deposit cash
 
-Pending receipt details retain a disabled Approve Cash action when approval is unavailable. Inline help explains self-approval restrictions, missing approval permission, or refreshing eligibility. An eligible reviewer opens the bank selection and counted-amount form from that action. Administrators with cash approval permission may approve their own collections; the backend resolves current administrator membership and returns `canApprove`. Other collectors need a different reviewer. The frontend follows that capability without inferring administrator access from client role claims or granting permissions.
+The single Deposit cash action requires the exact `Finance.Accounts.CashManagement.Deposit`
+grant and a fresh, positive year-wide balance. Its shared `CustomDialog` shows the total as a
+read-only value, requires an active receiving school bank account, and accepts optional notes and
+one PDF/JPG/JPEG/PNG document up to 5 MB. Notes are limited to 1,000 characters.
 
-Existing Add Expense shows a Cash source picker for Cash, populated through the owning expense-action lookup with pending receipts that have a positive remaining balance. Approved receipts are unavailable for new expenses. The source label identifies its linked receipt, available pending cash, and pending cash after payment. The client sends `cashCollectionId` and `cashConcurrencyStamp`; actual expense payment refreshes cash and register data. Manual Cash Income reports that it awaits cash approval. Collection continues generating the official receipt immediately, with pending Income explained in success feedback.
+Submit sends one multipart `POST /finance/cash-management/bulk-deposit` containing
+`academicYearId`, `bankAccountId`, `expectedAmount`, `idempotencyKey`, optional `notes` and
+optional `file`. It sends no table filters or page selection. The server recalculates the available
+amount and deposits all eligible academic-year cash atomically. No manual approval is involved.
 
-Cash mutations refresh the Cash Management and affected Income/Expenses clients. Forms retain entered values after errors, block double submission and protect dirty closing. A stale approval refreshes the balance and concurrency stamp without replacing the draft; submission must then match the latest remainder. An uncertain result locks fields and retries the exact original command and idempotency key. Amount inputs and displays use the existing Finance numeric/currency utilities.
+The form uses Formik/Yup, `CustomSelect`, the shared required-field wrapper, `CustomUpload`,
+section cards, shared feedback and the existing dialog footer pattern. Upload selection does not
+save evidence until submission. Busy state locks fields, upload actions, submission and closing.
+The saved supporting document is downloadable from Cash Details through the scoped
+`GET /finance/cash-management/{id}/supporting-document?academicYearId=...` client under View.
+Dirty cancellation offers Keep editing / Discard changes. Failures preserve the draft; stale
+balances require a refresh, while an uncertain outcome retries the original request and key.
 
-Business rules, endpoints and migration ownership: [backend Cash Management contract](../../../../Shikshamitra-BE/docs/modules/finance/references/cash-management.md).
+## Expenses and evidence
 
-The controlled fixture in `e2e/fixtures/cash-management/` mounts the actual screen with synthetic API responses. Its browser evidence verifies presentation and interactions, not persisted bank or cash records. Real HTTP acceptance belongs to the backend tests.
+Cash expenses use the academic-year cash pool automatically. Add Expense has no cash source
+receipt or cash payment reference input. The server allocates cash and updates the spent/remaining
+balances; cash and register queries refresh after the mutation. Non-cash payment fields retain
+their existing evidence requirements. Manual cash Income remains held cash until deposited.
+
+Cash details retain collection evidence, amounts, bank deposits, notes and expense allocations.
+They have no approval action, approval status, or individual deposit button. Eligible legacy
+in-transit deposits retain bank-credit confirmation under the exact Reconcile grant and server
+capability; this does not introduce another step for new bulk deposits.
+
+Business rules, authority, persistence and endpoints: [backend Cash Management contract](../../../../Shikshamitra-BE/docs/modules/finance/references/cash-management.md).
+
+## Validation
+
+Focused tests cover the list/display-filter versus deposit-scope distinction, academic months,
+absence of approval controls, details, multipart transport, required bank, document types/size,
+dirty cancellation, busy locks, stale balances and exact uncertain retries. Run the owning
+Cash Management and Accounts register suites, TypeScript, focused lint and Finance docs validation.
+The synthetic fixture in `e2e/fixtures/cash-management/` validates UI behavior without backend
+writes. Real financial persistence and authorization acceptance belong to backend tests.

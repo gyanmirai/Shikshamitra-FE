@@ -51,7 +51,6 @@ import { collectFeeCategoryExportRows } from './fee-category-export';
 import type { IFeeCategory, IFeeCategoryTableProps } from './type';
 
 const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
-  archived,
   onAddFeeCategory,
   setEditData,
   onView,
@@ -93,7 +92,6 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   const categoryQueryArgs = {
     academicYearId: currentYear?.id,
     ...queryParams,
-    isActive: !archived,
     filters: tableFilters,
     sortBy: sorts[0]?.column,
     sortDirection: sorts[0]?.direction,
@@ -180,7 +178,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   const nextStatus = statusData ? !statusData.isActive : false;
 
   const handleOpenFeeHeadStatusConfirm = (row: any) => {
-    if (archived || !feeHeadsCategory?.isActive) return;
+    if (!feeHeadsCategory?.isActive) return;
     setFeeHeadStatusData(row);
     setFeeHeadDeactivationReason('');
     feeHeadStatusConfirm.onTrue();
@@ -285,15 +283,13 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         isFilter: false,
         render: (value, row: any) => (
           <CustomTooltip
-            title={
-              archived || !category.isActive ? 'Restore the category to change fee head status' : ''
-            }
+            title={!category.isActive ? 'Restore the category to change fee head status' : ''}
           >
             <span>
               <Switch
                 size="small"
                 checked={row.isActive || false}
-                disabled={archived || !category.isActive}
+                disabled={!category.isActive}
                 slotProps={{
                   input: {
                     'aria-label': `${row.isActive ? 'Deactivate' : 'Activate'} ${row.name}`,
@@ -427,7 +423,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
             directActionLimit={3}
             moreLabel={`More actions for ${(row as IFeeCategory).name}`}
             actions={[
-              ...(canAdd && !archived
+              ...(canAdd && row.isActive
                 ? [
                     {
                       id: 'edit',
@@ -440,7 +436,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                     },
                   ]
                 : []),
-              ...(canDelete && !archived
+              ...(canDelete && row.isActive
                 ? [
                     {
                       id: 'delete',
@@ -462,11 +458,11 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 ? [
                     {
                       id: 'status',
-                      label: archived ? 'Restore' : 'Archive',
-                      icon: archived ? 'mdi:archive-arrow-up-outline' : 'mdi:archive-outline',
-                      disabled: !archived && Boolean(row?.isUsedInDownstream),
+                      label: row.isActive ? 'Archive' : 'Restore',
+                      icon: row.isActive ? 'mdi:archive-outline' : 'mdi:archive-arrow-up-outline',
+                      disabled: row.isActive && Boolean(row?.isUsedInDownstream),
                       tooltip:
-                        !archived && row?.isUsedInDownstream
+                        row.isActive && row?.isUsedInDownstream
                           ? 'This category is used elsewhere and cannot be archived.'
                           : undefined,
                       onClick: () => handleOpenStatusConfirm(row as IFeeCategory),
@@ -520,7 +516,6 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
             tableTitle: 'Fee categories',
             context: [
               ...exportContext,
-              `Status: ${archived ? 'Archived' : 'Current'}`,
               queryParams.search ? `Search: ${queryParams.search}` : '',
               ...filters.map(
                 (filter) => `${filter.column}: ${filter.type} ${JSON.stringify(filter.value)}`
@@ -540,7 +535,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
           ) : hasNoMatches ? (
             <Stack alignItems="center" spacing={1.5}>
               <Typography variant="subtitle2">
-                No {archived ? 'archived ' : ''}fee categories match{' '}
+                No fee categories match{' '}
                 {queryParams.search.trim() && filters.length
                   ? 'the search and selected filters'
                   : queryParams.search.trim()
@@ -568,8 +563,6 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         noDataText={
           !currentYear?.id ? (
             'Select an academic year to view fee categories.'
-          ) : archived ? (
-            'No archived fee categories.'
           ) : (
             <Stack alignItems="center" spacing={1.5}>
               <span>No fee categories have been added yet.</span>
@@ -934,7 +927,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 Boolean(headBlocked))
             }
             onClick={async () => {
-              if (!feeHeadStatusData || archived || !feeHeadsCategory?.isActive) return;
+              if (!feeHeadStatusData || !feeHeadsCategory?.isActive) return;
               try {
                 await patchFeeHeadStatus({
                   feeHeadId: feeHeadStatusData.id,

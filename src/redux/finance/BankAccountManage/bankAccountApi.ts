@@ -22,6 +22,7 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
       }) => ({
         url: '/bank-accounts',
         method: 'GET',
+        timeout: 30000,
         params: {
           academicYearId,
           page,

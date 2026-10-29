@@ -2,7 +2,6 @@
 
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import { toggleFilteredStudents } from './studentFilters';
 import {
   Box,
   List,
@@ -13,12 +12,11 @@ import {
   Skeleton,
   TextField,
   Typography,
-  ListItemIcon,
-  ListItemText,
-  ListItemButton,
   TablePagination,
   FormControlLabel,
 } from '@mui/material';
+
+import { toggleFilteredStudents } from './studentFilters';
 
 interface IStudentOption {
   id: string;
@@ -116,9 +114,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
   const currentPage = Math.min(page, Math.max(0, Math.ceil(filteredStudents.length / 25) - 1));
 
   return (
-    <Box
-      sx={{ display: 'flex', flexDirection: 'column', height: '100%', opacity: disabled ? 0.6 : 1 }}
-    >
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Search Header */}
       <Paper
         variant="outlined"
@@ -134,7 +130,6 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
             label="Search students"
             placeholder="Name, admission #, or roll #"
             value={localSearchQuery}
-            disabled={disabled}
             onChange={(e) => handleSearchChange(e.target.value)}
             InputProps={{
               startAdornment: <Iconify icon="solar:magnifer-linear" sx={{ mr: 1 }} />,
@@ -147,7 +142,14 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
         </Stack>
 
         <FormControlLabel
-          sx={{ m: 0, px: 1, width: 1 }}
+          labelPlacement="start"
+          sx={{
+            m: 0,
+            px: 1,
+            width: 1,
+            justifyContent: 'space-between',
+            '& .MuiFormControlLabel-label.Mui-disabled': { color: 'text.primary' },
+          }}
           label="Select all results"
           control={
             <Checkbox
@@ -181,36 +183,41 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
               {/* Individual Students */}
               {filteredStudents.slice(currentPage * 25, (currentPage + 1) * 25).map((student) => (
                 <ListItem key={student.id} disablePadding>
-                  <ListItemButton
-                    disabled={disabled}
-                    onClick={() => handleStudentToggle(student.id)}
-                    sx={{ py: 1, px: 1 }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 40 }}>
+                  <FormControlLabel
+                    labelPlacement="start"
+                    sx={{
+                      m: 0,
+                      py: 1,
+                      px: 1,
+                      width: 1,
+                      gap: 1,
+                      justifyContent: 'space-between',
+                      '& .MuiFormControlLabel-label': { flex: 1, minWidth: 0 },
+                      '& .MuiFormControlLabel-label.Mui-disabled': { color: 'text.primary' },
+                    }}
+                    control={
                       <Checkbox
-                        edge="start"
+                        size="small"
                         checked={selectedStudentIds.includes(student.id)}
-                        tabIndex={-1}
-                        disableRipple
+                        onChange={() => handleStudentToggle(student.id)}
                         disabled={disabled}
                       />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
+                    }
+                    label={
+                      <Box>
                         <Typography variant="body2" fontWeight={500}>
                           {student.label}
                         </Typography>
-                      }
-                      secondary={
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography component="div" variant="caption" color="text.secondary">
                           {student.grNumber && `GR #${student.grNumber}`}
                           {student.grNumber && student.rollNumber && ' • '}
                           {student.rollNumber && `Roll #${student.rollNumber}`}
                           {student.divisionName && ` • ${student.divisionName}`}
                         </Typography>
-                      }
-                    />
-                  </ListItemButton>
+                      </Box>
+                    }
+                    disableTypography
+                  />
                 </ListItem>
               ))}
             </List>

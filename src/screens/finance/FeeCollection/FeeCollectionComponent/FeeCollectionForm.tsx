@@ -35,12 +35,12 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
+import { FormPrerequisiteState } from 'src/components/form-prerequisites';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
-import FeeStructureAssignmentForm from 'src/screens/finance/FeeStructureAssign/Components/StudentFeeStructureAssignmentForm';
 import {
   useCollectFeeMutation,
   useGetCollectFormQuery,
@@ -74,9 +74,12 @@ import { useFinancePermissions } from '../../hooks/useFinancePermissions';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
 import FeeCollectionPreviewDialog from './preview/FeeCollectionPreviewDialog';
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
 import CollectionPaymentDateField from '../Components/CollectionPaymentDateField';
 import { getCollectionPaymentDateError } from '../Components/collectionPaymentDate';
+import { isFinancePrerequisiteMissing } from '../../components/financePrerequisites';
 import FeeLedgerFilterBar, { FEE_LEDGER_INITIAL_FILTERS } from './FeeLedgerFilterBar';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 import {
   collectionDisplayStudent,
   FeeCollectionWaiverContext,
@@ -133,6 +136,9 @@ type ReceiptPreviewState = {
   feeReceipt: GeneratedReceipt | null;
   chargeReceipt: GeneratedReceipt | null;
 };
+
+const RECEIPT_PDF_ERROR =
+  'Payment was collected, but the receipt could not be generated. Please retry or contact support.';
 
 const toPaise = (amount: number): number => Math.round((amount + Number.EPSILON) * 100);
 
@@ -234,7 +240,6 @@ const FeeCollectComponentForm = ({
   const selectionOwnership = useRef(createSelectionOwnership());
   const [previewOpen, setPreviewOpen] = useState(false);
   const [finalReviewOpen, setFinalReviewOpen] = useState(false);
-  const [feeStructureDialogOpen, setFeeStructureDialogOpen] = useState(false);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [receiptPreviewState, setReceiptPreviewState] = useState<ReceiptPreviewState>({
     feeReceipt: null,
@@ -242,11 +247,18 @@ const FeeCollectComponentForm = ({
   });
   const [feeReceiptBlobUrl, setFeeReceiptBlobUrl] = useState<string | null>(null);
   const [chargeReceiptBlobUrl, setChargeReceiptBlobUrl] = useState<string | null>(null);
+  const [receiptPdfStatus, setReceiptPdfStatus] = useState<
+    Record<'fee' | 'charge', 'idle' | 'loading' | 'ready' | 'error'>
+  >({ fee: 'idle', charge: 'idle' });
+  const receiptPreviewRequest = useRef(0);
   const [lastCollectResponse, setLastCollectResponse] = useState<CollectFeeOutput | null>(null);
   const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [collectionError, setCollectionError] = useState<string | null>(null);
   const [collectionOutcomeUncertain, setCollectionOutcomeUncertain] = useState(false);
+  const [collectionRefreshFailed, setCollectionRefreshFailed] = useState(false);
+  const [collectionRefreshing, setCollectionRefreshing] = useState(false);
+  const collectionRefreshRequest = useRef(0);
   const lifecycleCallbacks = useRef({ onBusyChange, onDirtyChange });
   lifecycleCallbacks.current = { onBusyChange, onDirtyChange };
 
@@ -260,6 +272,7 @@ const FeeCollectComponentForm = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCollectFormQuery,
+    popupConfig: { error: false },
     params: {
       studentId: String(studentRecord?.id ?? ''),
       academicYearId: currentYear?.id ?? '',
@@ -300,6 +313,8 @@ const FeeCollectComponentForm = ({
     data: bankAccountsData,
     isLoading: bankAccountsLoading,
     isFetching: bankAccountsFetching,
+    isError: bankAccountsError,
+    refetch: refetchBankAccounts,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFinanceRoutingOptionsQuery,
@@ -310,6 +325,7 @@ const FeeCollectComponentForm = ({
   const [collectFee, { isLoading: studentCollectLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCollectFeeMutation,
+    popupConfig: { error: false },
   });
   const collectLoading =
     submitting || (collectionAdapter ? collectionAdapter.isCollecting : studentCollectLoading);
@@ -318,6 +334,8 @@ const FeeCollectComponentForm = ({
     !canCollect ||
     collectFormError ||
     collectFormFetching ||
+    collectionRefreshFailed ||
+    collectionRefreshing ||
     (usesAutomaticAllocation && (!formData?.allocationRevision || !formData?.allocationDueFeeOrder))
   );
 
@@ -351,8 +369,7 @@ const FeeCollectComponentForm = ({
     type: 'mutation',
     currentQueryAndMutation: useDownloadReceiptPdfMutation,
     popupConfig: {
-      error: true,
-      errorMessage: 'Unable to load receipt preview',
+      error: false,
       success: false,
     },
   });
@@ -361,55 +378,55 @@ const FeeCollectComponentForm = ({
   const feeReceiptData =
     lastCollectResponse && receiptPreviewState.feeReceipt
       ? {
-        id: lastCollectResponse.feeReceiptId ?? receiptPreviewState.feeReceipt.id,
-        receiptNumber: lastCollectResponse.feeReceiptNumber ?? '',
-        studentId: lastCollectResponse.studentId ?? '',
-        studentName: resolvedStudentName,
-        academicYearId: lastCollectResponse.academicYearId,
-        totalAmount:
-          lastCollectResponse.receiptGrouping === 'Combined' &&
+          id: lastCollectResponse.feeReceiptId ?? receiptPreviewState.feeReceipt.id,
+          receiptNumber: lastCollectResponse.feeReceiptNumber ?? '',
+          studentId: lastCollectResponse.studentId ?? '',
+          studentName: resolvedStudentName,
+          academicYearId: lastCollectResponse.academicYearId,
+          totalAmount:
+            lastCollectResponse.receiptGrouping === 'Combined' &&
             !!lastCollectResponse.paidCharges?.length
-            ? lastCollectResponse.receivedAmount
-            : lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0) +
-            (lastCollectResponse.paidLateFees ?? []).reduce(
-              (sum, line) => sum + line.amountPaid,
-              0
-            ),
-        lateFeeAmount: (lastCollectResponse.paidLateFees ?? []).reduce(
-          (sum, line) => sum + line.amountPaid,
-          0
-        ),
-        combined:
-          lastCollectResponse.receiptGrouping === 'Combined' &&
-          !!lastCollectResponse.paidCharges?.length,
-        paidCharges:
-          lastCollectResponse.receiptGrouping === 'Combined'
-            ? lastCollectResponse.paidCharges
-            : [],
-        collectedAt: lastCollectResponse.collectedAt,
-        collectedBy: lastCollectResponse.collectedBy,
-        paidFeeHeads: lastCollectResponse.paidFeeHeads,
-        auditSummary: lastCollectResponse.auditSummary,
-      }
+              ? lastCollectResponse.receivedAmount
+              : lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0) +
+                (lastCollectResponse.paidLateFees ?? []).reduce(
+                  (sum, line) => sum + line.amountPaid,
+                  0
+                ),
+          lateFeeAmount: (lastCollectResponse.paidLateFees ?? []).reduce(
+            (sum, line) => sum + line.amountPaid,
+            0
+          ),
+          combined:
+            lastCollectResponse.receiptGrouping === 'Combined' &&
+            !!lastCollectResponse.paidCharges?.length,
+          paidCharges:
+            lastCollectResponse.receiptGrouping === 'Combined'
+              ? lastCollectResponse.paidCharges
+              : [],
+          collectedAt: lastCollectResponse.collectedAt,
+          collectedBy: lastCollectResponse.collectedBy,
+          paidFeeHeads: lastCollectResponse.paidFeeHeads,
+          auditSummary: lastCollectResponse.auditSummary,
+        }
       : undefined;
 
   const chargeReceiptData =
     lastCollectResponse && receiptPreviewState.chargeReceipt
       ? {
-        id: lastCollectResponse.chargeReceiptId ?? receiptPreviewState.chargeReceipt.id,
-        receiptNumber: lastCollectResponse.chargeReceiptNumber ?? '',
-        studentId: lastCollectResponse.studentId ?? '',
-        studentName: resolvedStudentName,
-        academicYearId: lastCollectResponse.academicYearId,
-        totalAmount: (lastCollectResponse.paidCharges ?? []).reduce(
-          (sum, c) => sum + c.amountPaid,
-          0
-        ),
-        collectedAt: lastCollectResponse.collectedAt,
-        collectedBy: lastCollectResponse.collectedBy,
-        paidCharges: lastCollectResponse.paidCharges ?? [],
-        auditSummary: lastCollectResponse.auditSummary,
-      }
+          id: lastCollectResponse.chargeReceiptId ?? receiptPreviewState.chargeReceipt.id,
+          receiptNumber: lastCollectResponse.chargeReceiptNumber ?? '',
+          studentId: lastCollectResponse.studentId ?? '',
+          studentName: resolvedStudentName,
+          academicYearId: lastCollectResponse.academicYearId,
+          totalAmount: (lastCollectResponse.paidCharges ?? []).reduce(
+            (sum, c) => sum + c.amountPaid,
+            0
+          ),
+          collectedAt: lastCollectResponse.collectedAt,
+          collectedBy: lastCollectResponse.collectedBy,
+          paidCharges: lastCollectResponse.paidCharges ?? [],
+          auditSummary: lastCollectResponse.auditSummary,
+        }
       : undefined;
 
   const academicMonthsFromContext = useMemo(
@@ -741,6 +758,8 @@ const FeeCollectComponentForm = ({
   const hasInstallments = ledgerData.monthWise.some((group) =>
     group.items.some((item) => Boolean(item.installmentId || item.installmentLabel))
   );
+  const hasCollectibleItems =
+    collectibleLedgerItems.length > 0 || chargesData.some(isChargeSelectable);
 
   // ── Formik ─────────────────────────────────────────────────────────────────
   const formik = useFormik<FeeCollectionFormValues>({
@@ -751,7 +770,7 @@ const FeeCollectComponentForm = ({
     validate: (values) => {
       const errors: any = {};
       const resolvedItems = resolveItems(values.selectedItems, values.charges);
-      if (!resolvedItems.length && !values.charges.length)
+      if (hasCollectibleItems && !resolvedItems.length && !values.charges.length)
         errors.charges = 'Select at least one fee item or charge to collect';
       const itemsTotal = resolvedItems.reduce(
         (s, i) => s + roundUpToRupee(i.dueAmount) + (i.lateFeeAmount ?? 0),
@@ -817,10 +836,32 @@ const FeeCollectComponentForm = ({
       }));
     },
     onSubmit: () => {
-      if (adaptedOutcomeUnresolved || collectLoading || collectionReadBlocked) return;
+      if (
+        adaptedOutcomeUnresolved ||
+        collectLoading ||
+        collectionReadBlocked ||
+        missingCollectionBank
+      )
+        return;
       setPreviewOpen(true);
     },
   });
+
+  const missingCollectionBank = isFinancePrerequisiteMissing({
+    options: bankAccountsData?.bankAccounts,
+    required: formik.values.payment.paymentMethod !== 'Cash' && !collectionOutcomeUncertain,
+    isLoading: bankAccountsLoading,
+    isFetching: bankAccountsFetching,
+    isError: bankAccountsError,
+  });
+  const refreshPrerequisites = () => {
+    refetchCollectForm?.();
+    refetchBankAccounts?.();
+  };
+  useRefreshFinancePrerequisites(
+    refreshPrerequisites,
+    canCollect && !collectLoading && !collectionOutcomeUncertain
+  );
 
   const previousContextKey = useRef(contextKey);
   const { resetForm: resetCollectionForm } = formik;
@@ -832,6 +873,9 @@ const FeeCollectComponentForm = ({
       setFilters(FEE_LEDGER_INITIAL_FILTERS);
       setCollectionError(null);
       setCollectionOutcomeUncertain(false);
+      collectionRefreshRequest.current += 1;
+      setCollectionRefreshFailed(false);
+      setCollectionRefreshing(false);
       resetCollectionForm({ values: buildInitialValues(student) });
     }
   }, [contextKey, resetCollectionForm, student]);
@@ -843,6 +887,8 @@ const FeeCollectComponentForm = ({
   }, [formik.dirty, lastCollectResponse, onDirtyChange]);
   useEffect(
     () => () => {
+      receiptPreviewRequest.current += 1;
+      collectionRefreshRequest.current += 1;
       lifecycleCallbacks.current.onBusyChange?.(false);
       lifecycleCallbacks.current.onDirtyChange?.(false);
     },
@@ -995,34 +1041,48 @@ const FeeCollectComponentForm = ({
     },
   ];
 
-  const loadFeeReceiptPdf = async (receiptId: string) => {
+  const loadReceiptPdf = async (receiptId: string, scope: 'fee' | 'charge') => {
+    const request = receiptPreviewRequest.current;
+    const setBlobUrl = scope === 'fee' ? setFeeReceiptBlobUrl : setChargeReceiptBlobUrl;
+    setReceiptPdfStatus((previous) => ({ ...previous, [scope]: 'loading' }));
     try {
       const blob = collectionAdapter
-        ? await collectionAdapter.downloadReceiptPdf(receiptId, 'fee')
-        : await downloadReceiptPdf({ receiptId }).unwrap();
-      const objectUrl = URL.createObjectURL(blob);
-      setFeeReceiptBlobUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return objectUrl;
-      });
+        ? await collectionAdapter.downloadReceiptPdf(receiptId, scope)
+        : await downloadReceiptPdf({
+            receiptId,
+            ...(scope === 'charge' ? { receiptType: scope } : {}),
+          }).unwrap();
+      if (request !== receiptPreviewRequest.current) return;
+      setBlobUrl(URL.createObjectURL(blob));
+      setReceiptPdfStatus((previous) => ({ ...previous, [scope]: 'ready' }));
     } catch {
-      setFeeReceiptBlobUrl(null);
+      if (request !== receiptPreviewRequest.current) return;
+      setBlobUrl(null);
+      setReceiptPdfStatus((previous) => ({ ...previous, [scope]: 'error' }));
     }
   };
 
-  const loadChargeReceiptPdf = async (receiptId: string) => {
+  // Refresh failures do not change the outcome of an already accepted payment.
+  const refreshCollectionSummary = async () => {
+    collectionRefreshRequest.current += 1;
+    const request = collectionRefreshRequest.current;
+    setCollectionRefreshing(true);
+    setCollectionRefreshFailed(false);
     try {
-      const blob = collectionAdapter
-        ? await collectionAdapter.downloadReceiptPdf(receiptId, 'charge')
-        : await downloadReceiptPdf({ receiptId, receiptType: 'charge' }).unwrap();
-      const objectUrl = URL.createObjectURL(blob);
-      setChargeReceiptBlobUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return objectUrl;
-      });
+      const result = await refetchCollectForm?.();
+      if (request !== collectionRefreshRequest.current) return;
+      if (result && typeof result === 'object' && 'error' in result && result.error)
+        setCollectionRefreshFailed(true);
     } catch {
-      setChargeReceiptBlobUrl(null);
+      if (request === collectionRefreshRequest.current) setCollectionRefreshFailed(true);
+    } finally {
+      if (request === collectionRefreshRequest.current) setCollectionRefreshing(false);
     }
+  };
+
+  const resetCollectedDraft = () => {
+    formik.resetForm();
+    refreshCollectionSummary();
   };
 
   // Opens the FinalPaymentReviewDialog from the preview dialog
@@ -1106,12 +1166,12 @@ const FeeCollectComponentForm = ({
       paymentConfirmed: isCashierDecided ? confirmNonCash : undefined,
       ...(usesAutomaticAllocation
         ? {
-          automaticAllocation: {
-            revision: formData?.allocationRevision ?? '',
-            dueFeeIds: orderedSelectedItems.map((item) => item.dueFeeId ?? ''),
-            chargeIds: formik.values.charges,
-          },
-        }
+            automaticAllocation: {
+              revision: formData?.allocationRevision ?? '',
+              dueFeeIds: orderedSelectedItems.map((item) => item.dueFeeId ?? ''),
+              chargeIds: formik.values.charges,
+            },
+          }
         : {}),
       dueFeePayments,
       lateFeePayments,
@@ -1129,12 +1189,16 @@ const FeeCollectComponentForm = ({
       const collectResponse = await submitCollection(prepareCollectionCommand(true));
 
       shikshaMitraToast.success({
-        message: formik.values.payment.paymentMethod === 'Cash' ? 'Receipt generated and fees settled. Cash Income awaits independent Cash Management approval.' : collectResponse.auditSummary?.headline || 'Fee collected successfully',
+        message:
+          formik.values.payment.paymentMethod === 'Cash'
+            ? 'Payment collected and fees settled. Cash Income awaits independent Cash Management approval.'
+            : collectResponse.auditSummary?.headline || 'Fee collected successfully',
       });
       setFinalReviewOpen(false);
       submissionRef.current = null;
       setLastCollectResponse(collectResponse);
       setCollectionOutcomeUncertain(false);
+      resetCollectedDraft();
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
         if (collectResponse.auditSummary || collectionAdapter) {
           setOutcomeDialogOpen(true);
@@ -1177,6 +1241,7 @@ const FeeCollectComponentForm = ({
       submissionRef.current = null;
       setLastCollectResponse(collectResponse);
       setCollectionOutcomeUncertain(false);
+      resetCollectedDraft();
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
         if (collectResponse.auditSummary || collectionAdapter) {
           setOutcomeDialogOpen(true);
@@ -1389,8 +1454,8 @@ const FeeCollectComponentForm = ({
   // Highlight the funded rows without narrowing the automatic allocation candidate set.
   const ledgerSelectedItems = isAmountOnly
     ? orderedSelectedItems.filter(
-      (item) => (feeAllocationById.get(item.dueFeeId)?.paidAmount ?? 0) > 0
-    )
+        (item) => (feeAllocationById.get(item.dueFeeId)?.paidAmount ?? 0) > 0
+      )
     : formik.values.selectedItems;
   const handleLedgerSelectionChange = (items: SelectedItem[]) => {
     handleSelectionChange(items);
@@ -1401,9 +1466,14 @@ const FeeCollectComponentForm = ({
   useEffect(
     () => () => {
       if (feeReceiptBlobUrl) URL.revokeObjectURL(feeReceiptBlobUrl);
+    },
+    [feeReceiptBlobUrl]
+  );
+  useEffect(
+    () => () => {
       if (chargeReceiptBlobUrl) URL.revokeObjectURL(chargeReceiptBlobUrl);
     },
-    [feeReceiptBlobUrl, chargeReceiptBlobUrl]
+    [chargeReceiptBlobUrl]
   );
 
   // ── Show skeleton while loading ─────────────────────────────────────────────
@@ -1430,7 +1500,7 @@ const FeeCollectComponentForm = ({
         >
           {collectFormError
             ? parseApiProblemDetail(collectFormError).detail ||
-            'Unable to load fees. Please try again.'
+              'Unable to load fees. Please try again.'
             : !currentYear?.id
               ? 'Academic year is required to collect fees.'
               : 'Fee collection details are unavailable. Please try again.'}
@@ -1441,13 +1511,6 @@ const FeeCollectComponentForm = ({
 
   // ── Fee Structure Not Assigned: show empty state ───────────────────────────
   const isFeeStructureAssigned = formData?.student?.isFeeStructureAssigned;
-
-  const handleFeeStructureDialogClose = (_e: any, isSubmit: boolean) => {
-    setFeeStructureDialogOpen(false);
-    if (isSubmit) {
-      refetchCollectForm();
-    }
-  };
 
   const showGeneratedReceiptDialog = async (collectResponse: CollectFeeOutput) => {
     setLastCollectResponse(collectResponse);
@@ -1461,31 +1524,34 @@ const FeeCollectComponentForm = ({
     setReceiptPreviewState({
       feeReceipt: hasFeeReceipt
         ? {
-          id: collectResponse.feeReceiptId!,
-          receiptNumber: collectResponse.feeReceiptNumber,
-          pdfFileName: collectResponse.feeReceiptPdfFileName,
-        }
+            id: collectResponse.feeReceiptId!,
+            receiptNumber: collectResponse.feeReceiptNumber,
+            pdfFileName: collectResponse.feeReceiptPdfFileName,
+          }
         : null,
       chargeReceipt: hasChargeReceipt
         ? {
-          id: collectResponse.chargeReceiptId!,
-          receiptNumber: collectResponse.chargeReceiptNumber,
-          pdfFileName: collectResponse.chargeReceiptPdfFileName,
-        }
+            id: collectResponse.chargeReceiptId!,
+            receiptNumber: collectResponse.chargeReceiptNumber,
+            pdfFileName: collectResponse.chargeReceiptPdfFileName,
+          }
         : null,
     });
 
     setFeeReceiptBlobUrl(null);
     setChargeReceiptBlobUrl(null);
+    receiptPreviewRequest.current += 1;
+    setReceiptPdfStatus({
+      fee: hasFeeReceipt ? 'loading' : 'idle',
+      charge: hasChargeReceipt ? 'loading' : 'idle',
+    });
     setReceiptDialogOpen(true);
 
-    // Load PDFs for both receipts (if they exist)
-    if (hasFeeReceipt) {
-      await loadFeeReceiptPdf(collectResponse.feeReceiptId!);
-    }
-    if (hasChargeReceipt) {
-      await loadChargeReceiptPdf(collectResponse.chargeReceiptId!);
-    }
+    // Each receipt owns its progress and failure; one unavailable PDF does not hide the other.
+    await Promise.all([
+      hasFeeReceipt && loadReceiptPdf(collectResponse.feeReceiptId!, 'fee'),
+      hasChargeReceipt && loadReceiptPdf(collectResponse.chargeReceiptId!, 'charge'),
+    ]);
 
     return true;
   };
@@ -1507,96 +1573,60 @@ const FeeCollectComponentForm = ({
   };
 
   const handleReceiptDialogClose = () => {
+    receiptPreviewRequest.current += 1;
     setReceiptDialogOpen(false);
     setReceiptPreviewState({ feeReceipt: null, chargeReceipt: null });
     setLastCollectResponse(null);
-    if (feeReceiptBlobUrl) {
-      URL.revokeObjectURL(feeReceiptBlobUrl);
-      setFeeReceiptBlobUrl(null);
-    }
-    if (chargeReceiptBlobUrl) {
-      URL.revokeObjectURL(chargeReceiptBlobUrl);
-      setChargeReceiptBlobUrl(null);
-    }
+    setFeeReceiptBlobUrl(null);
+    setChargeReceiptBlobUrl(null);
     // Return to parent table/list view after receipt flow is completed.
     onCancel?.(null, true);
   };
 
-  if (isFeeStructureAssigned === false) {
+  const noAssignedObligations =
+    isFeeStructureAssigned === false &&
+    !collectFormFetching &&
+    !collectFormError &&
+    !formData?.ledger?.length &&
+    !(formData?.charges ?? []).some((charge: ChargeDetail) => Number(charge.pendingAmount) > 0);
+  if (noAssignedObligations) {
     return (
       <Box
         sx={{
+          flex: 1,
+          minHeight: 0,
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flex: 1,
           width: 1,
-          height: 1,
-          minHeight: 0,
-          alignSelf: 'stretch',
-          py: 3,
-          gap: 2,
-          textAlign: 'center',
-          px: 3,
+          overflow: 'auto',
         }}
       >
-        <Iconify
-          icon="solar:document-add-bold-duotone"
-          width={72}
-          sx={{ color: 'text.disabled', mb: 1 }}
-        />
-        <Typography variant="h6" color="text.secondary">
-          No Fee Structure Assigned
-        </Typography>
-        <Typography variant="body2" color="text.secondary" maxWidth={400}>
-          {collectionAdapter
-            ? 'Confirm the applicable fee structure in the admission journey before collecting fees.'
-            : 'A fee structure must be assigned to this student before collecting fees. Please assign a fee structure first.'}
-        </Typography>
-        {!collectionAdapter && (
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="solar:add-circle-bold" />}
-            onClick={() => setFeeStructureDialogOpen(true)}
-            sx={{ mt: 1 }}
-          >
-            Assign Fee Structure
-          </Button>
+        {collectionAdapter ? (
+          <FormPrerequisiteState
+            title="No Fee Structure Assigned"
+            description="Confirm the applicable fee structure in the admission journey before collecting fees."
+            actions={[]}
+            onRefresh={refreshPrerequisites}
+          />
+        ) : (
+          <FinancePrerequisiteState
+            requirements={[{ key: 'fee-assignment', title: 'No Fee Structure Assigned' }]}
+            onRefresh={refreshPrerequisites}
+          />
         )}
-
-        {/* Fee Structure Assignment Dialog */}
-        {!collectionAdapter && (
-          <CustomDialog
-            open={feeStructureDialogOpen}
-            handleClose={() => setFeeStructureDialogOpen(false)}
-            title={
-              <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-                <Typography variant="h5">Assign Fee Structure</Typography>
-                <CustomTooltip
-                  arrow
-                  placement="right"
-                  sx={{ textAlign: 'justify' }}
-                  title="Assign a fee structure to the student based on their selected class for accurate fee management and billing."
-                >
-                  <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-                </CustomTooltip>
-              </Box>
-            }
-            maxWidth="md"
-          >
-            <FeeStructureAssignmentForm
-              student={
-                formData?.student
-                  ? ({
-                    studentId: formData.student.studentId,
-                    standardId: formData.student.standardId,
-                  } as any)
-                  : null
-              }
-              handleClose={handleFeeStructureDialogClose}
-            />
-          </CustomDialog>
+        {onCancel && (
+          <DialogActions>
+            <Button
+              type="button"
+              color="inherit"
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={() => onCancel(null, false)}
+            >
+              Cancel
+            </Button>
+          </DialogActions>
         )}
       </Box>
     );
@@ -1626,12 +1656,18 @@ const FeeCollectComponentForm = ({
         position: 'relative',
       }}
     >
-      {formData && collectFormError && (
+      {formData && (collectFormError || collectionRefreshFailed) && (
         <Alert
           severity="error"
           sx={{ mx: 1.5, mt: 1 }}
           action={
-            <Button size="small" disabled={collectLoading} onClick={() => refetchCollectForm?.()}>
+            <Button
+              size="small"
+              disabled={collectLoading || collectionRefreshing}
+              onClick={() => {
+                refreshCollectionSummary();
+              }}
+            >
               Refresh fees
             </Button>
           }
@@ -1793,7 +1829,13 @@ const FeeCollectComponentForm = ({
                 academicYearId={currentYear?.id}
                 feeHeads={collectionAdapter ? adapterFeeHeads : undefined}
               />
-              {formik.submitCount > 0 && finalAmount <= 0 && (
+              {formData && !collectionReadBlocked && !hasCollectibleItems && (
+                <Alert severity="info" role="status">
+                  No outstanding fees or charges to collect. Items with no outstanding balance
+                  cannot be selected.
+                </Alert>
+              )}
+              {hasCollectibleItems && formik.submitCount > 0 && finalAmount <= 0 && (
                 <Typography variant="caption" color="error">
                   Select at least one fee item or charge to collect
                 </Typography>
@@ -1908,9 +1950,11 @@ const FeeCollectComponentForm = ({
                   >
                     <SelectedCollectionItems
                       emptyText={
-                        usesAutomaticAllocation
-                          ? 'Enter an amount to preview automatic fee allocation, or select specific items from the ledger.'
-                          : undefined
+                        !hasCollectibleItems
+                          ? 'No payment is needed. There is no outstanding amount to collect.'
+                          : usesAutomaticAllocation
+                            ? 'Enter an amount to preview automatic fee allocation, or select specific items from the ledger.'
+                            : undefined
                       }
                       fixedFeeOrder={usesAutomaticAllocation}
                       showAllocation={showLiveAllocation}
@@ -1936,12 +1980,12 @@ const FeeCollectComponentForm = ({
                           onRemove: isAmountOnly
                             ? undefined
                             : () =>
-                              handleSelectionChange(
-                                formik.values.selectedItems.filter(
-                                  (selected) =>
-                                    selectionItemKey(selected) !== selectionItemKey(item)
-                                )
-                              ),
+                                handleSelectionChange(
+                                  formik.values.selectedItems.filter(
+                                    (selected) =>
+                                      selectionItemKey(selected) !== selectionItemKey(item)
+                                  )
+                                ),
                         }))}
                       charges={selectedChargesInOrder(chargesData ?? [], formik.values.charges).map(
                         (charge) => ({
@@ -1950,13 +1994,13 @@ const FeeCollectComponentForm = ({
                           term: charge.dueDate ? dayjs(charge.dueDate).format('MMM YYYY') : '—',
                           amount: showLiveAllocation
                             ? (liveAllocation.allocatedRows.find(
-                              (row) => row.type === 'charge' && row.key === charge.chargeId
-                            )?.paidAmount ?? 0)
+                                (row) => row.type === 'charge' && row.key === charge.chargeId
+                              )?.paidAmount ?? 0)
                             : charge.amount,
                           remainingAmount: showLiveAllocation
                             ? liveAllocation.allocatedRows.find(
-                              (row) => row.type === 'charge' && row.key === charge.chargeId
-                            )?.remainingAmount
+                                (row) => row.type === 'charge' && row.key === charge.chargeId
+                              )?.remainingAmount
                             : undefined,
                           onRemove: () =>
                             handleChargesChange(
@@ -2073,35 +2117,42 @@ const FeeCollectComponentForm = ({
                           />
                         </ShakingTextField>
                       </Box>
-                      {formik.values.payment.paymentMethod !== 'Cash' && (
-                        <CustomSelect
-                          fullWidth
-                          size="small"
-                          label="Receiving School Bank Account"
-                          required
-                          value={formik.values.payment.details.bankAccount || ''}
-                          name="payment.details.bankAccount"
-                          options={bankAccountOptions.map(
-                            (account: { id: string; name: string }) => ({
-                              label: account.name,
-                              value: account.id,
-                            })
-                          )}
-                          isLoading={isBankAccountsBusy}
-                          onChange={(value) =>
-                            formik.setFieldValue('payment.details.bankAccount', value)
-                          }
-                          error={Boolean(
-                            formik.touched.payment?.details?.bankAccount &&
-                            formik.errors.payment?.details?.bankAccount
-                          )}
-                          helperText={
-                            formik.touched.payment?.details?.bankAccount
-                              ? String(formik.errors.payment?.details?.bankAccount || '')
-                              : undefined
-                          }
-                        />
-                      )}
+                      {formik.values.payment.paymentMethod !== 'Cash' &&
+                        (missingCollectionBank ? (
+                          <FinancePrerequisiteState
+                            requirements={[{ key: 'bank-account' }]}
+                            compact
+                            onRefresh={refreshPrerequisites}
+                          />
+                        ) : (
+                          <CustomSelect
+                            fullWidth
+                            size="small"
+                            label="Receiving School Bank Account"
+                            required
+                            value={formik.values.payment.details.bankAccount || ''}
+                            name="payment.details.bankAccount"
+                            options={bankAccountOptions.map(
+                              (account: { id: string; name: string }) => ({
+                                label: account.name,
+                                value: account.id,
+                              })
+                            )}
+                            isLoading={isBankAccountsBusy}
+                            onChange={(value) =>
+                              formik.setFieldValue('payment.details.bankAccount', value)
+                            }
+                            error={Boolean(
+                              formik.touched.payment?.details?.bankAccount &&
+                              formik.errors.payment?.details?.bankAccount
+                            )}
+                            helperText={
+                              formik.touched.payment?.details?.bankAccount
+                                ? String(formik.errors.payment?.details?.bankAccount || '')
+                                : undefined
+                            }
+                          />
+                        ))}
                     </Box>
                     {formik.values.payment.paymentMethod && (
                       <Box
@@ -2117,7 +2168,7 @@ const FeeCollectComponentForm = ({
                         {/* Extra payment details (cheque, upi, etc.) */}
                         {(
                           paymentMethodsConfig[
-                          formik.values.payment.paymentMethod as keyof typeof paymentMethodsConfig
+                            formik.values.payment.paymentMethod as keyof typeof paymentMethodsConfig
                           ] ?? []
                         )
                           .filter((field: IPaymentFieldConfig) => field.name !== 'amount')
@@ -2158,7 +2209,7 @@ const FeeCollectComponentForm = ({
                                       }}
                                       error={
                                         (touched || formik.submitCount > 0) &&
-                                          typeof error === 'string'
+                                        typeof error === 'string'
                                           ? error
                                           : undefined
                                       }
@@ -2177,7 +2228,7 @@ const FeeCollectComponentForm = ({
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
                                         ((touched || formik.submitCount > 0) &&
-                                          typeof error === 'string'
+                                        typeof error === 'string'
                                           ? error
                                           : isBankAccountField && isBankAccountsBusy
                                             ? 'Loading bank accounts...'
@@ -2232,7 +2283,7 @@ const FeeCollectComponentForm = ({
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
                                         ((touched || formik.submitCount > 0) &&
-                                          typeof error === 'string'
+                                        typeof error === 'string'
                                           ? error
                                           : undefined) || undefined
                                       }
@@ -2242,10 +2293,10 @@ const FeeCollectComponentForm = ({
                                       fullWidth
                                       type={
                                         field.type === 'text' ||
-                                          field.type === 'numbers' ||
-                                          field.type === 'last4digits' ||
-                                          field.type === 'uppercase' ||
-                                          field.type === 'anytext'
+                                        field.type === 'numbers' ||
+                                        field.type === 'last4digits' ||
+                                        field.type === 'uppercase' ||
+                                        field.type === 'anytext'
                                           ? 'text'
                                           : field.type
                                       }
@@ -2303,7 +2354,7 @@ const FeeCollectComponentForm = ({
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
                                         ((touched || formik.submitCount > 0) &&
-                                          typeof error === 'string'
+                                        typeof error === 'string'
                                           ? error
                                           : undefined) || undefined
                                       }
@@ -2380,6 +2431,7 @@ const FeeCollectComponentForm = ({
               collectLoading ||
               adaptedOutcomeUnresolved ||
               collectionReadBlocked ||
+              missingCollectionBank ||
               finalAmount <= 0 ||
               Number(formik.values.payment.amount) <= 0
             }
@@ -2438,12 +2490,12 @@ const FeeCollectComponentForm = ({
             {/* Payment Summary Header */}
             {lastCollectResponse && (
               <DetailSection title="Payment Summary" icon="mdi:cash-check">
-                <DetailGrid>
+                <DetailGrid desktopColumns={4} desktopMinWidth={680}>
                   <DetailField label="Student" value={resolvedStudentName} />
                   <DetailField
                     label={
                       lastCollectResponse.feeReceiptNumber &&
-                        lastCollectResponse.chargeReceiptNumber
+                      lastCollectResponse.chargeReceiptNumber
                         ? 'Receipt numbers'
                         : 'Receipt number'
                     }
@@ -2470,22 +2522,64 @@ const FeeCollectComponentForm = ({
             <UnifiedReceiptDisplay
               feeReceipt={feeReceiptData}
               chargeReceipt={chargeReceiptData}
-              feeIsLoading={false}
-              chargeIsLoading={false}
+              feeIsLoading={receiptPdfStatus.fee === 'loading'}
+              chargeIsLoading={receiptPdfStatus.charge === 'loading'}
               feeBlobUrl={feeReceiptBlobUrl}
               chargeBlobUrl={chargeReceiptBlobUrl}
-              onOpenFeeInNewTab={() => handleOpenReceiptInNewTab(feeReceiptBlobUrl)}
-              onDownloadFee={() =>
-                handleDownloadReceipt(receiptPreviewState.feeReceipt, feeReceiptBlobUrl)
-              }
-              onOpenChargeInNewTab={() => handleOpenReceiptInNewTab(chargeReceiptBlobUrl)}
-              onDownloadCharge={() =>
-                handleDownloadReceipt(receiptPreviewState.chargeReceipt, chargeReceiptBlobUrl)
-              }
+              feeError={receiptPdfStatus.fee === 'error' ? RECEIPT_PDF_ERROR : null}
+              chargeError={receiptPdfStatus.charge === 'error' ? RECEIPT_PDF_ERROR : null}
+              onRetryFee={() => {
+                if (receiptPreviewState.feeReceipt)
+                  loadReceiptPdf(receiptPreviewState.feeReceipt.id, 'fee');
+              }}
+              onRetryCharge={() => {
+                if (receiptPreviewState.chargeReceipt)
+                  loadReceiptPdf(receiptPreviewState.chargeReceipt.id, 'charge');
+              }}
             />
           </Box>
         </Scrollbar>
-        <DialogActions sx={{ borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.45)}` }}>
+        <DialogActions
+          sx={{
+            borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.45)}`,
+            flexWrap: 'wrap',
+            rowGap: 1,
+          }}
+        >
+          {(
+            [
+              {
+                scope: 'fee',
+                receipt: receiptPreviewState.feeReceipt,
+                blobUrl: feeReceiptBlobUrl,
+              },
+              {
+                scope: 'charge',
+                receipt: receiptPreviewState.chargeReceipt,
+                blobUrl: chargeReceiptBlobUrl,
+              },
+            ] as const
+          ).map(({ scope, receipt, blobUrl }) =>
+            receipt && blobUrl && receiptPdfStatus[scope] === 'ready' ? (
+              <Stack key={scope} direction="row" spacing={1}>
+                <Button
+                  size="small"
+                  startIcon={<Iconify icon="mdi:open-in-new" />}
+                  onClick={() => handleOpenReceiptInNewTab(blobUrl)}
+                >
+                  {feeReceiptData && chargeReceiptData ? `Open ${scope}` : 'Open'}
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="mdi:download" />}
+                  onClick={() => handleDownloadReceipt(receipt, blobUrl)}
+                >
+                  {feeReceiptData && chargeReceiptData ? `Download ${scope}` : 'Download'}
+                </Button>
+              </Stack>
+            ) : null
+          )}
           <Button
             variant="contained"
             size="small"
@@ -2551,6 +2645,8 @@ const FeeCollectComponentForm = ({
         loading={collectLoading}
         formValues={allocationFormValues}
         student={student}
+        chargesData={chargesData ?? []}
+        feeHeadMap={feeHeadMap}
         bankAccounts={bankAccountOptions}
       />
     </Box>

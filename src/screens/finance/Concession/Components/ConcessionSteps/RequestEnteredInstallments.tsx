@@ -37,6 +37,10 @@ export default function RequestEnteredInstallments({
   const maximum = percentage
     ? Math.min(100, policy.maximumPercentage ?? 100)
     : (policy.maximumFixedAmount ?? Number.POSITIVE_INFINITY);
+  const showAllowance = !percentage && Number.isFinite(maximum) && lines.length > 0;
+  const hasInvalidEntries = Object.keys(validationErrors).length > 0;
+  const remaining = Math.max(0, Number((maximum - enteredTotal).toFixed(2)));
+  const maximumReached = !hasInvalidEntries && remaining === 0;
   const money = (amount: number) => formatNumber(amount, 'INR');
   // Respond to the editor's width, rather than the viewport: a wide screen can
   // still have a narrow editor beside the impact panel.
@@ -44,6 +48,32 @@ export default function RequestEnteredInstallments({
 
   return (
     <Box sx={{ minWidth: 0, containerType: 'inline-size' }}>
+      {showAllowance && (
+        <Box
+          role="status"
+          aria-label="Concession request allowance"
+          aria-live="polite"
+          aria-atomic="true"
+          sx={{ mb: 1.5, fontVariantNumeric: 'tabular-nums' }}
+        >
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 2, rowGap: 0.5 }}>
+            <Typography variant="body2">
+              Maximum concession allowed: <strong>{money(maximum)}</strong>
+            </Typography>
+            <Typography variant="body2">
+              Entered: <strong>{hasInvalidEntries ? '—' : money(enteredTotal)}</strong>
+            </Typography>
+            <Typography variant="body2">
+              Remaining: <strong>{hasInvalidEntries ? '—' : money(remaining)}</strong>
+            </Typography>
+          </Box>
+          {maximumReached && (
+            <Typography variant="body2" color="warning.main" sx={{ mt: 0.5 }}>
+              Maximum concession reached. Reduce an installment amount to add more elsewhere.
+            </Typography>
+          )}
+        </Box>
+      )}
       <Box
         component="section"
         aria-label="Installment concessions"

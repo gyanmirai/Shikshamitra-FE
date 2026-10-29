@@ -306,11 +306,19 @@ export interface ConcessionEligibleFeeHead {
   eligibleOutstanding: number;
 }
 
+export interface ConcessionBenefitBlocker {
+  code: string;
+  message: string;
+  blockingRequestId: string;
+  blockingStatus: 'Pending' | 'Approved' | 'PartiallyReversed';
+}
+
 export interface ConcessionTypeOption {
   concessionTypeId: string;
   name: string;
   description?: string | null;
   documents: ConcessionDocumentRequirement[];
+  benefitBlocker?: ConcessionBenefitBlocker | null;
 }
 
 export interface ConcessionPolicyOption {
@@ -496,6 +504,7 @@ export interface FeeHeadApprovalGroup {
 }
 
 export interface ConcessionApprovalContext {
+  benefitBlocker?: ConcessionBenefitBlocker | null;
   concessionRequestId: string;
   studentId: string;
   concessionPolicyName: string;

@@ -19,6 +19,7 @@ import ProrationFooterActions from './proration/ProrationFooterActions';
 import { useProrationPolicyForm } from '../hooks/useProrationPolicyForm';
 import ProrationGeneralSection from './proration/ProrationGeneralSection';
 import ProrationFeeHeadsSection from './proration/ProrationFeeHeadsSection';
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
 import { useProrationValidationFocus } from '../hooks/useProrationValidationFocus';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
@@ -57,6 +58,8 @@ function ProrationPolicyDrawerSession({
 
   const {
     formik,
+    prerequisites = [],
+    refreshPrerequisites,
     isSaving,
     isLoading,
     isFeeHeadsError,
@@ -67,6 +70,7 @@ function ProrationPolicyDrawerSession({
     handleCustomSubmit,
   } = useProrationPolicyForm({ open, onClose, editData, academicYearId });
 
+  const isPrerequisiteBlocked = prerequisites.length > 0;
   const formRef = useRef<HTMLFormElement>(null);
   const busy = isSaving || isLoading || formik.isSubmitting;
   useProrationValidationFocus(formik, formRef);
@@ -74,9 +78,9 @@ function ProrationPolicyDrawerSession({
   const handleSubmit = useCallback(
     (event?: React.FormEvent<HTMLFormElement>) => {
       event?.preventDefault();
-      if (!busy) handleCustomSubmit();
+      if (!busy && !isPrerequisiteBlocked) handleCustomSubmit();
     },
-    [busy, handleCustomSubmit]
+    [busy, isPrerequisiteBlocked, handleCustomSubmit]
   );
 
   const close = () => {
@@ -162,25 +166,45 @@ function ProrationPolicyDrawerSession({
             sx={{ display: 'flex', flex: 1, minWidth: 0, minHeight: 0, border: 0, p: 0, m: 0 }}
           >
             {/* Scrollable Form */}
-            <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
-              <Stack spacing={2} sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
-                {isFeeHeadsError && (
-                  <Alert severity="error" sx={{ mb: 2.5, borderRadius: 1.25 }}>
-                    Active fee heads could not be loaded from server. Saving is disabled to prevent
-                    an incomplete policy.
-                  </Alert>
+            <Scrollbar fillContent={isPrerequisiteBlocked} sx={{ flex: 1, minWidth: 0 }}>
+              <Stack
+                spacing={2}
+                sx={{
+                  p: { xs: 2, sm: 3 },
+                  minWidth: 0,
+                  minHeight: 1,
+                  flex: isPrerequisiteBlocked ? 1 : undefined,
+                }}
+              >
+                {isPrerequisiteBlocked ? (
+                  <FinancePrerequisiteState
+                    requirements={prerequisites}
+                    onRefresh={refreshPrerequisites}
+                    sx={{ flex: 1 }}
+                  />
+                ) : (
+                  <>
+                    {isFeeHeadsError && (
+                      <Alert severity="error" sx={{ mb: 2.5, borderRadius: 1.25 }}>
+                        Active fee heads could not be loaded from server. Saving is disabled to
+                        prevent an incomplete policy.
+                      </Alert>
+                    )}
+
+                    {/* Card 1 — Policy Information */}
+                    <ProrationGeneralSection
+                      formik={formik}
+                      activeEdit={activeEdit}
+                      canActivate={canActivate}
+                      otherDefaultPolicyName={otherDefaultPolicyName}
+                    />
+
+                    {/* Card 2 — Fee Head Configuration */}
+                    {(!isFeeHeadsError || formik.values.feeHeadRules.length > 0) && (
+                      <ProrationFeeHeadsSection formik={formik} />
+                    )}
+                  </>
                 )}
-
-                {/* Card 1 — Policy Information */}
-                <ProrationGeneralSection
-                  formik={formik}
-                  activeEdit={activeEdit}
-                  canActivate={canActivate}
-                  otherDefaultPolicyName={otherDefaultPolicyName}
-                />
-
-                {/* Card 2 — Fee Head Configuration */}
-                <ProrationFeeHeadsSection formik={formik} />
               </Stack>
             </Scrollbar>
           </Box>
@@ -209,7 +233,7 @@ function ProrationPolicyDrawerSession({
         {/* ── Sticky Footer ────────────────────────────────────────────────── */}
         <ProrationFooterActions
           isSaving={busy}
-          disabled={isFeeHeadsError}
+          disabled={isFeeHeadsError || isPrerequisiteBlocked}
           onCancel={close}
           isEditing={Boolean(editData?.id)}
         />

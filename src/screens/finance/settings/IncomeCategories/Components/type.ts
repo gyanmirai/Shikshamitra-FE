@@ -13,6 +13,7 @@ export interface IIncomeCategory {
   concurrencyStamp: string;
   version: number;
   canDelete: boolean;
+  isSystemCategory?: boolean;
   isUsedInDownstream: boolean;
   deletionBlockedReason?: string | null;
   isActive: boolean;

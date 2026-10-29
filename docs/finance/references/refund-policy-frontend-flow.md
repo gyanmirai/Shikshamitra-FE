@@ -3,7 +3,7 @@ module: finance
 domain: refund-policy-frontend-flow
 content_type: Conceptual
 status: proposed
-updated_on: 2026-10-06
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -20,12 +20,12 @@ Typed Refund Policy setup, Collection-style status selection, lifecycle actions,
 The policy editor groups Expense Category and Default Paying Bank Account in a final Refund Accounting section after general information and refund eligibility.
 This section includes a required **Payment methods** multi-select. Saved selections appear as chips when editing; only selected methods are sent in `allowedPayoutMethods`. Cash-only policies hide the default bank field. Refund request selectors use eligibility methods, and existing requests retain the methods from their pinned policy snapshot. Loading, failed, or empty policy responses never expose unrestricted methods; changing the resolved policy clears an excluded selection and its payment details.
 
-The Refund Policy workspace uses compact Current policies and Archived tabs and a plus-icon Policy action, matching the requested refund button wording. The full-height shared table shows amount rules, refundable fees, payout methods, partial-refund eligibility, status, and row actions. Payout-method counts open the full list through an accessible info tooltip. Up to three permitted row actions appear directly; when more than three are available, the three-dot menu contains the complete action set. Rows follow the Subject Allocation table's shared surfaces, regular name text, compact soft default chips, neutral Draft labels, and 150px action column. Status and actions stick to the right; the identifying column scrolls on mobile so it cannot cover the remaining content. Eligibility badges use the shared soft labels. Updated by and Last updated remain available through Columns and are hidden by default. Initial and changed-scope loads use table skeletons; refreshes retain current-scope rows with a labelled progress indicator, and failed loads provide Retry inside the table. Search and filter no-results use the shared clear-criteria actions.
+The Refund Policy workspace uses a single table containing Draft, Active and Archived records and a plus-icon Policy header action, matching the requested refund button wording. The full-height shared table shows amount rules, refundable fees, payout methods, partial-refund eligibility, status, and row actions. Payout-method counts open the full list through an accessible info tooltip. Up to three permitted row actions appear directly; when more than three are available, the three-dot menu contains the complete action set. Rows follow the Subject Allocation table's shared surfaces, regular name text, compact soft default chips, warning-colored Draft labels, and 150px action column. Status and actions stick to the right; the identifying column scrolls on mobile so it cannot cover the remaining content. Eligibility badges use the shared soft labels. Updated by and Last updated remain available through Columns and are hidden by default. Initial and changed-scope loads use table skeletons; refreshes retain current-scope rows with a labelled progress indicator, and failed loads provide Retry inside the table. Search and filter no-results use the shared clear-criteria actions.
 
 The create/edit drawer follows the shared concession header, section-help tooltips, responsive field grid, neutral Submit action, and fixed footer. Detail and prerequisite loading replace editable fields with section skeletons and failed loads block submission until Retry succeeds. Saving locks inputs and dismissal while retaining the form under a progress overlay. Shared detail, version-history, and audit panels also use section skeletons.
 Create and edit wait for the fee-head and accounting options before revealing the form; failed prerequisite requests offer Retry and block saving. Edit also waits for the selected record's detail response, including the initial query frame, and rejects submission while loading or failed. View replaces the entire detail body with a skeleton or an error with Retry. Clone is a server action rather than a duplicate drawer; its action stays disabled during the request.
 Archived shows a server count scoped to the selected academic year; the archive/restore cache tags refresh this count and the list.
-Current permits Draft and Active status filters; Archived fixes the status and hides creation controls and the status filter.
+The Status column filters Draft, Active or Archived; clearing it restores all statuses. Creation remains available with its existing permission.
 Switching views resets pagination and the status query while retaining search.
 Restore returns a policy to Draft, making it visible in Current Policies.
 The focused workspace checks are in `src/screens/finance/policies/workspaces/PolicyArchiveWorkspaces.test.tsx`.
@@ -340,7 +340,7 @@ Draft <-> Active
 Create and Update carry Draft or Active status, as Concession Policy does.
 Archive uses the dedicated archive mutation and a consequence confirmation.
 Unarchive uses the dedicated action and reports that the policy was restored to Draft.
-The workspace keeps separate Current and Archived views and invalidates list, detail, version, and available-attachment caches after each status action.
+The workspace keeps current and archived policies in one table and invalidates list, detail, version, and available-attachment caches after each status action.
 
 ### Policy calculation
 

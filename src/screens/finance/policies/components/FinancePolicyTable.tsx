@@ -7,7 +7,7 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 
@@ -143,12 +143,7 @@ const isPolicyDeletable = (
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
-  policyType,
-  onAdd,
-  onEdit,
-  archived = false,
-}) => {
+const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, onAdd, onEdit }) => {
   const lifecycleDialog = useBoolean();
   const deleteDialog = useBoolean();
   const detailsDialog = useBoolean();
@@ -169,12 +164,6 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const academicYearId = currentYear?.id || '';
 
-  useEffect(() => {
-    setQueryParams((previous) => ({ ...previous, page: 1, status: '' }));
-    setPolicyFilters([]);
-    setPolicySorts([]);
-  }, [archived]);
-
   // ── Queries / Mutations ──────────────────────────────────────────────────────
   // Each policy workspace uses its own list API. Hooks are gated with `skip` so
   // only the selected policy type requests rows.
@@ -187,7 +176,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   const policySorting = policySorts[0]
     ? `${policySorts[0].column} ${policySorts[0].direction}`
     : undefined;
-  const usesArchiveTabs = isCollectionKind || isConcessionKind || isRefundKind || isProrationKind;
+  const usesPolicyListApi = isCollectionKind || isConcessionKind || isRefundKind || isProrationKind;
   const concessionPermissions = financePermissions.policies.concessionPolicyActions;
   const collectionPermissions = financePermissions.policies.collectionPolicyActions;
   const refundPermissions = financePermissions.policies.refundPolicyActions;
@@ -258,8 +247,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   } = useGetCollectionPoliciesQuery(
     {
       academicYearId,
-      status: archived ? 'Archived' : queryParams.status || undefined,
-      includeArchived: archived,
+      status: queryParams.status || undefined,
+      includeArchived: true,
       search: queryParams.search || undefined,
       ...policyQueryFilters,
       sorting: policySorting,
@@ -278,7 +267,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   } = useGetConcessionPoliciesQuery(
     {
       academicYearId,
-      status: archived ? 'Archived' : queryParams.status || undefined,
+      status: queryParams.status || undefined,
+      includeArchived: true,
       search: queryParams.search || undefined,
       ...concessionQueryFilters,
       sorting: policySorting,
@@ -297,7 +287,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   } = useGetRefundPoliciesQuery(
     {
       academicYearId,
-      status: archived ? 'Archived' : queryParams.status || undefined,
+      status: queryParams.status || undefined,
+      includeArchived: true,
       search: queryParams.search || undefined,
       ...policyQueryFilters,
       sorting: policySorting,
@@ -316,7 +307,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   } = useGetProrationPoliciesQuery(
     {
       academicYearId,
-      status: archived ? 'Archived' : queryParams.status || undefined,
+      status: queryParams.status || undefined,
+      includeArchived: true,
       search: queryParams.search || undefined,
       ...policyQueryFilters,
       sorting: policySorting,
@@ -448,7 +440,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         id: 'policyName',
         label: isRefundKind ? 'Policy name' : 'Policy Name',
         align: 'left',
-        filterType: usesArchiveTabs ? 'string' : undefined,
+        filterType: usesPolicyListApi ? 'string' : undefined,
         sticky: true,
         stickyPosition: 'left',
         stickyOnMobile: !isRefundKind,
@@ -708,25 +700,6 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       ...(policyType === 'collection'
         ? [
             {
-              cellSx: { textAlign: 'center' as const },
-              id: 'enableLateFee',
-              label: 'Late Fee',
-              align: 'left' as const,
-              filterType: 'enum' as const,
-              enumOptions: [
-                { label: 'Enabled', value: 'true' },
-                { label: 'Disabled', value: 'false' },
-              ],
-              render: (value: any) => (
-                <Chip
-                  label={value ? 'Enabled' : 'Disabled'}
-                  color={value ? 'warning' : 'default'}
-                  size="small"
-                  variant="outlined"
-                />
-              ),
-            },
-            {
               id: 'lateFeeType',
               label: 'Late Fee Type',
               align: 'left' as const,
@@ -748,22 +721,6 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                 <Typography variant="caption" fontSize="13px">
                   {value != null ? `${value} days` : '-'}
                 </Typography>
-              ),
-            },
-            {
-              cellSx: { textAlign: 'center' as const },
-              id: 'allowOnlineCollection',
-              label: 'Online Pay',
-              align: 'left' as const,
-              filterType: 'enum' as const,
-              enumOptions: BOOLEAN_OPTIONS,
-              render: (value: any) => (
-                <Chip
-                  label={value ? 'Yes' : 'No'}
-                  color={value ? 'success' : 'default'}
-                  size="small"
-                  variant="outlined"
-                />
               ),
             },
           ]
@@ -806,7 +763,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
             },
           ]
         : []),
-      ...(!usesArchiveTabs
+      ...(!usesPolicyListApi
         ? [
             {
               id: 'updatedBy',
@@ -827,43 +784,53 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         defaultHidden: isRefundKind,
         align: 'left',
         minWidth: isConcessionKind ? 140 : undefined,
-        filterType: usesArchiveTabs ? 'date' : undefined,
+        filterType: usesPolicyListApi ? 'date' : undefined,
         render: (value, row: any) => (
           <Typography variant="caption" fontSize="13px">
             {policyDateLabel(row.updatedAt || row.lastModificationTime || row.creationTime)}
           </Typography>
         ),
       },
+      ...(policyType === 'collection'
+        ? [
+            {
+              cellSx: { textAlign: 'center' as const },
+              id: 'enableLateFee',
+              label: 'Late Fee',
+              align: 'left' as const,
+              filterType: 'enum' as const,
+              enumOptions: [
+                { label: 'Enabled', value: 'true' },
+                { label: 'Disabled', value: 'false' },
+              ],
+              render: (value: any) => (
+                <Chip
+                  label={value ? 'Enabled' : 'Disabled'}
+                  color={value ? 'warning' : 'default'}
+                  size="small"
+                  variant="outlined"
+                />
+              ),
+            },
+          ]
+        : []),
       {
         id: 'status',
         label: 'Status',
         align: 'left',
         minWidth: 100,
         filterType: 'enum',
-        isFilter: !(usesArchiveTabs && archived),
-        isSort: !(usesArchiveTabs && archived),
+        isFilter: true,
+        isSort: true,
         sticky: true,
         stickyPosition: 'right',
-        enumOptions: usesArchiveTabs
-          ? archived
-            ? [{ label: 'Archived', value: 'Archived' }]
-            : [
-                { label: 'Draft', value: 'Draft' },
-                { label: 'Active', value: 'Active' },
-              ]
-          : [
-              { label: 'Draft', value: 'Draft' },
-              { label: 'Active', value: 'Active' },
-              { label: 'Archived', value: 'Archived' },
-            ],
+        enumOptions: [
+          { label: 'Draft', value: 'Draft' },
+          { label: 'Active', value: 'Active' },
+          { label: 'Archived', value: 'Archived' },
+        ],
         render: (value) => (
-          <Label
-            color={
-              isRefundKind && value === 'Draft'
-                ? 'default'
-                : (STATUS_COLOR[value as FinancePolicyStatus] ?? 'default')
-            }
-          >
+          <Label color={STATUS_COLOR[value as FinancePolicyStatus] ?? 'default'}>
             {value}
           </Label>
         ),
@@ -1099,7 +1066,6 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       canArchivePolicy,
       canRestorePolicy,
       canViewPolicyVersions,
-      archived,
     ]
   );
 
@@ -1144,14 +1110,14 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
           Unable to load {policyLabel.toLowerCase()}.
         </Alert>
       )}
-      {usesArchiveTabs && isFetching && Boolean(policyData) && (
+      {usesPolicyListApi && isFetching && Boolean(policyData) && (
         <LinearProgress aria-label={`Refreshing ${policyLabel.toLowerCase()}`} />
       )}
       <CustomizableTable
         tableId={`finance-${policyType}-policy-table`}
         isLoading={isLoading || (isFetching && !policyData)}
         errorContent={
-          usesArchiveTabs && listError && !policyData?.items.length ? (
+          usesPolicyListApi && listError && !policyData?.items.length ? (
             <Stack spacing={1.5} alignItems="center">
               <Iconify
                 icon="solar:danger-triangle-linear"
@@ -1178,12 +1144,12 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
           sx: { height: 1 },
         }}
         searchFieldProps={{
-          placeholder: usesArchiveTabs ? 'Search policies by name…' : 'Search…',
+          placeholder: usesPolicyListApi ? 'Search policies by name…' : 'Search…',
         }}
         page={queryParams.page - 1}
         rowsPerPage={queryParams.pageSize}
-        filters={usesArchiveTabs ? policyFilters : undefined}
-        sorts={usesArchiveTabs ? policySorts : undefined}
+        filters={usesPolicyListApi ? policyFilters : undefined}
+        sorts={usesPolicyListApi ? policySorts : undefined}
         data={policyData?.items || []}
         handleRowClick={(row) => {
           setSelected(row as IFinancePolicyRow);
@@ -1214,10 +1180,10 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         serverSidePagination
         serverSideSearch
         serverSideFilter
-        serverSideSort={usesArchiveTabs}
+        serverSideSort={usesPolicyListApi}
         serverSideSortMode="single"
         onServerSort={
-          usesArchiveTabs
+          usesPolicyListApi
             ? (_column, sorts) => {
                 setPolicySorts(sorts);
                 setQueryParams((prev) => ({ ...prev, page: 1 }));
@@ -1230,17 +1196,12 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         }
         onServerSearch={(search) => setQueryParams((prev) => ({ ...prev, search, page: 1 }))}
         onServerFilter={(filters) => {
-          const activeFilters = usesArchiveTabs ? normalizeConcessionFilters(filters) : filters;
-          if (usesArchiveTabs) setPolicyFilters(activeFilters);
+          const activeFilters = usesPolicyListApi ? normalizeConcessionFilters(filters) : filters;
+          if (usesPolicyListApi) setPolicyFilters(activeFilters);
           const statusFilter = activeFilters.find((f) => f.column === 'status');
           setQueryParams((prev) => ({
             ...prev,
-            status:
-              usesArchiveTabs && archived
-                ? ''
-                : statusFilter
-                  ? (statusFilter.value as FinancePolicyStatus)
-                  : '',
+            status: statusFilter ? (statusFilter.value as FinancePolicyStatus) : '',
             page: 1,
           }));
         }}
@@ -1251,10 +1212,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
             'Select an academic year to view policies.'
           ) : queryParams.search ||
             queryParams.status ||
-            (usesArchiveTabs && policyFilters.length) ? (
+            (usesPolicyListApi && policyFilters.length) ? (
             'No policies match your search or filters.'
-          ) : usesArchiveTabs && archived ? (
-            'No archived policies.'
           ) : (
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">

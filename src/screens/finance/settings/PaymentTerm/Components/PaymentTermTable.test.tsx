@@ -42,10 +42,16 @@ vi.mock('src/components/customizabaleTable', () => ({
       data-columns={columns.map((column) => column.id).join(',')}
     >
       {data.map((row) => (
-        <div key={String(row.id)} data-testid={`row-${String(row.id)}`}
-          onClick={() => getRowAction?.(row, 0)?.onClick()}>
+        <div
+          key={String(row.id)}
+          data-testid={`row-${String(row.id)}`}
+          onClick={() => getRowAction?.(row, 0)?.onClick()}
+        >
           {columns.map((column) => (
-            <div key={column.id} onClick={column.id === 'actions' ? (event) => event.stopPropagation() : undefined}>
+            <div
+              key={column.id}
+              onClick={column.id === 'actions' ? (event) => event.stopPropagation() : undefined}
+            >
               {column.render ? column.render(row[column.id], row) : String(row[column.id] ?? '')}
             </div>
           ))}
@@ -91,7 +97,6 @@ const baseProps: ComponentProps<typeof PaymentTermTable> = {
   page: 1,
   rowsPerPage: 10,
   searchTerm: '',
-  archived: false,
   canView: true,
   canEdit: true,
   canPublish: true,
@@ -172,18 +177,23 @@ describe('PaymentTermTable', () => {
     expect(callbacks.onPublish).toHaveBeenCalledWith(draft);
   });
 
-  it('offers Restore only from the archived view', () => {
+  it('offers Restore for archived rows alongside current rows', () => {
     const archived = createTerm({
       id: 'term-archived',
       status: 'Archived',
     });
 
-    render(<PaymentTermTable {...baseProps} data={[archived]} totalCount={1} archived />);
+    render(<PaymentTermTable {...baseProps} data={[createTerm(), archived]} totalCount={2} />);
 
     const archivedRow = within(screen.getByTestId('row-term-archived'));
     expect(archivedRow.getByText('Archived')).toBeInTheDocument();
     expect(archivedRow.getByText('Restore')).toBeInTheDocument();
     expect(archivedRow.queryByText('Activate')).not.toBeInTheDocument();
+    expect(archivedRow.queryByText('Archive')).not.toBeInTheDocument();
+    expect(
+      archivedRow.queryByRole('button', { name: `Edit ${archived.name}` })
+    ).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('row-term-draft')).getByText('Archive')).toBeInTheDocument();
     expect(getPaymentTermDisplayStatus({ ...archived, status: 'Draft' })).toBe('Draft');
   });
 

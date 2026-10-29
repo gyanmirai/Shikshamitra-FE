@@ -163,7 +163,7 @@ describe('refund policy payment methods', () => {
     expect(screen.getByRole('heading', { name: 'Refund payment details' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Refund details information' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Received By *' })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Refund reason' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /Refund reason/ })).toBeRequired();
     expect(screen.queryByRole('textbox', { name: /Remarks|Notes/ })).not.toBeInTheDocument();
     expect(screen.queryByText('Refund Date')).not.toBeInTheDocument();
     expect(screen.getByText('Transport refund')).toBeInTheDocument();

@@ -23,6 +23,7 @@ import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
+import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
 import { useDeleteClassWiseFeeStructureMutation } from 'src/redux/finance/financeFeeStructure';
 import {
   useReviseStructureMutation,
@@ -39,6 +40,7 @@ import StructureScheduleDialog from './StructureScheduleDialog';
 import FeeStructurePoliciesStep from './FeeStructurePoliciesStep';
 import useFeeStructureLookups from '../hooks/useFeeStructureLookups';
 import useFeeStructureWorkspaceForm from '../hooks/useFeeStructureWorkspaceForm';
+import { structurePublicationPrerequisites } from '../../components/financeSetupPrerequisites';
 import {
   amountError,
   defaultPolicy,
@@ -132,7 +134,6 @@ export default function FeeStructureWorkspaceCard({
       );
   }, [initialData.record, progressKey]);
   const activeStep = workflowKeys.indexOf(tab);
-  const [editing, setEditing] = useState(!initialData.record);
   const [preview, setPreview] = useState<StructurePreview>();
   const [impactFamily, setImpactFamily] = useState<StructurePolicyFamily>();
   const [error, setError] = useState('');
@@ -163,8 +164,25 @@ export default function FeeStructureWorkspaceCard({
     standardId: initialData.classId,
   };
   const scheduleLine = candidate.feeHeads.find((line) => line.feeHeadId === scheduleHead);
-  const { settings, context, heads, terms, catalogs, scheduleTerm, termDetail } =
-    useFeeStructureLookups(scope, !record || tab === 'policies', scheduleLine, locked);
+  const {
+    settings,
+    context,
+    heads,
+    terms,
+    catalogs,
+    scheduleTerm,
+    termDetail,
+    refreshPrerequisites,
+  } = useFeeStructureLookups(scope, !record || tab === 'policies', scheduleLine, locked);
+  const publicationPrerequisites = structurePublicationPrerequisites({
+    locked: !!locked || viewOnly,
+    heads,
+    terms,
+    collection: catalogs.collection,
+    settings,
+    candidate,
+  });
+  const publicationRequirements = publicationPrerequisites.map((key) => ({ key }));
   const { isLoading, isError, refetch } = context;
   const collectionItems = catalogs.collection.items;
   const refundItems = catalogs.refund.items;
@@ -305,8 +323,9 @@ export default function FeeStructureWorkspaceCard({
       ?.focus();
   }, [tab, submitted, error]);
   const policiesValid = families.every(({ key }) => !structurePolicyError(candidate, key));
-  const publishBlockReason =
-    !locked && !policiesValid
+  const publishBlockReason = publicationPrerequisites.length
+    ? 'Complete the required fee setup before publishing.'
+    : !locked && !policiesValid
       ? 'Select a Collection Policy and a Refund Policy before publishing.'
       : dirty
         ? 'Save draft before publishing.'
@@ -316,11 +335,7 @@ export default function FeeStructureWorkspaceCard({
             ? 'Run the readiness check before publishing.'
             : '';
   const writable =
-    !viewOnly &&
-    editing &&
-    !locked &&
-    !navigationBusy &&
-    !!settings?.permissions[record ? 'edit' : 'add'];
+    !viewOnly && !locked && !navigationBusy && !!settings?.permissions[record ? 'edit' : 'add'];
   const dirtyCallback = useRef(onDirtyChange);
   dirtyCallback.current = onDirtyChange;
   useEffect(() => {
@@ -369,7 +384,6 @@ export default function FeeStructureWorkspaceCard({
     setRecord(saved);
     setCandidate(next);
     setBaseline(JSON.stringify(next));
-    setEditing(false);
     setSubmitted(false);
     setServerNameError('');
     formik.setTouched({});
@@ -392,7 +406,7 @@ export default function FeeStructureWorkspaceCard({
       setPreview(record.publicationReview);
       return;
     }
-    if (!validateFields() || !validatePolicies()) return;
+    if (publicationPrerequisites.length || !validateFields() || !validatePolicies()) return;
     setError('');
     generation.current += 1;
     const requestGeneration = generation.current;
@@ -437,7 +451,6 @@ export default function FeeStructureWorkspaceCard({
     try {
       const changes = record ? buildStructureChanges(JSON.parse(baseline), candidate) : undefined;
       if (record && !Object.keys(changes ?? {}).length) {
-        setEditing(false);
         return true;
       }
       const fingerprint = JSON.stringify({ changes, stamp: candidate.concurrencyStamp });
@@ -473,8 +486,6 @@ export default function FeeStructureWorkspaceCard({
   const saveAndNext = async () => {
     if (tab === 'policies' && !validatePolicies()) return;
     if (!(await save())) return;
-    // Stay in edit mode after saving so the next stage remains usable.
-    setEditing(true);
     // Saving replaces the candidate with canonical server data. Review must
     // run from the next render, rather than against the old candidate here.
     setTab(workflowKeys[Math.min(activeStep + 1, 2)]);
@@ -491,7 +502,6 @@ export default function FeeStructureWorkspaceCard({
       const next = structureCandidate(record);
       change(next);
       setBaseline(JSON.stringify(next));
-      setEditing(!record);
       setConfirmation(null);
       return;
     }
@@ -625,18 +635,7 @@ export default function FeeStructureWorkspaceCard({
                   '& .MuiIconButton-root': { border: 1, borderColor: 'divider', borderRadius: 1 },
                 }}
                 actions={[
-                  ...(!viewOnly && !locked && !editing && settings?.permissions.edit
-                    ? [
-                        {
-                          id: 'edit',
-                          label: 'Edit Draft',
-                          icon: GlobalIcons.edit,
-                          disabled: navigationBusy,
-                          onClick: () => setEditing(true),
-                        },
-                      ]
-                    : []),
-                  ...(!viewOnly && editing && dirty
+                  ...(!viewOnly && !locked && dirty
                     ? [
                         {
                           id: 'discard',
@@ -773,6 +772,10 @@ export default function FeeStructureWorkspaceCard({
                 >
                   {tab === 'heads' && (
                     <FeeStructureHeadsStep
+                      prerequisites={publicationRequirements.filter(
+                        (item) => item.key !== 'collection-policy'
+                      )}
+                      onRefreshPrerequisites={refreshPrerequisites}
                       adding={addHeadDialog.value}
                       onAdd={addHeadDialog.onTrue}
                       onCloseAdd={addHeadDialog.onFalse}
@@ -836,44 +839,58 @@ export default function FeeStructureWorkspaceCard({
                       }}
                     />
                   )}
-                  {tab === 'policies' && (
-                    <FeeStructurePoliciesStep
-                      candidate={candidate}
-                      settings={settings}
-                      impacts={impacts}
-                      catalogs={catalogs}
-                      writable={writable}
-                      locked={!!locked}
-                      busy={navigationBusy}
-                      onChange={(key, version) => {
-                        const policy = settings.policies.find(
-                          (item) => item.family === key && item.versionId === version
-                        );
-                        if (!policy?.id || !policy.versionId) return;
-                        defaultsHandled.current.add(key);
-                        change({
-                          ...candidate,
-                          [`${key}PolicyId`]: policy.id,
-                          [`${key}PolicyVersionId`]: policy.versionId,
-                        });
-                      }}
-                      onView={setImpactFamily}
+                  {tab === 'policies' && publicationPrerequisites.includes('collection-policy') ? (
+                    <FinancePrerequisiteState
+                      requirements={[{ key: 'collection-policy' }]}
+                      onRefresh={refreshPrerequisites}
                     />
+                  ) : (
+                    tab === 'policies' && (
+                      <FeeStructurePoliciesStep
+                        candidate={candidate}
+                        settings={settings}
+                        impacts={impacts}
+                        catalogs={catalogs}
+                        writable={writable}
+                        locked={!!locked}
+                        busy={navigationBusy}
+                        onChange={(key, version) => {
+                          const policy = settings.policies.find(
+                            (item) => item.family === key && item.versionId === version
+                          );
+                          if (!policy?.id || !policy.versionId) return;
+                          defaultsHandled.current.add(key);
+                          change({
+                            ...candidate,
+                            [`${key}PolicyId`]: policy.id,
+                            [`${key}PolicyVersionId`]: policy.versionId,
+                          });
+                        }}
+                        onView={setImpactFamily}
+                      />
+                    )
                   )}
-                  {tab === 'review' && (
-                    <FeeStructureReviewStep
-                      candidate={candidate}
-                      record={record}
-                      preview={preview}
-                      impacts={impacts}
-                      writable={writable}
-                      locked={!!locked}
-                      busy={navigationBusy}
-                      previewing={previewing}
-                      tableId={`structure-review-${record?.id ?? `${initialData.classId}-${index}`}`}
-                      onReview={review}
-                      onNavigate={navigate}
+                  {tab === 'review' && publicationRequirements.length ? (
+                    <FinancePrerequisiteState
+                      requirements={publicationRequirements}
+                      onRefresh={refreshPrerequisites}
                     />
+                  ) : (
+                    tab === 'review' && (
+                      <FeeStructureReviewStep
+                        candidate={candidate}
+                        record={record}
+                        preview={preview}
+                        impacts={impacts}
+                        writable={writable}
+                        locked={!!locked}
+                        busy={navigationBusy}
+                        previewing={previewing}
+                        tableId={`structure-review-${record?.id ?? `${initialData.classId}-${index}`}`}
+                        onReview={review}
+                        onNavigate={navigate}
+                      />
+                    )
                   )}
                 </Box>
               )}

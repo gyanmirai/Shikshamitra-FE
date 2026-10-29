@@ -16,11 +16,19 @@ import ManualEntryForm from 'src/screens/finance/accounts/Registers/ManualEntryF
 
 import { api } from './mock-service';
 
-const period = { id: 'year', name: '2026–27', startDate: '2026-04-01', endDate: '2027-03-31' };
+const period = {
+  id: 'year',
+  name: '2026–27',
+  startDate: '2026-04-01',
+  endDate: '2027-03-31',
+  boards: [{ id: 'board', name: 'CBSE', educationMediums: [{ id: 'medium', name: 'English' }] }],
+};
 const permissions = ['View', 'Approve', 'Deposit', 'Reconcile']
   .map((action) => `Finance.Accounts.CashManagement.${action}`)
   .concat(['Finance.Accounts.ExpenseTracking.Add', 'Finance.Accounts.IncomeTracking.Add'])
-  .filter((name) => !new URLSearchParams(window.location.search).has('readonly') || name.endsWith('.View'))
+  .filter(
+    (name) => !new URLSearchParams(window.location.search).has('readonly') || name.endsWith('.View')
+  )
   .map((name) => ({ name, isGranted: true }));
 const store = configureStore({
   reducer: {
@@ -28,8 +36,14 @@ const store = configureStore({
     confirmPopup,
     globalState: () => ({ currentYear: period }),
     auth: () => ({
-      user: { sub: new URLSearchParams(window.location.search).has('collector') ? 'other-user' : 'reviewer' },
-      permissions, permissionsInitialized: true, loading: false,
+      user: {
+        sub: new URLSearchParams(window.location.search).has('collector')
+          ? 'other-user'
+          : 'reviewer',
+      },
+      permissions,
+      permissionsInitialized: true,
+      loading: false,
     }),
   },
   middleware: (getDefault) => getDefault({ serializableCheck: false }).concat(api.middleware),

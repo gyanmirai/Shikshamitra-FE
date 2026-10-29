@@ -3,6 +3,8 @@ import type {
   ConcessionRequestContext,
 } from 'src/redux/finance/ConcessionManagement/types';
 
+import { parseApiProblemDetail, isGenericApiProblemMessage } from 'src/utils/api-problem-details';
+
 export function validateConcessionInstallments(
   selectedHeadIds: string[],
   entries: Record<string, number | string>,
@@ -48,13 +50,21 @@ export function validateConcessionInstallments(
 }
 
 export function concessionErrorMessage(error: any, fallback: string): string {
-  const data = error?.data;
-  const code = data?.errorCode ?? data?.error?.code;
-  if (code === 'Finance:Concession:010020') {
-    return 'The selected installments or balances changed after the preview. Review the refreshed amounts and submit again.';
-  }
-  if (code === 'Finance:Concession:010032') {
-    return 'Concession amount must be a whole rupee. Enter ₹1 or more for the affected installment.';
-  }
-  return data?.detail || data?.error?.message || data?.message || error?.message || fallback;
+  const { detail, errorCode } = parseApiProblemDetail(error);
+  const generic =
+    isGenericApiProblemMessage(detail) ||
+    /^(bad request|conflict|not found|invalid request|request failed|validation failed)$/i.test(
+      detail
+    );
+  const message = generic ? fallback : detail;
+  const data = error?.response?.data ?? error?.data ?? error;
+  const traceId =
+    data?.traceId ??
+    data?.correlationId ??
+    data?.error?.data?.traceId ??
+    data?.error?.data?.correlationId;
+  const reference = typeof traceId === 'string' && traceId.trim() ? traceId.trim() : undefined;
+  const code = generic && typeof errorCode === 'string' ? `Code: ${errorCode}` : undefined;
+  const support = [code, reference && `Reference: ${reference}`].filter(Boolean).join('; ');
+  return support ? `${message} (${support})` : message;
 }

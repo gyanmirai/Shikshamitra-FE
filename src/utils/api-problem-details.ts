@@ -1,5 +1,6 @@
 import { salaryPreviewError } from './salary-preview-error';
 import { prorationPolicyErrorMessage } from './proration-policy-error';
+import { concessionRequestErrorMessage } from './concession-request-error';
 import { isGenericPermissionMessage, normalizePermissionDeniedError } from './permission-denied';
 import {
   duplicateDivisionCode,
@@ -112,10 +113,6 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   'Finance:ConcessionPolicy:010027': 'Enter a percentage with no more than two decimal places.',
   'Finance:PaymentTerm:000039':
     'These template options cannot produce a valid schedule for the selected board period. Review the installment count and date rules, then try again.',
-  'Finance:Concession:030002':
-    'Refresh the request before approval; concurrency information is missing.',
-  'Finance:Concession:030003':
-    'The request or fee balances changed. Refresh, review, and approve again.',
   'Finance:Concession:030004': 'Select and review due-fee allocations before approval.',
   'Finance:Concession:010030':
     'The paid fee has no settled receipt available for an automatic refund. Review its payment before approving the concession.',
@@ -146,13 +143,21 @@ const GENERIC_MESSAGES = new Set([
 ]);
 
 const PRORATION_HTTP_TITLES = new Set([
-  'bad request', 'conflict', 'not found', 'invalid request', 'request failed', 'validation failed',
+  'bad request',
+  'conflict',
+  'not found',
+  'invalid request',
+  'request failed',
+  'validation failed',
 ]);
 
 const normalizeMessage = (value: string) => value.trim().toLowerCase().replace(/[.]+$/, '');
 
-const isGenericMessage = (value: string) =>
+export const isGenericApiProblemMessage = (value: string) =>
   GENERIC_MESSAGES.has(normalizeMessage(value)) || isGenericPermissionMessage(value);
+
+export const isApiProblemCodeMessage = (value: string) =>
+  /^(?:[A-Za-z][A-Za-z0-9_.-]*:)+[A-Za-z0-9_.-]+$/.test(value.trim());
 
 const addCandidate = (candidates: string[], value: unknown) => {
   if (typeof value === 'string' && value.trim()) {
@@ -254,10 +259,30 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
         KNOWN_ERROR_MESSAGES[errorCode.replace(/:/g, '.')] ||
         KNOWN_ERROR_MESSAGES[errorCode.replace(/\./g, ':')]
       : undefined;
-  const specificCandidate = candidates.find((candidate) => !isGenericMessage(candidate));
+  const specificCandidate = candidates.find((candidate) => !isGenericApiProblemMessage(candidate));
   const prorationMessage = prorationPolicyErrorMessage(errorCode, businessData);
-  const prorationCandidate = prorationMessage && candidates.find((candidate) =>
-    !isGenericMessage(candidate) && !PRORATION_HTTP_TITLES.has(normalizeMessage(candidate)));
+  const prorationCandidate =
+    prorationMessage &&
+    candidates.find(
+      (candidate) =>
+        !isGenericApiProblemMessage(candidate) &&
+        !PRORATION_HTTP_TITLES.has(normalizeMessage(candidate))
+    );
+  const isConcessionError =
+    typeof errorCode === 'string' &&
+    (errorCode.startsWith('Finance:Concession:') ||
+      errorCode.startsWith('Finance:ConcessionPolicy:'));
+  const concessionMessage =
+    isConcessionError &&
+    (candidates.find(
+      (candidate) =>
+        !isGenericApiProblemMessage(candidate) &&
+        candidate !== errorCode &&
+        !isApiProblemCodeMessage(candidate) &&
+        !PRORATION_HTTP_TITLES.has(normalizeMessage(candidate))
+    ) ||
+      concessionRequestErrorMessage(errorCode, businessData) ||
+      knownMessage);
 
   const detail =
     (isDivisionDuplicate &&
@@ -268,6 +293,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
     duplicateCategoryMessage ||
     salaryPreviewError(errorCode, businessData)?.message ||
     (prorationMessage && (prorationCandidate || prorationMessage)) ||
+    concessionMessage ||
     knownMessage ||
     specificCandidate ||
     candidates[0] ||

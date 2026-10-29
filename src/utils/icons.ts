@@ -64,6 +64,8 @@ export const GlobalIcons = {
   rejectDecision: 'mdi:close-circle',
   delete: 'solar:trash-bin-trash-bold',
   receiptIcon: 'tabler:receipt',
+  paymentSummary: 'mdi:receipt-text-outline',
+  bankAccount: 'mdi:bank-outline',
   tick: 'mdi:tick-circle',
   reject: 'fluent:text-change-reject-24-filled',
   lockIcon: 'mdi:lock-outline',

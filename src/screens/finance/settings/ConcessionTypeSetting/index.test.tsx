@@ -2,7 +2,7 @@ import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
 import { configureStore } from '@reduxjs/toolkit';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 
 import ConcessionType from './index';
 
@@ -70,48 +70,31 @@ beforeEach(() => {
 });
 
 describe('Concession Type initial academic-year loading', () => {
-  it('waits for year hydration before fetching the current list or archived count', async () => {
+  it('waits for year hydration before fetching the combined list', async () => {
     const store = setup();
     await act(async () => {
       await Promise.resolve();
     });
     expect(transport.calls).toEqual([]);
-
     await act(async () => {
       store.dispatch({ type: 'changeYear', payload: 'year-2026' });
     });
-    await waitFor(() => expect(transport.calls).toHaveLength(2));
-    expect(transport.calls.every((call) => call.url === '/year-2026/concession-types')).toBe(true);
-    expect(transport.calls).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          params: expect.objectContaining({
-            maxResultCount: 10,
-            skipCount: 0,
-            includeInactive: false,
-            isActive: true,
-          }),
-        }),
-        expect.objectContaining({
-          params: expect.objectContaining({
-            maxResultCount: 1,
-            includeInactive: true,
-            isActive: false,
-          }),
-        }),
-      ])
-    );
+    await waitFor(() => expect(transport.calls).toHaveLength(1));
+    expect(transport.calls[0].params).toMatchObject({
+      maxResultCount: 10,
+      skipCount: 0,
+      includeInactive: true,
+    });
+    expect(transport.calls[0].params.isActive).toBeUndefined();
     expect(transport.calls.some((call) => call.url.startsWith('//'))).toBe(false);
   });
 
-  it('loads immediately with a selected year and preserves archived filters', async () => {
+  it('loads all statuses immediately with a selected year and no archive tabs', async () => {
     setup('year-2026');
-    await waitFor(() => expect(transport.calls).toHaveLength(2));
-    fireEvent.click(screen.getByRole('button', { name: 'Archived (0)' }));
-    await waitFor(() => expect(transport.calls).toHaveLength(3));
-    expect(transport.calls[2]).toMatchObject({
-      url: '/year-2026/concession-types',
-      params: { maxResultCount: 10, skipCount: 0, includeInactive: true, isActive: false },
-    });
+    await waitFor(() => expect(transport.calls).toHaveLength(1));
+    expect(transport.calls[0].params).toMatchObject({ includeInactive: true });
+    expect(transport.calls[0].params.isActive).toBeUndefined();
+    expect(screen.queryByRole('button', { name: 'Current' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Archived/ })).not.toBeInTheDocument();
   });
 });

@@ -11,7 +11,8 @@ import { financeModuleApi } from '../finance/financeModuleApi';
 
 export const FEE_COLLECTION_V2_BASE_URL = '/fee-collections';
 export const FEE_RECEIPT_BASE_URL = '/v1/fee-receipts';
-export const CHARGE_RECEIPT_BASE_URL = '/v1/charge-receipts';
+// Charge and fee scopes share the backend FeeReceiptController and receipt store.
+export const CHARGE_RECEIPT_BASE_URL = FEE_RECEIPT_BASE_URL;
 
 // ─── Generic Receipt PDF download helper ──────────────────────────────────
 export const downloadReceiptPdfConfig = {
@@ -552,7 +553,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
 
     /**
      * Generic receipt PDF download for both fee and charge receipts
-     * GET /v1/fee-receipts/{id}/pdf or /v1/charge-receipts/{id}/pdf
+     * GET /v1/fee-receipts/{id}/pdf for every receipt scope
      * Returns receipt PDF as Blob for authenticated preview/download.
      */
     downloadReceiptPdf: builder.mutation<

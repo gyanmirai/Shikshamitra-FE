@@ -14,6 +14,7 @@ const request = (amount: string | number) => ({
     studentId: 'student',
     refundMethod: 'Cash',
     paymentDetails: { receivedBy: 'Parent' },
+    notes: 'Excess fee payment',
   }),
   feeHeadRefunds: [
     {
@@ -46,5 +47,21 @@ describe('refund selected installment validation', () => {
     const values = request('');
     values.feeHeadRefunds.pop();
     await expect(schema.validate(values)).resolves.toBeDefined();
+  });
+});
+
+describe('refund reason validation', () => {
+  const schema = buildRefundValidationSchema({});
+
+  it.each(['', '   ', '\t\n', undefined])('rejects a missing reason %j', async (notes) => {
+    await expect(schema.validate({ ...request(100), notes })).rejects.toThrow(
+      'Refund reason is required'
+    );
+  });
+
+  it('accepts a reason with surrounding whitespace', async () => {
+    await expect(
+      schema.validate({ ...request(100), notes: '  Excess fee payment  ' })
+    ).resolves.toMatchObject({ notes: 'Excess fee payment' });
   });
 });

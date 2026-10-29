@@ -72,10 +72,26 @@ export const category: any = dependencyMode
       ],
     };
 const stableRefetch = () => {};
-const listData = { items: [category], totalCount: 1 };
+const unifiedMode = new URLSearchParams(window.location.search).has('unified');
+const currentCategory = {
+  ...category,
+  id: 'active-category',
+  name: 'Active test category',
+  isActive: true,
+  feeHeads: [],
+};
+const listData = unifiedMode
+  ? { items: [currentCategory, category], totalCount: 2 }
+  : { items: [category], totalCount: 1 };
 const routingData = {
-  items: new URLSearchParams(window.location.search).get('income') === 'empty'
-    ? [] : [{ id: 'income-1', name: 'Tuition' }],
+  items:
+    new URLSearchParams(window.location.search).get('income') === 'empty'
+      ? []
+      : [
+          { id: 'income-aaa', name: 'AAA Income' },
+          { id: 'income-none', name: 'None' },
+          { id: 'income-1', name: 'Tuition' },
+        ],
 };
 const listResult = {
   data: listData,

@@ -62,6 +62,7 @@ const policyOptions: AssignmentPolicy[] = [
 ];
 const stamps = new Map<string, number>();
 const bulkSidebar = new URLSearchParams(window.location.search).has('bulkSidebar');
+const installmentStress = new URLSearchParams(window.location.search).has('installmentStress');
 
 export const candidate: AssignmentCandidate = {
   policies: policyOptions.filter((p) => p.versionId !== 'alternate-v1'),
@@ -109,6 +110,19 @@ if (bulkSidebar) {
   );
   candidate.total = candidate.heads.reduce((sum, head) => sum + (head.configuredAmount ?? 0), 0);
 }
+// Opt-in long schedule for dialog scrolling and column-width browser checks.
+if (installmentStress) {
+  candidate.heads[0].feeHeadName =
+    'Annual Tuition Including Academic Materials and Classroom Learning Activities';
+  candidate.heads.push(
+    ...Array.from({ length: 2 }, (_, index) => ({
+      ...candidate.heads[0],
+      feeHeadId: `schedule-stress-${index}`,
+      feeHeadName: `Extended Academic Enrichment and Student Development Programme ${index + 1}`,
+    }))
+  );
+  candidate.total = candidate.heads.reduce((sum, head) => sum + (head.configuredAmount ?? 0), 0);
+}
 // Keep existing fixed fixtures stable; opt into variable pricing for browser checks.
 if (new URLSearchParams(window.location.search).has('variableFees')) {
   candidate.heads[1] = {
@@ -143,7 +157,8 @@ function preview(input: AssignmentRequest): AssignmentPreview {
       obligation: included ? effectiveAmount! : 0,
       zeroAmountReason: input.variableFeeHeads?.find((h) => h.feeHeadId === head.feeHeadId)
         ?.zeroAmountReason,
-      paymentTermName: bulkSidebar ? 'Twelve installments' : 'Two installments',
+      paymentTermName:
+        bulkSidebar || installmentStress ? 'Twelve installments' : 'Two installments',
       paymentTermVersionNumber: 3,
       servicePeriod: input.servicePeriods.find((p) => p.feeHeadId === head.feeHeadId) ?? {
         feeHeadId: head.feeHeadId,
@@ -156,27 +171,34 @@ function preview(input: AssignmentRequest): AssignmentPreview {
   const lines = heads
     .filter((h) => h.included)
     .flatMap((h) =>
-      (bulkSidebar ? [...Array<number>(11).fill(8), 12] : [60, 40]).map((share, i) => ({
-        feeHeadId: h.feeHeadId,
-        feeHeadName: h.feeHeadName,
-        installmentLabel: `Installment ${i + 1}`,
-        sequence: i + 1,
-        dueDate: bulkSidebar
-          ? new Date(Date.UTC(2026, 3 + i, 10)).toISOString().slice(0, 10)
-          : i === 0
-            ? '2026-04-10'
-            : '2026-10-10',
-        demandDate: bulkSidebar
-          ? new Date(Date.UTC(2026, 3 + i, 1)).toISOString().slice(0, 10)
-          : i === 0
-            ? '2026-04-01'
-            : '2026-10-01',
-        allocationPercentage: share,
-        scheduledAmount: (h.effectiveAmount! * share) / 100,
-        proratedAmount: (h.obligation * share) / 100,
-        paidAmount: 0,
-        outstandingAmount: (h.obligation * share) / 100,
-      }))
+      (bulkSidebar || installmentStress ? [...Array<number>(11).fill(8), 12] : [60, 40]).map(
+        (share, i) => ({
+          feeHeadId: h.feeHeadId,
+          feeHeadName: h.feeHeadName,
+          installmentLabel: `Installment ${i + 1}`,
+          sequence: i + 1,
+          dueDate:
+            bulkSidebar || installmentStress
+              ? new Date(Date.UTC(2026, 3 + i, 10)).toISOString().slice(0, 10)
+              : i === 0
+                ? '2026-04-10'
+                : '2026-10-10',
+          demandDate:
+            bulkSidebar || installmentStress
+              ? new Date(Date.UTC(2026, 3 + i, 1)).toISOString().slice(0, 10)
+              : i === 0
+                ? '2026-04-01'
+                : '2026-10-01',
+          allocationPercentage: share,
+          scheduledAmount: (h.effectiveAmount! * share) / 100,
+          proratedAmount: (h.obligation * share) / 100,
+          paidAmount: 0,
+          outstandingAmount: (h.obligation * share) / 100,
+          ...(installmentStress && {
+            explanation: 'Recorded payment-term share for this installment.',
+          }),
+        })
+      )
     );
   return {
     studentId: input.studentId,

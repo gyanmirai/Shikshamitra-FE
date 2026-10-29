@@ -15,6 +15,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Paper, Stack, Button, Divider, Typography } from '@mui/material';
+import { useGetAdjustmentEligibilityQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 
 import AdjustmentGeneralInfoCard from './AdjustmentGeneralInfoCard';
 import FeeHeadRefundTable from '../../feeRefund/NewRefundForm/FeeHeadRefundTable';
@@ -54,6 +55,7 @@ const AdjustmentForm: React.FC<
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values, helpers) => {
+      if (!canSubmitAdjustment) return;
       try {
         onSubmit(values as any);
         helpers.resetForm();
@@ -65,6 +67,19 @@ const AdjustmentForm: React.FC<
   });
 
   const { values, touched, errors, setFieldValue } = formik;
+  const eligibility = useGetAdjustmentEligibilityQuery(
+    { studentId: String(values.studentId), academicYearId: currentYear?.id ?? '' },
+    { skip: !values.studentId || !currentYear?.id }
+  );
+  const canSubmitAdjustment = Boolean(
+    eligibility.currentData &&
+    !eligibility.isFetching &&
+    !eligibility.isError &&
+    eligibility.currentData.totalAdjustable > 0 &&
+    eligibility.currentData.feeHeads.some((head) =>
+      head.months.some((month) => month.adjustable > 0)
+    )
+  );
   console.log('errie----', errors);
   // ── Derived totals for sticky footer ────────────────────────────────────────
   const { totalSelectedMonths, totalAdjustmentAmount } = useMemo(() => {
@@ -93,8 +108,8 @@ const AdjustmentForm: React.FC<
       height="100%"
     >
       {/* ── Scrollable content ── */}
-      <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-        <Box sx={{ p: { xs: 1, md: 2 }, pb: 1 }}>
+      <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
+        <Box sx={{ p: { xs: 1, md: 2 }, pb: 1, flex: 1, display: 'flex', flexDirection: 'column' }}>
           <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
             {!hideStudentInfoForm && (
               <Paper
@@ -210,6 +225,7 @@ const AdjustmentForm: React.FC<
               type="submit"
               variant="contained"
               size="small"
+              disabled={!canSubmitAdjustment}
               startIcon={<Iconify icon="mdi:tune-variant" />}
               onClick={() => formik.handleSubmit()}
             >

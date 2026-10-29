@@ -30,6 +30,7 @@ import RefundFooterActions from './refund/RefundFooterActions';
 import RefundGeneralSection from './refund/RefundGeneralSection';
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 import RefundEligibilitySection from './refund/RefundEligibilitySection';
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
 import { PAYOUT_METHODS, useRefundPolicyForm } from '../hooks/useRefundPolicyForm';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
@@ -66,6 +67,8 @@ function RefundPolicyDrawerSession({
   );
   const {
     formik,
+    prerequisites = [],
+    refreshPrerequisites,
     activeEdit,
     impact,
     isImpactLoading,
@@ -80,6 +83,7 @@ function RefundPolicyDrawerSession({
     handleCloseAttempt,
     handleCustomSubmit,
   } = useRefundPolicyForm({ open, onClose, editData, academicYearId });
+  const isPrerequisiteBlocked = prerequisites.length > 0;
   const busy = isSaving || formik.isSubmitting;
   const close = () => {
     if (!busy) handleCloseAttempt();
@@ -88,9 +92,18 @@ function RefundPolicyDrawerSession({
   const handleSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (!busy && !isInitializing && !isLoadError && canSubmit) handleCustomSubmit(selectedStatus);
+      if (!busy && !isInitializing && !isLoadError && !isPrerequisiteBlocked && canSubmit)
+        handleCustomSubmit(selectedStatus);
     },
-    [busy, isInitializing, isLoadError, canSubmit, handleCustomSubmit, selectedStatus]
+    [
+      busy,
+      isInitializing,
+      isLoadError,
+      isPrerequisiteBlocked,
+      canSubmit,
+      handleCustomSubmit,
+      selectedStatus,
+    ]
   );
 
   if (!open) return null;
@@ -152,8 +165,10 @@ function RefundPolicyDrawerSession({
               overflow: 'hidden',
             }}
           >
-            <Scrollbar sx={{ height: 1 }}>
-              <Box sx={{ p: { xs: 2, sm: 3 } }}>
+            <Scrollbar fillContent={isPrerequisiteBlocked} sx={{ height: 1 }}>
+              <Box
+                sx={{ p: { xs: 2, sm: 3 }, minHeight: 1, display: 'flex', flexDirection: 'column', flex: isPrerequisiteBlocked ? 1 : undefined }}
+              >
                 {isInitializing ? (
                   <FinancePolicySkeleton label="Loading refund policy" />
                 ) : isLoadError ? (
@@ -167,6 +182,54 @@ function RefundPolicyDrawerSession({
                   >
                     Unable to load the refund policy or its options. Retry before continuing.
                   </Alert>
+                ) : isPrerequisiteBlocked ? (
+                  <Stack spacing={2} sx={{ flex: 1 }}>
+                    <Stack spacing={1.5}>
+                      <CustomSelect
+                        fullWidth
+                        size="small"
+                        name="status"
+                        label="Status"
+                        value={formik.values.status}
+                        options={[
+                          { value: 'Draft', label: 'Draft' },
+                          { value: 'Active', label: 'Active' },
+                        ]}
+                        disabledValues={formik.initialValues.isDefault ? ['Draft'] : []}
+                        onChange={(value) => {
+                          formik.setFieldValue('status', value);
+                          if (value !== 'Active') formik.setFieldValue('isDefault', false);
+                        }}
+                      />
+                      <CustomSelect
+                        fullWidth
+                        size="small"
+                        name="feeHeadScope"
+                        label="Refundable fee heads"
+                        value={formik.values.feeHeadScope}
+                        options={[
+                          { value: 'AllFeeHeads', label: 'All fee heads' },
+                          { value: 'SelectedFeeHeads', label: 'Selected fee heads' },
+                        ]}
+                        onChange={(value) => formik.setFieldValue('feeHeadScope', value)}
+                      />
+                      <CustomSelect
+                        fullWidth
+                        size="small"
+                        multiple
+                        name="allowedPayoutMethods"
+                        label="Payment methods"
+                        options={PAYOUT_METHODS}
+                        value={formik.values.allowedPayoutMethods}
+                        onChange={(value) => formik.setFieldValue('allowedPayoutMethods', value)}
+                      />
+                    </Stack>
+                    <FinancePrerequisiteState
+                      requirements={prerequisites}
+                      onRefresh={refreshPrerequisites}
+                      sx={{ flex: 1 }}
+                    />
+                  </Stack>
                 ) : (
                   <Box
                     component="fieldset"
@@ -261,7 +324,13 @@ function RefundPolicyDrawerSession({
           </Box>
           <RefundFooterActions
             isSaving={busy}
-            disabled={isInitializing || isLoadError || !canSubmit || !formik.values.academicYearId}
+            disabled={
+              isInitializing ||
+              isLoadError ||
+              isPrerequisiteBlocked ||
+              !canSubmit ||
+              !formik.values.academicYearId
+            }
             onCancel={close}
           />
         </Box>

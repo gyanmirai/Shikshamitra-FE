@@ -3,12 +3,22 @@ module: finance
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Finance frontend routes
+
+Bank account activity remains on the existing bank-settings route; it introduces
+no second account page. `bankActivity` identifies the open account, while
+`bankActivityQuery`, `bankCreditQuery`, `bankDebitQuery` and `bankActivityTab`
+(`credit` or `debit`) preserve its drawer view. Older four-panel links fall back
+to Credit; the old deposit-query state is cleared when the drawer saves its view.
+`bankListPage`, `bankListPageSize`, `bankListSearch` and `bankListFilters` restore
+the parent table. Existing Income/Expenses/Cash Management routes accept
+`academicYearId`, `bankAccountId`, `action=add|deposit` and a restricted local
+`returnTo` for contextual entry; source links use `search` or `cashId`.
 
 TL;DR: Finance routes are owned by `src/constants/finance-menu.ts` and `src/app/(auth-route)/finance/**`.
 Use the menu source to decide whether a route is active navigation.

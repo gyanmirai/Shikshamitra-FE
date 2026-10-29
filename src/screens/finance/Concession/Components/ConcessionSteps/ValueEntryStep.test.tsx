@@ -12,16 +12,25 @@ import {
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
-function Editor({ fixed = false, policyFixed = false, empty = false, compact = false }) {
+function Editor({
+  fixed = false,
+  policyFixed = false,
+  empty = false,
+  compact = false,
+  maximumFixedAmount = 1000 as number | null,
+  eligibleAmount = 2500,
+  initialEntries = {} as Record<string, number | string>,
+}) {
   const formik = useFormik({
     initialValues: {
       concessionTypeId: 'sibling',
       concessionTypeIds: ['sibling'],
       selectedFeeHeads: { sibling: empty ? [] : ['tuition'] },
-      dueFeeEntries: {},
+      dueFeeEntries: initialEntries,
       valueEntries: {},
     },
     onSubmit: () => undefined,
+    validateOnChange: false,
   });
   return (
     <>
@@ -30,17 +39,34 @@ function Editor({ fixed = false, policyFixed = false, empty = false, compact = f
         showPolicyFixedDetails={!compact}
         formik={formik}
         concessionTypes={[{ id: 'sibling', name: 'Sibling tuition concession' }]}
-        requestContext={context}
+        requestContext={{
+          ...context,
+          eligibleDueFees: context.eligibleDueFees.map((line) => ({
+            ...line,
+            eligibleConcessionAmount: eligibleAmount,
+          })),
+        }}
         preview={preview}
         policy={{
           ...policy,
           valueSource: policyFixed ? 'PolicyFixed' : policy.valueSource,
           calculationMethod: fixed ? 'FixedAmount' : 'Percentage',
           percentageValue: 8,
+          maximumFixedAmount,
         }}
       />
       <output aria-label="Raw entries">{JSON.stringify(formik.values.dueFeeEntries)}</output>
       <output aria-label="Policy entries">{JSON.stringify(formik.values.valueEntries)}</output>
+      <button
+        type="button"
+        onClick={() =>
+          formik.setFieldValue('selectedFeeHeads', {
+            sibling: formik.values.selectedFeeHeads.sibling.length ? [] : ['tuition'],
+          })
+        }
+      >
+        Toggle tuition selection
+      </button>
     </>
   );
 }
@@ -69,9 +95,9 @@ describe('concession values and review', () => {
     expect(input).toHaveAccessibleDescription(/whole rupee/);
     const row = input.closest('.MuiTextField-root')?.parentElement as HTMLElement;
     expect(within(row).getByText('—')).toBeVisible();
-    expect(
-      screen.queryByRole('status', { name: 'Concession request allowance' })
-    ).not.toBeInTheDocument();
+    const allowance = screen.getByRole('status', { name: 'Concession request allowance' });
+    expect(allowance).toHaveTextContent(/Entered: —/);
+    expect(allowance).toHaveTextContent(/Remaining: —/);
     fireEvent.change(input, { target: { value: '1' } });
     expect(input).not.toHaveAccessibleDescription(/whole rupee/);
   });
@@ -103,10 +129,12 @@ describe('concession values and review', () => {
     fireEvent.change(second, { target: { value: '249.75' } });
     expect(screen.getByLabelText('Raw entries')).toHaveTextContent('"due-2":"249.75"');
   });
-  it('enforces the shared cap without repeated guidance and allows reallocating amounts', () => {
+  it('shows the live shared cap and allows reallocating amounts after reaching it', () => {
     render(<Editor fixed />);
-    expect(screen.queryByText(/Maximum concession for this request:/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/shared across all selected installments/)).not.toBeInTheDocument();
+    const allowance = screen.getByRole('status', { name: 'Concession request allowance' });
+    expect(allowance).toHaveTextContent(/Maximum concession allowed: ₹\s*1,000/);
+    expect(allowance).toHaveTextContent(/Entered: ₹\s*0/);
+    expect(allowance).toHaveTextContent(/Remaining: ₹\s*1,000/);
     const first = screen.getByRole('textbox', {
       name: 'Half-Yearly 1 School tuition concession amount',
     });
@@ -114,18 +142,92 @@ describe('concession values and review', () => {
       name: 'Half-Yearly 2 School tuition concession amount',
     });
     fireEvent.change(first, { target: { value: '1000' } });
-    expect(
-      screen.queryByRole('status', { name: 'Concession request allowance' })
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(second).not.toHaveAccessibleDescription();
+    expect(allowance).toHaveTextContent(/Entered: ₹\s*1,000/);
+    expect(allowance).toHaveTextContent(/Remaining: ₹\s*0/);
+    expect(allowance).toHaveTextContent(/Maximum concession reached/);
     fireEvent.change(second, { target: { value: '1' } });
     expect(screen.getByLabelText('Raw entries')).not.toHaveTextContent('"due-2":"1"');
     fireEvent.change(first, { target: { value: '900' } });
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(second).not.toHaveAccessibleDescription();
+    expect(allowance).toHaveTextContent(/Remaining: ₹\s*100/);
+    expect(allowance).not.toHaveTextContent(/Maximum concession reached/);
     fireEvent.change(second, { target: { value: '100' } });
     expect(screen.getByLabelText('Raw entries')).toHaveTextContent('"due-2":"100"');
+    expect(allowance).toHaveTextContent(/Maximum concession reached/);
+  });
+  it('updates the policy allowance immediately for the reported ₹11,111 cap', () => {
+    render(<Editor fixed compact maximumFixedAmount={11111} eligibleAmount={15000} />);
+    const allowance = screen.getByRole('status', { name: 'Concession request allowance' });
+    const first = screen.getByRole('textbox', {
+      name: 'Half-Yearly 1 School tuition concession amount',
+    });
+    const second = screen.getByRole('textbox', {
+      name: 'Half-Yearly 2 School tuition concession amount',
+    });
+    fireEvent.change(first, { target: { value: '10111' } });
+    expect(allowance).toHaveTextContent(/Maximum concession allowed: ₹\s*11,111/);
+    expect(allowance).toHaveTextContent(/Entered: ₹\s*10,111/);
+    expect(allowance).toHaveTextContent(/Remaining: ₹\s*1,000/);
+    fireEvent.change(second, { target: { value: '1001' } });
+    expect(screen.getByLabelText('Raw entries')).not.toHaveTextContent('"due-2":"1001"');
+    fireEvent.change(second, { target: { value: '1000' } });
+    expect(allowance).toHaveTextContent(/Entered: ₹\s*11,111/);
+    expect(allowance).toHaveTextContent(/Remaining: ₹\s*0/);
+    expect(allowance).toHaveTextContent(/Maximum concession reached/);
+    fireEvent.change(first, { target: { value: '10112' } });
+    expect(screen.getByLabelText('Raw entries')).toHaveTextContent('"due-1":"10111"');
+    fireEvent.change(second, { target: { value: '' } });
+    expect(allowance).toHaveTextContent(/Remaining: ₹\s*1,000/);
+    expect(allowance).not.toHaveTextContent(/Maximum concession reached/);
+  });
+  it('does not invent a fixed allowance for an uncapped or percentage policy', () => {
+    const { unmount } = render(<Editor fixed maximumFixedAmount={null} />);
+    expect(screen.queryByRole('status', { name: 'Concession request allowance' })).toBeNull();
+    unmount();
+    render(<Editor />);
+    expect(screen.queryByRole('status', { name: 'Concession request allowance' })).toBeNull();
+  });
+  it('recalculates restored entries when the selected fees or cap changes', () => {
+    const { rerender } = render(
+      <Editor fixed initialEntries={{ 'due-1': '800', 'unselected-due': '500' }} />
+    );
+    expect(screen.getByRole('status', { name: 'Concession request allowance' })).toHaveTextContent(
+      /Remaining: ₹\s*200/
+    );
+    rerender(<Editor fixed maximumFixedAmount={900} />);
+    expect(screen.getByRole('status', { name: 'Concession request allowance' })).toHaveTextContent(
+      /Remaining: ₹\s*100/
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle tuition selection' }));
+    expect(screen.queryByRole('status', { name: 'Concession request allowance' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle tuition selection' }));
+    expect(screen.getByRole('status', { name: 'Concession request allowance' })).toHaveTextContent(
+      /Entered: ₹\s*800/
+    );
+  });
+  it('marks restored over-limit entries invalid instead of announcing that the cap is reached', () => {
+    render(<Editor fixed initialEntries={{ 'due-1': '1100' }} />);
+    const allowance = screen.getByRole('status', { name: 'Concession request allowance' });
+    expect(allowance).not.toHaveTextContent(/Maximum concession reached/);
+    expect(allowance).toHaveTextContent(/Remaining: —/);
+    expect(
+      screen.getByRole('textbox', {
+        name: 'Half-Yearly 1 School tuition concession amount',
+      })
+    ).toHaveAccessibleDescription(/total concession exceeds the policy limit/);
+  });
+  it('announces a zero allowance and prevents a positive entry', () => {
+    render(<Editor fixed maximumFixedAmount={0} />);
+    const allowance = screen.getByRole('status', { name: 'Concession request allowance' });
+    expect(allowance).toHaveTextContent(/Maximum concession allowed: ₹\s*0/);
+    expect(allowance).toHaveTextContent(/Remaining: ₹\s*0/);
+    expect(allowance).toHaveTextContent(/Maximum concession reached/);
+    fireEvent.change(
+      screen.getByRole('textbox', {
+        name: 'Half-Yearly 1 School tuition concession amount',
+      }),
+      { target: { value: '1' } }
+    );
+    expect(screen.getByLabelText('Raw entries')).not.toHaveTextContent('"due-1":"1"');
   });
   it('shows each installment year once and groups the calculated reduction beside its input', () => {
     render(<Editor fixed />);

@@ -6,7 +6,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import FeeCategoryForm from './FeeCategoryForm';
 
 const routing = vi.hoisted(() => ({
-  result: { data: { items: [{ id: 'income-1', name: 'School Fee Income [ABC123]' }] },
+  result: { data: { items: [{ id: 'income-aaa', name: 'AAA Income' }, { id: 'income-1', name: 'School Fee Income [ABC123]' }, { id: 'income-none', name: 'None' }] },
     isLoading: false, isFetching: false },
 }));
 
@@ -49,6 +49,7 @@ vi.mock('src/screens/hr/policies/components/HRPolicySharedUI', () => ({
 vi.mock('src/components/shaking-text-field', () => ({
   default: ({ children }: { children: ReactNode }) => children,
 }));
+vi.mock('src/screens/finance/components/FinancePrerequisiteState', () => ({ default: () => <div>Income setup required</div> }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
 vi.mock('src/screens/finance/settings/components/DownstreamUsageWarning', () => ({
@@ -60,22 +61,47 @@ const renderForm = () =>
 
 describe('Fee category editor', () => {
   beforeEach(() => {
-    routing.result = { data: { items: [{ id: 'income-1', name: 'School Fee Income [ABC123]' }] },
+    routing.result = { data: { items: [{ id: 'income-aaa', name: 'AAA Income' }, { id: 'income-1', name: 'School Fee Income [ABC123]' }, { id: 'income-none', name: 'None' }] },
       isLoading: false, isFetching: false };
   });
 
-  it('offers only real income categories and keeps the selection required', async () => {
+  it('replaces new head fields only after current-scope income setup is resolved empty', () => {
+    Object.assign(routing.result, { currentData: { items: [] } });
+    renderForm();
+    expect(screen.getByText('Income setup required')).toBeVisible();
+    expect(screen.queryByRole('textbox', { name: 'Fee head name *' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+  });
+  it('preserves a saved historical income mapping while editing the category', () => {
+    Object.assign(routing.result, { currentData: { items: [] } });
+    render(<FeeCategoryForm open={{ value: true } as never} onClose={vi.fn()} editData={{ id: 'category', name: 'Historic', feeHeads: [{ id: 'head', name: 'Tuition', incomeCategoryId: 'old', isConcessionApplied: false }] } as never} />);
+    expect(screen.queryByText('Income setup required')).toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Fee head name *' })).toHaveValue('Tuition');
+  });
+  it('pins the stored None option first and retains it after blur without a required error', async () => {
     renderForm();
     const incomeCategory = screen.getByRole('combobox', { name: 'Income Category *' });
     fireEvent.mouseDown(incomeCategory);
     expect(await screen.findByRole('option', { name: /School Fee Income/ })).toBeVisible();
-    expect(screen.queryByRole('option', { name: 'None' })).toBeNull();
-    fireEvent.keyDown(incomeCategory, { key: 'Escape' });
+    expect(screen.getAllByRole('option')[0]).toHaveTextContent('None');
+    fireEvent.click(screen.getByRole('option', { name: /School Fee Income/ }));
+    expect(incomeCategory).toHaveValue('School Fee Income');
+    fireEvent.mouseDown(incomeCategory);
+    fireEvent.click(await screen.findByRole('option', { name: 'None' }));
+    expect(incomeCategory).toHaveValue('None');
     fireEvent.blur(incomeCategory);
-    expect(await screen.findByText('Income Category is required')).toBeVisible();
+    await waitFor(() => expect(incomeCategory).toHaveValue('None'));
+    await waitFor(() => expect(incomeCategory).toHaveAttribute('aria-invalid', 'false'));
+    expect(screen.queryByText('Income Category is required')).toBeNull();
+
+    fireEvent.mouseDown(incomeCategory);
+    expect(await screen.findByRole('option', { name: 'None' })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(await screen.findByRole('option', { name: /School Fee Income/ }));
+    await waitFor(() => expect(screen.queryByText('Income Category is required')).toBeNull());
   });
 
-  it('keeps an empty category list empty and shows its loading state', async () => {
+  it('shows loading and does not invent a None record when the API returns no categories', async () => {
     routing.result = { data: { items: [] }, isLoading: true, isFetching: true };
     const view = renderForm();
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Income Category *' }));
@@ -84,7 +110,11 @@ describe('Fee category editor', () => {
     routing.result = { data: { items: [] }, isLoading: false, isFetching: false };
     view.rerender(<FeeCategoryForm open={{ value: true } as never} onClose={vi.fn()} editData={null} />);
     expect(await screen.findByText('No income categories found')).toBeVisible();
-    expect(screen.queryByRole('option')).toBeNull();
+    expect(screen.queryByRole('option', { name: 'None' })).toBeNull();
+    const incomeCategory = screen.getByRole('combobox', { name: 'Income Category *' });
+    fireEvent.keyDown(incomeCategory, { key: 'Escape' });
+    fireEvent.blur(incomeCategory);
+    expect(await screen.findByText('Income Category is required')).toBeVisible();
   });
 
   it('blocks removal of an assigned fee head without showing a usage warning while editing', () => {

@@ -30,7 +30,7 @@ type PreviewCommand = Pick<
   | 'concessionTypeId'
   | 'feeHeadConcessions'
   | 'dueFeeConcessions'
->;
+> & { requestId?: string };
 
 type UpdateDraftCommand = ConcessionDraftCommand & {
   concessionRequestId: string;
@@ -62,10 +62,12 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         concessionTypeId?: string;
         concessionPolicyId?: string;
         concessionPolicyVersionId?: string;
+        requestId?: string;
       }
     >({
       query: (params) => ({ url: '/concession-request/context', method: 'GET', params }),
       providesTags: (_result, _error, arg) => [
+        financeModuleType.concessionRequest,
         { type: financePolicyType.concessionPolicy, id: `year:${arg.academicYearId}` },
       ],
     }),
