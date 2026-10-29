@@ -4,19 +4,19 @@ import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useRef, useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useRef, useState, useEffect } from 'react';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -54,12 +54,12 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 import {
-  useGetEarningComponentOptionsQuery,
-  useGetDeductionComponentOptionsQuery,
   useGetDeductionComponentsQuery,
   useAddDeductionComponentMutation,
+  useGetEarningComponentOptionsQuery,
   useUpdateDeductionComponentMutation,
   useDeleteDeductionComponentMutation,
+  useGetDeductionComponentOptionsQuery,
   usePreviewDeductionComponentDeleteImpactQuery,
   usePreviewDeductionComponentUpdateImpactMutation,
 } from 'src/redux/hr/employee-payroll-api';
@@ -120,7 +120,7 @@ const DeductionComponent = () => {
   );
 
   const {
-    data: getDeductionComponentsData,
+    currentData: getDeductionComponentsData,
     isLoading: getDeductionComponentsLoading,
     refetch,
     error: tableError,
@@ -304,7 +304,8 @@ const DeductionComponent = () => {
           setTableQuery((current) => ({ ...current, page, pageSize }))
         }
         onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
-        isLoading={getDeductionComponentsLoading || tableFetching}
+        isLoading={!getDeductionComponentsData && (getDeductionComponentsLoading || tableFetching)}
+        isRefreshing={Boolean(getDeductionComponentsData) && tableFetching}
         searchTerm={tableQuery.search}
         columns={[
           {

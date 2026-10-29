@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useRef, useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
@@ -15,6 +14,7 @@ import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useRef, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -34,15 +34,6 @@ import {
   SetupEditorActions,
   useHrSetupEditorState,
 } from 'src/screens/hr/setup/hr-setup-editor-context';
-import {
-  useGetEarningComponentsQuery,
-  useGetEarningComponentOptionsQuery,
-  useAddEarningComponentMutation,
-  useDeleteEarningComponentMutation,
-  useUpdateEarningComponentMutation,
-  usePreviewEarningComponentDeleteImpactQuery,
-  usePreviewEarningComponentUpdateImpactMutation,
-} from 'src/redux/hr/employee-payroll-api';
 import {
   Box,
   Grid,
@@ -64,6 +55,15 @@ import {
   DialogContentText,
   ToggleButtonGroup,
 } from '@mui/material';
+import {
+  useGetEarningComponentsQuery,
+  useAddEarningComponentMutation,
+  useDeleteEarningComponentMutation,
+  useUpdateEarningComponentMutation,
+  useGetEarningComponentOptionsQuery,
+  usePreviewEarningComponentDeleteImpactQuery,
+  usePreviewEarningComponentUpdateImpactMutation,
+} from 'src/redux/hr/employee-payroll-api';
 
 import { EarningEsiTreatmentDialog } from './earning-esi-treatment-dialog';
 import { grossSalaryOption, getCalculationBase } from './payroll-calculation-base';
@@ -134,7 +134,7 @@ const EarningComponent = () => {
   );
 
   const {
-    data: getEarningComponentsData,
+    currentData: getEarningComponentsData,
     isLoading: getEarningComponentsLoading,
     refetch,
     error: tableError,
@@ -324,7 +324,8 @@ const EarningComponent = () => {
           setTableQuery((current) => ({ ...current, page, pageSize }))
         }
         onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
-        isLoading={getEarningComponentsLoading || tableFetching}
+        isLoading={!getEarningComponentsData && (getEarningComponentsLoading || tableFetching)}
+        isRefreshing={Boolean(getEarningComponentsData) && tableFetching}
         searchTerm={tableQuery.search}
         columns={[
           {

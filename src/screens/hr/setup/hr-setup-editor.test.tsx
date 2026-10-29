@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { it, vi, expect, describe, beforeEach, afterEach } from 'vitest';
+import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 import { HrSetupEditor } from './hr-setup-editor';

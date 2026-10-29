@@ -380,8 +380,10 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '18000');
     await user.click(screen.getByLabelText('Apply PF'));
     await user.click(screen.getByLabelText('Apply ESIC'));
-    await user.type(screen.getByLabelText('Reason for turning PF off'), 'Not enrolled');
-    await user.type(screen.getByLabelText('Reason for turning ESIC off'), 'Not enrolled');
+    await user.click(screen.getByLabelText('Reason for turning PF off'));
+    await user.paste('Not enrolled');
+    await user.click(screen.getByLabelText('Reason for turning ESIC off'));
+    await user.paste('Not enrolled');
     expect(screen.getByRole('button', { name: 'Preview salary' })).toBeDisabled();
     expect(onReadinessChange).toHaveBeenLastCalledWith(
       expect.arrayContaining([

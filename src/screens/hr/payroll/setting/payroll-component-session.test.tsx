@@ -5,11 +5,11 @@ import { configureStore } from '@reduxjs/toolkit';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
-import { act, render, screen, cleanup, waitFor } from '@testing-library/react';
-import { defaultSettings } from 'src/components/settings/config-settings';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
+import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
+import { defaultSettings } from 'src/components/settings/config-settings';
 import { HrSetupEditorContext } from 'src/screens/hr/setup/hr-setup-editor-context';
+import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import EarningComponent, { EarningComponentForm } from './earning-component';
 import DeductionComponent, { DeductionComponentForm } from './deduction-component';
@@ -28,6 +28,8 @@ const mocks = vi.hoisted(() => ({
   earningOptionItems: [] as any[],
   deductionOptionItems: [] as any[],
   optionsError: false,
+  tableFetching: false,
+  currentRowsAvailable: true,
   earning: {
     id: 'earning-1',
     earningComponentName: 'Existing earning',
@@ -54,15 +56,19 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ action }: { action: ReactNode }) => <header>{action}</header>,
 }));
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ data, columns }: any) => (
-    <div>
-      {data.map((row: any) => (
-        <div key={row.id}>
-          {columns.find((column: any) => column.id === 'action')?.render(null, row)}
-        </div>
-      ))}
-    </div>
-  ),
+  default: ({ data, columns, isLoading, isRefreshing }: any) =>
+    isLoading ? (
+      <div role="status" aria-label="Loading component rows" />
+    ) : (
+      <div>
+        {isRefreshing && <div role="status" aria-label="Refreshing component rows" />}
+        {data.map((row: any) => (
+          <div key={row.id}>
+            {columns.find((column: any) => column.id === 'action')?.render(null, row)}
+          </div>
+        ))}
+      </div>
+    ),
 }));
 vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));
 vi.mock('src/screens/hr/hooks/use-hr-table-query', () => ({
@@ -82,8 +88,9 @@ vi.mock('src/redux/hr/employee-payroll-api', () => {
   const mutation = (request: any) => [request, { isLoading: false }];
   const query = (row: any) => ({
     data: { items: [row], totalCount: 1 },
+    currentData: mocks.currentRowsAvailable ? { items: [row], totalCount: 1 } : undefined,
     isLoading: false,
-    isFetching: false,
+    isFetching: mocks.tableFetching,
     refetch: mocks.refetch,
   });
   const previewQuery = () => ({
@@ -170,6 +177,8 @@ const cases = [
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.optionsError = false;
+  mocks.tableFetching = false;
+  mocks.currentRowsAvailable = true;
   mocks.earningOptionItems = [mocks.earning];
   mocks.deductionOptionItems = [mocks.deduction];
   [
@@ -194,6 +203,34 @@ afterEach(() => {
 });
 
 describe.each(cases)('$kind component sessions', ({ kind, Screen, Form, row, add, update }) => {
+  it('keeps the pressed Edit button mounted when a background refresh begins', async () => {
+    const view = renderEditor(<Screen />);
+    const edit = screen.getByRole('button', { name: 'Edit' });
+    fireEvent.mouseDown(edit);
+    mocks.tableFetching = true;
+    view.rerender(<Screen />);
+    expect(edit.isConnected).toBe(true);
+    expect(screen.getByRole('button', { name: 'Edit' })).toBe(edit);
+    expect(screen.getByRole('status', { name: 'Refreshing component rows' })).toBeVisible();
+    fireEvent.mouseUp(edit);
+    fireEvent.click(edit);
+    expect(
+      await screen.findByRole('dialog', { name: new RegExp(`Edit ${kind} Component`, 'i') })
+    ).toBeVisible();
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(add).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('uses loading rows when the current query scope has no data instead of showing a prior scope', () => {
+    mocks.currentRowsAvailable = false;
+    mocks.tableFetching = true;
+    renderEditor(<Screen />);
+    expect(screen.getByRole('status', { name: 'Loading component rows' })).toBeVisible();
+    expect(screen.queryByRole('status', { name: 'Refreshing component rows' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull();
+  });
+
   async function createNew(user: ReturnType<typeof userEvent.setup>) {
     await user.click(screen.getByRole('button', { name: `Add ${kind}` }));
     const name = screen.getByRole('textbox', { name: new RegExp(`^${kind} Name`, 'i') });
