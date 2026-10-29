@@ -24,6 +24,9 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { DetailField, DetailSection } from 'src/components/detail-view';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
+import { isFinancePrerequisiteMissing } from 'src/screens/finance/components/financePrerequisites';
+import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
 import {
   Box,
   List,
@@ -161,6 +164,15 @@ export default function AssignmentWorkflow({
     { studentId: students[0]?.studentId, academicYearId },
     { skip: !academicYearId || viewing || !canAssign }
   );
+  const missingStructure = isFinancePrerequisiteMissing({
+    ...candidates,
+    options: candidates.currentData,
+    required: !!academicYearId && !viewing && canAssign,
+  });
+  const refreshPrerequisites = () => {
+    if (!candidates.isUninitialized && !viewing && canAssign) candidates.refetch?.();
+  };
+  useRefreshFinancePrerequisites(refreshPrerequisites, !viewing && canAssign);
   const assigned = useAssignmentDetailsQuery(
     { studentId: students[0]?.studentId, academicYearId },
     { skip: !academicYearId || !viewing }
@@ -239,6 +251,7 @@ export default function AssignmentWorkflow({
   };
 
   const runPreview = async (values: AssignmentValues) => {
+    if (missingStructure) return;
     generation.current += 1;
     const ticket = generation.current;
     setError('');
@@ -569,6 +582,7 @@ export default function AssignmentWorkflow({
           loading: busy,
           disabled:
             busy ||
+            missingStructure ||
             (activeStep === 0 && (candidates.isLoading || candidates.isError)) ||
             (activeStep === 1 && invalidAmounts) ||
             (activeStep === 2 && !showResults && !retryingConfirmation && previewExpired) ||
@@ -591,7 +605,7 @@ export default function AssignmentWorkflow({
           endIcon: null,
         }}
         handleNext={async (_last, values: AssignmentValues, _formik, setLoading) => {
-          if (operation.current || busy) return;
+          if (operation.current || busy || missingStructure) return;
           if (activeStep === 0) {
             const missingReason = values.requests.find((r) => {
               const candidate = candidates.data?.find((c) => c.id === values.structureId);
@@ -695,6 +709,19 @@ export default function AssignmentWorkflow({
         renderItem={(context) => {
           const formik = context.formik as FormikProps<AssignmentValues>;
           const { values } = formik;
+          if (missingStructure && !showResults)
+            return (
+              <FinancePrerequisiteState
+                requirements={[
+                  {
+                    key: 'fee-structure',
+                    description:
+                      'No published fee structure matches this student’s class, board, medium and academic year.',
+                  },
+                ]}
+                onRefresh={refreshPrerequisites}
+              />
+            );
           const candidate = candidates.data?.find((c) => c.id === values.structureId);
           return (
             <Stack

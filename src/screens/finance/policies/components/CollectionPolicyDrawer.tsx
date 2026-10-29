@@ -1,23 +1,35 @@
 'use client';
 
-import React, { useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
+import React, { useCallback } from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Stack, Drawer, Button, Typography, CircularProgress } from '@mui/material';
+import {
+  Box,
+  Stack,
+  Drawer,
+  Button,
+  Switch,
+  Typography,
+  CircularProgress,
+  FormControlLabel,
+} from '@mui/material';
 
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 import { useCollectionPolicyForm } from '../hooks/useCollectionPolicyForm';
 import CollectionFooterActions from './collection/CollectionFooterActions';
 import CollectionGeneralSection from './collection/CollectionGeneralSection';
 import CollectionLateFeeSection from './collection/CollectionLateFeeSection';
-import CollectionAllocationSection from './collection/CollectionAllocationSection';
 import CollectionReceiptSection from './collection/CollectionReceiptSection';
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
+import CollectionAllocationSection from './collection/CollectionAllocationSection';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -45,6 +57,8 @@ function CollectionPolicyDrawerSession({
 
   const {
     formik,
+    prerequisites = [],
+    refreshPrerequisites,
     checks,
     feeHeads,
     isSaving,
@@ -61,6 +75,7 @@ function CollectionPolicyDrawerSession({
     academicYearId,
   });
 
+  const isPrerequisiteBlocked = prerequisites.length > 0;
   const busy = isSaving || formik.isSubmitting;
   const close = () => {
     if (!busy) handleCloseAttempt();
@@ -81,9 +96,9 @@ function CollectionPolicyDrawerSession({
   const handleSubmit = useCallback(
     (event?: React.FormEvent<HTMLFormElement>) => {
       event?.preventDefault();
-      if (!busy) handleCustomSubmit(selectedStatus);
+      if (!busy && !isPrerequisiteBlocked) handleCustomSubmit(selectedStatus);
     },
-    [busy, handleCustomSubmit, selectedStatus]
+    [busy, isPrerequisiteBlocked, handleCustomSubmit, selectedStatus]
   );
 
   if (!open) return null;
@@ -147,27 +162,74 @@ function CollectionPolicyDrawerSession({
           }}
         >
           {/* Scrollable Form */}
-          <Scrollbar sx={{ height: 1 }}>
+          <Scrollbar fillContent={isPrerequisiteBlocked} sx={{ height: 1 }}>
             <Box
               component="fieldset"
               disabled={busy}
               inert={busy}
-              sx={{ border: 0, m: 0, minWidth: 0, p: { xs: 2, sm: 3 } }}
+              sx={{
+                border: 0,
+                m: 0,
+                minWidth: 0,
+                minHeight: 1,
+                flex: isPrerequisiteBlocked ? 1 : undefined,
+                p: { xs: 2, sm: 3 },
+                display: 'flex',
+                flexDirection: 'column',
+              }}
             >
-              <Stack spacing={2} sx={{ minWidth: 0 }}>
-                <CollectionGeneralSection
-                  formik={formik}
-                  otherDefaultPolicyName={otherDefaultPolicyName}
-                  activeEdit={isAlreadyActive}
-                />
-                <CollectionAllocationSection formik={formik} />
-                <CollectionReceiptSection formik={formik} />
-                <CollectionLateFeeSection
-                  formik={formik}
-                  feeHeads={feeHeads}
-                  addSlab={handleAddSlab}
-                  removeSlab={handleRemoveSlab}
-                />
+              <Stack spacing={2} sx={{ minWidth: 0, flex: 1 }}>
+                {isPrerequisiteBlocked ? (
+                  <>
+                    <CustomSelect
+                      fullWidth
+                      size="small"
+                      name="status"
+                      label="Status"
+                      value={formik.values.status}
+                      options={[
+                        { value: 'Draft', label: 'Draft' },
+                        { value: 'Active', label: 'Active' },
+                      ]}
+                      disabledValues={formik.initialValues.isDefault ? ['Draft'] : []}
+                      onChange={(value) => {
+                        formik.setFieldValue('status', value);
+                        if (value !== 'Active') formik.setFieldValue('isDefault', false);
+                      }}
+                    />
+                    <FormControlLabel
+                      label="Enable late fee charges"
+                      control={
+                        <Switch
+                          size="small"
+                          checked={formik.values.enableLateFee}
+                          onChange={(_, checked) => formik.setFieldValue('enableLateFee', checked)}
+                        />
+                      }
+                    />
+                    <FinancePrerequisiteState
+                      requirements={prerequisites}
+                      onRefresh={refreshPrerequisites}
+                      sx={{ flex: 1 }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <CollectionGeneralSection
+                      formik={formik}
+                      otherDefaultPolicyName={otherDefaultPolicyName}
+                      activeEdit={isAlreadyActive}
+                    />
+                    <CollectionAllocationSection formik={formik} />
+                    <CollectionReceiptSection formik={formik} />
+                    <CollectionLateFeeSection
+                      formik={formik}
+                      feeHeads={feeHeads}
+                      addSlab={handleAddSlab}
+                      removeSlab={handleRemoveSlab}
+                    />
+                  </>
+                )}
               </Stack>
             </Box>
           </Scrollbar>
@@ -192,7 +254,11 @@ function CollectionPolicyDrawerSession({
         </Box>
 
         {/* Sticky Footer */}
-        <CollectionFooterActions isSaving={busy} invalid={!checks.numericValid} onCancel={close} />
+        <CollectionFooterActions
+          isSaving={busy}
+          invalid={!checks.numericValid || isPrerequisiteBlocked}
+          onCancel={close}
+        />
 
         {/* Unsaved changes confirmation dialog */}
         <ConfirmDialog

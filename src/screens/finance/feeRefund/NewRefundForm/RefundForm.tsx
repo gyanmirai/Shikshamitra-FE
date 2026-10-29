@@ -49,7 +49,10 @@ import {
 import RefundFormSkeleton from './RefundFormSkeleton';
 import FeeRefundDetailsForm from './FeeRefundDetailForm';
 import RefundGeneralInfoCard from './RefundGeneralInfoCard';
+import { getRefundPrerequisite } from './refundPrerequisites';
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
 import { normalizeRefundMethod, isAllowedRefundMethod } from './refundPayoutMethods';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 import {
   isValidRefundAmount,
   refundAllocationLabel,
@@ -100,6 +103,11 @@ const FeeRefundFormComponent = ({
     receiptNumber: string;
   } | null>(null);
   const confirmedAdminFingerprint = React.useRef<string | null>(null);
+  const [submissionPrerequisite, setSubmissionPrerequisite] = React.useState<{
+    studentId: string;
+    academicYearId: string;
+    key: NonNullable<ReturnType<typeof getRefundPrerequisite>>;
+  } | null>(null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // List filters may refresh while the request is being edited.
   const [openingScope] = React.useState(() => ({
@@ -331,6 +339,7 @@ const FeeRefundFormComponent = ({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values, helpers) => {
+      if (activeSubmissionPrerequisite) return;
       if (!hasSourceRefund && !refundCanSubmit) {
         shikshaMitraToast.error({
           message: 'Choose a student with refundable paid fees before submitting.',
@@ -461,6 +470,13 @@ const FeeRefundFormComponent = ({
         onCancel?.(null, true);
       } catch (err: any) {
         confirmedAdminFingerprint.current = null;
+        const prerequisite = getRefundPrerequisite({ error: err });
+        if (prerequisite)
+          setSubmissionPrerequisite({
+            studentId: values.studentId,
+            academicYearId: currentYear.id,
+            key: prerequisite,
+          });
         const parsed = parseApiProblemDetail(err);
         const message =
           err?.status === 500 && parsed.detail === 'The request failed.'
@@ -490,6 +506,24 @@ const FeeRefundFormComponent = ({
     refundEligibility.currentData.feeHeads.some((head) =>
       head.months.some((month) => month.refundable > 0)
     )
+  );
+  const eligibilityPrerequisite =
+    !hasSourceRefund && formik.values.studentId
+      ? getRefundPrerequisite(refundEligibility)
+      : undefined;
+  const activeSubmissionPrerequisite =
+    submissionPrerequisite?.studentId === formik.values.studentId &&
+    submissionPrerequisite.academicYearId === currentYear?.id
+      ? submissionPrerequisite.key
+      : undefined;
+  const prerequisite = activeSubmissionPrerequisite ?? eligibilityPrerequisite;
+  const refreshPrerequisites = () => {
+    setSubmissionPrerequisite(null);
+    if (!refundEligibility.isUninitialized) refundEligibility.refetch();
+  };
+  useRefreshFinancePrerequisites(
+    refreshPrerequisites,
+    Boolean(formik.values.studentId && currentYear?.id)
   );
   useEffect(() => {
     formik.resetForm();
@@ -554,9 +588,9 @@ const FeeRefundFormComponent = ({
       height="100%"
     >
       {/* ── Scrollable content ── */}
-      <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-        <Box sx={{ p: { xs: 1, md: 2 }, pb: 1 }}>
-          <FormBusyRegion busy={busy} label="Checking and submitting refund…">
+      <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
+        <Box sx={{ p: { xs: 1, md: 2 }, pb: 1, flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <FormBusyRegion fillContent busy={busy} label="Checking and submitting refund…">
             <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
               {editLoadError ? (
                 <Alert
@@ -579,7 +613,7 @@ const FeeRefundFormComponent = ({
               ) : showSkeleton ? (
                 <RefundFormSkeleton />
               ) : (
-                <Stack spacing={1}>
+                <Stack spacing={1} sx={{ flex: 1 }}>
                   {/* ── Student Information Card ── */}
                   <FormSectionCard
                     descriptionTooltip="Select the student's board, medium, class and division for the current academic year, then choose the student. Refund eligibility comes from paid fees and the linked refund policy."
@@ -590,14 +624,21 @@ const FeeRefundFormComponent = ({
                   </FormSectionCard>
 
                   {/* ── Fee Refund Details ── */}
-                  <FeeRefundDetailsForm
-                    formik={formik}
-                    allowedPayoutMethods={
-                      isEdit || (replacementRefundId && editRefundDetail?.concessionRequestId)
-                        ? editRefundDetail?.allowedPayoutMethods
-                        : undefined
-                    }
-                  />
+                  {prerequisite ? (
+                    <FinancePrerequisiteState
+                      requirements={[{ key: prerequisite }]}
+                      onRefresh={refreshPrerequisites}
+                    />
+                  ) : (
+                    <FeeRefundDetailsForm
+                      formik={formik}
+                      allowedPayoutMethods={
+                        isEdit || (replacementRefundId && editRefundDetail?.concessionRequestId)
+                          ? editRefundDetail?.allowedPayoutMethods
+                          : undefined
+                      }
+                    />
+                  )}
                 </Stack>
               )}
             </BackPopUpChecked>
@@ -697,7 +738,8 @@ const FeeRefundFormComponent = ({
                 !formik.isValid ||
                 totalSelectedMonths === 0 ||
                 incompleteRefundMonths > 0 ||
-                (!hasSourceRefund && !refundCanSubmit)
+                (!hasSourceRefund && !refundCanSubmit) ||
+                Boolean(prerequisite)
               }
               loading={
                 loading ||

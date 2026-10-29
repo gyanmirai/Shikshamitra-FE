@@ -54,6 +54,7 @@ function Fixture() {
         <Button onClick={() => { close(); resetFixture(); store.dispatch(api.util.resetApiState()); }}>Reset synthetic scenario</Button>
         <Button onClick={() => { close(); resetFixture('statuses'); store.dispatch(api.util.resetApiState()); }}>Mixed statuses</Button>
         <Button onClick={() => { close(); resetFixture('selection'); store.dispatch(api.util.resetApiState()); }}>Selection regression</Button>
+        <Button onClick={() => { close(); resetFixture('settled'); store.dispatch(api.util.resetApiState()); }}>Settled balances</Button>
         <Button onClick={() => { close(); resetFixture('charge-receipt'); store.dispatch(api.util.resetApiState()); }}>Charge receipt regression</Button>
         <Button onClick={() => { close(); resetFixture('charge-receipt-retry'); store.dispatch(api.util.resetApiState()); }}>Charge receipt retry regression</Button>
         <Button onClick={() => setMode('light')}>Light</Button><Button onClick={() => setMode('dark')}>Dark</Button>

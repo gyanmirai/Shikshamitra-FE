@@ -1,13 +1,14 @@
 import React from 'react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import ConcessionRequestForm from './ConcessionRequestForm';
 
 const state = vi.hoisted(() => ({
   detail: {} as any,
   context: {} as any,
+  contextError: null as any,
   queryError: null as any,
   preview: {} as any,
   previewRequest: vi.fn(),
@@ -30,6 +31,11 @@ vi.mock('react-redux', () => ({
 }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => true }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('../../components/FinancePrerequisiteState', () => ({
+  default: ({ requirements }: any) => (
+    <div>{requirements.map((item: any) => item.key).join(',')}</div>
+  ),
+}));
 vi.mock('src/utils/icons', () => ({ GlobalIcons: {} }));
 // Keep this suite focused on the real Formik workflow and API command chain.
 // The browser fixture separately mounts all production MUI presentation components.
@@ -131,13 +137,20 @@ vi.mock('src/redux/finance/ConcessionManagement/concessionManagementApi', () => 
   usePreviewConcessionRequestMutation: () => [state.previewRequest],
   useGetConcessionRequestContextQuery: (params: unknown) => {
     state.contextArgs(params);
-    return { data: state.context, refetch: state.contextRefetch };
+    return {
+      data: state.context,
+      currentData: state.context,
+      isError: Boolean(state.contextError),
+      error: state.contextError,
+      refetch: state.contextRefetch,
+    };
   },
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   state.queryError = null;
+  state.contextError = null;
   state.detail = {
     id: 'request',
     concessionRequestId: 'request',
@@ -206,6 +219,29 @@ const renderForm = () =>
   render(<ConcessionRequestForm {...formProps} editData={{ id: 'request' } as any} />);
 
 describe('concession request update concurrency', () => {
+  it('shows resolved missing types and policies for a new request without hiding student selection', () => {
+    state.context = { ...state.context, concessionTypes: [], concessionPolicies: [] };
+    render(<ConcessionRequestForm {...formProps} />);
+    expect(screen.getByText('concession-type,concession-policy')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Student Information' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeDisabled();
+  });
+
+  it('retains an existing request when currently active setup lists are empty', () => {
+    state.context = { ...state.context, concessionTypes: [], concessionPolicies: [] };
+    renderForm();
+    expect(screen.queryByText('concession-type,concession-policy')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+  });
+
+  it('shows fee assignment setup for the exact missing-assignment error while retaining Cancel', () => {
+    state.context = undefined;
+    state.contextError = { data: { errorCode: 'Finance:Concession:010029' } };
+    renderForm();
+    expect(screen.getByText('fee-assignment')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeDisabled();
+  });
   it('releases a resolved server blocker without losing fee selections or the reviewed stamp', async () => {
     const message = 'Another request is pending for this concession type in this academic year.';
     state.context.concessionTypes[0].benefitBlocker = {
@@ -285,11 +321,11 @@ describe('concession request update concurrency', () => {
     async (status) => {
       const message =
         status === 'Pending'
-          ? 'A pending request already exists for this concession type in this academic year.'
+          ? 'A pending concession request already exists for this concession type in this academic year. Review the existing request.'
           : 'This student already has an approved benefit for this concession type in this academic year. Another benefit cannot be requested or approved.';
       state.context.concessionTypes[0].benefitBlocker = {
         code: status === 'Pending' ? 'Finance:Concession:010010' : 'Finance:Concession:010034',
-        message,
+        message: status === 'Pending' ? 'Finance:Concession:010010' : 'Finance:Concession:010034',
         blockingRequestId: 'existing-request',
         blockingStatus: status,
       };

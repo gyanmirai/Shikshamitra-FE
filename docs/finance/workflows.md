@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -19,7 +19,9 @@ Existing backend operations that share one permission identifier remain one capa
 
 ## Review a bank account's activity
 
-Open a bank-name link or its row in Bank Accounts. The read-only right drawer
+The bank activity drawer is temporarily disabled at the user's request: the opening handler and drawer mount in `BankAccManagement/index.tsx` are commented out. Clicking a bank or restoring a saved `bankActivity` URL does not open it. The implementation below is retained for later re-enabling.
+
+When enabled, open a bank-name link or its row in Bank Accounts. The read-only right drawer
 contains exactly Credit and Debit tabs, with masked identity, academic-year
 context, header/section help and a fixed Close footer. Each tab uses the shared
 server table with column filters, search, sorting, columns, pagination, density,
@@ -424,6 +426,12 @@ The current workspace creates and reviews charge batches, while Fee Collection c
 
 ## Trace collection and receipt changes
 
+When the complete collection ledger has no collectible fees or charges, Collect Fees shows
+“No outstanding fees or charges to collect. Items with no outstanding balance cannot be selected.”
+as informational feedback instead of asking for a selection. Existing eligibility rules keep
+settled rows unavailable; unpaid charges and late fees remain selectable even when principal
+fees are settled. Display filters do not determine this state.
+
 Collection Policy's **Receipt Generation** section uses the existing section card, `CustomSelect`, Formik/Yup and `ShakingTextField`. Staff choose **Single combined receipt** or **Separate fee and charge receipts**. Older policies retain separate receipts. The details drawer displays the saved choice in a corresponding section; its help explains that fees-only or charges-only payments produce one document.
 
 The collect-form response exposes `receiptGrouping` from the resolved policy version. Payment preview explains the expected receipt count using the actual allocation. The completed collection displays one combined receipt with fees, late fees and charges, or two documents with independent receipt numbers and downloads. Combined documents use `feeReceiptId` and the existing fee-receipt PDF endpoint. Reconciliation displays one row per original provisional document. Its shared decision form explains that separate fee/charge documents for one payment are verified together; mutation cache invalidation refreshes both rows.
@@ -745,3 +753,19 @@ succeeds. Completing the receipt dialog returns to the refreshed collection list
 5. Approval/rejection invalidates receipt list/detail cache tags as well as reconciliation and collection data, so reopening Receipts shows the updated linkage.
 
 Backend rules and PDF contract: [Provisional and official receipts](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md). Bank-statement import and automatic matching are outside this delivery.
+
+## Missing form prerequisites
+
+Finance forms share `FormPrerequisiteState` through the Finance route/permission adapter. A successful empty lookup for the current year and form context replaces the dependent body with a centered explanation, a permitted setup/review link and **Refresh options**. Headers, Cancel and entered values stay mounted; submission is guarded. Setup opens in a new tab, and returning refetches options. Users without the destination's View and relevant action grant see administrator guidance. Loading, denied, failed, skipped and filtered searches are not missing setup.
+
+| Forms | Prerequisites covered |
+| --- | --- |
+| Refund, Proration and Collection policies | Selected/late-fee heads; expense or income mapping when activating; non-cash refund bank |
+| Fee heads, Fee Categories and Charge Categories | Fee category and income mappings |
+| Payment Terms and Fee Structures | Board/calendar; active heads; published board/year terms; active collection policy for publication |
+| Fee Assignment and Concession Requests | Matching published structure; student assignment; active concession type and policy |
+| Charges and Collections | Charge category; assigned obligations; bank for non-cash collection |
+| Refund Requests, payouts and Adjustments | Assigned refund policy; eligible paid sources; explicit pending-verification responses; payout category and bank |
+| Manual Income/Expense and Cash Management | Category; non-cash bank; available cash; deposit/approval bank |
+
+Draft and optional choices retain their existing rules: all-head refund drafts, disabled late fees, cash collection without a bank, approved charge-only collection and optional structure policies remain available. Historical mappings and saved version pins remain visible. Cash command retries retain their original uncertain-outcome payload; the server remains authoritative for balances, eligibility and publication.

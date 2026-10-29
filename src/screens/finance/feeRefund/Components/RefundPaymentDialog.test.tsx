@@ -12,6 +12,11 @@ import RefundPaymentDialog from './RefundPaymentDialog';
 import type { IStudentFeeData } from '../type';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('../../components/FinancePrerequisiteState', () => ({
+  default: ({ requirements }: any) => (
+    <div>{requirements.map((item: any) => item.key).join(',')}</div>
+  ),
+}));
 
 const refund = {
   name: 'Test Student',
@@ -23,16 +28,28 @@ const refund = {
   _defaultPayingBankAccountId: 'bank-1',
 } as IStudentFeeData;
 
-function setup(overrides: Partial<IStudentFeeData> = {}, onSubmit = vi.fn(async () => {})) {
+function setup(
+  overrides: Partial<IStudentFeeData> = {},
+  onSubmit = vi.fn(async () => {}),
+  routing: {
+    bankAccounts?: any[];
+    expenseCategories?: any[];
+    isError?: boolean;
+    isLoading?: boolean;
+  } = {}
+) {
   const onClose = vi.fn();
   render(
     <Provider store={configureStore({ reducer: { confirmPopup } })}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <RefundPaymentDialog
           refund={{ ...refund, ...overrides }}
-          bankAccounts={[{ id: 'bank-1', label: 'School Bank' }]}
-          expenseCategories={[{ id: 'category-1', label: 'Fee refunds' }]}
-          bankAccountsLoading={false}
+          bankAccounts={routing.bankAccounts ?? [{ id: 'bank-1', label: 'School Bank' }]}
+          expenseCategories={
+            routing.expenseCategories ?? [{ id: 'category-1', label: 'Fee refunds' }]
+          }
+          bankAccountsLoading={routing.isLoading ?? false}
+          routingError={routing.isError}
           loading={false}
           onClose={onClose}
           onSubmit={onSubmit}
@@ -42,6 +59,22 @@ function setup(overrides: Partial<IStudentFeeData> = {}, onSubmit = vi.fn(async 
   );
   return { onClose, onSubmit };
 }
+
+it('shows both routing prerequisites and blocks payout even when saved IDs remain in the form', async () => {
+  const { onSubmit } = setup({}, undefined, { bankAccounts: [], expenseCategories: [] });
+  expect(screen.getByText('expense-category,bank-account')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Record Payment' })).toBeDisabled();
+  fireEvent.submit(document.querySelector('form')!);
+  await waitFor(() => expect(onSubmit).not.toHaveBeenCalled());
+});
+
+it('keeps routing failures distinct from missing expense categories or banks', () => {
+  setup({}, undefined, { bankAccounts: [], expenseCategories: [], isError: true });
+  expect(screen.getByRole('alert')).toHaveTextContent('Unable to load refund payment routing');
+  expect(screen.queryByText('expense-category,bank-account')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Record Payment' })).toBeDisabled();
+});
 
 it('requires expense routing for cash and submits without a handover or verification field', async () => {
   const { onSubmit } = setup({ _defaultExpenseCategoryId: '', _defaultPayingBankAccountId: '' });

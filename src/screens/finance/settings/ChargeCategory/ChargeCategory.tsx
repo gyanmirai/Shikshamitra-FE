@@ -1,55 +1,55 @@
 'use client';
 
-import type { IParams } from 'src/components/customizabaleTable/types';
-import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
-
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IParams, IColumn } from 'src/components/customizabaleTable/types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { financePaths, financePermissions } from 'src/constants/finance-menu';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useRef, useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useRef, useMemo, useState, useCallback } from 'react';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
-
+import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
+import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
+import { setupOptionsMissing } from 'src/screens/finance/settings/components/financeSetupPrerequisites';
+import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
 import {
   Box,
   Chip,
   Stack,
   Button,
+  Switch,
   TextField,
   Typography,
   DialogActions,
-  Switch,
   FormControlLabel,
 } from '@mui/material';
 import {
   type ChargeCategoryUsage,
-  useLazyGetChargeCategoryUsageQuery,
   useGetChargeCategoriesQuery,
   usePutChargeCategoryMutation,
   usePostChargeCategoryMutation,
   useDeleteChargeCategoryMutation,
+  useLazyGetChargeCategoryUsageQuery,
   usePatchChargeCategoryStatusMutation,
 } from 'src/redux/finance/chargeCategory';
 
@@ -169,7 +169,7 @@ const FinanceChargeCategory = () => {
     setSelectedEntry(item);
     setDeletionUsage(null);
     confirm.onTrue();
-    void checkDeletionUsage(item.id);
+    checkDeletionUsage(item.id);
   };
 
   // Handle add new item
@@ -495,7 +495,9 @@ const FinanceChargeCategory = () => {
             <Button
               variant="contained"
               startIcon={<Iconify icon="mdi:refresh" />}
-              onClick={() => selectedEntry?.id && void checkDeletionUsage(selectedEntry.id)}
+              onClick={() => {
+                if (selectedEntry?.id) checkDeletionUsage(selectedEntry.id);
+              }}
             >
               Retry
             </Button>
@@ -612,7 +614,7 @@ export const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategory
   const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
   const [pendingFormValues, setPendingFormValues] = useState<ChargeCategoryFormValues | null>(null);
 
-  const { data: incomeCategoryData, isLoading: incomeCategoryLoading } = useQueryAndMutation({
+  const incomeCategoryQuery = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFinanceRoutingOptionsQuery,
     params: {
@@ -623,6 +625,17 @@ export const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategory
     },
     options: { skip: !currentYear?.id || !open },
   });
+
+  const { data: incomeCategoryData, isLoading: incomeCategoryLoading } = incomeCategoryQuery;
+  const missingIncomeCategory = setupOptionsMissing(
+    incomeCategoryQuery,
+    !!currentYear?.id && open,
+    editData?.incomeCategoryId
+  );
+  const refreshPrerequisites = () => {
+    if (!incomeCategoryQuery.isUninitialized) incomeCategoryQuery.refetch?.();
+  };
+  useRefreshFinancePrerequisites(refreshPrerequisites, open);
 
   const incomeCategoryOptions = useMemo(
     () =>
@@ -695,6 +708,7 @@ export const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategory
     validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
+      if (missingIncomeCategory) return;
       // Check if updating an item that is used downstream
       if (editData?.isUsedInDownstream && editData?.id) {
         setPendingFormValues(values);
@@ -709,6 +723,7 @@ export const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategory
 
   // Perform the actual form submission
   const performSubmission = async (values: ChargeCategoryFormValues) => {
+    if (missingIncomeCategory) return;
     try {
       const payload = {
         name: values.chargeName,
@@ -752,94 +767,103 @@ export const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategory
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <DialogScrollContent>
-          <Stack spacing={2} p={0}>
-            {/* Charge Category Name Field */}
-            <ShakingTextField
-              error={!!(formik.touched.chargeName && formik.errors.chargeName) || false}
-            >
-              <TextField
-                size="small"
-                value={formik.values.chargeName}
-                name="chargeName"
-                fullWidth
-                label="Charge Category Name *"
-                onChange={(e: any) => {
-                  const onlyLetters = e.target.value
-                    .replace(/[^a-zA-Z0-9\s]/g, '')
-                    .replace(/^\s+/g, '')
-                    .trimStart();
-                  const newName = onlyLetters
-                    .split(' ')
-                    .map(
-                      (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                    )
-                    .join(' ');
-                  formik.setFieldValue('chargeName', newName);
-                }}
-                error={formik.touched.chargeName && Boolean(formik.errors.chargeName)}
-                inputProps={{ maxLength: 40 }}
-                helperText={
-                  (formik.touched.chargeName && typeof formik.errors.chargeName === 'string'
-                    ? formik.errors.chargeName
-                    : undefined) || undefined
-                }
-              />
-            </ShakingTextField>
+          {missingIncomeCategory ? (
+            <FinancePrerequisiteState
+              requirements={[{ key: 'income-category' }]}
+              onRefresh={refreshPrerequisites}
+            />
+          ) : (
+            <Stack spacing={2} p={0}>
+              {/* Charge Category Name Field */}
+              <ShakingTextField
+                error={!!(formik.touched.chargeName && formik.errors.chargeName) || false}
+              >
+                <TextField
+                  size="small"
+                  value={formik.values.chargeName}
+                  name="chargeName"
+                  fullWidth
+                  label="Charge Category Name *"
+                  onChange={(e: any) => {
+                    const onlyLetters = e.target.value
+                      .replace(/[^a-zA-Z0-9\s]/g, '')
+                      .replace(/^\s+/g, '')
+                      .trimStart();
+                    const newName = onlyLetters
+                      .split(' ')
+                      .map(
+                        (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                      )
+                      .join(' ');
+                    formik.setFieldValue('chargeName', newName);
+                  }}
+                  error={formik.touched.chargeName && Boolean(formik.errors.chargeName)}
+                  inputProps={{ maxLength: 40 }}
+                  helperText={
+                    (formik.touched.chargeName && typeof formik.errors.chargeName === 'string'
+                      ? formik.errors.chargeName
+                      : undefined) || undefined
+                  }
+                />
+              </ShakingTextField>
 
-            {/* Income category determines the income account used when the charge is collected. */}
-            <ShakingTextField
-              error={!!(formik.touched.incomeCategoryId && formik.errors.incomeCategoryId) || false}
-            >
-              <CustomSelect
-                name="incomeCategoryId"
-                label="Income Category *"
-                options={incomeCategoryOptions}
-                value={formik.values.incomeCategoryId || ''}
-                labelKey="displayName"
-                valueKey="id"
-                isLoading={incomeCategoryLoading}
-                disabled={Boolean(editData?.isUsedInDownstream)}
-                onChange={(value) => formik.setFieldValue('incomeCategoryId', value)}
-                error={formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)}
-                helperText={
-                  (formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
-                    ? (formik.errors.incomeCategoryId as string)
-                    : undefined) || undefined
+              {/* Income category determines the income account used when the charge is collected. */}
+              <ShakingTextField
+                error={
+                  !!(formik.touched.incomeCategoryId && formik.errors.incomeCategoryId) || false
                 }
-              />
-            </ShakingTextField>
+              >
+                <CustomSelect
+                  name="incomeCategoryId"
+                  label="Income Category *"
+                  options={incomeCategoryOptions}
+                  value={formik.values.incomeCategoryId || ''}
+                  labelKey="displayName"
+                  valueKey="id"
+                  isLoading={incomeCategoryLoading}
+                  disabled={Boolean(editData?.isUsedInDownstream)}
+                  onChange={(value) => formik.setFieldValue('incomeCategoryId', value)}
+                  error={formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)}
+                  helperText={
+                    (formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
+                      ? (formik.errors.incomeCategoryId as string)
+                      : undefined) || undefined
+                  }
+                />
+              </ShakingTextField>
 
-            <Box>
-              <FormControlLabel
-                sx={{ m: 0 }}
-                label="Approval Required"
-                control={
-                  <Switch
-                    name="isApprovalRequired"
-                    checked={formik.values.isApprovalRequired}
-                    onChange={(_, checked) => formik.setFieldValue('isApprovalRequired', checked)}
-                  />
-                }
-              />
-            </Box>
+              <Box>
+                <FormControlLabel
+                  sx={{ m: 0 }}
+                  label="Approval Required"
+                  control={
+                    <Switch
+                      name="isApprovalRequired"
+                      checked={formik.values.isApprovalRequired}
+                      onChange={(_, checked) => formik.setFieldValue('isApprovalRequired', checked)}
+                    />
+                  }
+                />
+              </Box>
 
-            {/* Description Field */}
-            <ShakingTextField
-              error={!!(formik.touched.description && formik.errors.description) || false}
-            >
-              <TextField
-                multiline
-                rows={4}
-                size="small"
-                value={formik.values.description}
-                name="description"
-                fullWidth
-                label="Description"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-            </ShakingTextField>
-          </Stack>
+              {/* Description Field */}
+              <ShakingTextField
+                error={!!(formik.touched.description && formik.errors.description) || false}
+              >
+                <TextField
+                  multiline
+                  rows={4}
+                  size="small"
+                  value={formik.values.description}
+                  name="description"
+                  fullWidth
+                  label="Description"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+              </ShakingTextField>
+            </Stack>
+          )}
         </DialogScrollContent>
       </BackPopUpChecked>
 
@@ -857,6 +881,7 @@ export const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategory
           size="small"
           type="submit"
           variant="contained"
+          disabled={missingIncomeCategory}
           loading={postLoading || putLoading}
           startIcon={
             <Iconify

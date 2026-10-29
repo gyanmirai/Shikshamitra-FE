@@ -156,6 +156,9 @@ const normalizeMessage = (value: string) => value.trim().toLowerCase().replace(/
 export const isGenericApiProblemMessage = (value: string) =>
   GENERIC_MESSAGES.has(normalizeMessage(value)) || isGenericPermissionMessage(value);
 
+export const isApiProblemCodeMessage = (value: string) =>
+  /^(?:[A-Za-z][A-Za-z0-9_.-]*:)+[A-Za-z0-9_.-]+$/.test(value.trim());
+
 const addCandidate = (candidates: string[], value: unknown) => {
   if (typeof value === 'string' && value.trim()) {
     candidates.push(value.trim());
@@ -274,6 +277,8 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
     (candidates.find(
       (candidate) =>
         !isGenericApiProblemMessage(candidate) &&
+        candidate !== errorCode &&
+        !isApiProblemCodeMessage(candidate) &&
         !PRORATION_HTTP_TITLES.has(normalizeMessage(candidate))
     ) ||
       concessionRequestErrorMessage(errorCode, businessData) ||
@@ -288,6 +293,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
     duplicateCategoryMessage ||
     salaryPreviewError(errorCode, businessData)?.message ||
     (prorationMessage && (prorationCandidate || prorationMessage)) ||
+    concessionMessage ||
     knownMessage ||
     specificCandidate ||
     candidates[0] ||

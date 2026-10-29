@@ -1,7 +1,7 @@
 import React from 'react';
-import { shikshaMitraToast } from 'src/components/toast';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { shikshaMitraToast } from 'src/components/toast';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import {
@@ -577,7 +577,12 @@ describe('embedded Finance collection context', () => {
       <FeeCollectComponentForm
         academicYear={academicYear}
         collectionAdapter={adapter({
-          data: { ...form(), student: { ...form().student, isFeeStructureAssigned: false } } as any,
+          data: {
+            ...form(),
+            ledger: [],
+            charges: [],
+            student: { ...form().student, isFeeStructureAssigned: false },
+          } as any,
         })}
       />
     );

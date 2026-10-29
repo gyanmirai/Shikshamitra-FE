@@ -15,6 +15,9 @@ const state = vi.hoisted(() => ({
   policyToast: vi.fn(),
   mobile: false,
 }));
+vi.mock('react-redux', () => ({
+  useSelector: (select: any) => select({ auth: { permissions: [] } }),
+}));
 vi.mock('src/hooks/use-responsive', () => ({
   useResponsive: (query: string, breakpoint: string) =>
     state.mobile && query === 'down' && breakpoint === 'sm',
@@ -87,7 +90,8 @@ const term = {
   demandGenerationRule: '',
   installments: [],
 };
-const catalog = { items: [], ready: true, loading: false, error: false, retry: vi.fn() };
+// Row/editor tests do not resolve the separate policy catalog unless they supply one.
+const catalog = { items: [], ready: false, loading: false, error: false, retry: vi.fn() };
 const initialData = {
   name: '',
   classId: 'class',
@@ -511,20 +515,20 @@ it('keeps a new fee head local until its required fields are valid', async () =>
   expect(state.mutate).not.toHaveBeenCalled();
 });
 
-it('requires a payment frequency and defaults it when published terms finish loading', async () => {
+it('explains a resolved empty payment-term catalog and defaults a term after setup completes', async () => {
   state.lookups.settings.terms = [];
   state.lookups.terms = { ...catalog, ready: true, loading: false };
   const view = render(ui());
+  expect(screen.getByRole('heading', { name: 'Set up payment terms first' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Fee Head' })).toBeDisabled();
+  expect(state.mutate).not.toHaveBeenCalled();
+  state.lookups.settings = { ...state.lookups.settings, terms: [term] };
+  view.rerender(ui());
   await addHead();
   fireEvent.change(screen.getByRole('textbox', { name: /Annual amount/ }), {
     target: { value: '90' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-  expect(await screen.findByText('Select a published payment frequency.')).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Edit Tuition' })).toBeNull();
-  state.lookups.terms = { ...catalog };
-  state.lookups.settings = { ...state.lookups.settings, terms: [term] };
-  view.rerender(ui());
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: /Payment frequency/ }).textContent).toContain(
       'Monthly'
@@ -547,17 +551,39 @@ const savedHead = (overrides = {}) => ({
   paymentTermVersionId: 'old-v1',
   paymentTermName: 'Old monthly',
   paymentTermVersionNumber: 1,
-  scheduleMode: 'Inherited',
+  scheduleMode: 'Inherited' as const,
   installmentOverrides: [],
   ...overrides,
 });
 const savedRecord = (head = savedHead()) => ({
   ...structureCandidate(),
   id: 'saved',
+  revisionRootId: 'saved',
+  creationTime: '2026-10-01T00:00:00Z',
   name: 'Saved fees',
   status: 1,
   revisionNumber: 1,
   feeHeads: [head],
+});
+
+it('replaces an empty resolved collection-policy step and recovers without losing the draft name', async () => {
+  state.lookups.catalogs.collection = { ...catalog, ready: true };
+  const view = render(ui());
+  fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
+    target: { value: 'Preserved draft name' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
+  expect(screen.getByRole('heading', { name: 'Set up a collection policy first' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Select Collection Policy' })).toBeNull();
+  expect(state.mutate).not.toHaveBeenCalled();
+  state.lookups.settings.policies = [{
+    family: 'collection', id: 'collection', name: 'Standard collection',
+    versionId: 'collection-v1', versionNumber: 1,
+  }];
+  view.rerender(ui());
+  expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+  expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue('Preserved draft name');
 });
 
 it('opens saved drafts with direct fee-head actions and keeps them available after saving and discarding', async () => {

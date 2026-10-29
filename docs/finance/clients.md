@@ -3,12 +3,21 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Finance frontend clients
+
+## Inline feedback
+
+`src/theme/module-feedback-styles.tsx` applies the shared Finance alert appearance to
+`/finance` and its child routes, including portalled dialogs and drawers. Existing MUI
+`Alert` messages use a paper background, divider border, neutral text, compact padding,
+and a severity-colored icon. Render the message directly without adding generic
+Info/Warning/Error/Success headings. Preserve meaningful issue titles, alert semantics,
+and recovery actions. Toasts retain their shared styling.
 
 ## Bank account activity
 

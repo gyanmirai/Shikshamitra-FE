@@ -49,6 +49,7 @@ vi.mock('src/screens/hr/policies/components/HRPolicySharedUI', () => ({
 vi.mock('src/components/shaking-text-field', () => ({
   default: ({ children }: { children: ReactNode }) => children,
 }));
+vi.mock('src/screens/finance/components/FinancePrerequisiteState', () => ({ default: () => <div>Income setup required</div> }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
 vi.mock('src/screens/finance/settings/components/DownstreamUsageWarning', () => ({
@@ -64,6 +65,20 @@ describe('Fee category editor', () => {
       isLoading: false, isFetching: false };
   });
 
+  it('replaces new head fields only after current-scope income setup is resolved empty', () => {
+    Object.assign(routing.result, { currentData: { items: [] } });
+    renderForm();
+    expect(screen.getByText('Income setup required')).toBeVisible();
+    expect(screen.queryByRole('textbox', { name: 'Fee head name *' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+  });
+  it('preserves a saved historical income mapping while editing the category', () => {
+    Object.assign(routing.result, { currentData: { items: [] } });
+    render(<FeeCategoryForm open={{ value: true } as never} onClose={vi.fn()} editData={{ id: 'category', name: 'Historic', feeHeads: [{ id: 'head', name: 'Tuition', incomeCategoryId: 'old', isConcessionApplied: false }] } as never} />);
+    expect(screen.queryByText('Income setup required')).toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Fee head name *' })).toHaveValue('Tuition');
+  });
   it('pins the stored None option first and retains it after blur without a required error', async () => {
     renderForm();
     const incomeCategory = screen.getByRole('combobox', { name: 'Income Category *' });

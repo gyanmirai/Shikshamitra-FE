@@ -22,6 +22,8 @@ const mocks = vi.hoisted(() => ({
   cashBalance: 100,
   cashFetching: false,
   cashError: false,
+  noCategories: false,
+  noBanks: false,
   cashOptions: vi.fn(),
   routing: vi.fn(),
 }));
@@ -65,9 +67,13 @@ vi.mock('src/redux/finance/financeRoutingApi', () => ({
       currentData: mocks.error
         ? undefined
         : {
-            incomeCategories: [{ id: 'income-category', label: 'Other income' }],
-            expenseCategories: [{ id: 'expense-category', label: 'Supplies' }],
-            bankAccounts: [{ id: 'bank', label: 'School bank' }],
+            incomeCategories: mocks.noCategories
+              ? []
+              : [{ id: 'income-category', label: 'Other income' }],
+            expenseCategories: mocks.noCategories
+              ? []
+              : [{ id: 'expense-category', label: 'Supplies' }],
+            bankAccounts: mocks.noBanks ? [] : [{ id: 'bank', label: 'School bank' }],
           },
     };
   },
@@ -175,6 +181,8 @@ beforeEach(() => {
   mocks.cashFetching = false;
   mocks.cashError = false;
   mocks.canAdd = true;
+  mocks.noCategories = false;
+  mocks.noBanks = false;
   mocks.unwrap.mockReset().mockResolvedValue({});
   mocks.create.mockImplementation(() => ({ unwrap: mocks.unwrap }));
 });
@@ -244,6 +252,28 @@ it('blocks manual entry submission without its exact Add permission', () => {
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   expect(mocks.create).not.toHaveBeenCalled();
+});
+
+it('replaces the entry body with a prerequisite message only after categories resolve empty', () => {
+  mocks.noCategories = true;
+  setup('income');
+  expect(screen.getByRole('heading', { name: 'Add an income category first' })).toBeVisible();
+  expect(screen.queryByLabelText(/^Income name/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+});
+
+it('keeps the payment method switch available when noncash banks are empty', async () => {
+  mocks.noBanks = true;
+  setup('income', 'bank');
+  expect(screen.getByRole('heading', { name: 'Add a bank account first' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: '0' } });
+  await waitFor(() =>
+    expect(
+      screen.queryByRole('heading', { name: 'Add a bank account first' })
+    ).not.toBeInTheDocument()
+  );
 });
 
 it('shows pooled year cash without receipt or reference selection', () => {

@@ -66,11 +66,20 @@ let remainingPdfFailures = 0;
 export const requests: Array<{ url: string; method: string; body?: unknown }> = [];
 const replay = new Map<string, CollectFeeOutput>();
 
-export function resetFixture(scenario?: 'statuses' | 'selection' | 'charge-receipt' | 'charge-receipt-retry') {
+export function resetFixture(scenario?: 'statuses' | 'selection' | 'settled' | 'charge-receipt' | 'charge-receipt-retry') {
   ledger = initialLedger();
   charges = initialCharges();
   chargeReceiptScenario = scenario === 'charge-receipt' || scenario === 'charge-receipt-retry';
   remainingPdfFailures = scenario === 'charge-receipt-retry' ? 1 : 0;
+  if (scenario === 'settled') {
+    ledger.flatMap((group) => group.items).forEach((item) => {
+      Object.assign(item, { paid: item.total, due: 0, status: 'Paid' });
+    });
+    ledger.forEach((group) => { group.totalDue = 0; });
+    charges.forEach((charge) => {
+      Object.assign(charge, { paidAmount: charge.amount, pendingAmount: 0, status: 'Paid' });
+    });
+  }
   if (chargeReceiptScenario) {
     ledger.flatMap((group) => group.items).forEach((item) => {
       Object.assign(item, { paid: item.total, due: 0, status: 'Paid' });

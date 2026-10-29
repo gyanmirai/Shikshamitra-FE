@@ -363,30 +363,33 @@ export default function FeeRefundDetailsForm({
 
             {/* Notes */}
             <Grid size={12}>
-              <TextField
-                fullWidth
-                multiline
-                minRows={2}
-                size="small"
-                label="Refund reason"
-                name="notes"
-                value={formik.values.notes}
-                onChange={(e) => {
-                  let val = e.target.value.replace(/[<>]/g, '');
-                  if (val.length > 500) val = val.slice(0, 500);
-                  formik.setFieldValue('notes', val);
-                }}
-                onBlur={(e) => {
-                  const val = e.target.value;
-                  const trimmed = val.trim().replace(/\s+/g, ' ');
-                  if (trimmed !== val) {
-                    formik.setFieldValue('notes', trimmed);
-                  }
-                  formik.handleBlur(e);
-                }}
-                error={Boolean(formik.touched.notes && formik.errors.notes)}
-                helperText={(formik.touched.notes && formik.errors.notes) || undefined}
-              />
+              <ShakingTextField error={Boolean(formik.touched.notes && formik.errors.notes)}>
+                <TextField
+                  required
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  size="small"
+                  label="Refund reason"
+                  name="notes"
+                  value={formik.values.notes}
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/[<>]/g, '');
+                    if (val.length > 500) val = val.slice(0, 500);
+                    formik.setFieldValue('notes', val);
+                  }}
+                  onBlur={(e) => {
+                    const val = e.target.value;
+                    const trimmed = val.trim().replace(/\s+/g, ' ');
+                    if (trimmed !== val) {
+                      formik.setFieldValue('notes', trimmed);
+                    }
+                    formik.handleBlur(e);
+                  }}
+                  error={Boolean(formik.touched.notes && formik.errors.notes)}
+                  helperText={(formik.touched.notes && formik.errors.notes) || undefined}
+                />
+              </ShakingTextField>
             </Grid>
           </Grid>
         </FormSectionCard>

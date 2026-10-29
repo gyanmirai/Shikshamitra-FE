@@ -84,7 +84,7 @@ describe('concession benefit approval eligibility', () => {
     (status) => {
       state.context.benefitBlocker = {
         code: 'Finance:Concession:010034',
-        message: approvedMessage,
+        message: 'Finance:Concession:010034',
         blockingRequestId: 'approved-200',
         blockingStatus: status,
       };

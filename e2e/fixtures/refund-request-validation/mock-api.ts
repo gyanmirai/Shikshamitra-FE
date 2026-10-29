@@ -1,6 +1,7 @@
 const eligibility = {
   totalPaid: 6000,
   totalRefundable: 6000,
+  allowPartialRefund: true,
   allowedPayoutMethods: ['Cash'],
   feeHeads: ['FH1', 'FH2'].map((feeHeadId) => ({
     feeHeadId,

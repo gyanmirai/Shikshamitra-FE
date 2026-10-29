@@ -1,4 +1,5 @@
 import type { FormikProps } from 'formik';
+import type { FinancePrerequisite } from 'src/screens/finance/components/FinancePrerequisiteState';
 import type {
   StructureLine,
   StructureSettings,
@@ -15,6 +16,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
 import { Box, Stack, Alert, Button, TextField, Typography, FormHelperText } from '@mui/material';
 
 import { structureMoney } from '../feeStructurePresentation';
@@ -22,6 +24,8 @@ import FeeStructureHeadDialog from './FeeStructureHeadDialog';
 import { amountError, paymentTermError } from '../feeStructureModel';
 
 interface Props {
+  prerequisites?: FinancePrerequisite[];
+  onRefreshPrerequisites?: () => void;
   adding: boolean;
   onAdd: () => void;
   onCloseAdd: () => void;
@@ -50,6 +54,8 @@ interface Props {
 }
 
 export default function FeeStructureHeadsStep({
+  prerequisites = [],
+  onRefreshPrerequisites,
   adding,
   onAdd,
   onCloseAdd,
@@ -148,7 +154,13 @@ export default function FeeStructureHeadsStep({
               size="small"
               variant="contained"
               startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-              disabled={busy || headsLoading || headsError || !settings.permissions.headsRead}
+              disabled={
+                busy ||
+                headsLoading ||
+                headsError ||
+                !settings.permissions.headsRead ||
+                prerequisites.length > 0
+              }
               onClick={onAdd}
             >
               Fee Head
@@ -184,220 +196,240 @@ export default function FeeStructureHeadsStep({
             Payment terms could not be loaded. Saved version pins are preserved.
           </Alert>
         )}
-        <CustomizableTable
-          getRowAction={(row) =>
-            !busy && row.paymentTermVersionId && settings.permissions.termsRead
-              ? {
-                  label: `Open ${row.feeHeadName} schedule`,
-                  onClick: () => {
-                    onSchedule(row.feeHeadId);
-                  },
-                }
-              : undefined
-          }
-          tableTitle="Fee heads"
-          tableId={`${tableId}-summary`}
-          data={lines}
-          isPagination={false}
-          isSearch={false}
-          isFilter={false}
-          isShowedDense={false}
-          showToolbar={false}
-          noDataText={
-            writable
-              ? 'No fee heads added. Add a fee head to build this structure.'
-              : 'No fee heads are configured for this structure.'
-          }
-          columns={[
-            {
-              id: 'feeHeadName',
-              label: 'Fee head name',
-              minWidth: 220,
-              isFilter: false,
-              isSort: false,
-              render: (_value, row) => (
-                <Box>
-                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                    {row.feeHeadName}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {[row.categoryName, row.isOptional ? 'Optional' : 'Required']
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </Typography>
-                  {mobile && (row.amountError || row.termError) && (
-                    <Stack
-                      role="group"
-                      aria-label={`Errors for ${row.feeHeadName}`}
-                      data-invalid="true"
-                      tabIndex={-1}
-                      spacing={0.5}
-                      sx={{ mt: 0.5 }}
-                    >
-                      {row.amountError && (
-                        <FormHelperText error sx={{ m: 0 }}>
-                          Annual amount: {row.amountError}
-                        </FormHelperText>
+        {prerequisites.length && !candidate.feeHeads.length ? (
+          <FinancePrerequisiteState
+            requirements={prerequisites}
+            onRefresh={onRefreshPrerequisites}
+          />
+        ) : (
+          <>
+            <CustomizableTable
+              getRowAction={(row) =>
+                !busy && row.paymentTermVersionId && settings.permissions.termsRead
+                  ? {
+                      label: `Open ${row.feeHeadName} schedule`,
+                      onClick: () => {
+                        onSchedule(row.feeHeadId);
+                      },
+                    }
+                  : undefined
+              }
+              tableTitle="Fee heads"
+              tableId={`${tableId}-summary`}
+              data={lines}
+              isPagination={false}
+              isSearch={false}
+              isFilter={false}
+              isShowedDense={false}
+              showToolbar={false}
+              noDataText={
+                writable
+                  ? 'No fee heads added. Add a fee head to build this structure.'
+                  : 'No fee heads are configured for this structure.'
+              }
+              columns={[
+                {
+                  id: 'feeHeadName',
+                  label: 'Fee head name',
+                  minWidth: 220,
+                  isFilter: false,
+                  isSort: false,
+                  render: (_value, row) => (
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                        {row.feeHeadName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {[row.categoryName, row.isOptional ? 'Optional' : 'Required']
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </Typography>
+                      {mobile && (row.amountError || row.termError) && (
+                        <Stack
+                          role="group"
+                          aria-label={`Errors for ${row.feeHeadName}`}
+                          data-invalid="true"
+                          tabIndex={-1}
+                          spacing={0.5}
+                          sx={{ mt: 0.5 }}
+                        >
+                          {row.amountError && (
+                            <FormHelperText error sx={{ m: 0 }}>
+                              Annual amount: {row.amountError}
+                            </FormHelperText>
+                          )}
+                          {row.termError && (
+                            <FormHelperText error sx={{ m: 0 }}>
+                              Payment frequency: {row.termError}
+                            </FormHelperText>
+                          )}
+                        </Stack>
                       )}
-                      {row.termError && (
-                        <FormHelperText error sx={{ m: 0 }}>
-                          Payment frequency: {row.termError}
+                    </Box>
+                  ),
+                },
+                {
+                  id: 'amount',
+                  label: 'Annual amount',
+                  minWidth: 160,
+                  align: 'left',
+                  isFilter: false,
+                  isSort: false,
+                  render: (_value, row) => (
+                    <Stack
+                      spacing={0.5}
+                      role="group"
+                      aria-label={`Annual amount for ${row.feeHeadName}`}
+                      data-invalid={!!row.amountError}
+                      aria-describedby={
+                        row.amountError
+                          ? `${validationId}-${row.feeHeadId}-amount-error`
+                          : undefined
+                      }
+                      tabIndex={row.amountError ? -1 : undefined}
+                    >
+                      <Typography
+                        variant="body2"
+                        color={row.amountError ? 'error.main' : 'text.primary'}
+                        sx={{ fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        {row.isVariable
+                          ? 'Set during assignment'
+                          : row.amount == null
+                            ? 'Not set'
+                            : structureMoney(row.amount)}
+                      </Typography>
+                      {row.amountError && (
+                        <FormHelperText
+                          error
+                          id={`${validationId}-${row.feeHeadId}-amount-error`}
+                          sx={{ m: 0, textAlign: 'left' }}
+                        >
+                          {row.amountError}
                         </FormHelperText>
                       )}
                     </Stack>
-                  )}
-                </Box>
-              ),
-            },
-            {
-              id: 'amount',
-              label: 'Annual amount',
-              minWidth: 160,
-              align: 'left',
-              isFilter: false,
-              isSort: false,
-              render: (_value, row) => (
-                <Stack
-                  spacing={0.5}
-                  role="group"
-                  aria-label={`Annual amount for ${row.feeHeadName}`}
-                  data-invalid={!!row.amountError}
-                  aria-describedby={
-                    row.amountError ? `${validationId}-${row.feeHeadId}-amount-error` : undefined
-                  }
-                  tabIndex={row.amountError ? -1 : undefined}
-                >
-                  <Typography
-                    variant="body2"
-                    color={row.amountError ? 'error.main' : 'text.primary'}
-                    sx={{ fontVariantNumeric: 'tabular-nums' }}
-                  >
-                    {row.isVariable
-                      ? 'Set during assignment'
-                      : row.amount == null
-                        ? 'Not set'
-                        : structureMoney(row.amount)}
-                  </Typography>
-                  {row.amountError && (
-                    <FormHelperText
-                      error
-                      id={`${validationId}-${row.feeHeadId}-amount-error`}
-                      sx={{ m: 0, textAlign: 'left' }}
+                  ),
+                },
+                {
+                  id: 'paymentTermName',
+                  label: 'Payment frequency',
+                  minWidth: 220,
+                  isFilter: false,
+                  isSort: false,
+                  render: (_value, row) => (
+                    <Stack
+                      spacing={0.5}
+                      role="group"
+                      aria-label={`Payment frequency for ${row.feeHeadName}`}
+                      data-invalid={!!row.termError}
+                      aria-describedby={
+                        row.termError ? `${validationId}-${row.feeHeadId}-term-error` : undefined
+                      }
+                      tabIndex={row.termError ? -1 : undefined}
                     >
-                      {row.amountError}
-                    </FormHelperText>
-                  )}
-                </Stack>
-              ),
-            },
-            {
-              id: 'paymentTermName',
-              label: 'Payment frequency',
-              minWidth: 220,
-              isFilter: false,
-              isSort: false,
-              render: (_value, row) => (
-                <Stack
-                  spacing={0.5}
-                  role="group"
-                  aria-label={`Payment frequency for ${row.feeHeadName}`}
-                  data-invalid={!!row.termError}
-                  aria-describedby={
-                    row.termError ? `${validationId}-${row.feeHeadId}-term-error` : undefined
-                  }
-                  tabIndex={row.termError ? -1 : undefined}
-                >
-                  <Typography
-                    variant="body2"
-                    color={row.termError ? 'error.main' : 'text.primary'}
-                    sx={{ overflowWrap: 'anywhere' }}
-                  >
-                    {row.paymentTermId && row.paymentTermVersionId
-                      ? row.paymentTermName || 'Attached payment frequency'
-                      : 'Not selected'}
-                  </Typography>
-                  {row.paymentTermVersionId && (
-                    <Typography variant="caption" color="text.secondary">
-                      Version {row.paymentTermVersionNumber ?? '?'}
-                      {row.scheduleMode === 'Customized' ? ' · Customized installments' : ''}
-                    </Typography>
-                  )}
-                  {row.termError && (
-                    <FormHelperText
-                      error
-                      id={`${validationId}-${row.feeHeadId}-term-error`}
-                      sx={{ m: 0 }}
-                    >
-                      {row.termError}
-                    </FormHelperText>
-                  )}
-                </Stack>
-              ),
-            },
-            {
-              id: 'actions',
-              label: 'Actions',
-              width: 128,
-              minWidth: 128,
-              maxWidth: 128,
-              align: 'center',
-              sticky: true,
-              stickyPosition: 'right',
-              isFilter: false,
-              isSort: false,
-              excludeFromExport: true,
-              render: (_value, row) => (
-                <AdaptiveThreeDotsActions
-                  directActionLimit={2}
-                  collapseOnOverflow={false}
-                  moreLabel={`More actions for ${row.feeHeadName}`}
-                  sx={{
-                    justifyContent: 'center',
-                    '& .MuiIconButton-root': { border: 1, borderColor: 'divider', borderRadius: 1 },
-                  }}
-                  actions={[
-                    ...(writable
-                      ? [
-                          {
-                            id: 'edit',
-                            label: `Edit ${row.feeHeadName}`,
-                            icon: GlobalIcons.edit,
-                            tooltip: 'Edit Fee Head',
-                            disabled: busy,
-                            onClick: () => {
-                              setEditingLine(
-                                candidate.feeHeads.find((line) => line.feeHeadId === row.feeHeadId)
-                              );
-                              dialog.onTrue();
-                            },
-                          },
-                          {
-                            id: 'remove',
-                            label: `Delete ${row.feeHeadName}`,
-                            icon: GlobalIcons.delete,
-                            tooltip: 'Delete Fee Head',
-                            color: 'error.main',
-                            disabled: busy,
-                            onClick: () => setRemovingLine(row as StructureLine),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              ),
-            },
-          ]}
-        />
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          spacing={1}
-          sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}
-        >
-          <Typography variant="subtitle2">Total annual amount</Typography>
-          <Typography variant="h6">{structureMoney(total)}</Typography>
-        </Stack>
+                      <Typography
+                        variant="body2"
+                        color={row.termError ? 'error.main' : 'text.primary'}
+                        sx={{ overflowWrap: 'anywhere' }}
+                      >
+                        {row.paymentTermId && row.paymentTermVersionId
+                          ? row.paymentTermName || 'Attached payment frequency'
+                          : 'Not selected'}
+                      </Typography>
+                      {row.paymentTermVersionId && (
+                        <Typography variant="caption" color="text.secondary">
+                          Version {row.paymentTermVersionNumber ?? '?'}
+                          {row.scheduleMode === 'Customized' ? ' · Customized installments' : ''}
+                        </Typography>
+                      )}
+                      {row.termError && (
+                        <FormHelperText
+                          error
+                          id={`${validationId}-${row.feeHeadId}-term-error`}
+                          sx={{ m: 0 }}
+                        >
+                          {row.termError}
+                        </FormHelperText>
+                      )}
+                    </Stack>
+                  ),
+                },
+                {
+                  id: 'actions',
+                  label: 'Actions',
+                  width: 128,
+                  minWidth: 128,
+                  maxWidth: 128,
+                  align: 'center',
+                  sticky: true,
+                  stickyPosition: 'right',
+                  isFilter: false,
+                  isSort: false,
+                  excludeFromExport: true,
+                  render: (_value, row) => (
+                    <AdaptiveThreeDotsActions
+                      directActionLimit={2}
+                      collapseOnOverflow={false}
+                      moreLabel={`More actions for ${row.feeHeadName}`}
+                      sx={{
+                        justifyContent: 'center',
+                        '& .MuiIconButton-root': {
+                          border: 1,
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                        },
+                      }}
+                      actions={[
+                        ...(writable
+                          ? [
+                              {
+                                id: 'edit',
+                                label: `Edit ${row.feeHeadName}`,
+                                icon: GlobalIcons.edit,
+                                tooltip: 'Edit Fee Head',
+                                disabled: busy,
+                                onClick: () => {
+                                  setEditingLine(
+                                    candidate.feeHeads.find(
+                                      (line) => line.feeHeadId === row.feeHeadId
+                                    )
+                                  );
+                                  dialog.onTrue();
+                                },
+                              },
+                              {
+                                id: 'remove',
+                                label: `Delete ${row.feeHeadName}`,
+                                icon: GlobalIcons.delete,
+                                tooltip: 'Delete Fee Head',
+                                color: 'error.main',
+                                disabled: busy,
+                                onClick: () => setRemovingLine(row as StructureLine),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  ),
+                },
+              ]}
+            />
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              spacing={1}
+              sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}
+            >
+              <Typography variant="subtitle2">Total annual amount</Typography>
+              <Typography variant="h6">{structureMoney(total)}</Typography>
+            </Stack>
+          </>
+        )}
       </FormSectionCard>
+      {prerequisites.length > 0 && candidate.feeHeads.length > 0 && (
+        <FinancePrerequisiteState requirements={prerequisites} onRefresh={onRefreshPrerequisites} />
+      )}
       {(dialog.value || adding) && (
         <FeeStructureHeadDialog
           line={editingLine}

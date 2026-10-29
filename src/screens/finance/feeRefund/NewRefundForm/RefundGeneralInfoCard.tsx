@@ -126,7 +126,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
             }}
             error={!!errors.boardId && touched.boardId}
             helperText={(touched.boardId && errors.boardId) as string}
-            formControlProps={{ fullWidth: true }}
+            formControlProps={{ fullWidth: true, disabled }}
           />
         </ShakingTextField>
       </Grid>
@@ -155,7 +155,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
             }}
             error={!!errors.mediumId && touched.mediumId}
             helperText={(touched.mediumId && errors.mediumId) as string}
-            formControlProps={{ fullWidth: true }}
+            formControlProps={{ fullWidth: true, disabled: disabled || !values.boardId }}
           />
         </ShakingTextField>
       </Grid>
@@ -183,7 +183,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
             }}
             error={!!errors.standardId && touched.standardId}
             helperText={(touched.standardId && errors.standardId) as string}
-            formControlProps={{ fullWidth: true }}
+            formControlProps={{ fullWidth: true, disabled: disabled || !values.mediumId }}
           />
         </ShakingTextField>
       </Grid>
@@ -208,7 +208,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
             }}
             error={!!errors.divisionId && touched.divisionId}
             helperText={(touched.divisionId && errors.divisionId) as string}
-            formControlProps={{ fullWidth: true }}
+            formControlProps={{ fullWidth: true, disabled: disabled || !values.standardId }}
           />
         </ShakingTextField>
       </Grid>

@@ -9,6 +9,7 @@ const formState = vi.hoisted(() => ({
   dirty: false,
   submitting: false,
   loading: false,
+  calendarMissing: false,
   resetForm: vi.fn(),
   dispatch: vi.fn(),
 }));
@@ -29,6 +30,8 @@ vi.mock('../hooks/usePaymentTermForm', () => ({
       resetForm: formState.resetForm,
     },
     boards: [],
+    calendarMissing: formState.calendarMissing,
+    refreshPrerequisites: vi.fn(),
     checks: { isReadyToPublish: false, validationMessage: '' },
     demandLabel: '',
     isSubmitting: formState.submitting,
@@ -46,12 +49,13 @@ vi.mock('../hooks/usePaymentTermForm', () => ({
 vi.mock('src/components/back-popup-check/BackPopUpCheck', () => ({
   BackPopUpChecked: ({ children }: { children: ReactNode }) => children,
 }));
+vi.mock('src/screens/finance/components/FinancePrerequisiteState', () => ({ default: () => <div>Board calendar required</div> }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/scrollbar', () => ({
   Scrollbar: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
-vi.mock('./sections/GeneralInfoSection', () => ({ GeneralInfoSection: () => null }));
-vi.mock('./sections/InstallmentSection', () => ({ InstallmentSection: () => null }));
+vi.mock('./sections/GeneralInfoSection', () => ({ GeneralInfoSection: () => <div>Board context</div> }));
+vi.mock('./sections/InstallmentSection', () => ({ InstallmentSection: () => <div>Installment fields</div> }));
 vi.mock('./panels/SummaryPanel', () => ({ SummaryPanel: () => null }));
 vi.mock('./PaymentTermUsage', () => ({
   PaymentTermDefaultSummary: () => null,
@@ -145,4 +149,14 @@ it('clears the shared navigation dirty flag when the form closes', () => {
     type: 'confirmPopup/setIsChanges',
     payload: false,
   });
+});
+
+it('keeps board context and Cancel when calendar setup replaces the dependent schedule', () => {
+  formState.calendarMissing = true;
+  renderForm('create');
+  expect(screen.getByText('Board context')).toBeVisible();
+  expect(screen.getByText('Board calendar required')).toBeVisible();
+  expect(screen.queryByText('Installment fields')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+  formState.calendarMissing = false;
 });

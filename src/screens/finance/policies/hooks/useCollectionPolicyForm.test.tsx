@@ -35,6 +35,12 @@ vi.mock('src/redux/feeHeadManage/feeHeadManageApi', () => ({
   useGetActiveFeeHeadsQuery: () => ({ data: [] }),
 }));
 
+vi.mock('src/redux/finance/financeRoutingApi', () => ({
+  useGetFinanceRoutingOptionsQuery: () => ({
+    currentData: { incomeCategories: [], bankAccounts: [], expenseCategories: [] },
+    refetch: vi.fn(),
+  }),
+}));
 vi.mock('src/redux/finance/collectionPolicy', () => ({
   useGetCollectionPoliciesQuery: () => ({ data: { items: [] } }),
   useCreateCollectionPolicyMutation: mocks.createHook,

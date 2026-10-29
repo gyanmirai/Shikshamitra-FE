@@ -5,6 +5,7 @@ import type {
 
 import { useId } from 'react';
 import { Stack } from '@mui/material';
+import { concessionBenefitBlockerMessage } from 'src/utils/concession-benefit-blocker';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
@@ -45,9 +46,14 @@ export default function ConcessionPolicyFields({
   const policyHelperId = `${fieldId}-policy-help`;
   const typeHelperId = `${fieldId}-type-help`;
   const selectedTypeBlocker = types.find((type) => type.id === typeId)?.benefitBlocker;
-  const typeFeedback = selectedTypeBlocker?.message || typeHelperText;
+  const typeFeedback = concessionBenefitBlockerMessage(selectedTypeBlocker) || typeHelperText;
   return (
-    <Stack spacing={1.5}>
+    <Stack
+      sx={{
+        gap: 2,
+        '& > *': { minWidth: 0 },
+      }}
+    >
       <ShakingTextField error={policyError}>
         <CustomSelect
           required
@@ -94,7 +100,7 @@ export default function ConcessionPolicyFields({
           options={types.map((type) => ({
             id: type.id,
             name: type.name,
-            unavailableReason: type.benefitBlocker?.message || '',
+            unavailableReason: concessionBenefitBlockerMessage(type.benefitBlocker) || '',
           }))}
           disabledValues={types.filter((type) => type.benefitBlocker).map((type) => type.id)}
           disabledReasonKey="unavailableReason"

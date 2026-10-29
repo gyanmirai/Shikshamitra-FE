@@ -29,6 +29,9 @@ import {
 } from 'src/redux/finance/cashManagementApi';
 
 import { cashActionAllowed, cashCommandSchema } from '../cashManagementRules';
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
+import { isFinancePrerequisiteMissing } from '../../components/financePrerequisites';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 
 import type { CashAction } from '../cashManagementRules';
 
@@ -223,6 +226,20 @@ export default function CashCommandDialog({
     helperText: formik.touched[name] ? formik.errors[name] : undefined,
   });
   const title = approve ? 'Approve Cash' : confirm ? 'Confirm Bank Credit' : 'Record Bank Deposit';
+  const missingBank =
+    allowed &&
+    approve &&
+    !uncertain &&
+    isFinancePrerequisiteMissing({
+      ...options,
+      options: options.currentData?.bankAccounts,
+    });
+  useRefreshFinancePrerequisites(
+    () => {
+      options.refetch();
+    },
+    allowed && approve && !locked && !uncertain
+  );
   return (
     <>
       <CustomDialog
@@ -251,176 +268,188 @@ export default function CashCommandDialog({
         paperProps={{ sx: { backgroundImage: 'none' } }}
       >
         <DialogScrollContent>
-          <Stack spacing={1.5}>
-            {!allowed && (
-              <Alert severity="error">This cash action is no longer available. Close.</Alert>
-            )}
-            {failure && (
-              <Alert severity="error">
-                {failure}
-                {stale && (
-                  <Button disabled={locked || refreshing} onClick={refreshLatest}>
-                    Refresh cash details
+          {missingBank ? (
+            <FinancePrerequisiteState
+              requirements={[{ key: 'bank-account' }]}
+              onRefresh={() => {
+                options.refetch();
+              }}
+            />
+          ) : (
+            <Stack spacing={1.5}>
+              {!allowed && (
+                <Alert severity="error">This cash action is no longer available. Close.</Alert>
+              )}
+              {failure && (
+                <Alert severity="error">
+                  {failure}
+                  {stale && (
+                    <Button disabled={locked || refreshing} onClick={refreshLatest}>
+                      Refresh cash details
+                    </Button>
+                  )}
+                  <Button size="small" disabled={locked} onClick={requestClose}>
+                    Close
                   </Button>
-                )}
-                <Button size="small" disabled={locked} onClick={requestClose}>
-                  Close
-                </Button>
-              </Alert>
-            )}
-            {uncertain && (
-              <Alert severity="warning">
-                The outcome is uncertain. Retry submits the original cash command. Fields stay
-                locked until its outcome is resolved.
-              </Alert>
-            )}
-            {approve && options.isError && (
-              <Alert
-                severity="error"
-                action={<Button onClick={() => options.refetch()}>Retry</Button>}
+                </Alert>
+              )}
+              {uncertain && (
+                <Alert severity="warning">
+                  The outcome is uncertain. Retry submits the original cash command. Fields stay
+                  locked until its outcome is resolved.
+                </Alert>
+              )}
+              {approve && options.isError && (
+                <Alert
+                  severity="error"
+                  action={<Button onClick={() => options.refetch()}>Retry</Button>}
+                >
+                  Active school bank accounts could not be loaded.
+                </Alert>
+              )}
+              <FormSectionCard
+                title={approve ? 'Approval Evidence' : 'Bank Evidence'}
+                icon="mdi:bank-check"
+                descriptionTooltip="Enter the actual amount and evidence. The server revalidates permission, reviewer eligibility, date and current available balance."
               >
-                Active school bank accounts could not be loaded.
-              </Alert>
-            )}
-            <FormSectionCard
-              title={approve ? 'Approval Evidence' : 'Bank Evidence'}
-              icon="mdi:bank-check"
-              descriptionTooltip="Enter the actual amount and evidence. The server revalidates permission, reviewer eligibility, date and current available balance."
-            >
-              <Stack spacing={2}>
-                {approve ? (
-                  <Stack spacing={0.5}>
+                <Stack spacing={2}>
+                  {approve ? (
+                    <Stack spacing={0.5}>
+                      <Typography variant="body2">
+                        Collected amount: {formatNumber(currentData.amount, 'INR')}
+                      </Typography>
+                      <Typography variant="body2">
+                        Expenses paid: {formatNumber(currentData.spentAmount, 'INR')}
+                      </Typography>
+                      <Typography variant="body2">
+                        Remaining to deposit: {formatNumber(maximum, 'INR')}
+                      </Typography>
+                    </Stack>
+                  ) : (
                     <Typography variant="body2">
-                      Collected amount: {formatNumber(currentData.amount, 'INR')}
+                      {confirm ? 'Remaining bank credit to confirm' : 'Available cash'}:{' '}
+                      {formatNumber(maximum, 'INR')}
+                      {` · Bank destination: ${currentData.bankLabel ?? '—'}`}
                     </Typography>
-                    <Typography variant="body2">
-                      Expenses paid: {formatNumber(currentData.spentAmount, 'INR')}
-                    </Typography>
-                    <Typography variant="body2">
-                      Remaining to deposit: {formatNumber(maximum, 'INR')}
-                    </Typography>
-                  </Stack>
-                ) : (
-                  <Typography variant="body2">
-                    {confirm ? 'Remaining bank credit to confirm' : 'Available cash'}:{' '}
-                    {formatNumber(maximum, 'INR')}
-                    {` · Bank destination: ${currentData.bankLabel ?? '—'}`}
-                  </Typography>
-                )}
-                {approve && (
-                  <ShakingTextField error={field('bankAccountId').error}>
-                    <CustomSelect
+                  )}
+                  {approve && (
+                    <ShakingTextField error={field('bankAccountId').error}>
+                      <CustomSelect
+                        required
+                        label="Receiving school bank account"
+                        name="bankAccountId"
+                        value={formik.values.bankAccountId}
+                        options={options.currentData?.bankAccounts ?? []}
+                        labelKey="label"
+                        valueKey="id"
+                        isSearch
+                        isLoading={options.isFetching}
+                        disabled={fieldsBlocked || options.isError}
+                        onChange={(value) => formik.setFieldValue('bankAccountId', value)}
+                        onBlur={formik.handleBlur}
+                        {...field('bankAccountId')}
+                      />
+                    </ShakingTextField>
+                  )}
+                  {approve && options.currentData?.bankAccounts.length === 0 && (
+                    <Alert severity="warning">
+                      An active school bank account is required before approval.
+                    </Alert>
+                  )}
+                  <ShakingTextField error={field('amount').error}>
+                    <NumericFormatCustom
+                      fullWidth
+                      size="small"
                       required
-                      label="Receiving school bank account"
-                      name="bankAccountId"
-                      value={formik.values.bankAccountId}
-                      options={options.currentData?.bankAccounts ?? []}
-                      labelKey="label"
-                      valueKey="id"
-                      isSearch
-                      isLoading={options.isFetching}
-                      disabled={fieldsBlocked || options.isError}
-                      onChange={(value) => formik.setFieldValue('bankAccountId', value)}
+                      autoFocus
+                      name="amount"
+                      label={
+                        approve
+                          ? 'Counted amount'
+                          : confirm
+                            ? 'Actual credited amount'
+                            : 'Deposit amount'
+                      }
+                      value={formik.values.amount}
+                      valueIsNumericString
+                      roundToWholeRupees={false}
+                      decimalScale={2}
+                      onValueChange={(value, source) => {
+                        if (source.source === 'event') formik.setFieldValue('amount', value.value);
+                      }}
+                      disabled={fieldsBlocked}
                       onBlur={formik.handleBlur}
-                      {...field('bankAccountId')}
+                      {...field('amount')}
                     />
                   </ShakingTextField>
-                )}
-                {approve && options.currentData?.bankAccounts.length === 0 && (
-                  <Alert severity="warning">
-                    An active school bank account is required before approval.
-                  </Alert>
-                )}
-                <ShakingTextField error={field('amount').error}>
-                  <NumericFormatCustom
+                  {!approve && (
+                    <>
+                      <ShakingTextField error={field('date').error}>
+                        <DateTimePicker
+                          label={confirm ? 'Actual bank credit date' : 'Actual deposit date'}
+                          value={dayjs(formik.values.date)}
+                          maxDateTime={dayjs()}
+                          minDateTime={
+                            confirm
+                              ? dayjs(currentDeposit?.depositDate)
+                              : dayjs(currentData.collectedAt)
+                          }
+                          disabled={fieldsBlocked}
+                          onChange={(value) =>
+                            formik.setFieldValue(
+                              'date',
+                              value?.isValid() ? value.toISOString() : ''
+                            )
+                          }
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: 'small',
+                              required: true,
+                              name: 'date',
+                              onBlur: formik.handleBlur,
+                              ...field('date'),
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
+                      <ShakingTextField error={field('reference').error}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          required
+                          name="reference"
+                          label={
+                            confirm
+                              ? 'Bank statement credit reference'
+                              : 'Deposit slip / bank reference'
+                          }
+                          value={formik.values.reference}
+                          disabled={fieldsBlocked}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          {...field('reference')}
+                        />
+                      </ShakingTextField>
+                    </>
+                  )}
+                  <TextField
                     fullWidth
                     size="small"
-                    required
-                    autoFocus
-                    name="amount"
-                    label={
-                      approve
-                        ? 'Counted amount'
-                        : confirm
-                          ? 'Actual credited amount'
-                          : 'Deposit amount'
-                    }
-                    value={formik.values.amount}
-                    valueIsNumericString
-                    roundToWholeRupees={false}
-                    decimalScale={2}
-                    onValueChange={(value, source) => {
-                      if (source.source === 'event') formik.setFieldValue('amount', value.value);
-                    }}
+                    multiline
+                    minRows={2}
+                    name="notes"
+                    label="Notes (optional)"
+                    value={formik.values.notes}
                     disabled={fieldsBlocked}
+                    onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    {...field('amount')}
+                    {...field('notes')}
                   />
-                </ShakingTextField>
-                {!approve && (
-                  <>
-                    <ShakingTextField error={field('date').error}>
-                      <DateTimePicker
-                        label={confirm ? 'Actual bank credit date' : 'Actual deposit date'}
-                        value={dayjs(formik.values.date)}
-                        maxDateTime={dayjs()}
-                        minDateTime={
-                          confirm
-                            ? dayjs(currentDeposit?.depositDate)
-                            : dayjs(currentData.collectedAt)
-                        }
-                        disabled={fieldsBlocked}
-                        onChange={(value) =>
-                          formik.setFieldValue('date', value?.isValid() ? value.toISOString() : '')
-                        }
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            size: 'small',
-                            required: true,
-                            name: 'date',
-                            onBlur: formik.handleBlur,
-                            ...field('date'),
-                          },
-                        }}
-                      />
-                    </ShakingTextField>
-                    <ShakingTextField error={field('reference').error}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        required
-                        name="reference"
-                        label={
-                          confirm
-                            ? 'Bank statement credit reference'
-                            : 'Deposit slip / bank reference'
-                        }
-                        value={formik.values.reference}
-                        disabled={fieldsBlocked}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        {...field('reference')}
-                      />
-                    </ShakingTextField>
-                  </>
-                )}
-                <TextField
-                  fullWidth
-                  size="small"
-                  multiline
-                  minRows={2}
-                  name="notes"
-                  label="Notes (optional)"
-                  value={formik.values.notes}
-                  disabled={fieldsBlocked}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  {...field('notes')}
-                />
-              </Stack>
-            </FormSectionCard>
-          </Stack>
+                </Stack>
+              </FormSectionCard>
+            </Stack>
+          )}
         </DialogScrollContent>
         <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
           <Button

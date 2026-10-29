@@ -6,6 +6,36 @@ import ConcessionPolicyFields from './ConcessionPolicyFields';
 import { policy } from '../../../../../e2e/fixtures/concession-request-ui/data';
 
 describe('concession policy field consistency', () => {
+  it('shows a readable selected-type helper when the API returns only its pending code', () => {
+    render(
+      <ConcessionPolicyFields
+        policies={policies}
+        types={[
+          {
+            id: 'school',
+            name: 'School concession',
+            benefitBlocker: {
+              code: 'Finance:Concession:010010',
+              message: 'Finance:Concession:010010',
+              blockingRequestId: 'pending',
+              blockingStatus: 'Pending',
+            },
+          },
+        ]}
+        policyVersionId="version"
+        typeId="school"
+        onPolicyChange={vi.fn()}
+        onTypeChange={vi.fn()}
+        onPolicyBlur={vi.fn()}
+        onTypeBlur={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('combobox', { name: 'Concession type' })).toHaveAccessibleDescription(
+      'A pending concession request already exists for this concession type in this academic year. Review the existing request.'
+    );
+    expect(screen.queryByText('Finance:Concession:010010')).not.toBeInTheDocument();
+  });
+
   it('disables an already granted type and shows the exact eligibility reason beside that option', async () => {
     const user = userEvent.setup();
     const onTypeChange = vi.fn();
@@ -17,7 +47,7 @@ describe('concession policy field consistency', () => {
         name: 'School concession',
         benefitBlocker: {
           code: 'Finance:Concession:010034',
-          message,
+          message: 'Finance:Concession:010034',
           blockingRequestId: 'approved-200',
           blockingStatus: 'Approved' as const,
         },

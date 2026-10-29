@@ -8,6 +8,12 @@ node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin
 
 Open `http://127.0.0.1:5177/` in the Codex in-app browser.
 
+Choose **Settled balances**, then open Collect Fee. With all fees and charges settled,
+the dialog shows “No outstanding fees or charges to collect. Items with no outstanding
+balance cannot be selected.” as informational feedback. Fee/charge checkboxes and Collect
+remain disabled, without the selection validation error. Switching back to the default
+scenario retains normal selection of pending fees and late fees.
+
 If the Windows dev dependency optimizer stalls, build and preview the same fixture instead
 (run these commands sequentially from the frontend root):
 

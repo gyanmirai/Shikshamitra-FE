@@ -207,7 +207,7 @@ export const buildRefundValidationSchema = (currentYear: ICurrentYear) =>
     studentId: Yup.string().required('Student is required'),
     refundType: Yup.string().required('Refund Type is required'),
     refundMethod: Yup.string().required('Select a refund method'),
-    notes: Yup.string(),
+    notes: Yup.string().trim().required('Refund reason is required'),
     feeHeadRefunds: Yup.mixed()
       .test('at-least-one-refund', 'Enter a refund amount for at least one month', (value) => {
         if (!Array.isArray(value)) return false;

@@ -9,23 +9,25 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useFormik, setNestedObjectValues } from 'formik';
 import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import {
   useGetCollectionPoliciesQuery,
   useCreateCollectionPolicyMutation,
   useUpdateCollectionPolicyMutation,
 } from 'src/redux/finance/collectionPolicy';
 
+import { collectionPolicyPrerequisites } from '../utils/policy-prerequisites';
+import { computeSlabIssues } from '../components/collection/CollectionCommon';
+import { acceptsNumericDraft, validCollectionNumber } from '../collectionNumericLimits';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 import {
   normalizePolicyName,
   isDuplicatePolicyNameError,
   DUPLICATE_POLICY_NAME_MESSAGE,
 } from '../utils/policy-name';
-
-import { computeSlabIssues } from '../components/collection/CollectionCommon';
-import { acceptsNumericDraft, validCollectionNumber } from '../collectionNumericLimits';
 
 import type {
   IFinancePolicyRow,
@@ -244,9 +246,20 @@ export function useCollectionPolicyForm({
 
   // Collection policies are academic-year scoped, so selectors must use the complete,
   // unpaginated active lookup rather than the fee-head administration list.
-  const { data: feeHeadsData } = useGetActiveFeeHeadsQuery(effectiveAcademicYearId, {
-    skip: !effectiveAcademicYearId,
+  const feeHeadsQuery = useGetActiveFeeHeadsQuery(effectiveAcademicYearId, {
+    skip: !open || !effectiveAcademicYearId,
   });
+  const { currentData: feeHeadsData } = feeHeadsQuery;
+  const routingQuery = useGetFinanceRoutingOptionsQuery(
+    { academicYearId: effectiveAcademicYearId, operation: 'collection-policy' },
+    { skip: !open || !effectiveAcademicYearId }
+  );
+  const refreshPrerequisites = () => {
+    if (!open || !effectiveAcademicYearId) return;
+    feeHeadsQuery.refetch();
+    routingQuery.refetch();
+  };
+  useRefreshFinancePrerequisites(refreshPrerequisites, open && Boolean(effectiveAcademicYearId));
   const feeHeads = useMemo(() => feeHeadsData || [], [feeHeadsData]);
 
   // Load the current academic-year default so the form can explain that saving
@@ -381,7 +394,15 @@ export function useCollectionPolicyForm({
   }, [formik.values]);
 
   const handleCustomSubmit = async (overrideStatus: 'Draft' | 'Active') => {
-    if (isSaving) return;
+    if (
+      isSaving ||
+      collectionPolicyPrerequisites(
+        { ...formik.values, status: overrideStatus },
+        feeHeadsQuery,
+        routingQuery
+      ).length
+    )
+      return;
 
     const isDraft = overrideStatus === 'Draft';
     const errors = await formik.validateForm();
@@ -562,6 +583,8 @@ export function useCollectionPolicyForm({
 
   return {
     formik,
+    prerequisites: collectionPolicyPrerequisites(formik.values, feeHeadsQuery, routingQuery),
+    refreshPrerequisites,
     feeHeads,
     isSaving,
     unsavedChangesDialog,

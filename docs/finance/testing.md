@@ -3,12 +3,18 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Finance frontend changes
+
+## Form prerequisite UI
+
+Shared presentation, query-state classification and focus refresh have focused tests in `src/components/form-prerequisites`, Finance `components`, and `hooks`. Integration tests cover policy drafts/activation, setup/assignment, charge-only collection, refund eligibility and payouts, concession context and manual/cash retry flows. Run the affected `*.test.ts(x)` files with Vitest, one worker, then `npm run ts`, touched-file ESLint, and `npm run docs:check`.
+
+The [synthetic prerequisite fixture](../../e2e/fixtures/finance-prerequisites/README.md) mounts production policy drawers, manual account forms and the Cash Deposit dialog without backend writes. Verify desktop/mobile/tablet widths, light/dark themes, permitted setup links versus administrator guidance, Cancel, disabled submission, error/loading precedence, optional Cash/Draft paths, and refresh with preserved input. Persisted financial rules remain covered by the [backend Finance tests](../../../Shikshamitra-BE/docs/modules/finance/testing.md).
 
 ## Bank account activity checks
 

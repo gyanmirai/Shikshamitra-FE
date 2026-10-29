@@ -5,6 +5,7 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
+import { concessionBenefitBlockerMessage } from 'src/utils/concession-benefit-blocker';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { concessionErrorMessage } from '../Concession/Components/concessionValueValidation';
@@ -167,7 +168,9 @@ export default function ReadOnlyConcessionApprovalView({
                 create a new request; approval cannot reduce the submitted amount.
               </Alert>
             )}
-            {benefitBlocker && <Alert severity="error">{benefitBlocker.message}</Alert>}
+            {benefitBlocker && (
+              <Alert severity="error">{concessionBenefitBlockerMessage(benefitBlocker)}</Alert>
+            )}
             {actionError && <Alert severity="error">{actionError}</Alert>}
             {previewTotal !== null && previewRefund > 0 && !autoCreateRefund && (
               <Alert severity="warning">

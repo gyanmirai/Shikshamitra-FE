@@ -1,8 +1,7 @@
 import type { FeeReceiptDetail, ChargeReceiptDetail } from 'src/redux/feeCollection/feeCollection';
 
-import { Iconify } from 'src/components/iconify';
-import { Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
+import { Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 
 interface UnifiedReceiptDisplayProps {
   feeReceipt: FeeReceiptDetail | undefined;
@@ -15,10 +14,6 @@ interface UnifiedReceiptDisplayProps {
   chargeError?: string | null;
   onRetryFee?: () => void;
   onRetryCharge?: () => void;
-  onOpenFeeInNewTab: () => void;
-  onDownloadFee: () => void;
-  onOpenChargeInNewTab: () => void;
-  onDownloadCharge: () => void;
 }
 
 export default function UnifiedReceiptDisplay({
@@ -32,10 +27,6 @@ export default function UnifiedReceiptDisplay({
   chargeError,
   onRetryFee,
   onRetryCharge,
-  onOpenFeeInNewTab,
-  onDownloadFee,
-  onOpenChargeInNewTab,
-  onDownloadCharge,
 }: UnifiedReceiptDisplayProps) {
   const renderReceipt = (isFee: boolean) => {
     const receipt = isFee ? feeReceipt : chargeReceipt;
@@ -72,26 +63,7 @@ export default function UnifiedReceiptDisplay({
             {error}
           </Alert>
         ) : blobUrl ? (
-          <>
-            <PdfPreview url={blobUrl} title={`${name} Receipt`} />
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
-              <Button
-                size="small"
-                startIcon={<Iconify icon="mdi:open-in-new" />}
-                onClick={isFee ? onOpenFeeInNewTab : onOpenChargeInNewTab}
-              >
-                Open
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:download" />}
-                onClick={isFee ? onDownloadFee : onDownloadCharge}
-              >
-                Download
-              </Button>
-            </Stack>
-          </>
+          <PdfPreview url={blobUrl} title={`${name} Receipt`} showPageText={false} />
         ) : (
           <Typography variant="body2" color="text.secondary">
             {name} receipt preview is unavailable.

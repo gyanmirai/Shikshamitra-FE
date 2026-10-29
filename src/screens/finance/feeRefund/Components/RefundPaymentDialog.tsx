@@ -25,10 +25,16 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 import {
   normalizeRefundMethod,
   getAllowedRefundMethodOptions,
 } from '../NewRefundForm/refundPayoutMethods';
+import {
+  type FinancePrerequisite,
+  isFinancePrerequisiteMissing,
+} from '../../components/financePrerequisites';
 
 import type { IStudentFeeData } from '../type';
 
@@ -44,6 +50,9 @@ interface Props {
   bankAccounts: RoutingOption[];
   expenseCategories: RoutingOption[];
   bankAccountsLoading: boolean;
+  routingError?: boolean;
+  routingUninitialized?: boolean;
+  onRefreshRouting?: () => void;
   loading: boolean;
   onClose: () => void;
   onSubmit: (values: RefundPaymentValues) => Promise<void>;
@@ -54,10 +63,27 @@ export default function RefundPaymentDialog({
   bankAccounts,
   expenseCategories,
   bankAccountsLoading,
+  routingError,
+  routingUninitialized,
+  onRefreshRouting,
   loading,
   onClose,
   onSubmit,
 }: Props) {
+  const requirements: FinancePrerequisite[] = [];
+  const routingState = {
+    isLoading: bankAccountsLoading,
+    isError: routingError,
+    isUninitialized: routingUninitialized,
+  };
+  if (isFinancePrerequisiteMissing({ ...routingState, options: expenseCategories }))
+    requirements.push({ key: 'expense-category' });
+  if (isFinancePrerequisiteMissing({ ...routingState, options: bankAccounts }))
+    requirements.push({ key: 'bank-account' });
+  const setupMissing = requirements.length > 0;
+  const routingUnavailable =
+    bankAccountsLoading || routingError || routingUninitialized || setupMissing;
+  useRefreshFinancePrerequisites(onRefreshRouting);
   const [confirmClose, setConfirmClose] = useState(false);
   const submitting = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -87,7 +113,7 @@ export default function RefundPaymentDialog({
       expenseCategoryId: Yup.string().required('Expense category is required'),
     }),
     onSubmit: async (values) => {
-      if (submitting.current || loading || !refund._refundRequestId) return;
+      if (submitting.current || loading || routingUnavailable || !refund._refundRequestId) return;
       submitting.current = true;
       formik.setStatus(undefined);
       try {
@@ -156,151 +182,174 @@ export default function RefundPaymentDialog({
           }}
           sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}
         >
-          <DialogScrollContent>
-            <FormBusyRegion busy={busy} label="Recording payment…">
-              <FormSectionCard
-                descriptionTooltip="Choose the expense category and source school bank account. Recording payment completes the refund and adds it to Expenses."
-                icon={GlobalIcons.receiptIcon}
-                title="Payment Details"
-                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-              >
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, sm: 7 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Student
-                    </Typography>
-                    <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                      {refund.name}
-                    </Typography>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 5 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Approved amount
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                      {formatNumber(refund._approvedAmount ?? 0, 'INR')}
-                    </Typography>
-                  </Grid>
-                  <Grid size={12}>
-                    <ShakingTextField error={Boolean(fieldError('method'))}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        required
-                        label="Payout method"
-                        name="method"
-                        value={formik.values.method}
-                        select={!refund._refundMethod}
-                        disabled={
-                          busy || Boolean(refund._refundMethod) || methodOptions.length === 0
-                        }
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={Boolean(fieldError('method'))}
-                        helperText={
-                          fieldError('method') ||
-                          (methodOptions.length === 0
-                            ? 'No payment methods are available under this refund policy.'
-                            : undefined)
-                        }
-                      >
-                        {methodOptions.map((method) => (
-                          <MenuItem key={method.value} value={method.value}>
-                            {method.label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </ShakingTextField>
-                  </Grid>
-                  <Grid size={12}>
-                    <ShakingTextField error={Boolean(fieldError('expenseCategoryId'))}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        required
-                        select
-                        label="Expense category"
-                        name="expenseCategoryId"
-                        value={formik.values.expenseCategoryId}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        disabled={busy || bankAccountsLoading}
-                        error={Boolean(fieldError('expenseCategoryId'))}
-                        helperText={
-                          fieldError('expenseCategoryId') ||
-                          (bankAccountsLoading
-                            ? 'Loading expense categories…'
-                            : expenseCategories.length === 0
-                              ? 'No expense categories are available.'
-                              : undefined)
-                        }
-                      >
-                        {expenseCategories.map((category) => (
-                          <MenuItem key={category.id} value={category.id}>
-                            {category.label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </ShakingTextField>
-                  </Grid>
-                  {nonCash && (
+          <DialogScrollContent
+            scrollBarProps={{ fillContent: true }}
+            sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+          >
+            <FormBusyRegion fillContent busy={busy} label="Recording payment…">
+              {setupMissing ? (
+                <FinancePrerequisiteState
+                  requirements={requirements}
+                  onRefresh={onRefreshRouting}
+                />
+              ) : routingError ? (
+                <Alert
+                  severity="error"
+                  action={
+                    onRefreshRouting && (
+                      <Button size="small" onClick={onRefreshRouting}>
+                        Retry
+                      </Button>
+                    )
+                  }
+                >
+                  Unable to load refund payment routing. Try again.
+                </Alert>
+              ) : (
+                <FormSectionCard
+                  descriptionTooltip="Choose the expense category and source school bank account. Recording payment completes the refund and adds it to Expenses."
+                  icon={GlobalIcons.receiptIcon}
+                  title="Payment Details"
+                  titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                >
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 7 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Student
+                      </Typography>
+                      <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                        {refund.name}
+                      </Typography>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 5 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Approved amount
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {formatNumber(refund._approvedAmount ?? 0, 'INR')}
+                      </Typography>
+                    </Grid>
                     <Grid size={12}>
-                      <ShakingTextField error={Boolean(fieldError('externalReference'))}>
+                      <ShakingTextField error={Boolean(fieldError('method'))}>
                         <TextField
                           fullWidth
                           size="small"
                           required
-                          label={referenceLabel}
-                          name="externalReference"
-                          value={formik.values.externalReference}
+                          label="Payout method"
+                          name="method"
+                          value={formik.values.method}
+                          select={!refund._refundMethod}
+                          disabled={
+                            busy || Boolean(refund._refundMethod) || methodOptions.length === 0
+                          }
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
-                          disabled={busy || Boolean(refund._payoutPending)}
-                          inputProps={{ maxLength: 200 }}
-                          error={Boolean(fieldError('externalReference'))}
-                          helperText={fieldError('externalReference')}
-                        />
+                          error={Boolean(fieldError('method'))}
+                          helperText={
+                            fieldError('method') ||
+                            (methodOptions.length === 0
+                              ? 'No payment methods are available under this refund policy.'
+                              : undefined)
+                          }
+                        >
+                          {methodOptions.map((method) => (
+                            <MenuItem key={method.value} value={method.value}>
+                              {method.label}
+                            </MenuItem>
+                          ))}
+                        </TextField>
                       </ShakingTextField>
                     </Grid>
-                  )}
-                  <Grid size={12}>
-                    <ShakingTextField error={Boolean(fieldError('bankAccountId'))}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        required
-                        select
-                        label="Source school bank account"
-                        name="bankAccountId"
-                        value={formik.values.bankAccountId}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        disabled={
-                          busy ||
-                          bankAccountsLoading ||
-                          Boolean(refund._payoutPending && refund._payingBankAccountId)
-                        }
-                        error={Boolean(fieldError('bankAccountId'))}
-                        helperText={
-                          fieldError('bankAccountId') ||
-                          (bankAccountsLoading
-                            ? 'Loading bank accounts…'
-                            : bankAccounts.length === 0
-                              ? 'No school bank accounts are available.'
-                              : undefined)
-                        }
-                      >
-                        {bankAccounts.map((account) => (
-                          <MenuItem key={account.id} value={account.id}>
-                            {account.label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </ShakingTextField>
+                    <Grid size={12}>
+                      <ShakingTextField error={Boolean(fieldError('expenseCategoryId'))}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          required
+                          select
+                          label="Expense category"
+                          name="expenseCategoryId"
+                          value={formik.values.expenseCategoryId}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          disabled={busy || bankAccountsLoading}
+                          error={Boolean(fieldError('expenseCategoryId'))}
+                          helperText={
+                            fieldError('expenseCategoryId') ||
+                            (bankAccountsLoading
+                              ? 'Loading expense categories…'
+                              : expenseCategories.length === 0
+                                ? 'No expense categories are available.'
+                                : undefined)
+                          }
+                        >
+                          {expenseCategories.map((category) => (
+                            <MenuItem key={category.id} value={category.id}>
+                              {category.label}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </ShakingTextField>
+                    </Grid>
+                    {nonCash && (
+                      <Grid size={12}>
+                        <ShakingTextField error={Boolean(fieldError('externalReference'))}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            required
+                            label={referenceLabel}
+                            name="externalReference"
+                            value={formik.values.externalReference}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            disabled={busy || Boolean(refund._payoutPending)}
+                            inputProps={{ maxLength: 200 }}
+                            error={Boolean(fieldError('externalReference'))}
+                            helperText={fieldError('externalReference')}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                    )}
+                    <Grid size={12}>
+                      <ShakingTextField error={Boolean(fieldError('bankAccountId'))}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          required
+                          select
+                          label="Source school bank account"
+                          name="bankAccountId"
+                          value={formik.values.bankAccountId}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          disabled={
+                            busy ||
+                            bankAccountsLoading ||
+                            Boolean(refund._payoutPending && refund._payingBankAccountId)
+                          }
+                          error={Boolean(fieldError('bankAccountId'))}
+                          helperText={
+                            fieldError('bankAccountId') ||
+                            (bankAccountsLoading
+                              ? 'Loading bank accounts…'
+                              : bankAccounts.length === 0
+                                ? 'No school bank accounts are available.'
+                                : undefined)
+                          }
+                        >
+                          {bankAccounts.map((account) => (
+                            <MenuItem key={account.id} value={account.id}>
+                              {account.label}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </ShakingTextField>
+                    </Grid>
                   </Grid>
-                </Grid>
-                {formik.status && <Alert severity="error">{formik.status}</Alert>}
-              </FormSectionCard>
+                  {formik.status && <Alert severity="error">{formik.status}</Alert>}
+                </FormSectionCard>
+              )}
             </FormBusyRegion>
           </DialogScrollContent>
           <DialogActions sx={{ p: 2, flexShrink: 0, flexWrap: 'wrap', rowGap: 1 }}>
@@ -320,7 +369,9 @@ export default function RefundPaymentDialog({
               variant="contained"
               loading={busy}
               loadingPosition="start"
-              disabled={busy || !refund._refundRequestId || methodOptions.length === 0}
+              disabled={
+                busy || routingUnavailable || !refund._refundRequestId || methodOptions.length === 0
+              }
               startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
             >
               Record Payment

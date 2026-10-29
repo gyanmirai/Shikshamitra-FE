@@ -28,7 +28,7 @@ import {
 
 import BankAccountForm from './Components/BankManageForm';
 import BankAccountTable from './Components/BankAccountTable';
-import BankAccountActivityDrawer from './Components/BankAccountActivityDrawer';
+// import BankAccountActivityDrawer from './Components/BankAccountActivityDrawer';
 
 import type { IBankAccount } from './Components/type';
 
@@ -44,9 +44,10 @@ const BankAccountManagement: React.FC = () => {
   const access = useAccountSettingPermissions('BankAccount');
   const searchParams = useSearchParams();
   const [activityBank, setActivityBank] = useState<IBankAccount | null>(null);
-  const openActivity = useCallback((bank: IBankAccount) => {
-    replaceActivitySelection(bank.id);
-    setActivityBank(bank);
+  const openActivity = useCallback((_bank: IBankAccount) => {
+    // Bank account view opening is temporarily disabled.
+    // replaceActivitySelection(_bank.id);
+    // setActivityBank(_bank);
   }, []);
 
   const [queryParams, setQueryParams] = useState(() => ({
@@ -128,10 +129,10 @@ const BankAccountManagement: React.FC = () => {
     }
   }, [currentYear?.id]);
 
-  const closeActivity = () => {
-    replaceActivitySelection();
-    setActivityBank(null);
-  };
+  // const closeActivity = () => {
+  //   replaceActivitySelection();
+  //   setActivityBank(null);
+  // };
 
   // Dialog control states
   const deleteBankAccountDialog = useBoolean();
@@ -235,6 +236,7 @@ const BankAccountManagement: React.FC = () => {
         />
       )}
 
+      {/* Bank account view drawer temporarily disabled, including saved URL selection.
       {activityBank && currentYear?.id && previousYear.current === currentYear.id && (
         <BankAccountActivityDrawer
           open
@@ -243,6 +245,7 @@ const BankAccountManagement: React.FC = () => {
           onClose={closeActivity}
         />
       )}
+      */}
 
       <CustomDialog
         titleInfo="Maintain bank, account, and payment details used by Finance."

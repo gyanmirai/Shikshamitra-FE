@@ -13,6 +13,7 @@ import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
 import {
   type PaymentTermUsage,
   useCreateRevisionMutation,
@@ -33,6 +34,7 @@ import { toPaymentTermApiDate } from '../paymentTermApiDate';
 import { normalizePaymentTermName } from '../paymentTermName';
 import { getAllocationSummary } from '../allocationValidation';
 import { getInitialPaymentTermData } from '../Components/PaymentTermInitialValues';
+import { paymentTermCalendarMissing } from '../../components/financeSetupPrerequisites';
 import { paymentTermValidationSchema } from '../Components/PaymentTermValidationSchema';
 import { getInvoiceDateError, getInvoiceOffsetLimit } from '../invoiceScheduleValidation';
 
@@ -82,6 +84,8 @@ export interface UsePaymentTermFormReturn {
   formik: ReturnType<typeof useFormik<IPaymentTerm>>;
   boards: IBoard[];
   checks: IPaymentTermChecks;
+  calendarMissing: boolean;
+  refreshPrerequisites: () => void;
   demandLabel: string;
   isSubmitting: boolean;
   isLoadingDetail: boolean;
@@ -192,7 +196,12 @@ export function usePaymentTermForm(
   );
   const [getDefaultImpact] = useLazyGetPaymentTermDefaultImpactQuery();
   // ── Data queries ──────────────────────────────────────────────────────────
-  const { data: boardData } = useGetBoardsQuery('');
+  const boardQuery = useGetBoardsQuery('');
+  const { data: boardData } = boardQuery;
+  const refreshPrerequisites = () => {
+    if (!boardQuery.isUninitialized) boardQuery.refetch?.();
+  };
+  useRefreshFinancePrerequisites(refreshPrerequisites);
 
   /**
    * Memoization Justification:
@@ -240,6 +249,12 @@ export function usePaymentTermForm(
     enableReinitialize: true,
     onSubmit: async () => {},
   });
+
+  const calendarMissing = paymentTermCalendarMissing(
+    boardQuery,
+    currentYear?.id,
+    formik.values.boardId
+  );
 
   const impactParams = useMemo(
     () => ({
@@ -391,12 +406,13 @@ export function usePaymentTermForm(
    */
   const handleSubmit = useCallback(
     async (confirmed = false) => {
-      if (isSubmitting || isLoadingDetail) return;
+      if (isSubmitting || isLoadingDetail || calendarMissing) return;
       if (
         formik.status?.nameConflict &&
         normalizePaymentTermName(formik.status.nameConflict.name) ===
           normalizePaymentTermName(formik.values.paymentTermName)
-      ) return;
+      )
+        return;
       const errors = await formik.validateForm({
         ...formik.values,
         paymentTermName: formik.values.paymentTermName.trim(),
@@ -449,9 +465,10 @@ export function usePaymentTermForm(
           formik.setStatus({
             nameConflict: {
               name: formik.values.paymentTermName,
-              message: problem.errorCode === 'Finance:PaymentTerm:000042'
-                ? `A payment term named “${formik.values.paymentTermName.trim()}” already exists in this academic year. Use a different name.`
-                : `A payment term already uses the code generated from “${formik.values.paymentTermName.trim()}” in this academic year. Use a different name.`,
+              message:
+                problem.errorCode === 'Finance:PaymentTerm:000042'
+                  ? `A payment term named “${formik.values.paymentTermName.trim()}” already exists in this academic year. Use a different name.`
+                  : `A payment term already uses the code generated from “${formik.values.paymentTermName.trim()}” in this academic year. Use a different name.`,
             },
           });
           formik.setFieldTouched('paymentTermName', true, false);
@@ -472,6 +489,7 @@ export function usePaymentTermForm(
       getDefaultImpact,
       impactParams,
       confirmationImpact,
+      calendarMissing,
     ]
   );
 
@@ -541,7 +559,8 @@ export function usePaymentTermForm(
     const v = formik.values;
     const boardValid = Boolean(v.boardId);
     const nameConflict = formik.status?.nameConflict;
-    const hasNameConflict = Boolean(nameConflict) &&
+    const hasNameConflict =
+      Boolean(nameConflict) &&
       normalizePaymentTermName(nameConflict.name) === normalizePaymentTermName(v.paymentTermName);
     const nameValid = v.paymentTermName.trim().length >= 3 && !hasNameConflict;
     const codeValid = /^[A-Z0-9-]{3,24}$/.test(v.paymentTermCode.trim());
@@ -695,6 +714,8 @@ export function usePaymentTermForm(
     formik,
     boards,
     checks,
+    calendarMissing,
+    refreshPrerequisites,
     demandLabel,
     isSubmitting,
     isLoadingDetail,

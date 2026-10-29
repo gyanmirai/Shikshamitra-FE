@@ -2,7 +2,7 @@ import type { FormikProps } from 'formik';
 
 import React from 'react';
 import { vi, it, expect, describe } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import CollectionPolicyDrawer from './CollectionPolicyDrawer';
 
@@ -16,6 +16,12 @@ vi.mock('src/components/toast', () => ({
 }));
 vi.mock('src/redux/feeHeadManage/feeHeadManageApi', () => ({
   useGetActiveFeeHeadsQuery: () => ({ data: [] }),
+}));
+vi.mock('src/redux/finance/financeRoutingApi', () => ({
+  useGetFinanceRoutingOptionsQuery: () => ({
+    currentData: { incomeCategories: [], bankAccounts: [], expenseCategories: [] },
+    refetch: vi.fn(),
+  }),
 }));
 vi.mock('src/redux/finance/collectionPolicy', () => ({
   useGetCollectionPoliciesQuery: () => ({ data: { items: [] } }),

@@ -1,5 +1,6 @@
 'use client';
 
+import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type {
   ConcessionDraftCommand,
@@ -11,26 +12,26 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useGetStudentsByScopeQuery } from 'src/redux/student';
+import { financePermissions } from 'src/constants/finance-menu';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
+import { concessionBenefitBlockerMessage } from 'src/utils/concession-benefit-blocker';
 import {
   Box,
   Grid,
@@ -58,10 +59,16 @@ import ConcessionDocumentList from './ConcessionDocumentList';
 import ConcessionPolicyFields from './ConcessionPolicyFields';
 import ValueEntryStep from './ConcessionSteps/ValueEntryStep';
 import ConcessionRequestWorkspace from './ConcessionRequestWorkspace';
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 import {
   concessionErrorMessage,
   validateConcessionInstallments,
 } from './concessionValueValidation';
+import {
+  type FinancePrerequisite,
+  isFinancePrerequisiteMissing,
+} from '../../components/financePrerequisites';
 
 import type { IConcessionFormProps } from '../type';
 
@@ -72,17 +79,6 @@ import type { IConcessionFormProps } from '../type';
 type ValueEntry = { basedOn: 0 | 1; amount: number | string; netAmount: number };
 
 const FEE_STRUCTURE_ASSIGNMENT_REQUIRED = 'Finance:Concession:010029';
-const FEE_STRUCTURE_ASSIGNMENT_MESSAGE =
-  'No fee structure is assigned to this student for the selected academic year. Assign a fee structure before creating a concession request.';
-
-type RequestContextError = {
-  data?: {
-    errorCode?: string;
-    detail?: string;
-    message?: string;
-  };
-};
-
 type FormValues = {
   boardId: string;
   boardName: string;
@@ -246,7 +242,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   defaultStandardId = '',
   defaultDivisionId = '',
 }) => {
-  const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
   const isAdminCreator = isFinanceAdministratorSession(session);
   const [adminConfirmation, setAdminConfirmation] = useState<{
@@ -279,10 +274,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     concessionPermissions.uploadDocument
   );
   const canViewDocuments = hasGrantedPermission(permissions, concessionPermissions.viewDocument);
-  const canOpenFeeStructureAssignment = hasGrantedPermission(
-    permissions,
-    `${financePermissions.fees.structureAssign}.View`
-  );
 
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
   // List filters may refresh while the request is being edited.
@@ -398,7 +389,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     ]
   );
 
-  const formik = useFormik<FormValues>({
+  const formik: FormikProps<FormValues> = useFormik<FormValues>({
     initialValues,
     enableReinitialize: true,
     validationSchema,
@@ -414,17 +405,20 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         selectedPolicy
       );
       return {
-        ...(benefitBlocker ? { concessionTypeId: benefitBlocker.message } : {}),
+        ...(benefitBlocker
+          ? { concessionTypeId: concessionBenefitBlockerMessage(benefitBlocker) }
+          : {}),
         ...(Object.keys(dueFeeEntries).length ? { dueFeeEntries } : {}),
       };
     },
     onSubmit: async (values) => {
       setSubmitError(null);
+      if (hasMissingPrerequisites) return;
       const benefitBlocker = requestContext?.concessionTypes.find(
         (type) => type.concessionTypeId === values.concessionTypeId
       )?.benefitBlocker;
       if (benefitBlocker) {
-        setSubmitError(benefitBlocker.message);
+        setSubmitError(concessionBenefitBlockerMessage(benefitBlocker) || '');
         return;
       }
       try {
@@ -595,7 +589,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   // -- Fee structure ---------------------------------------------------------
 
   const {
-    data: requestContext,
+    currentData: requestContext,
     isLoading: feeStructureLoading,
     isFetching: feeStructureFetching,
     isError: feeStructureIsError,
@@ -633,12 +627,15 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const selectedTypeBenefitBlocker = concessionTypesList.find(
     (type) => type.id === values.concessionTypeId
   )?.benefitBlocker;
-  const setFieldError = formik.setFieldError;
+  const selectedTypeBenefitBlockerMessage = concessionBenefitBlockerMessage(
+    selectedTypeBenefitBlocker
+  );
+  const {setFieldError} = formik;
   useEffect(() => {
     if (values.concessionTypeId) {
-      setFieldError('concessionTypeId', selectedTypeBenefitBlocker?.message);
+      setFieldError('concessionTypeId', selectedTypeBenefitBlockerMessage);
     }
-  }, [selectedTypeBenefitBlocker?.message, setFieldError, values.concessionTypeId]);
+  }, [selectedTypeBenefitBlockerMessage, setFieldError, values.concessionTypeId]);
 
   const selectedPolicy = useMemo(
     () =>
@@ -671,9 +668,32 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     [requestContext]
   );
 
-  const requestContextError = (feeStructureError as RequestContextError | undefined)?.data;
   const noFeeStructureError =
-    feeStructureIsError && requestContextError?.errorCode === FEE_STRUCTURE_ASSIGNMENT_REQUIRED;
+    feeStructureIsError &&
+    parseApiProblemDetail(feeStructureError).errorCode === FEE_STRUCTURE_ASSIGNMENT_REQUIRED;
+
+  const setupRequirements: FinancePrerequisite[] = [];
+  if (values.studentId && !feeStructureLoading && !feeStructureFetching) {
+    if (noFeeStructureError) setupRequirements.push({ key: 'fee-assignment' });
+    if (!isEditMode && hasResolvedAssignment) {
+      const queryState = {
+        isLoading: feeStructureLoading,
+        isFetching: feeStructureFetching,
+        isError: feeStructureIsError,
+      };
+      if (isFinancePrerequisiteMissing({ ...queryState, options: requestContext?.concessionTypes }))
+        setupRequirements.push({ key: 'concession-type' });
+      if (
+        isFinancePrerequisiteMissing({ ...queryState, options: requestContext?.concessionPolicies })
+      )
+        setupRequirements.push({ key: 'concession-policy' });
+    }
+  }
+  const hasMissingPrerequisites = setupRequirements.length > 0;
+  useRefreshFinancePrerequisites(
+    () => refetchRequestContext(),
+    Boolean(values.studentId && currentYear?.id)
+  );
 
   const previewRequest = useMemo(
     () => ({
@@ -784,9 +804,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   }, [formik, isSaving]);
 
   const handleSaveDraft = useCallback(async () => {
+    if (hasMissingPrerequisites) return;
     if (isSaving || draftSaveInFlight.current) return;
     if (selectedTypeBenefitBlocker) {
-      setSubmitError(selectedTypeBenefitBlocker.message);
+      setSubmitError(selectedTypeBenefitBlockerMessage || '');
       return;
     }
     setSubmitError(null);
@@ -879,12 +900,14 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     formik,
     getCommandKey,
     hasResolvedAssignment,
+    hasMissingPrerequisites,
     isSaving,
     onClose,
     requestContext,
     refetchRequestContext,
     selectedPolicy?.valueSource,
     selectedTypeBenefitBlocker,
+    selectedTypeBenefitBlockerMessage,
     student?.sourceRequestId,
     updateConcessionRequest,
     values,
@@ -1073,21 +1096,43 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             role="region"
             aria-label="Concession request form fields"
             tabIndex={0}
-            sx={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
           >
-            <FormBusyRegion busy={isSaving} label="Saving concession request…">
+            <FormBusyRegion fillContent busy={isSaving} label="Saving concession request…">
               <Box
                 sx={{
                   p: 1.5,
                   containerType: 'inline-size',
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
                   '& .MuiCard-root': { boxShadow: 'none' },
                 }}
               >
-                <Grid container spacing={1.5}>
+                <Grid
+                  container
+                  spacing={1.5}
+                  sx={
+                    hasMissingPrerequisites
+                      ? { flex: 1, flexDirection: 'column', flexWrap: 'nowrap' }
+                      : undefined
+                  }
+                >
                   {/* 1. Student Information */}
                   <Grid size={{ xs: 12 }}>
                     <FormSectionCard
-                      descriptionTooltip="Select the board, medium, class, division, and student for this request."
+                      descriptionTooltip={
+                        isEditMode
+                          ? 'Student information cannot be changed when updating a concession request.'
+                          : 'Select the board, medium, class, division, and student for this request.'
+                      }
                       icon="solar:users-group-rounded-bold-duotone"
                       title="Student Information"
                       titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
@@ -1109,6 +1154,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               valueKey="id"
                               value={values.boardId}
                               disabled={isEditMode}
+                              formControlProps={{ disabled: isEditMode }}
                               onChange={(val) => {
                                 const board = boards.find((b) => b.id === val);
                                 setFieldValue('boardId', val);
@@ -1140,6 +1186,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               required
                               onBlur={() => setFieldTouched('mediumId', true)}
                               disabled={isEditMode || !values.boardId}
+                              formControlProps={{ disabled: isEditMode || !values.boardId }}
                               options={mediums}
                               labelKey="name"
                               valueKey="id"
@@ -1173,6 +1220,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               required
                               onBlur={() => setFieldTouched('standardId', true)}
                               disabled={isEditMode || !values.mediumId}
+                              formControlProps={{ disabled: isEditMode || !values.mediumId }}
                               options={classes || []}
                               isLoading={classLoading}
                               labelKey="name"
@@ -1205,6 +1253,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               required
                               onBlur={() => setFieldTouched('divisionId', true)}
                               disabled={isEditMode || !values.standardId}
+                              formControlProps={{ disabled: isEditMode || !values.standardId }}
                               options={allDivisions}
                               labelKey="name"
                               valueKey="id"
@@ -1340,49 +1389,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                   )}
 
                   {/* No Fee Structure assigned alert */}
-                  {values.studentId && !feeStructureLoading && noFeeStructureError && (
-                    <Grid size={{ xs: 12 }}>
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          p: 2,
-                          mb: 1.5,
-                          borderRadius: 2,
-                          border: '1.5px solid',
-                          borderColor: 'warning.main',
-                          bgcolor: 'warning.lighter',
-                          display: 'flex',
-                          flexDirection: { xs: 'column', sm: 'row' },
-                          alignItems: 'flex-start',
-                          gap: 1.5,
-                        }}
-                      >
-                        <Iconify
-                          icon="solar:danger-triangle-bold-duotone"
-                          width={24}
-                          sx={{ color: 'warning.dark', flexShrink: 0, mt: 0.25 }}
-                        />
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="subtitle2" color="warning.dark">
-                            Fee structure assignment required
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" mt={0.25}>
-                            {FEE_STRUCTURE_ASSIGNMENT_MESSAGE}
-                          </Typography>
-                        </Box>
-                        {canOpenFeeStructureAssignment && (
-                          <Button
-                            variant="contained"
-                            color="warning"
-                            size="small"
-                            startIcon={<Iconify icon="mdi:file-document-edit-outline" />}
-                            onClick={() => router.push(financePaths.fees.structureAssign)}
-                            sx={{ flexShrink: 0 }}
-                          >
-                            Assign Fee Structure
-                          </Button>
-                        )}
-                      </Paper>
+                  {hasMissingPrerequisites && (
+                    <Grid size={{ xs: 12 }} sx={{ flex: 1, display: 'flex' }}>
+                      <FinancePrerequisiteState
+                        requirements={setupRequirements}
+                        onRefresh={() => refetchRequestContext()}
+                      />
                     </Grid>
                   )}
 
@@ -1397,7 +1409,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     </Grid>
                   )}
 
-                  {values.studentId && !feeStructureLoading && !noFeeStructureError && (
+                  {values.studentId && !feeStructureLoading && !hasMissingPrerequisites && (
                     <Grid size={{ xs: 12 }}>
                       <ConcessionRequestWorkspace
                         key={`${values.studentId}:${values.concessionPolicyVersionId}:${
@@ -1469,7 +1481,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                         : undefined
                               }
                               typeHelperText={
-                                selectedTypeBenefitBlocker?.message ||
+                                selectedTypeBenefitBlockerMessage ||
                                 (touched.concessionTypeId || formik.submitCount > 0
                                   ? errors.concessionTypeId
                                   : undefined)
@@ -1626,6 +1638,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     size="small"
                     loading={createDraftLoading || updateLoading}
                     disabled={
+                      hasMissingPrerequisites ||
                       !hasResolvedAssignment ||
                       Boolean(selectedTypeBenefitBlocker) ||
                       formik.isSubmitting ||
@@ -1657,6 +1670,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       previewIsError ||
                       hasInvalidInstallmentValues ||
                       hasMissingRequiredDocuments ||
+                      hasMissingPrerequisites ||
                       !hasResolvedAssignment
                     }
                     startIcon={<Iconify icon={GlobalIcons.submit} />}

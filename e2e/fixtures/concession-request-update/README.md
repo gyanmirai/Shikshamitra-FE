@@ -32,6 +32,20 @@ be treated as aliases without a server contract establishing that relationship.
 These browser checks demonstrate frontend behavior with controlled responses. Backend
 allocation, persistence, concurrency and authorization are verified separately by API tests.
 
+The `approved-benefit`, `pending-benefit` and `approval-duplicate` scenarios deliberately
+return the raw error code as `benefitBlocker.message`, reproducing untranslated context
+responses. The dropdown reason, selected field helper, form guards and approval warning
+must resolve that code to readable feedback. Specific server explanations remain intact;
+an unknown, empty or generic blocker message uses a safe fallback without enabling the action.
+
+The raw-code follow-up passed 64 focused automated tests and five browser cases: approved
+dropdown/helper, pending dropdown/helper, blocked approval alert, valid update-to-submit
+stamps and stale-update reason/reference. The earlier 19-case browser pass below belongs
+to the preceding benefit-rule change; those 19 cases were not all repeated for this copy fix.
+The focused blocker/API-parser TypeScript check and formatting check passed. The required
+full-repository `npm run ts` attempt was stopped without diagnostics after a bounded wait;
+it does not establish a full-repository type pass.
+
 The confirmed benefit rule is one active benefit per student, academic year and concession type.
 The context returns a `benefitBlocker` for another Pending request or an Approved/Partially Reversed
 benefit that remains in force. The context and preview receive the actual edited request ID so the

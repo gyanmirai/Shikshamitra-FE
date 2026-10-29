@@ -81,9 +81,14 @@ const getBlocker = (requestId?: string, typeId = 'type'): ConcessionBenefitBlock
           ? 'pending-other'
           : 'approved-200';
   if (requestId === blockingRequestId) return null;
+  const code = pending ? 'Finance:Concession:010010' : 'Finance:Concession:010034';
+  // Exercise untranslated read-context responses with the production presentation components.
+  const codeOnlyMessage = ['approved-benefit', 'pending-benefit', 'approval-duplicate'].includes(
+    scenario
+  );
   return {
-    code: pending ? 'Finance:Concession:010010' : 'Finance:Concession:010034',
-    message: pending ? pendingMessage : approvedMessage,
+    code,
+    message: codeOnlyMessage ? code : pending ? pendingMessage : approvedMessage,
     blockingRequestId,
     blockingStatus: pending
       ? 'Pending'

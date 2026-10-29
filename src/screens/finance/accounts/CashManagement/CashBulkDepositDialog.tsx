@@ -36,6 +36,10 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
+import { isFinancePrerequisiteMissing } from '../../components/financePrerequisites';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
+
 const types = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
 export const bulkDepositSchema = Yup.object({
   bankAccountId: Yup.string().required('Select a receiving school bank account.'),
@@ -171,6 +175,19 @@ export default function CashBulkDepositDialog({
   const bankError = Boolean(
     (formik.touched.bankAccountId || formik.submitCount > 0) && formik.errors.bankAccountId
   );
+  const missingBank =
+    allowed &&
+    !uncertain &&
+    isFinancePrerequisiteMissing({
+      ...options,
+      options: options.currentData?.bankAccounts,
+    });
+  useRefreshFinancePrerequisites(
+    () => {
+      options.refetch();
+    },
+    allowed && !busy && !uncertain
+  );
   return (
     <>
       <CustomDialog
@@ -192,133 +209,146 @@ export default function CashBulkDepositDialog({
         }}
       >
         <DialogScrollContent>
-          <Stack spacing={2}>
-            {!allowed && (
-              <Alert severity="error">You do not have permission to deposit cash.</Alert>
-            )}
-            {failure && (
-              <Alert severity="error">
-                {failure}
-                {stale && (
-                  <Button size="small" disabled={busy} onClick={refresh}>
-                    Refresh cash balance
-                  </Button>
-                )}
-              </Alert>
-            )}
-            {uncertain && (
-              <Alert severity="warning">
-                The deposit outcome is uncertain. Retry sends the original request to prevent a
-                duplicate deposit.
-              </Alert>
-            )}
-            {options.isError && (
-              <Alert
-                severity="error"
-                action={
-                  <Button size="small" disabled={busy} onClick={() => options.refetch()}>
-                    Retry
-                  </Button>
-                }
-              >
-                School bank accounts could not be loaded.
-              </Alert>
-            )}
-            {expectedAmount <= 0 && (
-              <Alert severity="info">No cash is available to deposit for this academic year.</Alert>
-            )}
-            <FormSectionCard
-              title="Deposit Details"
-              icon={GlobalIcons.bankAccount}
-              descriptionTooltip="The amount includes all available cash for this academic year after paid cash expenses and previous deposits."
-            >
-              <Stack spacing={2}>
-                <Stack spacing={0.5}>
-                  <Typography variant="body2" color="text.secondary">
-                    Total academic-year cash to deposit
-                  </Typography>
-                  <Typography variant="subtitle1">{formatNumber(expectedAmount, 'INR')}</Typography>
-                </Stack>
-                <ShakingTextField error={bankError}>
-                  <CustomSelect
-                    required
-                    fullWidth
-                    size="small"
-                    name="bankAccountId"
-                    label="Receiving school bank account"
-                    value={formik.values.bankAccountId}
-                    options={options.currentData?.bankAccounts ?? []}
-                    labelKey="label"
-                    valueKey="id"
-                    isSearch
-                    isLoading={options.isFetching}
-                    disabled={fieldsBlocked || options.isError || options.isFetching}
-                    onChange={(value) => formik.setFieldValue('bankAccountId', value)}
-                    onBlur={formik.handleBlur}
-                    error={bankError}
-                    helperText={bankError ? formik.errors.bankAccountId : undefined}
-                  />
-                </ShakingTextField>
-                {!options.isFetching && options.currentData?.bankAccounts.length === 0 && (
-                  <Alert severity="warning">
-                    Add an active school bank account before depositing cash.
-                  </Alert>
-                )}
-                <TextField
-                  size="small"
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  name="notes"
-                  label="Notes (optional)"
-                  value={formik.values.notes}
-                  disabled={fieldsBlocked}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={Boolean(formik.touched.notes && formik.errors.notes)}
-                  helperText={formik.touched.notes && formik.errors.notes}
-                />
-              </Stack>
-            </FormSectionCard>
-            <FormSectionCard
-              title="Attachments"
-              icon={GlobalIcons.documentIcon}
-              descriptionTooltip="Optionally attach a deposit slip or supporting document to this deposit."
-            >
-              <Stack spacing={1}>
-                <FormLabel id="cash-deposit-document-label">
-                  Supporting document (optional)
-                </FormLabel>
-                <CustomUpload
-                  multiple={false}
-                  value={formik.values.file ?? undefined}
-                  disabled={fieldsBlocked}
-                  loading={formik.isSubmitting && Boolean(formik.values.file)}
-                  primaryText="Upload document"
-                  onChange={(file) => {
-                    formik.setFieldTouched('file', true, false);
-                    formik.setFieldValue('file', file ?? null);
-                  }}
-                  onReject={(message) => {
-                    formik.setFieldTouched('file', true, false);
-                    formik.setFieldError('file', message);
-                  }}
-                  error={formik.touched.file ? formik.errors.file : undefined}
-                  dragProps={{
-                    'aria-labelledby': 'cash-deposit-document-label',
-                    'aria-describedby': 'cash-deposit-document-help',
-                  }}
-                />
-                <Typography
-                  id="cash-deposit-document-help"
-                  variant="caption"
-                  color="text.secondary"
+          {missingBank ? (
+            <FinancePrerequisiteState
+              requirements={[{ key: 'bank-account' }]}
+              onRefresh={() => {
+                options.refetch();
+              }}
+            />
+          ) : (
+            <Stack spacing={2}>
+              {!allowed && (
+                <Alert severity="error">You do not have permission to deposit cash.</Alert>
+              )}
+              {failure && (
+                <Alert severity="error">
+                  {failure}
+                  {stale && (
+                    <Button size="small" disabled={busy} onClick={refresh}>
+                      Refresh cash balance
+                    </Button>
+                  )}
+                </Alert>
+              )}
+              {uncertain && (
+                <Alert severity="warning">
+                  The deposit outcome is uncertain. Retry sends the original request to prevent a
+                  duplicate deposit.
+                </Alert>
+              )}
+              {options.isError && (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button size="small" disabled={busy} onClick={() => options.refetch()}>
+                      Retry
+                    </Button>
+                  }
                 >
-                  One PDF, JPG, JPEG or PNG file, up to 5 MB.
-                </Typography>
-              </Stack>
-            </FormSectionCard>
-          </Stack>
+                  School bank accounts could not be loaded.
+                </Alert>
+              )}
+              {expectedAmount <= 0 && (
+                <Alert severity="info">
+                  No cash is available to deposit for this academic year.
+                </Alert>
+              )}
+              <FormSectionCard
+                title="Deposit Details"
+                icon={GlobalIcons.bankAccount}
+                descriptionTooltip="The amount includes all available cash for this academic year after paid cash expenses and previous deposits."
+              >
+                <Stack spacing={2}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="body2" color="text.secondary">
+                      Total academic-year cash to deposit
+                    </Typography>
+                    <Typography variant="subtitle1">
+                      {formatNumber(expectedAmount, 'INR')}
+                    </Typography>
+                  </Stack>
+                  <ShakingTextField error={bankError}>
+                    <CustomSelect
+                      required
+                      fullWidth
+                      size="small"
+                      name="bankAccountId"
+                      label="Receiving school bank account"
+                      value={formik.values.bankAccountId}
+                      options={options.currentData?.bankAccounts ?? []}
+                      labelKey="label"
+                      valueKey="id"
+                      isSearch
+                      isLoading={options.isFetching}
+                      disabled={fieldsBlocked || options.isError || options.isFetching}
+                      onChange={(value) => formik.setFieldValue('bankAccountId', value)}
+                      onBlur={formik.handleBlur}
+                      error={bankError}
+                      helperText={bankError ? formik.errors.bankAccountId : undefined}
+                    />
+                  </ShakingTextField>
+                  {!options.isFetching && options.currentData?.bankAccounts.length === 0 && (
+                    <Alert severity="warning">
+                      Add an active school bank account before depositing cash.
+                    </Alert>
+                  )}
+                  <TextField
+                    size="small"
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    name="notes"
+                    label="Notes (optional)"
+                    value={formik.values.notes}
+                    disabled={fieldsBlocked}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={Boolean(formik.touched.notes && formik.errors.notes)}
+                    helperText={formik.touched.notes && formik.errors.notes}
+                  />
+                </Stack>
+              </FormSectionCard>
+              <FormSectionCard
+                title="Attachments"
+                icon={GlobalIcons.documentIcon}
+                descriptionTooltip="Optionally attach a deposit slip or supporting document to this deposit."
+              >
+                <Stack spacing={1}>
+                  <FormLabel id="cash-deposit-document-label">
+                    Supporting document (optional)
+                  </FormLabel>
+                  <CustomUpload
+                    multiple={false}
+                    value={formik.values.file ?? undefined}
+                    disabled={fieldsBlocked}
+                    loading={formik.isSubmitting && Boolean(formik.values.file)}
+                    primaryText="Upload document"
+                    onChange={(file) => {
+                      formik.setFieldTouched('file', true, false);
+                      formik.setFieldValue('file', file ?? null);
+                    }}
+                    onReject={(message) => {
+                      formik.setFieldTouched('file', true, false);
+                      formik.setFieldError('file', message);
+                    }}
+                    error={formik.touched.file ? formik.errors.file : undefined}
+                    dragProps={{
+                      'aria-labelledby': 'cash-deposit-document-label',
+                      'aria-describedby': 'cash-deposit-document-help',
+                    }}
+                  />
+                  <Typography
+                    id="cash-deposit-document-help"
+                    variant="caption"
+                    color="text.secondary"
+                  >
+                    One PDF, JPG, JPEG or PNG file, up to 5 MB.
+                  </Typography>
+                </Stack>
+              </FormSectionCard>
+            </Stack>
+          )}
         </DialogScrollContent>
         <DialogActions>
           <Button

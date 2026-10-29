@@ -3,7 +3,15 @@ import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 
 import { usePdfPage } from './use-pdf-page';
 
-export default function PdfCanvas({ url, title }: { url: string; title: string }) {
+export default function PdfCanvas({
+  url,
+  title,
+  showPageText = true,
+}: {
+  url: string;
+  title: string;
+  showPageText?: boolean;
+}) {
   const [page, setPage] = useState(1);
   const [retry, setRetry] = useState(0);
   const [zoom, setZoom] = useState(false);
@@ -70,7 +78,7 @@ export default function PdfCanvas({ url, title }: { url: string; title: string }
             bgcolor: 'common.white',
           }}
         />
-        {pdf.text && (
+        {showPageText && pdf.text && (
           <Box component="details" sx={{ p: 1 }}>
             <Box component="summary" sx={{ typography: 'body2', cursor: 'pointer' }}>
               Page Text

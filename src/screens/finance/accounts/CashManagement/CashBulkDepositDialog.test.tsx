@@ -131,6 +131,15 @@ function bank() {
     target: { value: 'bank' },
   });
 }
+
+it('shows the shared setup state for an empty bank catalog while keeping Cancel available', () => {
+  mock.banks = false;
+  setup();
+  expect(screen.getByRole('heading', { name: 'Add a bank account first' })).toBeVisible();
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Deposit cash' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+});
 it('shows the complete read-only total and requires a receiving bank', async () => {
   setup();
   expect(screen.getByText(/5,329/)).toBeInTheDocument();

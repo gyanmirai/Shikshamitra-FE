@@ -104,13 +104,11 @@ it('does not navigate the route when the academic year hydrates', async () => {
   await screen.findByRole('button', { name: 'School bank' });
   expect(navigation.replace).not.toHaveBeenCalled();
 });
-it('opens and closes activity using local URL state without route navigation', async () => {
+it('keeps the bank activity drawer closed while opening is temporarily disabled', async () => {
   show();
   fireEvent.click(await screen.findByRole('button', { name: 'School bank' }));
   expect(navigation.replace).not.toHaveBeenCalled();
-  expect(new URLSearchParams(window.location.search).get('bankActivity')).toBe('bank');
-  fireEvent.click(screen.getByRole('button', { name: 'Close activity' }));
-  expect(navigation.replace).not.toHaveBeenCalled();
+  expect(screen.queryByRole('button', { name: 'Close activity' })).not.toBeInTheDocument();
   expect(new URLSearchParams(window.location.search).has('bankActivity')).toBe(false);
 });
 it('settles the real bank table after the initial request without repeated requests', async () => {

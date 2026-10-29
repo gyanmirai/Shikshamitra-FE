@@ -37,6 +37,9 @@ import {
 import { entryDate } from './academicMonths';
 import { manualEntrySchema } from './manualEntrySchema';
 import { useFinancePermissions } from '../../hooks/useFinancePermissions';
+import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
+import { isFinancePrerequisiteMissing } from '../../components/financePrerequisites';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 
 import type { AcademicPeriod } from './academicMonths';
 
@@ -274,12 +277,47 @@ export default function ManualEntryForm({
     else onClose();
   };
   const fieldError = (name: keyof typeof formik.values) => ({
-    error: Boolean(formik.touched[name] && formik.errors[name]),
-    helperText: formik.touched[name] ? formik.errors[name] : undefined,
+    error: Boolean(
+      (name === 'amount' && insufficientCash && Number(formik.values.amount) > 0) ||
+      (formik.touched[name] && formik.errors[name])
+    ),
+    helperText:
+      name === 'amount' && insufficientCash && Number(formik.values.amount) > 0
+        ? 'Amount exceeds the available cash balance.'
+        : formik.touched[name]
+          ? formik.errors[name]
+          : undefined,
   });
   const categories = income
     ? options.currentData?.incomeCategories
     : options.currentData?.expenseCategories;
+  const missingCategory =
+    access.canAdd &&
+    !uncertain &&
+    isFinancePrerequisiteMissing({
+      ...options,
+      options: categories,
+    });
+  const missingBank =
+    access.canAdd &&
+    !uncertain &&
+    isFinancePrerequisiteMissing({
+      ...options,
+      options: options.currentData?.bankAccounts,
+      required: formik.values.paymentMethod !== PaymentMethod.CASH,
+    });
+  const insufficientCash =
+    cashExpense &&
+    !uncertain &&
+    !cashOptions.isFetching &&
+    !cashOptions.isError &&
+    availableCash !== undefined &&
+    (availableCash <= 0 || Number(formik.values.amount) > availableCash);
+  const refreshPrerequisites = () => {
+    options.refetch();
+    if (cashExpense) cashOptions.refetch();
+  };
+  useRefreshFinancePrerequisites(refreshPrerequisites, access.canAdd && !locked && !uncertain);
   const text = (
     name: 'name' | 'counterparty' | 'paymentReference' | 'notes',
     label: string,
@@ -341,8 +379,14 @@ export default function ManualEntryForm({
           boxShadow: 'var(--shadows-4)',
         }}
       >
-        <Box sx={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'auto', p: 2 }}>
-          <Stack spacing={2}>
+        <Box
+          sx={{
+            flex: 1, minHeight: 0, position: 'relative', overflow: 'auto', p: 2,
+            display: missingCategory ? 'flex' : undefined,
+            flexDirection: 'column',
+          }}
+        >
+          <Stack spacing={2} sx={{ flex: missingCategory ? 1 : undefined }}>
             {failure && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {failure}
@@ -372,232 +416,249 @@ export default function ManualEntryForm({
                 Categories and bank accounts could not be loaded.
               </Alert>
             )}
-            <Box
-              component="fieldset"
-              disabled={fieldsBlocked}
-              sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}
-            >
-              <Stack spacing={2}>
-                <FormSectionCard
-                  descriptionTooltip="Enter the transaction name, category and payer or payee for this school entry."
-                  icon="mdi:receipt-text-outline"
-                  title={income ? 'Income Details' : 'Expense Details'}
-                >
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      {text('name', income ? 'Income name' : 'Expense purpose', true)}
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <ShakingTextField error={fieldError('categoryId').error}>
-                        <CustomSelect
-                          label={income ? 'Income category' : 'Expense category'}
-                          required
-                          options={categories ?? []}
-                          labelKey="label"
-                          valueKey="id"
-                          value={formik.values.categoryId}
-                          onChange={(value) => formik.setFieldValue('categoryId', value)}
-                          name="categoryId"
-                          onBlur={formik.handleBlur}
-                          isSearch
-                          isLoading={options.isFetching}
-                          disabled={fieldsBlocked || options.isError}
-                          {...fieldError('categoryId')}
-                        />
-                      </ShakingTextField>
-                    </Grid>
-                    <Grid size={12}>
-                      {text('counterparty', income ? 'Received from' : 'Paid to', true)}
-                    </Grid>
-                  </Grid>
-                </FormSectionCard>
-                <FormSectionCard
-                  descriptionTooltip="Cash expenses use the academic year's available cash. Cash Management records the amount spent and deposits the remainder as Income. Other methods require an eligible school bank account."
-                  icon="mdi:bank-transfer"
-                  title="Payment Details"
-                >
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <ShakingTextField error={fieldError('amount').error}>
-                        <NumericFormatCustom
-                          fullWidth
-                          size="small"
-                          required
-                          name="amount"
-                          label="Amount"
-                          value={formik.values.amount}
-                          valueIsNumericString
-                          roundToWholeRupees={false}
-                          decimalScale={2}
-                          isAllowed={({ floatValue }) =>
-                            floatValue === undefined || floatValue <= 999999999999.99
-                          }
-                          onValueChange={(values, source) => {
-                            if (source.source === 'event')
-                              formik.setFieldValue('amount', values.value);
-                          }}
-                          onBlur={formik.handleBlur}
-                          disabled={fieldsBlocked}
-                          {...fieldError('amount')}
-                        />
-                      </ShakingTextField>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      {formik.values.paymentMethod === PaymentMethod.CASH ? (
-                        <ShakingTextField error={fieldError('cashPaymentDateTime').error}>
-                          <DateTimePicker
-                            label="Payment date"
-                            value={dayjs(formik.values.cashPaymentDateTime)}
-                            minDateTime={dayjs(period.startDate).startOf('day')}
-                            maxDateTime={
-                              dayjs(period.endDate).endOf('day').isBefore(dayjs())
-                                ? dayjs(period.endDate).endOf('day')
-                                : dayjs()
-                            }
-                            disabled={fieldsBlocked}
-                            onChange={(value: Dayjs | null) => {
-                              formik.setFieldValue(
-                                'cashPaymentDateTime',
-                                value?.isValid() ? value.toISOString() : ''
-                              );
-                              formik.setFieldValue(
-                                'paymentDate',
-                                value?.isValid() ? value.format('YYYY-MM-DD') : ''
-                              );
-                            }}
-                            slotProps={{
-                              textField: {
-                                fullWidth: true,
-                                size: 'small',
-                                required: true,
-                                name: 'cashPaymentDateTime',
-                                onBlur: formik.handleBlur,
-                                ...fieldError('cashPaymentDateTime'),
-                              },
-                            }}
-                          />
-                        </ShakingTextField>
-                      ) : (
-                        <ShakingTextField error={fieldError('paymentDate').error}>
-                          <DatePicker
-                            label="Payment date"
-                            value={dayjs(formik.values.paymentDate)}
-                            minDate={dayjs(period.startDate)}
-                            maxDate={dayjs(period.endDate)}
-                            onChange={(value: Dayjs | null) =>
-                              formik.setFieldValue(
-                                'paymentDate',
-                                value?.isValid() ? value.format('YYYY-MM-DD') : ''
-                              )
-                            }
-                            disabled={fieldsBlocked}
-                            slotProps={{
-                              textField: {
-                                fullWidth: true,
-                                size: 'small',
-                                required: true,
-                                name: 'paymentDate',
-                                onBlur: formik.handleBlur,
-                                ...fieldError('paymentDate'),
-                              },
-                            }}
-                          />
-                        </ShakingTextField>
-                      )}
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <ShakingTextField error={fieldError('paymentMethod').error}>
-                        <CustomSelect
-                          label="Payment method"
-                          required
-                          value={formik.values.paymentMethod}
-                          options={Object.entries(PaymentMethodLabels).map(([value, label]) => ({
-                            value: Number(value),
-                            label,
-                          }))}
-                          onChange={(value) => {
-                            formik.setFieldValue('paymentMethod', Number(value));
-                            if (Number(value) === PaymentMethod.CASH) {
-                              formik.setFieldValue('bankAccountId', '');
-                              if (!income) formik.setFieldValue('paymentReference', '');
-                            }
-                          }}
-                          disabled={fieldsBlocked}
-                          name="paymentMethod"
-                          onBlur={formik.handleBlur}
-                          {...fieldError('paymentMethod')}
-                        />
-                      </ShakingTextField>
-                    </Grid>
-                    {cashExpense && (
-                      <Grid size={12}>
-                        {cashOptions.isError && (
-                          <Alert
-                            severity="error"
-                            action={<Button onClick={() => cashOptions.refetch()}>Retry</Button>}
-                          >
-                            Available cash could not be loaded.
-                          </Alert>
-                        )}
-                        {cashOptions.isFetching ? (
-                          <Typography role="status" variant="body2">
-                            Loading available cash...
-                          </Typography>
-                        ) : !cashOptions.isError && availableCash !== undefined ? (
-                          <Typography variant="body2" color="text.secondary">
-                            Available cash: {formatNumber(availableCash, 'INR')}
-                          </Typography>
-                        ) : null}
-                        {!cashOptions.isFetching && !cashOptions.isError && availableCash === 0 && (
-                          <Alert severity="info">
-                            No cash is available for this academic year.
-                          </Alert>
-                        )}
-                      </Grid>
-                    )}
-                    {formik.values.paymentMethod !== PaymentMethod.CASH && (
+            {missingCategory ? (
+              <FinancePrerequisiteState
+                requirements={[{ key: income ? 'income-category' : 'expense-category' }]}
+                onRefresh={refreshPrerequisites}
+              />
+            ) : (
+              <Box
+                component="fieldset"
+                disabled={fieldsBlocked}
+                sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}
+              >
+                <Stack spacing={2}>
+                  <FormSectionCard
+                    descriptionTooltip="Enter the transaction name, category and payer or payee for this school entry."
+                    icon="mdi:receipt-text-outline"
+                    title={income ? 'Income Details' : 'Expense Details'}
+                  >
+                    <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 6 }}>
-                        <ShakingTextField error={fieldError('bankAccountId').error}>
+                        {text('name', income ? 'Income name' : 'Expense purpose', true)}
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <ShakingTextField error={fieldError('categoryId').error}>
                           <CustomSelect
-                            label={
-                              income
-                                ? 'Receiving school bank account'
-                                : 'Paying school bank account'
-                            }
+                            label={income ? 'Income category' : 'Expense category'}
                             required
-                            options={options.currentData?.bankAccounts ?? []}
+                            options={categories ?? []}
                             labelKey="label"
                             valueKey="id"
-                            value={formik.values.bankAccountId}
-                            onChange={(value) => formik.setFieldValue('bankAccountId', value)}
-                            name="bankAccountId"
+                            value={formik.values.categoryId}
+                            onChange={(value) => formik.setFieldValue('categoryId', value)}
+                            name="categoryId"
                             onBlur={formik.handleBlur}
                             isSearch
                             isLoading={options.isFetching}
                             disabled={fieldsBlocked || options.isError}
-                            {...fieldError('bankAccountId')}
+                            {...fieldError('categoryId')}
                           />
                         </ShakingTextField>
                       </Grid>
-                    )}
-                    {!cashExpense && (
                       <Grid size={12}>
-                        {text('paymentReference', 'Payment reference (optional)')}
+                        {text('counterparty', income ? 'Received from' : 'Paid to', true)}
                       </Grid>
-                    )}
-                  </Grid>
-                </FormSectionCard>
-                <FormSectionCard
-                  descriptionTooltip="Add any supporting context for this transaction. Notes are optional."
-                  icon="mdi:text-box-outline"
-                  title="Additional Notes"
-                >
-                  <Grid container spacing={2}>
-                    <Grid size={12}>{text('notes', 'Notes (optional)')}</Grid>
-                  </Grid>
-                </FormSectionCard>
-              </Stack>
-            </Box>
+                    </Grid>
+                  </FormSectionCard>
+                  <FormSectionCard
+                    descriptionTooltip="Cash expenses use the academic year's available cash. Cash Management records the amount spent and deposits the remainder as Income. Other methods require an eligible school bank account."
+                    icon="mdi:bank-transfer"
+                    title="Payment Details"
+                  >
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <ShakingTextField error={fieldError('amount').error}>
+                          <NumericFormatCustom
+                            fullWidth
+                            size="small"
+                            required
+                            name="amount"
+                            label="Amount"
+                            value={formik.values.amount}
+                            valueIsNumericString
+                            roundToWholeRupees={false}
+                            decimalScale={2}
+                            isAllowed={({ floatValue }) =>
+                              floatValue === undefined || floatValue <= 999999999999.99
+                            }
+                            onValueChange={(values, source) => {
+                              if (source.source === 'event')
+                                formik.setFieldValue('amount', values.value);
+                            }}
+                            onBlur={formik.handleBlur}
+                            disabled={fieldsBlocked}
+                            {...fieldError('amount')}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        {formik.values.paymentMethod === PaymentMethod.CASH ? (
+                          <ShakingTextField error={fieldError('cashPaymentDateTime').error}>
+                            <DateTimePicker
+                              label="Payment date"
+                              value={dayjs(formik.values.cashPaymentDateTime)}
+                              minDateTime={dayjs(period.startDate).startOf('day')}
+                              maxDateTime={
+                                dayjs(period.endDate).endOf('day').isBefore(dayjs())
+                                  ? dayjs(period.endDate).endOf('day')
+                                  : dayjs()
+                              }
+                              disabled={fieldsBlocked}
+                              onChange={(value: Dayjs | null) => {
+                                formik.setFieldValue(
+                                  'cashPaymentDateTime',
+                                  value?.isValid() ? value.toISOString() : ''
+                                );
+                                formik.setFieldValue(
+                                  'paymentDate',
+                                  value?.isValid() ? value.format('YYYY-MM-DD') : ''
+                                );
+                              }}
+                              slotProps={{
+                                textField: {
+                                  fullWidth: true,
+                                  size: 'small',
+                                  required: true,
+                                  name: 'cashPaymentDateTime',
+                                  onBlur: formik.handleBlur,
+                                  ...fieldError('cashPaymentDateTime'),
+                                },
+                              }}
+                            />
+                          </ShakingTextField>
+                        ) : (
+                          <ShakingTextField error={fieldError('paymentDate').error}>
+                            <DatePicker
+                              label="Payment date"
+                              value={dayjs(formik.values.paymentDate)}
+                              minDate={dayjs(period.startDate)}
+                              maxDate={dayjs(period.endDate)}
+                              onChange={(value: Dayjs | null) =>
+                                formik.setFieldValue(
+                                  'paymentDate',
+                                  value?.isValid() ? value.format('YYYY-MM-DD') : ''
+                                )
+                              }
+                              disabled={fieldsBlocked}
+                              slotProps={{
+                                textField: {
+                                  fullWidth: true,
+                                  size: 'small',
+                                  required: true,
+                                  name: 'paymentDate',
+                                  onBlur: formik.handleBlur,
+                                  ...fieldError('paymentDate'),
+                                },
+                              }}
+                            />
+                          </ShakingTextField>
+                        )}
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <ShakingTextField error={fieldError('paymentMethod').error}>
+                          <CustomSelect
+                            label="Payment method"
+                            required
+                            value={formik.values.paymentMethod}
+                            options={Object.entries(PaymentMethodLabels).map(([value, label]) => ({
+                              value: Number(value),
+                              label,
+                            }))}
+                            onChange={(value) => {
+                              formik.setFieldValue('paymentMethod', Number(value));
+                              if (Number(value) === PaymentMethod.CASH) {
+                                formik.setFieldValue('bankAccountId', '');
+                                if (!income) formik.setFieldValue('paymentReference', '');
+                              }
+                            }}
+                            disabled={fieldsBlocked}
+                            name="paymentMethod"
+                            onBlur={formik.handleBlur}
+                            {...fieldError('paymentMethod')}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                      {cashExpense && (
+                        <Grid size={12}>
+                          {cashOptions.isError && (
+                            <Alert
+                              severity="error"
+                              action={<Button onClick={() => cashOptions.refetch()}>Retry</Button>}
+                            >
+                              Available cash could not be loaded.
+                            </Alert>
+                          )}
+                          {cashOptions.isFetching ? (
+                            <Typography role="status" variant="body2">
+                              Loading available cash...
+                            </Typography>
+                          ) : !cashOptions.isError && availableCash !== undefined ? (
+                            <Typography variant="body2" color="text.secondary">
+                              Available cash: {formatNumber(availableCash, 'INR')}
+                            </Typography>
+                          ) : null}
+                          {insufficientCash && (
+                            <FinancePrerequisiteState
+                              requirements={[{ key: 'cash-balance' }]}
+                              compact
+                              onRefresh={refreshPrerequisites}
+                            />
+                          )}
+                        </Grid>
+                      )}
+                      {formik.values.paymentMethod !== PaymentMethod.CASH && (
+                        <Grid size={missingBank ? 12 : { xs: 12, sm: 6 }}>
+                          {missingBank ? (
+                            <FinancePrerequisiteState
+                              requirements={[{ key: 'bank-account' }]}
+                              onRefresh={refreshPrerequisites}
+                              compact
+                            />
+                          ) : (
+                            <ShakingTextField error={fieldError('bankAccountId').error}>
+                              <CustomSelect
+                                label={
+                                  income
+                                    ? 'Receiving school bank account'
+                                    : 'Paying school bank account'
+                                }
+                                required
+                                options={options.currentData?.bankAccounts ?? []}
+                                labelKey="label"
+                                valueKey="id"
+                                value={formik.values.bankAccountId}
+                                onChange={(value) => formik.setFieldValue('bankAccountId', value)}
+                                name="bankAccountId"
+                                onBlur={formik.handleBlur}
+                                isSearch
+                                isLoading={options.isFetching}
+                                disabled={fieldsBlocked || options.isError}
+                                {...fieldError('bankAccountId')}
+                              />
+                            </ShakingTextField>
+                          )}
+                        </Grid>
+                      )}
+                      {!cashExpense && (
+                        <Grid size={12}>
+                          {text('paymentReference', 'Payment reference (optional)')}
+                        </Grid>
+                      )}
+                    </Grid>
+                  </FormSectionCard>
+                  <FormSectionCard
+                    descriptionTooltip="Add any supporting context for this transaction. Notes are optional."
+                    icon="mdi:text-box-outline"
+                    title="Additional Notes"
+                  >
+                    <Grid container spacing={2}>
+                      <Grid size={12}>{text('notes', 'Notes (optional)')}</Grid>
+                    </Grid>
+                  </FormSectionCard>
+                </Stack>
+              </Box>
+            )}
           </Stack>
           {blocking && (
             <Box
@@ -653,6 +714,9 @@ export default function ManualEntryForm({
               stale ||
               refreshingCash ||
               !access.canAdd ||
+              missingCategory ||
+              missingBank ||
+              insufficientCash ||
               (!uncertain &&
                 (options.isFetching ||
                   options.isError ||

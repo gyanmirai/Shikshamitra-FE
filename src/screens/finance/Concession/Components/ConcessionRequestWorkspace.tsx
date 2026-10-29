@@ -40,7 +40,6 @@ export default function ConcessionRequestWorkspace({
   installments,
   selectedIds,
   onToggle,
-  policy,
   preview,
   loading = false,
   feeSelectionMessage,
@@ -50,31 +49,121 @@ export default function ConcessionRequestWorkspace({
 }: Props) {
   const detailsId = useId();
   const [inspectedId, setInspectedId] = useState('');
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(true);
   const activeHead =
     feeHeads.find((head) => head.feeHeadId === inspectedId) ??
     feeHeads.find((head) => selectedIds.includes(head.feeHeadId)) ??
     feeHeads[0];
-  const lines = installments.filter((line) => line.feeHeadId === activeHead?.feeHeadId);
-  const included = Boolean(activeHead && selectedIds.includes(activeHead.feeHeadId));
-  const result =
-    included && !feeSelectionMessage
-      ? preview?.feeHeadConcessions.find((head) => head.feeHeadId === activeHead?.feeHeadId)
+
+  const renderFeeDetails = (head: ConcessionSelectableFeeHead, headDetailsId: string) => {
+    const lines = installments.filter((line) => line.feeHeadId === head.feeHeadId);
+    const included = selectedIds.includes(head.feeHeadId);
+    const result = included
+      ? preview?.feeHeadConcessions.find((item) => item.feeHeadId === head.feeHeadId)
       : undefined;
-  const isAutomatic = policy?.valueSource === 'PolicyFixed';
-  const automaticValue =
-    policy?.calculationMethod === 'Percentage'
-      ? `${policy.percentageValue ?? 0}% reduction`
-      : policy?.calculationMethod === 'FixedAmount'
-        ? `${formatNumber(policy.fixedAmount ?? 0, 'INR')} concession`
-        : 'Full waiver';
+    const expanded = activeHead?.feeHeadId === head.feeHeadId && detailsOpen;
+
+    return (
+      <CustomAccordion
+        title="Fee Breakdown"
+        expanded={expanded}
+        onChange={() => {
+          setInspectedId(head.feeHeadId);
+          setDetailsOpen(!expanded);
+        }}
+        content={
+          <Stack id={headDetailsId} component="section" aria-label="Fee details" spacing={0.75}>
+            {lines.length > 0 && (
+              <Stack
+                component="ul"
+                aria-label={`${head.feeHeadName} installments`}
+                spacing={0.5}
+                sx={{ m: 0, p: 0, listStyle: 'none' }}
+              >
+                {lines.map((line) => (
+                  <Stack
+                    component="li"
+                    direction="row"
+                    justifyContent="space-between"
+                    gap={1}
+                    key={line.dueFeeId}
+                  >
+                    <Typography variant="body2">
+                      {concessionInstallmentLabel(line.installmentLabel, line.year)}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+                    >
+                      {formatNumber(line.eligibleConcessionAmount, 'INR')}
+                    </Typography>
+                  </Stack>
+                ))}
+              </Stack>
+            )}
+            <Divider />
+            <Box
+              aria-busy={loading}
+              sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 1 }}
+            >
+              {[
+                {
+                  label: 'Original fee',
+                  value: lines.length
+                    ? formatNumber(
+                        lines.reduce((total, line) => total + line.originalAmount, 0),
+                        'INR'
+                      )
+                    : '—',
+                },
+                {
+                  label: 'Already paid',
+                  value: lines.length
+                    ? formatNumber(
+                        lines.reduce((total, line) => total + line.paidAmount, 0),
+                        'INR'
+                      )
+                    : '—',
+                },
+                {
+                  label: 'Concession',
+                  value: result ? `−${formatNumber(result.discountAmount, 'INR')}` : '—',
+                },
+              ].map((item) => (
+                <Box key={item.label} sx={{ minWidth: 0 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {item.label}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      overflowWrap: 'anywhere',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {item.value}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+            {!included && (
+              <Typography variant="caption" color="text.secondary">
+                Select this fee to include it in the request.
+              </Typography>
+            )}
+          </Stack>
+        }
+      />
+    );
+  };
 
   return (
     <Box
       sx={{
         display: 'grid',
         alignItems: 'start',
-        gap: 1.5,
+        gap: 1,
         minWidth: 0,
         gridTemplateColumns: 'minmax(0, 1fr)',
         '@container (min-width: 850px)': {
@@ -87,17 +176,31 @@ export default function ConcessionRequestWorkspace({
         titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
         icon={GlobalIcons.receiptIcon}
         iconContainerSize={28}
-        contentSpacing={1.25}
+        contentSpacing={1}
         descriptionTooltip="Select a policy, concession type and eligible fees. Enter installment values when the policy allows them."
         action={
           <Label color="default">
             {selectedIds.length} selected fee{selectedIds.length === 1 ? '' : 's'}
           </Label>
         }
-        sx={{ p: 1.5, minWidth: 0, containerType: 'inline-size', bgcolor: 'background.paper' }}
+        sx={{ p: 1.25, minWidth: 0, containerType: 'inline-size', bgcolor: 'background.paper' }}
       >
         {policyFields}
         <Box>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            gap={1}
+            sx={{ mb: 0.75 }}
+          >
+            <Typography component="h3" variant="subtitle2">
+              Eligible Fees
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {feeHeads.length} fee{feeHeads.length === 1 ? '' : 's'} available
+            </Typography>
+          </Stack>
           {feeSelectionMessage || (
             <ConcessionFeeHeadSelection
               feeHeads={feeHeads}
@@ -106,6 +209,7 @@ export default function ConcessionRequestWorkspace({
               activeId={activeHead?.feeHeadId}
               detailsId={detailsId}
               detailsExpanded={detailsOpen}
+              renderDetails={renderFeeDetails}
               onInspect={(id) => {
                 setInspectedId(id);
                 setDetailsOpen(true);
@@ -117,92 +221,12 @@ export default function ConcessionRequestWorkspace({
             />
           )}
         </Box>
-        {isAutomatic && (
-          <Typography variant="body2" color="text.secondary">
-            {automaticValue} applied automatically to selected fees
-          </Typography>
-        )}
         {valueFields}
-        {activeHead && !feeSelectionMessage && (
-          <CustomAccordion
-            title="Fee Breakdown"
-            expanded={detailsOpen}
-            onChange={() => setDetailsOpen((value) => !value)}
-            content={
-              <Stack id={detailsId} component="section" aria-label="Fee details" spacing={1}>
-                <Typography component="h3" variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                  {activeHead.feeHeadName}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Original{' '}
-                  {lines.length
-                    ? formatNumber(
-                        lines.reduce((total, line) => total + line.originalAmount, 0),
-                        'INR'
-                      )
-                    : '—'}
-                  {' · '}Paid{' '}
-                  {lines.length
-                    ? formatNumber(
-                        lines.reduce((total, line) => total + line.paidAmount, 0),
-                        'INR'
-                      )
-                    : '—'}
-                </Typography>
-                {lines.length > 0 && (
-                  <Stack
-                    component="ul"
-                    aria-label={`${activeHead.feeHeadName} installments`}
-                    spacing={1}
-                    sx={{ m: 0, p: 0, listStyle: 'none' }}
-                  >
-                    {lines.map((line) => (
-                      <Stack
-                        component="li"
-                        direction="row"
-                        justifyContent="space-between"
-                        gap={1}
-                        key={line.dueFeeId}
-                      >
-                        <Typography variant="body2" color="text.secondary">
-                          {concessionInstallmentLabel(line.installmentLabel, line.year)}
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                          {formatNumber(line.eligibleConcessionAmount, 'INR')}
-                        </Typography>
-                      </Stack>
-                    ))}
-                  </Stack>
-                )}
-                <Divider />
-                <Stack direction="row" justifyContent="space-between" gap={1}>
-                  <Typography variant="body2" color="text.secondary">
-                    Eligible amount
-                  </Typography>
-                  <Typography variant="body2">{formatNumber(activeHead.amount, 'INR')}</Typography>
-                </Stack>
-                <Stack direction="row" justifyContent="space-between" gap={1} aria-busy={loading}>
-                  <Typography variant="body2" color="text.secondary">
-                    Concession
-                  </Typography>
-                  <Typography variant="body2">
-                    {result ? `−${formatNumber(result.discountAmount, 'INR')}` : '—'}
-                  </Typography>
-                </Stack>
-                {!included && (
-                  <Typography variant="caption" color="text.secondary">
-                    Select this fee to include it in the request.
-                  </Typography>
-                )}
-              </Stack>
-            }
-          />
-        )}
       </FormSectionCard>
       <Stack
         component="aside"
         aria-label="Concession impact and supporting documents"
-        spacing={1.5}
+        spacing={1}
         sx={{ minWidth: 0 }}
       >
         <ConcessionImpactSummary

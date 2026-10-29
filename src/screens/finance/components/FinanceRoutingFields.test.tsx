@@ -66,6 +66,6 @@ describe('Refund policy category options', () => {
     renderRefundFields();
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Expense Category' }));
     expect(await screen.findAllByRole('option')).toHaveLength(1);
-    expect(screen.queryByRole('option', { name: 'None', exact: true })).toBeNull();
+    expect(screen.queryByRole('option', { name: 'None' })).toBeNull();
   });
 });

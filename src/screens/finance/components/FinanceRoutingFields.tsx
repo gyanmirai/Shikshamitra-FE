@@ -7,6 +7,10 @@ import { Stack, Alert, Skeleton } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 
+import FinancePrerequisiteState from './FinancePrerequisiteState';
+import { isFinancePrerequisiteMissing } from './financePrerequisites';
+import { useRefreshFinancePrerequisites } from '../hooks/useRefreshFinancePrerequisites';
+
 interface Props {
   formik: FormikProps<any>;
   academicYearId: string;
@@ -17,6 +21,8 @@ interface Props {
   bankLabel?: string;
   disabled?: boolean;
   skeletonLoading?: boolean;
+  categoryRequired?: boolean;
+  bankRequired?: boolean;
 }
 export default function FinanceRoutingFields({
   formik,
@@ -28,10 +34,31 @@ export default function FinanceRoutingFields({
   bankLabel = 'Receiving Bank Account',
   disabled = false,
   skeletonLoading = false,
+  categoryRequired,
+  bankRequired,
 }: Props) {
-  const { data, isFetching, isError } = useGetFinanceRoutingOptionsQuery(
+  const query = useGetFinanceRoutingOptionsQuery(
     { academicYearId, operation },
     { skip: !academicYearId }
+  );
+  const { isFetching, isError } = query;
+  const data = query.currentData ?? query.data;
+  const expense = operation === 'refund' || operation === 'refund-policy';
+  const requiresCategory =
+    categoryRequired ??
+    (operation === 'refund-policy'
+      ? formik.values.status === 'Active'
+      : operation === 'collection-policy'
+        ? formik.values.status === 'Active' && Boolean(formik.values.enableLateFee)
+        : true);
+  const requiresBank =
+    bankRequired ??
+    Boolean(bankField && (operation !== 'refund-policy' || formik.values.status === 'Active'));
+  useRefreshFinancePrerequisites(
+    () => {
+      query.refetch();
+    },
+    Boolean(academicYearId) && !disabled && !query.isUninitialized
   );
   const categoryRows =
     operation === 'refund' || operation === 'refund-policy'
@@ -45,6 +72,16 @@ export default function FinanceRoutingFields({
             Number(a.label.trim().toLowerCase() === 'none')
         )
       : categoryRows;
+  const missingCategory = isFinancePrerequisiteMissing({
+    ...query,
+    options: categories,
+    required: requiresCategory && !formik.values[categoryField],
+  });
+  const missingBank = isFinancePrerequisiteMissing({
+    ...query,
+    options: data?.bankAccounts,
+    required: requiresBank && Boolean(bankField) && !formik.values[bankField!],
+  });
   const field = (
     name: string,
     label: string,
@@ -99,8 +136,29 @@ export default function FinanceRoutingFields({
         </Stack>
       ) : (
         <>
-          {field(categoryField, categoryLabel, categories)}
-          {bankField && field(bankField, bankLabel, data?.bankAccounts)}
+          {missingCategory ? (
+            <FinancePrerequisiteState
+              requirements={[{ key: expense ? 'expense-category' : 'income-category' }]}
+              onRefresh={() => {
+                query.refetch();
+              }}
+              compact
+            />
+          ) : (
+            field(categoryField, categoryLabel, categories)
+          )}
+          {bankField &&
+            (missingBank ? (
+              <FinancePrerequisiteState
+                requirements={[{ key: 'bank-account' }]}
+                onRefresh={() => {
+                  query.refetch();
+                }}
+                compact
+              />
+            ) : (
+              field(bankField, bankLabel, data?.bankAccounts)
+            ))}
         </>
       )}
     </Stack>
