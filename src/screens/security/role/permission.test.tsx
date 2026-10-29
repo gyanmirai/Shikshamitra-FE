@@ -87,15 +87,22 @@ const entry = (name: string): CataloguePermission => ({
 });
 function renderPermissions(granted = true, disabled = false, providerName = 'R') {
   const names = ['View', 'Add', 'Delete'].map((action) => `${base}.${action}`);
+  const visibility = 'ShikshaMitra.Module.Students';
   const setGrants = vi.fn();
   renderWithProviders(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <Permission
         catalogue={{
-          groups: [{ name: 'Students', displayName: 'Students', permissions: names.map(entry) }],
+          groups: [
+            {
+              name: 'Students',
+              displayName: 'Students',
+              permissions: [...names, visibility].map(entry),
+            },
+          ],
         }}
         provider={{ providerName, providerKey: 'test-provider' }}
-        grants={Object.fromEntries(names.map((name) => [name, granted]))}
+        grants={{ ...Object.fromEntries(names.map((name) => [name, granted])), [visibility]: true }}
         setGrants={setGrants}
         disabled={disabled}
       />
@@ -147,8 +154,10 @@ it('switches submodules and clears stale selection on a different module', () =>
   expect(screen.getByRole('heading', { name: 'HR/Staff' })).toBeInTheDocument();
   expect(screen.getByTestId('permission-Statutory Schemes')).toBeInTheDocument();
   expect(screen.getByTestId('permission-Salary Templates')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Payroll Management' }))
-    .toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByRole('button', { name: 'Payroll Management' })).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  );
   expect(screen.queryByTestId('permission-Profiles')).not.toBeInTheDocument();
   expect(setGrants).not.toHaveBeenCalled();
 });
@@ -194,14 +203,22 @@ it('keeps statutory Edit independent and leaves unavailable Delete disabled', ()
   const edits = ['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'].map(
     (action) => `${root}.${action}`
   );
-  const names = [`${root}.View`, ...edits, 'HR.PayrollManagement.Settings.SalaryTemplates.View'];
+  const visibility = 'ShikshaMitra.Module.HR';
+  const names = [
+    `${root}.View`,
+    ...edits,
+    'HR.PayrollManagement.Settings.SalaryTemplates.View',
+    visibility,
+  ];
   const setGrants = vi.fn();
   renderWithProviders(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <Permission
         catalogue={{ groups: [{ name: 'HR', displayName: 'HR', permissions: names.map(entry) }] }}
         provider={{ providerName: 'R', providerKey: 'test-role' }}
-        grants={Object.fromEntries(names.map((name) => [name, edits.includes(name)]))}
+        grants={Object.fromEntries(
+          names.map((name) => [name, name === visibility || edits.includes(name)])
+        )}
         setGrants={setGrants}
       />
     </ThemeProvider>

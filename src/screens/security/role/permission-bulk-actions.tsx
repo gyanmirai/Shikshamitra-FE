@@ -1,8 +1,8 @@
 import { varAlpha } from 'src/theme/styles';
 import { Box, Stack, Button, Tooltip } from '@mui/material';
 
-import { permissionBulkNames } from './permission-bulk-state';
 import { usePermissionBulk } from './permission-bulk-context';
+import { permissionBulkNames, visibilityBulkNames } from './permission-bulk-state';
 
 import type { NavigationPermission, PermissionOverrideState } from './permission-catalogue';
 
@@ -15,8 +15,13 @@ export default function PermissionBulkActions({
 }) {
   const context = usePermissionBulk();
   if (!context) return null;
-  const { grants, manageable, states, setStates, disabled, user } = context;
-  const names = permissionBulkNames(nodes, grants, manageable);
+  const { grants, manageable, states, setStates, disabled, user, visibility, requiresVisibility } =
+    context;
+  const visibilityNames = visibility ? visibilityBulkNames(nodes, grants, manageable) : [];
+  const names = visibility
+    ? { grant: visibilityNames, revoke: visibilityNames }
+    : permissionBulkNames(nodes, grants, manageable);
+  const target = visibility ? 'visibility' : 'permissions';
   const actions: {
     label: string;
     names: string[];
@@ -29,7 +34,7 @@ export default function PermissionBulkActions({
       names: names.grant,
       state: 'allow',
       color: 'primary',
-      help: `Grant every available permission in ${scope}, including filtered and collapsed features.`,
+      help: `Grant every available ${visibility ? 'navigation visibility flag' : 'permission'} in ${scope}, including filtered and collapsed features.`,
     },
     {
       label: 'Revoke all',
@@ -55,7 +60,7 @@ export default function PermissionBulkActions({
   return (
     <Stack
       role="group"
-      aria-label={`${scope} permissions`}
+      aria-label={`${scope} ${target}`}
       direction="row"
       flexWrap="wrap"
       gap={0.25}
@@ -77,11 +82,16 @@ export default function PermissionBulkActions({
               type="button"
               size="small"
               color={action.color}
-              variant="text"
-              aria-label={`${action.label} ${scope} permissions`}
+              variant={visibility ? (action.state === 'allow' ? 'contained' : 'outlined') : 'text'}
+              aria-label={`${action.label} ${scope} ${target}`}
               disabled={
                 disabled ||
-                !action.names.some((name) => (states[name] ?? 'inherit') !== action.state)
+                (!action.names.some((name) => (states[name] ?? 'inherit') !== action.state) &&
+                  !(
+                    action.state === 'allow' &&
+                    action.names.length > 0 &&
+                    requiresVisibility?.(action.names)
+                  ))
               }
               onClick={(event) => {
                 event.stopPropagation();
@@ -96,13 +106,26 @@ export default function PermissionBulkActions({
                 borderRadius: 0.5,
                 fontSize: 12,
                 fontWeight: 400,
-                color: `${action.color}.dark`,
-                bgcolor: varAlpha(theme.vars.palette[action.color].mainChannel, 0.12),
-                '&:hover': {
+                ...(visibility &&
+                  (action.state === 'allow'
+                    ? {
+                        color: 'primary.contrastText',
+                        bgcolor: 'primary.dark',
+                        '&:hover': { bgcolor: 'primary.darker' },
+                      }
+                    : {
+                        color: `${action.color}.dark`,
+                        ...theme.applyStyles('dark', { color: `${action.color}.light` }),
+                      })),
+                ...(!visibility && {
+                  color: `${action.color}.dark`,
                   bgcolor: varAlpha(theme.vars.palette[action.color].mainChannel, 0.12),
-                },
-                ...theme.applyStyles('dark', {
-                  color: `${action.color}.light`,
+                  '&:hover': {
+                    bgcolor: varAlpha(theme.vars.palette[action.color].mainChannel, 0.12),
+                  },
+                  ...theme.applyStyles('dark', {
+                    color: `${action.color}.light`,
+                  }),
                 }),
                 '&.Mui-disabled': { color: 'text.disabled', bgcolor: 'transparent' },
                 '&.Mui-focusVisible': {

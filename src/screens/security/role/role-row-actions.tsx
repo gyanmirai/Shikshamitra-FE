@@ -19,6 +19,23 @@ export default function RoleRowActions({
 }) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const actions: AdaptiveThreeDotsAction[] = [];
+  if (hasGrantedPermission(permissions, 'AbpIdentity.Roles.ManagePermissions'))
+    actions.push(
+      {
+        id: 'visibility',
+        label: `Set Module Visibility for ${role.name}`,
+        tooltip: 'Set Module Visibility',
+        icon: GlobalIcons.eye,
+        onClick: () => onAction('visibility', role),
+      },
+      {
+        id: 'permissions',
+        label: `Manage Permissions for ${role.name}`,
+        tooltip: 'Manage Permissions',
+        icon: GlobalIcons.lockIcon,
+        onClick: () => onAction('permissions', role),
+      }
+    );
   if (hasGrantedPermission(permissions, 'AbpIdentity.Roles.Update'))
     actions.push({
       id: 'edit',
@@ -34,22 +51,6 @@ export default function RoleRowActions({
       color: 'error.main',
       onClick: () => onAction('delete', role),
     });
-  if (hasGrantedPermission(permissions, 'AbpIdentity.Roles.ManagePermissions'))
-    actions.push(
-      {
-        id: 'visibility',
-        label:
-          actions.length < 2 ? `Set Module Visibility for ${role.name}` : 'Set Module Visibility',
-        icon: GlobalIcons.eye,
-        onClick: () => onAction('visibility', role),
-      },
-      {
-        id: 'permissions',
-        label: actions.length < 1 ? `Module Permission for ${role.name}` : 'Module Permission',
-        icon: GlobalIcons.lockIcon,
-        onClick: () => onAction('permissions', role),
-      }
-    );
 
   return (
     <AdaptiveThreeDotsActions

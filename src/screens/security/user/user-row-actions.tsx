@@ -22,12 +22,14 @@ export default function UserRowActions({
       {
         id: 'visibility',
         label: `Set Module Visibility for ${user.userName}`,
+        tooltip: 'Set Module Visibility',
         icon: GlobalIcons.eye,
         onClick: () => onAction('visibility', user),
       },
       {
         id: 'permissions',
         label: `Module Permission for ${user.userName}`,
+        tooltip: 'Manage Permissions',
         icon: GlobalIcons.lockIcon,
         onClick: () => onAction('permissions', user),
       }

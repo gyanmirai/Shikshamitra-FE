@@ -4,6 +4,7 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import PermissionRoleResult from './permission-role-result';
 import PermissionActionNotes from './permission-action-notes';
 import PermissionRuleSelector from './permission-rule-selector';
+import { visibilityPrerequisiteWarning } from './visibility-prerequisites';
 
 import type { MatrixAction } from './permission-matrix-model';
 import type { PermissionOverrideState } from './permission-catalogue';
@@ -26,6 +27,7 @@ export default function PermissionInlineEditor({
   onChange: (state: PermissionOverrideState) => void;
 }) {
   const id = useId();
+  const hidden = !visibility && !!action.visibilityMissing?.length;
   const rule = user ? action.rule : action.hasDirect ? 'allow' : 'inherit';
   const provenance = user
     ? action.overridden
@@ -50,7 +52,7 @@ export default function PermissionInlineEditor({
     : action.sources.length
       ? `Inherited from ${action.sources.join(', ')}. Removing a direct grant leaves inherited access effective.`
       : 'Direct grants apply to this role.';
-  const summary = `${action.result}. ${provenance}. ${explanation}`;
+  const summary = `${hidden ? `${visibilityPrerequisiteWarning} ` : ''}${action.result}. ${provenance}. ${explanation}`;
   return (
     <Box
       role="group"
@@ -71,15 +73,26 @@ export default function PermissionInlineEditor({
           </>
         }
         describeChild
-        disableInteractive
+        disableInteractive={!hidden}
       >
-        <Box sx={{ width: 1 }}>
+        <Box
+          tabIndex={hidden ? 0 : undefined}
+          aria-label={hidden ? `${feature}: ${visibilityPrerequisiteWarning}` : undefined}
+          sx={{
+            width: 1,
+            '&:focus-visible': {
+              outline: '2px solid',
+              outlineColor: 'primary.main',
+              outlineOffset: 2,
+            },
+          }}
+        >
           <PermissionRuleSelector
             id={id}
             label={`${feature} ${action.label} permission`}
             rule={rule}
             user={user}
-            disabled={disabled || !action.editable}
+            disabled={disabled || !action.editable || hidden}
             onChange={onChange}
           />
         </Box>

@@ -3,12 +3,18 @@ module: security
 domain: permissions
 content_type: Reference
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Security API clients
+
+## User directory
+
+`getUserDirectory` in `src/redux/user/userApi.ts` reads every page from the [backend directory endpoint](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/multi-tenancy/roles.md#read-user-role-assignments). A failed or incomplete page fails the whole read instead of presenting a partial directory as complete. The existing `getUsers` client remains available to other workflows.
+
+`user-table.tsx` uses the complete result for shared-table search, filtering, sorting, pagination, and exports. `user-role-column.tsx` renders exact assigned role names as neutral pills and supplies comma-separated text for filtering, alphabetic sorting, and export.
 
 ## Permission-denied feedback
 

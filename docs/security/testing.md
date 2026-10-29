@@ -3,12 +3,29 @@ module: security
 domain: permissions
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Security frontend changes
+
+## Visibility prerequisites and role shortcuts
+
+Run the prerequisite logic and shared-editor tests with one worker, followed by the dedicated
+desktop/mobile fixture and Role Management browser checks:
+
+```sh
+node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/security/role/visibility-prerequisites.test.ts src/screens/security/role/permission-visibility-prerequisite.test.tsx src/screens/security/role/permission-inline-editor.test.tsx src/screens/security/role/permission.test.tsx --pool=forks --maxWorkers=1
+node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/security/visibility-prerequisite.config.ts
+node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/security/role-management.config.ts
+```
+
+The tests cover inherited visibility, explicit user denial, module ancestors, alternate navigation
+paths, provider-ineligible prerequisites, disabled controls, cancel without changes, and confirmed
+visibility/action saves. Role shortcuts open the selected role's existing dialogs and retain
+management permission guards. Complete the final smoke test in the Codex in-app browser.
+The fixture contains synthetic records and does not validate deployed DDVS access.
 
 ## Academic navigation
 
@@ -154,6 +171,20 @@ The existing identity-create role-membership path is not a reliable fixture and 
 Browser setup does not fabricate compensation approvals, alter payroll, or activate ESI.
 
 ## Evidence for the approved matrix
+
+### Visibility bulk controls
+
+`src/screens/security/role/visibility-bulk-state.test.ts` covers mapped module/descendant targeting, deduplication, absent catalogue entries, provider eligibility, and exclusion of API-only flags and action permissions.
+`e2e/security/visibility-bulk.spec.ts` uses the real shared form and synthetic API fixture to check selected-module and all-module controls for roles and users, search-independent updates, exact changed-only save/reopen, draft restoration, keyboard activation, both themes, responsive containment, and WCAG AA checks.
+
+```sh
+node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/security/role/visibility-bulk-state.test.ts src/screens/security/role/permission-bulk-state.test.ts --pool=threads --maxWorkers=1 --no-file-parallelism
+node node_modules/@playwright/test/cli.js test --config e2e/security/permission-bulk.config.ts
+```
+
+The shared bulk-action browser configuration includes the visibility cases at desktop and phone widths, with readability cases also at tablet width. Finish with a Codex in-app browser check against the fixture; synthetic evidence does not validate DDVS role configuration or live backend authorization.
+
+### Matrix validation
 
 The user approved the matrix on October 9. It replaces the September 17 presentation while preserving grouped mappings.
 Legacy switch-component tests still validate their helpers but do not prove the new workspace renders correctly.

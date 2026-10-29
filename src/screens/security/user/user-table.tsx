@@ -1,18 +1,19 @@
-import { useGetUsersQuery } from 'src/redux/user/userApi';
 import { convertBase64Format } from 'src/utils/base64Formate';
+import { useGetUserDirectoryQuery } from 'src/redux/user/userApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Avatar, Typography, LinearProgress } from '@mui/material';
 
 import UserRowActions from './user-row-actions';
 import { getUserDisplayName } from './user-record';
+import { userRoleColumn } from './user-role-column';
 
 import type { UserRecord, UserActionHandler } from './user-record';
 
 export default function UserTable({ onAction }: { onAction: UserActionHandler }) {
   const { data, isLoading, isFetching, error, refetch } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetUsersQuery,
+    currentQueryAndMutation: useGetUserDirectoryQuery,
     popupConfig: { error: false },
   });
   const users: UserRecord[] = data?.items ?? [];
@@ -71,6 +72,7 @@ export default function UserTable({ onAction }: { onAction: UserActionHandler })
               </Box>
             ),
           },
+          userRoleColumn,
           {
             id: 'email',
             label: 'Email',
