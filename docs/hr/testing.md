@@ -245,6 +245,11 @@ Each frontend HR change should satisfy these gates:
 
 ## Salary template page regressions
 
+Run `salary-template-component-picker.test.tsx` alongside the editor and salary-template API contract tests.
+Cover automatic open/return refresh, concurrent-request deduplication, deferred refresh during preview/save, failure and Retry, valid/removed selections, local dirty-close decisions, native submit isolation, StrictMode, and unmounted response cleanup.
+The salary-components Playwright suite covers both compact pickers at 390/768/1440 pixels in light/dark themes, standalone new-tab component creation and return, and failed-refresh draft retention.
+These fixtures exercise production frontend components with synthetic APIs; authenticated production persistence remains a separate acceptance check.
+
 Run the focused editor, list, model, and client-contract tests after changing the salary template pages.
 Cover direct create/edit/view routes, denied permissions, same-page calculation validation and first-error focus, compact and expanded rows, additions, ordering, removal, and at least 15 components.
 Verify only the two salary bases are offered, the amount label follows the selection, and no separate protection control or help dialog appears.

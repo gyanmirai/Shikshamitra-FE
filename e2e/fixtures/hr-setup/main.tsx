@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import React, { useState } from 'react';
 import { api } from 'src/redux/service';
 import { createRoot } from 'react-dom/client';
+import { hrPaths } from 'src/constants/hr-menus';
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from 'src/redux/auth/authSlice';
 import { ThemeProvider } from '@mui/material/styles';
@@ -23,10 +24,15 @@ import { HrSetupCoordinator } from 'src/screens/hr/setup/hr-setup-coordinator';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import EarningComponent from 'src/screens/hr/payroll/setting/earning-component';
 import DeductionComponent from 'src/screens/hr/payroll/setting/deduction-component';
+import SalaryTemplateEditor from 'src/screens/hr/payroll/setting/salary-template-editor';
 
 dayjs.extend(customParseFormat);
 const context = await (await fetch('/fixture/context')).json();
-const scenario = new URLSearchParams(window.location.search).get('scenario');
+const scenario =
+  new URLSearchParams(window.location.search).get('scenario') ??
+  (window.location.pathname === hrPaths.payroll.settings.deductionComponents
+    ? 'deduction-components'
+    : null);
 const fixtureMode =
   new URLSearchParams(window.location.search).get('theme') === 'dark' ? 'dark' : 'light';
 const baseGrants =
@@ -87,7 +93,9 @@ function Fixture() {
         </Typography>
         <Button onClick={() => setHr((value) => !value)}>{hr ? 'Leave HR' : 'Return to HR'}</Button>
         <Typography>Normal HR operations remain available after closing setup.</Typography>
-        {scenario === 'earning-components' ? (
+        {scenario === 'salary-template' ? (
+          <SalaryTemplateEditor mode="create" />
+        ) : scenario === 'earning-components' ? (
           <EarningComponent />
         ) : scenario === 'deduction-components' ? (
           <DeductionComponent />
