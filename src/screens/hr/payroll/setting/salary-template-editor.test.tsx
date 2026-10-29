@@ -46,6 +46,7 @@ const mocks = vi.hoisted(() => ({
   updateTemplate: vi.fn(),
   createTemplate: vi.fn(),
   calculate: vi.fn(),
+  calculating: false,
   refetch: vi.fn(),
   loading: false,
   catalogLoading: false,
@@ -159,7 +160,7 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
   }),
   useCreateSalaryTemplateMutation: () => [mocks.createTemplate, { isLoading: false }],
   useUpdateSalaryTemplateMutation: () => [mocks.updateTemplate, { isLoading: false }],
-  usePreviewSalaryTemplateMutation: () => [mocks.calculate, { isLoading: false }],
+  usePreviewSalaryTemplateMutation: () => [mocks.calculate, { isLoading: mocks.calculating }],
 }));
 
 const theme = createTheme(defaultSettings);
@@ -169,6 +170,37 @@ const renderEditor = (ui: React.ReactNode) =>
 const originalTemplate = structuredClone(mocks.template);
 
 describe('SalaryTemplateEditor', () => {
+  it('blocks picker refresh while a preview is pending and invalidates it after an allowed refresh', async () => {
+    const user = userEvent.setup();
+    const proof = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    let finishPreview: (result: unknown) => void = () => {};
+    mocks.calculate.mockReturnValueOnce({
+      unwrap: () =>
+        new Promise((resolve) => {
+          finishPreview = resolve;
+        }),
+    });
+    const editor = <SalaryTemplateEditor templateId="template-1" />;
+    const view = renderEditor(editor);
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    mocks.calculating = true;
+    view.rerender(<ThemeProvider theme={theme}>{editor}</ThemeProvider>);
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    const refresh = screen.getByRole('button', { name: 'Refresh setup' });
+    expect(refresh).toBeDisabled();
+    fireEvent.click(refresh);
+    expect(mocks.refetchCatalog).not.toHaveBeenCalled();
+    mocks.calculating = false;
+    await act(async () => finishPreview(proof));
+    expect(refresh).toBeEnabled();
+    await user.click(refresh);
+    expect(mocks.refetchCatalog).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+    expect(mocks.updateTemplate).not.toHaveBeenCalled();
+  });
+
   it('explains an empty catalogue without exposing component creation to a template editor without Add access', async () => {
     const user = userEvent.setup();
     mocks.permissions = new Set(['View', 'Edit']);
@@ -405,6 +437,7 @@ describe('SalaryTemplateEditor', () => {
     mocks.permissions = new Set(['View', 'Add', 'Edit']);
     mocks.loading = false;
     mocks.catalogLoading = false;
+    mocks.calculating = false;
     mocks.catalogEmpty = false;
     mocks.catalogError = undefined;
     mocks.refetchCatalog.mockResolvedValue({ data: { items: [] } });

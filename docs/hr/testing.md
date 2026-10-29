@@ -12,7 +12,7 @@ audience: humans-and-agents
 
 Bug 6484 frontend regression: run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/hr/salary-components.config.ts`.
 This separate fixture uses real setup editors and RTK Query clients with in-memory synthetic API responses on loopback port 4496; it starts no application backend or database. It covers earning/deduction creation, both modal pickers, template completion, failed deduction-save retry, retained drafts, exact creation permissions, focus restoration, and 390/768/1440px light/dark layouts. It does not prove database persistence, backend calculations, or deployed tenant acceptance.
-The salary-template editor unit suite also covers embedded modal visibility, cancelled/repeated additions, empty/all-added guidance, and standalone setup-link refresh without losing entries.
+The salary-template editor unit suite also covers embedded modal visibility, cancelled/repeated additions, empty/all-added guidance, and standalone setup-link refresh without losing entries. Refresh stays disabled while a salary preview is pending, and an allowed refresh invalidates its proof. Browser checks exercise Enter selection and Tab trapping within each picker.
 
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/setup --pool=threads` for progress and document-lifetime reminder tests.
 For disposable API-backed browser verification, start `dotnet run --project test/browser/hr-setup/HrSetupBrowser.csproj` from the backend repository, then run `npx playwright test --config e2e/hr/hr-setup.config.ts` from the frontend repository.

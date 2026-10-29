@@ -55,8 +55,12 @@ test.describe('Bug 6484 with synthetic APIs and real setup editors', () => {
       await wizard.getByRole('button', { name: `Add ${kind}`, exact: true }).click();
       const picker = pickerFor(page, kind);
       await expect(picker).toBeInViewport();
-      await picker.getByRole('combobox', { name: 'Payroll component', exact: true }).click();
-      await page.getByRole('option', { name, exact: true }).click();
+      const component = picker.getByRole('combobox', { name: 'Payroll component', exact: true });
+      await component.fill(name);
+      await component.press('ArrowDown');
+      await component.press('Enter');
+      await expect(component).toHaveValue(name);
+      expect((await (await request.get('/fixture/state')).json()).templates).toHaveLength(0);
       await picker.getByRole('button', { name: 'Add Component', exact: true }).click();
       await wizard
         .getByRole('textbox', { name: `${name} amount`, exact: true })
@@ -206,6 +210,12 @@ test.describe('Bug 6484 with synthetic APIs and real setup editors', () => {
           await expect(
             picker.getByRole('button', { name: 'Cancel', exact: true })
           ).toBeInViewport();
+          await picker.getByRole('button', { name: 'Cancel', exact: true }).focus();
+          await page.keyboard.press('Tab');
+          await expect(picker.locator(':focus')).toHaveCount(1);
+          await expect(
+            picker.getByRole('button', { name: `Add ${kind} Component information`, exact: true })
+          ).toBeFocused();
           await page.screenshot({
             path: `.artifacts/salary-components/picker-${theme}-${viewport.width}-${kind}.png`,
             animations: 'disabled',

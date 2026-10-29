@@ -965,7 +965,7 @@ function SalaryTemplateWorkflow({
                 setPreview(null);
                 await onRefreshCatalog();
               }}
-              disabled={busy}
+              disabled={busy || calculationState.isLoading}
             />
           )}
         </DialogScrollContent>
