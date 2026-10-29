@@ -48,6 +48,9 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
   const [request, setRequest] = useState<PreviewRequest | null>(null);
   const requestLock = useRef<{ key: string } | null>(null);
   const [pollingInterval, setPollingInterval] = useState(2000);
+  const [refreshingContext, setRefreshingContext] = useState<{ key: string } | null>(null);
+  const statusRefreshRequest = useRef<{ key: string } | null>(null);
+  const refreshingStatus = refreshingContext === context.current;
   const [start, startState] = useStartPayrollPreviewMutation();
   const lastStarted = useRef('');
   const serializedParams = params.toString();
@@ -272,6 +275,37 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
     return () => clearTimeout(timer);
   }, [search, searchInput, updateQuery]);
 
+  const refreshStatus = async () => {
+    if (
+      !requestedRunId ||
+      !academicYearId ||
+      busy ||
+      statusRefreshRequest.current === context.current
+    )
+      return;
+    const requestedContext = context.current;
+    statusRefreshRequest.current = requestedContext;
+    setRefreshingContext(requestedContext);
+    setFailure(null);
+    try {
+      const result = await statusQuery.refetch();
+      if (
+        mounted.current &&
+        context.current === requestedContext &&
+        result.data?.status === 'SUCCEEDED' &&
+        completedId
+      )
+        await pageQuery.refetch();
+    } catch (caught) {
+      if (mounted.current && context.current === requestedContext)
+        setFailure({ key, ...normalizePreviewFailure(caught) });
+    } finally {
+      if (statusRefreshRequest.current === requestedContext) statusRefreshRequest.current = null;
+      if (mounted.current)
+        setRefreshingContext((current) => (current === requestedContext ? null : current));
+    }
+  };
+
   return {
     data,
     tableProps: pageQuery.tableProps,
@@ -285,6 +319,8 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
     isStale,
     isCurrent,
     loadPreview,
+    refreshStatus,
+    refreshingStatus,
     page,
     pageSize,
     searchInput,

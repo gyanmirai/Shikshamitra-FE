@@ -622,3 +622,9 @@ it('removes already opened protected correction content when View is revoked', a
   expect(screen.queryByRole('combobox', { name: /^01 / })).not.toBeInTheDocument();
   expect(screen.getByText('You do not have access to payslips.')).toBeInTheDocument();
 });
+// Route/month behavior is covered by use-payroll-month and the browser workflow suite.
+vi.mock('../payroll-cycle/use-payroll-month', async () => {
+  const { useState } = await import('react');
+  const { default: payrollDate } = await import('dayjs');
+  return { usePayrollMonth: () => useState(payrollDate().startOf('month')) };
+});

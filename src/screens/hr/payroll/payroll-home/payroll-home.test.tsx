@@ -1,9 +1,10 @@
 import type { PayrollPreviewPage } from 'src/redux/runPayroll/payroll-preview-run-api';
 
+import dayjs from 'dayjs';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen } from '@testing-library/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import PayrollHome from './payroll-home';
@@ -14,10 +15,28 @@ const mocks = vi.hoisted(() => ({
   error: null as { message: string } | null,
   isCurrent: true,
   loadPreview: vi.fn(),
+  refreshStatus: vi.fn(),
+  requestedRunId: 'run-1',
+  refreshingStatus: false,
+  params: new URLSearchParams('month=2026-09'),
+  replace: vi.fn(),
+}));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: mocks.replace }),
+  usePathname: () => '/hr/payroll',
+  useSearchParams: () => mocks.params,
 }));
 vi.mock('react-redux', () => ({ useSelector: () => ({ currentYear: { id: mocks.yearId } }) }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
-vi.mock('@mui/x-date-pickers', () => ({ DatePicker: () => <input aria-label="Payroll month" /> }));
+vi.mock('@mui/x-date-pickers', () => ({
+  DatePicker: ({ value, onChange }: any) => (
+    <input
+      aria-label="Payroll month"
+      value={value.format('YYYY-MM')}
+      onChange={(event) => onChange(dayjs(`${event.target.value}-01`))}
+    />
+  ),
+}));
 vi.mock('../run-payroll/use-payroll-preview-run', () => ({
   usePayrollPreviewRun: () => ({ ...mocks, busy: false, fetching: false }),
 }));
@@ -61,6 +80,10 @@ describe('Payroll overview readiness', () => {
     mocks.error = null;
     mocks.isCurrent = true;
     mocks.yearId = 'year-1';
+    mocks.params = new URLSearchParams('month=2026-09');
+    mocks.requestedRunId = 'run-1';
+    mocks.refreshingStatus = false;
+    vi.clearAllMocks();
   });
 
   it('explains salary and policy blockers and links to their owning workflows', () => {
@@ -70,7 +93,7 @@ describe('Payroll overview readiness', () => {
     expect(screen.getByText('Payroll policy issues (1)')).toBeVisible();
     expect(screen.getByRole('link', { name: 'Review salary setup' })).toHaveAttribute(
       'href',
-      '/hr/payroll/structure'
+      '/hr/payroll/structure?month=2026-09'
     );
     expect(screen.getByRole('link', { name: 'Review payroll policies' })).toHaveAttribute(
       'href',
@@ -100,7 +123,8 @@ describe('Payroll overview readiness', () => {
       blockingIssues: ['A payroll exception requires review.'],
     });
     renderHome();
-    expect(screen.getByText('A payroll exception requires review.')).toBeVisible();
+    expect(screen.getByText(/A payroll setup issue needs attention/)).toBeVisible();
+    expect(screen.queryByText('A payroll exception requires review.')).not.toBeInTheDocument();
     expect(screen.queryByText(/No readiness blockers/)).not.toBeInTheDocument();
   });
 
@@ -113,7 +137,7 @@ describe('Payroll overview readiness', () => {
     renderHome();
     expect(screen.getAllByRole('link', { name: 'Open payslips' })[0]).toHaveAttribute(
       'href',
-      '/hr/payroll/payslip-generation'
+      '/hr/payroll/payslip-generation?month=2026-09'
     );
   });
 
@@ -125,10 +149,12 @@ describe('Payroll overview readiness', () => {
     });
     mocks.isCurrent = false;
     renderHome();
-    expect(screen.getByText('Refresh status to confirm readiness for this month.')).toBeVisible();
+    expect(
+      screen.getByText('Open the payroll workbench to calculate and review the updated payroll.')
+    ).toBeVisible();
     expect(screen.getAllByRole('link', { name: 'Open payroll workbench' })[0]).toHaveAttribute(
       'href',
-      '/hr/payroll/run-payroll'
+      '/hr/payroll/run-payroll?month=2026-09'
     );
   });
 
@@ -136,6 +162,46 @@ describe('Payroll overview readiness', () => {
     mocks.yearId = '';
     renderHome();
     expect(screen.getByRole('status')).toHaveTextContent('Select an academic year');
+    expect(screen.getByRole('button', { name: 'Refresh status' })).toBeDisabled();
+  });
+
+  it('refetches status without requesting a new calculation', () => {
+    mocks.data = page();
+    renderHome();
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh status' }));
+    expect(mocks.refreshStatus).toHaveBeenCalledOnce();
+    expect(mocks.loadPreview).not.toHaveBeenCalled();
+  });
+
+  it('preserves the selected month in both overview navigation actions', () => {
+    renderHome();
+    screen
+      .getAllByRole('link', { name: 'Open payroll workbench' })
+      .forEach((link) =>
+        expect(link).toHaveAttribute('href', '/hr/payroll/run-payroll?month=2026-09')
+      );
+    expect(screen.getByRole('link', { name: 'Open payslips' })).toHaveAttribute(
+      'href',
+      '/hr/payroll/payslip-generation?month=2026-09'
+    );
+  });
+
+  it('uses actionable known blocker messages and safely groups unknown codes', () => {
+    mocks.data = page({
+      missingSalaryStructureCount: 0,
+      policyConfigurationIssueCount: 0,
+      blockingIssues: ['ESI_WAGE_CLASSIFICATION_REQUIRED', 'INTERNAL_CODE_A', 'INTERNAL_CODE_B'],
+    });
+    renderHome();
+    expect(screen.getByText(/Review how earning components count toward ESIC wages/)).toBeVisible();
+    expect(screen.getAllByText(/A payroll setup issue needs attention/)).toHaveLength(1);
+    expect(screen.queryByText('ESI_WAGE_CLASSIFICATION_REQUIRED')).not.toBeInTheDocument();
+    expect(screen.queryByText('INTERNAL_CODE_A')).not.toBeInTheDocument();
+  });
+
+  it('does not enable status refresh when there is no existing preview', () => {
+    mocks.requestedRunId = '';
+    renderHome();
     expect(screen.getByRole('button', { name: 'Refresh status' })).toBeDisabled();
   });
 });

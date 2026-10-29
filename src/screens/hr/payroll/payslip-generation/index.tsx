@@ -11,6 +11,7 @@ import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
 
+import { usePayrollMonth } from '../payroll-cycle/use-payroll-month';
 import MonthlyPayslips from '../salarySlip-generate/salarySlipGenerate';
 import SalaryDocumentsWorkspace from '../salarySlip-generate/salary-documents-workspace';
 
@@ -21,6 +22,7 @@ const DOCUMENT_TABS = [
 ];
 
 export default function SalaryDocumentCenter() {
+  const [month] = usePayrollMonth();
   const tabs = useTabs(DOCUMENT_TABS[0].value);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canOpenSettings =
@@ -33,7 +35,10 @@ export default function SalaryDocumentCenter() {
         description="Review monthly payslips, employee salary statements and the school payroll register."
         sx={{ minHeight: 40 }}
         links={[
-          { name: 'Payroll Management', href: hrPaths.payroll.root },
+          {
+            name: 'Payroll Management',
+            href: `${hrPaths.payroll.root}?month=${month.format('YYYY-MM')}`,
+          },
           { name: 'Salary documents' },
         ]}
       />

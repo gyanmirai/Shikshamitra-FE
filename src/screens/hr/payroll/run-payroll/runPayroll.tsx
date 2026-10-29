@@ -1063,7 +1063,7 @@ const RunPayroll = () => {
       <CustomBreadcrumbs
         heading="Run Payroll"
         links={[
-          { name: 'Payroll Management', href: hrPaths.payroll.root },
+          { name: 'Payroll Management', href: `${hrPaths.payroll.root}?month=${selectedMonthKey}` },
           { name: 'Run Payroll' },
         ]}
         description="Generate, review, and lock monthly payroll from one workbench."
@@ -2425,7 +2425,9 @@ const RunPayroll = () => {
                   );
                 })
               ) : (
-                <HrNotice severity="info">No payroll lock audit events found for this month.</HrNotice>
+                <HrNotice severity="info">
+                  No payroll lock audit events found for this month.
+                </HrNotice>
               )}
             </Stack>
           </Drawer>
