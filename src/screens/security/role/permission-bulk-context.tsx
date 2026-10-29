@@ -8,7 +8,9 @@ import type { PermissionGrant } from './permission-grants';
 import type { PermissionWorkspaceProps } from './permission-workspace';
 
 type BulkContext = Pick<PermissionWorkspaceProps, 'states' | 'setStates' | 'disabled'> & {
+  requiresVisibility?: (names: string[]) => boolean;
   user: boolean;
+  visibility: boolean;
   grants: PermissionGrant[];
   manageable: Set<string>;
 };
@@ -21,9 +23,13 @@ export default function PermissionBulkProvider({
   states,
   setStates,
   disabled,
-  visibility,
+  visibility = false,
   children,
-}: PermissionWorkspaceProps & { children: ReactNode }) {
+  requiresVisibility,
+}: PermissionWorkspaceProps & {
+  children: ReactNode;
+  requiresVisibility?: (names: string[]) => boolean;
+}) {
   /** Memoization Justification: every feature's bulk controls share the same catalogue
    * and eligibility index instead of rebuilding it for each row and draft edit. */
   const index = useMemo(() => {
@@ -38,17 +44,16 @@ export default function PermissionBulkProvider({
   /** Memoization Justification: all row controls consume this context; preserve its
    * identity when the catalogue, draft and editing callbacks have not changed. */
   const value = useMemo(
-    () =>
-      visibility
-        ? null
-        : {
-            ...index,
-            states,
-            setStates,
-            disabled,
-            user: provider.providerName === 'U',
-          },
-    [visibility, index, states, setStates, disabled, provider.providerName]
+    () => ({
+      ...index,
+      states,
+      setStates,
+      disabled,
+      visibility,
+      requiresVisibility,
+      user: provider.providerName === 'U',
+    }),
+    [visibility, index, states, setStates, disabled, provider.providerName, requiresVisibility]
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

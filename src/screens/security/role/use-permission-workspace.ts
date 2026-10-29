@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import { fullSecurityNavData } from 'src/constants/navigation';
 
+import { missingVisibility } from './visibility-prerequisites';
+import { useVisibilityPrerequisite } from './use-visibility-prerequisite';
 import { getAffectedNodePermissionNames } from './account-settings-permissions';
 import { actionMatrixRows, visibilityMatrixRows } from './permission-matrix-model';
 import {
@@ -30,13 +32,21 @@ export function usePermissionWorkspace({
   const [moduleTitle, setModuleTitle] = useState('');
   const [submoduleTitle, setSubmoduleTitle] = useState('');
   const [dependencyNote, setDependencyNote] = useState('');
+  const prerequisites = useVisibilityPrerequisite({
+    catalogue,
+    provider,
+    states,
+    setStates,
+    disabled,
+    visibility,
+    modules,
+  });
+  const { index } = prerequisites;
   const module = modules.find((item) => item.title === moduleTitle);
   const selected = module?.submodule?.length
-    ? module.submodule.find((item) => item.title === submoduleTitle) ?? module
+    ? (module.submodule.find((item) => item.title === submoduleTitle) ?? module)
     : module;
-  const visibilityPanels = visibility
-    ? buildVisibilityPanels(modules)
-    : [];
+  const visibilityPanels = visibility ? buildVisibilityPanels(modules) : [];
   const navigation = visibility
     ? visibilityPanels.map((panel) => ({ title: panel.title, icon: panel.icon }))
     : modules;
@@ -45,12 +55,25 @@ export function usePermissionWorkspace({
    * hundreds of server entries; navigation-only renders reuse the derived matrix. */
   const rows = useMemo(() => {
     const model = { catalogue, provider, states };
-    if (!visibility) return selected ? actionMatrixRows(selected, model) : [];
-    const panel = buildVisibilityPanels(modules).find(
-      (item) => item.title === moduleTitle
-    );
+    if (!visibility)
+      return selected
+        ? actionMatrixRows(selected, model).map((row) => ({
+            ...row,
+            actions: row.actions.map((action) => ({
+              ...action,
+              visibilityMissing: missingVisibility(
+                action.names,
+                index,
+                catalogue,
+                provider,
+                states
+              ),
+            })),
+          }))
+        : [];
+    const panel = buildVisibilityPanels(modules).find((item) => item.title === moduleTitle);
     return panel ? visibilityMatrixRows(panel, model) : [];
-  }, [catalogue, provider, states, visibility, selected, modules, moduleTitle]);
+  }, [catalogue, provider, states, visibility, selected, modules, moduleTitle, index]);
   const sources = user
     ? [
         ...new Set(
@@ -83,7 +106,7 @@ export function usePermissionWorkspace({
         .filter((entry) => canManageGrant(entry, provider))
         .map((entry) => entry.name)
     );
-    setStates(
+    prerequisites.requestChange(
       names.filter((name) => manageable.has(name)),
       state
     );
@@ -96,11 +119,11 @@ export function usePermissionWorkspace({
   };
 
   return {
-    modules,
+    modules: visibility ? visibilityPanels : modules,
     moduleTitle,
     submoduleTitle,
     dependencyNote,
-    selected,
+    selected: visibility ? visibilityPanels.find((panel) => panel.title === moduleTitle) : selected,
     navigation,
     user,
     rows,
@@ -109,5 +132,6 @@ export function usePermissionWorkspace({
     onModule,
     setSubmoduleTitle,
     setDependencyNote,
+    prerequisites,
   };
 }

@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: 'permission-bulk.spec.ts',
+  testMatch: ['permission-bulk.spec.ts', 'visibility-bulk.spec.ts'],
   fullyParallel: false,
   workers: 1,
   timeout: 120000,

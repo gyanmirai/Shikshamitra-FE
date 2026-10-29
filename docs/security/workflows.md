@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: How-to
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -50,6 +50,12 @@ At widths of 1200px and above, use the separate Bulk actions column pinned to th
 Below 1200px, cards keep the same direct bulk controls beneath the feature name with 44px controls.
 Expand or collapse a group with its chevron to show or hide its descendants without changing grants.
 
+## Review user roles
+
+User Management places Role between Full Name and Email. Each assigned role appears as a neutral pill; users without assignments show No role assigned. These labels describe membership, independently of direct user permission overrides.
+
+Use the Role header to sort alphabetically by the displayed role list. Its text filter supports Contains to find a role within a multi-role list; Equals compares the complete comma-separated list. Columns can hide or show Role. Filtering and sorting apply to the complete loaded directory before table pagination.
+
 ## Delete a role
 
 Role Management opens the shared `ConfirmDialog` through `role-delete-dialog.tsx`.
@@ -82,8 +88,20 @@ Statutory Schemes Revoke all and Follow role include eligible undisplayed action
 Unmapped and unrelated action permissions are retained without being rewritten.
 Set Module Visibility builds its modules, labels, order, and nested settings only from `src/constants/navigation.tsx` and the module menus under `src/constants/`. API-only flags do not add rows or an Additional visibility section. The API loads and saves grant selections; configured flags absent from its catalogue stay visible with disabled controls.
 Visibility edits do not mutate action permissions.
+Action assignments require effective navigation visibility for the feature and its module ancestors.
+Hidden-feature controls are disabled and explain how to enable access in Set Visibility. Grant all
+offers an explicit confirmation to add the missing visibility flags to the same draft. Cancel leaves
+the draft unchanged; confirm still requires Review changes and save. Unavailable or provider-ineligible
+visibility flags cannot be granted through this prompt. Inherited visibility satisfies the prerequisite
+unless the user has an explicit denial. Existing action grants remain intact when visibility is revoked.
+Set Module Visibility provides Grant all and Revoke all beside search for the selected module, including its module flag and configured descendants. The bottom-left All modules controls apply to the complete configured visibility tree, including modules not currently selected and rows hidden by search or Overrides only.
+These controls use the same role/user rules in the bulk-action table above, including Follow role for users. Only mapped flags present in the server catalogue and eligible for the selected provider are changed; API-only flags and action permissions remain untouched.
+Bulk visibility edits immediately update the draft and unsaved-change status. Review changes and the existing verified save flow are still required; restoring the loaded state clears the dirty status.
 
 The selected role or user need not already have module visibility to be configured.
+Role Management places Set Module Visibility (Eye) and Manage Permissions (Lock) first in each
+authorized row. Edit and Delete remain in the overflow menu when both shortcuts are available.
+Their tooltips are `Set Module Visibility` and `Manage Permissions`; accessible names include the role.
 Provider-ineligible entries cannot be submitted.
 Pre-save reads detect changed-entry drift; post-save reads verify persisted direct grants or user override states.
 The API has no compare-and-swap token, so these checks cannot eliminate simultaneous-write races.

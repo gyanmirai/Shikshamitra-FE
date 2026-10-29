@@ -1,3 +1,4 @@
+import { buildVisibilityPanels } from './permission-catalogue';
 import {
   getNodeActionPermissionNames,
   getNodeRevocationPermissionNames,
@@ -5,6 +6,19 @@ import {
 
 import type { PermissionGrant } from './permission-grants';
 import type { NavigationPermission } from './permission-catalogue';
+
+export function visibilityBulkNames(
+  nodes: NavigationPermission[],
+  grants: Pick<PermissionGrant, 'name'>[],
+  manageable: Set<string>
+) {
+  const available = new Set(grants.map(({ name }) => name));
+  return buildVisibilityPanels(nodes).flatMap((panel) =>
+    [panel.permissionName, ...panel.submodule.map((item) => item.permissionName)].filter(
+      (name) => available.has(name) && manageable.has(name)
+    )
+  );
+}
 
 export function permissionBulkNames(
   nodes: NavigationPermission[],

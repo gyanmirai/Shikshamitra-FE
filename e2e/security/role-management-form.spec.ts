@@ -4,7 +4,9 @@ import { test, expect } from '@playwright/test';
 test.beforeEach(async ({ request, page }) => {
   await request.post('/fixture/reset');
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('button', { name: 'Edit QA Role 01', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Set Module Visibility for QA Role 01', exact: true })
+  ).toBeVisible();
 });
 
 test('required errors focus the field and dirty closing preserves or discards the draft', async ({
@@ -93,7 +95,8 @@ test('edit retains role metadata and delete opens the existing confirmation', as
   page,
   request,
 }) => {
-  await page.getByRole('button', { name: 'Edit QA Role 01', exact: true }).click();
+  await page.getByRole('button', { name: 'More actions for QA Role 01', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Edit QA Role 01', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Edit Role', exact: true });
   await expect(dialog.getByRole('textbox', { name: 'Role Name' })).toHaveValue('QA Role 01');
   await expect(
@@ -111,7 +114,8 @@ test('edit retains role metadata and delete opens the existing confirmation', as
     path: '/api/identity/roles/qa-role-1',
     body: { employeeOnboardingAssignable: true, employeeGroupAudience: 'Teaching' },
   });
-  await page.getByRole('button', { name: 'Delete QA Role 01', exact: true }).click();
+  await page.getByRole('button', { name: 'More actions for QA Role 01', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Delete QA Role 01', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Delete Role', exact: true })).toContainText(
     'QA Role 01'
   );
