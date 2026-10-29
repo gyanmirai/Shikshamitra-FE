@@ -30,6 +30,7 @@ export type MatrixAction = {
   editable: boolean;
   overridden: boolean;
   hasDirect: boolean;
+  visibilityMissing?: string[];
 };
 export type MatrixRow = {
   id: string;

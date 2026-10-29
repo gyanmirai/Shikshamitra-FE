@@ -10,7 +10,12 @@ test('table layout, filtering, sorting and utilities stay usable in both themes'
 }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   const table = page.getByRole('table', { name: 'Role Management table' });
-  await expect(table.getByRole('button', { name: 'Edit QA Role 01', exact: true })).toBeVisible();
+  await expect(
+    table.getByRole('button', { name: 'Set Module Visibility for QA Role 01', exact: true })
+  ).toBeVisible();
+  await expect(
+    table.getByRole('button', { name: 'Manage Permissions for QA Role 01', exact: true })
+  ).toBeVisible();
   const heading = page.getByRole('columnheader', { name: 'Actions', exact: true });
   await expect(heading).toBeVisible();
   const widths = await table
@@ -25,21 +30,23 @@ test('table layout, filtering, sorting and utilities stay usable in both themes'
   ).toBeLessThan(20);
   await page.screenshot({ path: test.info().outputPath('role-management-light.png') });
   await page.getByRole('button', { name: 'More actions for QA Role 01', exact: true }).click();
+  await expect(page.getByRole('menuitem', { name: 'Edit QA Role 01', exact: true })).toBeVisible();
   await expect(
-    page.getByRole('menuitem', { name: 'Set Module Visibility', exact: true })
+    page.getByRole('menuitem', { name: 'Delete QA Role 01', exact: true })
   ).toBeVisible();
-  await expect(
-    page.getByRole('menuitem', { name: 'Module Permission', exact: true })
-  ).toBeVisible();
-  await page.getByRole('menuitem', { name: 'Set Module Visibility', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page
+    .getByRole('button', { name: 'Set Module Visibility for QA Role 01', exact: true })
+    .click();
   const visibility = page.getByRole('dialog', {
     name: 'Set Visibility for QA Role 01',
     exact: true,
   });
   await expect(visibility).toBeVisible();
   await visibility.getByRole('button', { name: 'close', exact: true }).click();
-  await page.getByRole('button', { name: 'More actions for QA Role 01', exact: true }).click();
-  await page.getByRole('menuitem', { name: 'Module Permission', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Manage Permissions for QA Role 01', exact: true })
+    .click();
   const permissions = page.getByRole('dialog', { name: 'Permissions of QA Role 01', exact: true });
   await expect(permissions).toBeVisible();
   await permissions.getByRole('button', { name: 'close', exact: true }).click();

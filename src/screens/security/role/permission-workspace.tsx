@@ -8,6 +8,7 @@ import PermissionBulkActions from './permission-bulk-actions';
 import PermissionBulkProvider from './permission-bulk-context';
 import { usePermissionWorkspace } from './use-permission-workspace';
 import PermissionWorkspaceHeading from './permission-workspace-heading';
+import VisibilityPrerequisiteDialog from './visibility-prerequisite-dialog';
 import PermissionWorkspaceNavigation from './permission-workspace-navigation';
 
 import type { PermissionStates } from './permission-draft-state';
@@ -50,13 +51,15 @@ export default function PermissionWorkspace(props: PermissionWorkspaceProps) {
     onModule,
     setSubmoduleTitle,
     setDependencyNote,
+    prerequisites,
   } = usePermissionWorkspace({ provider, disabled, visibility, catalogue, states, setStates });
   return (
     <PermissionBulkProvider
       {...props}
+      requiresVisibility={(names) => prerequisites.missing(names).length > 0}
       setStates={(names, state) => {
         setDependencyNote('');
-        setStates(names, state);
+        prerequisites.requestChange(names, state);
       }}
     >
       <Box
@@ -82,7 +85,7 @@ export default function PermissionWorkspace(props: PermissionWorkspaceProps) {
             }
           }}
           disabled={disabled}
-          bulkActions={!visibility && <PermissionBulkActions scope="All modules" nodes={modules} />}
+          bulkActions={<PermissionBulkActions scope="All modules" nodes={modules} />}
         />
         <Box
           role="region"
@@ -121,7 +124,6 @@ export default function PermissionWorkspace(props: PermissionWorkspaceProps) {
                 visibility={visibility}
                 onChange={change}
                 bulkActions={
-                  !visibility &&
                   selected && <PermissionBulkActions scope={selected.title} nodes={[selected]} />
                 }
               />
@@ -140,6 +142,7 @@ export default function PermissionWorkspace(props: PermissionWorkspaceProps) {
           )}
         </Box>
       </Box>
+      <VisibilityPrerequisiteDialog {...prerequisites.confirmation} />
     </PermissionBulkProvider>
   );
 }
