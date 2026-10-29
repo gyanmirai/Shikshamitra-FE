@@ -42,6 +42,49 @@ it('scopes cash queries and posts exact approval, deposit and partial bank credi
   list.unsubscribe();
   await store
     .dispatch(
+      cashManagementApi.endpoints.getCashManagement.initiate(
+        {
+          academicYearId: 'year',
+          page: 1,
+          pageSize: 20,
+          boardId: 'board',
+          mediumId: 'medium',
+          month: 10,
+          year: 2026,
+        },
+        { subscribe: false }
+      )
+    )
+    .unwrap();
+  expect(transport.calls.at(-1).params).toMatchObject({
+    boardId: 'board',
+    mediumId: 'medium',
+    month: 10,
+    year: 2026,
+  });
+  const file = new File(['evidence'], 'deposit.pdf', { type: 'application/pdf' });
+  await store
+    .dispatch(
+      cashManagementApi.endpoints.bulkDepositCash.initiate({
+        academicYearId: 'year',
+        bankAccountId: 'bank',
+        expectedAmount: 5329,
+        idempotencyKey: 'bulk-key',
+        notes: 'Deposit',
+        file,
+      })
+    )
+    .unwrap();
+  const bulk = transport.calls.at(-1);
+  expect(bulk).toMatchObject({ url: '/finance/cash-management/bulk-deposit', method: 'POST' });
+  expect(bulk.body).toBeInstanceOf(FormData);
+  expect(bulk.body.get('academicYearId')).toBe('year');
+  expect(bulk.body.get('expectedAmount')).toBe('5329');
+  expect(bulk.body.get('file').name).toBe('deposit.pdf');
+  expect(bulk.body.has('boardId')).toBe(false);
+  expect(bulk.body.has('month')).toBe(false);
+  await store
+    .dispatch(
       cashManagementApi.endpoints.getCashOptions.initiate(
         { academicYearId: 'year', operation: 'expense' },
         { subscribe: false }

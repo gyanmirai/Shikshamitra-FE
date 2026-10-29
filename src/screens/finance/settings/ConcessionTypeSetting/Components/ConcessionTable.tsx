@@ -34,7 +34,6 @@ function TruncatedText({ value, width = 240 }: { value: unknown; width?: number 
 }
 
 const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
-  archived,
   canView,
   canAdd = false,
   canEdit,
@@ -178,7 +177,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
               directActionLimit={3}
               moreLabel={`More actions for ${concessionType.name}`}
               actions={[
-                ...(canEdit && !archived
+                ...(canEdit && concessionType.isActive
                   ? [
                       {
                         id: 'edit',
@@ -188,7 +187,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
                       },
                     ]
                   : []),
-                ...(canDelete && archived
+                ...(canDelete && !concessionType.isActive
                   ? [
                       {
                         id: 'delete',
@@ -216,8 +215,10 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
                   ? [
                       {
                         id: 'status',
-                        label: archived ? 'Restore' : 'Archive',
-                        icon: archived ? 'mdi:archive-arrow-up-outline' : 'mdi:archive-outline',
+                        label: concessionType.isActive ? 'Archive' : 'Restore',
+                        icon: concessionType.isActive
+                          ? 'mdi:archive-outline'
+                          : 'mdi:archive-arrow-up-outline',
                         onClick: () => handleOpenStatusConfirm(concessionType),
                       },
                     ]
@@ -229,17 +230,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      archived,
-      canChangeStatus,
-      canDelete,
-      canEdit,
-      canView,
-      onDelete,
-      onEdit,
-      onVersionHistory,
-      onView,
-    ]
+    [canChangeStatus, canDelete, canEdit, canView, onDelete, onEdit, onVersionHistory, onView]
   );
 
   return (
@@ -262,8 +253,8 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         isLoading={isLoading}
         noDataText={
           <>
-            {archived ? 'No archived concession types.' : 'No concession types found.'}
-            {!archived && canAdd ? (
+            No concession types found.
+            {canAdd ? (
               <Button
                 size="small"
                 variant="text"

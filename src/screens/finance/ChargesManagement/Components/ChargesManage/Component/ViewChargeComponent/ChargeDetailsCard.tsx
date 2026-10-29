@@ -18,7 +18,7 @@ export default function ChargeViewDetailsCard({ charge }: { charge: IChargeDetai
 
       action={<Label color={workflow?.color ?? 'default'}>{workflow?.label ?? 'Unknown'}</Label>}
     >
-      <DetailGrid>
+      <DetailGrid desktopColumns={4}>
         <DetailField label="Charge name" value={charge?.chargeName} />
         <DetailField
           label="Amount"
@@ -33,7 +33,7 @@ export default function ChargeViewDetailsCard({ charge }: { charge: IChargeDetai
           label="Created date"
           value={charge?.appliedOn ? dayjs(charge.appliedOn).format('DD-MM-YYYY') : null}
         />
-        <DetailField fullWidth label="Description" value={charge?.purposeDescription} />
+        <DetailField label="Description" value={charge?.purposeDescription} />
       </DetailGrid>
     </DetailSection>
   );

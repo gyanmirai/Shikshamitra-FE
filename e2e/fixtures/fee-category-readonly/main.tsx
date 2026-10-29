@@ -1,4 +1,5 @@
 import React from 'react';
+import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -9,9 +10,11 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useBoolean } from 'src/hooks/use-boolean';
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
+import FeeCategoryCreation from 'src/screens/finance/settings/FeeCategory';
 import FeeCategoryTable from 'src/screens/finance/settings/FeeCategory/Components/FeeCategoryTable';
 import FeeCategoryForm from 'src/screens/finance/settings/FeeCategory/Components/FeeCategoryForm';
 import 'simplebar-react/dist/simplebar.min.css';
+const unifiedMode = new URLSearchParams(window.location.search).has('unified');
 const dependencyMode = new URLSearchParams(window.location.search).has('dependencies');
 const store = configureStore({
   reducer: {
@@ -55,35 +58,54 @@ function Fixture() {
     return () => window.removeEventListener('fixture-mutation', update);
   }, []);
   return (
-    <Provider store={store}>
-      <ThemeProvider theme={createTheme(defaultSettings)}>
-        <CssBaseline />
-        <Box
-          sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100dvh', minHeight: 0 }}
-        >
-          <Typography variant="h5">
-            {dependencyMode ? 'Fee Head Dependency Checks' : 'Archived Fee Category'}
-          </Typography>
-          <Typography>
-            Fixture status mutations: {count} · Synthetic data, no backend writes
-          </Typography>
-          <ThemeControls />
-          <Button onClick={editor.onTrue}>Create fee category</Button>
-          <FeeCategoryTable
-            archived={!dependencyMode}
-            onAddFeeCategory={editor}
-            setEditData={setEditData}
-          />
-          {(editData || editor.value) && (
-            <FeeCategoryForm
-              open={{ value: true }}
-              editData={editData}
-              onClose={() => { setEditData(null); editor.onFalse(); }}
-            />
-          )}
-        </Box>
-      </ThemeProvider>
-    </Provider>
+    <AppRouterContext.Provider
+      value={{
+        bfcacheId: 'finance-fixture',
+        back() {},
+        forward() {},
+        refresh() {},
+        push() {},
+        replace() {},
+        prefetch: async () => {},
+      }}
+    >
+      <Provider store={store}>
+        <ThemeProvider theme={createTheme(defaultSettings)}>
+          <CssBaseline />
+          <Box
+            sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100dvh', minHeight: 0 }}
+          >
+            {!unifiedMode && (
+              <>
+                <Typography variant="h5">
+                  {dependencyMode ? 'Fee Head Dependency Checks' : 'Archived Fee Category'}
+                </Typography>
+                <Typography>
+                  Fixture status mutations: {count} · Synthetic data, no backend writes
+                </Typography>
+                <ThemeControls />
+                <Button onClick={editor.onTrue}>Create fee category</Button>
+              </>
+            )}
+            {unifiedMode ? (
+              <FeeCategoryCreation />
+            ) : (
+              <FeeCategoryTable onAddFeeCategory={editor} setEditData={setEditData} />
+            )}
+            {(editData || editor.value) && (
+              <FeeCategoryForm
+                open={{ value: true }}
+                editData={editData}
+                onClose={() => {
+                  setEditData(null);
+                  editor.onFalse();
+                }}
+              />
+            )}
+          </Box>
+        </ThemeProvider>
+      </Provider>
+    </AppRouterContext.Provider>
   );
 }
 createRoot(document.getElementById('root')!).render(<Fixture />);

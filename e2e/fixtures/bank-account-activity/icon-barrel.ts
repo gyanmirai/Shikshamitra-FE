@@ -1,0 +1,11 @@
+export * from '../fee-structure/icon-barrel';
+export { default as Add } from '@mui/icons-material/Add';
+export { default as InfoOutlined } from '@mui/icons-material/InfoOutlined';
+export { default as ArrowBack } from '@mui/icons-material/ArrowBack';
+export { default as MoreVert } from '@mui/icons-material/MoreVert';
+export { default as FilterList } from '@mui/icons-material/FilterList';
+export { default as CalendarMonth } from '@mui/icons-material/CalendarMonth';
+export { default as ChevronLeft } from '@mui/icons-material/ChevronLeft';
+export { default as ChevronRight } from '@mui/icons-material/ChevronRight';
+export { default as FirstPage } from '@mui/icons-material/FirstPage';
+export { default as LastPage } from '@mui/icons-material/LastPage';

@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
 import type { Theme, SxProps } from '@mui/material/styles';
 
-import { Card, Stack } from '@mui/material';
+import { useId, useState } from 'react';
+import Box from '@mui/material/Box';
+import { Iconify } from 'src/components/iconify';
+import { Card, Stack, Tooltip, Collapse, IconButton } from '@mui/material';
 
 import { FormSectionHeader, type FormSectionHeaderProps } from './section-header';
 
@@ -9,6 +12,10 @@ export { FormFieldSpacing } from './field-spacing';
 export { FormSectionHeader } from './section-header';
 
 interface FormSectionCardProps extends FormSectionHeaderProps {
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
   children?: ReactNode;
   contentSpacing?: number;
   contentSx?: SxProps<Theme>;
@@ -29,14 +36,25 @@ export function FormSectionCard({
   contentSpacing = 2,
   contentSx,
   sx,
+  collapsible = false,
+  defaultExpanded = true,
+  expanded: controlledExpanded,
+  onExpandedChange,
 }: FormSectionCardProps) {
+  const [localExpanded, setLocalExpanded] = useState(defaultExpanded);
+  const expanded = controlledExpanded ?? localExpanded;
+  const sectionId = useId();
+  const toggleId = `${sectionId}-toggle`;
+  const contentId = `${sectionId}-content`;
+  const toggleLabel = `${expanded ? 'Collapse' : 'Expand'} ${typeof title === 'string' ? title : 'section'}`;
+
   return (
     <Card
       component="section"
       variant="outlined"
       sx={[{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }, ...(Array.isArray(sx) ? sx : [sx])]}
     >
-      <Stack spacing={contentSpacing} sx={contentSx}>
+      <Stack spacing={collapsible && !expanded ? 0 : contentSpacing} sx={contentSx}>
         <FormSectionHeader
           icon={icon}
           iconSize={iconSize}
@@ -45,10 +63,41 @@ export function FormSectionCard({
           titleTypographyProps={titleTypographyProps}
           description={description}
           descriptionTooltip={descriptionTooltip}
-          action={action}
+          action={
+            collapsible ? (
+              <Stack direction="row" spacing={1} alignItems="center">
+                {action}
+                <Tooltip title={toggleLabel}>
+                  <IconButton
+                    id={toggleId}
+                    size="small"
+                    aria-label={toggleLabel}
+                    aria-expanded={expanded}
+                    aria-controls={contentId}
+                    onClick={() => {
+                      setLocalExpanded(!expanded);
+                      onExpandedChange?.(!expanded);
+                    }}
+                  >
+                    <Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            ) : (
+              action
+            )
+          }
           actionFullWidthOnMobile={actionFullWidthOnMobile}
         />
-        {children}
+        {collapsible ? (
+          <Collapse in={expanded}>
+            <Stack id={contentId} role="region" aria-labelledby={toggleId} spacing={contentSpacing}>
+              {children}
+            </Stack>
+          </Collapse>
+        ) : (
+          children
+        )}
       </Stack>
     </Card>
   );

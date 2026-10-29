@@ -35,6 +35,7 @@ export interface ProrationPolicySavePayload {
 }
 
 export interface ProrationPolicyListArgs {
+  includeArchived?: boolean;
   academicYearId: string;
   status?: string;
   search?: string;

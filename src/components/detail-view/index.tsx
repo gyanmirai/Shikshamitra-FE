@@ -13,6 +13,8 @@ export function DetailSection({
   action,
   children,
   sx,
+  collapsible,
+  defaultExpanded,
 }: {
   title: string;
   icon: string;
@@ -20,9 +22,13 @@ export function DetailSection({
   action?: ReactNode;
   children: ReactNode;
   sx?: SxProps<Theme>;
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
 }) {
   return (
     <FormSectionCard
+      collapsible={collapsible}
+      defaultExpanded={defaultExpanded}
       title={title}
       icon={icon}
       iconSize={16}

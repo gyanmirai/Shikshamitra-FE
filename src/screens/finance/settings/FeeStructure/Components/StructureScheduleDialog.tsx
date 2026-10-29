@@ -18,7 +18,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField } from 'src/components/detail-view';
 import { Box, Alert, Stack, Button, IconButton, Typography, DialogActions } from '@mui/material';
 
 import { structureScheduleAmounts } from './structureScheduleAmounts';
@@ -64,7 +64,6 @@ export default function StructureScheduleDialog({
     else onClose();
   };
   const amounts = structureScheduleAmounts(line.isVariable ? null : line.amount, rows);
-  const totalAllocation = rows.reduce((sum, row) => sum + (row.allocationPercentage ?? 0), 0);
   const totalAmount = amounts.every((amount) => amount !== null)
     ? amounts.reduce<number>((sum, amount) => sum + (amount ?? 0), 0)
     : null;
@@ -198,12 +197,14 @@ export default function StructureScheduleDialog({
       >
         <DialogScrollContent>
           <Stack spacing={2}>
-            <DetailSection
-              helpText="Annual amount and charge options configured for this fee head. Variable amounts are determined during student assignment."
+            <FormSectionCard
+              descriptionTooltip="Annual amount and charge options configured for this fee head. Variable amounts are determined during student assignment."
               icon={GlobalIcons.receiptIcon}
               title="Fee Head Details"
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+              sx={{ minWidth: 0, containerType: 'inline-size' }}
             >
-              <DetailGrid>
+              <DetailGrid desktopColumns={line.categoryName ? 5 : 4}>
                 <DetailField label="Fee head name" value={line.feeHeadName || 'Fee head'} />
                 {line.categoryName && <DetailField label="Category" value={line.categoryName} />}
                 <DetailField
@@ -225,7 +226,7 @@ export default function StructureScheduleDialog({
                   value={line.isOptional ? 'Optional' : 'Required'}
                 />
               </DetailGrid>
-            </DetailSection>
+            </FormSectionCard>
             <FormSectionCard
               descriptionTooltip="Each installment shows its coverage, demand date, due date, percentage allocation, and calculated amount. Remainders follow the existing payment-term allocation rules."
               icon={GlobalIcons.calendar}
@@ -378,30 +379,21 @@ export default function StructureScheduleDialog({
                   },
                 ]}
               />
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={2}
-                justifyContent="flex-end"
-                useFlexGap
-                flexWrap="wrap"
-                sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}
-              >
-                <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                  Total allocation: {totalAllocation.toFixed(2)}%
-                </Typography>
-                <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                  Total amount:{' '}
-                  {line.isVariable
-                    ? 'Calculated during assignment'
-                    : totalAmount === null
-                      ? '—'
-                      : formatNumber(totalAmount, 'INR')}
-                </Typography>
-              </Stack>
             </FormSectionCard>
           </Stack>
         </DialogScrollContent>
         <DialogActions sx={{ p: 2, flexShrink: 0, flexWrap: 'wrap', rowGap: 1 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{ fontVariantNumeric: 'tabular-nums', minWidth: 0, mr: 1 }}
+          >
+            Total amount:{' '}
+            {line.isVariable
+              ? 'Calculated during assignment'
+              : totalAmount === null
+                ? '—'
+                : formatNumber(totalAmount, 'INR')}
+          </Typography>
           {!readOnly && (
             <Button
               size="small"

@@ -3,7 +3,7 @@ module: finance
 domain: fee-structure
 content_type: Reference
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -68,6 +68,8 @@ Fee-head columns allocate flexible width to the name, left-align annual amounts,
 
 Metadata list pagination/search uses the server. Empty, loading and error states are distinct. Settings refresh preserves unsaved changes and invalidates the previous readiness result. Parent refetch never overwrites a dirty card. Out-of-order previews are discarded using an editor generation counter. Publication is disabled for an unsaved or unreviewed draft.
 
+Every Review & publish card can be collapsed independently. Structure Summary shows its four facts in one desktop row; attached policy labels and values share a row. Policy cards, Policy Coverage, and Payment Schedules start collapsed, while the summary and readiness remain open. Card actions and help stay available when collapsed. Publication blockers use plain inline messages with the existing review action, without a colored alert panel. A new readiness result containing blockers reopens readiness; mobile layouts wrap within the available width.
+
 ## Client contract
 
 `src/redux/finance/feeStructureWorkspace.ts` owns typed lightweight context, preview, partial save, publish and revision endpoints. Existing `financeFeeStructure.tsx` remains the client for metadata lists/generation, class lists and draft deletion.
@@ -78,7 +80,9 @@ Canonical save responses replace the local draft; subsequent saves use its ID an
 
 Display validation messages from both ABP `error.data.Errors` and the host's Problem Details `data.Errors`/`errors`/`detail` responses. Prefer specific business-rule errors over the generic detail. Recognize the concurrency code in either envelope and preserve the draft on failure.
 
-Policy selectors are editable only in an authorized draft edit session. Selecting a policy updates the local candidate; **Save draft** persists its policy ID and version ID. Publish sends only the saved structure ID and concurrency stamp. Keep Publish disabled until changes are saved and a fresh review is ready, show the required next step, and recheck those conditions when confirming publication.
+Authorized drafts open ready to edit, with direct Edit and Delete actions on each fee-head row and no structure-level Edit button. Saving or discarding changes keeps the draft editable. Published structures and view-only users have no fee-head write actions. Deleting a fee head changes the local draft after confirmation; **Save draft** persists the removal.
+
+Policy selectors are editable only in an authorized draft. Selecting a policy updates the local candidate; **Save draft** persists its policy ID and version ID. Publish sends only the saved structure ID and concurrency stamp. Keep Publish disabled until changes are saved and a fresh review is ready, show the required next step, and recheck those conditions when confirming publication.
 
 The active path uses `FeeStructureWorkspaceCard.tsx`, `FeeStructureHeadsStep.tsx`, `FeeStructureHeadDialog.tsx`, `FeeStructurePoliciesStep.tsx`, `FeeStructureReviewStep.tsx`, `useFeeStructureWorkspaceForm.ts`, and `StructureScheduleDialog.tsx`. Older `IndependentFeeStructureCard`, `FeePoliciesTab`, schedule drawer and ViewDetails prototypes remain inactive source; they are not the current management flow. The old status/unlock path is no longer exposed by the active screen.
 

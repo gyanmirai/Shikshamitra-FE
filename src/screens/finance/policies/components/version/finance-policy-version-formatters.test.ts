@@ -11,10 +11,10 @@ import {
 
 describe('finance policy version formatters', () => {
   it.each([
-    [0, 'AllOutstanding', 'All outstanding installments'],
-    [1, 'CurrentInstallment', 'Current unpaid installment'],
-    [2, 'FutureInstallments', 'Future installments'],
-    [3, 'AllFees', 'All installments, including paid'],
+    [0, 'AllOutstanding', 'All unpaid installments'],
+    [1, 'CurrentInstallment', 'Current installment only'],
+    [2, 'FutureInstallments', 'Upcoming installments only'],
+    [3, 'AllFees', 'All installments (including paid)'],
   ])('uses the form label for every Apply On representation: %s', (number, name, label) => {
     for (const value of [number, String(number), name, JSON.stringify(name)]) {
       expect(formatFinancePolicyVersionValue('ApplyOn', value).text).toBe(label);
@@ -42,7 +42,7 @@ describe('finance policy version formatters', () => {
     ['ValueSource', 1, 'Request Entered Within Limits', 'text'],
     ['CalculationMethod', 0, 'Percentage', 'text'],
     ['FeeHeadScope', 0, 'Entire Fee Structure', 'text'],
-    ['ApplyOn', 0, 'All outstanding installments', 'text'],
+    ['ApplyOn', 0, 'All unpaid installments', 'text'],
     ['RoundingMethod', 0, 'None', 'text'],
   ])('formats the numeric %s enum', (field, value, text, kind) => {
     expect(formatFinancePolicyVersionValue(field, value)).toEqual({ kind, text });

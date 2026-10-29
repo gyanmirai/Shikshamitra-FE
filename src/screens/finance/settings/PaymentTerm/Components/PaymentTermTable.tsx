@@ -40,7 +40,6 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   page,
   rowsPerPage,
   searchTerm,
-  archived,
   onPaginationChange,
   onSearchChange,
   filters,
@@ -150,6 +149,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         excludeFromExport: true,
         render: (_, row) => {
           const term = row as PaymentTermListItem;
+          const archived = term.status === 'Archived';
           const canActivate = !archived && term.hasDraft && canPublish;
           const archiveDisabled = term.referencedStructureCount > 0 || actionLoading;
           const deleteDisabled = !canDeletePaymentTerm(term) || actionLoading;
@@ -234,7 +234,6 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
     ],
     [
       actionLoading,
-      archived,
       canArchive,
       canDelete,
       canEdit,
@@ -283,7 +282,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         searchTerm={searchTerm}
         onServerPagination={onPaginationChange}
         onServerSearch={onSearchChange}
-        noDataText={archived ? 'No archived payment terms.' : 'No current payment terms found.'}
+        noDataText="No payment terms found."
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{ sx: { height: '100%' } }}
       />

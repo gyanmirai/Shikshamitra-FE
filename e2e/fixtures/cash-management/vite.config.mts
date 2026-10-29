@@ -25,7 +25,7 @@ export default defineConfig({
         find: 'next/navigation',
         replacement: `${here}/mock-navigation.ts`,
       },
-      { find: /^@mui\/icons-material$/, replacement: `${here}/../fee-structure/icon-barrel.ts` },
+      { find: /^@mui\/icons-material$/, replacement: `${here}/icon-barrel.ts` },
       { find: /^src\/redux\/service$/, replacement: `${here}/mock-service.ts` },
       { find: 'src', replacement: `${repo}/src` },
     ],

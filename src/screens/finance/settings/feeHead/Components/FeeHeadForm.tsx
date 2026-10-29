@@ -69,10 +69,12 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
 
   const incomeCategoryOptions = useMemo(
     () =>
-      (incomeCategoryData?.items ?? []).map((category: any) => ({
-        id: category.id,
-        displayName: category.name,
-      })),
+      (incomeCategoryData?.items ?? [])
+        .filter((category: any) => String(category.name ?? '').trim().toLowerCase() !== 'none')
+        .map((category: any) => ({
+          id: category.id,
+          displayName: category.name,
+        })),
     [incomeCategoryData]
   );
 

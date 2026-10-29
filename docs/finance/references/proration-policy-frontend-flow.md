@@ -3,7 +3,7 @@ module: finance
 domain: proration-policy-frontend-flow
 content_type: Reference
 status: implemented
-updated_on: 2026-10-06
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,9 +16,9 @@ Product rules, calculations, backend architecture, API, persistence, permissions
 
 > This page records both the original review findings and their implemented disposition.
 
-The Proration Policy workspace uses Current Policies and Archived controls, matching Collection and Concession.
+The Proration Policy workspace shows Draft, Active and Archived policies in one table, matching Collection and Concession.
 Archived shows a server count scoped to the selected academic year; the archive/restore cache tags refresh this count and the list.
-Current permits Draft and Active status filters; Archived fixes the status and hides creation controls and the status filter.
+The optional Status column filter includes Draft, Active and Archived; creation stays permission-controlled in the page header.
 Switching views resets pagination and the status query while retaining search.
 Restore returns a policy to Draft, making it visible in Current Policies.
 The focused workspace checks are in `src/screens/finance/policies/workspaces/PolicyArchiveWorkspaces.test.tsx`.

@@ -1,7 +1,7 @@
 import type { FeeReceiptDetail, ChargeReceiptDetail } from 'src/redux/feeCollection/feeCollection';
 
 import { Iconify } from 'src/components/iconify';
-import { Stack, Button, Skeleton, Typography } from '@mui/material';
+import { Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
 
 interface UnifiedReceiptDisplayProps {
@@ -11,6 +11,10 @@ interface UnifiedReceiptDisplayProps {
   chargeIsLoading: boolean;
   feeBlobUrl: string | null;
   chargeBlobUrl: string | null;
+  feeError?: string | null;
+  chargeError?: string | null;
+  onRetryFee?: () => void;
+  onRetryCharge?: () => void;
   onOpenFeeInNewTab: () => void;
   onDownloadFee: () => void;
   onOpenChargeInNewTab: () => void;
@@ -24,6 +28,10 @@ export default function UnifiedReceiptDisplay({
   chargeIsLoading,
   feeBlobUrl,
   chargeBlobUrl,
+  feeError,
+  chargeError,
+  onRetryFee,
+  onRetryCharge,
   onOpenFeeInNewTab,
   onDownloadFee,
   onOpenChargeInNewTab,
@@ -33,6 +41,8 @@ export default function UnifiedReceiptDisplay({
     const receipt = isFee ? feeReceipt : chargeReceipt;
     const isLoading = isFee ? feeIsLoading : chargeIsLoading;
     const blobUrl = isFee ? feeBlobUrl : chargeBlobUrl;
+    const error = isFee ? feeError : chargeError;
+    const onRetry = isFee ? onRetryFee : onRetryCharge;
     const name = isFee ? (feeReceipt?.combined ? 'Combined Fee And Charge' : 'Fee') : 'Charge';
     if (!receipt && !isLoading) return null;
 
@@ -48,6 +58,19 @@ export default function UnifiedReceiptDisplay({
             <Skeleton height={60} />
             <Skeleton height={160} />
           </Stack>
+        ) : error ? (
+          <Alert
+            severity="warning"
+            action={
+              onRetry && (
+                <Button size="small" onClick={onRetry}>
+                  Retry receipt
+                </Button>
+              )
+            }
+          >
+            {error}
+          </Alert>
         ) : blobUrl ? (
           <>
             <PdfPreview url={blobUrl} title={`${name} Receipt`} />

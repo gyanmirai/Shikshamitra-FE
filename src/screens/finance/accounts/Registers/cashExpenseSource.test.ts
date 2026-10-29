@@ -13,9 +13,9 @@ const entry = {
   bankAccountId: '',
   paymentReference: 'BILL-1',
 };
-describe('cash expense source validation', () => {
+describe('pooled cash expense validation', () => {
   it.each(['', '   '])(
-    'requires a nonblank payment reference only for cash expenses (%j)',
+    'allows cash expenses without a payment reference (%j)',
     async (paymentReference) => {
       const cashExpense = { ...entry, cashCollectionId: 'collection' };
       expect(
@@ -23,7 +23,7 @@ describe('cash expense source validation', () => {
           { ...cashExpense, paymentReference },
           { context: { direction: 'expense' } }
         )
-      ).toBe(false);
+      ).toBe(true);
       expect(
         await manualEntrySchema.isValid(
           { ...entry, paymentReference },
@@ -38,9 +38,9 @@ describe('cash expense source validation', () => {
       ).toBe(true);
     }
   );
-  it('requires a linked pending cash source only for cash expenses', async () => {
+  it('allows cash expenses without selecting a receipt', async () => {
     expect(await manualEntrySchema.isValid(entry, { context: { direction: 'expense' } })).toBe(
-      false
+      true
     );
     expect(
       await manualEntrySchema.isValid(

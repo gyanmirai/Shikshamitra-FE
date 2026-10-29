@@ -124,7 +124,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
                   },
                 }}
                 size="small"
-                disabled={!access.canChangeStatus}
+                disabled={!access.canChangeStatus || expense.isSystemCategory}
                 checked={expense.isActive || false}
                 onClick={(event) => event.stopPropagation()}
                 onChange={() => handleOpenStatusConfirm(expense)}
@@ -162,7 +162,10 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
                   onClick: () => {
                     onEdit(row as IExpenseCategory);
                   },
-                  disabled: !access.canEdit,
+                  disabled: !access.canEdit || (row as IExpenseCategory).isSystemCategory,
+                  tooltip: (row as IExpenseCategory).isSystemCategory
+                    ? 'None is a built-in category and cannot be changed.'
+                    : undefined,
                 },
                 {
                   id: 'delete',
@@ -172,7 +175,9 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
                     onDelete(row as IExpenseCategory);
                   },
                   disabled: !access.canDelete || !(row as IExpenseCategory).canDelete,
-                  tooltip: (row as IExpenseCategory).isActive
+                  tooltip: (row as IExpenseCategory).isSystemCategory
+                    ? 'None is a built-in category and cannot be deleted.'
+                    : (row as IExpenseCategory).isActive
                     ? 'Deactivate this record before deleting it.'
                     : 'This record is referenced by other Finance records and cannot be deleted.',
                   color: 'error.main',

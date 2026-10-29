@@ -5,6 +5,7 @@ import type {
 } from 'src/redux/finance/feeStructureWorkspace';
 
 import dayjs from 'dayjs';
+import { useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
@@ -14,16 +15,7 @@ import CustomAccordion from 'src/components/custom-accordian';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { DetailField, DetailSection } from 'src/components/detail-view';
-import {
-  Box,
-  Grid,
-  Stack,
-  Alert,
-  Button,
-  IconButton,
-  Typography,
-  AccordionSummary,
-} from '@mui/material';
+import { Box, Stack, Button, IconButton, Typography, AccordionSummary } from '@mui/material';
 
 import { structureMoney } from '../feeStructurePresentation';
 
@@ -59,9 +51,18 @@ export default function FeeStructureReviewStep({
   onReview,
   onNavigate,
 }: Props) {
+  const [readinessExpanded, setReadinessExpanded] = useState(true);
+
+  useEffect(() => {
+    if (preview && (preview.errors.length || !preview.isReady)) {
+      setReadinessExpanded(true);
+    }
+  }, [preview]);
+
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1.5}>
       <DetailSection
+        collapsible
         helpText="Fixed fee total includes optional heads. All assigned heads are available in Fee Collection. Variable amounts are set during student assignment; this is not a student's amount due."
         icon={GlobalIcons.notebook}
         title="Structure Summary"
@@ -72,7 +73,13 @@ export default function FeeStructureReviewStep({
           </Label>
         }
       >
-        <Grid container spacing={2}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(4, minmax(0, 1fr))' },
+            gap: 2,
+          }}
+        >
           {[
             {
               label: 'Fixed fee total',
@@ -92,21 +99,22 @@ export default function FeeStructureReviewStep({
               value: candidate.feeHeads.filter((line) => line.isVariable).length,
             },
           ].map((item) => (
-            <Grid key={item.label} size={{ xs: 12, sm: 6 }}>
-              <DetailField label={item.label} value={item.value} />
-            </Grid>
+            <DetailField key={item.label} label={item.label} value={item.value} />
           ))}
-        </Grid>
+        </Box>
       </DetailSection>
       <Box
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' },
           gap: 1.5,
+          alignItems: 'start',
         }}
       >
         {impacts.map((impact) => (
           <DetailSection
+            collapsible
+            defaultExpanded={false}
             key={impact.key}
             icon={GlobalIcons.receiptIcon}
             title={impact.label}
@@ -127,15 +135,22 @@ export default function FeeStructureReviewStep({
               </CustomTooltip>
             }
           >
-            <DetailField
-              label="Attached policy"
-              value={candidate[`${impact.key}PolicyVersionId`] ? impact.policyLabel : impact.empty}
-            />
+            <Stack direction="row" spacing={1} alignItems="baseline" sx={{ minWidth: 0 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
+                Attached policy:
+              </Typography>
+              <Typography variant="body2" sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+                {candidate[`${impact.key}PolicyVersionId`] ? impact.policyLabel : impact.empty}
+              </Typography>
+            </Stack>
           </DetailSection>
         ))}
       </Box>
 
       <FormSectionCard
+        collapsible
+        expanded={readinessExpanded}
+        onExpandedChange={setReadinessExpanded}
         descriptionTooltip="These checks describe structure configuration. Student eligibility and transactions are calculated in their own workflows."
         icon={GlobalIcons.publish}
         title={locked ? 'Publication Validation' : 'Publish Readiness'}
@@ -167,39 +182,37 @@ export default function FeeStructureReviewStep({
         {preview && (
           <>
             {!preview.errors.length && !preview.isReady && (
-              <Alert severity="error">
+              <Typography variant="body2" role="alert">
                 {locked && record?.publicationReview
                   ? 'Configuration checks saved at publication.'
                   : 'This configuration is not ready to publish. Recheck configuration for details.'}
-              </Alert>
+              </Typography>
             )}
             {!!preview.errors.length && (
-              <Alert severity="error">
-                <Stack spacing={1}>
-                  <Typography variant="subtitle2">
-                    {preview.errors.length} issue
-                    {preview.errors.length === 1 ? ' blocks' : 's block'} publication
-                  </Typography>
-                  {preview.errors.map((message, index) => (
-                    <Box key={`${index}-${message}`}>
-                      <Typography variant="body2">{message}</Typography>
-                      <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
-                        <Button
-                          size="small"
-                          disabled={busy}
-                          onClick={() =>
-                            onNavigate(/policy|collection|refund/i.test(message) ? 1 : 0)
-                          }
-                        >
-                          {/policy|collection|refund/i.test(message)
-                            ? 'Review Policies'
-                            : 'Review Fee Heads'}
-                        </Button>
-                      </Stack>
-                    </Box>
-                  ))}
-                </Stack>
-              </Alert>
+              <Stack spacing={1} role="alert">
+                {preview.errors.map((message, index) => (
+                  <Stack
+                    key={`${index}-${message}`}
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={1}
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                  >
+                    <Typography variant="body2" sx={{ flex: 1, minWidth: 0 }}>
+                      {message}
+                    </Typography>
+                    <Button
+                      size="small"
+                      disabled={busy}
+                      sx={{ flexShrink: 0 }}
+                      onClick={() => onNavigate(/policy|collection|refund/i.test(message) ? 1 : 0)}
+                    >
+                      {/policy|collection|refund/i.test(message)
+                        ? 'Review Policies'
+                        : 'Review Fee Heads'}
+                    </Button>
+                  </Stack>
+                ))}
+              </Stack>
             )}
             {!preview.errors.length && preview.isReady && (
               <Typography variant="body2">No issues block publication.</Typography>
@@ -245,6 +258,8 @@ export default function FeeStructureReviewStep({
       {preview && (
         <>
           <DetailSection
+            collapsible
+            defaultExpanded={false}
             icon={GlobalIcons.documentIcon}
             title="Policy Coverage"
             helpText="Collection, refund, and accounting treatment for each fee head in this review."
@@ -315,6 +330,8 @@ export default function FeeStructureReviewStep({
             />
           </DetailSection>
           <FormSectionCard
+            collapsible
+            defaultExpanded={false}
             icon={GlobalIcons.calendar}
             title="Payment Schedules"
             iconSize={16}

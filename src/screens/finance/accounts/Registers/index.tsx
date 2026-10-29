@@ -4,15 +4,16 @@ import type { RootState } from 'src/redux/store';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { AccountsActivityRow } from 'src/redux/finance/accountsActivityApi';
 
-import { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useRef, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Card, Stack, Alert, Button } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -25,6 +26,7 @@ import ManualEntryForm from './ManualEntryForm';
 import AccountEntryDetails from './AccountEntryDetails';
 import { academicMonthOptions, defaultAcademicMonth } from './academicMonths';
 import { toRegisterTableRow, registerStatusOptions } from './registerTablePresentation';
+import { bankAccountReturnTo, readBankAccountEntryContext } from '../bankAccountEntryContext';
 
 import type { AcademicPeriod } from './academicMonths';
 
@@ -37,7 +39,7 @@ export default function AccountsRegister({ direction }: { direction: 'income' | 
       : financePermissions.accounts.expense;
   const canView = hasGrantedPermission(permissions, `${permission}.View`);
   const canAdd = hasGrantedPermission(permissions, `${permission}.Add`);
-  const heading = direction === 'income' ? 'Income' : 'Expenses';
+  const heading = direction === 'income' ? 'Incomes' : 'Expenses';
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       {(!canView || !currentYear?.id) && (
@@ -81,19 +83,50 @@ function RegisterContent({
   canAdd: boolean;
 }) {
   const income = direction === 'income';
+  const routeParams = useSearchParams();
+  const router = useRouter();
+  const entryContext = readBankAccountEntryContext(routeParams, period.id, 'add');
+  const returnTo =
+    routeParams.get('academicYearId') === period.id
+      ? bankAccountReturnTo(routeParams.get('returnTo'))
+      : null;
   const months = academicMonthOptions(period);
-  const [month, setMonth] = useState(() => defaultAcademicMonth(months));
+  const [month, setMonth] = useState(() =>
+    returnTo && routeParams.get('search') ? 'all' : defaultAcademicMonth(months)
+  );
   const [category, setCategory] = useState('all');
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() =>
+    returnTo ? (routeParams.get('search') || '').slice(0, 100) : ''
+  );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [sorts, setSorts] = useState<IParams['sorts']>([]);
   const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
   const [selected, setSelected] = useState<AccountsActivityRow | null>(null);
   const add = useBoolean();
+  const openBankEntry = add.onTrue;
+  const consumedEntry = useRef('');
+  const requestedEntryKey = entryContext
+    ? `${period.id}:${entryContext.bankAccountId}:${entryContext.returnTo}`
+    : '';
+  useEffect(() => {
+    if (
+      !requestedEntryKey ||
+      !canAdd ||
+      months.length === 0 ||
+      consumedEntry.current === requestedEntryKey
+    )
+      return;
+    consumedEntry.current = requestedEntryKey;
+    openBankEntry();
+  }, [requestedEntryKey, canAdd, months.length, openBankEntry]);
   const addButton = useRef<HTMLButtonElement>(null);
   const closeAdd = () => {
     add.onFalse();
+    if (entryContext) {
+      router.push(entryContext.returnTo);
+      return;
+    }
     requestAnimationFrame(() => addButton.current?.focus());
   };
   const query = useGetAccountsActivityQuery(
@@ -275,13 +308,24 @@ function RegisterContent({
               ? 'View received student payments and other school income.'
               : 'View paid school expenses, completed student refunds, and returned payments.'
           }
-          heading={income ? 'Income' : 'Expenses'}
+          heading={income ? 'Incomes' : 'Expenses'}
 
           links={[
             { name: 'Finance', href: financePaths.dashboard },
             { name: 'Accounts' },
-            { name: income ? 'Income' : 'Expenses' },
+            { name: income ? 'Incomes' : 'Expenses' },
           ]}
+          action={
+            returnTo ? (
+              <Button
+                size="small"
+                startIcon={<Iconify icon={GlobalIcons.retrunIcon} />}
+                onClick={() => router.push(returnTo)}
+              >
+                Back to bank account
+              </Button>
+            ) : undefined
+          }
         />
         {months.length === 0 && (
           <Alert severity="error">
@@ -359,7 +403,7 @@ function RegisterContent({
                 setSelected(row as AccountsActivityRow);
               },
             })}
-            tableTitle={income ? 'Income' : 'Expenses'}
+            tableTitle={income ? 'Incomes' : 'Expenses'}
             wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
             tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
             tableId={`accounts-${direction}-register`}
@@ -403,7 +447,7 @@ function RegisterContent({
                   severity="error"
                   action={<Button onClick={() => query.refetch()}>Retry</Button>}
                 >
-                  {income ? 'Income' : 'Expenses'} could not be loaded.
+                  {income ? 'Incomes' : 'Expenses'} could not be loaded.
                 </Alert>
               ) : undefined
             }
@@ -418,7 +462,13 @@ function RegisterContent({
         />
       )}
       {add.value && canAdd && (
-        <ManualEntryForm direction={direction} period={period} month={month} onClose={closeAdd} />
+        <ManualEntryForm
+          direction={direction}
+          period={period}
+          month={month}
+          onClose={closeAdd}
+          initialBankAccountId={entryContext?.bankAccountId}
+        />
       )}
     </>
   );

@@ -34,7 +34,6 @@ import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRouti
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   Box,
-  Card,
   Chip,
   Stack,
   Button,
@@ -57,7 +56,6 @@ import {
 const ARCHIVE_REASON_MAX_LENGTH = 500;
 
 const FinanceChargeCategory = () => {
-  const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
   const addDialog = useBoolean();
   const editDialog = useBoolean();
   const confirm = useBoolean();
@@ -99,18 +97,8 @@ const FinanceChargeCategory = () => {
       pageSize: queryParams.pageSize,
       search: queryParams.search || undefined,
       filters: serializeFinanceTableFilters(filters),
-      isActive: archiveView === 'current',
     },
   });
-  const { data: archivedSummary } = useGetChargeCategoriesQuery(
-    {
-      academicYearId,
-      page: 1,
-      pageSize: 1,
-      isActive: false,
-    },
-    { skip: !academicYearId }
-  );
 
   const [deleteChargeCategory, { isLoading: isDeleting }] = useDeleteChargeCategoryMutation();
   const [getCategoryUsage] = useLazyGetChargeCategoryUsageQuery();
@@ -300,7 +288,7 @@ const FinanceChargeCategory = () => {
               directActionLimit={3}
               placement="right-top"
               actions={[
-                ...(canEdit && archiveView === 'current'
+                ...(canEdit && row.isActive
                   ? [
                       {
                         id: 'edit',
@@ -310,7 +298,7 @@ const FinanceChargeCategory = () => {
                       },
                     ]
                   : []),
-                ...(canDelete && archiveView === 'current'
+                ...(canDelete && row.isActive
                   ? [
                       {
                         id: 'delete',
@@ -325,11 +313,10 @@ const FinanceChargeCategory = () => {
                   ? [
                       {
                         id: 'status',
-                        label: archiveView === 'archived' ? 'Restore' : 'Archive',
-                        icon:
-                          archiveView === 'archived'
-                            ? 'mdi:archive-arrow-up-outline'
-                            : 'mdi:archive-outline',
+                        label: !row.isActive ? 'Restore' : 'Archive',
+                        icon: !row.isActive
+                          ? 'mdi:archive-arrow-up-outline'
+                          : 'mdi:archive-outline',
                         disabled: isStatusLoading,
                         onClick: () => handleOpenStatusConfirm(row),
                       },
@@ -342,7 +329,7 @@ const FinanceChargeCategory = () => {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [archiveView, canChangeStatus, canDelete, canEdit, isStatusLoading]
+    [canChangeStatus, canDelete, canEdit, isStatusLoading]
   );
 
   return (
@@ -361,7 +348,7 @@ const FinanceChargeCategory = () => {
           { name: 'Charge Category' },
         ]}
         action={
-          canAdd && archiveView === 'current' ? (
+          canAdd ? (
             <Button
               variant="contained"
               size="small"
@@ -375,43 +362,12 @@ const FinanceChargeCategory = () => {
         }
       />
 
-      <Card sx={{ p: 1, mb: 1, flexShrink: 0 }}>
-        <Stack direction="row" spacing={1}>
-          <Button
-            size="small"
-            variant={archiveView === 'current' ? 'contained' : 'outlined'}
-            onClick={() => {
-              setQueryParams((current) => ({ ...current, page: 1 }));
-              setFilters((current) => current.filter((filter) => filter.column !== 'isActive'));
-              setArchiveView('current');
-            }}
-          >
-            Current
-          </Button>
-          <Button
-            size="small"
-            variant={archiveView === 'archived' ? 'contained' : 'outlined'}
-            onClick={() => {
-              setQueryParams((current) => ({ ...current, page: 1 }));
-              setFilters((current) => current.filter((filter) => filter.column !== 'isActive'));
-              setArchiveView('archived');
-            }}
-          >
-            Archived ({archivedSummary?.totalCount ?? 0})
-          </Button>
-        </Stack>
-      </Card>
-
       <CustomizableTable
         tableId="charge-category-table"
         tableTitle="Charge Categories"
         wrapperProps={{ sx: { flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' } }}
         tableContainerProps={{ sx: { height: 1 } }}
-        noDataText={
-          archiveView === 'archived'
-            ? 'No archived charge categories.'
-            : 'No charge categories found.'
-        }
+        noDataText="No charge categories found."
         isLoading={isLoading || isFetching}
         columns={columns}
         data={data?.items || []}

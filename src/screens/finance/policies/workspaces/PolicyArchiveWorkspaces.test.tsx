@@ -27,7 +27,12 @@ vi.mock('src/redux/finance/concessionPolicy', () => ({
   useGetConcessionPoliciesQuery: mocks.concessionList,
 }));
 vi.mock('src/components/custom-breadcrumbs', () => ({
-  CustomBreadcrumbs: ({ heading }: any) => <h1>{heading}</h1>,
+  CustomBreadcrumbs: ({ heading, action }: any) => (
+    <>
+      <h1>{heading}</h1>
+      {action}
+    </>
+  ),
 }));
 vi.mock('src/components/label', () => ({ Label: ({ children }: any) => <span>{children}</span> }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -37,11 +42,7 @@ vi.mock('../components/CollectionPolicyDrawer', () => ({ default: () => null }))
 vi.mock('../components/ConcessionPolicyDrawer', () => ({ default: () => null }));
 vi.mock('../components/ExceptionWindowsDialog', () => ({ default: () => null }));
 vi.mock('../components/FinancePolicyTable', () => ({
-  default: ({ archived, policyType }: any) => (
-    <div data-testid="policy-table">
-      {policyType}:{String(archived)}
-    </div>
-  ),
+  default: ({ policyType }: any) => <div data-testid="policy-table">{policyType}</div>,
 }));
 
 beforeEach(() => {
@@ -60,66 +61,14 @@ beforeEach(() => {
 });
 
 it.each([
-  ['refund', RefundPolicyWorkspace, mocks.refundList],
-  ['proration', ProrationPolicyWorkspace, mocks.prorationList],
-  ['concession', ConcessionPolicyWorkspace, mocks.concessionList],
-] as const)(
-  '%s switches the Fee Category-style archive buttons and hides creation in Archived',
-  (kind, Workspace, list) => {
-    render(<Workspace />);
-    expect(list).toHaveBeenCalledWith(
-      { academicYearId: 'year-1', status: 'Archived', page: 1, pageSize: 1 },
-      { skip: false }
-    );
-    expect(screen.getByTestId('policy-table')).toHaveTextContent(`${kind}:false`);
-    expect(screen.getByRole('button', { name: 'Create Policy' })).toBeVisible();
-    const currentButton = screen.getByRole('button', { name: 'Current' });
-    const archivedButton = screen.getByRole('button', { name: /Archived.*7/ });
-    expect(currentButton).toHaveClass('MuiButton-contained');
-    expect(archivedButton).toHaveClass('MuiButton-outlined');
-    fireEvent.click(archivedButton);
-    expect(screen.getByTestId('policy-table')).toHaveTextContent(`${kind}:true`);
-    expect(screen.queryByRole('button', { name: 'Create Policy' })).not.toBeInTheDocument();
-    expect(archivedButton).toHaveClass('MuiButton-contained');
-    fireEvent.click(currentButton);
-    expect(screen.getByTestId('policy-table')).toHaveTextContent(`${kind}:false`);
-    expect(screen.getByRole('button', { name: 'Create Policy' })).toBeVisible();
-  }
-);
-
-it('collection uses the same Current and Archived buttons with the archive count', () => {
-  render(<CollectionPolicyWorkspace />);
-  expect(mocks.collectionList).toHaveBeenCalledWith(
-    {
-      academicYearId: 'year-1',
-      status: 'Archived',
-      includeArchived: true,
-      skipCount: 0,
-      maxResultCount: 1,
-    },
-    { skip: false }
-  );
-  expect(screen.getByTestId('policy-table')).toHaveTextContent('collection:false');
-  fireEvent.click(screen.getByRole('button', { name: /Archived.*7/ }));
-  expect(screen.getByTestId('policy-table')).toHaveTextContent('collection:true');
-  expect(screen.queryByRole('button', { name: 'Create Policy' })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Current' }));
-  expect(screen.getByRole('button', { name: 'Create Policy' })).toBeVisible();
+  ['refund', RefundPolicyWorkspace],
+  ['proration', ProrationPolicyWorkspace],
+  ['concession', ConcessionPolicyWorkspace],
+  ['collection', CollectionPolicyWorkspace],
+] as const)('%s shows a single table without archive tabs', (kind, Workspace) => {
+  render(<Workspace />);
+  expect(screen.getByTestId('policy-table')).toHaveTextContent(kind);
+  expect(screen.queryByRole('button', { name: 'Current' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Archived/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Policy/ })).toBeVisible();
 });
-
-it.each([
-  ['refund', RefundPolicyWorkspace, mocks.refundList],
-  ['proration', ProrationPolicyWorkspace, mocks.prorationList],
-  ['concession', ConcessionPolicyWorkspace, mocks.concessionList],
-] as const)(
-  '%s skips the archive count without a year and respects create permission',
-  (_, Workspace, list) => {
-    mocks.state.globalState.currentYear.id = '';
-    mocks.state.auth.permissions = [];
-    render(<Workspace />);
-    expect(list).toHaveBeenCalledWith(expect.objectContaining({ academicYearId: '' }), {
-      skip: true,
-    });
-    expect(screen.queryByRole('button', { name: 'Create Policy' })).not.toBeInTheDocument();
-  }
-);

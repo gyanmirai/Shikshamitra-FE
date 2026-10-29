@@ -1,13 +1,13 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { concessionErrorMessage } from '../Concession/Components/concessionValueValidation';
 import { Box, Alert, Stack, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
   useApproveConcessionRequestMutation,
@@ -35,14 +35,20 @@ export default function ReadOnlyConcessionApprovalView({
   const [previewApproval, { isLoading: isPreviewing }] = usePreviewConcessionApprovalMutation();
   const [approve, { isLoading: isApproving }] = useApproveConcessionRequestMutation();
   const [previewTotal, setPreviewTotal] = useState<number | null>(null);
-  const [, setPreviewRefund] = useState(0);
-  const [, setAutoCreateRefund] = useState(true);
+  const [previewRefund, setPreviewRefund] = useState(0);
+  const [autoCreateRefund, setAutoCreateRefund] = useState(true);
   const [message, setMessage] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
   const commandKey = useRef('');
   const changed = (context?.feeHeadGroups ?? []).some((group) => group.hasChangedSinceSubmission);
+  const benefitBlocker = context?.benefitBlocker;
+  useEffect(() => {
+    if (benefitBlocker) setPreviewTotal(null);
+  }, [benefitBlocker]);
 
   const handleAction = async () => {
-    if (!context) return;
+    if (!context || benefitBlocker || isError || changed) return;
+    setActionError(null);
     try {
       if (previewTotal === null) {
         const result = await previewApproval({
@@ -76,7 +82,12 @@ export default function ReadOnlyConcessionApprovalView({
     } catch (error) {
       setPreviewTotal(null);
       setPreviewRefund(0);
-      shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
+      const detail = concessionErrorMessage(
+        error,
+        'Could not approve this concession. Refresh and review the request.'
+      );
+      setActionError(detail);
+      shikshaMitraToast.error({ message: detail });
       await refetch();
     }
   };
@@ -154,6 +165,14 @@ export default function ReadOnlyConcessionApprovalView({
               <Alert severity="error">
                 The live fee balance or policy calculation has changed since submission. Refresh or
                 create a new request; approval cannot reduce the submitted amount.
+              </Alert>
+            )}
+            {benefitBlocker && <Alert severity="error">{benefitBlocker.message}</Alert>}
+            {actionError && <Alert severity="error">{actionError}</Alert>}
+            {previewTotal !== null && previewRefund > 0 && !autoCreateRefund && (
+              <Alert severity="warning">
+                A refund of {money(previewRefund)} requires a separate request. After approval,
+                create its linked refund requests manually.
               </Alert>
             )}
             {context.feeHeadGroups.map((group) => (
@@ -252,7 +271,7 @@ export default function ReadOnlyConcessionApprovalView({
             }
             variant="contained"
             size="small"
-            disabled={changed || isLoading}
+            disabled={changed || isLoading || isError || Boolean(benefitBlocker)}
             loading={isPreviewing || isApproving}
             onClick={handleAction}
           >

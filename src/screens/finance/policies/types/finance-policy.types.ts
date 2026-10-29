@@ -257,7 +257,6 @@ export interface IFinancePolicyTableProps {
   policyType: FinancePolicyKind;
   onAdd: () => void;
   onEdit: (row: IFinancePolicyRow) => void;
-  archived?: boolean;
 }
 
 // ─── Collection Policy ────────────────────────────────────────────────────────

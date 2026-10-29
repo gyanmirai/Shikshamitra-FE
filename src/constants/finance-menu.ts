@@ -464,7 +464,7 @@ const financeModule = {
           icon: menuIconView('mdi:bank-outline'),
           children: [
             {
-              title: 'Income',
+              title: 'Incomes',
               path: financePaths.incomeTracking,
               _action: 'income-tracking',
               permissionName: `${financePermissions.accounts.income}.View`,

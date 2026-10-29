@@ -172,7 +172,6 @@ export interface IPaymentTermTableProps {
   page: number;
   rowsPerPage: number;
   searchTerm: string;
-  archived: boolean;
   onPaginationChange: (page: number, pageSize: number) => void;
   onSearchChange: (search: string) => void;
   filters?: IParams['filters'];

@@ -3,12 +3,36 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Finance frontend clients
+
+## Bank account activity
+
+The bank-account list waits for the selected academic year before fetching.
+Its GET request has a 30-second timeout; failures use the shared table error
+and Retry action. Same-year refreshes retain the current rows with refresh
+progress instead of replacing the table with initial-loading skeletons.
+Activity selection uses the native History API for local URL state. Academic-year
+hydration does not navigate the route; an actual year change clears the selected
+account without reloading the page.
+
+`src/redux/finance/BankAccountManage/bankAccountActivityApi.ts` injects typed
+activity, deposit, movement-detail and complete-export operations into the
+existing Finance API. `BankAccountActivityDrawer.tsx` reads `currentData` only
+for the selected bank and academic year. Credit and Debit request incoming and
+outgoing activity respectively; cash credits remain in Credit. Each tab keeps
+independent search, column filters, sorting and pagination and shares the date
+period. Pending amounts and cash in transit remain separate from recorded credit.
+Exports send the selected direction's normalized query and
+visible column order to the server, rather than exporting the loaded page.
+Bank, income, expense, cash, collection, refund and reconciliation tags refresh
+the projection after owning mutations; returning to the drawer refetches it.
+The [backend Finance API](../../../Shikshamitra-BE/docs/modules/finance/api.md)
+owns permissions, monetary sources and historical-attribution limitations.
 
 `feeStructureWorkspace.ts` exposes `useGetStructureCopyPoliciesQuery` for the scoped
 `GET /fee-structures/{sourceId}/copy-policies` preflight. The copy form sends returned
@@ -99,7 +123,7 @@ Applying updates the local Formik rows and invoice rule together; the ordinary c
 
 Invoice creation is controlled once for the complete payment-term schedule. The editor synchronizes that choice to every installment's `demandEnabled` field, and manual or template-generated installments inherit the current choice.
 
-The Payment Terms workspace selects an Education Board at the top and sends its `boardId` when querying the paged current and archived master-record lists. Its Status column presents one user-facing lifecycle value only: `Draft`, `Active`, or `Archived`; version lifecycle fields remain internal to version history and assignment checks. Draft terms are activated from the row actions through `POST /finance/payment-terms/{paymentTermId}/versions/{versionId}/publish`, and the Status column has no toggle. Archiving moves a term to the Archived tab; restoring preserves the underlying version state, so the term returns to the Current tab as Draft or Active. Details come from `GET /finance/payment-terms/{paymentTermId}`; the audit-style history table lazily queries `GET /finance/payment-terms/{paymentTermId}/versions` when its drawer tab opens. The Default chip is shown in the Status column. Only an Active term can be selected as default, and create/update requests that select a new default atomically clear the previous default for the same board. Other boards retain their own defaults. Draft and Archived terms cannot retain the flag; there is no standalone set-default endpoint.
+The Payment Terms workspace selects an Education Board at the top and sends its `boardId` when querying one paged master-record list with `includeArchived: true` and no fixed status. Its Status column presents one user-facing lifecycle value only: `Draft`, `Active`, or `Archived`; version lifecycle fields remain internal to version history and assignment checks. Draft terms are activated from the row actions through `POST /finance/payment-terms/{paymentTermId}/versions/{versionId}/publish`, and the Status column has no toggle. Archived terms remain in the same table; restoring preserves the underlying version state, so their status becomes Draft or Active. Details come from `GET /finance/payment-terms/{paymentTermId}`; the audit-style history table lazily queries `GET /finance/payment-terms/{paymentTermId}/versions` when its drawer tab opens. The Default chip is shown in the Status column. Only an Active term can be selected as default, and create/update requests that select a new default atomically clear the previous default for the same board. Other boards retain their own defaults. Draft and Archived terms cannot retain the flag; there is no standalone set-default endpoint.
 
 The Concession Type settings client includes inactive records for administration and history, while the request form receives active types only for new requests. The row action menu loads audit-backed history from `GET /concession-types/{id}/versions`. Delete is shown only for inactive, unused records. Its document contract uses `maxFileSizeBytes`, `acceptedFormats`, and `isRequired`. New document rows use local defaults of 5 MB and PDF/JPG/JPEG/PNG, so opening the form does not make a defaults request. Supporting files use the concession-scoped multipart upload endpoint in `ConcessionManagement/concessionManagementApi.ts`, which returns an opaque uploader-owned staged URL. The UI renders the shared `UploadButton` and `DocumentPreviewDialog`; saved evidence preview uses the authenticated request-scoped download route and is gated by `ViewDocument`.
 
@@ -164,9 +188,9 @@ The implemented selectors, retired Account Heads route, lookup permissions, cach
 
 ## Cash Management client
 
-Cash Management uses `src/redux/finance/cashManagementApi.ts` for list/detail, action-owned options, approval, deposit dispatch and bank-credit confirmation. The existing register client adds the cash source and concurrency stamp to paid expenses. Collection and cash mutations invalidate the Cash Management and affected register tags. See [cash client and retry behavior](./references/cash-management.md).
+Cash Management uses `src/redux/finance/cashManagementApi.ts` for list/detail, action-owned options, approval, deposit dispatch and bank-credit confirmation. The register form reads year-wide cash options with operation `expense` to show pooled availability and block amounts above that balance; cash expense requests omit the source receipt, source concurrency stamp and payment reference. The backend allocates the expense against available cash. Collection and cash mutations invalidate the Cash Management and affected register tags. See [cash client and retry behavior](./references/cash-management.md).
 
-Cash expense forms request category options with routing operation `cash-expense`; other payment methods retain `expense-entry`. The cash category response contains no bank accounts and does not require Cash Management View or bank-settings access.
+Cash expense forms request category options with routing operation `cash-expense`; other payment methods retain `expense-entry` and the existing optional payment reference. The cash category response contains no bank accounts and does not require Cash Management View or bank-settings access.
 
 Expense cash options contain only positive pending balances. Approval submits `countedAmount` equal to the current `remainingAmount`, including zero; original `amount` and `spentAmount` remain display evidence. The unchanged approval endpoint finalizes the net bank deposit and Income, while legacy deposit/credit endpoints remain available through server capability flags.
 
@@ -174,7 +198,7 @@ Expense cash options contain only positive pending balances. Approval submits `c
 
 `src/redux/finance/accountsActivityApi.ts` owns direction/month/year/category/search/paging, selected-record details and manual creation.
 `src/redux/finance/financeRoutingApi.ts` adds income-entry and expense-entry operations with owning Add permissions.
-Manual requests include bankAccountId, payer/payee, paymentReference and a stable UUID idempotency key retained on retry.
+Manual requests include payer/payee and a stable UUID idempotency key retained on retry. Noncash requests include bankAccountId and the optional paymentReference; cash expense requests omit both bank routing and payment reference.
 Register list/detail queries subscribe to Income, Expense, Fee Collection and Fee Refund cache tags.
 Use [the workspace contract](./references/income-expense-workspaces.md) for UI behavior and backend ownership.
 
@@ -185,3 +209,8 @@ Reconciliation list queries for every payment method wait until `queryParams.aca
 The feeReceiptApi list/detail contract adds paymentMethodLabel and pdfFileName. ReceiptPreviewDialog displays the method and downloads the authenticated PDF blob using pdfFileName. Receipt kind enum values remain unchanged; display labels use Provisional Receipt / Official Receipt. The combined document label is supplied by the backend. Reconciliation approve/reject mutations invalidate receiptType.receipt. Tab counts still include cashOfficial in the API contract; the Reconciliation screen renders only non-cash tabs and falls back to Cheque for unsupported tab parameters.
 
 Reconciliation PDF downloads also use `/v1/fee-receipts/{id}/pdf`. The mutation returns `{ blob, fileName }`; `fileName` comes from the exposed Content-Disposition header (UTF-8 filename preferred). Approved rows select the linked official receipt ID, and their preview displays the official number.
+
+Collection PDF downloads use that same endpoint for both `feeReceiptId` and `chargeReceiptId`;
+receipt scope does not select a separate charge-receipts API. Each preview tracks its own
+loading/failure state and retries only the PDF GET. Collection, receipt and refresh errors are
+handled in their owning regions so a PDF failure cannot report the accepted payment as failed.

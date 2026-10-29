@@ -1,4 +1,5 @@
 import React from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
@@ -190,7 +191,9 @@ vi.mock('./CollectionLedgerTable', () => ({
   ),
 }));
 vi.mock('./FeeCollectionFormSkeleton', () => ({ default: () => <span>Loading fees</span> }));
-vi.mock('./UnifiedReceiptDisplay', () => ({ default: () => null }));
+vi.mock('src/components/preview-document/pdf-preview', () => ({
+  default: ({ title, url }: any) => <div role="document" aria-label={title} data-url={url} />,
+}));
 vi.mock('./preview/FeeCollectionPreviewDialog', () => ({
   default: ({ open, onConfirm, academicYear }: any) =>
     open ? (
@@ -879,6 +882,168 @@ describe('embedded Finance collection context', () => {
       })
     );
   });
+
+  it('keeps a collected charge successful when its PDF fails and retries only the receipt', async () => {
+    const chargeOutput = {
+      ...output,
+      studentId: 'student-one',
+      feeReceiptId: undefined,
+      chargeReceiptId: 'charge-receipt',
+      chargeReceiptNumber: 'CH-1',
+      paidCharges: [{ chargeId: 'charge-one', chargeName: 'Charge', amountPaid: 500 }],
+    };
+    mocks.defaultCollect.mockReturnValue({ unwrap: () => Promise.resolve(chargeOutput) });
+    let rejectPdf!: (error: unknown) => void;
+    const pendingPdf = new Promise<Blob>((_resolve, reject) => {
+      rejectPdf = reject;
+    });
+    mocks.defaultDownload.mockReturnValueOnce({ unwrap: () => pendingPdf }).mockReturnValue({
+      unwrap: () => Promise.resolve(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
+    });
+    render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
+    await beginCollection();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
+    await screen.findByRole('status', { name: 'Loading charge receipt' });
+    expect(screen.queryByText(/receipt preview is unavailable/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Amount to collect *')).toHaveValue('');
+    expect(screen.queryByText(/exceeds the payable amount/)).not.toBeInTheDocument();
+    await waitFor(() => expect(mocks.refetch).toHaveBeenCalled());
+    await act(async () => {
+      rejectPdf({ status: 404 });
+    });
+    await screen.findByText(
+      'Payment was collected, but the receipt could not be generated. Please retry or contact support.'
+    );
+    expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Retry payment' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry receipt' }));
+    await screen.findByRole('document', { name: 'Charge Receipt' });
+    expect(screen.getByRole('button', { name: 'Download' })).toBeEnabled();
+    expect(mocks.defaultCollect).toHaveBeenCalledTimes(1);
+    expect(mocks.defaultDownload).toHaveBeenCalledTimes(2);
+    expect(mocks.defaultDownload).toHaveBeenLastCalledWith({
+      receiptId: 'charge-receipt',
+      receiptType: 'charge',
+    });
+    expect(mocks.queries).toHaveBeenCalledWith(
+      expect.objectContaining({
+        currentQueryAndMutation: mocks.downloadMutation,
+        popupConfig: expect.objectContaining({ error: false }),
+      })
+    );
+  });
+
+  it('keeps both PDF URLs valid as separate fee and charge receipts finish loading', async () => {
+    let resolveCharge!: (blob: Blob) => void;
+    const pendingCharge = new Promise<Blob>((resolve) => {
+      resolveCharge = resolve;
+    });
+    const revoke = vi.spyOn(URL, 'revokeObjectURL');
+    const context = adapter({
+      canViewReceipts: true,
+      collect: vi.fn().mockResolvedValue({
+        ...output,
+        chargeReceiptId: 'charge-two',
+        chargeReceiptNumber: 'CH-2',
+        paidCharges: [{ chargeId: 'charge-one', chargeName: 'Charge', amountPaid: 500 }],
+      }),
+      downloadReceiptPdf: vi
+        .fn()
+        .mockImplementation((_id, scope) =>
+          scope === 'fee'
+            ? Promise.resolve(new Blob(['%PDF-fee'], { type: 'application/pdf' }))
+            : pendingCharge
+        ),
+    });
+    const view = render(
+      <FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />
+    );
+    try {
+      await beginCollection();
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
+      const feeUrl = (await screen.findByRole('document', { name: 'Fee Receipt' })).getAttribute(
+        'data-url'
+      );
+      expect(screen.getByRole('status', { name: 'Loading charge receipt' })).toBeInTheDocument();
+      await act(async () => {
+        resolveCharge(new Blob(['%PDF-charge'], { type: 'application/pdf' }));
+      });
+      const chargeUrl = (
+        await screen.findByRole('document', { name: 'Charge Receipt' })
+      ).getAttribute('data-url');
+      expect(feeUrl).toBeTruthy();
+      expect(chargeUrl).toBeTruthy();
+      expect(revoke).not.toHaveBeenCalledWith(feeUrl);
+      expect(revoke).not.toHaveBeenCalledWith(chargeUrl);
+      view.unmount();
+      expect(revoke).toHaveBeenCalledWith(feeUrl);
+      expect(revoke).toHaveBeenCalledWith(chargeUrl);
+    } finally {
+      revoke.mockRestore();
+    }
+  });
+
+  it('keeps receipt access when the post-collection summary refresh rejects', async () => {
+    const context = adapter({
+      canViewReceipts: true,
+      refetch: vi.fn().mockRejectedValue(new Error('Summary unavailable')),
+      downloadReceiptPdf: vi
+        .fn()
+        .mockResolvedValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
+    });
+    render(<FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />);
+    await beginCollection();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
+    await screen.findByRole('document', { name: 'Fee Receipt' });
+    await screen.findByText(/Fee details could not be refreshed/);
+    expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Retry payment' })).not.toBeInTheDocument();
+    expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+    expect(context.collect).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh fees' }));
+    expect(context.refetch).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(['failed', 'pending'] as const)(
+    'does not carry a previous applicant’s %s summary refresh into a new collection context',
+    async (state) => {
+      let rejectRefresh!: (error: unknown) => void;
+      const pendingRefresh = new Promise((_resolve, reject) => {
+        rejectRefresh = reject;
+      });
+      const context = adapter({ refetch: vi.fn().mockReturnValue(pendingRefresh) });
+      const view = render(
+        <FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />
+      );
+      await beginCollection();
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
+      await waitFor(() => expect(context.refetch).toHaveBeenCalledOnce());
+      if (state === 'failed') {
+        await act(async () => {
+          rejectRefresh(new Error('Previous applicant summary unavailable'));
+        });
+        await screen.findByText(/Fee details could not be refreshed/);
+      }
+      view.rerender(
+        <FeeCollectComponentForm
+          academicYear={academicYear}
+          collectionAdapter={adapter({ contextKey: 'application-two' })}
+        />
+      );
+      await waitFor(() => expect(screen.getByLabelText('Amount to collect *')).toHaveValue(''));
+      fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
+      fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '500' } });
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeEnabled()
+      );
+      if (state === 'pending')
+        await act(async () => {
+          rejectRefresh(new Error('Previous applicant summary unavailable'));
+        });
+      expect(screen.queryByText(/Fee details could not be refreshed/)).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeEnabled();
+    }
+  );
 
   it('clears the previous applicant draft when the collection context changes', async () => {
     const context = adapter();

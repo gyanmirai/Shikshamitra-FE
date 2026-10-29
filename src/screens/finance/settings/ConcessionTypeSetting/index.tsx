@@ -17,7 +17,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Card, Stack, Button, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -37,7 +37,6 @@ import ConcessionTypeVersionHistoryDrawer from './Components/ConcessionTypeVersi
 import type { IConcessionTypeForm } from './type';
 
 const ConcessionType = () => {
-  const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
   // State to track the currently selected concession type
   const [selectedConcessionType, setSelectedConcessionType] = useState<IConcessionTypeForm | null>(
     null
@@ -77,19 +76,8 @@ const ConcessionType = () => {
     maxResultCount: queryParams.pageSize,
     searchTerm: queryParams.search || undefined,
     filters: serializeFinanceTableFilters(filters),
-    includeInactive: archiveView === 'archived',
-    isActive: archiveView === 'current',
+    includeInactive: true,
   };
-  const { data: archivedSummary } = useGetConcessionTypesQuery(
-    {
-      academicYearId,
-      skipCount: 0,
-      maxResultCount: 1,
-      includeInactive: true,
-      isActive: false,
-    },
-    { skip: !academicYearId }
-  );
 
   // Fetch concession type data
   const {
@@ -143,7 +131,7 @@ const ConcessionType = () => {
           { name: 'Concession Type' },
         ]}
         action={
-          canAdd && archiveView === 'current' ? (
+          canAdd ? (
             <Button
               onClick={() => {
                 setSelectedConcessionType(null);
@@ -160,32 +148,6 @@ const ConcessionType = () => {
           ) : undefined
         }
       />
-      <Card sx={{ p: 1, mb: 1, flexShrink: 0 }}>
-        <Stack direction="row" spacing={1}>
-          <Button
-            size="small"
-            variant={archiveView === 'current' ? 'contained' : 'outlined'}
-            onClick={() => {
-              setQueryParams((current) => ({ ...current, page: 1 }));
-              setFilters((current) => current.filter((filter) => filter.column !== 'isActive'));
-              setArchiveView('current');
-            }}
-          >
-            Current
-          </Button>
-          <Button
-            size="small"
-            variant={archiveView === 'archived' ? 'contained' : 'outlined'}
-            onClick={() => {
-              setQueryParams((current) => ({ ...current, page: 1 }));
-              setFilters((current) => current.filter((filter) => filter.column !== 'isActive'));
-              setArchiveView('archived');
-            }}
-          >
-            Archived ({archivedSummary?.data?.totalCount ?? 0})
-          </Button>
-        </Stack>
-      </Card>
       <>
         {/* Form card for creating/editing concession types */}
 
@@ -229,7 +191,6 @@ const ConcessionType = () => {
             setFilters(next);
             setQueryParams((current) => ({ ...current, page: 1 }));
           }}
-          archived={archiveView === 'archived'}
           canView={canView}
           canAdd={canAdd}
           canEdit={canEdit}

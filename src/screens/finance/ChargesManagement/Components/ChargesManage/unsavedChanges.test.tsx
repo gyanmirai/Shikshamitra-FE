@@ -16,7 +16,10 @@ vi.mock('src/redux/finance/ChargeManagement/chargeApi', () => ({
   useDeleteChargeMutation: vi.fn(),
   useVoidChargeMutation: vi.fn(),
 }));
-vi.mock('src/components/customDialog', () => ({ default: () => null }));
+vi.mock('src/components/customDialog', () => ({
+  default: () => null,
+  DialogScrollContent: ({ children }: any) => <div>{children}</div>,
+}));
 vi.mock('src/components/custom-tooltip', () => ({ default: () => null }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/custom-breadcrumbs', () => ({

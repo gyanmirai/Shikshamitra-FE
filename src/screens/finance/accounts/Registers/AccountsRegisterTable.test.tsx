@@ -12,6 +12,13 @@ const state = vi.hoisted(() => ({
   error: false,
   canAdd: true,
   refetch: vi.fn(),
+  url: '',
+  push: vi.fn(),
+  form: {} as any,
+}));
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(state.url),
+  useRouter: () => ({ push: state.push }),
 }));
 vi.mock('react-redux', () => ({
   useSelector: (selector: any) =>
@@ -32,7 +39,18 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ action }: any) => <>{action}</>,
 }));
-vi.mock('./ManualEntryForm', () => ({ default: () => null }));
+vi.mock('./ManualEntryForm', () => ({
+  default: (props: any) => {
+    state.form = props;
+    return (
+      <div role="dialog">
+        <button type="button" onClick={props.onClose}>
+          Close entry
+        </button>
+      </div>
+    );
+  },
+}));
 vi.mock('./AccountEntryDetails', () => ({
   default: ({ row }: any) => <div>Details for {row.reference}</div>,
 }));
@@ -143,6 +161,56 @@ describe('Accounts register table', () => {
     state.income = false;
     state.canAdd = true;
     state.refetch.mockClear();
+    state.url = '';
+    state.push.mockClear();
+  });
+
+  it('opens the existing entry flow for a bank and returns to the preserved dialog', () => {
+    const returnTo = '/finance/settings/bank-account-management?bankActivity=bank-1';
+    state.url = new URLSearchParams({
+      action: 'add',
+      bankAccountId: 'bank-1',
+      academicYearId: 'year',
+      returnTo,
+    }).toString();
+    render(<AccountsRegister direction="income" />);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(state.form.initialBankAccountId).toBe('bank-1');
+    fireEvent.click(screen.getByRole('button', { name: 'Close entry' }));
+    expect(state.push).toHaveBeenCalledWith(returnTo);
+  });
+
+  it('does not open the bank entry when the selected year differs or Add is denied', () => {
+    const returnTo = '/finance/settings/bank-account-management?bankActivity=bank-1';
+    state.url = new URLSearchParams({
+      action: 'add',
+      bankAccountId: 'bank-1',
+      academicYearId: 'other-year',
+      returnTo,
+    }).toString();
+    const view = render(<AccountsRegister direction="income" />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    state.url = new URLSearchParams({
+      action: 'add',
+      bankAccountId: 'bank-1',
+      academicYearId: 'year',
+      returnTo,
+    }).toString();
+    state.canAdd = false;
+    view.rerender(<AccountsRegister direction="income" />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('searches every academic month when opening a historical bank source reference', () => {
+    state.url = new URLSearchParams({
+      search: 'FEE-APRIL-001',
+      academicYearId: 'year',
+      returnTo: '/finance/settings/bank-account-management?bankActivity=bank-1',
+    }).toString();
+    render(<AccountsRegister direction="income" />);
+    expect(state.params.search).toBe('FEE-APRIL-001');
+    expect(state.params.month).toBeUndefined();
+    expect(state.params.year).toBeUndefined();
   });
 
   it.each(['expense', 'income'] as const)(

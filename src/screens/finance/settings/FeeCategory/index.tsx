@@ -11,10 +11,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Card, Stack, Button, DialogActions } from '@mui/material';
+import { Box, Button, DialogActions } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 
 import FeeCategoryForm from './Components/FeeCategoryForm';
 import FeeCategoryView from './Components/FeeCategoryView';
@@ -23,26 +22,14 @@ import FeeCategoryTable from './Components/FeeCategoryTable';
 import type { IFeeCategory } from './Components/type';
 
 const FeeCategoryCreation = () => {
-  const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
   // Dialog control states
   const addFeeCategoryDialog = useBoolean(); // Controls add/edit fee category dialog
   const viewFeeCategoryDialog = useBoolean(); // Controls view details dialog
 
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canAdd = hasGrantedPermission(
     permissions,
     financePermissions.fees.settings.feeCategoryActions.add
-  );
-  const academicYearId = currentYear?.id ?? '';
-  const { data: archivedSummary } = useGetFeeCategoriesQuery(
-    {
-      academicYearId,
-      page: 1,
-      pageSize: 1,
-      isActive: false,
-    },
-    { skip: !academicYearId }
   );
 
   // State to store currently selected fee category for edit/delete/view operations
@@ -77,7 +64,7 @@ const FeeCategoryCreation = () => {
           { name: 'Fee Category' },
         ]}
         action={
-          canAdd && archiveView === 'current' ? (
+          canAdd ? (
             <Button
               onClick={() => {
                 setSelectedFeeCategory(null);
@@ -95,29 +82,8 @@ const FeeCategoryCreation = () => {
         }
       />
 
-      <Card sx={{ p: 1, mb: 1, flexShrink: 0 }}>
-        <Stack direction="row" spacing={1}>
-          <Button
-            size="small"
-            variant={archiveView === 'current' ? 'contained' : 'outlined'}
-            onClick={() => setArchiveView('current')}
-          >
-            Current
-          </Button>
-          <Button
-            size="small"
-            variant={archiveView === 'archived' ? 'contained' : 'outlined'}
-            onClick={() => setArchiveView('archived')}
-          >
-            Archived ({archivedSummary?.totalCount ?? 0})
-          </Button>
-        </Stack>
-      </Card>
-
       <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
         <FeeCategoryTable
-          key={archiveView}
-          archived={archiveView === 'archived'}
           onAddFeeCategory={addFeeCategoryDialog}
           setEditData={setSelectedFeeCategory}
           onView={(data) => {

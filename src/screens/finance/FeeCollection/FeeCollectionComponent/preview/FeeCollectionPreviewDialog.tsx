@@ -1,27 +1,25 @@
 'use client';
 
+import type { IData, IColumn } from 'src/components/customizabaleTable/types';
+
+import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { LoadingButton } from 'src/components/loading-button';
-import { Box, Card, Stack, Button, Typography } from '@mui/material';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailField, DetailSection } from 'src/components/detail-view';
+import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
-import StudentInfoPreviewCard from './StudentInfoPreviewCard';
-import PaymentInfoPreview from './PaymentInfoPreview';
-import AllocationPreviewTable from './AllocationPreviewTable';
+import { collectionPaymentDetails } from '../collectionPaymentDetails';
 import { allocatePayment, selectedChargesInOrder } from './paymentAllocationUtils';
 
 import type { IFeeCharge, IStudentFee, FeeCollectionFormValues } from '../../Components/type';
 
-// ─── Re-export types so consumers can import from one place ───────────────────
 export type { AllocatedRow, AllocatedFeeRow, AllocatedChargeRow } from './paymentAllocationUtils';
-
-// ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface FeeCollectionPreviewDialogProps {
   open: boolean;
@@ -38,139 +36,6 @@ export interface FeeCollectionPreviewDialogProps {
   bankAccounts?: { id: string; name: string }[];
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const parsePaidAmount = (raw: string | number): number => {
-  const n = Number(String(raw || 0).replace(/[₹,\s]/g, ''));
-  return Number.isNaN(n) ? 0 : n;
-};
-
-// ─── Hero Payment Section ─────────────────────────────────────────────────────
-
-interface HeroSectionProps {
-  paidAmount: number;
-  paymentMethod?: string;
-  selectedItems: { period?: string; feeHeadId?: string }[];
-}
-
-const HeroSection = ({ paidAmount, paymentMethod, selectedItems }: HeroSectionProps) => {
-  const theme = useTheme();
-
-  // derive unique months for subtitle
-  const uniquePeriods = useMemo(() => {
-    const seen = new Set<string>();
-    return selectedItems.reduce<string[]>((acc, item) => {
-      if (item.period && !seen.has(item.period)) {
-        seen.add(item.period);
-        acc.push(item.period);
-      }
-      return acc;
-    }, []);
-  }, [selectedItems]);
-
-  const feeHeadCount = new Set(selectedItems.map((item) => item.feeHeadId).filter(Boolean)).size;
-
-  return (
-    <Card
-      sx={{
-        p: 1,
-        borderRadius: 1.5,
-        textAlign: 'center',
-        boxShadow: 'var(--shadows-4)',
-      }}
-    >
-      {/* Label */}
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        fontWeight={600}
-        sx={{
-          textTransform: 'uppercase',
-          letterSpacing: '1px',
-          fontSize: '10px',
-          display: 'block',
-          mb: 1,
-        }}
-      >
-        Collecting Today
-      </Typography>
-
-      {/* Hero Amount */}
-      <Typography
-        variant="h3"
-        fontWeight={800}
-        sx={{
-          fontSize: { xs: '2.4rem', sm: '3rem' },
-          lineHeight: 1.1,
-          letterSpacing: '-0.5px',
-          fontVariantNumeric: 'tabular-nums',
-          mb: 1.5,
-        }}
-      >
-        ₹{formatNumber(paidAmount)}
-      </Typography>
-
-      {/* Divider */}
-      <Box
-        sx={{
-          height: '1px',
-          maxWidth: 200,
-          mx: 'auto',
-          mb: 1.5,
-        }}
-      />
-
-      {/* Metadata */}
-      <Stack
-        direction="row"
-        justifyContent="center"
-        alignItems="center"
-        spacing={1.5}
-        flexWrap="wrap"
-      >
-        {paymentMethod && (
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <Iconify icon="solar:card-bold" width={13} />
-            <Typography variant="caption" fontWeight={600}>
-              via {paymentMethod}
-            </Typography>
-          </Stack>
-        )}
-
-        {feeHeadCount > 0 && (
-          <>
-            <Box
-              sx={{
-                width: 3,
-                height: 3,
-                borderRadius: '50%',
-                bgcolor: alpha(theme.palette.primary.main, 0.3),
-              }}
-            />
-            <Stack direction="row" alignItems="center" spacing={0.5}>
-              <Iconify icon="solar:bill-list-bold" width={13} />
-              <Typography variant="caption" fontWeight={600}>
-                {feeHeadCount} fee {feeHeadCount === 1 ? 'head' : 'heads'}
-              </Typography>
-            </Stack>
-          </>
-        )}
-
-        {uniquePeriods.length > 0 && (
-          <>
-            <Box sx={{ width: 3, height: 3, borderRadius: '50%' }} />
-            <Typography variant="caption" fontWeight={600}>
-              {uniquePeriods.length === 1 ? uniquePeriods[0] : `${uniquePeriods.length} months`}
-            </Typography>
-          </>
-        )}
-      </Stack>
-    </Card>
-  );
-};
-
-// ─── Component ────────────────────────────────────────────────────────────────
-
 const FeeCollectionPreviewDialog = ({
   open,
   onClose,
@@ -180,118 +45,228 @@ const FeeCollectionPreviewDialog = ({
   student,
   chargesData,
   feeHeadMap,
-  preserveAllocationOrder,
   academicYear,
   feeStructureName,
   bankAccounts,
 }: FeeCollectionPreviewDialogProps) => {
-  // ── Derived values ─────────────────────────────────────────────────────────
-  const paidAmount = useMemo(
-    () => parsePaidAmount(formValues.payment.amount),
-    [formValues.payment.amount]
-  );
+  const paidAmount = useMemo(() => {
+    const amount = Number(String(formValues.payment.amount || 0).replace(/[₹,\s]/g, ''));
+    return Number.isNaN(amount) ? 0 : amount;
+  }, [formValues.payment.amount]);
 
-  const selectedCharges = useMemo(
-    () => selectedChargesInOrder(chargesData, formValues.charges),
-    [chargesData, formValues.charges]
+  const { allocatedRows, unallocatedAmount } = useMemo(
+    () =>
+      allocatePayment(
+        formValues.selectedItems,
+        selectedChargesInOrder(chargesData, formValues.charges),
+        feeHeadMap,
+        paidAmount
+      ),
+    [formValues.selectedItems, formValues.charges, chargesData, feeHeadMap, paidAmount]
   );
+  // Retain collection order, including unfunded selections and additional charges.
+  const rows = allocatedRows.map((row) => ({
+    ...row,
+    id: `${row.type}:${row.key}`,
+    name: row.type === 'fee' ? row.feeHeadName : row.chargeName,
+    context:
+      row.type === 'fee'
+        ? [row.installmentLabel, row.period].filter(Boolean).join(' · ')
+        : row.sourceType === 'LateFee'
+          ? 'Late fee'
+          : 'Additional charge',
+  }));
+  const columns: IColumn[] = [
+    {
+      id: 'name',
+      label: 'Fee head',
+      rowHeader: true,
+      minWidth: 180,
+      render: (value: string, row: IData) => (
+        <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+          <Typography variant="body2">{value}</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {row.context}
+          </Typography>
+        </Box>
+      ),
+    },
+    ...(['originalAmount', 'paidAmount', 'remainingAmount'] as const).map((id, index) => ({
+      id,
+      label: ['Original', 'To collect', 'Balance after'][index],
+      align: 'right' as const,
+      minWidth: 100,
+      render: (value: number) => formatNumber(value, 'INR'),
+      cellSx: { fontVariantNumeric: 'tabular-nums' },
+    })),
+  ].map((column) => ({ ...column, isSort: false, isFilter: false }));
+  const periods = [...new Set(formValues.selectedItems.map((item) => item.period).filter(Boolean))];
+  const periodLabel =
+    periods.length === 1
+      ? dayjs(`${periods[0]}-01`).format('MMMM YYYY')
+      : periods.length > 1
+        ? `${periods.length} months`
+        : 'Selected Charges';
+  const details = Object.entries(
+    collectionPaymentDetails(formValues.payment.paymentMethod, formValues.payment.details ?? {})
+  ).filter(([, value]) => Boolean(value));
+  const formatDetail = (key: string, value: unknown) => {
+    if (key === 'bankAccount') return bankAccounts?.find((bank) => bank.id === value)?.name || '—';
+    if (dayjs.isDayjs(value)) return value.format('DD/MM/YYYY');
+    if (
+      typeof value === 'string' &&
+      (/^\d{4}-\d{2}-\d{2}/.test(value) || key.toLowerCase().includes('date'))
+    ) {
+      const date = dayjs(value);
+      if (date.isValid()) return date.format('DD/MM/YYYY');
+    }
+    return String(value);
+  };
 
-  // ── Allocation (pure, memoised) ────────────────────────────────────────────
-  const { allocatedRows } = useMemo(
-    () => allocatePayment(formValues.selectedItems, selectedCharges, feeHeadMap, paidAmount),
-    [formValues.selectedItems, selectedCharges, feeHeadMap, paidAmount]
-  );
-
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <CustomDialog
       open={open}
       handleClose={onClose}
+      disableClose={loading}
+      guardUnsavedChanges={false}
       maxWidth="md"
       hasForm={false}
-      title={
-        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-          <Typography variant="h5">Payment Details</Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            sx={{ textAlign: 'justify' }}
-            title="You can update the payment details including amount and method."
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
-        </Box>
-      }
+      title="Review Payment"
+      titleInfo="Review the student, payment evidence, and allocation before continuing to confirm collection."
     >
-      <Scrollbar sx={{ maxHeight: 'calc(100dvh - 220px)', px: 2.5, pt: 1, pb: 0.5 }}>
+      <DialogScrollContent>
         <Stack spacing={2}>
-          {/* ── Hero Payment Section ── */}
-          <HeroSection
-            paidAmount={paidAmount}
-            paymentMethod={formValues.payment.paymentMethod}
-            selectedItems={formValues.selectedItems}
-          />
-
-          {/* ── Student Info ── */}
-          <StudentInfoPreviewCard
-            student={student}
-            academicYear={academicYear}
-            feeStructureName={feeStructureName}
-          />
-
-          <PaymentInfoPreview
-            payment={formValues.payment}
-            remarks={formValues.remarks}
-            bankAccounts={bankAccounts}
-          />
-
-          {/* ── Allocation Breakdown ── */}
-          <AllocationPreviewTable
-            allocatedRows={allocatedRows}
-            preserveOrder={preserveAllocationOrder}
-          />
+          <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+            <Typography variant="subtitle1">
+              {student?.name || formValues.studentName || 'Student'}
+            </Typography>
+            <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap">
+              <Typography variant="body2" color="text.secondary">
+                Admission {student?.grNumber || student?.rollNumber || '—'}
+              </Typography>
+              {student?.className && (
+                <Typography variant="body2" color="text.secondary">
+                  {[student.className, student.division ? `Div ${student.division}` : '']
+                    .filter(Boolean)
+                    .join(' · ')}
+                </Typography>
+              )}
+              {academicYear && (
+                <Typography variant="body2" color="text.secondary">
+                  AY {academicYear}
+                </Typography>
+              )}
+              {feeStructureName && (
+                <Typography variant="body2" color="text.secondary">
+                  {feeStructureName}
+                </Typography>
+              )}
+            </Stack>
+          </Box>
+          <FormSectionCard
+            title={periodLabel}
+            icon={GlobalIcons.receiptIcon}
+            iconSize={16}
+            iconContainerSize={28}
+            descriptionTooltip="Amounts allocated to selected fee installments and charges in collection order. Balance after shows the amount still due after this allocation."
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+            sx={{ pt: { xs: 1, sm: 1 }, boxShadow: 'none' }}
+            action={
+              <Box sx={{ textAlign: 'right', overflowWrap: 'anywhere' }}>
+                <Typography variant="body2" color="text.secondary">
+                  To collect
+                </Typography>
+                <Typography variant="h4" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {formatNumber(paidAmount, 'INR')}
+                </Typography>
+              </Box>
+            }
+          >
+            <CustomizableTable
+              tableId="collection-payment-review-compact"
+              tableTitle="Payment allocation"
+              variant="embedded"
+              columns={columns}
+              data={rows}
+              showToolbar={false}
+              isPagination={false}
+              isSearch={false}
+              isFilter={false}
+              isShowedDense={false}
+              tableContainerProps={{ sx: { height: 'auto' } }}
+            />
+          </FormSectionCard>
+          {(details.length > 0 || formValues.remarks) && (
+            <DetailSection
+              title="Payment Details"
+              icon={GlobalIcons.documentIcon}
+              helpText="Payment evidence and remarks entered for this collection."
+            >
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: 'minmax(0, 1fr)',
+                    sm: 'repeat(2, minmax(0, 1fr))',
+                    md: 'repeat(4, minmax(0, 1fr))',
+                  },
+                  gap: 2,
+                }}
+              >
+                {details.map(([key, value]) => (
+                  <DetailField
+                    key={key}
+                    label={key
+                      .replace(/([A-Z])/g, ' $1')
+                      .replace(/^./, (letter) => letter.toUpperCase())}
+                    value={formatDetail(key, value)}
+                  />
+                ))}
+                {formValues.remarks && (
+                  <DetailField label="Remarks" value={formValues.remarks} fullWidth />
+                )}
+              </Box>
+            </DetailSection>
+          )}
         </Stack>
-      </Scrollbar>
-
-      {/* ── Sticky Footer ── */}
-      <Box
-        sx={{
-          px: 2.5,
-          py: 1.75,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          gap: 2,
-          // bgcolor: alpha(theme.palette.background.paper, 0.95),
-          backdropFilter: 'blur(8px)',
-        }}
-      >
-        <Box display="flex" gap={1} flexShrink={0}>
-          <Button
-            variant="outlined"
-            color="inherit"
-            disabled={loading}
-            onClick={onClose}
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            size="small"
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2, flexShrink: 0, flexWrap: 'wrap', rowGap: 1 }}>
+        {unallocatedAmount > 0 && (
+          <Typography
+            variant="body2"
+            color="warning.main"
+            sx={{ mr: 'auto', width: { xs: '100%', sm: 'auto' } }}
           >
-            Cancel
-          </Button>
-
-          <LoadingButton
-            variant="contained"
-            loading={loading}
-            loadingPosition="start"
-            onClick={onConfirm}
-            startIcon={<Iconify icon="solar:check-circle-bold" />}
-            size="small"
-          >
-            Confirm &amp; Collect Fee
-          </LoadingButton>
-        </Box>
-      </Box>
+            {formatNumber(unallocatedAmount, 'INR')} unallocated
+          </Typography>
+        )}
+        <Button
+          type="button"
+          variant="outlined"
+          color="inherit"
+          disabled={loading}
+          onClick={onClose}
+          startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+          size="small"
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          type="button"
+          variant="contained"
+          color="inherit"
+          loading={loading}
+          disabled={loading}
+          loadingPosition="start"
+          onClick={() => {
+            if (!loading) onConfirm();
+          }}
+          startIcon={<Iconify icon={GlobalIcons.receiptIcon} width={18} />}
+          size="small"
+        >
+          Collect {formatNumber(paidAmount, 'INR')}
+        </LoadingButton>
+      </DialogActions>
     </CustomDialog>
   );
 };

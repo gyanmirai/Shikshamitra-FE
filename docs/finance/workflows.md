@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-24
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,11 +17,33 @@ Existing backend operations that share one permission identifier remain one capa
 
 # Trace Finance frontend workflows
 
+## Review a bank account's activity
+
+Open a bank-name link or its row in Bank Accounts. The read-only right drawer
+contains exactly Credit and Debit tabs, with masked identity, academic-year
+context, header/section help and a fixed Close footer. Each tab uses the shared
+server table with column filters, search, sorting, columns, pagination, density,
+fullscreen and complete Excel/PDF export. Credit includes incoming activity and
+cash credits; pending amounts and cash in transit are separate columns. Debit
+shows outgoing activity. Each movement opens its authorized evidence; provisional payments
+remain in that evidence view until they belong in a confirmed register.
+
+Add income, Add expense and Deposit cash open the existing owning flows with
+validated bank/year context. Noncash forms preselect the bank; changing to Cash
+clears it. Deposit cash retains the existing year-wide amount preview. Closing
+or completing an entry returns to the preserved bank drawer, list criteria,
+selected panel and panel criteria. Source-register links search all academic
+months for the reference. The return target is restricted to the bank workspace.
+Academic-year changes immediately hide the previous year's activity; errors
+show the shared table Retry state. The drawer uses full width on narrow screens;
+the table owns record scrolling while its header, controls and footer remain usable.
+
 ## Required fee setup selections and names
 
-Fee-head Income Category choices contain real categories only; the required selector has no
-None option. Empty/loading states do not supply an empty-ID choice, and missing selection still
-blocks submission with the existing field validation.
+Only Fee Category's fee-head Income Category dropdown and Refund Policy's Expense Category
+dropdown offer None, always first. Their routing APIs return its persisted category ID; general
+category lists and other routing lookups exclude it. None stays selected after blur and passes
+required validation. An unselected field remains required. The frontend does not invent an empty-ID None.
 
 Payment Terms trim names before validation, generated-code derivation and submission. Duplicate
 comparison normalizes whitespace and case within the backend's tenant/academic-year scope.
@@ -153,7 +175,7 @@ use the shared searchable CustomSelect with required markers and touch/submissio
 ShakingTextField validation. Shared section headings use subtitle1/600, Title Case, neutral icons,
 help controls and 16 px spacing. FormBusyRegion locks the fields and header navigation while
 saving; Cancel is disabled during that operation and draft saving stays locked through validation
-and the latest-draft refresh. Editable installment rows show original, paid and
+and command completion. Editable installment rows show original, paid and
 eligible amounts beside compact concession inputs. Request-entered installment values retain raw
 decimal text while editing and convert to numbers at the existing command boundary. Policy-fixed
 values remain read-only. The review keeps eligible fees, concession reduction and net payable in
@@ -172,6 +194,13 @@ same explicitly entered installments, including when sibling installments have b
 Submit failures prefer the actionable server detail over the generic problem title and retain
 the form values. Current-source `Finance:Concession:010020` means the preview's inputs or live
 balances changed; it is not a maximum-concession violation.
+Draft updates send the concurrency stamp paired with the reviewed editor values rather than
+silently fetching a newer stamp before saving.
+Submitting an updated draft uses the update response stamp, including after a failed submission.
+Background detail refreshes do not replace an open editor's values or stamp.
+Concession errors preserve specific server reasons and otherwise explain known state, eligibility,
+policy-version and concurrency codes; support references include the API trace ID when supplied.
+Unknown codes remain visible with the fallback message instead of being assigned an assumed cause.
 
 Fee-head eligible totals and installment counts remain visible beside their selection controls;
 the detail panel shows one fee's installment breakdown at a time. Fixed request-entered
@@ -192,7 +221,7 @@ through provisional receipts, reconciliation month filtering and final receipts.
 
 Payment Terms display usage across all versions with a class, Fee Structure, Fee Head and version breakdown. Create, Edit and Duplicate show the current-to-new default and current-default usage when Default is on; saving a replacement requires Confirm/Cancel. The server impact is refreshed before confirmation. Existing structure assignments retain their saved versions. Archived Fee Category mapped-head status switches are disabled with a restore-category explanation.
 
-The Fee Category table applies category name and description text filters, fee-head-count numeric filters, status options, and single-column sorting on the server before pagination. Current and Archived tabs set the status scope; the Status filter offers Active and Archived within that scope. Clicking a category row, or pressing Enter or Space on a focused row, opens its detail view; View is not an Actions-column item. The fee-head drawer loads the full category detail, so its search, filters, and sorting cover every mapped head even if the parent table page changes. Its status switch sits in the Actions column and is disabled while the category is archived.
+The Fee Category table applies category name and description text filters, fee-head-count numeric filters, status options, and single-column sorting on the server before pagination. Active and Archived categories appear together by default; the Status column can optionally filter either state. Clicking a category row, or pressing Enter or Space on a focused row, opens its detail view; View is not an Actions-column item. The fee-head drawer loads the full category detail, so its search, filters, and sorting cover every mapped head even if the parent table page changes. Its status switch sits in the Actions column and is disabled while the category is archived.
 Export retrieves every page matching the current query and visible column order; cancellation or incomplete results do not produce a partial file.
 Category details keep one income-category value per fee head, labeled concession badges, wrapping text, and responsive cards inside the shared scrollable dialog.
 
@@ -236,7 +265,7 @@ start-of-day/end-of-day timestamps; an empty end is sent as `null`.
 
 ## Cash Management
 
-Cash collections generate their official receipt immediately. Existing Add Expense selects a pending cash source and actual payment time; the paid expense immediately reduces pending cash. The single [Cash Management workspace](./references/cash-management.md) shows collected, expenses paid, and remaining to deposit. Approval selects the receiving bank and finalizes only the remaining deposit as Income, leaving held cash zero. A fully spent receipt accepts counted amount zero. Administrators may approve their own collection when the server permits it; other collectors require a different reviewer. Legacy approved-held/transit records retain their server-authorized deposit and credit actions. Definitive stale-state responses refresh the latest balance without replacing the draft; uncertain responses retain the exact original request for retry.
+Cash collections generate their official receipt immediately. Add Expense records the actual payment time and uses the academic year's pooled available cash automatically, without a receipt selector or cash payment reference. The form shows available cash and blocks amounts above it; the server validates and allocates the payment. The single [Cash Management workspace](./references/cash-management.md) shows academic-year collected, spent, deposited and available cash. Board, Medium, Month, search and column filters affect table records only. Deposit cash opens one bank-selection dialog for the entire available academic-year balance, with optional notes and supporting document; it records the deposit directly without manual approval or individual receipt selection. Details retain original collection, expense and deposit evidence. Existing legacy transit alone retains its authorized bank-credit confirmation. Definitive stale-state responses refresh the latest balance without replacing the draft; uncertain responses retain the exact original request for retry.
 
 ## Accounts source activity
 
@@ -544,7 +573,8 @@ actions. General information pairs name/status and description/default controls.
 Drawer and section guidance is available through accessible information tooltips.
 Status uses the shared dropdown with option help; late-fee selectors have associated
 labels and consistent sentence-case field names.
-Late-fee and online-collection switches support keyboard interaction. The selected
+The collection policy table omits Online Pay, and the create/edit form has no online-payment toggle.
+The late-fee switch supports keyboard interaction. The selected
 status still determines whether submission saves a draft or activates the policy.
 Saving locks the form, close, and footer actions with a visible progress overlay;
 unsaved changes retain the discard confirmation. The configuration form omits the
@@ -581,10 +611,16 @@ comparison. Accessible info icons explain read-only history, the Latest badge,
 recorded change reasons, and Before/After values. The selected version remains
 visible when a search returns no matches, and clearing search restores the list.
 
+### Combined Finance configuration tables
+
+Fee Category, Charge Category, Concession Type, Payment Terms, Collection Policy, Concession Policy, Refund Policy and Proration Policy show all lifecycle statuses in one table without Current/Archived tabs.
+Creation stays permission-controlled in the page header; Archive/Restore and edit/delete availability follow each row’s status and existing dependency rules.
+Fee and charge categories omit the fixed `isActive` query; concession types use `includeInactive: true`; payment terms and policy tables use `includeArchived: true`.
+Pagination, search, status filters and Fee Category exports use the same combined query.
+
 ### Concession Policy workspace
 
-The Current policies and Archived tabs share a full-height table with server search and status
-filtering. Values use the same concession labels in the table, form fields and detail view;
+Each policy workspace opens directly to one full-height table containing Draft, Active and Archived policies, with server search and optional status filtering. Values use the same concession labels in the table, form fields and detail view;
 missing or invalid dates display `—`, and amounts use the shared Indian currency formatter.
 Create/edit, details, audit and version drawers share a header and stable footer. The form body
 owns scrolling, stacks fields on narrow screens and locks interaction while saving. Section
@@ -693,6 +729,14 @@ name field, preserve entered data, and use one error notification path. Payment 
 unique within the academic year; changing Board alone does not resolve a code conflict.
 
 ## Provisional and official receipt workflow
+
+After collection succeeds, the payment draft, selected rows and allocation errors are cleared,
+and collection details are refreshed independently of PDF retrieval. Each generated receipt
+shows loading progress until its PDF arrives. If retrieval fails, the receipt shows
+“Payment was collected, but the receipt could not be generated. Please retry or contact support.”
+with **Retry receipt**. Retry downloads the existing receipt; it never repeats collection.
+A summary refresh failure preserves receipt access and blocks new collection until **Refresh fees**
+succeeds. Completing the receipt dialog returns to the refreshed collection list.
 
 1. In Fee Collection, cash offers one action to collect and issue an Official Receipt. All non-cash methods offer one action to record and issue a Provisional Receipt.
 2. Receipts lists fee, charge, and combined document types using the server label. Payment method and verification/link status are visible. The Official Receipt (Charge) option is included in the receipt-type filter.

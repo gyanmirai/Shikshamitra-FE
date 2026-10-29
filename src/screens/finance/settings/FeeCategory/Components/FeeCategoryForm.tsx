@@ -122,18 +122,23 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
   });
 
   const incomeCategoryOptions = useMemo(
-    () => [
-      ...(incomeCategoryData?.items ?? []).map((category: any) => {
-        const displayName = String(category.name ?? '');
-        const match = displayName.match(/^(.*?)\s*\[([^\]]+)\]$/);
-        return {
-          id: category.id,
-          displayName,
-          name: match?.[1]?.trim() || displayName,
-          code: match?.[2] || '',
-        };
-      }),
-    ],
+    () =>
+      (incomeCategoryData?.items ?? [])
+        .map((category: any) => {
+          const displayName = String(category.name ?? '');
+          const match = displayName.match(/^(.*?)\s*\[([^\]]+)\]$/);
+          return {
+            id: category.id,
+            displayName,
+            name: match?.[1]?.trim() || displayName,
+            code: match?.[2] || '',
+          };
+        })
+        .sort(
+          (a: { name: string }, b: { name: string }) =>
+            Number(b.name.trim().toLowerCase() === 'none') -
+            Number(a.name.trim().toLowerCase() === 'none')
+        ),
     [incomeCategoryData]
   );
 
@@ -651,6 +656,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                           );
                                           formik.setFieldTouched(
                                             `feeHeads.${idx}.incomeCategoryId`,
+                                            true,
                                             false
                                           );
                                         }}

@@ -3,7 +3,7 @@ module: finance
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -18,6 +18,9 @@ Active Fee Structure editor, typed client and browser checks: [workspace impleme
 The single Accounts cash workspace, expense source picker and deposit actions: [Cash Management](./references/cash-management.md).
 
 Variable structure pricing and manual student entry: [variable fee assignment](./references/variable-fee-assignment.md).
+
+Concession request eligibility, reviewed update stamps and approval recovery: [workflows](./workflows.md),
+[validation evidence](./testing.md), and the [local regression fixture](../../e2e/fixtures/concession-request-update/README.md).
 
 ## Read order
 

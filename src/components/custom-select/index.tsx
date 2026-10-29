@@ -48,6 +48,8 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   addOtherItemOnClick?: () => void;
   disabledValues?: (string | number)[];
   disabledLabel?: string;
+  /** Visible explanation for each disabled option; falls back to disabledLabel. */
+  disabledReasonKey?: T;
   /** Optional guidance for menu options and the selected value. */
   optionDescriptionKey?: T;
   /** Group contiguous options under non-selectable headings (for example, class → structure). */
@@ -77,6 +79,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   addOtherItemOnClick,
   disabledValues = [],
   disabledLabel = 'Already configured',
+  disabledReasonKey,
   optionDescriptionKey,
   groupKey,
   inputProps,
@@ -143,6 +146,7 @@ const CustomSelect = <T extends string, J extends boolean>({
     }
     const selectedValue: J extends true ? string[] | number[] : string | number =
       event.target.value;
+    if (!multiple && disabledValues.includes(selectedValue as string | number)) return;
     onChange(selectedValue);
   };
 
@@ -323,8 +327,19 @@ const CustomSelect = <T extends string, J extends boolean>({
                     )}
                     <ListItemText
                       primary={option[labelKey]}
-                      secondary={isDisabled ? disabledLabel : undefined}
-                      secondaryTypographyProps={isDisabled ? { fontSize: '0.72rem' } : undefined}
+                      secondary={
+                        isDisabled
+                          ? (disabledReasonKey && option[disabledReasonKey]) || disabledLabel
+                          : undefined
+                      }
+                      secondaryTypographyProps={
+                        isDisabled
+                          ? {
+                              fontSize: '0.72rem',
+                              whiteSpace: disabledReasonKey ? 'normal' : undefined,
+                            }
+                          : undefined
+                      }
                     />
                     {optionDescriptionKey && option[optionDescriptionKey]
                       ? optionInfo(option[optionDescriptionKey], option[labelKey])

@@ -61,12 +61,28 @@ function initialCharges(): ChargeDetail[] {
 let ledger = initialLedger();
 let charges = initialCharges();
 let receiptSequence = 4;
+let chargeReceiptScenario = false;
+let remainingPdfFailures = 0;
 export const requests: Array<{ url: string; method: string; body?: unknown }> = [];
 const replay = new Map<string, CollectFeeOutput>();
 
-export function resetFixture(scenario?: 'statuses' | 'selection') {
+export function resetFixture(scenario?: 'statuses' | 'selection' | 'charge-receipt' | 'charge-receipt-retry') {
   ledger = initialLedger();
   charges = initialCharges();
+  chargeReceiptScenario = scenario === 'charge-receipt' || scenario === 'charge-receipt-retry';
+  remainingPdfFailures = scenario === 'charge-receipt-retry' ? 1 : 0;
+  if (chargeReceiptScenario) {
+    ledger.flatMap((group) => group.items).forEach((item) => {
+      Object.assign(item, { paid: item.total, due: 0, status: 'Paid' });
+    });
+    ledger.forEach((group) => { group.totalDue = 0; });
+    charges = [{
+      chargeId: 'receipt-regression-charge', sourceId: 'receipt-regression-charge',
+      sourceType: 'Charge', name: 'Receipt Regression Charge', isSystemGenerated: false,
+      amount: 1000, paidAmount: 0, pendingAmount: 1000, waivedAmount: 0,
+      canWaive: false, status: 0,
+    }];
+  }
   if (scenario === 'selection') {
     ledger.flatMap((group) => group.items).forEach((item) => {
       if (/^tuition-[0-4]$/.test(item.dueFeeId) || item.dueFeeId === 'transport-1') {
@@ -94,6 +110,30 @@ export function resetFixture(scenario?: 'statuses' | 'selection') {
 }
 
 const money = (value: number) => Math.round(value * 100) / 100;
+
+// A deliberately simple, valid PDF fixture, not a server-generated receipt.
+// ASCII-only content makes PDF byte offsets and stream length deterministic.
+function chargeReceiptPdf(receiptNumber: string): Blob {
+  const content = `BT /F1 22 Tf 48 760 Td (Charge Receipt) Tj 0 -40 Td /F1 12 Tf (${receiptNumber}) Tj 0 -28 Td (Synthetic charge collection - INR 1,000) Tj ET`;
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
+  ];
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  pdf += offsets.slice(1).map((offset) => `${String(offset).padStart(10, '0')} 00000 n \n`).join('');
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  return new Blob([pdf], { type: 'application/pdf' });
+}
 // Simulate authoritative balances changing elsewhere while the collector is editing.
 export function refreshSelectionBalances() {
   ledger.flatMap((group) => group.items).forEach((item) => {
@@ -229,7 +269,8 @@ export const fixtureBaseQuery = async (args: string | FetchArgs) => {
         return { data: { totalCount: 1, items: [{
           ...balances(), studentId: student.studentId, studentName: student.studentName,
           grNumber: student.grNo, rollNumber: student.rollNo, standardDivision: 'Class 3 - A',
-          overdueFees: ledger.flatMap((group) => group.items).filter((item) => Number(item.status) === 2 || item.status === 'Overdue').reduce((sum, item) => sum + item.due, 0), totalConcessionAmount: 0, status: 2,
+          overdueFees: ledger.flatMap((group) => group.items).filter((item) => Number(item.status) === 2 || item.status === 'Overdue').reduce((sum, item) => sum + item.due, 0), totalConcessionAmount: 0,
+          status: chargeReceiptScenario ? (balances().pendingCharges === 0 ? 1 : 0) : 2,
         }] } };
       }
       if (url.endsWith('/collect-form')) {
@@ -263,7 +304,20 @@ export const fixtureBaseQuery = async (args: string | FetchArgs) => {
         feeHeads: ['tuition', 'transport'].map((feeHeadId) => ({ feeHeadId, feeHeadName: feeHeadId === 'tuition' ? 'Class 3 Tuition Fee' : 'Class 3 Student Transport Fee', isSelected: true })),
       } };
       if (url === '/fee-structures/academic-year-months') return { data: ledger.map(({ month, year }) => ({ month, year })) };
-      if (url.endsWith('/pdf')) return { error: { status: 404, data: { message: 'Synthetic fixture: PDF generation is unavailable; receipt data is displayed.' } } };
+      if (url.endsWith('/pdf')) {
+        // Intentionally reject the obsolete /v1/charge-receipts route. Both fee
+        // and charge IDs are served by the canonical fee-receipts resource.
+        const match = /^\/v1\/fee-receipts\/([^/]+)\/pdf$/.exec(url);
+        const collection = [...replay.values()].find((result) => result.chargeReceiptId === match?.[1]);
+        if (chargeReceiptScenario && match && collection) {
+          if (remainingPdfFailures > 0) {
+            remainingPdfFailures -= 1;
+            return { error: { status: 404, data: { message: 'Synthetic receipt rendering failure.' } } };
+          }
+          return { data: chargeReceiptPdf(collection.chargeReceiptNumber!) };
+        }
+        return { error: { status: 404, data: { message: 'Synthetic fixture: PDF generation is unavailable; receipt data is displayed.' } } };
+      }
       return { error: { status: 404, data: { message: `Unhandled synthetic fixture API: ${method} ${url}` } } };
     } catch (error) {
       return { error: { status: 400, data: { message: error instanceof Error ? error.message : 'Fixture request failed' } } };

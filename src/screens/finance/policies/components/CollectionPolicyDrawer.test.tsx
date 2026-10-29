@@ -51,7 +51,6 @@ vi.mock('./collection/CollectionFooterActions', () => ({
     </button>
   ),
 }));
-vi.mock('./collection/CollectionOnlineSection', () => ({ default: () => null }));
 vi.mock('./collection/CollectionLateFeeSection', () => ({ default: () => null }));
 vi.mock('./collection/CollectionGeneralSection', () => ({
   default: ({ formik }: { formik: FormikProps<ICollectionPolicyFormValues> }) => (

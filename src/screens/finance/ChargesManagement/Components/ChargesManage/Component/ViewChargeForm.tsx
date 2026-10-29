@@ -134,7 +134,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
             <ChargeViewDetailsCard charge={selectedCharge} />
             <RequestorInfoCard charge={selectedCharge} />
             <DetailSection title="Approval Details" icon="mdi:check-circle-outline">
-              <DetailGrid>
+              <DetailGrid desktopColumns={4}>
                 <DetailField
                   label="Approved by"
                   value={selectedCharge.approvalDetails?.approvedByName || 'Pending'}
@@ -148,7 +148,6 @@ const ChargeDetailsCard: React.FC<Props> = ({
                   }
                 />
                 <DetailField
-                  fullWidth
                   label="Approval notes"
                   value={selectedCharge.approvalDetails?.approvalNotes}
                 />

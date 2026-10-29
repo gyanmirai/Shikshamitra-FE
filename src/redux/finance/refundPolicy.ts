@@ -8,6 +8,7 @@ import { policyCacheTags } from './policyCacheTags';
 const policyTags = policyCacheTags(financePolicyType.refundPolicy);
 
 export interface RefundPolicyListArgs {
+  includeArchived?: boolean;
   academicYearId: string;
   status?: string;
   search?: string;

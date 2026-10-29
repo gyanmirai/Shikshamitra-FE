@@ -3,12 +3,67 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-10-28
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Finance frontend changes
+
+## Bank account activity checks
+
+`BankAccManagement/index.loading.test.tsx` uses the real RTK Query client and
+shared table to check initial request completion, the request timeout contract,
+error/Retry recovery and waiting for academic context without a false empty list.
+It also checks that academic-year hydration and opening/closing activity never
+call route navigation, while preserving the activity selection in the URL.
+
+Run `bankAccountActivityApi.test.ts`, `BankAccountActivityDrawer.test.tsx` and
+`BankAccountTable.test.tsx` in their owning BankAccountManage/BankAccManagement
+folders, plus `accounts/bankAccountEntryContext.test.ts`,
+`Registers/AccountsRegisterTable.test.tsx`, `Registers/ManualEntryForm.test.tsx`,
+`CashManagement/CashManagement.test.tsx` and `CashManagement/CashBulkDepositDialog.test.tsx`.
+Verify exactly two drawer tabs, independent credit/debit criteria, server-enforced
+direction, direction-scoped export queries, current bank/year
+data, permission denial, error states, safe return URLs, bank prefill, cash
+semantics and historical source navigation. Run `npm run ts` and focused ESLint.
+
+Serve `e2e/fixtures/bank-account-activity/vite.config.mts` on port 4194 and use
+the Codex in-app browser for the production bank screen/drawer and existing
+entry flows with synthetic APIs. Check 390x844, 768x1024, 1440x900 and short
+desktop layouts, both themes, keyboard/focus, both tabs, date/filter
+controls, source details, source/entry return and contained table scrolling.
+`readonly` removes write capabilities and `fixtureError` simulates an activity
+request failure. This fixture verifies UI behavior; backend persistence and
+PostgreSQL query correctness require the backend suites.
+
+Concession update regression: run `ConcessionRequestForm.test.tsx`, `ConcessionPolicyFields.test.tsx`
+and `concessionValueValidation.test.ts` in `src/screens/finance/Concession/Components/`,
+`ReadOnlyConcessionApprovalView.test.tsx` and `ReadOnlyConcessionApprovalView.benefit.test.tsx`
+in `src/screens/finance/ConcessionAdmin/`, `src/redux/finance/ConcessionManagement/concessionManagementApi.benefit.test.ts`
+and `src/utils/concession-request-error.test.ts`.
+Run `src/utils/api-problem-details.test.ts` separately for shared error-message compatibility.
+Build and serve the [local regression fixture](../../e2e/fixtures/concession-request-update/README.md)
+on port 4228 and use the in-app browser to
+submit the valid synthetic fixed ₹1,000 request across ₹58,166 and ₹717 eligible fees.
+Check the captured update uses the reviewed stamp and submit uses the update response stamp.
+Exercise stale, approved, policy-version, eligibility and unknown-error scenarios; each failure
+must keep the form open and show its actionable reason or fallback with a support reference.
+The fixture mounts the production form with synthetic APIs; it does not verify backend persistence.
+The backend HTTP update-to-submit regression establishes persisted response-stamp correctness.
+
+Verification on 28 October 2026: 71 focused checks passed with one worker.
+The core 24 cover request validation, reviewed stamps, own-request exclusion, policy/assignment
+independence, eligibility refresh after raced rejections, approval blocking, support references
+and real RTK Query cache refresh after Cancel, Reject and Approve.
+The remaining 47 cover the shared select, policy fields, value/error handling and approval review;
+that UI group used the existing `e2e/fixtures/concession-request-ui/setup.ts` component-test setup.
+All 19 synthetic fixture scenarios passed in the Codex in-app browser, including the original six
+error/update scenarios, active-benefit blockers, reapplication after released history, independent
+year/type scope, policy switching, own pending approval and rejection of a legacy pending request.
+The rejection form was also checked at a 355px panel width after making the fixture responsive.
+These frontend checks do not establish backend financial persistence or replace a full-repository
+TypeScript check; the latter did not complete in the resource-constrained session.
 
 Required income choices, Payment Term names, assignment review and clone feedback: run
 `FeeCategoryForm.ui.test.tsx`, `usePaymentTermForm.errors.test.tsx`,
@@ -18,7 +73,11 @@ Required income choices, Payment Term names, assignment review and clone feedbac
 `e2e/fixtures/payment-term-template` with `name-conflict`,
 `e2e/fixtures/fee-assignment` with `studentColumns` and `bulkSidebar`, and
 `e2e/fixtures/proration-policy` with `clone=default` or `clone=blocked`.
-Check no None category choice, missing-category validation, padded/repeated-space name rejection
+Check None is first only in Fee Category's fee-head Income Category and Refund Policy Expense
+Category, retained after blur without a required error, and excluded elsewhere (including standalone
+Fee Head). Test unsorted lookup responses with ordinary categories ahead of None. Run
+`FinanceRoutingFields.test.tsx` for unavailable saved Refund Policy categories and empty lookups. Check missing-category
+validation, padded/repeated-space name rejection
 and trimmed successful save, assigned-row exclusion and header selection, left-aligned roll
 numbers, independent review collapses, adjacent policy/total cards and direct reached-step
 navigation. An unchanged review must remain valid; changed input must obtain fresh evidence.
@@ -63,6 +122,14 @@ server-only summary values, recalculation/empty states, and compact
 installment fields retaining raw values, whole-rupee validation and policy limits. In the local
 browser check create/update, required selectors and documents, fee breakdown, absence of remarks,
 the existing fixed footer, narrow layouts and both themes without submitting financial changes.
+For request-entered fixed amounts, serve `e2e/fixtures/concession-request-ui` and append
+the `?mode=fixed` query to its browser URL.
+With the synthetic ₹11,111 policy cap, enter ₹10,111 and verify Maximum concession allowed,
+Entered and Remaining show ₹11,111, ₹10,111 and ₹1,000 immediately. Allocate the remaining
+₹1,000 to another installment, check the maximum-reached guidance and blocked additions, then
+reduce or clear an existing amount and verify allowance becomes available again. Check fee-head
+deselection/reselection, percentage mode, invalid fractional rupees and the saving lock. This
+fixture renders production components with synthetic data and does not establish persistence.
 
 Copy, refund details and DD dates: run `copyFeeStructure.test.ts`,
 `Components/CopyFeeStructureDialog.test.tsx`, `feeStructureWorkspace.test.ts`,
@@ -193,7 +260,7 @@ renders production cards with synthetic data. Check six student facts in one des
 saved Board / Medium values, responsive wrapping, and equal-sized icon-only Edit/Delete
 controls. Check the Edit accessible name and delegation without changing draft permissions.
 
-Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/finance/Concession/Components/ConcessionPolicyFields.test.tsx src/screens/finance/Concession/Components/ConcessionFeeHeadSelection.test.tsx --pool=forks --maxWorkers=1` for required searchable policy/type controls, exact policy-version selection, associated errors, disabled edits and independent fee inspection. The synthetic fixture's **Preview saving lock** control exposes the shared busy overlay and locks fields and footer actions without submitting a financial request. Verify the authenticated form also blocks its breadcrumb/back controls during draft validation, latest-draft refresh and submission; confirm values return after a failed save.
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/finance/Concession/Components/ConcessionPolicyFields.test.tsx src/screens/finance/Concession/Components/ConcessionFeeHeadSelection.test.tsx --pool=forks --maxWorkers=1` for required searchable policy/type controls, exact policy-version selection, associated errors, disabled edits and independent fee inspection. The synthetic fixture's **Preview saving lock** control exposes the shared busy overlay and locks fields and footer actions without submitting a financial request. Verify the authenticated form also blocks its breadcrumb/back controls during draft validation, draft saving and submission; confirm values return after a failed save.
 
 In the Codex in-app browser, open Concession Request. Check neutral icons, keyboard-accessible heading help, compact academic fields on desktop and stacked fields on narrow screens. Select a student and verify the fee-assignment warning or the Policy & Fees workspace as applicable. Inspect each fee without changing checkbox selection or request totals; check its installment breakdown, original/paid/eligible amounts, and server concession. Verify document reminders name the missing evidence, request-entered values remain editable, and the right panel stacks below the form at narrow container widths. Confirm the body scrolls while the unchanged Cancel, Save draft, and permitted submit action remain reachable, with no horizontal page overflow. Presentation checks do not prove financial persistence or approval behavior.
 
@@ -485,6 +552,23 @@ and `tmp/` folders, with backend logs under its ignored `.artifacts/` directory.
 
 ## Cash Management checks
 
+The 28 October year-wide cash flow supersedes the approval/source-selection scenarios below.
+Run CashManagement, CashBulkDepositDialog, CashDetails, cashManagementApi, ManualEntryForm,
+manualEntrySchema and cashExpenseSource suites. Acceptance: display-filter changes never change
+academic-year summary/deposit totals; one deposit covers every available source beyond pagination;
+cash expenses have no receipt/reference input and reduce the pooled balance; supporting evidence
+is optional, validated, saved and downloadable. Check required bank, insufficient cash, stale balance,
+exact uncertain retries, permissions, busy/dirty-close states and legacy transit separately.
+
+Local verification for the 28 October flow passed 58 distinct frontend tests across the cash
+workspace/dialog/detail/API and expense form/schema suites. A combined run passed 55 tests but
+one worker failed to start under machine load; the three affected tests passed on the focused
+retry, alongside eight deposit-dialog tests. Full `npm run ts`, focused TypeScript and typed ESLint checks passed,
+and the synthetic cash fixture production bundle compiled. The required in-app browser smoke
+remains unverified: the browser bridge reported that the in-app browser was unavailable.
+The backend separately passed 21 HTTP and 12 domain checks; see its
+[verification record](../../../Shikshamitra-BE/docs/modules/finance/testing.md).
+
 The 27 October pending-cash correction supersedes the earlier approve-before-expense browser scenario below. The current focused suite passes 47 tests across ten files, including collected/expenses/remaining approval evidence, prefilled net counts of 8000 and zero, stale expense-race refresh preserving the draft while requiring the latest count, pending source balances, exact uncertain retry, manual-entry validation, cache invalidation and permission controls. Command: `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/accounts/CashManagement src/screens/finance/accounts/cashManagementRules.test.ts src/screens/finance/accounts/Registers/ManualEntryForm.test.tsx src/screens/finance/accounts/Registers/manualEntrySchema.test.ts src/screens/finance/accounts/Registers/cashExpenseSource.test.ts src/redux/finance/cashManagementApi.test.ts src/redux/feeCollection/feeCollection.cashCache.test.ts src/screens/security/role/cash-management-permissions.test.ts --pool=threads --maxWorkers=1`. The wrapper verification log is `tmp/simple-cash-management/pending-net-fe-final-tests.log`.
 
 Current browser acceptance uses the synthetic fixture at port 4188: start with pending receipt 10000, Add Expense 2000, verify pending cash 8000, then approve the receiving-bank deposit with prefilled count 8000. Details must retain collected 10000 and expense 2000, show deposited 8000/held zero, and omit a new deposit step. Repeat with a fully spent receipt, ordinary collector (`?collector`), administrator collector (`?collector&admin`), read-only/error states, and legacy approved-held cash (`?legacy`). Fixture state resets on reload and makes no backend writes.
@@ -502,6 +586,18 @@ After the final category-routing and required-reference changes, the three affec
 Run the focused `useCollectionPolicyForm`, `CollectionPolicyDrawer`, `FeeCollectionForm.charges` and `FeeCollectionOutcomePanel` Vitest suites after changing receipt configuration or collection preview. The policy tests cover both choices, historical defaults, payloads and invalid submissions. The outcome test covers one versus two verification entries. Use the existing `e2e/fixtures/collection-policy` harness for the final in-app browser smoke: select each receipt option, inspect its accessible info, check discard/reopen, and verify the fixed footer and narrow-screen layout. Backend persistence and reversal evidence belongs to [Finance backend testing](../../../Shikshamitra-BE/docs/modules/finance/testing.md).
 
 ## Receipt lifecycle checks
+
+Charge-only collection regression: run `feeCollection.receipt.test.ts`,
+`feeCollection.charges.test.ts` and `FeeCollectionForm.context.test.tsx`. They cover the unified
+PDF endpoint, cache invalidation, loading, receipt-only retry, cleared payment drafts and
+summary-refresh failure without reclassifying a successful payment.
+Build the collection fixture as described in
+[`e2e/fixtures/fee-collection-late-fees/README.md`](../../e2e/fixtures/fee-collection-late-fees/README.md),
+then run `node node_modules/@playwright/test/cli.js test --config e2e/finance/charge-receipt-preview.config.ts`.
+Finish in the in-app browser with **Charge receipt regression** and **Charge receipt retry regression**:
+collect ₹1,000, verify PDF preview/download, refresh to paid/zero pending, and retry a failed PDF
+without a second payment POST. Synthetic browser responses verify frontend behavior; persisted
+PDF generation and missing-blob recovery are covered by the backend HTTP regression.
 
 Run the focused FinalPaymentReviewDialog.test.tsx and paymentReceiptSummary.test.ts tests, npm run ts, and npm run docs:check.
 

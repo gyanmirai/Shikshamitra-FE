@@ -13,6 +13,7 @@ export interface IExpenseCategory {
   concurrencyStamp: string;
   version: number;
   canDelete: boolean;
+  isSystemCategory?: boolean;
   isUsedInDownstream: boolean;
   isActive: boolean;
   deactivationReason?: string | null;

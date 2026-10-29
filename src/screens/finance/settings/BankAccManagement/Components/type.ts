@@ -38,7 +38,11 @@ export interface IBankAccountTableProps {
   setEditData: (value: IBankAccount | null) => void;
   onDelete: (data: IBankAccount) => void;
   onEdit: (data: IBankAccount) => void;
+  onView: (data: IBankAccount) => void;
   isLoading?: boolean;
+  isRefreshing?: boolean;
+  error?: unknown;
+  onRetry?: () => void;
   totalCount?: number;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;

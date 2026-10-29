@@ -264,7 +264,7 @@ it.each([
       })
     );
     expect(screen.getByText('Refund Policy is required')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
     expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
       'aria-current',
@@ -410,8 +410,7 @@ it('saves both required policies before allowing review and publication of the s
     screen.getByRole('button', { name: 'Publish Structure' }) as HTMLButtonElement;
   expect(screen.queryByRole('button', { name: 'Publish Structure' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
-  expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
+  expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeEnabled();
   await chooseCollection('collection prerna policy');
   expect(screen.queryByRole('button', { name: 'Publish Structure' })).toBeNull();
   // Reviewing unsaved input must not permit publishing the older server record.
@@ -422,7 +421,8 @@ it('saves both required policies before allowing review and publication of the s
   expect(publishButton().disabled).toBe(true);
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(saved) });
   fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
-  await waitFor(() => expect(screen.queryByRole('button', { name: 'Save Draft' })).toBeNull());
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Discard Changes' })).toBeNull());
+  expect(screen.getByRole('button', { name: 'Save Draft' })).toBeEnabled();
   expect(state.mutate.mock.calls[1][0].changes).toEqual({
     policies: { collection: { policyId: policy.id, policyVersionId: policy.versionId } },
   });
@@ -472,7 +472,6 @@ it('offers only structure policies and preserves a legacy concession attachment 
     unwrap: () => Promise.resolve({ ...record, name: 'Renamed fees' }),
   });
   render(ui(record));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Renamed fees' },
   });
@@ -561,6 +560,60 @@ const savedRecord = (head = savedHead()) => ({
   feeHeads: [head],
 });
 
+it('opens saved drafts with direct fee-head actions and keeps them available after saving and discarding', async () => {
+  const record = savedRecord();
+  state.mutate.mockReturnValue({ unwrap: () => Promise.resolve(record) });
+  render(ui(record));
+  expect(screen.queryByRole('button', { name: 'Edit Draft' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Edit Tuition' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Delete Tuition' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Edit Tuition' })).toBeTruthy());
+  fireEvent.change(screen.getByRole('textbox', { name: 'Structure name' }), {
+    target: { value: 'Changed fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  await waitFor(() => expect(state.mutate).toHaveBeenCalledOnce());
+  await waitFor(() =>
+    expect(screen.getByRole('textbox', { name: 'Structure name' })).toHaveValue(record.name)
+  );
+  expect(screen.getByRole('button', { name: 'Edit Tuition' })).toBeTruthy();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Structure name' }), {
+    target: { value: 'Discard this name' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
+  const confirmation = await screen.findByRole('dialog', { name: 'Discard unsaved changes' });
+  fireEvent.click(within(confirmation).getByRole('button', { name: 'Discard Changes' }));
+  await waitFor(() =>
+    expect(screen.getByRole('textbox', { name: 'Structure name' })).toHaveValue(record.name)
+  );
+  expect(screen.getByRole('button', { name: 'Edit Tuition' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Delete Tuition' })).toBeTruthy();
+});
+
+it.each(['published', 'view-only', 'no-edit-permission'])(
+  'hides fee-head write actions for %s structures',
+  (mode) => {
+    if (mode === 'no-edit-permission') state.lookups.settings.permissions.edit = false;
+    render(
+      <ThemeProvider theme={theme}>
+        <FeeStructureWorkspaceCard
+          index={0}
+          viewOnly={mode === 'view-only'}
+          initialData={{
+            ...initialData,
+            record: { ...savedRecord(), status: mode === 'published' ? 0 : 1 },
+          }}
+        />
+      </ThemeProvider>
+    );
+    expect(screen.queryByRole('button', { name: 'Edit Draft' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Edit Tuition' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Delete Tuition' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Fee Head' })).toBeNull();
+  }
+);
+
 it('shows field-specific row errors after validation and carries them into Edit until corrected', async () => {
   state.lookups.settings.heads.push({ id: 'transport', name: 'Transport' });
   const record = savedRecord(
@@ -582,7 +635,6 @@ it('shows field-specific row errors after validation and carries them into Edit 
   const transportFrequency = screen.getByRole('group', { name: 'Payment frequency for Transport' });
   expect(amount).toHaveAttribute('data-invalid', 'false');
   expect(frequency).toHaveAttribute('data-invalid', 'false');
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: 'Save & Continue' }));
   await waitFor(() => expect(amount).toHaveAttribute('data-invalid', 'true'));
   expect(amount).toHaveAccessibleDescription('Enter the total fee for this Fee Head.');
@@ -619,7 +671,6 @@ it('shows field-specific row errors after validation and carries them into Edit 
 it('keeps labelled row errors visible under the fee-head name on mobile', async () => {
   state.mobile = true;
   render(ui(savedRecord(savedHead({ paymentTermId: null, paymentTermVersionId: null }))));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
   const errors = await screen.findByRole('group', { name: 'Errors for Tuition' });
   expect(
@@ -633,7 +684,6 @@ it('keeps labelled row errors visible under the fee-head name on mobile', async 
 
 it('shows the structure name error alongside row errors without sending an invalid draft', async () => {
   render(ui({ ...savedRecord(savedHead({ paymentTermId: null })), name: '' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
   expect(await screen.findByText('Enter a name for this Fee Structure.')).toBeTruthy();
   expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveAttribute(
@@ -650,7 +700,6 @@ it('shows the structure name error alongside row errors without sending an inval
 it('edits a retained payment-term pin and permits cached terms after refresh failure', async () => {
   state.lookups.terms = { ...catalog, error: true, ready: false };
   render(ui(savedRecord()));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: 'Edit Tuition' }));
   const select = screen.getByRole('combobox', { name: /Payment frequency/ });
   expect(select.textContent).toContain('Old monthly');
@@ -726,7 +775,6 @@ it.each(['0', '12.25'])(
 
 it('excludes fee heads already configured from the Add dropdown', async () => {
   render(ui(savedRecord()));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: 'Fee Head' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: /Fee head/ }));
   expect(screen.queryByRole('option', { name: 'Tuition' })).toBeNull();
@@ -735,7 +783,6 @@ it('excludes fee heads already configured from the Add dropdown', async () => {
 
 it('cancels an edited row without modifying the parent draft and confirms deletion', async () => {
   render(ui(savedRecord()));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: 'Edit Tuition' }));
   fireEvent.change(screen.getByRole('textbox', { name: /Annual amount/ }), {
     target: { value: '999' },
@@ -774,7 +821,6 @@ it('confirms replacing customized installments only when a new payment frequency
       )
     )
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: 'Edit Tuition' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: /Payment frequency/ }));
   fireEvent.click(await screen.findByRole('option', { name: 'Monthly · v1 · Default' }));
@@ -960,8 +1006,8 @@ it('shows the policy checklist with exact-version coverage and opens its coverag
   expect(screen.getByRole('group', { name: 'Refund Policy' })).toHaveAccessibleDescription(
     'Refund Policy is required'
   );
-  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Change Collection Policy' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Change Collection Policy' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: 'View Collection Policy fee head impact' }));
   const details = await screen.findByRole('dialog', { name: 'School Collection Policy · v1' });
   expect(within(details).getByText('Late fee applies')).toBeTruthy();
@@ -1021,7 +1067,6 @@ it('retains a required policy when replacements cannot be browsed', () => {
   const record = checklistSetup();
   state.lookups.settings.permissions.collectionRead = false;
   render(ui(record));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   expect(screen.getByRole('button', { name: 'Change Collection Policy' })).toBeDisabled();
   expect(screen.queryByRole('button', { name: 'Remove Collection Policy' })).toBeNull();

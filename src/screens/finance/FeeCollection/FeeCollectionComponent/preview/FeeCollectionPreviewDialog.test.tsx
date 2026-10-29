@@ -9,6 +9,7 @@ import FeeCollectionPreviewDialog from './FeeCollectionPreviewDialog';
 
 vi.mock('src/components/customDialog', () => ({
   default: ({ open, children }: any) => (open ? <div role="dialog">{children}</div> : null),
+  DialogScrollContent: ({ children }: any) => children,
 }));
 vi.mock('src/components/scrollbar', () => ({ Scrollbar: ({ children }: any) => children }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));

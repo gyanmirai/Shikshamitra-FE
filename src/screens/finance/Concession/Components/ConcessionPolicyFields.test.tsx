@@ -1,10 +1,53 @@
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 import ConcessionPolicyFields from './ConcessionPolicyFields';
 import { policy } from '../../../../../e2e/fixtures/concession-request-ui/data';
 
 describe('concession policy field consistency', () => {
+  it('disables an already granted type and shows the exact eligibility reason beside that option', async () => {
+    const user = userEvent.setup();
+    const onTypeChange = vi.fn();
+    const message =
+      'This student already has an approved benefit for this concession type in this academic year. Another benefit cannot be requested or approved.';
+    const types = [
+      {
+        id: 'school',
+        name: 'School concession',
+        benefitBlocker: {
+          code: 'Finance:Concession:010034',
+          message,
+          blockingRequestId: 'approved-200',
+          blockingStatus: 'Approved' as const,
+        },
+      },
+      { id: 'other', name: 'Other concession', benefitBlocker: null },
+    ];
+    render(
+      <ConcessionPolicyFields
+        policies={policies}
+        types={types}
+        policyVersionId="version"
+        typeId=""
+        onPolicyChange={vi.fn()}
+        onTypeChange={onTypeChange}
+        onPolicyBlur={vi.fn()}
+        onTypeBlur={vi.fn()}
+      />
+    );
+    await user.click(screen.getByRole('combobox', { name: 'Concession type' }));
+    const blocked = screen.getByRole('option', { name: /School concession/ });
+    expect(blocked).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByText(message)).toBeVisible();
+    fireEvent.click(blocked);
+    expect(onTypeChange).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+    await user.click(screen.getByRole('combobox', { name: 'Concession type' }));
+    await user.click(screen.getByRole('option', { name: 'Other concession' }));
+    expect(onTypeChange).toHaveBeenCalledExactlyOnceWith('other');
+  });
+
   const policies = [
     { ...policy, policyCode: 'SIB', policyName: 'Sibling policy' },
     {
@@ -39,10 +82,68 @@ describe('concession policy field consistency', () => {
     );
     fireEvent.mouseDown(select);
     expect(screen.getByRole('textbox', { name: 'Search Concession policy' })).toBeVisible();
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
     fireEvent.click(screen.getByRole('option', { name: 'Sibling policy (SIB, v2)' }));
     expect(onPolicyChange).toHaveBeenCalledWith(policies[1]);
     fireEvent.blur(select);
     expect(onPolicyBlur).toHaveBeenCalled();
+  });
+
+  it('keeps one search per menu, filters without selecting, and clears the query on reopen', async () => {
+    const user = userEvent.setup();
+    const onPolicyChange = vi.fn();
+    const onTypeChange = vi.fn();
+    const meritPolicy = {
+      ...policy,
+      policyCode: 'MERIT',
+      policyName: 'Merit policy',
+      concessionPolicyVersionId: 'merit-version',
+    };
+    render(
+      <ConcessionPolicyFields
+        policies={[...policies, meritPolicy]}
+        types={[
+          { id: 'sibling', name: 'Sibling concession' },
+          { id: 'merit', name: 'Merit concession' },
+        ]}
+        policyVersionId=""
+        typeId=""
+        onPolicyChange={onPolicyChange}
+        onTypeChange={onTypeChange}
+        onPolicyBlur={vi.fn()}
+        onTypeBlur={vi.fn()}
+      />
+    );
+
+    const policySelect = screen.getByRole('combobox', { name: 'Concession policy' });
+    await user.click(policySelect);
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search Concession policy' }), {
+      target: { value: 'merit' },
+    });
+    expect(screen.queryByRole('option', { name: 'Sibling policy (SIB, v2)' })).toBeNull();
+    expect(onPolicyChange).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('option', { name: /Merit policy/ }));
+    expect(onPolicyChange).toHaveBeenCalledExactlyOnceWith(meritPolicy);
+
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+    await user.click(policySelect);
+    const policySearch = screen.getByRole('textbox', { name: 'Search Concession policy' });
+    expect(policySearch).toHaveValue('');
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+    expect(screen.getByRole('option', { name: 'Sibling policy (SIB, v2)' })).toBeVisible();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole('combobox', { name: 'Concession type' }));
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search Concession type' }), {
+      target: { value: 'merit' },
+    });
+    expect(screen.queryByRole('option', { name: 'Sibling concession' })).toBeNull();
+    expect(onTypeChange).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('option', { name: 'Merit concession' }));
+    expect(onTypeChange).toHaveBeenCalledExactlyOnceWith('merit');
   });
 
   it('associates visible validation feedback and disables policy/type edits during saving', () => {

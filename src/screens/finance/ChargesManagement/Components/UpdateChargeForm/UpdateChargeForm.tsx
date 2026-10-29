@@ -38,7 +38,6 @@ import {
   Alert,
   Radio,
   Button,
-  Divider,
   Skeleton,
   TextField,
   Typography,
@@ -714,7 +713,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                 {/* Student Information */}
                 <Grid size={{ xs: 12 }}>
                   <FormSectionCard
-                    descriptionTooltip="Choose the board, medium, and classes whose students can receive this charge."
+                    descriptionTooltip="Choose the board and medium whose students can receive this charge."
                     icon="solar:users-group-rounded-bold-duotone"
                     title="Academic scope"
                   >
@@ -805,194 +804,176 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                           />
                         </ShakingTextField>
                       </Grid>
-
-                      {/* Class - Multi-select Buttons */}
-                      <Grid size={{ xs: 12 }}>
-                        <Box>
-                          <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                            <Iconify
-                              icon="solar:notebook-bold-duotone"
-                              width={18}
-                              sx={{ color: 'primary.main' }}
-                            />
-                            <Box>
-                              <Typography variant="subtitle2" fontWeight={700}>
-                                Classes *
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {values.standardId.length === 0
-                                  ? 'Select one or more classes'
-                                  : `${values.standardId.length} selected`}
-                              </Typography>
-                            </Box>
-                          </Stack>
-                          <Divider sx={{ mb: 1.5 }} />
-                          <Box display="flex" flexWrap="wrap" gap={1}>
-                            {classesLoading && classes.length === 0 ? (
-                              Array.from(new Array(6)).map((_, index) => (
-                                <Skeleton
-                                  key={index}
-                                  variant="rectangular"
-                                  sx={{ width: 90, height: 36, borderRadius: 1 }}
-                                />
-                              ))
-                            ) : classesError && classes.length === 0 ? (
-                              <Alert
-                                severity="error"
-                                action={
-                                  <Button size="small" onClick={() => retryClasses()}>
-                                    Retry
-                                  </Button>
-                                }
-                              >
-                                Classes and divisions could not be loaded.
-                              </Alert>
-                            ) : (classes || []).length > 0 ? (
-                              (classes || []).map((cls: any) => (
-                                <Button
-                                  key={cls.id}
-                                  variant={
-                                    values.standardId.includes(cls.id) ? 'contained' : 'outlined'
-                                  }
-                                  color={values.standardId.includes(cls.id) ? 'primary' : undefined}
-                                  sx={{ minWidth: 60, textTransform: 'none', fontWeight: 500 }}
-                                  onClick={() => {
-                                    const isSelected = values.standardId.includes(cls.id);
-                                    const updated = isSelected
-                                      ? values.standardId.filter((id) => id !== cls.id)
-                                      : [...values.standardId, cls.id];
-
-                                    if (isSelected && values.studentIds.length > 0) {
-                                      setPendingSelectionChange({
-                                        type: 'class',
-                                        nextStandardIds: updated,
-                                        deselectedStandardId: cls.id,
-                                      });
-                                      return;
-                                    }
-
-                                    applySelectionChange(
-                                      {
-                                        type: 'class',
-                                        nextStandardIds: updated,
-                                        deselectedStandardId: cls.id,
-                                      },
-                                      isSelected
-                                    );
-                                  }}
-                                  disabled={!values.educationMediumId}
-                                >
-                                  {cls.name.replace('Class ', '')}
-                                </Button>
-                              ))
-                            ) : (
-                              <Box sx={{ p: 2, width: '100%', textAlign: 'center' }}>
-                                <Typography variant="body2" color="text.secondary">
-                                  No classes available
-                                </Typography>
-                              </Box>
-                            )}
-                          </Box>
-                          {touched.standardId && errors.standardId && (
-                            <Typography
-                              variant="caption"
-                              sx={{ color: '#d32f2f', mt: 0.5, display: 'block' }}
-                            >
-                              {errors.standardId}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Grid>
-
-                      {/* Division - Only show if exactly one class selected */}
-                      {values.standardId.length === 1 && (
-                        <Grid size={{ xs: 12 }}>
-                          <Box>
-                            <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                              <Iconify
-                                icon="solar:layers-bold-duotone"
-                                width={18}
-                                sx={{ color: 'primary.main' }}
-                              />
-                              <Box>
-                                <Typography variant="subtitle2" fontWeight={700}>
-                                  Divisions (optional)
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {values.divisionIds.length === 0
-                                    ? 'All divisions included; select divisions to narrow the scope'
-                                    : `${values.divisionIds.length} selected`}
-                                </Typography>
-                              </Box>
-                            </Stack>
-                            <Divider sx={{ mb: 1.5 }} />
-                            <Box display="flex" flexWrap="wrap" gap={1}>
-                              {classesLoading && classes.length === 0 ? (
-                                <Typography role="status" variant="body2">
-                                  Loading divisions…
-                                </Typography>
-                              ) : !allDivision || allDivision.length === 0 ? (
-                                <Box sx={{ p: 2, width: '100%', textAlign: 'center' }}>
-                                  <Typography variant="body2" color="text.secondary">
-                                    No divisions are configured for this class. Students from the
-                                    whole class are included.
-                                  </Typography>
-                                </Box>
-                              ) : (
-                                allDivision.map((div: Division) => (
-                                  <Button
-                                    key={div.id}
-                                    variant={
-                                      values.divisionIds.includes(div.id) ? 'contained' : 'outlined'
-                                    }
-                                    color={
-                                      values.divisionIds.includes(div.id) ? 'primary' : undefined
-                                    }
-                                    sx={{ minWidth: 60, textTransform: 'none', fontWeight: 500 }}
-                                    onClick={() => {
-                                      const isSelected = values.divisionIds.includes(div.id);
-                                      const updated = isSelected
-                                        ? values.divisionIds.filter((id) => id !== div.id)
-                                        : [...values.divisionIds, div.id];
-
-                                      if (isSelected && values.studentIds.length > 0) {
-                                        setPendingSelectionChange({
-                                          type: 'division',
-                                          nextDivisionIds: updated,
-                                          deselectedDivisionId: div.id,
-                                        });
-                                        return;
-                                      }
-
-                                      applySelectionChange(
-                                        {
-                                          type: 'division',
-                                          nextDivisionIds: updated,
-                                          deselectedDivisionId: div.id,
-                                        },
-                                        isSelected
-                                      );
-                                    }}
-                                  >
-                                    {div.name}
-                                  </Button>
-                                ))
-                              )}
-                            </Box>
-                            {touched.divisionIds && errors.divisionIds && (
-                              <Typography
-                                variant="caption"
-                                sx={{ color: '#d32f2f', mt: 0.5, display: 'block' }}
-                              >
-                                {errors.divisionIds}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Grid>
-                      )}
                     </Grid>
                   </FormSectionCard>
                 </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <FormSectionCard
+                    title="Classes"
+                    icon="solar:notebook-bold-duotone"
+                    descriptionTooltip="Select one or more classes within the chosen board and medium."
+                  >
+                    <ShakingTextField error={!!(touched.standardId && errors.standardId)}>
+                      <Box role="group" aria-label="Classes (required)">
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                          {values.standardId.length === 0
+                            ? 'Select one or more classes *'
+                            : `${values.standardId.length} selected`}
+                        </Typography>
+                        <Box display="flex" flexWrap="wrap" gap={1}>
+                          {classesLoading && classes.length === 0 ? (
+                            Array.from(new Array(6)).map((_, index) => (
+                              <Skeleton
+                                key={index}
+                                variant="rectangular"
+                                sx={{ width: 90, height: 36, borderRadius: 1 }}
+                              />
+                            ))
+                          ) : classesError && classes.length === 0 ? (
+                            <Alert
+                              severity="error"
+                              action={
+                                <Button size="small" onClick={() => retryClasses()}>
+                                  Retry
+                                </Button>
+                              }
+                            >
+                              Classes and divisions could not be loaded.
+                            </Alert>
+                          ) : (classes || []).length > 0 ? (
+                            (classes || []).map((cls: any) => (
+                              <Button
+                                key={cls.id}
+                                variant={
+                                  values.standardId.includes(cls.id) ? 'contained' : 'outlined'
+                                }
+                                color={values.standardId.includes(cls.id) ? 'primary' : undefined}
+                                sx={{ minWidth: 60, textTransform: 'none', fontWeight: 500 }}
+                                onClick={() => {
+                                  const isSelected = values.standardId.includes(cls.id);
+                                  const updated = isSelected
+                                    ? values.standardId.filter((id) => id !== cls.id)
+                                    : [...values.standardId, cls.id];
+
+                                  if (isSelected && values.studentIds.length > 0) {
+                                    setPendingSelectionChange({
+                                      type: 'class',
+                                      nextStandardIds: updated,
+                                      deselectedStandardId: cls.id,
+                                    });
+                                    return;
+                                  }
+
+                                  applySelectionChange(
+                                    {
+                                      type: 'class',
+                                      nextStandardIds: updated,
+                                      deselectedStandardId: cls.id,
+                                    },
+                                    isSelected
+                                  );
+                                }}
+                                disabled={!values.educationMediumId}
+                              >
+                                {cls.name.replace('Class ', '')}
+                              </Button>
+                            ))
+                          ) : (
+                            <Box sx={{ p: 2, width: '100%', textAlign: 'center' }}>
+                              <Typography variant="body2" color="text.secondary">
+                                No classes available
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                        {touched.standardId && errors.standardId && (
+                          <Typography
+                            variant="caption"
+                            sx={{ color: 'error.main', mt: 0.5, display: 'block' }}
+                          >
+                            {errors.standardId}
+                          </Typography>
+                        )}
+                      </Box>
+                    </ShakingTextField>
+                  </FormSectionCard>
+                </Grid>
+
+                {values.standardId.length === 1 && (
+                  <Grid size={{ xs: 12 }}>
+                    <FormSectionCard
+                      title="Divisions"
+                      icon="solar:layers-bold-duotone"
+                      descriptionTooltip="Select divisions to narrow the class scope. Leaving this empty includes all divisions."
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {values.divisionIds.length === 0
+                          ? 'All divisions included; select divisions to narrow the scope'
+                          : `${values.divisionIds.length} selected`}
+                      </Typography>
+                      <Box display="flex" flexWrap="wrap" gap={1}>
+                        {classesLoading && classes.length === 0 ? (
+                          <Typography role="status" variant="body2">
+                            Loading divisions…
+                          </Typography>
+                        ) : !allDivision || allDivision.length === 0 ? (
+                          <Box sx={{ p: 2, width: '100%', textAlign: 'center' }}>
+                            <Typography variant="body2" color="text.secondary">
+                              No divisions are configured for this class. Students from the whole
+                              class are included.
+                            </Typography>
+                          </Box>
+                        ) : (
+                          allDivision.map((div: Division) => (
+                            <Button
+                              key={div.id}
+                              variant={
+                                values.divisionIds.includes(div.id) ? 'contained' : 'outlined'
+                              }
+                              color={values.divisionIds.includes(div.id) ? 'primary' : undefined}
+                              sx={{ minWidth: 60, textTransform: 'none', fontWeight: 500 }}
+                              onClick={() => {
+                                const isSelected = values.divisionIds.includes(div.id);
+                                const updated = isSelected
+                                  ? values.divisionIds.filter((id) => id !== div.id)
+                                  : [...values.divisionIds, div.id];
+
+                                if (isSelected && values.studentIds.length > 0) {
+                                  setPendingSelectionChange({
+                                    type: 'division',
+                                    nextDivisionIds: updated,
+                                    deselectedDivisionId: div.id,
+                                  });
+                                  return;
+                                }
+
+                                applySelectionChange(
+                                  {
+                                    type: 'division',
+                                    nextDivisionIds: updated,
+                                    deselectedDivisionId: div.id,
+                                  },
+                                  isSelected
+                                );
+                              }}
+                            >
+                              {div.name}
+                            </Button>
+                          ))
+                        )}
+                      </Box>
+                      {touched.divisionIds && errors.divisionIds && (
+                        <Typography
+                          variant="caption"
+                          sx={{ color: 'error.main', mt: 0.5, display: 'block' }}
+                        >
+                          {errors.divisionIds}
+                        </Typography>
+                      )}
+                    </FormSectionCard>
+                  </Grid>
+                )}
 
                 {/* Student Selection Section */}
                 <Grid size={{ xs: 12 }}>

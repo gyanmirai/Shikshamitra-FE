@@ -252,25 +252,32 @@ export default function RefundWorklist({
           data={rows}
           columns={[
             {
+              id: 'name',
+              label: 'Student (GR No.)',
+              minWidth: 180,
+              sticky: true,
+              stickyPosition: 'left',
+              filterType: 'string',
+              isFilter: true,
+              isSort: false,
+              render: (value, row) => (
+                <Typography variant="body2">
+                  {value}
+                  {row.grNo && (
+                    <Box component="span" sx={{ display: 'block' }}>
+                      ({row.grNo})
+                    </Box>
+                  )}
+                </Typography>
+              ),
+            },
+            {
               id: '_voucherNumber',
               label: 'Refund no.',
               minWidth: 135,
               filterType: 'string',
               isFilter: true,
               isSort: false,
-            },
-            {
-              id: 'name',
-              label: 'Student',
-              minWidth: 180,
-              filterType: 'string',
-              isFilter: true,
-              isSort: false,
-              render: (value, row) => (
-                <Typography variant="body2">
-                  {value} {row.grNo ? `(${row.grNo})` : ''}
-                </Typography>
-              ),
             },
             {
               id: 'classDivision',

@@ -430,23 +430,22 @@ export default function AssignmentReview({
           guardUnsavedChanges={false}
           handleClose={() => setShowInstallments(false)}
         >
-          <DialogScrollContent>
+          <DialogScrollContent
+            scrollBarProps={{
+              autoHide: false,
+              ariaLabel: 'Installment details',
+            }}
+          >
             <CustomizableTable
               {...embeddedTableProps}
               tableContainerProps={{
                 sx: {
                   height: 'auto',
-                  maxHeight: '65vh',
-                  overflow: 'auto',
                   flex: 'none',
-                  '& .MuiTableCell-head': {
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 2,
-                    bgcolor: 'background.paper',
-                    whiteSpace: 'nowrap',
-                  },
-                  '& .MuiTableCell-root': { py: 1, px: 1.5 },
+                  // This embedded table grows with its rows: the dialog body owns
+                  // vertical scrolling, while the table contains horizontal overflow.
+                  '& .MuiTable-root': { minWidth: committed ? 1120 : 820 },
+                  '& .MuiTableCell-root': { whiteSpace: 'nowrap' },
                 },
               }}
               tableId={`${tableId}-installments`}
@@ -463,15 +462,20 @@ export default function AssignmentReview({
                   id: 'feeHeadName',
                   label: 'Fee head / installment',
                   filterType: 'string' as const,
-                  minWidth: 220,
-                  width: '35%',
+                  minWidth: 260,
+                  width: 300,
                   isSort: false,
                   isFilter: true,
                   render: (_value, line) => (
                     <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
                       <Typography
                         variant="body2"
-                        sx={{ minWidth: 0, flex: 1, overflowWrap: 'anywhere' }}
+                        sx={{
+                          minWidth: 0,
+                          flex: 1,
+                          whiteSpace: 'normal',
+                          overflowWrap: 'anywhere',
+                        }}
                       >
                         {line.feeHeadName} · {line.installmentLabel}
                       </Typography>

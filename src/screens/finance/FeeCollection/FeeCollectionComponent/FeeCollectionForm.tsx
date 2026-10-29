@@ -134,6 +134,9 @@ type ReceiptPreviewState = {
   chargeReceipt: GeneratedReceipt | null;
 };
 
+const RECEIPT_PDF_ERROR =
+  'Payment was collected, but the receipt could not be generated. Please retry or contact support.';
+
 const toPaise = (amount: number): number => Math.round((amount + Number.EPSILON) * 100);
 
 const buildDetailsForMethod = (method: string): Record<string, any> => {
@@ -242,11 +245,18 @@ const FeeCollectComponentForm = ({
   });
   const [feeReceiptBlobUrl, setFeeReceiptBlobUrl] = useState<string | null>(null);
   const [chargeReceiptBlobUrl, setChargeReceiptBlobUrl] = useState<string | null>(null);
+  const [receiptPdfStatus, setReceiptPdfStatus] = useState<
+    Record<'fee' | 'charge', 'idle' | 'loading' | 'ready' | 'error'>
+  >({ fee: 'idle', charge: 'idle' });
+  const receiptPreviewRequest = useRef(0);
   const [lastCollectResponse, setLastCollectResponse] = useState<CollectFeeOutput | null>(null);
   const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [collectionError, setCollectionError] = useState<string | null>(null);
   const [collectionOutcomeUncertain, setCollectionOutcomeUncertain] = useState(false);
+  const [collectionRefreshFailed, setCollectionRefreshFailed] = useState(false);
+  const [collectionRefreshing, setCollectionRefreshing] = useState(false);
+  const collectionRefreshRequest = useRef(0);
   const lifecycleCallbacks = useRef({ onBusyChange, onDirtyChange });
   lifecycleCallbacks.current = { onBusyChange, onDirtyChange };
 
@@ -260,6 +270,7 @@ const FeeCollectComponentForm = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCollectFormQuery,
+    popupConfig: { error: false },
     params: {
       studentId: String(studentRecord?.id ?? ''),
       academicYearId: currentYear?.id ?? '',
@@ -310,6 +321,7 @@ const FeeCollectComponentForm = ({
   const [collectFee, { isLoading: studentCollectLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCollectFeeMutation,
+    popupConfig: { error: false },
   });
   const collectLoading =
     submitting || (collectionAdapter ? collectionAdapter.isCollecting : studentCollectLoading);
@@ -318,6 +330,8 @@ const FeeCollectComponentForm = ({
     !canCollect ||
     collectFormError ||
     collectFormFetching ||
+    collectionRefreshFailed ||
+    collectionRefreshing ||
     (usesAutomaticAllocation && (!formData?.allocationRevision || !formData?.allocationDueFeeOrder))
   );
 
@@ -351,8 +365,7 @@ const FeeCollectComponentForm = ({
     type: 'mutation',
     currentQueryAndMutation: useDownloadReceiptPdfMutation,
     popupConfig: {
-      error: true,
-      errorMessage: 'Unable to load receipt preview',
+      error: false,
       success: false,
     },
   });
@@ -832,6 +845,9 @@ const FeeCollectComponentForm = ({
       setFilters(FEE_LEDGER_INITIAL_FILTERS);
       setCollectionError(null);
       setCollectionOutcomeUncertain(false);
+      collectionRefreshRequest.current += 1;
+      setCollectionRefreshFailed(false);
+      setCollectionRefreshing(false);
       resetCollectionForm({ values: buildInitialValues(student) });
     }
   }, [contextKey, resetCollectionForm, student]);
@@ -843,6 +859,8 @@ const FeeCollectComponentForm = ({
   }, [formik.dirty, lastCollectResponse, onDirtyChange]);
   useEffect(
     () => () => {
+      receiptPreviewRequest.current += 1;
+      collectionRefreshRequest.current += 1;
       lifecycleCallbacks.current.onBusyChange?.(false);
       lifecycleCallbacks.current.onDirtyChange?.(false);
     },
@@ -995,34 +1013,47 @@ const FeeCollectComponentForm = ({
     },
   ];
 
-  const loadFeeReceiptPdf = async (receiptId: string) => {
+  const loadReceiptPdf = async (receiptId: string, scope: 'fee' | 'charge') => {
+    const request = receiptPreviewRequest.current;
+    const setBlobUrl = scope === 'fee' ? setFeeReceiptBlobUrl : setChargeReceiptBlobUrl;
+    setReceiptPdfStatus((previous) => ({ ...previous, [scope]: 'loading' }));
     try {
       const blob = collectionAdapter
-        ? await collectionAdapter.downloadReceiptPdf(receiptId, 'fee')
-        : await downloadReceiptPdf({ receiptId }).unwrap();
-      const objectUrl = URL.createObjectURL(blob);
-      setFeeReceiptBlobUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return objectUrl;
-      });
+        ? await collectionAdapter.downloadReceiptPdf(receiptId, scope)
+        : await downloadReceiptPdf({
+          receiptId,
+          ...(scope === 'charge' ? { receiptType: scope } : {}),
+        }).unwrap();
+      if (request !== receiptPreviewRequest.current) return;
+      setBlobUrl(URL.createObjectURL(blob));
+      setReceiptPdfStatus((previous) => ({ ...previous, [scope]: 'ready' }));
     } catch {
-      setFeeReceiptBlobUrl(null);
+      if (request !== receiptPreviewRequest.current) return;
+      setBlobUrl(null);
+      setReceiptPdfStatus((previous) => ({ ...previous, [scope]: 'error' }));
     }
   };
 
-  const loadChargeReceiptPdf = async (receiptId: string) => {
+  // Refresh failures do not change the outcome of an already accepted payment.
+  const refreshCollectionSummary = async () => {
+    const request = ++collectionRefreshRequest.current;
+    setCollectionRefreshing(true);
+    setCollectionRefreshFailed(false);
     try {
-      const blob = collectionAdapter
-        ? await collectionAdapter.downloadReceiptPdf(receiptId, 'charge')
-        : await downloadReceiptPdf({ receiptId, receiptType: 'charge' }).unwrap();
-      const objectUrl = URL.createObjectURL(blob);
-      setChargeReceiptBlobUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return objectUrl;
-      });
+      const result = await refetchCollectForm?.();
+      if (request !== collectionRefreshRequest.current) return;
+      if (result && typeof result === 'object' && 'error' in result && result.error)
+        setCollectionRefreshFailed(true);
     } catch {
-      setChargeReceiptBlobUrl(null);
+      if (request === collectionRefreshRequest.current) setCollectionRefreshFailed(true);
+    } finally {
+      if (request === collectionRefreshRequest.current) setCollectionRefreshing(false);
     }
+  };
+
+  const resetCollectedDraft = () => {
+    formik.resetForm();
+    void refreshCollectionSummary();
   };
 
   // Opens the FinalPaymentReviewDialog from the preview dialog
@@ -1129,12 +1160,13 @@ const FeeCollectComponentForm = ({
       const collectResponse = await submitCollection(prepareCollectionCommand(true));
 
       shikshaMitraToast.success({
-        message: formik.values.payment.paymentMethod === 'Cash' ? 'Receipt generated and fees settled. Cash Income awaits independent Cash Management approval.' : collectResponse.auditSummary?.headline || 'Fee collected successfully',
+        message: formik.values.payment.paymentMethod === 'Cash' ? 'Payment collected and fees settled. Cash Income awaits independent Cash Management approval.' : collectResponse.auditSummary?.headline || 'Fee collected successfully',
       });
       setFinalReviewOpen(false);
       submissionRef.current = null;
       setLastCollectResponse(collectResponse);
       setCollectionOutcomeUncertain(false);
+      resetCollectedDraft();
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
         if (collectResponse.auditSummary || collectionAdapter) {
           setOutcomeDialogOpen(true);
@@ -1177,6 +1209,7 @@ const FeeCollectComponentForm = ({
       submissionRef.current = null;
       setLastCollectResponse(collectResponse);
       setCollectionOutcomeUncertain(false);
+      resetCollectedDraft();
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
         if (collectResponse.auditSummary || collectionAdapter) {
           setOutcomeDialogOpen(true);
@@ -1401,9 +1434,14 @@ const FeeCollectComponentForm = ({
   useEffect(
     () => () => {
       if (feeReceiptBlobUrl) URL.revokeObjectURL(feeReceiptBlobUrl);
+    },
+    [feeReceiptBlobUrl]
+  );
+  useEffect(
+    () => () => {
       if (chargeReceiptBlobUrl) URL.revokeObjectURL(chargeReceiptBlobUrl);
     },
-    [feeReceiptBlobUrl, chargeReceiptBlobUrl]
+    [chargeReceiptBlobUrl]
   );
 
   // ── Show skeleton while loading ─────────────────────────────────────────────
@@ -1477,15 +1515,18 @@ const FeeCollectComponentForm = ({
 
     setFeeReceiptBlobUrl(null);
     setChargeReceiptBlobUrl(null);
+    receiptPreviewRequest.current += 1;
+    setReceiptPdfStatus({
+      fee: hasFeeReceipt ? 'loading' : 'idle',
+      charge: hasChargeReceipt ? 'loading' : 'idle',
+    });
     setReceiptDialogOpen(true);
 
-    // Load PDFs for both receipts (if they exist)
-    if (hasFeeReceipt) {
-      await loadFeeReceiptPdf(collectResponse.feeReceiptId!);
-    }
-    if (hasChargeReceipt) {
-      await loadChargeReceiptPdf(collectResponse.chargeReceiptId!);
-    }
+    // Each receipt owns its progress and failure; one unavailable PDF does not hide the other.
+    await Promise.all([
+      hasFeeReceipt && loadReceiptPdf(collectResponse.feeReceiptId!, 'fee'),
+      hasChargeReceipt && loadReceiptPdf(collectResponse.chargeReceiptId!, 'charge'),
+    ]);
 
     return true;
   };
@@ -1507,17 +1548,12 @@ const FeeCollectComponentForm = ({
   };
 
   const handleReceiptDialogClose = () => {
+    receiptPreviewRequest.current += 1;
     setReceiptDialogOpen(false);
     setReceiptPreviewState({ feeReceipt: null, chargeReceipt: null });
     setLastCollectResponse(null);
-    if (feeReceiptBlobUrl) {
-      URL.revokeObjectURL(feeReceiptBlobUrl);
-      setFeeReceiptBlobUrl(null);
-    }
-    if (chargeReceiptBlobUrl) {
-      URL.revokeObjectURL(chargeReceiptBlobUrl);
-      setChargeReceiptBlobUrl(null);
-    }
+    setFeeReceiptBlobUrl(null);
+    setChargeReceiptBlobUrl(null);
     // Return to parent table/list view after receipt flow is completed.
     onCancel?.(null, true);
   };
@@ -1626,12 +1662,16 @@ const FeeCollectComponentForm = ({
         position: 'relative',
       }}
     >
-      {formData && collectFormError && (
+      {formData && (collectFormError || collectionRefreshFailed) && (
         <Alert
           severity="error"
           sx={{ mx: 1.5, mt: 1 }}
           action={
-            <Button size="small" disabled={collectLoading} onClick={() => refetchCollectForm?.()}>
+            <Button
+              size="small"
+              disabled={collectLoading || collectionRefreshing}
+              onClick={() => void refreshCollectionSummary()}
+            >
               Refresh fees
             </Button>
           }
@@ -2470,10 +2510,20 @@ const FeeCollectComponentForm = ({
             <UnifiedReceiptDisplay
               feeReceipt={feeReceiptData}
               chargeReceipt={chargeReceiptData}
-              feeIsLoading={false}
-              chargeIsLoading={false}
+              feeIsLoading={receiptPdfStatus.fee === 'loading'}
+              chargeIsLoading={receiptPdfStatus.charge === 'loading'}
               feeBlobUrl={feeReceiptBlobUrl}
               chargeBlobUrl={chargeReceiptBlobUrl}
+              feeError={receiptPdfStatus.fee === 'error' ? RECEIPT_PDF_ERROR : null}
+              chargeError={receiptPdfStatus.charge === 'error' ? RECEIPT_PDF_ERROR : null}
+              onRetryFee={() => {
+                if (receiptPreviewState.feeReceipt)
+                  void loadReceiptPdf(receiptPreviewState.feeReceipt.id, 'fee');
+              }}
+              onRetryCharge={() => {
+                if (receiptPreviewState.chargeReceipt)
+                  void loadReceiptPdf(receiptPreviewState.chargeReceipt.id, 'charge');
+              }}
               onOpenFeeInNewTab={() => handleOpenReceiptInNewTab(feeReceiptBlobUrl)}
               onDownloadFee={() =>
                 handleDownloadReceipt(receiptPreviewState.feeReceipt, feeReceiptBlobUrl)
@@ -2551,6 +2601,8 @@ const FeeCollectComponentForm = ({
         loading={collectLoading}
         formValues={allocationFormValues}
         student={student}
+        chargesData={chargesData ?? []}
+        feeHeadMap={feeHeadMap}
         bankAccounts={bankAccountOptions}
       />
     </Box>

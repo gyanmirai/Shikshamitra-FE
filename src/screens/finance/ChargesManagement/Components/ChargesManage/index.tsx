@@ -4,12 +4,13 @@ import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
 import { Add } from '@mui/icons-material';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
-import { Box, Card, Stack, Button, TextField, Typography } from '@mui/material';
+import { Box, Card, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -159,6 +160,13 @@ const ChargesManagement = () => {
     setSelectedChargeData({ ...data, chargeId });
     setSelectedMode(mode);
     approvalReviewDialog.onTrue();
+  };
+
+  const handleVoidClose = () => {
+    if (isVoiding) return;
+    voidChargeDialog.onFalse();
+    setSelectedChargeData(null);
+    setVoidReason('');
   };
 
   return (
@@ -493,18 +501,19 @@ const ChargesManagement = () => {
           </Button>
         }
       />
-      <ConfirmDialog
+      <CustomDialog
         open={voidChargeDialog.value}
-        onClose={() => {
-          if (isVoiding) return;
-          voidChargeDialog.onFalse();
-          setSelectedChargeData(null);
-          setVoidReason('');
-        }}
+        handleClose={handleVoidClose}
         title="Cancel Charge"
-        content={
+        maxWidth="xs"
+        hasForm={false}
+        guardUnsavedChanges={false}
+        disableClose={isVoiding}
+        aria-describedby="cancel-charge-description"
+      >
+        <DialogScrollContent>
           <Stack spacing={2}>
-            <Typography variant="body2">
+            <Typography id="cancel-charge-description" variant="body2">
               This cancels the approved, uncollected charge lines. Charges with a collection cannot
               be cancelled. Reverse the collection through reconciliation or use the refund workflow.
             </Typography>
@@ -515,14 +524,30 @@ const ChargesManagement = () => {
               minRows={3}
               label="Reason *"
               value={voidReason}
+              disabled={isVoiding}
               onChange={(event) => setVoidReason(event.target.value)}
               error={voidReason.length > 0 && voidReason.trim().length < 10}
               helperText="Enter a cancellation reason with at least 10 characters."
             />
           </Stack>
-        }
-        action={
+        </DialogScrollContent>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
           <Button
+            type="button"
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            disabled={isVoiding}
+            onClick={handleVoidClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            size="small"
+            loading={isVoiding}
+            loadingPosition="start"
             startIcon={<Iconify icon="mdi:cancel" />}
             variant="contained"
             color="warning"
@@ -553,8 +578,8 @@ const ChargesManagement = () => {
           >
             Cancel Charge
           </Button>
-        }
-      />
+        </DialogActions>
+      </CustomDialog>
       <ConfirmDialog
         open={unsavedClose !== null}
         icon="warning"

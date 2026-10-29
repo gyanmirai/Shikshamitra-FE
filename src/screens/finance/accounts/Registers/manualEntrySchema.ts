@@ -15,11 +15,6 @@ export const manualEntrySchema = Yup.object({
       (value) => Number(value) >= 0.01 && Number(value) <= 999999999999.99
     ),
   paymentMethod: Yup.number().required('Select a payment method.').min(0).max(6),
-  cashCollectionId: Yup.string().when(['paymentMethod', '$direction'], {
-    is: (method: number, direction: string) =>
-      method === PaymentMethod.CASH && direction === 'expense',
-    then: (schema) => schema.required('Select a pending cash source.'),
-  }),
   bankAccountId: Yup.string().when('paymentMethod', {
     is: (method: number) => method !== PaymentMethod.CASH,
     then: (schema) => schema.required('Select a school bank account.'),
@@ -34,10 +29,6 @@ export const manualEntrySchema = Yup.object({
           Boolean(value && dayjs(value).isValid() && !dayjs(value).isAfter(dayjs()))
         ),
   }),
-  paymentReference: Yup.string().max(100).when(['paymentMethod', '$direction'], {
-    is: (method: number, direction: string) =>
-      method === PaymentMethod.CASH && direction === 'expense',
-    then: (schema) => schema.trim().required('Enter a payment reference for this cash expense.'),
-  }),
+  paymentReference: Yup.string().max(100),
   notes: Yup.string().max(2000),
 });
