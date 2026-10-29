@@ -51,6 +51,7 @@ const mocks = vi.hoisted(() => ({
   pfRuleAvailable: true,
   esiPolicyAvailable: true,
   revisionsFetching: false,
+  revisionsError: false,
   revisions: [] as any[],
   readiness: { canActivate: false, blockerCodes: [] as string[] },
   activate: vi.fn(),
@@ -193,7 +194,7 @@ vi.mock('src/redux/hr/compensation-revision-api', () => ({
     data: { items: mocks.revisions },
     refetch: mocks.refetchRevisions,
     isLoading: false,
-    isError: false,
+    isError: mocks.revisionsError,
   }),
   useSaveEmployeeCompensationMutation: () => [mocks.saveSalary, { isLoading: false }],
   useGetEmployeeActivationReadinessQuery: () => ({
@@ -265,6 +266,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     mocks.esiPolicyAvailable = true;
     mocks.revisions = [];
     mocks.revisionsFetching = false;
+    mocks.revisionsError = false;
     mocks.canManageSalary = true;
     mocks.refetchRevisions.mockResolvedValue({});
     mocks.refetchSetup.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });
@@ -305,8 +307,10 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.click(screen.getByLabelText('Apply ESIC'));
     expect(screen.getByRole('button', { name: 'Preview salary' })).toBeDisabled();
     expect(onSalaryChange).toHaveBeenLastCalledWith(null);
-    await user.type(screen.getByLabelText('Reason for turning PF off'), 'Not enrolled');
-    await user.type(screen.getByLabelText('Reason for turning ESIC off'), 'Not enrolled');
+    await user.click(screen.getByLabelText('Reason for turning PF off'));
+    await user.paste('Not enrolled');
+    await user.click(screen.getByLabelText('Reason for turning ESIC off'));
+    await user.paste('Not enrolled');
     expect(screen.getByRole('button', { name: 'Preview salary' })).toBeEnabled();
     await user.click(screen.getByRole('button', { name: 'Preview salary' }));
     await waitFor(() =>
@@ -376,8 +380,10 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '18000');
     await user.click(screen.getByLabelText('Apply PF'));
     await user.click(screen.getByLabelText('Apply ESIC'));
-    await user.type(screen.getByLabelText('Reason for turning PF off'), 'Not enrolled');
-    await user.type(screen.getByLabelText('Reason for turning ESIC off'), 'Not enrolled');
+    await user.click(screen.getByLabelText('Reason for turning PF off'));
+    await user.paste('Not enrolled');
+    await user.click(screen.getByLabelText('Reason for turning ESIC off'));
+    await user.paste('Not enrolled');
     expect(screen.getByRole('button', { name: 'Preview salary' })).toBeDisabled();
     expect(onReadinessChange).toHaveBeenLastCalledWith(
       expect.arrayContaining([
@@ -1219,6 +1225,66 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     expect(mocks.refetchRevisions).toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
     expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 10,000');
+  });
+  it('retries failed salary history without losing entries and blocks overlapping retries', async () => {
+    const user = userEvent.setup();
+    mocks.revisionsError = true;
+    mocks.revisions = [
+      {
+        id: 'revision-existing',
+        revisionNumber: 1,
+        status: 'EFFECTIVE',
+        netSalary: 16000,
+        isCurrent: true,
+        effectiveMonth: '2026-10-01',
+        salaryBasis: 'EMPLOYER_COST',
+        quotedMonthlyAmount: 16000,
+        sourceSalaryTemplateId: 'template-default',
+        sourceSalaryTemplateVersionId: 'version-default',
+        esiManagementMode: 'IN_PLATFORM',
+        esiPolicyId: 'esi-policy-1',
+      },
+    ];
+    renderBuilder({ initialMonth: '2026-11' });
+    await user.click(screen.getByRole('button', { name: /Salary history/ }));
+    expect(screen.getByText(/Revision 1 -/)).toBeVisible();
+    fireEvent.change(screen.getByLabelText('Monthly cost to school (CTC)'), {
+      target: { value: '18000' },
+    });
+    await user.click(screen.getByRole('button', { name: 'PF registration details' }));
+    fireEvent.change(screen.getByLabelText('PF number'), { target: { value: 'RETAINED-DRAFT' } });
+    let finishRetry: (response: unknown) => void = () => {};
+    mocks.refetchRevisions.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishRetry = resolve;
+      })
+    );
+    const retry = screen.getByRole('button', { name: 'Retry salary history' });
+    await user.click(retry);
+    expect(retry).toBeDisabled();
+    fireEvent.click(retry);
+    expect(mocks.refetchRevisions).toHaveBeenCalledOnce();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    await act(async () => finishRetry({ error: { status: 503 } }));
+    expect(await screen.findByText(/Salary history could not be refreshed/)).toBeVisible();
+    expect(retry).toBeEnabled();
+    expect(screen.getByLabelText('PF number')).toHaveValue('RETAINED-DRAFT');
+    mocks.refetchRevisions.mockImplementationOnce(async () => {
+      mocks.revisionsError = false;
+      return { data: { items: mocks.revisions } };
+    });
+    await user.click(retry);
+    await waitFor(() => expect(screen.queryByText(/Salary history could not/)).toBeNull());
+    expect(
+      (screen.getByLabelText('Monthly cost to school (CTC)') as HTMLInputElement).value
+    ).toContain('18,000');
+    expect(screen.getByLabelText('PF number')).toHaveValue('RETAINED-DRAFT');
+    expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11');
+    expect(screen.getByText(/Revision 1 -/)).toBeVisible();
+    expect(mocks.refetchRevisions).toHaveBeenCalledTimes(2);
+    expect(mocks.refetchSetup).not.toHaveBeenCalled();
+    expect(mocks.saveSalary).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
   });
   it('does not calculate or save without the compensation Manage permission', () => {
     mocks.canManageSalary = false;

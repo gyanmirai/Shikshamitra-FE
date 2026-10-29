@@ -1,9 +1,30 @@
 import { employeeType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
+import { loadPayrollComponentOptions } from './payroll-component-options';
+
+import type {
+  PayrollComponentOptions,
+  PayrollComponentOptionsArgs,
+} from './payroll-component-options';
 
 export const employeePayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
+    getEarningComponentOptions: builder.query<PayrollComponentOptions, PayrollComponentOptionsArgs>(
+      {
+        queryFn: (args, queryApi, _extraOptions, baseQuery) =>
+          loadPayrollComponentOptions('earning', args, baseQuery, queryApi.signal),
+        providesTags: [employeeType.earningComponents],
+      }
+    ),
+    getDeductionComponentOptions: builder.query<
+      PayrollComponentOptions,
+      PayrollComponentOptionsArgs
+    >({
+      queryFn: (args, queryApi, _extraOptions, baseQuery) =>
+        loadPayrollComponentOptions('deduction', args, baseQuery, queryApi.signal),
+      providesTags: [employeeType.deductionComponents],
+    }),
     getDeductionComponents: builder.query({
       query: ({ page = 1, pageSize = 20, academicYearId, search }) => ({
         url: '/payroll/deduction-components',
@@ -132,6 +153,8 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
 });
 
 export const {
+  useGetEarningComponentOptionsQuery,
+  useGetDeductionComponentOptionsQuery,
   useAddDeductionComponentMutation,
   useAddEarningComponentMutation,
   useUpdateDeductionComponentMutation,

@@ -8,6 +8,7 @@ let deductions: any[] = [];
 let templates: any[] = [];
 let failDeduction = false;
 let failCatalog = false;
+let updates: any[] = [];
 const year = {
   id: 'synthetic-year',
   name: '2026-27',
@@ -27,7 +28,7 @@ const fixture: Plugin = {
         response.end(JSON.stringify(data));
       };
       let body: any = {};
-      if (request.method === 'POST') {
+      if (request.method === 'POST' || request.method === 'PUT') {
         let raw = '';
         for await (const chunk of request) raw += chunk;
         body = raw ? JSON.parse(raw) : {};
@@ -45,6 +46,28 @@ const fixture: Plugin = {
         templates = [];
         failDeduction = false;
         failCatalog = false;
+        updates = [];
+        return send({ ok: true });
+      }
+      if (path === '/fixture/seed') {
+        earnings = Array.from({ length: body.earnings || 0 }, (_, index) => ({
+          id: `earning-${index + 1}`,
+          earningComponentName: `Earning ${index + 1}`,
+          earningType: 'Fixed',
+          calculationType: 'Amount',
+          amount: 100,
+          visibleInPayslip: true,
+          isActive: true,
+        }));
+        deductions = Array.from({ length: body.deductions || 0 }, (_, index) => ({
+          id: `deduction-${index + 1}`,
+          deductionComponentName: `Deduction ${index + 1}`,
+          deductionType: 'Fixed',
+          calculationType: 'Amount',
+          amount: 100,
+          visibleInPayslip: true,
+          isActive: true,
+        }));
         return send({ ok: true });
       }
       if (path === '/fixture/control') {
@@ -52,7 +75,7 @@ const fixture: Plugin = {
         failCatalog = Boolean(body.failCatalog);
         return send({ ok: true });
       }
-      if (path === '/fixture/state') return send({ earnings, deductions, templates });
+      if (path === '/fixture/state') return send({ earnings, deductions, templates, updates });
       if (path === '/api/hr/setup-readiness')
         return send({
           academicYearId: year.id,
@@ -106,7 +129,39 @@ const fixture: Plugin = {
           rows.push(row);
           return send(row);
         }
-        return send({ items: rows, totalCount: rows.length });
+        const page = Number(url.searchParams.get('page') || 1);
+        const pageSize = Number(url.searchParams.get('pageSize') || 20);
+        const search = (url.searchParams.get('search') || '').toLowerCase();
+        const matches = rows.filter((row) =>
+          String(row.earningComponentName || row.deductionComponentName)
+            .toLowerCase()
+            .includes(search)
+        );
+        return send({
+          items: matches.slice((page - 1) * pageSize, page * pageSize),
+          totalCount: matches.length,
+        });
+      }
+      const componentRecord =
+        /^\/api\/payroll\/(earning|deduction)-components\/([^/]+)(\/update-impact-preview)?$/.exec(
+          path
+        );
+      if (componentRecord) {
+        const rows = componentRecord[1] === 'earning' ? earnings : deductions;
+        const row = rows.find((item) => item.id === componentRecord[2]);
+        if (!row) return send({ error: { message: 'Synthetic component not found.' } }, 404);
+        if (componentRecord[3])
+          return send({
+            previewHash: 'synthetic-impact-proof',
+            effectiveMonth: '2026-10',
+            syncedEmployeeCount: 0,
+            manualOverrideEmployeeCount: 0,
+          });
+        if (request.method === 'PUT') {
+          Object.assign(row, body);
+          updates.push({ id: row.id, body });
+        }
+        return send(row);
       }
       if (path === '/api/payroll/salary-templates/component-catalog') {
         if (failCatalog)

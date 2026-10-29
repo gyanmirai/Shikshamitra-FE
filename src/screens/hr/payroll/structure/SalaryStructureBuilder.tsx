@@ -227,6 +227,8 @@ export function SalaryStructureBuilder({
   const [hasConflict, setHasConflict] = useState(false);
   const [localBusy, setLocalBusy] = useState(false);
   const [setupRefreshing, setSetupRefreshing] = useState(false);
+  const [historyRefreshing, setHistoryRefreshing] = useState(false);
+  const [historyReloadError, setHistoryReloadError] = useState('');
   const [operation, setOperation] = useState<'calculate' | 'save' | null>(null);
   const [amountTouched, setAmountTouched] = useState(false);
   const [reasonTouched, setReasonTouched] = useState(false);
@@ -388,9 +390,11 @@ export function SalaryStructureBuilder({
   const busy =
     localBusy ||
     setupRefreshing ||
+    historyRefreshing ||
     calculationState.isLoading ||
     saveState.isLoading ||
     activationState.isLoading;
+  const historyUnavailable = revisionsError || Boolean(historyReloadError);
   useEffect(() => {
     if (
       initialized &&
@@ -443,6 +447,30 @@ export function SalaryStructureBuilder({
     esiPolicies?.find((policy) => policy.id === esiPolicyId),
     effectiveMonth
   );
+  const reloadSalaryHistory = async () => {
+    if (operationPending.current || !employeeId || !canReadCompensation) return;
+    operationPending.current = true;
+    setHistoryRefreshing(true);
+    setHistoryReloadError('');
+    setCalculation(null);
+    setCalculatedSignature('');
+    try {
+      const response = await refetchRevisions();
+      if (response.error) throw new Error('Salary history refresh failed.');
+      if (hasConflict) {
+        setHasConflict(false);
+        setOperationError('');
+      }
+      operationKeyRef.current = '';
+    } catch {
+      setHistoryReloadError(
+        'Salary history could not be refreshed. Your entries are still here. Retry salary history.'
+      );
+    } finally {
+      operationPending.current = false;
+      setHistoryRefreshing(false);
+    }
+  };
   const pfConfigurationInvalid = Boolean(
     pfApplicable && (pfRulesError || !pfRules.some((rule: any) => rule.id === pfRuleId))
   );
@@ -561,6 +589,7 @@ export function SalaryStructureBuilder({
       !calculation ||
       savedSignature === signature ||
       hasConflict ||
+      historyUnavailable ||
       targetBlocked ||
       statutoryBlocked
     )
@@ -930,7 +959,7 @@ export function SalaryStructureBuilder({
     if (operation === 'save') footerStatus = 'Saving salary…';
     if (activationState.isLoading) footerStatus = 'Activating staff…';
   } else if (!canManage) footerStatus = 'View-only salary';
-  else if (hasConflict || revisionsError) footerStatus = 'Review salary history before saving';
+  else if (hasConflict || historyUnavailable) footerStatus = 'Review salary history before saving';
   else if (!selectedVersion) footerStatus = 'Choose a salary template';
   else if (templateChangeRequired) footerStatus = 'Review the template version change';
   else if (amountInvalid) footerStatus = 'Enter an amount greater than zero';
@@ -984,13 +1013,13 @@ export function SalaryStructureBuilder({
     !templateChangeRequired &&
     !reviewStatutory &&
     !hasConflict &&
-    !revisionsError;
+    !historyUnavailable;
   const canReviewSave =
     templateLookupReady &&
     canManage &&
     !busy &&
     !hasConflict &&
-    !revisionsError &&
+    !historyUnavailable &&
     !(savedSignature === signature && calculationCurrent) &&
     (!calculationCurrent || reasonInvalid || reviewStatutory || targetBlocked);
 
@@ -1152,7 +1181,7 @@ export function SalaryStructureBuilder({
             targetBlocked ||
             savedSignature === signature ||
             hasConflict ||
-            revisionsError
+            historyUnavailable
           }
         >
           Save salary
@@ -1661,20 +1690,8 @@ export function SalaryStructureBuilder({
                 <Button
                   size="small"
                   disabled={busy}
-                  onClick={async () => {
-                    setLocalBusy(true);
-                    try {
-                      const response = await refetchRevisions();
-                      if (!response.error) {
-                        setHasConflict(false);
-                        setCalculation(null);
-                        setOperationError('');
-                        operationKeyRef.current = '';
-                      }
-                    } finally {
-                      setLocalBusy(false);
-                    }
-                  }}
+                  loading={historyRefreshing}
+                  onClick={reloadSalaryHistory}
                 >
                   Reload salary history
                 </Button>
@@ -1778,8 +1795,25 @@ export function SalaryStructureBuilder({
           </Alert>
         ) : null}
 
-        {revisionsError ? (
-          <Alert severity="error">Salary history could not be loaded.</Alert>
+        {historyUnavailable ? (
+          <Alert
+            severity="error"
+            action={
+              !hasConflict && (
+                <Button
+                  size="small"
+                  disabled={busy}
+                  loading={historyRefreshing}
+                  onClick={reloadSalaryHistory}
+                >
+                  Retry salary history
+                </Button>
+              )
+            }
+          >
+            {historyReloadError ||
+              'Salary history could not be loaded. Retry before saving salary.'}
+          </Alert>
         ) : null}
         {revisionData?.items.length ? (
           <Accordion

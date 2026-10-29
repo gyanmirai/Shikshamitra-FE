@@ -21,9 +21,9 @@ import { getIn, useFormik, setNestedObjectValues } from 'formik';
 import { salaryPreviewError } from 'src/utils/salary-preview-error';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useGetEsiPolicyOptionsQuery } from 'src/redux/hr/esi-policy-api';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useRef, useMemo, useState, useEffect, useContext, useCallback } from 'react';
 import { HrSetupLink, HrSetupRefresh } from 'src/screens/hr/recovery/hr-setup-controls';
 import {
@@ -199,33 +199,35 @@ export default function SalaryTemplateEditor({
           <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
             <SalaryTemplateSkeleton />
           </Box>
-          <Box
-            component="footer"
-            sx={{
-              flexShrink: 0,
-              p: { xs: 1, md: 2 },
-              borderTop: 1,
-              borderColor: 'divider',
-              bgcolor: 'background.paper',
-              display: 'flex',
-              gap: 1,
-              flexWrap: 'wrap',
-              alignItems: 'center',
-            }}
-          >
-            <Button size="small" variant="outlined" onClick={close}>
-              {readOnly ? 'Close' : 'Cancel'}
-            </Button>
-            <Typography variant="body2" color="text.secondary" sx={{ flex: '1 1 200px' }}>
-              Loading template configuration…
-            </Typography>
-
-            {!readOnly && (
-              <Button size="small" variant="contained" disabled>
-                {isCreate ? 'Create Template' : 'Save Changes'}
+          {!embedded && (
+            <Box
+              component="footer"
+              sx={{
+                flexShrink: 0,
+                p: { xs: 1, md: 2 },
+                borderTop: 1,
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+                display: 'flex',
+                gap: 1,
+                flexWrap: 'wrap',
+                alignItems: 'center',
+              }}
+            >
+              <Button size="small" variant="outlined" onClick={close}>
+                {readOnly ? 'Close' : 'Cancel'}
               </Button>
-            )}
-          </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ flex: '1 1 200px' }}>
+                Loading template configuration…
+              </Typography>
+
+              {!readOnly && (
+                <Button size="small" variant="contained" disabled>
+                  {isCreate ? 'Create Template' : 'Save Changes'}
+                </Button>
+              )}
+            </Box>
+          )}
         </Box>
       ) : failed || (!isCreate && !template) ? (
         <Alert

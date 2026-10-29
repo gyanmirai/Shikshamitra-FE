@@ -68,6 +68,7 @@ Outside the wizard, the picker offers the matching component setup page in a new
 Required deduction and statutory dependencies appear inside the salary step when needed; the salary draft remains mounted while a dependency is configured.
 Role repair remains an explicitly authorized Role Management task in another tab.
 Each step saves independently through existing APIs, and the final action rechecks server readiness.
+Failed background catalogue reads keep earning and salary-template editors mounted with their entries and an explicit retry action. The earning selector loads the complete paginated catalogue; embedded template loading uses only the wizard's navigation footer.
 Closing preserves saved configuration, protects unsaved entries with the existing discard confirmation, leaves the current route intact, and shows no banner.
 Dismissal lasts for the document lifetime across HR navigation and resets on refresh or a user, tenant, or academic-year change.
 Self-service-only users receive no popup and make no readiness request.
@@ -146,6 +147,8 @@ The device attendance screen starts with the current month and keeps the empty-s
 Payslip content is keyed by both employee and payroll month, and a previous response is not rendered while a new selection is loading.
 Only a 404 response is shown as a missing payslip, while access, server, and network failures provide a retry action.
 Percentage-based earning components list only valid earning-component dependencies and surface backend dependency errors on the component field.
+Component Add always starts a blank session after a successful edit or confirmed discard. Standalone create/update controls follow the existing backend Add grant; delete remains separately gated. Pending saves lock fields and close/navigation actions until settlement, and embedded updates display their impact decision in a modal above setup.
+Percentage calculation bases load complete metadata through cached, sequential pages only when needed. Missing, changing or failed pages show retry guidance rather than a partial catalogue; searching filters the loaded choices while preserving Gross Salary, saved selections and earning dependency validation.
 
 ### Policies & Rules navigation
 
@@ -307,6 +310,7 @@ Users preview and save salary directly as an effective immutable revision withou
 A later save creates another revision, supersedes the previous effective revision for the same month, and keeps future-effective revisions scheduled.
 After salary is ready, users with Employee Edit permission activate the employee as a separate action.
 Only effective revisions drive payroll, while one-time earning and deduction components remain a separate editable list.
+Salary-history lookup failures expose an explicit retry that retains salary/statutory drafts and loaded history. Retry shares the salary operation lock, keeps saving blocked on failure, and invalidates the preview before successful recovery so the user must calculate again.
 System-managed statutory lines stay visible in the calculation but are never persisted as editable employee components.
 Run Payroll shows compensation revision provenance and protected-target drift without silently changing salary or blocking lock.
 Employee payslips omit employer cost and compensation protection details.

@@ -14,9 +14,9 @@ import { Alert, Stack, Button, MenuItem, TextField } from '@mui/material';
 import { useGetSalaryTemplatesQuery } from 'src/redux/hr/salary-template-api';
 import { EsiPolicyEditor } from 'src/screens/hr/payroll/setting/esi-policies';
 import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
-import { useGetEarningComponentsQuery } from 'src/redux/hr/employee-payroll-api';
 import { LeavePolicyForm } from 'src/screens/hr/policies/components/LeavePolicyForm';
 import { ProfessionalTaxForm } from 'src/screens/hr/payroll/setting/professional-tax';
+import { useGetEarningComponentOptionsQuery } from 'src/redux/hr/employee-payroll-api';
 import { EarningComponentForm } from 'src/screens/hr/payroll/setting/earning-component';
 import { ShiftManagementForm } from 'src/screens/hr/attendance-setting/shift-management';
 import SalaryTemplateEditor from 'src/screens/hr/payroll/setting/salary-template-editor';
@@ -133,28 +133,29 @@ export function HrSetupEditor(props: Props) {
 
 function EarningsEditor({ onSaved }: { onSaved: () => void }) {
   const navigate = useContext(HrSetupNavigationContext);
-  const query = useGetEarningComponentsQuery({ page: 1, pageSize: 200 });
+  const query = useGetEarningComponentOptionsQuery(undefined);
   const [selected, setSelected] = useState('new');
   // Keep the selected record stable while its catalogue refreshes in the background.
   const [row, setRow] =
     useState<React.ComponentProps<typeof EarningComponentForm>['editData']>(null);
   const rows = query.currentData?.items || [];
-  if (query.isError)
-    return (
-      <Alert
-        severity="error"
-        action={
-          <Button size="small" onClick={() => query.refetch()}>
-            Retry
-          </Button>
-        }
-      >
-        Unable to load earning components.
-      </Alert>
-    );
-  if (!query.currentData) return <Alert severity="info">Loading earning components...</Alert>;
+  const errorNotice = query.isError ? (
+    <Alert
+      severity="error"
+      action={
+        <Button size="small" onClick={() => query.refetch()}>
+          Retry
+        </Button>
+      }
+    >
+      Unable to load earning components.
+    </Alert>
+  ) : null;
+  if (!query.currentData)
+    return errorNotice || <Alert severity="info">Loading earning components...</Alert>;
   return (
     <Stack spacing={2}>
+      {errorNotice}
       <TextField
         select
         size="small"
@@ -163,12 +164,12 @@ function EarningsEditor({ onSaved }: { onSaved: () => void }) {
         onChange={(event) =>
           navigate(() => {
             setSelected(event.target.value);
-            setRow(rows.find((item: { id: string }) => item.id === event.target.value) || null);
+            setRow(rows.find((item) => item.id === event.target.value) || null);
           })
         }
       >
         <MenuItem value="new">Create earning component</MenuItem>
-        {rows.map((item: { id: string; earningComponentName: string }) => (
+        {rows.map((item) => (
           <MenuItem key={item.id} value={item.id}>
             {item.earningComponentName}
           </MenuItem>
@@ -198,22 +199,23 @@ function TemplateEditor({ onSaved, revision }: Pick<Props, 'onSaved' | 'revision
   );
   const query = useGetSalaryTemplatesQuery();
   const [selected, setSelected] = useState(canCreate ? 'new' : '');
-  if (query.isError)
-    return (
-      <Alert
-        severity="error"
-        action={
-          <Button size="small" onClick={() => query.refetch()}>
-            Retry
-          </Button>
-        }
-      >
-        Unable to load salary templates.
-      </Alert>
-    );
-  if (!query.currentData) return <Alert severity="info">Loading salary templates...</Alert>;
+  const errorNotice = query.isError ? (
+    <Alert
+      severity="error"
+      action={
+        <Button size="small" onClick={() => query.refetch()}>
+          Retry
+        </Button>
+      }
+    >
+      Unable to load salary templates.
+    </Alert>
+  ) : null;
+  if (!query.currentData)
+    return errorNotice || <Alert severity="info">Loading salary templates...</Alert>;
   return (
     <Stack spacing={2}>
+      {errorNotice}
       <TextField
         select
         size="small"
