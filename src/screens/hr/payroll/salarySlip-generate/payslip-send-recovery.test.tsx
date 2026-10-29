@@ -193,3 +193,9 @@ it.each(['empty', 'other-document', 'other-key'])('retains the request identity 
   await waitFor(() => expect(requests).toHaveLength(2));
   expect(requests[1]).toEqual(requests[0]);
 });
+// Route/month behavior is covered by use-payroll-month and the browser workflow suite.
+vi.mock('../payroll-cycle/use-payroll-month', async () => {
+  const { useState } = await import('react');
+  const { default: payrollDate } = await import('dayjs');
+  return { usePayrollMonth: () => useState(payrollDate().startOf('month')) };
+});

@@ -273,3 +273,9 @@ vi.mock('src/redux/hr/hrOperationalTableApi', () => ({
     return { ...state.tableResult, refetch: state.tableRetry };
   },
 }));
+// Route/month behavior is covered by use-payroll-month and the browser workflow suite.
+vi.mock('../payroll-cycle/use-payroll-month', async () => {
+  const { useState } = await import('react');
+  const { default: payrollDate } = await import('dayjs');
+  return { usePayrollMonth: () => useState(payrollDate().startOf('month')) };
+});

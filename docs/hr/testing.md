@@ -55,6 +55,16 @@ Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vites
 The synthetic transport tests cover the Security endpoint, custom and legacy metadata, reserved/non-employee/group exclusions, every-open refresh, empty results, 403/503 recovery without draft loss, invalid selected IDs and Security mutation cache invalidation.
 They do not establish a tenant's deployed role metadata or authenticated browser acceptance. Backend tenant filtering and assignment authorization remain unchanged and require their existing backend security gates before release.
 
+## Payroll overview workflow regression
+
+Run the payroll overview, `use-payroll-month` and `use-payroll-preview-run` component suites alongside the affected monthly-payslip and salary-document suites.
+They cover month parsing and navigation, removal of obsolete preview/page context, read-only status refresh, failed reads, late refresh responses, safe blocker messages and existing document protections.
+
+Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/payroll-overview.config.ts` for the synthetic local browser workflow.
+The fixture mounts production overview, preview queries and monthly payslips with an isolated local API.
+It covers month-preserving links and breadcrumbs, reload/back navigation, no new calculation on status refresh, failed-read recovery, readable blockers, keyboard month changes and containment at 390, 768 and 1440 pixels in both themes.
+It does not establish authenticated tenant access, payroll locking, real payment or email delivery acceptance.
+
 ## Payslip & statement settings regression
 
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/payroll/salarySlip-generate/payslip-settings --pool=forks --maxWorkers=1` on Windows. The preview tests cover debounce, stale response suppression, cancellation, retry and identical viewer/download URLs; settings tests cover draft reset/cancel, save recovery and navigation. Browser acceptance must additionally check 390/768/1440px, both themes, keyboard focus and live PDF layout; automated component tests alone do not certify these states.

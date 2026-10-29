@@ -41,6 +41,7 @@ import {
 import { usePayslipActions } from './use-payslip-actions';
 import { payslipActionError } from './payslip-action-error';
 import PayslipCorrectionDialog from './payslip-correction-dialog';
+import { usePayrollMonth } from '../payroll-cycle/use-payroll-month';
 import PayslipAvailabilityNotice from './payslip-availability-notice';
 import PayslipDocumentActionDialog from './payslip-document-action-dialog';
 import EmployeeAccountEmailAction from '../../employee/employee-account-email-action';
@@ -78,7 +79,7 @@ export default function PaySlipGenerationScreen({
     onPrintError: () => setPrintError(true),
   });
   const [employee, setEmployee] = useState<{ id: string; label: string } | null>(null);
-  const [month, setMonth] = useState<dayjs.Dayjs | null>(dayjs());
+  const [month, setMonth] = usePayrollMonth();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(
     permissions,
@@ -373,7 +374,13 @@ export default function PaySlipGenerationScreen({
       {!hideHeading && (
         <CustomBreadcrumbs
           heading="Payslips"
-          links={[{ name: 'Payroll Management', href: hrPaths.payroll.root }, { name: 'Payslips' }]}
+          links={[
+            {
+              name: 'Payroll Management',
+              href: `${hrPaths.payroll.root}?month=${month.format('YYYY-MM')}`,
+            },
+            { name: 'Payslips' },
+          ]}
         />
       )}
       {!canView ? (

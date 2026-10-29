@@ -98,6 +98,53 @@ describe('background payroll preview', () => {
       }
     }
   );
+  it('refreshes an existing preview and its reviews using reads only', async () => {
+    completedPreview();
+    mocks.status.refetch.mockResolvedValue({ data: mocks.status.currentData });
+    mocks.page.refetch.mockResolvedValue({ data: mocks.page.currentData });
+    const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+    await act(async () => result.current.refreshStatus());
+    expect(mocks.status.refetch).toHaveBeenCalledOnce();
+    expect(mocks.page.refetch).toHaveBeenCalledOnce();
+    expect(mocks.start).not.toHaveBeenCalled();
+    expect(mocks.replace).not.toHaveBeenCalled();
+    expect(result.current.refreshingStatus).toBe(false);
+    expect(result.current.isCurrent).toBe(true);
+  });
+
+  it('retains a status refresh error without starting a replacement generation', async () => {
+    completedPreview();
+    mocks.status.refetch.mockResolvedValue({ error: { status: 503 } });
+    const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+    await act(async () => result.current.refreshStatus());
+    expect(mocks.page.refetch).not.toHaveBeenCalled();
+    expect(mocks.start).not.toHaveBeenCalled();
+    expect(result.current.refreshingStatus).toBe(false);
+  });
+
+  it('does not refetch old employee results after changing payroll context', async () => {
+    completedPreview();
+    let resolve!: (value: any) => void;
+    mocks.status.refetch.mockReturnValue(
+      new Promise((done) => {
+        resolve = done;
+      })
+    );
+    const { result, rerender } = renderHook(({ month }) => usePayrollPreviewRun(month, 'year-1'), {
+      initialProps: { month: '2026-08' },
+    });
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current.refreshStatus();
+    });
+    expect(result.current.refreshingStatus).toBe(true);
+    rerender({ month: '2026-09' });
+    await act(async () => {
+      resolve({ data: mocks.status.currentData });
+      await pending;
+    });
+    expect(mocks.page.refetch).not.toHaveBeenCalled();
+  });
 
   it('prioritizes a current polling access failure over a cached FAILED job setup action', () => {
     completedPreview();

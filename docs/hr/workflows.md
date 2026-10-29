@@ -371,6 +371,18 @@ Run Payroll and payslips distinguish Full-month gross, attendance-adjusted Gross
 Gross Salary is a read-only summary, separate from the regular earning lines that allocate it.
 The backend calculation contract and policy behavior are documented in [HR backend workflows](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/workflows.md#built-in-gross-salary).
 
+## Payroll overview navigation and status refresh
+
+The payroll overview, monthly payslips and salary-document periods read the selected `month=YYYY-MM` from the URL.
+Overview links into Run Payroll and Payslips, salary setup recovery and payroll breadcrumbs retain that month.
+Changing month drops the previous preview generation and page while preserving unrelated query fields.
+Reload and browser navigation restore the URL month; invalid month values fall back to the current month.
+
+Refresh status reads the existing preview status and employee results without starting a calculation or replacing its review generation.
+The action remains unavailable until a preview exists and while that preview is being prepared.
+Initial preview preparation retains its established behavior; recalculation remains available explicitly in Run Payroll.
+Known overview blockers use the shared payroll issue labels and recovery guidance, and unknown codes use a safe readable message rather than internal identifiers.
+
 ## ESIC editing and stale payroll
 
 ESIC exceptions use Start month and End month fields and apply to complete payroll months.
