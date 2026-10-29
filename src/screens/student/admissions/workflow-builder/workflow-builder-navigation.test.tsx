@@ -155,8 +155,8 @@ describe('WorkflowBuilderCanvas', () => {
   it('shows the journey directly and keeps empty-state creation usable', () => {
     render(<Canvas />, { wrapper: Wrapper });
     expect(screen.queryByRole('tabpanel')).not.toBeInTheDocument();
-    const journey = screen.getByRole('region', { name: 'Journey' });
-    fireEvent.click(within(journey).getByRole('button', { name: 'Add first stage' }));
+    const journey = screen.getByRole('region', { name: 'Admission Journey' });
+    fireEvent.click(within(journey).getByRole('button', { name: 'Add stage' }));
     expect(handlers.onAddStage).toHaveBeenCalledOnce();
     expect(within(journey).getByRole('button', { name: 'Save draft' })).toBeInTheDocument();
   });

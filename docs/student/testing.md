@@ -3,12 +3,24 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Optional onboarding fees
+
+The focused Quick Setup save/page, compact Fees editor/accordion, readiness model/summary and App Login suites passed 153 tests on 29 October 2026. They cover activation with an untouched blank fee section, independent fee-read failure/loading (including cached confirmed fees), explicit fee edits retaining validation and failure recovery, no implicit single-candidate selection, separately pending fees, and manual credential sending. Full TypeScript checking and scoped ESLint passed. Backend activation and monetary invariants are covered by [Student backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md#optional-onboarding-fees); these checks do not establish inbox delivery.
+
+## Inquiry Add Sibling UI (29 October 2026)
+
+- `admission-inquiry-duplicate-matches.test.tsx` verifies in-form matching without toast publication, accessible result announcements, required explicit parent/family confirmation, email-only/mobile-difference review, unavailable-family guards, and separate-family reason disclosure, draft retention, blank-reason and busy locks.
+- The focused duplicate-match, Inquiry page/model and Special Registration suites pass **69 tests**. Full `npm run ts` and scoped ESLint pass. The stacked sibling selector used by Special Registration keeps its existing presentation and actions.
+- `e2e/student/admission-sibling.spec.ts` passes **8 browser checks**, using the real section, select, validation, confirmation, theme and snackbar components with synthetic callbacks. It covers light/dark at 390, 768 and 1440px, long names/contact wrapping, keyboard disclosure, no toast controls, reason retention, explicit confirmation, saving locks, single callback, multiple matches, unavailable parents and different-mobile review.
+- The final Codex in-app browser smoke verified disclosure/reopening, saved Father/Mother choice, confirmation, saving locks and one synthetic callback. Browser evidence is under `.artifacts/add-sibling-20261029/`. No real Inquiry/family/parent account mutation or authenticated backend save was performed; no backend or shared feedback change is included.
+- Run: `node node_modules/@playwright/test/cli.js test --config e2e/student/admission-sibling.config.ts`. The isolated fixture uses port 4227 and never calls a real Admissions API.
 
 ## Application numbering cycle (28 October 2026)
 

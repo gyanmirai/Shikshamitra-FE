@@ -149,7 +149,8 @@ export const getStudentSetupAssignmentEligibility = (
     reason = `${labels[type]} is already assigned.`;
   }
   if (!reason && type === 'gr-number') {
-    if (!grAssignmentMode) reason = 'Load the published GR assignment settings before assigning.';
+    if (!student.divisionId) reason = 'Assign a division before assigning a GR number.';
+    else if (!grAssignmentMode) reason = 'Load the published GR assignment settings before assigning.';
     else if (mode === 'manual' && student.grNumberLocked) reason = 'GR number is locked.';
     else if (
       mode === 'manual' &&

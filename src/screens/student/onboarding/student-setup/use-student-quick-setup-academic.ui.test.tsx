@@ -238,6 +238,27 @@ it('keeps zero and plain prerequisite guidance when no division is selected', as
   expect(mocks.roll).not.toHaveBeenCalled();
 });
 
+it('disables both identifier methods until a division is selected', async () => {
+  mocks.caseQuery.currentData = makeCase({ divisionId: null });
+  render(<Harness compact />);
+  const gr = await screen.findByRole('group', { name: 'GR number assignment method' });
+  const roll = screen.getByRole('group', { name: 'Roll number assignment method' });
+  [gr, roll].forEach((group) => {
+    expect(within(group).getByRole('button', { name: 'Auto' })).toBeDisabled();
+    expect(within(group).getByRole('button', { name: 'Manual' })).toBeDisabled();
+  });
+  expect(mocks.preview).not.toHaveBeenCalled();
+  expect(mocks.gr).not.toHaveBeenCalled();
+  expect(mocks.roll).not.toHaveBeenCalled();
+});
+
+it('disables assigned identifier edit actions when division is missing', async () => {
+  mocks.caseQuery.currentData = makeCase({ divisionId: null, grNumber: '001', rollNumber: 3 });
+  render(<Harness compact />);
+  expect(await screen.findByRole('button', { name: 'Change GR number' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Change roll number' })).toBeDisabled();
+});
+
 it('previews a selected unsaved division without saving placement, GR or Roll', async () => {
   mocks.caseQuery.currentData = makeCase({ divisionId: null });
   const { result } = renderHook(() =>

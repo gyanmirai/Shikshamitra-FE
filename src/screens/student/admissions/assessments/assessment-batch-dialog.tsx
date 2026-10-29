@@ -451,6 +451,13 @@ export function AssessmentBatchDialog({
       <CustomDialog
         open
         title={titles[action]}
+        titleInfo={
+          action === 'continue'
+            ? 'Each application is checked again and follows its own configured workflow.'
+            : action === 'attendance'
+              ? 'Only entered rows are saved. Unedited attendance stays pending.'
+              : 'Only entered rows are saved. Unedited results stay pending.'
+        }
         maxWidth="lg"
         handleClose={onClose}
         hasUnsavedChanges={unsaved && saved < rows.length}
@@ -458,14 +465,7 @@ export function AssessmentBatchDialog({
       >
         <DialogScrollContent>
           <Stack spacing={1.5}>
-            <Typography variant="body2">
-              {rows.length} selected applicants.{' '}
-              {action === 'continue'
-                ? 'Each application is checked again and follows its own configured workflow.'
-                : action === 'attendance'
-                  ? 'Only entered rows are saved. Unedited attendance stays pending.'
-                  : 'Only entered rows are saved. Unedited results stay pending.'}
-            </Typography>
+            <Typography variant="body2">{rows.length} selected applicants.</Typography>
             {error && (
               <StudentFeedback
                 notificationKey="STU-0247"

@@ -107,9 +107,14 @@ export default function StudentOnboardingFees({
   });
   const { setFieldValue } = form;
   useEffect(() => {
-    if (!lockedSnapshot && !form.values.structureId && candidates.currentData?.length === 1)
+    if (
+      !compact &&
+      !lockedSnapshot &&
+      !form.values.structureId &&
+      candidates.currentData?.length === 1
+    )
       setFieldValue('structureId', candidates.currentData[0].structureId);
-  }, [candidates.currentData, form.values.structureId, setFieldValue, lockedSnapshot]);
+  }, [compact, candidates.currentData, form.values.structureId, setFieldValue, lockedSnapshot]);
   const loading =
     !caseState ||
     !feeState ||
@@ -144,17 +149,28 @@ export default function StudentOnboardingFees({
     pendingSave.current = true;
     setSaveRequested(true);
     try {
+      // An untouched optional fee section must not prevent academic activation,
+      // including when its independent read is unavailable.
+      if (
+        options?.allowIncomplete &&
+        !form.dirty &&
+        (confirmedUnchanged || !form.values.structureId || !canManage)
+      )
+        return;
       if (readError || !caseState || !feeState)
         throw new Error('Refresh fee structures before saving.');
       if (confirmedUnchanged) return;
-      if (options?.allowIncomplete && !form.values.structureId && !form.dirty) return;
       if (!canManage) throw new Error('You do not have permission to confirm the fee structure.');
       if (lockedSnapshot && form.dirty)
         throw new Error('The confirmed fee structure cannot be changed here.');
       const errors = await form.validateForm();
       if (Object.keys(errors).length) {
         await form.setTouched({ structureId: true });
-        throw new Error(errors.structureId || 'Choose a published fee structure.');
+        throw new Yup.ValidationError(
+          errors.structureId || 'Choose a published fee structure.',
+          form.values.structureId,
+          'structureId'
+        );
       }
       if (!chosen)
         throw new Error(
@@ -185,7 +201,7 @@ export default function StudentOnboardingFees({
       const message =
         (error instanceof Error ? error.message : parseApiProblemDetail(error).detail) ||
         'The fee structure could not be confirmed. Refresh and retry.';
-      form.setStatus(message);
+      form.setStatus(error instanceof Yup.ValidationError ? undefined : message);
       throw error;
     } finally {
       pendingSave.current = false;
@@ -323,11 +339,30 @@ export default function StudentOnboardingFees({
             Fee structure confirmed: {feeState.selection?.structureName}
           </StudentFeedback>
         ))}
-      {!structures.length && (
-        <StudentFeedback notificationKey="STU-0999" presentation="persistent" severity="info">
-          No published fee structure matches this student&apos;s academic year and Class. Ask
-          Finance to publish the matching structure.
-        </StudentFeedback>
+      {!structures.length && !readError && (
+        <Stack
+          spacing={1}
+          role={form.touched.structureId ? 'alert' : 'status'}
+          tabIndex={-1}
+          data-fee-structure-empty
+        >
+          <Typography
+            variant="body2"
+            color={form.touched.structureId ? 'error.main' : 'text.secondary'}
+          >
+            No published fee structure matches this student&apos;s academic year and Class. Ask
+            Finance to publish the matching structure.
+          </Typography>
+          <Button
+            size="small"
+            sx={{ alignSelf: 'flex-start' }}
+            disabled={externallyDisabled || busy || loading}
+            startIcon={<Iconify icon="mdi:refresh" width={18} />}
+            onClick={() => candidates.refetch()}
+          >
+            Refresh fee structures
+          </Button>
+        </Stack>
       )}
       {automaticallyConfirmed ? (
         <Stack spacing={0.5}>
@@ -338,12 +373,12 @@ export default function StudentOnboardingFees({
             {feeState.selection?.structureName} · Revision {feeState.selection?.revisionNumber}
           </Typography>
         </Stack>
-      ) : (
+      ) : structures.length > 0 ? (
         <ShakingTextField error={Boolean(form.touched.structureId && form.errors.structureId)}>
           <CustomSelect
             label="Fee structure"
             size="small"
-            required
+            required={!compact}
             fullWidth
             isSearch
             value={form.values.structureId}
@@ -362,7 +397,7 @@ export default function StudentOnboardingFees({
             helperText={form.touched.structureId ? form.errors.structureId : undefined}
           />
         </ShakingTextField>
-      )}
+      ) : null}
       {chosen && (
         <>
           {compact ? (

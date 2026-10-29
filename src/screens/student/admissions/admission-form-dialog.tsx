@@ -39,10 +39,11 @@ export function AdmissionFormDialog({
 }: Props) {
   if (!open) return null;
   if (editingId && !editing) {
+    const formType = props.initialPurpose === 0 ? 'Inquiry' : 'Registration';
     return (
       <CustomDialog
         open
-        title="Edit admission form"
+        title={`Edit ${formType} Form`}
         handleClose={props.onClose}
         hasForm={false}
         guardUnsavedChanges={false}
@@ -64,8 +65,8 @@ export function AdmissionFormDialog({
             </StudentFeedback>
           ) : (
             <Stack direction="row" spacing={1.5} alignItems="center" role="status">
-              <CircularProgress size={24} aria-label="Loading admission form" />
-              <Typography variant="body2">Loading admission form...</Typography>
+              <CircularProgress size={24} aria-label={`Loading ${formType.toLowerCase()} form`} />
+              <Typography variant="body2">Loading {formType.toLowerCase()} form...</Typography>
             </Stack>
           )}
         </Stack>
@@ -85,6 +86,7 @@ function AdmissionFormEditor({
 }: Omit<Props, 'open'>) {
   const wizard = useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave, onPublishNow });
   const busy = saving || wizard.submitting;
+  const formType = wizard.initialValues.purpose === 0 ? 'Inquiry' : 'Registration';
   return (
     <CustomDialog
       open
@@ -95,9 +97,9 @@ function AdmissionFormEditor({
         <Box component="span" sx={{ display: 'block' }}>
           <Stack component="span" direction="row" spacing={1.25} alignItems="center">
             <AdmissionDialogTitle
-              title={editing ? 'Edit admission form' : 'Create admission form'}
+              title={`${editing ? 'Edit' : 'Create'} ${formType} Form`}
               helpText="Build the reusable fields, validation, and review structure used by admission applicants and staff."
-              helpLabel="Admission form information"
+              helpLabel={`${formType} form information`}
             />
             <Label color="default" variant="soft">
               Draft

@@ -12,9 +12,9 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { Box, Stack, Button, IconButton, Typography } from '@mui/material';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 
 import { WorkflowStageCard } from './workflow-stage-card';
-import { AdmissionDialogTitle } from '../../admission-dialog-title';
 
 type Props = {
   dirty?: boolean;
@@ -100,22 +100,20 @@ export function WorkflowStageList({
           borderColor: 'divider',
         }}
       >
-        <Box>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography
-              id="workflow-stages-heading"
-              aria-label="Journey"
-              variant="h6"
-              fontWeight={700}
-              component="div"
-            >
-              <AdmissionDialogTitle
-                title="Journey"
-                helpText="Stages are shown in their saved sequence. Each stage’s next step controls where applicants continue."
-                helpLabel="Journey arrangement information"
-              />
+        <Box sx={{ minWidth: 0 }}>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+            <Typography id="workflow-stages-heading" variant="subtitle1" component="h2">
+              Admission Journey
             </Typography>
-            {stages.length > 0 && <Label variant="outlined">{stages.length} stages</Label>}
+            <Stack direction="row" alignItems="center">
+              <Label color="info" variant="outlined">
+                After inquiry
+              </Label>
+              <InfoTooltipIcon
+                label="About the admission journey after inquiry"
+                title="Configure the stages applicants follow after inquiry, through to admission finalization. These stages appear in Applicant 360."
+              />
+            </Stack>
           </Stack>
         </Box>
         {!readOnly && (

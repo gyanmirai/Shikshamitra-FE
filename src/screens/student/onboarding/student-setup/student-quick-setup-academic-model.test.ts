@@ -108,6 +108,21 @@ function fixture(overrides: Partial<StudentOnboardingCase> = {}) {
 }
 
 describe('quick academic save', () => {
+  it('rejects identifier assignment before any writes when division is missing', async () => {
+    const { services, initial } = fixture({ divisionId: null });
+    await expect(
+      saveQuickAcademic({
+        baseline: initial,
+        values: quickAcademicInitialValues(initial, 'both'),
+        grPolicy: 'both',
+        services,
+        onSaved: vi.fn(),
+      })
+    ).rejects.toThrow('Select a division before assigning GR or roll numbers.');
+    expect(services.assignGr).not.toHaveBeenCalled();
+    expect(services.assignRoll).not.toHaveBeenCalled();
+    expect(services.setPlacement).not.toHaveBeenCalled();
+  });
   it('saves division, GR, then previews and saves Roll using fresh dependent stamps', async () => {
     const { services, initial, order } = fixture();
     const onSaved = vi.fn();

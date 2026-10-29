@@ -251,6 +251,61 @@ const inquiry = {
 } as AdmissionInquiry;
 
 describe('Edit inquiry page', () => {
+  it('updates the captured parent mobile independently of the main school contact', async () => {
+    const saved = {
+      ...inquiry,
+      parentRelationship: 'mother',
+      mainSchoolContact: {
+        fullName: 'Meera',
+        relationship: 'father' as const,
+        mobile: '9876543212',
+      },
+      formDefinition: {
+        ...originalForm,
+        sections: originalForm.sections.map((section) => ({
+          ...section,
+          fields: [
+            ...section.fields.map((field) =>
+              field.code === 'mobile'
+                ? { ...field, label: 'Mother mobile', bindingKey: 'Mother.Mobile', required: false }
+                : field
+            ),
+            {
+              ...section.fields[2],
+              id: 'dad-mobile',
+              code: 'dad-mobile',
+              label: 'Father mobile',
+              bindingKey: 'Father.Mobile',
+            },
+          ],
+        })),
+      },
+      formValues: [...inquiry.formValues!, { fieldCode: 'dad-mobile', valueJson: '"9876543212"' }],
+    } as AdmissionInquiry;
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: saved,
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    render(<AdmissionInquiryEditPage />);
+    expect(screen.queryByRole('textbox', { name: 'Parent mobile number' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Mother mobile' }), {
+      target: { value: '9876543211' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            phone: '9876543211',
+            formValues: expect.arrayContaining([
+              { fieldCode: 'mobile', valueJson: '"9876543211"' },
+            ]),
+          }),
+        })
+      )
+    );
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useGetAdmissionInquiryCaptureCatalogueQuery).mockReturnValue({
@@ -518,7 +573,7 @@ describe('Edit inquiry page', () => {
     expect(push).toHaveBeenCalledWith('/student/admissions/pipeline?view=active');
   });
 
-  it('keeps the form hidden on an API error and offers a retry', () => {
+  it('keeps the form hidden on an API error and uses the standard error toast', async () => {
     const refetch = vi.fn();
     vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
       isLoading: false,
@@ -528,8 +583,13 @@ describe('Edit inquiry page', () => {
     render(<AdmissionInquiryEditPage />);
 
     expect(screen.queryByRole('textbox', { name: 'Applicant name' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(refetch).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Inquiry details could not be loaded. Try again.' })
+      )
+    );
+    expect(refetch).not.toHaveBeenCalled();
   });
 
   it('rejects an unrelated return path', () => {

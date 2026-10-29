@@ -189,7 +189,7 @@ export default function AdmissionFormsScreen() {
         editing={actions.editing}
         editingError={actions.editingError}
         onRetryEditing={actions.retryEditing}
-        initialPurpose={actions.creatingPurpose}
+        initialPurpose={actions.editingId ? purpose : actions.creatingPurpose}
         saving={actions.saving}
         onSave={actions.save}
         onPublishNow={actions.saveAndPublish}

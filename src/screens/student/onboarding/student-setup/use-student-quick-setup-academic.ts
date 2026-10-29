@@ -261,6 +261,10 @@ export function useStudentQuickSetupAcademic({
       resetForm({ values: quickAcademicInitialValues(saved, grPolicy) });
       return saved;
     } catch (error) {
+      if (error instanceof Yup.ValidationError && error.path) {
+        await form.setFieldTouched(error.path, true, false);
+        form.setFieldError(error.path, error.message);
+      }
       if (reportSaveErrors) {
         setFailureIsLocal(error instanceof Error && !('data' in error) && !('status' in error));
         setFailure(getOnboardingErrorMessage(error, 'Could not save student setup. Try again.'));

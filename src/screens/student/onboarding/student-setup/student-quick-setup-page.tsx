@@ -2,6 +2,7 @@
 
 import type { StudentOnboardingCase } from 'src/redux/student/onboarding/student-onboarding-types';
 
+import { ValidationError } from 'yup';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -83,7 +84,6 @@ export default function StudentQuickSetupPage({
   });
   const [failure, setFailure] = useState<string>();
   const [failureSeverity, setFailureSeverity] = useState<'error' | 'info'>('error');
-  const [failurePresentation, setFailurePresentation] = useState<'inline' | 'toast'>('inline');
   const [activatedCase, setActivatedCase] = useState<StudentOnboardingCase>();
   const [getCase] = useLazyGetStudentOnboardingCaseQuery();
   const [previewActivation] = useLazyPreviewStudentOnboardingActivationQuery();
@@ -227,9 +227,18 @@ export default function StudentQuickSetupPage({
         message: result.studentEnrollmentId ? 'Student is now active.' : 'Student setup saved.',
       });
     } catch (error) {
-      const requestFailure = !(error instanceof Error) || 'data' in error || 'status' in error;
-      setFailurePresentation(requestFailure ? 'toast' : 'inline');
-      setFailure(getOnboardingErrorMessage(error, 'Changes could not be saved. Try again.'));
+      setFailure(
+        error instanceof ValidationError
+          ? undefined
+          : getOnboardingErrorMessage(error, 'Changes could not be saved. Try again.')
+      );
+      if (error instanceof ValidationError) {
+        bodyRef.current
+          ?.querySelector<HTMLElement>(
+            error.path === 'divisionId' ? '#quick-setup-division' : '#quick-setup-fees'
+          )
+          ?.scrollIntoView({ block: 'nearest' });
+      }
       // Reconcile persisted progress after a lost response; never reallocate a saved number.
       const recovered = await getCase(student.id, false)
         .unwrap()
@@ -237,10 +246,11 @@ export default function StudentQuickSetupPage({
       if (recovered?.studentEnrollmentId) {
         setActivatedCase(recovered);
         setFailureSeverity('info');
-        setFailurePresentation('inline');
         setFailure('The student is active. Review any remaining App Login work below.');
       }
-      bodyRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+      bodyRef.current
+        ?.querySelector<HTMLElement>('[aria-invalid="true"], [data-fee-structure-empty]')
+        ?.focus();
     } finally {
       savingRef.current = false;
       setSaving(null);
@@ -365,7 +375,7 @@ export default function StudentQuickSetupPage({
               {failure && (
                 <StudentFeedback
                   notificationKey="STU-1036"
-                  presentation={failurePresentation}
+                  presentation="toast"
                   severity={failureSeverity}
                   role="alert"
                 >
@@ -583,7 +593,6 @@ export default function StudentQuickSetupPage({
                   busy ||
                   editor.loading ||
                   editor.readError ||
-                  feesState.loading ||
                   parentState.caseId !== student.id ||
                   !parentState.loaded ||
                   scopeChanged ||

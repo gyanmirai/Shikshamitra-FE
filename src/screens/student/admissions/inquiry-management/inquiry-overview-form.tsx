@@ -31,13 +31,13 @@ import {
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import AdmissionRuntimeField from '../admission-runtime-field';
-import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
 import { useAdmissionInquiryAge } from '../use-admission-inquiry-age';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { useAdmissionFormLanguage } from '../use-admission-form-language';
 import { useAdmissionUnsavedChanges } from '../use-admission-unsaved-changes';
 import { AdmissionSectionFields } from '../components/admission-section-fields';
+import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import {
   validateAdmissionInquiry,
@@ -50,6 +50,7 @@ import {
   admissionInquiryLanguageOptions,
   isAdmissionInquiryBirthDateField,
   preserveCompatibleInquiryAnswers,
+  getAdmissionInquiryVisibleSections,
 } from '../admission-inquiry-model';
 
 type InquiryEditorValues = AdmissionInquiryFormValues & { preferredLanguageCode: string };
@@ -96,6 +97,7 @@ export function InquiryOverviewForm({
       sourceDetail: current.sourceDetail ?? '',
       preferredLanguageCode: current.preferredLanguageCode || 'en',
       sendAcknowledgement: false,
+      parentRelationship: current.parentRelationship ?? undefined,
       fields: readAdmissionInquiryFormValues(current.formValues),
     }),
     [current]
@@ -166,8 +168,11 @@ export function InquiryOverviewForm({
     form,
     `${current.id}:${formik.values.offeringId}`
   );
-  const sections = getAdmissionInquirySections(form);
-  const fields = getAdmissionInquiryFields(form);
+  const sections = getAdmissionInquiryVisibleSections(
+    getAdmissionInquirySections(form, formik.values),
+    formik.values
+  );
+  const fields = getAdmissionInquiryFields(form, formik.values);
   const ageFeedback = useAdmissionInquiryAge({
     sections,
     values: formik.values.fields,

@@ -41,6 +41,12 @@ it('keeps confirmed fees compact and preserves drafts while expanding and collap
   expect(draft).toHaveValue('Unsaved draft');
 });
 
+it('shows unassigned fees separately without claiming confirmation', () => {
+  render(view({ ...base, confirmed: false, structureName: undefined }));
+  expect(screen.getByText('Fees pending')).toBeVisible();
+  expect(screen.queryByText('Confirmed')).not.toBeInTheDocument();
+});
+
 it('opens incomplete fees and reopens an error after the staff collapse it', () => {
   const state = { ...base, confirmed: false };
   const result = render(view(state));

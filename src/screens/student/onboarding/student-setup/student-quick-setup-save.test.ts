@@ -72,7 +72,7 @@ describe('single-student setup save coordination', () => {
       runStudentQuickSetupSave({ activate: true, idempotencyKey: 'attempt-1', services })
     ).resolves.toBe(activated);
 
-    expect(events).toEqual(['academic', 'fees:false', 'preview', 'activate']);
+    expect(events).toEqual(['academic', 'fees:true', 'preview', 'activate']);
     expect(services.activateStudent).toHaveBeenCalledWith(preview, 'attempt-1');
     expect(services.getCase).not.toHaveBeenCalled();
   });
@@ -117,7 +117,7 @@ describe('single-student setup save coordination', () => {
     ).rejects.toBe(failure);
 
     expect(services.saveAcademic).toHaveBeenCalledOnce();
-    expect(services.saveFees).toHaveBeenCalledWith({ allowIncomplete: false });
+    expect(services.saveFees).toHaveBeenCalledWith({ allowIncomplete: true });
     expect(services.getCase).not.toHaveBeenCalled();
     expect(services.previewActivation).not.toHaveBeenCalled();
     expect(services.activateStudent).not.toHaveBeenCalled();

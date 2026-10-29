@@ -284,6 +284,34 @@ describe('mapOnboardingCaseToItem', () => {
     expect(item.readinessItems.some((check) => check.key === 'finance-first-payment')).toBe(false);
   });
 
+  it('keeps optional fees pending separately from completed setup checks', () => {
+    const item = mapOnboardingCaseToItem(
+      buildCase({
+        status: 4,
+        studentEnrollmentId: 'active-enrollment',
+        feeStructureConfirmed: false,
+        steps: [
+          ...readySteps,
+          {
+            id: 'optional-fee',
+            key: 'finance_accounts_services',
+            label: 'Fees',
+            required: false,
+            status: 5,
+            displayOrder: 80,
+            detail: 'Fees pending. Fee assignment and payment do not block activation.',
+          },
+        ],
+      })
+    );
+    expect(getReadinessSummary(item)).toMatchObject({ progress: 100, blockingCount: 0 });
+    expect(getStudentPendingTasks(item)).not.toContainEqual(
+      expect.objectContaining({ view: 'fees' })
+    );
+    expect(item.feeStructureConfirmed).toBe(false);
+    expect(getPendingStudentCount([item], 'fees')).toBe(1);
+  });
+
   it('counts multiple required services once, with handoff evidence overriding any stale same-key step', () => {
     const item = mapOnboardingCaseToItem(
       Object.assign(

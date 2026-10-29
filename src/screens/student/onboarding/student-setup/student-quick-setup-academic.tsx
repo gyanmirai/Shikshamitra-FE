@@ -64,6 +64,7 @@ export default function StudentQuickSetupAcademic({
 }) {
   const { caseData: item, form, disabled, closed, series, grPolicy } = editor;
   const { values } = form;
+  const numberDisabled = disabled || !values.divisionId;
   if (!item || editor.loading) {
     return (
       <Stack spacing={1.5} aria-label="Loading academic setup">
@@ -120,7 +121,13 @@ export default function StudentQuickSetupAcademic({
   const editAction = (name: string, onClick: () => void) => (
     <InputAdornment position="end">
       <Tooltip title={`Change ${name}`}>
-        <IconButton size="small" aria-label={`Change ${name}`} onClick={onClick} edge="end">
+        <IconButton
+          size="small"
+          aria-label={`Change ${name}`}
+          onClick={onClick}
+          edge="end"
+          disabled={numberDisabled}
+        >
           <Iconify icon="mdi:pencil-outline" width={18} />
         </IconButton>
       </Tooltip>
@@ -238,7 +245,7 @@ export default function StudentQuickSetupAcademic({
                     GR Number
                   </Typography>
                   {grAssigned && !disabled && grManual ? (
-                    <Button size="small" onClick={editor.changeGr}>
+                    <Button size="small" onClick={editor.changeGr} disabled={numberDisabled}>
                       Change
                     </Button>
                   ) : null}
@@ -247,7 +254,9 @@ export default function StudentQuickSetupAcademic({
                       name="GR number"
                       value={values.grMode}
                       disabled={
-                        disabled || editor.settingsQuery.isFetching || editor.seriesQuery.isFetching
+                        numberDisabled ||
+                        editor.settingsQuery.isFetching ||
+                        editor.seriesQuery.isFetching
                       }
                       automatic={grAuto && !item.grNumber}
                       manual={grManual}
@@ -264,7 +273,7 @@ export default function StudentQuickSetupAcademic({
                   value={values.numberSeriesId}
                   options={series.map((entry) => ({ value: entry.id, label: entry.name }))}
                   onChange={(value) => form.setFieldValue('numberSeriesId', String(value))}
-                  disabled={disabled || editor.seriesQuery.isFetching}
+                  disabled={numberDisabled || editor.seriesQuery.isFetching}
                 />
               )}
               <ShakingTextField error={Boolean(fieldError('grValue'))}>
@@ -289,7 +298,7 @@ export default function StudentQuickSetupAcademic({
                           : undefined,
                     },
                   }}
-                  disabled={disabled && !grAssigned}
+                  disabled={numberDisabled && !grAssigned}
                 />
               </ShakingTextField>
               {!grAssigned && !closed && !editor.settingsQuery.isFetching && !grPolicy && (
@@ -346,7 +355,7 @@ export default function StudentQuickSetupAcademic({
                     Roll Number
                   </Typography>
                   {rollAssigned && !disabled && rollManual ? (
-                    <Button size="small" onClick={editor.changeRoll}>
+                    <Button size="small" onClick={editor.changeRoll} disabled={numberDisabled}>
                       Change
                     </Button>
                   ) : null}
@@ -354,7 +363,7 @@ export default function StudentQuickSetupAcademic({
                     <NumberMode
                       name="Roll number"
                       value={values.rollMode}
-                      disabled={disabled}
+                      disabled={numberDisabled}
                       automatic={rollAuto && (!item.rollNumber || placementInvalidatesRoll)}
                       manual={rollManual}
                       onChange={editor.changeRollMode}
@@ -420,7 +429,7 @@ export default function StudentQuickSetupAcademic({
                     onBlur={form.handleBlur}
                     error={Boolean(fieldError('rollValue'))}
                     helperText={fieldError('rollValue')}
-                    disabled={disabled || !rollManual}
+                    disabled={numberDisabled || !rollManual}
                   />
                 </ShakingTextField>
               )}

@@ -1,5 +1,6 @@
 import type { StudentOnboardingCase } from 'src/redux/student/onboarding/student-onboarding-types';
 
+import { ValidationError } from 'yup';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
@@ -11,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   academicLoading: false,
   academicBusy: false,
   academicDirty: true,
+  feeLoading: false,
   readError: false,
   permissionDenied: false,
   saveAcademic: vi.fn(),
@@ -119,7 +121,7 @@ vi.mock('./student-onboarding-fees', async () => {
     }) {
       useImperativeHandle(editorRef, () => ({ save: mocks.saveFees }));
       useEffect(() => {
-        onStateChange({ dirty: false, busy: false, loading: false, canSave: true });
+        onStateChange({ dirty: false, busy: false, loading: mocks.feeLoading, canSave: true });
       }, [onStateChange]);
       return <p>Published fee structure</p>;
     },
@@ -211,6 +213,7 @@ const renderPage = (overrides = {}) => {
 
 describe('single-student setup page', () => {
   beforeEach(() => {
+    mocks.feeLoading = false;
     mocks.readError = false;
     mocks.permissionDenied = false;
     vi.clearAllMocks();
@@ -362,13 +365,23 @@ describe('single-student setup page', () => {
     expect(screen.getByRole('button', { name: 'Save for Later' })).toBeDisabled();
   });
 
+  it('allows activation while untouched optional fee data is loading', async () => {
+    mocks.feeLoading = true;
+    renderPage();
+    expect(screen.getByRole('button', { name: 'Save & Activate' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
+    await waitFor(() => expect(mocks.activate).toHaveBeenCalledOnce());
+    expect(mocks.sendCredentials).not.toHaveBeenCalled();
+    mocks.feeLoading = false;
+  });
+
   it('saves and activates in order using the fresh preview stamp, keeps the page open and never sends credentials automatically', async () => {
     const { props } = renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
     await waitFor(() => expect(screen.getByText('Student active')).toBeInTheDocument());
 
     expect(mocks.events).toEqual(['academic', 'fees', 'preview', 'activate']);
-    expect(mocks.saveFees).toHaveBeenCalledWith({ allowIncomplete: false });
+    expect(mocks.saveFees).toHaveBeenCalledWith({ allowIncomplete: true });
     expect(mocks.previewActivation).toHaveBeenCalledWith('case-1', false);
     expect(mocks.activate).toHaveBeenCalledWith({
       id: 'case-1',
@@ -402,10 +415,15 @@ describe('single-student setup page', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
     await waitFor(() =>
-      expect(
-        screen.getByText('Choose a division with available capacity.', { exact: false })
-      ).toBeVisible()
+      expect(mocks.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Choose a division with available capacity.'),
+        })
+      )
     );
+    expect(
+      screen.queryByText('Choose a division with available capacity.', { exact: false })
+    ).not.toBeInTheDocument();
     expect(mocks.saveFees).not.toHaveBeenCalled();
     expect(mocks.activate).not.toHaveBeenCalled();
     expect(props.onClose).not.toHaveBeenCalled();
@@ -415,6 +433,21 @@ describe('single-student setup page', () => {
     expect(mocks.activate).toHaveBeenCalledOnce();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(mocks.success).toHaveBeenCalledWith({ message: 'Student is now active.' });
+  });
+
+  it('keeps fee field validation in Fees without repeating it below the student header or in a toast', async () => {
+    renderPage();
+    mocks.saveFees.mockRejectedValueOnce(
+      new ValidationError('Choose a published fee structure.', '', 'structureId')
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
+    await waitFor(() => expect(mocks.saveFees).toHaveBeenCalledOnce());
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Save & Activate' })).toBeEnabled()
+    );
+    expect(screen.queryByText('Choose a published fee structure.')).not.toBeInTheDocument();
+    expect(mocks.error).not.toHaveBeenCalled();
+    expect(mocks.activate).not.toHaveBeenCalled();
   });
 
   it('reports request failure once through the standard toast while preserving entered setup', async () => {
@@ -448,10 +481,13 @@ describe('single-student setup page', () => {
     }));
     fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
     await waitFor(() =>
-      expect(
-        screen.getByText('Verify the required transfer certificate.', { exact: false })
-      ).toBeVisible()
+      expect(mocks.error).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Verify the required transfer certificate.' })
+      )
     );
+    expect(
+      screen.queryByText('Verify the required transfer certificate.', { exact: false })
+    ).not.toBeInTheDocument();
     expect(mocks.activate).not.toHaveBeenCalled();
   });
 
