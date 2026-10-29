@@ -62,6 +62,9 @@ The staff-profile leave tab retains its existing employee-specific history.
 Authorized HR operators receive the **Complete HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
 The wizard opens at the first unresolved step and marks usable existing configuration complete without requiring acknowledgement.
 Users can configure shifts, policies and calendars, earning components, and salary templates through embedded versions of the existing editors.
+The Earning Components step also exposes optional deduction setup to operators with exact Deduction Components View and Add access, including before a template exists. Deductions are not an additional readiness requirement.
+Salary Template's Add Earning and Add Deduction actions open the shared modal picker above the wizard. Empty catalogues and components already added have visible guidance. Authorized operators can create another component within setup and return to the mounted salary draft; reopening the picker shows refreshed choices. Cancelling the picker preserves the draft and returns focus to its launcher.
+Outside the wizard, the picker offers the matching component setup page in a new tab and an explicit Refresh setup action. Missing creation access directs the operator to an HR administrator.
 Required deduction and statutory dependencies appear inside the salary step when needed; the salary draft remains mounted while a dependency is configured.
 Role repair remains an explicitly authorized Role Management task in another tab.
 Each step saves independently through existing APIs, and the final action rechecks server readiness.

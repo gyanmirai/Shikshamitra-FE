@@ -169,6 +169,65 @@ const renderEditor = (ui: React.ReactNode) =>
 const originalTemplate = structuredClone(mocks.template);
 
 describe('SalaryTemplateEditor', () => {
+  it('explains an empty catalogue without exposing component creation to a template editor without Add access', async () => {
+    const user = userEvent.setup();
+    mocks.permissions = new Set(['View', 'Edit']);
+    mocks.catalogEmpty = true;
+    renderEditor(<SalaryTemplateEditor templateId="template-1" />);
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    const picker = screen.getByRole('dialog', { name: 'Add Deduction Component' });
+    expect(picker).toHaveTextContent('No active deduction components are available.');
+    expect(picker).toHaveTextContent('Ask your HR administrator to create the component.');
+    expect(screen.queryByRole('link', { name: /Create deduction component/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Add Component' })).toBeDisabled();
+  });
+
+  it('offers the matching standalone setup route and refresh without replacing entered values', async () => {
+    const user = userEvent.setup();
+    mocks.catalogEmpty = true;
+    renderEditor(<SalaryTemplateEditor mode="create" />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Standalone draft' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    expect(
+      screen.getByRole('link', { name: 'Create deduction component (new tab)' })
+    ).toHaveAttribute('href', '/hr/payroll/setting/deduction-component');
+    await user.click(screen.getByRole('button', { name: 'Refresh setup' }));
+    expect(mocks.refetchCatalog).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue('Standalone draft');
+  });
+
+  it('opens a visible modal picker in setup and preserves the draft on cancel and repeated adds', async () => {
+    const user = userEvent.setup();
+    renderEditor(
+      <HrSetupEditorContext.Provider value={() => {}}>
+        <SalaryTemplateEditor mode="create" />
+      </HrSetupEditorContext.Provider>
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Retained setup draft' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Add Earning' }));
+    expect(screen.getByRole('dialog', { name: /Add earning component/i })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog', { name: /Add earning component/i })).toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue(
+      'Retained setup draft'
+    );
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    expect(screen.getByRole('dialog', { name: /Add deduction component/i })).toBeVisible();
+    await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
+    await user.click(screen.getByRole('option', { name: 'Loan Recovery' }));
+    await user.click(screen.getByRole('button', { name: /Add component/i }));
+    expect(screen.getByRole('textbox', { name: 'Loan Recovery amount' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    expect(screen.getByRole('alert')).toHaveTextContent(/already added/i);
+    expect(screen.getByRole('button', { name: /Add component/i })).toBeDisabled();
+    expect(mocks.createTemplate).not.toHaveBeenCalled();
+  });
+
   it('does not reuse PF correction targets after an unchanged-input retry succeeds and expires', async () => {
     vi.useFakeTimers();
     try {
@@ -185,12 +244,10 @@ describe('SalaryTemplateEditor', () => {
           }),
         })
         .mockReturnValueOnce({
-          unwrap: vi
-            .fn()
-            .mockResolvedValue({
-              ...success,
-              expiresAt: new Date(Date.now() + 1000).toISOString(),
-            }),
+          unwrap: vi.fn().mockResolvedValue({
+            ...success,
+            expiresAt: new Date(Date.now() + 1000).toISOString(),
+          }),
         });
       renderEditor(<SalaryTemplateEditor templateId="template-1" />);
       await act(async () =>

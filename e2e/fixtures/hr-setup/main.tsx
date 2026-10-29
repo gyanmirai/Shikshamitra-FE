@@ -27,7 +27,7 @@ const context = await (await fetch('/fixture/context')).json();
 const scenario = new URLSearchParams(window.location.search).get('scenario');
 const fixtureMode =
   new URLSearchParams(window.location.search).get('theme') === 'dark' ? 'dark' : 'light';
-const grants =
+const baseGrants =
   scenario === 'self-service'
     ? ['HR.LeaveManagement.LeaveCenter.Add']
     : [
@@ -45,6 +45,11 @@ const grants =
         'HR.PayrollManagement.Settings.StatutorySchemes.ConfigureCalculation',
         'AbpIdentity.Roles.Update',
       ];
+const grants = baseGrants.filter(
+  (name) =>
+    scenario !== 'no-deduction-create' ||
+    name !== 'HR.PayrollManagement.Settings.DeductionComponents.Add'
+);
 const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
@@ -74,7 +79,9 @@ function Fixture() {
       <Stack spacing={2} sx={{ p: 2 }}>
         <Typography variant="h5">HR Workspace</Typography>
         <Typography variant="body2">
-          Disposable school fixture. Real setup editors and backend APIs. Synthetic authentication.
+          {context.synthetic
+            ? 'Synthetic salary component fixture. Real setup editors with in-memory API responses.'
+            : 'Disposable school fixture. Real setup editors and backend APIs. Synthetic authentication.'}
         </Typography>
         <Button onClick={() => setHr((value) => !value)}>{hr ? 'Leave HR' : 'Return to HR'}</Button>
         <Typography>Normal HR operations remain available after closing setup.</Typography>

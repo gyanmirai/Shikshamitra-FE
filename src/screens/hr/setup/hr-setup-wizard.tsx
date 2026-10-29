@@ -1,12 +1,15 @@
 'use client';
 
 import type { HrSetupReadiness } from 'src/redux/hr/hr-setup-readiness-api';
+import type { RootState } from 'src/redux/store';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'src/routes/hooks';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { hrSetupSteps } from 'src/constants/hr-setup';
+import { hrPermissions } from 'src/constants/hr-menus';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomStepper from 'src/components/custom-stepper';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useRef, useState, useEffect, useCallback } from 'react';
@@ -53,6 +56,13 @@ type Props = {
 
 export default function HrSetupWizard({ readiness, error, refreshing, refresh, onClose }: Props) {
   const dispatch = useDispatch();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canCreateDeduction = ['View', 'Add'].every((action) =>
+    hasGrantedPermission(
+      permissions,
+      `${hrPermissions.payroll.settings.deductionComponents}.${action}`
+    )
+  );
   const router = useRouter();
   const theme = useTheme();
   const mobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -302,6 +312,31 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
                   )}
                 </Stack>
               ))
+            )}
+            {!task && step.id === 'earnings' && (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2">Deduction Components</Typography>
+                <Typography variant="body2">
+                  Optional: create deductions your school needs before adding them to a salary
+                  template.
+                </Typography>
+                {canCreateDeduction ? (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ alignSelf: 'flex-start' }}
+                    disabled={busy || refreshing}
+                    startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                    onClick={() => setTask('deductions')}
+                  >
+                    Set up deductions
+                  </Button>
+                ) : (
+                  <Typography variant="body2">
+                    Ask your HR administrator to create deduction components if needed.
+                  </Typography>
+                )}
+              </Stack>
             )}
           </Stack>
         </DialogScrollContent>
