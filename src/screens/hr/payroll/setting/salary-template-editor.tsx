@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { HrFailure } from 'src/screens/hr/recovery/hr-failure';
 import type {
   SalaryTemplate,
   SalaryTemplateRule,
@@ -21,10 +22,12 @@ import { salaryPreviewError } from 'src/utils/salary-preview-error';
 import { Box, Chip, Alert, Button, Typography } from '@mui/material';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { normalizeHrFailure } from 'src/screens/hr/recovery/hr-failure';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useGetEsiPolicyOptionsQuery } from 'src/redux/hr/esi-policy-api';
 import { useRef, useMemo, useState, useEffect, useContext, useCallback } from 'react';
 import { HrSetupLink, HrSetupRefresh } from 'src/screens/hr/recovery/hr-setup-controls';
+import { claimInlineSalaryPreviewRecovery } from 'src/screens/hr/recovery/inline-salary-preview-recovery';
 import {
   useHrSetupEmbedded,
   HrSetupTaskContext,
@@ -343,6 +346,7 @@ function SalaryTemplateWorkflow({
     result: SalaryTemplatePreview;
   } | null>(null);
   const [previewError, setPreviewError] = useState('');
+  const [previewRecovery, setPreviewRecovery] = useState<HrFailure | null>(null);
   const [previewFields, setPreviewFields] = useState<string[]>([]);
   const [hasPreviewed, setHasPreviewed] = useState(false);
   const requestSequence = useRef(0);
@@ -372,6 +376,7 @@ function SalaryTemplateWorkflow({
     requestSequence.current += 1;
     setPreview(null);
     setPreviewError('');
+    setPreviewRecovery(null);
     setPreviewFields([]);
   }, [inputSignature]);
   useEffect(() => {
@@ -561,6 +566,7 @@ function SalaryTemplateWorkflow({
         !/^\d{4}-(0[1-9]|1[0-2])$/.test(effectiveMonth)
       ) {
         setPreviewFields([]);
+        setPreviewRecovery(null);
         setPreviewError('Enter a sample amount greater than zero and a valid effective month.');
         setPendingFocus('salary-sample-calculation');
         return;
@@ -577,10 +583,14 @@ function SalaryTemplateWorkflow({
     const signature = inputSignature;
     setPreview(null);
     setPreviewError('');
+    setPreviewRecovery(null);
     setPreviewFields([]);
     setServerError('');
+    let releaseInlineRecovery = () => {};
     try {
-      const result = await calculate(previewInput).unwrap();
+      const request = calculate(previewInput);
+      releaseInlineRecovery = claimInlineSalaryPreviewRecovery(request.requestId);
+      const result = await request.unwrap();
       if (sequence === requestSequence.current && signature === latestSignature.current) {
         setPreviewFields([]);
         setPreview({ signature, result });
@@ -589,9 +599,13 @@ function SalaryTemplateWorkflow({
     } catch (error) {
       if (sequence === requestSequence.current && signature === latestSignature.current) {
         const parsed = parseApiProblemDetail(error);
+        const failure = normalizeHrFailure(error);
         setPreviewError(parsed.detail);
+        setPreviewRecovery(failure.kind === 'salaryPreview' ? failure : null);
         setPreviewFields(salaryPreviewError(parsed.errorCode)?.fields ?? []);
       }
+    } finally {
+      releaseInlineRecovery();
     }
   };
 
@@ -647,7 +661,7 @@ function SalaryTemplateWorkflow({
             : hasPreviewed
               ? 'Refresh the salary preview before saving.'
               : previewError
-                ? 'Salary preview failed. Review the preview error and retry.'
+                ? 'Preview needs attention.'
                 : 'Configuration ready. Preview salary before creating or saving the template.';
   return (
     <Box
@@ -758,6 +772,9 @@ function SalaryTemplateWorkflow({
             calculating={calculationState.isLoading}
             archived={template?.status === 'ARCHIVED'}
             previewError={previewError}
+            previewGuidance={previewRecovery?.guidance}
+            previewDetails={previewRecovery?.details}
+            previewValidationFields={previewRecovery?.fields}
             previewFields={previewFields}
             onCorrect={(field) => {
               const firstRule = formik.values.rules.find(

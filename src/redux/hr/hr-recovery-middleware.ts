@@ -2,6 +2,7 @@ import type { Middleware } from '@reduxjs/toolkit';
 
 import { normalizeHrFailure } from 'src/screens/hr/recovery/hr-failure';
 import { emitHrRecovery, hrRecoveryScope } from 'src/screens/hr/recovery/hr-recovery-events';
+import { takeInlineSalaryPreviewRecovery } from 'src/screens/hr/recovery/inline-salary-preview-recovery';
 
 /** Observe mutation outcomes only. Never retry commands or retain their arguments. */
 export const hrRecoveryMiddleware: Middleware = (store) => {
@@ -38,10 +39,16 @@ export const hrRecoveryMiddleware: Middleware = (store) => {
     if (isLatest) latest.delete(startedKey);
     if (!started || started.route !== route || started.scope !== scope || !isLatest) return result;
     if (event.meta?.aborted || event.meta?.condition) return result;
+    const inlineOwned = takeInlineSalaryPreviewRecovery(id, route);
+    const failure = event.type.endsWith('/rejected') ? normalizeHrFailure(event.payload) : undefined;
+    // Only this explicitly owned, read-only calculation's known business failures are local.
+    // Additional field validation, access, transport and unrelated failures retain global recovery.
+    if (inlineOwned && endpoint === 'previewSalaryTemplate' && failure?.kind === 'salaryPreview' &&
+      failure.fields.length === 0 && [400, 422].includes(Number(event.payload?.status))) return result;
     emitHrRecovery({
       ...started,
       requestId: id,
-      ...(event.type.endsWith('/rejected') ? { failure: normalizeHrFailure(event.payload) } : {}),
+      ...(failure ? { failure } : {}),
     });
     return result;
   };

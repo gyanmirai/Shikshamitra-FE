@@ -360,7 +360,8 @@ describe('SalaryTemplateEditor', () => {
     const amount = screen.getByRole('textbox', { name: 'Monthly cost to school (CTC)' });
     fireEvent.change(amount, { target: { value: '50000' } });
     await user.click(screen.getByRole('button', { name: 'Preview salary' }));
-    expect(await screen.findByText(/Fixed earnings total INR 52000.00/)).toBeVisible();
+    expect(await screen.findByText(/Fixed earnings exceed cost to school/)).toBeVisible();
+    expect(screen.getByText(/Employee deductions do not reduce employer cost/)).toBeVisible();
     expect(screen.queryByText('One or more business rules were violated.')).not.toBeInTheDocument();
     expect(amount).toHaveValue('₹ 50,000');
     expect(amount).toHaveAttribute('aria-invalid', 'true');

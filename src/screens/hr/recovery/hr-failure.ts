@@ -12,9 +12,11 @@ export type HrSetup =
   | 'staffPayroll'
   | 'attendance';
 export type HrFailure = {
+  kind?: 'salaryPreview';
   title: string;
   message: string;
   guidance: string;
+  details?: string;
   fields: { name: string; message: string }[];
   setup?: HrSetup;
 };
@@ -193,7 +195,11 @@ export function normalizeHrFailure(error: unknown): HrFailure {
     };
   const mapped = typeof code === 'string' ? known[code] : undefined;
   const preview = salaryPreviewError(code, body.data ?? business.data);
-  if (preview) preview.fields.forEach((name) => add(name, preview.message));
+  if (preview) {
+    const labels: Record<string, string> = { 'monthly Amount': 'Monthly amount', rules: 'Earning rules',
+      deductions: 'Deduction rules', 'pf Rule Id': 'PF rule', 'effective Month': 'Preview month' };
+    fields.forEach((field) => { field.name = labels[field.name] ?? field.name; });
+  }
   const message =
     preview?.message ??
     fields[0]?.message ??
@@ -209,13 +215,14 @@ export function normalizeHrFailure(error: unknown): HrFailure {
     mapped?.message ??
     'The server did not provide a specific reason for rejecting this request.';
   return {
-    title: Number(status) === 409 ? 'Review the Latest Record' : 'Action Could Not Be Completed',
+    ...(preview ? { kind: 'salaryPreview' as const, details: preview.details } : {}),
+    title: Number(status) === 409 ? 'Review the Latest Record' : preview ? 'Review Salary Preview' : 'Action Could Not Be Completed',
     message,
     fields,
     setup: mapped?.setup ?? (preview ? 'templates' : undefined),
     guidance:
       Number(status) === 409
         ? 'The request conflicts with the current saved state. Keep your entries, review the latest record, and try again when the conflict is resolved.'
-        : 'Your entries are still in the form. Review the fields or setup below, then submit again. The server will validate the request again.',
+        : preview?.guidance ?? 'Your entries are still in the form. Review the fields or setup below, then submit again. The server will validate the request again.',
   };
 }

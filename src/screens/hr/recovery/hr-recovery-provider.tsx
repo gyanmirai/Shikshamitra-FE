@@ -62,6 +62,10 @@ export function HrRecoveryProvider({ children }: { children: React.ReactNode }) 
     };
   }, [scope]);
   const failure = last?.scope === scope && last.route === route ? last.failure : undefined;
+  const displayFields = failure?.kind === 'salaryPreview'
+    ? failure.fields.filter((field, index, fields) => field.message !== failure.message &&
+      fields.findIndex((other) => other.name === field.name && other.message === field.message) === index)
+    : failure?.fields ?? [];
   useEffect(() => setHrRecoveryVisible(Boolean(failure && open)), [failure, open]);
   return (
     <RecoveryContext.Provider value={context}>
@@ -79,9 +83,10 @@ export function HrRecoveryProvider({ children }: { children: React.ReactNode }) 
           <DialogScrollContent>
             <Stack spacing={2} id="hr-recovery-description">
               <Alert severity="error">{failure.message}</Alert>
-              {failure.fields.length > 0 && (
+              {failure.details && <Typography variant="body2" color="text.secondary">{failure.details}</Typography>}
+              {displayFields.length > 0 && (
                 <Box component="ul" sx={{ pl: 2.5, m: 0 }}>
-                  {failure.fields.map((field, index) => (
+                  {displayFields.map((field, index) => (
                     <li key={`${field.name}-${index}`}>
                       <Typography variant="body2">
                         <strong>{field.name}:</strong> {field.message}
@@ -94,17 +99,18 @@ export function HrRecoveryProvider({ children }: { children: React.ReactNode }) 
               {failure.setup && (
                 <>
                   <HrSetupLink setup={failure.setup} />
-                  <Typography variant="body2" color="text.secondary">
+                  {failure.kind !== 'salaryPreview' && <Typography variant="body2" color="text.secondary">
                     Keep this tab open while you review setup in the new tab. Return here, close
                     this message and refresh setup where offered. No change is submitted
                     automatically.
-                  </Typography>
+                  </Typography>}
                 </>
               )}
               {setupOpened && (
                 <Typography role="status" variant="body2">
-                  If a new tab did not open, allow this setup link in your browser and try again.
-                  Your form remains open here.
+                  {failure.kind === 'salaryPreview'
+                    ? 'If setup did not open, check your browser. Your entries stay here.'
+                    : 'If a new tab did not open, allow this setup link in your browser and try again. Your form remains open here.'}
                 </Typography>
               )}
             </Stack>
@@ -113,7 +119,7 @@ export function HrRecoveryProvider({ children }: { children: React.ReactNode }) 
             <Button autoFocus size="small" variant="outlined" onClick={close}>
               Keep editing
             </Button>
-            <Button
+            {failure.kind !== 'salaryPreview' && <Button
               size="small"
               color="inherit"
               onClick={() => {
@@ -122,7 +128,7 @@ export function HrRecoveryProvider({ children }: { children: React.ReactNode }) 
               }}
             >
               Dismiss error
-            </Button>
+            </Button>}
           </DialogActions>
         </CustomDialog>
       )}

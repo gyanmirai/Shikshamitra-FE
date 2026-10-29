@@ -34,6 +34,9 @@ type Props = {
   calculating: boolean;
   archived: boolean;
   previewError: string;
+  previewGuidance?: string;
+  previewDetails?: string;
+  previewValidationFields?: { name: string; message: string }[];
   previewFields: string[];
   onCorrect: (field: string) => void;
   calculation?: SalaryTemplateCalculation;
@@ -54,6 +57,9 @@ export default function SalaryTemplateReview({
   calculating,
   archived,
   previewError,
+  previewGuidance,
+  previewDetails,
+  previewValidationFields,
   previewFields,
   onCorrect,
   calculation,
@@ -183,6 +189,13 @@ export default function SalaryTemplateReview({
           {previewError ? (
             <Alert id="salary-preview-error" severity="error" sx={{ mt: 2 }}>
               {previewError}
+              {previewDetails && <Typography variant="body2">{previewDetails}</Typography>}
+              {previewGuidance && <Typography variant="body2">{previewGuidance}</Typography>}
+              {previewValidationFields?.map((field, index) => (
+                <Typography key={`${field.name}-${index}`} variant="body2">
+                  {field.name}: {field.message}
+                </Typography>
+              ))}
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
                 {previewFields.map((field) => (
                   <Button key={field} size="small" color="inherit" onClick={() => onCorrect(field)}>
