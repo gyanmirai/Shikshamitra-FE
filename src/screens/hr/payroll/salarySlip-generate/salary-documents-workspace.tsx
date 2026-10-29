@@ -24,13 +24,11 @@ import {
   Alert,
   Stack,
   Button,
-  Switch,
   Tooltip,
   MenuItem,
   TextField,
   IconButton,
   Typography,
-  FormControlLabel,
 } from '@mui/material';
 
 import { payslipActionError } from './payslip-action-error';
@@ -62,7 +60,6 @@ export default function SalaryDocumentsWorkspace({
   const [payrollMonth, setPayrollMonth] = usePayrollMonth();
   const [from, setFrom] = useState(payrollMonth.subtract(5, 'month').format('YYYY-MM'));
   const to = payrollMonth.format('YYYY-MM');
-  const [includeDrafts, setIncludeDrafts] = useState(false);
   const [columns, setColumns] = useState<string[]>(standardSalaryDocumentColumns);
   const [page, setPage] = useState({ number: 1, size: 25 });
   const notesId = useId();
@@ -94,7 +91,7 @@ export default function SalaryDocumentsWorkspace({
     pageSize: page.size,
     filters: {
       employeeIds: statement && employee ? [employee.id] : undefined,
-      includeDrafts,
+      includeDrafts: false,
       month: statement ? undefined : to,
       fromDate: statement ? `${from}-01` : undefined,
       toDate: statement ? `${to}-01` : undefined,
@@ -202,12 +199,7 @@ export default function SalaryDocumentsWorkspace({
             <Iconify icon="mdi:information-outline" width={16} sx={{ color: 'info.main' }} />
           </IconButton>
         </Tooltip>
-        <Chip
-          size="small"
-          variant="soft"
-          label={includeDrafts ? 'Preview' : 'Issued payroll'}
-          color={includeDrafts ? 'warning' : 'default'}
-        />
+        <Chip size="small" variant="soft" label="Issued payroll" color="default" />
       </Stack>
       <Card sx={{ p: 1.5 }}>
         <Stack spacing={1.5}>
@@ -325,20 +317,9 @@ export default function SalaryDocumentsWorkspace({
             alignItems={{ xs: 'stretch', lg: 'center' }}
           >
             <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-              <FormControlLabel
-                sx={{ ml: 0, mr: 0 }}
-                label="Include draft payroll"
-                control={
-                  <Switch
-                    size="small"
-                    checked={includeDrafts}
-                    onChange={(_, checked) => {
-                      setIncludeDrafts(checked);
-                      setPage({ ...page, number: 1 });
-                    }}
-                  />
-                }
-              />
+              <Typography variant="body2" color="text.secondary">
+                Only issued payslips from locked payroll are included.
+              </Typography>
               <Button
                 size="small"
                 onClick={() =>

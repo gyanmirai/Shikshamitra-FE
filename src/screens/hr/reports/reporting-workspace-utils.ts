@@ -10,6 +10,9 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 export const isMonthlyRegister = (design: ReportDesign) =>
   design.layout === 'attendanceMatrix' || design.dataSource === 'payroll_register';
 
+export const isIssuedSalaryDocument = (design: Pick<ReportDesign, 'dataSource'>) =>
+  design.dataSource === 'payroll_statement' || design.dataSource === 'payroll_register';
+
 export const defaultReportParameters = (period = 'thisMonth'): ReportParameters => ({
   period,
   employeeIds: [],

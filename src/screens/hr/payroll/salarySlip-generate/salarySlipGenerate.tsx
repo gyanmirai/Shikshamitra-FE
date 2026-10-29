@@ -19,10 +19,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useLazyGetEmployeeOptionsQuery } from 'src/redux/hr/employeeApi';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import {
-  useGetEmployeeSalarySlipQuery,
-  useLazyGetEmployeeSalarySlipPreviewPdfQuery,
-} from 'src/redux/runPayroll/runPayrollApi';
+import { useGetEmployeeSalarySlipQuery } from 'src/redux/runPayroll/runPayrollApi';
 import {
   Box,
   Stack,
@@ -45,6 +42,7 @@ import { usePayslipActions } from './use-payslip-actions';
 import { payslipActionError } from './payslip-action-error';
 import PayslipCorrectionDialog from './payslip-correction-dialog';
 import { usePayrollMonth } from '../payroll-cycle/use-payroll-month';
+import PayslipAvailabilityNotice from './payslip-availability-notice';
 import PayslipDocumentActionDialog from './payslip-document-action-dialog';
 import EmployeeAccountEmailAction from '../../employee/employee-account-email-action';
 import {
@@ -116,9 +114,13 @@ export default function PaySlipGenerationScreen({
     selection && canView
       ? { employeeId: selection.employeeId, monthYear: selection.monthYear }
       : skipToken;
-  const slips = useGetEmployeeSalarySlipQuery(args);
-  const versions = useGetPayslipDocumentsQuery(args, { refetchOnMountOrArgChange: true });
+  const versions = useGetPayslipDocumentsQuery(args, {
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
   const documentStatusKnown = versions.isSuccess && !versions.isFetching && !versions.isError;
+  const currentDocument = versions.currentData?.find((version) => version.isCurrent);
+  const slips = useGetEmployeeSalarySlipQuery(currentDocument ? args : skipToken);
   const selectionKey = selection?.key;
   const [deniedSelections, setDeniedSelections] = useState<
     Map<
@@ -147,7 +149,6 @@ export default function PaySlipGenerationScreen({
     (!documentAccessRestored || slips.requestId !== recordedDenial?.summaryRequestId);
   const unknownDocumentStatus = versions.isFetching ? 'Refreshing status' : 'Status unavailable';
   const slip = payslipMatchesSelection(slips.currentData, selection) ? slips.currentData : null;
-  const currentDocument = versions.currentData?.find((version) => version.isCurrent);
   const [viewedVersion, setViewedVersion] = useState<{ selection: string; id: string } | null>(
     null
   );
@@ -227,9 +228,8 @@ export default function PaySlipGenerationScreen({
       });
     } else if (
       documentAccessRestored &&
-      slips.isSuccess &&
-      !slips.isFetching &&
-      (!currentDocument || (deliveries.isSuccess && !deliveries.isFetching))
+      (!currentDocument ||
+        (slips.isSuccess && !slips.isFetching && deliveries.isSuccess && !deliveries.isFetching))
     ) {
       setDeniedSelections((previous) => {
         if (!previous.has(selectionKey)) return previous;
@@ -254,34 +254,18 @@ export default function PaySlipGenerationScreen({
     deliveries.isFetching,
   ]);
   const [loadDocument] = useLazyGetPayslipDocumentPdfQuery();
-  const [loadPreview] = useLazyGetEmployeeSalarySlipPreviewPdfQuery();
   const [send, sending] = useSendPayslipMutation();
   const unconfirmedSendKeys = useRef(new Map<string, string>());
   const currentDocumentId = displayedDocument?.id;
-  const selectedEmployeeId = selection?.employeeId;
-  const selectedMonth = selection?.monthYear;
-  const hasSlip = !!slip && documentStatusKnown;
-  const canLoadPreview = !currentDocumentId && hasSlip;
   const loadPdf = useCallback(async () => {
     if (currentDocumentId) return loadDocument(currentDocumentId).unwrap();
-    if (selectedEmployeeId && selectedMonth && canLoadPreview)
-      return loadPreview({ employeeId: selectedEmployeeId, monthYear: selectedMonth }).unwrap();
     return null;
-  }, [
-    currentDocumentId,
-    loadDocument,
-    loadPreview,
-    selectedEmployeeId,
-    selectedMonth,
-    canLoadPreview,
-  ]);
-  const documentKey = canReadDocument
-    ? (displayedDocument?.id ?? (canLoadPreview ? (selectionKey ?? null) : null))
-    : null;
+  }, [currentDocumentId, loadDocument]);
+  const documentKey = canReadDocument ? (displayedDocument?.id ?? null) : null;
   const actions = usePayslipActions({
     selectionKey: documentKey,
     loadPdf: documentKey ? loadPdf : null,
-    fileName: `Payslip_${month?.format('YYYY-MM') ?? ''}_${displayedDocument ? `R${displayedDocument.revision}` : 'Preview'}.pdf`,
+    fileName: `Payslip_${month?.format('YYYY-MM') ?? ''}_R${displayedDocument?.revision ?? ''}.pdf`,
   });
   useEffect(() => {
     if (!retrySelection.current) return undefined;
@@ -289,7 +273,8 @@ export default function PaySlipGenerationScreen({
       retrySelection.current = null;
       return undefined;
     }
-    if (!documentStatusKnown || !slips.isSuccess || documentAccessDenied) return undefined;
+    if (!documentStatusKnown || (currentDocument && !slips.isSuccess) || documentAccessDenied)
+      return undefined;
     const hasDocument = !!displayedDocument || !!slip;
     if (hasDocument && (!actions.pdfUrl || renderedPdfUrl !== actions.pdfUrl)) return undefined;
     const frame = requestAnimationFrame(() => {
@@ -307,6 +292,7 @@ export default function PaySlipGenerationScreen({
     slips.isSuccess,
     documentAccessDenied,
     displayedDocument,
+    currentDocument,
     slip,
     actions.pdfUrl,
     renderedPdfUrl,
@@ -534,7 +520,7 @@ export default function PaySlipGenerationScreen({
                   onClick={() => {
                     if (selection) {
                       retrySelection.current = selection.key;
-                      slips.refetch();
+                      if (currentDocument && !slips.isUninitialized) slips.refetch();
                       versions.refetch();
                     }
                   }}
@@ -571,6 +557,14 @@ export default function PaySlipGenerationScreen({
               Select a staff member and pay period.
             </Typography>
           )}
+          {selection && documentStatusKnown && canReadDocument && !currentDocument && (
+            <PayslipAvailabilityNotice
+              key={selection.key}
+              employeeId={selection.employeeId}
+              monthYear={selection.monthYear}
+              reload={() => versions.refetch()}
+            />
+          )}
           {selection &&
             (slips.isLoading ||
               versions.isLoading ||
@@ -595,7 +589,7 @@ export default function PaySlipGenerationScreen({
               title={
                 displayedDocument
                   ? `Official payslip PDF, revision ${displayedDocument.revision}`
-                  : 'Draft payslip PDF'
+                  : 'Issued payslip PDF'
               }
               contentRef={printContentRef}
               onReady={setRenderedPdfUrl}

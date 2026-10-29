@@ -145,7 +145,7 @@ The shared quick-substitution drawer is also used from Academic teacher availabi
 Locked saved attendance may still be used to arrange cover. Approved-leave rows, non-teaching employees, Present/Pending rows, holidays, future dates, and dates outside the selected year do not offer this manual-attendance action. Approved-leave synchronization and batch assignment remain separate follow-up work.
 The device attendance screen starts with the current month and keeps the empty-state icon and message in the shared empty-state layout.
 Payslip content is keyed by both employee and payroll month, and a previous response is not rendered while a new selection is loading.
-Only a 404 response is shown as a missing payslip, while access, server, and network failures provide a retry action.
+An empty issued-document list opens availability guidance; access, server and network failures retain a distinct error and retry action.
 Percentage-based earning components list only valid earning-component dependencies and surface backend dependency errors on the component field.
 Component Add always starts a blank session after a successful edit or confirmed discard. Standalone create/update controls follow the existing backend Add grant; delete remains separately gated. Pending saves lock fields and close/navigation actions until settlement, and embedded updates display their impact decision in a modal above setup.
 Percentage calculation bases load complete metadata through cached, sequential pages only when needed. Missing, changing or failed pages show retry guidance rather than a partial catalogue; searching filters the loaded choices while preserving Gross Salary, saved selections and earning dependency validation.
@@ -159,6 +159,11 @@ Expanded year-end settlement details scroll within a bounded secondary panel so 
 On mobile, policy identity and status columns scroll with the table while row actions remain pinned, avoiding overlapping frozen columns.
 
 ### Run Payroll preview feedback
+
+Review and unreview require the existing RunPayroll Add action, independently of the Lock grant.
+Review, adjustment, lock and preview completions belong to the month/year and mounted session that submitted them.
+Navigating away and back does not authorize an earlier completion to reload payroll, clear a new selection or replace a later adjustment draft.
+Ignoring an obsolete UI completion does not cancel an already submitted server operation; reopening reads current server state.
 
 Generate preview and Refresh preview sit in the register action row alongside readiness, review, audit, and lock controls.
 Vertical dividers separate preview, readiness/audit, and review/lock action groups on desktop.
@@ -407,6 +412,13 @@ Saving, archiving, assigning, and changing defaults still use impact previews, c
 Attendance templates use Staff Code and Staff Name; imports accept Employee aliases, including mixed aliases for different fields, and reject duplicate aliases for one field.
 
 ## Payslip completion requirements
+
+Before issuance, monthly and employee-profile payslip views explain whether payroll needs preparation, review, locking or document investigation instead of requesting an unavailable official summary.
+The availability notice periodically rechecks the selected employee and month and reloads document metadata when issuance becomes available.
+Changing selection cannot borrow another employee's or month's summary or PDF; failed reads retain a relevant retry action.
+The employee-profile Preview action opens the issued PDF in the shared dialog, and PDF failures leave Preview and Download disabled until recovery.
+Salary statements and payroll-register templates include issued documents only, including older saved definitions that still declare the retired draft parameter.
+Generic payroll report preview controls retain their existing behavior.
 
 Immutable issued documents, payment recording, document-detail replacement and delivery are implemented with focused regression coverage.
 Unpaid reissue and paid later-payroll settlement are implemented with focused regression coverage and authenticated correction/settlement journeys.

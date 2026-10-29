@@ -144,6 +144,11 @@ npm run docs:hr:check
 
 ## Focused test commands
 
+Payroll recovery coverage includes `runPayroll.test.tsx`, `use-payroll-preview-run.test.tsx`, `payroll-summary.recovery.test.tsx`, `salary-slip-history-selection.test.tsx`, `payslip-availability-notice.test.tsx` and `reporting-workspace.test.tsx`.
+Verify exact review/lock/adjustment permissions, obsolete asynchronous completions after month/year/staff changes or unmount, issued-document gating, PDF failure/retry and legacy salary-report controls.
+Run the existing salary setup, PF/ESIC and structure suites alongside these regressions to preserve advisory registration guidance and setup-session recovery.
+Local synthetic UI tests do not establish deployed persistence, worker/concurrency behavior or native saved-file completion.
+
 For Staff Directory creation, run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/hr/employee/employee-form-state.test.ts src/screens/hr/employee/employee-form.payroll.test.tsx src/screens/hr/employee/employee-form-fields/RenderRole.test.tsx --pool=threads --maxWorkers=1`.
 The tests cover saved identity continuity, existing payroll edits, and the employee-specific role lookup.
 Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/staff-policy-access.config.ts` for the production Personal Information form with synthetic authentication and API responses.

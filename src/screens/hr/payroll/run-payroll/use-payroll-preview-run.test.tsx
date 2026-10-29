@@ -59,6 +59,45 @@ function completedPreview(id = 'run-1') {
 }
 
 describe('background payroll preview', () => {
+  it.each(['month', 'year', 'return', 'unmount'])(
+    'rejects an old refresh callback invoked after a context %s',
+    async (change) => {
+      completedPreview();
+      const { result, rerender, unmount } = renderHook(
+        ({ month, year }) => usePayrollPreviewRun(month, year),
+        { initialProps: { month: '2026-08', year: 'year-1' } }
+      );
+      const oldRefresh = result.current.loadPreview;
+      if (change === 'unmount') unmount();
+      else {
+        const next = {
+          month: change === 'year' ? '2026-08' : '2026-09',
+          year: change === 'year' ? 'year-2' : 'year-1',
+        };
+        mocks.params.set('month', next.month);
+        Object.assign(mocks.status.currentData, { month: next.month, academicYearId: next.year });
+        rerender(next);
+        if (change === 'return') {
+          mocks.params.set('month', '2026-08');
+          Object.assign(mocks.status.currentData, { month: '2026-08', academicYearId: 'year-1' });
+          rerender({ month: '2026-08', year: 'year-1' });
+        }
+      }
+      mocks.start.mockClear();
+      mocks.replace.mockClear();
+      await act(async () => {
+        expect(await oldRefresh(true)).toBeNull();
+      });
+      expect(mocks.start).not.toHaveBeenCalled();
+      expect(mocks.replace).not.toHaveBeenCalled();
+      if (change !== 'unmount') {
+        await act(async () => {
+          await result.current.loadPreview(true);
+        });
+        expect(mocks.start).toHaveBeenCalledTimes(1);
+      }
+    }
+  );
   it('refreshes an existing preview and its reviews using reads only', async () => {
     completedPreview();
     mocks.status.refetch.mockResolvedValue({ data: mocks.status.currentData });

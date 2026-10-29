@@ -12,12 +12,13 @@ import {
   Switch,
   MenuItem,
   TextField,
+  Typography,
   Autocomplete,
   FormControlLabel,
 } from '@mui/material';
 
 import { ReportConditionValue } from './ReportConditionValue';
-import { isMonthlyRegister } from '../reporting-workspace-utils';
+import { isMonthlyRegister, isIssuedSalaryDocument } from '../reporting-workspace-utils';
 
 type Props = {
   design: ReportDesign;
@@ -289,7 +290,12 @@ export function ReportParameters({ design, value, onChange, disabled = false, fi
           ))}
         </TextField>
       )}
-      {enabled('includeDrafts') && (
+      {isIssuedSalaryDocument(design) && (
+        <Typography variant="body2" color="text.secondary" sx={{ gridColumn: '1 / -1' }}>
+          Only issued payslips from locked payroll are included.
+        </Typography>
+      )}
+      {enabled('includeDrafts') && !isIssuedSalaryDocument(design) && (
         <FormControlLabel
           control={
             <Switch

@@ -14,7 +14,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { isMonthlyRegister } from '../reporting-workspace-utils';
+import { isMonthlyRegister, isIssuedSalaryDocument } from '../reporting-workspace-utils';
 
 const parameterLabels: Record<string, string> = {
   period: 'Reporting period',
@@ -296,26 +296,28 @@ export function ReportAdvancedEditor({
           </Box>
           <Typography variant="subtitle2">Ask when generating</Typography>
           <Stack direction="row" flexWrap="wrap" useFlexGap>
-            {dataset.parameters.map((p) => (
-              <FormControlLabel
-                key={p}
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={design.parameters.includes(p)}
-                    disabled={dataset.requiredParameters.includes(p)}
-                    onChange={(_, checked) =>
-                      update({
-                        parameters: checked
-                          ? [...design.parameters, p]
-                          : design.parameters.filter((x) => x !== p),
-                      })
-                    }
-                  />
-                }
-                label={parameterLabels[p] || p}
-              />
-            ))}
+            {dataset.parameters
+              .filter((p) => p !== 'includeDrafts' || !isIssuedSalaryDocument(design))
+              .map((p) => (
+                <FormControlLabel
+                  key={p}
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={design.parameters.includes(p)}
+                      disabled={dataset.requiredParameters.includes(p)}
+                      onChange={(_, checked) =>
+                        update({
+                          parameters: checked
+                            ? [...design.parameters, p]
+                            : design.parameters.filter((x) => x !== p),
+                        })
+                      }
+                    />
+                  }
+                  label={parameterLabels[p] || p}
+                />
+              ))}
           </Stack>
           <Box
             sx={{

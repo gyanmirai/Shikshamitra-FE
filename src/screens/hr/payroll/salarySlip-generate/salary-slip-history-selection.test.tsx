@@ -1,7 +1,13 @@
+import { skipToken } from '@reduxjs/toolkit/query';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import PaySlipGenerationScreen from './salarySlipGenerate';
+
+vi.mock('./payslip-availability-notice', () => ({
+  default: () => <p>Payroll is not locked for this staff member.</p>,
+}));
+const summaryRead = vi.hoisted(() => vi.fn());
 
 const state = vi.hoisted(() => ({ failed: false, refreshing: false, documentFailed: false, pdfReady: false, hasDocument: true }));
 vi.mock('next/dynamic', async () => {
@@ -35,7 +41,10 @@ vi.mock('src/components/paginated-search-select', () => ({
   </>,
 }));
 vi.mock('src/redux/runPayroll/runPayrollApi', () => ({
-  useGetEmployeeSalarySlipQuery: () => ({ currentData: null, isSuccess: true, refetch: vi.fn() }),
+  useGetEmployeeSalarySlipQuery: (args: unknown) => {
+    summaryRead(args);
+    return { currentData: null, isSuccess: true, refetch: vi.fn() };
+  },
   useLazyGetEmployeeSalarySlipPreviewPdfQuery: () => [vi.fn()],
 }));
 vi.mock('./payslip-settings-form', () => ({ default: () => null }));
@@ -66,6 +75,16 @@ vi.mock('src/redux/hr/payslip-api', () => ({
 describe('delivery history belongs to the selected employee', () => {
   beforeEach(() => { state.failed = false; state.refreshing = false; state.documentFailed = false; state.pdfReady = false; state.hasDocument = true; });
   afterEach(cleanup);
+
+  it('keeps expected pre-lock periods out of the issued-only summary endpoint', () => {
+    summaryRead.mockClear();
+    state.hasDocument = false;
+    render(<PaySlipGenerationScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Select employee A' }));
+    expect(summaryRead.mock.calls.every(([args]) => args === skipToken)).toBe(true);
+    expect(screen.getByText(/Payroll is not locked/)).toBeVisible();
+    expect(screen.queryByText('The payslip could not be loaded.')).not.toBeInTheDocument();
+  });
 
   it.each([false, true])('does not show the prior employee history while the next query is pending or failed (%s)', (failed) => {
     render(<PaySlipGenerationScreen />);
