@@ -46,6 +46,7 @@ const mocks = vi.hoisted(() => ({
   updateTemplate: vi.fn(),
   createTemplate: vi.fn(),
   calculate: vi.fn(),
+  calculating: false,
   refetch: vi.fn(),
   loading: false,
   catalogLoading: false,
@@ -159,7 +160,7 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
   }),
   useCreateSalaryTemplateMutation: () => [mocks.createTemplate, { isLoading: false }],
   useUpdateSalaryTemplateMutation: () => [mocks.updateTemplate, { isLoading: false }],
-  usePreviewSalaryTemplateMutation: () => [mocks.calculate, { isLoading: false }],
+  usePreviewSalaryTemplateMutation: () => [mocks.calculate, { isLoading: mocks.calculating }],
 }));
 
 const theme = createTheme(defaultSettings);
@@ -169,6 +170,96 @@ const renderEditor = (ui: React.ReactNode) =>
 const originalTemplate = structuredClone(mocks.template);
 
 describe('SalaryTemplateEditor', () => {
+  it('blocks picker refresh while a preview is pending and invalidates it after an allowed refresh', async () => {
+    const user = userEvent.setup();
+    const proof = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    let finishPreview: (result: unknown) => void = () => {};
+    mocks.calculate.mockReturnValueOnce({
+      unwrap: () =>
+        new Promise((resolve) => {
+          finishPreview = resolve;
+        }),
+    });
+    const editor = <SalaryTemplateEditor templateId="template-1" />;
+    const view = renderEditor(editor);
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    mocks.calculating = true;
+    view.rerender(<ThemeProvider theme={theme}>{editor}</ThemeProvider>);
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    const refresh = screen.getByRole('button', { name: 'Refresh setup' });
+    expect(refresh).toBeDisabled();
+    fireEvent.click(refresh);
+    expect(mocks.refetchCatalog).not.toHaveBeenCalled();
+    mocks.calculating = false;
+    await act(async () => finishPreview(proof));
+    expect(refresh).toBeEnabled();
+    await user.click(refresh);
+    expect(mocks.refetchCatalog).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+    expect(mocks.updateTemplate).not.toHaveBeenCalled();
+  });
+
+  it('explains an empty catalogue without exposing component creation to a template editor without Add access', async () => {
+    const user = userEvent.setup();
+    mocks.permissions = new Set(['View', 'Edit']);
+    mocks.catalogEmpty = true;
+    renderEditor(<SalaryTemplateEditor templateId="template-1" />);
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    const picker = screen.getByRole('dialog', { name: 'Add Deduction Component' });
+    expect(picker).toHaveTextContent('No active deduction components are available.');
+    expect(picker).toHaveTextContent('Ask your HR administrator to create the component.');
+    expect(screen.queryByRole('link', { name: /Create deduction component/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Add Component' })).toBeDisabled();
+  });
+
+  it('offers the matching standalone setup route and refresh without replacing entered values', async () => {
+    const user = userEvent.setup();
+    mocks.catalogEmpty = true;
+    renderEditor(<SalaryTemplateEditor mode="create" />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Standalone draft' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    expect(
+      screen.getByRole('link', { name: 'Create deduction component (new tab)' })
+    ).toHaveAttribute('href', '/hr/payroll/setting/deduction-component');
+    await user.click(screen.getByRole('button', { name: 'Refresh setup' }));
+    expect(mocks.refetchCatalog).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue('Standalone draft');
+  });
+
+  it('opens a visible modal picker in setup and preserves the draft on cancel and repeated adds', async () => {
+    const user = userEvent.setup();
+    renderEditor(
+      <HrSetupEditorContext.Provider value={() => {}}>
+        <SalaryTemplateEditor mode="create" />
+      </HrSetupEditorContext.Provider>
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Retained setup draft' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Add Earning' }));
+    expect(screen.getByRole('dialog', { name: /Add earning component/i })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog', { name: /Add earning component/i })).toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue(
+      'Retained setup draft'
+    );
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    expect(screen.getByRole('dialog', { name: /Add deduction component/i })).toBeVisible();
+    await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
+    await user.click(screen.getByRole('option', { name: 'Loan Recovery' }));
+    await user.click(screen.getByRole('button', { name: /Add component/i }));
+    expect(screen.getByRole('textbox', { name: 'Loan Recovery amount' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
+    expect(screen.getByRole('alert')).toHaveTextContent(/already added/i);
+    expect(screen.getByRole('button', { name: /Add component/i })).toBeDisabled();
+    expect(mocks.createTemplate).not.toHaveBeenCalled();
+  });
+
   it('does not reuse PF correction targets after an unchanged-input retry succeeds and expires', async () => {
     vi.useFakeTimers();
     try {
@@ -185,12 +276,10 @@ describe('SalaryTemplateEditor', () => {
           }),
         })
         .mockReturnValueOnce({
-          unwrap: vi
-            .fn()
-            .mockResolvedValue({
-              ...success,
-              expiresAt: new Date(Date.now() + 1000).toISOString(),
-            }),
+          unwrap: vi.fn().mockResolvedValue({
+            ...success,
+            expiresAt: new Date(Date.now() + 1000).toISOString(),
+          }),
         });
       renderEditor(<SalaryTemplateEditor templateId="template-1" />);
       await act(async () =>
@@ -348,6 +437,7 @@ describe('SalaryTemplateEditor', () => {
     mocks.permissions = new Set(['View', 'Add', 'Edit']);
     mocks.loading = false;
     mocks.catalogLoading = false;
+    mocks.calculating = false;
     mocks.catalogEmpty = false;
     mocks.catalogError = undefined;
     mocks.refetchCatalog.mockResolvedValue({ data: { items: [] } });

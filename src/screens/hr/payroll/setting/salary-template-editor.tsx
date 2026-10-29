@@ -11,6 +11,7 @@ import type {
 
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -20,6 +21,7 @@ import { getIn, useFormik, setNestedObjectValues } from 'formik';
 import { salaryPreviewError } from 'src/utils/salary-preview-error';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useGetEsiPolicyOptionsQuery } from 'src/redux/hr/esi-policy-api';
 import { useRef, useMemo, useState, useEffect, useContext, useCallback } from 'react';
@@ -35,11 +37,9 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
-  SetupEditorBody,
   useHrSetupEmbedded,
   HrSetupTaskContext,
   useHrSetupEditorState,
-  SetupInlineCustomDialog,
 } from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   useGetSalaryTemplateQuery,
@@ -308,6 +308,7 @@ function SalaryTemplateWorkflow({
 }: WorkflowProps) {
   const embedded = useHrSetupEmbedded();
   const openTask = useContext(HrSetupTaskContext);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
   // Pin the loaded version so background refreshes cannot replace edits.
   const [template] = useState(sourceTemplate);
   const [initialValues] = useState(() => initialEditorValues(template));
@@ -413,6 +414,19 @@ function SalaryTemplateWorkflow({
   const availableComponents = (catalogData?.items || []).filter(
     (item) => item.lineKind === addKind && !selectedIds.has(item.componentId)
   );
+  const componentKind = addKind === 'EARNING' ? 'earning' : 'deduction';
+  const componentPermission =
+    addKind === 'EARNING'
+      ? hrPermissions.payroll.settings.earningComponents
+      : hrPermissions.payroll.settings.deductionComponents;
+  const canCreateComponent = ['View', 'Add'].every((action) =>
+    hasGrantedPermission(permissions, `${componentPermission}.${action}`)
+  );
+  const allComponentsAdded = (catalogData?.items || []).some((item) => item.lineKind === addKind);
+  const closeComponentPicker = () => {
+    setAddKind(null);
+    setSelectedComponent(null);
+  };
   const pfFormulaPresent = formik.values.rules.some(
     (rule) => rule.formulaType === 'EMPLOYEE_PROVIDENT_FUND'
   );
@@ -871,19 +885,35 @@ function SalaryTemplateWorkflow({
           </Box>
         </Box>
       </Box>
-      <SetupInlineCustomDialog
+      <CustomDialog
         open={Boolean(addKind)}
-        handleClose={() => {
-          setAddKind(null);
-          setSelectedComponent(null);
-        }}
-        title={`Add ${addKind === 'EARNING' ? 'earning' : 'deduction'} component`}
+        handleClose={closeComponentPicker}
+        title={`Add ${addKind === 'EARNING' ? 'Earning' : 'Deduction'} Component`}
+        titleInfo="Choose an existing payroll component to configure its rule in this salary template."
         maxWidth="sm"
         hasForm={false}
         guardUnsavedChanges={false}
       >
-        <SetupEditorBody>
+        <DialogScrollContent>
+          {availableComponents.length === 0 && (
+            <Alert
+              severity="info"
+              variant="outlined"
+              sx={{
+                mb: 2,
+                bgcolor: 'background.paper',
+                borderColor: 'divider',
+                '& .MuiAlert-icon': { color: 'text.secondary' },
+              }}
+            >
+              {allComponentsAdded
+                ? `All available ${componentKind} components are already added to this template. Edit the existing rules or create another component.`
+                : `No active ${componentKind} components are available. Create ${addKind === 'EARNING' ? 'an earning' : 'a deduction'} component first, then return to add its salary rule.`}
+              {!canCreateComponent && ' Ask your HR administrator to create the component.'}
+            </Alert>
+          )}
           <Autocomplete
+            autoHighlight
             size="small"
             fullWidth
             options={availableComponents}
@@ -900,24 +930,51 @@ function SalaryTemplateWorkflow({
               <TextField {...params} size="small" label="Payroll component" />
             )}
           />
-          {openTask && availableComponents.length === 0 && (
-            <Button
-              size="small"
-              onClick={() => openTask(addKind === 'EARNING' ? 'earnings' : 'deductions')}
-            >
-              Create {addKind === 'EARNING' ? 'earning' : 'deduction'} component
-            </Button>
+          {canCreateComponent &&
+            (openTask ? (
+              <Button
+                size="small"
+                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                onClick={() => {
+                  const task = addKind === 'EARNING' ? 'earnings' : 'deductions';
+                  closeComponentPicker();
+                  openTask(task);
+                }}
+              >
+                Create {componentKind} component
+              </Button>
+            ) : (
+              <Button
+                size="small"
+                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                href={
+                  addKind === 'EARNING'
+                    ? hrPaths.payroll.settings.earningComponents
+                    : hrPaths.payroll.settings.deductionComponents
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Create {componentKind} component (new tab)
+              </Button>
+            ))}
+          {!openTask && (
+            <HrSetupRefresh
+              refresh={async () => {
+                setSelectedComponent(null);
+                setPreview(null);
+                await onRefreshCatalog();
+              }}
+              disabled={busy || calculationState.isLoading}
+            />
           )}
-        </SetupEditorBody>
+        </DialogScrollContent>
         <DialogActions>
           <Button
             size="small"
             variant="outlined"
             startIcon={<Iconify icon="mdi:close" />}
-            onClick={() => {
-              setAddKind(null);
-              setSelectedComponent(null);
-            }}
+            onClick={closeComponentPicker}
           >
             Cancel
           </Button>
@@ -944,7 +1001,7 @@ function SalaryTemplateWorkflow({
             Add Component
           </Button>
         </DialogActions>
-      </SetupInlineCustomDialog>
+      </CustomDialog>
     </Box>
   );
 }

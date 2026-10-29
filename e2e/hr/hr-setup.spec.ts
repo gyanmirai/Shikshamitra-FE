@@ -164,17 +164,24 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
       .getByLabel(/reason/i)
       .fill('Synthetic browser fixture uses externally managed ESIC.');
     await wizard.getByRole('button', { name: 'Add Earning', exact: true }).click();
-    await wizard
+    const earningPicker = page.getByRole('dialog', { name: 'Add Earning Component', exact: true });
+    await earningPicker
       .getByRole('combobox', { name: 'Payroll component', exact: true })
       .fill('Browser Basic');
     await page.getByRole('option', { name: 'Browser Basic', exact: true }).click();
-    await wizard.getByRole('button', { name: 'Add Component', exact: true }).click();
+    await earningPicker.getByRole('button', { name: 'Add Component', exact: true }).click();
     await wizard
       .getByRole('combobox', { name: 'Payroll purpose for Browser Basic', exact: true })
       .click();
     await page.getByRole('option', { name: 'Basic', exact: true }).click();
     await wizard.getByRole('button', { name: 'Add Deduction', exact: true }).click();
-    await wizard.getByRole('button', { name: 'Create deduction component', exact: true }).click();
+    const deductionPicker = page.getByRole('dialog', {
+      name: 'Add Deduction Component',
+      exact: true,
+    });
+    await deductionPicker
+      .getByRole('button', { name: 'Create deduction component', exact: true })
+      .click();
     await wizard.getByLabel('Deduction Name *', { exact: true }).fill('Browser Optional Deduction');
     await wizard.getByRole('combobox', { name: 'Calculation Type *', exact: true }).click();
     await page.getByRole('option', { name: 'Amount Based', exact: true }).click();
@@ -187,14 +194,15 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await expect(
       wizard.getByRole('combobox', { name: 'Payroll purpose for Browser Basic', exact: true })
     ).toContainText('Basic');
-    await wizard
+    await wizard.getByRole('button', { name: 'Add Deduction', exact: true }).click();
+    await deductionPicker
       .getByRole('combobox', { name: 'Payroll component', exact: true })
       .fill('Browser Optional Deduction');
     await expect(
       page.getByRole('option', { name: 'Browser Optional Deduction', exact: true })
     ).toBeVisible();
     await page.keyboard.press('Escape');
-    await wizard.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await deductionPicker.getByRole('button', { name: 'Cancel', exact: true }).click();
     await wizard.getByRole('button', { name: 'Preview salary', exact: true }).click();
     await expect(wizard.getByText('Preview ready', { exact: true }).first()).toBeVisible();
     await wizard.getByRole('button', { name: 'Save and next', exact: true }).click();
