@@ -182,7 +182,7 @@ describe('SalaryTemplateEditor', () => {
     expect(screen.queryByRole('button', { name: 'Create Template' })).toBeNull();
   });
 
-  it('blocks picker refresh while a preview is pending and invalidates it after an allowed refresh', async () => {
+  it('defers automatic picker refresh until a pending preview finishes and invalidates the preview', async () => {
     const user = userEvent.setup();
     const proof = await mocks.calculate().unwrap();
     mocks.calculate.mockClear();
@@ -199,15 +199,11 @@ describe('SalaryTemplateEditor', () => {
     mocks.calculating = true;
     view.rerender(<ThemeProvider theme={theme}>{editor}</ThemeProvider>);
     await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
-    const refresh = screen.getByRole('button', { name: 'Refresh setup' });
-    expect(refresh).toBeDisabled();
-    fireEvent.click(refresh);
+    expect(screen.queryByRole('button', { name: 'Refresh setup' })).toBeNull();
     expect(mocks.refetchCatalog).not.toHaveBeenCalled();
     mocks.calculating = false;
     await act(async () => finishPreview(proof));
-    expect(refresh).toBeEnabled();
-    await user.click(refresh);
-    expect(mocks.refetchCatalog).toHaveBeenCalledOnce();
+    await waitFor(() => expect(mocks.refetchCatalog).toHaveBeenCalledOnce());
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
     expect(mocks.updateTemplate).not.toHaveBeenCalled();
@@ -223,10 +219,10 @@ describe('SalaryTemplateEditor', () => {
     expect(picker).toHaveTextContent('No active deduction components are available.');
     expect(picker).toHaveTextContent('Ask your HR administrator to create the component.');
     expect(screen.queryByRole('link', { name: /Create deduction component/ })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Add Component' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   });
 
-  it('offers the matching standalone setup route and refresh without replacing entered values', async () => {
+  it('automatically refreshes the standalone picker without replacing entered values', async () => {
     const user = userEvent.setup();
     mocks.catalogEmpty = true;
     renderEditor(<SalaryTemplateEditor mode="create" />);
@@ -237,8 +233,8 @@ describe('SalaryTemplateEditor', () => {
     expect(
       screen.getByRole('link', { name: 'Create deduction component (new tab)' })
     ).toHaveAttribute('href', '/hr/payroll/setting/deduction-component');
-    await user.click(screen.getByRole('button', { name: 'Refresh setup' }));
-    expect(mocks.refetchCatalog).toHaveBeenCalledOnce();
+    await waitFor(() => expect(mocks.refetchCatalog).toHaveBeenCalledOnce());
+    expect(screen.queryByRole('button', { name: 'Refresh setup' })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue('Standalone draft');
   });
@@ -264,11 +260,11 @@ describe('SalaryTemplateEditor', () => {
     expect(screen.getByRole('dialog', { name: /Add deduction component/i })).toBeVisible();
     await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
     await user.click(screen.getByRole('option', { name: 'Loan Recovery' }));
-    await user.click(screen.getByRole('button', { name: /Add component/i }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     expect(screen.getByRole('textbox', { name: 'Loan Recovery amount' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
     expect(screen.getByRole('alert')).toHaveTextContent(/already added/i);
-    expect(screen.getByRole('button', { name: /Add component/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     expect(mocks.createTemplate).not.toHaveBeenCalled();
   });
 
@@ -517,14 +513,14 @@ describe('SalaryTemplateEditor', () => {
     await user.click(screen.getByRole('button', { name: 'Add Earning' }));
     await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
     await user.click(screen.getByRole('option', { name: 'Basic Salary' }));
-    await user.click(screen.getByRole('button', { name: 'Add Component' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Basic Salary amount' }), {
       target: { value: '50000' },
     });
     await user.click(screen.getByRole('button', { name: 'Add Deduction' }));
     await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
     await user.click(screen.getByRole('option', { name: 'Loan Recovery' }));
-    await user.click(screen.getByRole('button', { name: 'Add Component' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Loan Recovery amount' }), {
       target: { value: '1000' },
     });
@@ -1018,7 +1014,7 @@ describe('SalaryTemplateEditor', () => {
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
     await user.click(screen.getByRole('option', { name: 'Basic Salary' }));
-    await user.click(screen.getByRole('button', { name: 'Add Component' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() =>
       expect(screen.getByRole('textbox', { name: 'Basic Salary amount' })).toHaveFocus()
     );
@@ -1078,7 +1074,7 @@ describe('SalaryTemplateEditor', () => {
     await user.click(screen.getByRole('button', { name: 'Add Earning' }));
     await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
     await user.click(screen.getByRole('option', { name: 'Basic Salary' }));
-    await user.click(screen.getByRole('button', { name: 'Add Component' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     await user.click(screen.getByRole('combobox', { name: 'Payroll purpose for Basic Salary' }));
     await user.click(screen.getByRole('option', { name: 'Basic' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Basic Salary amount' }), {

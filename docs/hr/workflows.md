@@ -64,7 +64,12 @@ The wizard opens at the first unresolved step and marks usable existing configur
 Users can configure shifts, policies and calendars, earning components, and salary templates through embedded versions of the existing editors.
 The Earning Components step also exposes optional deduction setup to operators with exact Deduction Components View and Add access, including before a template exists. Deductions are not an additional readiness requirement.
 Salary Template's Add Earning and Add Deduction actions open the shared modal picker above the wizard. Empty catalogues and components already added have visible guidance. Authorized operators can create another component within setup and return to the mounted salary draft; reopening the picker shows refreshed choices. Cancelling the picker preserves the draft and returns focus to its launcher.
-Outside the wizard, the picker offers the matching component setup page in a new tab and an explicit Refresh setup action. Missing creation access directs the operator to an HR administrator.
+Both component pickers use a compact Component Details section, a required searchable Payroll component field, and Cancel/Submit actions.
+Outside the wizard, the matching component setup page opens in a new tab; choices refresh automatically when the picker opens and after returning, without a routine Refresh setup button or persistent success message.
+Refresh waits while salary preview or save is pending, preserves valid selections and template entries, and invalidates the previous salary preview.
+Failed refreshes retain the draft and selection, disable Submit, and offer inline Retry; removed selections are cleared after a successful refresh.
+Cancelling a changed selection offers Keep editing or Discard changes without discarding the parent template.
+Missing creation access directs the operator to an HR administrator.
 Required deduction and statutory dependencies appear inside the salary step when needed; the salary draft remains mounted while a dependency is configured.
 Role repair remains an explicitly authorized Role Management task in another tab.
 Each step saves independently through existing APIs, and the final action rechecks server readiness.

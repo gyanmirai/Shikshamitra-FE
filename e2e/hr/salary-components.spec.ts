@@ -56,12 +56,12 @@ test.describe('Bug 6484 with synthetic APIs and real setup editors', () => {
       const picker = pickerFor(page, kind);
       await expect(picker).toBeInViewport();
       const component = picker.getByRole('combobox', { name: 'Payroll component', exact: true });
-      await component.fill(name);
-      await component.press('ArrowDown');
-      await component.press('Enter');
-      await expect(component).toHaveValue(name);
+      await expect(component).toBeEnabled();
+      await component.click();
+      await page.getByRole('option', { name, exact: true }).click();
+      await expect(component).toHaveText(name);
       expect((await (await request.get('/fixture/state')).json()).templates).toHaveLength(0);
-      await picker.getByRole('button', { name: 'Add Component', exact: true }).click();
+      await picker.getByRole('button', { name: 'Submit', exact: true }).click();
       await wizard
         .getByRole('textbox', { name: `${name} amount`, exact: true })
         .fill(kind === 'Earning' ? '50000' : '1000');
@@ -161,7 +161,7 @@ test.describe('Bug 6484 with synthetic APIs and real setup editors', () => {
     await expect(
       picker.getByRole('button', { name: 'Create deduction component', exact: true })
     ).toHaveCount(0);
-    await expect(picker.getByRole('button', { name: 'Add Component', exact: true })).toBeDisabled();
+    await expect(picker.getByRole('button', { name: 'Submit', exact: true })).toBeDisabled();
   });
 
   test('distinguishes a failed component catalogue from missing setup and retries', async ({
@@ -180,6 +180,91 @@ test.describe('Bug 6484 with synthetic APIs and real setup editors', () => {
     await request.post('/fixture/control', { data: { failCatalog: false } });
     await wizard.getByRole('button', { name: 'Retry', exact: true }).click();
     await expect(wizard.getByRole('button', { name: 'Add Deduction', exact: true })).toBeVisible();
+  });
+
+  test('reloads standalone choices after creating in a new tab without losing the selection or template draft', async ({
+    page,
+    request,
+    context,
+  }) => {
+    await request.post('/fixture/seed', { data: { earnings: 1, deductions: 1 } });
+    await page.goto('/?scenario=salary-template');
+    await page.getByLabel(/^Template name/).fill('Standalone retained draft');
+    await page.getByRole('button', { name: 'Add Deduction', exact: true }).click();
+    const picker = pickerFor(page, 'Deduction');
+    const component = picker.getByRole('combobox', { name: 'Payroll component', exact: true });
+    await expect(component).toBeEnabled();
+    await component.click();
+    await page.getByRole('option', { name: 'Deduction 1', exact: true }).click();
+    const popupPromise = context.waitForEvent('page');
+    await picker
+      .getByRole('link', { name: 'Create deduction component (new tab)', exact: true })
+      .click();
+    const popup = await popupPromise;
+    await popup.getByRole('button', { name: 'Add deduction', exact: true }).click();
+    const create = pickerFor(popup, 'Deduction');
+    await create.getByLabel('Deduction Name *', { exact: true }).fill('New tab recovery');
+    await create.getByRole('combobox', { name: 'Calculation Type *', exact: true }).click();
+    await popup.getByRole('option', { name: 'Amount Based', exact: true }).click();
+    await create.getByLabel('Amount *', { exact: true }).fill('1000');
+    await create.getByRole('button', { name: 'Submit', exact: true }).click();
+    await expect(create).toHaveCount(0);
+    await popup.close();
+    await page.bringToFront();
+    // Headless Chromium does not consistently emit a native window-focus event on tab return.
+    const refreshed = page.waitForResponse((response) =>
+      response.url().endsWith('/component-catalog')
+    );
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await refreshed;
+    await expect(component).toBeEnabled();
+    await expect(component).toHaveText('Deduction 1');
+    await component.click();
+    await page
+      .getByRole('textbox', { name: 'Search Payroll component', exact: true })
+      .fill('New tab');
+    await expect(page.getByRole('option', { name: 'New tab recovery', exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await picker.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await page.getByRole('button', { name: 'Keep editing', exact: true }).click();
+    await expect(component).toHaveText('Deduction 1');
+    await page.screenshot({
+      path: '.artifacts/salary-components/standalone-picker.png',
+      animations: 'disabled',
+    });
+    await picker.getByRole('button', { name: 'Submit', exact: true }).click();
+    await expect(picker).toHaveCount(0);
+    await expect(page.getByLabel(/^Template name/)).toHaveValue('Standalone retained draft');
+    expect((await (await request.get('/fixture/state')).json()).templates).toHaveLength(0);
+  });
+
+  test('retains the standalone draft and selected component after refresh fails, then retries', async ({
+    page,
+    request,
+  }) => {
+    await request.post('/fixture/seed', { data: { earnings: 1, deductions: 1 } });
+    await page.goto('/?scenario=salary-template');
+    await page.getByLabel(/^Template name/).fill('Failed refresh retained draft');
+    await page.getByRole('button', { name: 'Add Deduction', exact: true }).click();
+    const picker = pickerFor(page, 'Deduction');
+    const component = picker.getByRole('combobox', { name: 'Payroll component', exact: true });
+    await expect(component).toBeEnabled();
+    await component.click();
+    await page.getByRole('option', { name: 'Deduction 1', exact: true }).click();
+    await request.post('/fixture/control', { data: { failCatalog: true } });
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event('blur'));
+      window.dispatchEvent(new Event('focus'));
+    });
+    await expect(picker.getByRole('alert')).toContainText('Unable to load payroll components');
+    await expect(component).toHaveText('Deduction 1');
+    await expect(picker.getByRole('button', { name: 'Submit', exact: true })).toBeDisabled();
+    await request.post('/fixture/control', { data: { failCatalog: false } });
+    await picker.getByRole('button', { name: 'Retry', exact: true }).click();
+    await expect(picker.getByRole('button', { name: 'Submit', exact: true })).toBeEnabled();
+    await expect(picker.getByText(/Setup refreshed/)).toHaveCount(0);
+    await picker.getByRole('button', { name: 'Submit', exact: true }).press('Enter');
+    await expect(page.getByLabel(/^Template name/)).toHaveValue('Failed refresh retained draft');
   });
 
   for (const theme of ['light', 'dark']) {
@@ -204,6 +289,10 @@ test.describe('Bug 6484 with synthetic APIs and real setup editors', () => {
           await launcher.click();
           const picker = pickerFor(page, kind);
           await expect(picker).toBeInViewport();
+          await expect(
+            picker.getByRole('button', { name: 'Refresh setup', exact: true })
+          ).toHaveCount(0);
+          await expect(picker.getByText('Component Details', { exact: true })).toBeVisible();
           await expect(
             picker.getByRole('combobox', { name: 'Payroll component', exact: true })
           ).toBeInViewport();

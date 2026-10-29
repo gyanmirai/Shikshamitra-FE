@@ -11,7 +11,6 @@ import type {
 
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -19,23 +18,13 @@ import { LoadingButton } from 'src/components/loading-button';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { getIn, useFormik, setNestedObjectValues } from 'formik';
 import { salaryPreviewError } from 'src/utils/salary-preview-error';
+import { Box, Chip, Alert, Button, Typography } from '@mui/material';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useGetEsiPolicyOptionsQuery } from 'src/redux/hr/esi-policy-api';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useRef, useMemo, useState, useEffect, useContext, useCallback } from 'react';
 import { HrSetupLink, HrSetupRefresh } from 'src/screens/hr/recovery/hr-setup-controls';
-import {
-  Box,
-  Chip,
-  Alert,
-  Button,
-  TextField,
-  Typography,
-  Autocomplete,
-  DialogActions,
-} from '@mui/material';
 import {
   useHrSetupEmbedded,
   HrSetupTaskContext,
@@ -53,6 +42,7 @@ import {
 import SalaryTemplateReview from './salary-template-review';
 import SalaryTemplateSkeleton from './salary-template-skeleton';
 import SalaryTemplateConfigure from './salary-template-configure';
+import SalaryTemplateComponentPicker from './salary-template-component-picker';
 import { createTemplateRule, normalizeRuleOrder } from './salary-template-editor-utils';
 import {
   editorSchema,
@@ -148,6 +138,10 @@ export default function SalaryTemplateEditor({
           message: 'Unable to reload the template. Your edits are still available.',
         });
     });
+  const refreshCatalog = useCallback(async () => {
+    const result = await refetchCatalog();
+    if (result.error) throw new Error('Salary components could not be refreshed.');
+  }, [refetchCatalog]);
   const readOnly = mode === 'view' || template?.status === 'ARCHIVED' || (!isCreate && !canEdit);
   const loading = (isLoading && !template) || (catalogLoading && !catalogData);
   const failed = (!isCreate && !template && isError) || (!catalogData && catalogError);
@@ -270,10 +264,7 @@ export default function SalaryTemplateEditor({
             onBusyChange={setBusy}
             onReload={reload}
             dependencyRevision={dependencyRevision}
-            onRefreshCatalog={async () => {
-              const result = await refetchCatalog();
-              if (result.error) throw new Error('Salary components could not be refreshed.');
-            }}
+            onRefreshCatalog={refreshCatalog}
           />
         </Box>
       )}
@@ -344,8 +335,6 @@ function SalaryTemplateWorkflow({
   const [updateTemplate, updateState] = useUpdateSalaryTemplateMutation();
   const [calculate, calculationState] = usePreviewSalaryTemplateMutation();
   const [addKind, setAddKind] = useState<SalaryTemplateRule['lineKind'] | null>(null);
-  const [selectedComponent, setSelectedComponent] =
-    useState<SalaryTemplateComponentCatalogItem | null>(null);
   const [serverError, setServerError] = useState('');
   const [sampleAmount, setSampleAmount] = useState(50000);
   const [effectiveMonth, setEffectiveMonth] = useState(() => new Date().toISOString().slice(0, 7));
@@ -416,7 +405,6 @@ function SalaryTemplateWorkflow({
   const availableComponents = (catalogData?.items || []).filter(
     (item) => item.lineKind === addKind && !selectedIds.has(item.componentId)
   );
-  const componentKind = addKind === 'EARNING' ? 'earning' : 'deduction';
   const componentPermission =
     addKind === 'EARNING'
       ? hrPermissions.payroll.settings.earningComponents
@@ -427,8 +415,11 @@ function SalaryTemplateWorkflow({
   const allComponentsAdded = (catalogData?.items || []).some((item) => item.lineKind === addKind);
   const closeComponentPicker = () => {
     setAddKind(null);
-    setSelectedComponent(null);
   };
+  const refreshPickerCatalog = useCallback(async () => {
+    setPreview(null);
+    await onRefreshCatalog();
+  }, [onRefreshCatalog]);
   const pfFormulaPresent = formik.values.rules.some(
     (rule) => rule.formulaType === 'EMPLOYEE_PROVIDENT_FUND'
   );
@@ -887,123 +878,43 @@ function SalaryTemplateWorkflow({
           </Box>
         </Box>
       </Box>
-      <CustomDialog
-        open={Boolean(addKind)}
-        handleClose={closeComponentPicker}
-        title={`Add ${addKind === 'EARNING' ? 'Earning' : 'Deduction'} Component`}
-        titleInfo="Choose an existing payroll component to configure its rule in this salary template."
-        maxWidth="sm"
-        hasForm={false}
-        guardUnsavedChanges={false}
-      >
-        <DialogScrollContent>
-          {availableComponents.length === 0 && (
-            <Alert
-              severity="info"
-              variant="outlined"
-              sx={{
-                mb: 2,
-                bgcolor: 'background.paper',
-                borderColor: 'divider',
-                '& .MuiAlert-icon': { color: 'text.secondary' },
-              }}
-            >
-              {allComponentsAdded
-                ? `All available ${componentKind} components are already added to this template. Edit the existing rules or create another component.`
-                : `No active ${componentKind} components are available. Create ${addKind === 'EARNING' ? 'an earning' : 'a deduction'} component first, then return to add its salary rule.`}
-              {!canCreateComponent && ' Ask your HR administrator to create the component.'}
-            </Alert>
-          )}
-          <Autocomplete
-            autoHighlight
-            size="small"
-            fullWidth
-            options={availableComponents}
-            noOptionsText={
-              availableComponents.length
-                ? 'No matching components'
-                : `No available ${addKind === 'EARNING' ? 'earning' : 'deduction'} components. Review payroll component setup or components already added.`
-            }
-            value={selectedComponent}
-            onChange={(_, value) => setSelectedComponent(value)}
-            getOptionLabel={(option) => option.name}
-            isOptionEqualToValue={(option, value) => option.componentId === value.componentId}
-            renderInput={(params) => (
-              <TextField {...params} size="small" label="Payroll component" />
-            )}
-          />
-          {canCreateComponent &&
-            (openTask ? (
-              <Button
-                size="small"
-                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-                onClick={() => {
+      {addKind && (
+        <SalaryTemplateComponentPicker
+          kind={addKind}
+          options={availableComponents}
+          allComponentsAdded={allComponentsAdded}
+          canCreate={canCreateComponent}
+          createHref={
+            addKind === 'EARNING'
+              ? hrPaths.payroll.settings.earningComponents
+              : hrPaths.payroll.settings.deductionComponents
+          }
+          onCreate={
+            openTask
+              ? () => {
                   const task = addKind === 'EARNING' ? 'earnings' : 'deductions';
                   closeComponentPicker();
                   openTask(task);
-                }}
-              >
-                Create {componentKind} component
-              </Button>
-            ) : (
-              <Button
-                size="small"
-                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-                href={
-                  addKind === 'EARNING'
-                    ? hrPaths.payroll.settings.earningComponents
-                    : hrPaths.payroll.settings.deductionComponents
                 }
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Create {componentKind} component (new tab)
-              </Button>
-            ))}
-          {!openTask && (
-            <HrSetupRefresh
-              refresh={async () => {
-                setSelectedComponent(null);
-                setPreview(null);
-                await onRefreshCatalog();
-              }}
-              disabled={busy || calculationState.isLoading}
-            />
-          )}
-        </DialogScrollContent>
-        <DialogActions>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:close" />}
-            onClick={closeComponentPicker}
-          >
-            Cancel
-          </Button>
-          <Button
-            size="small"
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            disabled={!selectedComponent}
-            onClick={() => {
-              if (!selectedComponent) return;
-              formik.setFieldValue(
-                'rules',
-                normalizeRuleOrder([
-                  ...formik.values.rules,
-                  createTemplateRule(selectedComponent, formik.values.rules.length),
-                ])
-              );
-              setExpanded((value) => new Set(value).add(selectedComponent.componentId));
-              setPendingFocus(`salary-rule-${selectedComponent.componentId}`);
-              setAddKind(null);
-              setSelectedComponent(null);
-            }}
-          >
-            Add Component
-          </Button>
-        </DialogActions>
-      </CustomDialog>
+              : undefined
+          }
+          blocked={busy || calculationState.isLoading}
+          refresh={refreshPickerCatalog}
+          onClose={closeComponentPicker}
+          onSubmit={(component) => {
+            formik.setFieldValue(
+              'rules',
+              normalizeRuleOrder([
+                ...formik.values.rules,
+                createTemplateRule(component, formik.values.rules.length),
+              ])
+            );
+            setExpanded((value) => new Set(value).add(component.componentId));
+            setPendingFocus(`salary-rule-${component.componentId}`);
+            closeComponentPicker();
+          }}
+        />
+      )}
     </Box>
   );
 }
