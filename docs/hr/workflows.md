@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -181,7 +181,7 @@ The salary-template editor keeps failed-preview guidance beside the sample contr
 Known target/allocation failures highlight the monthly amount and offer correction actions for the amount and earning rules; reviewing earning rules expands the first earning's controls before focusing them.
 PF rule failures direct the operator to the selected rule or preview month. The shared salary-error mapper handles exact known codes in both ProblemDetails and ABP responses, including older generic responses; it never renders arbitrary diagnostic data.
 Changing rules or sample inputs invalidates any previous preview, and saving still requires a fresh successful signed preview.
-The backend owns the rejection rules and safe error metadata; see its [salary template contract](../../../Shikshamitra-BE/docs/modules/hr/api.md).
+The backend owns the rejection rules and safe error metadata; see its [salary template contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 
 ## Policy, dashboard, and report behavior
 
