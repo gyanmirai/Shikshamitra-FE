@@ -91,6 +91,115 @@ const selectClass = async (
   });
 };
 
+it.each(['guardian', 'father', 'mother'] as const)(
+  'blocks blank %s mobile before either API and creates after it is corrected',
+  async (role) => {
+    let duplicateChecks = 0;
+    const submitted: Record<string, unknown>[] = [];
+    const onClose = vi.fn();
+    const available = offering('class-a');
+    mswServer.use(
+      http.get(`${root}/capture-catalogue`, () =>
+        HttpResponse.json({ data: catalogue([available]) })
+      ),
+      http.get(`${root}/capture-context/${available.id}`, () =>
+        HttpResponse.json({
+          data: {
+            offering: available,
+            availability: { canCreateInquiry: true },
+            policy: null,
+            form: {
+              sections: [
+                {
+                  fields: [
+                    {
+                      id: 'first',
+                      code: 'FIRST',
+                      label: 'First name',
+                      bindingKey: 'Applicant.FirstName',
+                      fieldType: 0,
+                      required: true,
+                    },
+                    {
+                      id: 'parent',
+                      code: 'PARENT',
+                      label: 'Parent name',
+                      bindingKey: 'Guardian.FirstName',
+                      fieldType: 0,
+                      required: true,
+                    },
+                    {
+                      id: 'phone',
+                      code: 'PHONE',
+                      label: 'Parent mobile',
+                      bindingKey:
+                        role === 'father'
+                          ? 'Father.Mobile'
+                          : role === 'mother'
+                            ? 'Mother.Mobile'
+                            : 'Guardian.Mobile',
+                      fieldType: 4,
+                      required: false,
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        })
+      ),
+      http.post(`${root}/duplicate-check`, () => {
+        duplicateChecks += 1;
+        return HttpResponse.json({ data: [] });
+      }),
+      http.post(root, async ({ request }) => {
+        submitted.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ data: { id: 'new-inquiry' } });
+      })
+    );
+    const { result } = renderHook(() => useAdmissionInquiryDialog(onClose), { wrapper });
+    await waitFor(() => expect(result.current.periods).toHaveLength(1));
+    await selectClass(result, 'class-a');
+    await waitFor(() => expect(result.current.canCreateInquiry).toBe(true));
+    await act(async () => {
+      await result.current.formik.setValues(
+        (current) => ({
+          ...current,
+          parentRelationship: role === 'mother' ? 'mother' : 'father',
+          fields: { FIRST: 'QA child', PARENT: 'QA parent', PHONE: '' },
+        }),
+        false
+      );
+    });
+    await act(async () => {
+      await result.current.formik.submitForm();
+    });
+    expect(result.current.formik.errors.fields).toMatchObject({
+      PHONE: 'Parent mobile is required',
+    });
+    expect(duplicateChecks).toBe(0);
+    expect(submitted).toHaveLength(0);
+    expect(result.current.formik.values.fields.FIRST).toBe('QA child');
+    if (role !== 'guardian')
+      expect(
+        result.current.sections
+          .flatMap((section) => section.fields)
+          .some((field) => field.bindingKey === 'Guardian.Mobile')
+      ).toBe(false);
+
+    await act(async () => {
+      await result.current.formik.setFieldValue('fields.PHONE', '9876543210', false);
+    });
+    await act(async () => {
+      await result.current.formik.submitForm();
+    });
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(duplicateChecks).toBe(1);
+    expect(submitted).toHaveLength(1);
+    expect(submitted[0]).toMatchObject({ guardianPhone: '9876543210', phone: '9876543210' });
+  }
+);
+
 it.each([
   [0, /setup is incomplete/i],
   [1, /not opened yet/i],

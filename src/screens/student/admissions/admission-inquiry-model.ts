@@ -18,6 +18,7 @@ import type {
 import * as Yup from 'yup';
 import { normalizeEmail } from 'src/utils/input-format';
 
+import { isAdmissionRuleVisible } from './admission-visibility-rules';
 import { normalizeAdmissionEmailValue } from './admission-email-values';
 import { getDynamicAdmissionValidationErrors } from './admission-form-validation';
 import {
@@ -197,13 +198,47 @@ const hasIdentityField = (fields: AdmissionFormField[], bindingKey: string) => {
   return fields.some(
     (field) =>
       equalsIgnoreCase(field.bindingKey, bindingKey) ||
-      aliases.some((code) => equalsIgnoreCase(field.code, code))
+      // Explicit mobile ownership wins; unknown historic bindings still use legacy codes.
+      (!['Guardian.Mobile', 'Father.Mobile', 'Mother.Mobile', 'Applicant.Mobile'].some((key) =>
+        equalsIgnoreCase(field.bindingKey, key)
+      ) &&
+        aliases.some((code) => equalsIgnoreCase(field.code, code)))
+  );
+};
+
+type InquiryMobileContext = Pick<AdmissionInquiryFormValues, 'parentRelationship' | 'fields'>;
+type InquiryRuntimeField = AdmissionFormField & { inquirySectionRuleJson?: string | null };
+
+const isInquiryFieldVisible = (field: AdmissionFormField, values: InquiryMobileContext) =>
+  isAdmissionRuleVisible((field as InquiryRuntimeField).inquirySectionRuleJson, values.fields) &&
+  isAdmissionRuleVisible(field.visibilityRuleJson, values.fields);
+
+const getSelectedParentMobileField = (
+  fields: AdmissionFormField[],
+  values?: InquiryMobileContext
+) => {
+  if (!values?.parentRelationship) return undefined;
+  // A published locked primary contact remains authoritative during edits.
+  if (fields.some((field) => hasIdentityField([field], 'Guardian.Mobile') && field.readOnly))
+    return undefined;
+  const key = values.parentRelationship === 'father' ? 'Father.Mobile' : 'Mother.Mobile';
+  return fields.find(
+    (field) => hasIdentityField([field], key) && isInquiryFieldVisible(field, values)
   );
 };
 
 export const getAdmissionInquirySections = (
-  form?: AdmissionForm
+  form?: AdmissionForm,
+  values?: InquiryMobileContext
 ): AdmissionInquiryFormSection[] => {
+  const parentMobile = getSelectedParentMobileField(
+    (form?.sections ?? [])
+      .filter(
+        (section) => !values || isAdmissionRuleVisible(section.visibilityRuleJson, values.fields)
+      )
+      .flatMap((section) => section.fields),
+    values
+  );
   const sections = [...(form?.sections ?? [])]
     .sort((left, right) => left.displayOrder - right.displayOrder)
     .map((section) => ({
@@ -213,7 +248,17 @@ export const getAdmissionInquirySections = (
       displayOrder: section.displayOrder,
       visibilityRuleJson: section.visibilityRuleJson,
       translations: section.translations,
-      fields: [...section.fields].sort((left, right) => left.displayOrder - right.displayOrder),
+      fields: [...section.fields]
+        .sort((left, right) => left.displayOrder - right.displayOrder)
+        // Inquiry identity requires a parent mobile even in older optional form definitions.
+        .map((field): InquiryRuntimeField => ({
+          ...field,
+          inquirySectionRuleJson: section.visibilityRuleJson,
+          required:
+            field.required ||
+            hasIdentityField([field], 'Guardian.Mobile') ||
+            field === parentMobile,
+        })),
     }));
   const fields = sections.flatMap((section) => section.fields);
   const applicantFallbackFields = !hasIdentityField(fields, 'Applicant.FirstName')
@@ -221,7 +266,9 @@ export const getAdmissionInquirySections = (
     : [];
   const guardianFallbackFields = [
     ...(!hasIdentityField(fields, 'Guardian.FirstName') ? [guardianFirstNameFallback] : []),
-    ...(!hasIdentityField(fields, 'Guardian.Mobile') ? [guardianPhoneFallback] : []),
+    ...(!parentMobile && !hasIdentityField(fields, 'Guardian.Mobile')
+      ? [guardianPhoneFallback]
+      : []),
   ];
 
   return [
@@ -251,8 +298,28 @@ export const getAdmissionInquirySections = (
   ];
 };
 
-export const getAdmissionInquiryFields = (form?: AdmissionForm): AdmissionFormField[] =>
-  getAdmissionInquirySections(form).flatMap((section) => section.fields);
+export const getAdmissionInquiryFields = (
+  form?: AdmissionForm,
+  values?: InquiryMobileContext
+): AdmissionFormField[] =>
+  getAdmissionInquirySections(form, values).flatMap((section) => section.fields);
+
+// Keep shared mobile answers in the published response, but collect the selected parent's number once.
+export function getAdmissionInquiryVisibleSections(
+  sections: AdmissionInquiryFormSection[],
+  values: InquiryMobileContext
+) {
+  const visibleFields = sections
+    .filter((section) => isAdmissionRuleVisible(section.visibilityRuleJson, values.fields))
+    .flatMap((section) => section.fields);
+  if (!getSelectedParentMobileField(visibleFields, values)) return sections;
+  return sections
+    .map((section) => ({
+      ...section,
+      fields: section.fields.filter((field) => !hasIdentityField([field], 'Guardian.Mobile')),
+    }))
+    .filter((section) => section.fields.length);
+}
 
 const uniqueOptions = (
   values: Array<{ id: string; name: string }>
@@ -297,7 +364,7 @@ export function getAdmissionInquiryAcademicOptions(
   };
 }
 
-const fieldValue = (values: AdmissionInquiryFormValues, code?: string) => {
+const fieldValue = (values: Pick<AdmissionInquiryFormValues, 'fields'>, code?: string) => {
   if (!code) return '';
   const valueKey = Object.keys(values.fields).find((key) => equalsIgnoreCase(key, code));
   return (valueKey ? values.fields[valueKey] : '').trim();
@@ -314,7 +381,11 @@ const boundValue = (
   if (canonicalValue) return canonicalValue;
 
   const aliasValue = (legacyIdentityFieldCodes[bindingKey] ?? [])
-    .map((alias) => fields.find((item) => equalsIgnoreCase(item.code, alias)))
+    .map((alias) =>
+      fields.find(
+        (item) => equalsIgnoreCase(item.code, alias) && hasIdentityField([item], bindingKey)
+      )
+    )
     .map((aliasField) => fieldValue(values, aliasField?.code))
     .find(Boolean);
   if (aliasValue) return aliasValue;
@@ -390,7 +461,10 @@ export function buildAdmissionInquiryPayload(
   );
   const applicantLastName = boundValue(values, fields, 'Applicant.LastName', 'applicantLastName');
   const guardianFirstName = boundValue(values, fields, 'Guardian.FirstName', 'guardianFirstName');
-  const guardianPhone = boundValue(values, fields, 'Guardian.Mobile', 'guardianPhone');
+  const parentMobile = getSelectedParentMobileField(fields, values);
+  const guardianPhone = parentMobile
+    ? fieldValue(values, parentMobile.code)
+    : boundValue(values, fields, 'Guardian.Mobile', 'guardianPhone');
   const guardianEmail = normalizeEmail(
     boundValue(values, fields, 'Guardian.Email', 'guardianEmail')
   );
@@ -438,13 +512,17 @@ export function buildAdmissionInquiryPayload(
         (field) =>
           !inquiryIdentityFallbackIds.has(field.id) &&
           (values.fields[field.code] !== undefined ||
+            (parentMobile && hasIdentityField([field], 'Guardian.Mobile')) ||
             selectedParentAnswer(field, parentSelection) !== undefined)
       )
       .map((field) => ({
         fieldCode: field.code,
         valueJson: serializeFieldValue(
           field,
-          selectedParentAnswer(field, parentSelection) ?? values.fields[field.code]
+          selectedParentAnswer(field, parentSelection) ??
+            (parentMobile && hasIdentityField([field], 'Guardian.Mobile')
+              ? guardianPhone
+              : values.fields[field.code])
         ),
       })),
   };
@@ -456,24 +534,46 @@ export function validateAdmissionInquiry(
   policy?: AdmissionInquiryPolicy | null,
   offering?: AdmissionOfferingListItem
 ) {
+  const parentMobile = getSelectedParentMobileField(fields, values);
+  const answers = { ...values.fields };
+  if (parentMobile)
+    fields
+      .filter((field) => hasIdentityField([field], 'Guardian.Mobile'))
+      .forEach((field) => {
+        answers[field.code] = fieldValue(values, parentMobile.code);
+      });
+  const activeFields = fields.filter((field) =>
+    isAdmissionRuleVisible((field as InquiryRuntimeField).inquirySectionRuleJson, values.fields)
+  );
   const fieldErrors = getDynamicAdmissionValidationErrors(
-    { sections: [{ fields }] },
-    values.fields
+    { sections: [{ fields: activeFields }] },
+    answers
   );
   fields.forEach((field) => {
-    if (field.required && !values.fields[field.code]?.trim() && fieldErrors[field.code]) {
+    if (field.required && !answers[field.code]?.trim() && fieldErrors[field.code]) {
       fieldErrors[field.code] = `${field.label} is required`;
     }
   });
-  const guardianPhoneField = fields.find(
-    (field) =>
-      equalsIgnoreCase(field.bindingKey, 'Guardian.Mobile') ||
-      legacyIdentityFieldCodes['Guardian.Mobile'].some((code) => equalsIgnoreCase(field.code, code))
-  );
-  const guardianPhone = boundValue(values, fields, 'Guardian.Mobile', 'guardianPhone');
-  if (guardianPhoneField && guardianPhone && !/^[6-9]\d{9}$/.test(guardianPhone)) {
-    fieldErrors[guardianPhoneField.code] =
-      'Guardian mobile number must be a valid 10-digit Indian mobile number.';
+  const guardianPhoneField =
+    parentMobile ?? fields.find((field) => hasIdentityField([field], 'Guardian.Mobile'));
+  const guardianPhone = parentMobile
+    ? fieldValue(values, parentMobile.code)
+    : boundValue(values, fields, 'Guardian.Mobile', 'guardianPhone');
+  if (parentMobile)
+    fields
+      .filter((field) => hasIdentityField([field], 'Guardian.Mobile'))
+      .forEach((field) => {
+        if (fieldErrors[field.code] && !fieldErrors[parentMobile.code])
+          fieldErrors[parentMobile.code] = fieldErrors[field.code];
+        delete fieldErrors[field.code];
+      });
+  if (guardianPhoneField) {
+    if (!guardianPhone) {
+      fieldErrors[guardianPhoneField.code] = `${guardianPhoneField.label} is required`;
+    } else if (!/^[6-9]\d{9}$/.test(guardianPhone)) {
+      fieldErrors[guardianPhoneField.code] =
+        'Guardian mobile number must be a valid 10-digit Indian mobile number.';
+    }
   }
   const preferredClassError = getAdmissionInquiryPreferredClassError(values, fields, offering);
   if (preferredClassError) {

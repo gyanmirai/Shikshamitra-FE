@@ -320,6 +320,33 @@ it('keeps compact recipient selection and manual sending with an accessible emai
     expectedEmail: 'raj@example.test',
   });
 });
+
+it('explains the activation prerequisite once while preserving the blocked send with all consent selected', () => {
+  setRecipients([
+    {
+      ...studentRecipient,
+      canSend: false,
+      blockedReason: 'The student must be actively enrolled in the school.',
+    },
+    {
+      ...fatherRecipient,
+      canSend: false,
+      blockedReason: 'The student must be actively enrolled in the school.',
+    },
+  ]);
+  panel({ compact: true, student: { ...student, studentEnrollmentId: null } });
+  selectStudent();
+  selectAdult();
+  confirm();
+  expect(screen.getAllByText('Use Save & Activate first, then send login details.')).toHaveLength(
+    1
+  );
+  expect(
+    screen.queryByText('The student must be active before login details can be sent.')
+  ).not.toBeInTheDocument();
+  expect(sendButton()).toBeDisabled();
+  expect(mocks.send).not.toHaveBeenCalled();
+});
 it('shows compact column labels and asks for parent consent only after selecting that recipient', () => {
   panel({ compact: true });
   ['Recipient', 'Email', 'Status', 'Actions'].forEach((label) => {

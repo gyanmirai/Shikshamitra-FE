@@ -1,11 +1,22 @@
 import type { DuplicateMatch } from 'src/redux/student/admissions/admission-inquiries-api';
 
+import { useState } from 'react';
 import { it, vi, expect } from 'vitest';
+import { shikshaMitraToast } from 'src/components/toast';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { AdmissionInquiryDuplicateMatches } from './admission-inquiry-duplicate-matches';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    dismiss: vi.fn(),
+  },
+}));
 vi.mock('src/components/custom-select', () => ({
   default: ({ label, value, options, onChange, disabled, helperText }: any) => (
     <>
@@ -154,6 +165,7 @@ it('requires a nonblank reason before creating a separate family for a duplicate
     onOverrideReasonChange: vi.fn(),
   };
   const view = render(<AdmissionInquiryDuplicateMatches {...props} overrideReason="   " />);
+  fireEvent.click(screen.getByRole('button', { name: 'Different family?' }));
   expect(screen.getByRole('button', { name: 'Create separate family' })).toBeDisabled();
   view.rerender(
     <AdmissionInquiryDuplicateMatches
@@ -163,4 +175,87 @@ it('requires a nonblank reason before creating a separate family for a duplicate
   );
   fireEvent.click(screen.getByRole('button', { name: 'Create separate family' }));
   expect(createSeparate).toHaveBeenCalledOnce();
+});
+
+it('keeps family matching controls in the form without publishing them to a toast', () => {
+  vi.mocked(shikshaMitraToast.warning).mockClear();
+  renderMatches('9876543210', {
+    ...match,
+    existingInquiryId: 'inquiry-1',
+    existingInquiryNumber: 'INQ-2026-000030',
+  });
+  expect(screen.getByRole('heading', { name: 'Existing Family Found' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Open inquiry' })).toBeInTheDocument();
+  expect(screen.getByLabelText('Parent')).toBeInTheDocument();
+  expect(shikshaMitraToast.warning).not.toHaveBeenCalled();
+});
+
+it('announces newly found matches without moving interactive controls into the live region', () => {
+  const props = {
+    guardianPhone: '9876543210',
+    busy: false,
+    onUseExisting: vi.fn(),
+    onOpenExisting: vi.fn(),
+    onCreateSeparate: vi.fn(),
+    overrideReason: '',
+    onOverrideReasonChange: vi.fn(),
+  };
+  const view = render(<AdmissionInquiryDuplicateMatches {...props} matches={[]} />);
+  const status = screen.getByRole('status');
+  expect(status).toBeEmptyDOMElement();
+  view.rerender(<AdmissionInquiryDuplicateMatches {...props} matches={[match]} />);
+  expect(status).toHaveTextContent('1 possible existing family found');
+  expect(within(status).queryByRole('button')).not.toBeInTheDocument();
+});
+
+it('discloses the separate-family reason only on click and retains its draft on collapse', async () => {
+  function Draft() {
+    const [reason, setReason] = useState('');
+    return (
+      <AdmissionInquiryDuplicateMatches
+        matches={[match]}
+        guardianPhone="9876543210"
+        busy={false}
+        onUseExisting={vi.fn()}
+        onOpenExisting={vi.fn()}
+        onCreateSeparate={vi.fn()}
+        overrideReason={reason}
+        onOverrideReasonChange={setReason}
+      />
+    );
+  }
+  render(<Draft />);
+  const toggle = screen.getByRole('button', { name: 'Different family?' });
+  expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.queryByLabelText(/Reason for creating a separate family/)).not.toBeInTheDocument();
+  fireEvent.click(toggle);
+  const field = await screen.findByLabelText(/Reason for creating a separate family/);
+  fireEvent.change(field, { target: { value: 'Two different families share this number.' } });
+  fireEvent.click(toggle);
+  await waitFor(() =>
+    expect(screen.queryByLabelText(/Reason for creating a separate family/)).not.toBeInTheDocument()
+  );
+  fireEvent.click(toggle);
+  expect(await screen.findByLabelText(/Reason for creating a separate family/)).toHaveValue(
+    'Two different families share this number.'
+  );
+});
+
+it('locks the disclosed reason and all family actions while the owner is saving', () => {
+  const props = {
+    matches: [{ ...match, existingInquiryId: 'inquiry-1' }],
+    guardianPhone: '9876543210',
+    onUseExisting: vi.fn(),
+    onOpenExisting: vi.fn(),
+    onCreateSeparate: vi.fn(),
+    overrideReason: 'A different family.',
+    onOverrideReasonChange: vi.fn(),
+  };
+  const view = render(<AdmissionInquiryDuplicateMatches {...props} busy={false} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Different family?' }));
+  view.rerender(<AdmissionInquiryDuplicateMatches {...props} busy />);
+  expect(screen.getByLabelText(/Reason for creating a separate family/)).toBeDisabled();
+  ['Different family?', 'Open inquiry', 'Add sibling', 'Create separate family'].forEach((name) => {
+    expect(screen.getByRole('button', { name })).toBeDisabled();
+  });
 });

@@ -101,11 +101,27 @@ export function AssessmentActionDialog({
     action === 'book' && snapshot.policy.schedulingEnabled
       ? 'Book assessment session'
       : assessmentActionLabels[action];
+  const titleInfo: Record<AssessmentAction, string> = {
+    book: snapshot.policy.schedulingEnabled
+      ? 'Choose an available session for this assessment attempt.'
+      : 'Start a new assessment attempt. This stage does not require a scheduled session.',
+    attendance: 'Record attendance for this assessment attempt.',
+    result:
+      snapshot.policy.scoringEnabled && !profile && snapshot.policy.scoringMode !== 'subjects'
+        ? 'The result is calculated from these marks.'
+        : 'Record the result for this assessment attempt. Draft marks do not complete the stage.',
+    resultDraft:
+      'Save draft marks for this assessment attempt. Draft marks do not complete the stage.',
+    retake: `Allow another attempt within the configured limit of ${snapshot.policy.maxAttempts}. Book the next attempt after saving.`,
+    cancel:
+      'Cancel this attempt and release its session place. A new booking can then be made if the stage allows it.',
+    waive: 'This records an assessment waiver. Enter the reason for the admission audit history.',
+  };
   return (
     <CustomDialog
       open
       title={title}
-      titleInfo="Record attendance or results for this assessment attempt. Draft marks do not complete the stage."
+      titleInfo={titleInfo[action]}
       maxWidth="sm"
       handleClose={onClose}
       hasUnsavedChanges={formik.dirty}

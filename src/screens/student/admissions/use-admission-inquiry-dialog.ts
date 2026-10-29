@@ -37,6 +37,7 @@ import {
   canLinkAdmissionInquiryFamily,
   type AdmissionInquiryFormValues,
   preserveCompatibleInquiryAnswers,
+  getAdmissionInquiryVisibleSections,
   buildAdmissionInquiryDuplicateInput,
 } from './admission-inquiry-model';
 
@@ -129,11 +130,12 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     !runtimeLoading &&
     !runtimeError &&
     Boolean(runtime.currentData?.availability.canCreateInquiry);
-  const sections =
+  const allSections =
     formik.values.offeringId && !runtimeLoading && !runtimeError && canCreateInquiry
-      ? getAdmissionInquirySections(form)
+      ? getAdmissionInquirySections(form, formik.values)
       : [];
-  const fields: AdmissionFormField[] = sections.flatMap((section) => section.fields);
+  const fields: AdmissionFormField[] = allSections.flatMap((section) => section.fields);
+  const sections = getAdmissionInquiryVisibleSections(allSections, formik.values);
   const policy = withStandardInquiryBehavior(runtime.currentData?.policy ?? DEFAULT_INQUIRY_POLICY);
   const workflowLoading = false;
   const allowedSources = policy?.allowedSources.length

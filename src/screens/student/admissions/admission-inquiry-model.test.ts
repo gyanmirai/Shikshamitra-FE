@@ -15,6 +15,7 @@ import {
   readAdmissionInquiryFormValues,
   type AdmissionInquiryFormValues,
   preserveCompatibleInquiryAnswers,
+  getAdmissionInquiryVisibleSections,
   getAdmissionInquiryAcademicOptions,
   buildAdmissionInquiryDuplicateInput,
   getAdmissionInquiryPreferredClassError,
@@ -80,6 +81,132 @@ const offering = {
 } as AdmissionOfferingListItem;
 
 describe('admission inquiry model', () => {
+  it.each(['father', 'mother'] as const)(
+    'reuses the selected %s mobile for capture and duplicate checking',
+    (relationship) => {
+      const prefix = relationship === 'father' ? 'Father' : 'Mother';
+      const parentFields = [...fields, field('PARENT_PHONE', `${prefix}.Mobile`, 4)];
+      const draft = {
+        ...values,
+        parentRelationship: relationship,
+        fields: { ...values.fields, GUARDIAN_MOBILE: '', PARENT_PHONE: '9876543211' },
+      };
+      const form = { sections: [{ fields: parentFields }] } as AdmissionForm;
+      const sections = getAdmissionInquirySections(form, draft);
+      const runtimeFields = sections.flatMap((section) => section.fields);
+      const visible = getAdmissionInquiryVisibleSections(sections, draft).flatMap(
+        (section) => section.fields
+      );
+      expect(visible.find((item) => item.code === 'PARENT_PHONE')?.required).toBe(true);
+      expect(visible.some((item) => item.bindingKey === 'Guardian.Mobile')).toBe(false);
+      expect(validateAdmissionInquiry(draft, runtimeFields, null, offering)).toEqual({});
+      expect(
+        buildAdmissionInquiryDuplicateInput(draft, runtimeFields, offering).guardianPhone
+      ).toBe('9876543211');
+      const payload = buildAdmissionInquiryPayload(draft, runtimeFields, offering);
+      expect(payload).toMatchObject({ guardianPhone: '9876543211', phone: '9876543211' });
+      expect(payload.formValues).toContainEqual({
+        fieldCode: 'GUARDIAN_MOBILE',
+        valueJson: '"9876543211"',
+      });
+      expect(draft.fields.GUARDIAN_MOBILE).toBe('');
+    }
+  );
+
+  it('uses the selected parent field instead of generating another mobile input', () => {
+    const form = {
+      sections: [{ fields: [field('DAD_PHONE', 'Father.Mobile', 4)] }],
+    } as AdmissionForm;
+    const runtimeFields = getAdmissionInquiryFields(form, {
+      ...values,
+      parentRelationship: 'father',
+    });
+    expect(runtimeFields.some((item) => item.id === 'inquiry-guardian-phone')).toBe(false);
+    expect(runtimeFields.find((item) => item.code === 'DAD_PHONE')?.required).toBe(true);
+  });
+
+  it('keeps the visible mobile when the selected parent section is hidden', () => {
+    const draft = { ...values, parentRelationship: 'father' as const };
+    const form = {
+      sections: [
+        { fields },
+        {
+          visibilityRuleJson: JSON.stringify({
+            field: 'SHOW_PARENT',
+            operator: 'Equals',
+            value: 'yes',
+          }),
+          fields: [field('DAD_PHONE', 'Father.Mobile', 4)],
+        },
+      ],
+    } as AdmissionForm;
+    const runtimeFields = getAdmissionInquiryFields(form, draft);
+    expect(validateAdmissionInquiry(draft, runtimeFields, null, offering)).toEqual({});
+    expect(buildAdmissionInquiryPayload(draft, runtimeFields, offering).guardianPhone).toBe(
+      '9876543210'
+    );
+  });
+
+  it('shows published shared-mobile validation on the reused parent field', () => {
+    const runtimeFields = [
+      field('DAD_PHONE', 'Father.Mobile', 4),
+      {
+        ...field('SHARED_PHONE', 'Guardian.Mobile', 4, true),
+        validationJson: JSON.stringify({
+          pattern: '^9',
+          message: 'Use the configured contact format.',
+        }),
+      },
+    ];
+    const draft = {
+      ...values,
+      parentRelationship: 'father' as const,
+      fields: { DAD_PHONE: '8765432109', SHARED_PHONE: '' },
+    };
+    expect(validateAdmissionInquiry(draft, runtimeFields, null, offering)).toMatchObject({
+      fields: { DAD_PHONE: 'Use the configured contact format.' },
+    });
+  });
+
+  it('preserves a published read-only mobile answer when a parent mobile is edited', () => {
+    const runtimeFields = [
+      field('DAD_PHONE', 'Father.Mobile', 4),
+      { ...field('SHARED_PHONE', 'Guardian.Mobile', 4), readOnly: true },
+    ];
+    const draft = {
+      ...values,
+      parentRelationship: 'father' as const,
+      fields: { DAD_PHONE: '8765432109', SHARED_PHONE: '9876543210' },
+    };
+    const payload = buildAdmissionInquiryPayload(draft, runtimeFields, offering);
+    expect(payload.guardianPhone).toBe('9876543210');
+    expect(payload.formValues).toContainEqual({
+      fieldCode: 'SHARED_PHONE',
+      valueJson: '"9876543210"',
+    });
+  });
+
+  it('does not borrow the other parent mobile when the selected parent is missing it', () => {
+    const parentFields = [
+      ...fields,
+      field('DAD_PHONE', 'Father.Mobile', 4),
+      field('MOM_PHONE', 'Mother.Mobile', 4),
+    ];
+    const draft = {
+      ...values,
+      parentRelationship: 'mother' as const,
+      fields: {
+        ...values.fields,
+        GUARDIAN_MOBILE: '9876543210',
+        DAD_PHONE: '9876543211',
+        MOM_PHONE: '',
+      },
+    };
+    expect(validateAdmissionInquiry(draft, parentFields, null, offering)).toMatchObject({
+      fields: { MOM_PHONE: 'MOM_PHONE is required' },
+    });
+  });
+
   it('rejects sibling confirmation that would relabel an entered optional parent', () => {
     expect(() =>
       buildAdmissionInquiryPayload(
@@ -320,6 +447,57 @@ describe('admission inquiry model', () => {
         GUARDIAN_MOBILE: 'Guardian mobile number must be a valid 10-digit Indian mobile number.',
       },
     });
+  });
+
+  it.each(['', '   '])(
+    'requires the parent mobile even when the published field is optional (%j)',
+    (mobile) => {
+      const optionalFields = fields.map((item) =>
+        item.code === 'GUARDIAN_MOBILE'
+          ? { ...item, label: 'Parent mobile', required: false }
+          : item
+      );
+      expect(
+        validateAdmissionInquiry(
+          {
+            ...values,
+            parentRelationship: 'father',
+            fields: { ...values.fields, GUARDIAN_MOBILE: mobile },
+          },
+          optionalFields,
+          null,
+          offering
+        )
+      ).toMatchObject({ fields: { GUARDIAN_MOBILE: 'Parent mobile is required' } });
+    }
+  );
+
+  it('marks the parent mobile as required at capture without changing the published definition', () => {
+    const publishedMobile = field('PARENT_MOBILE', 'Guardian.Mobile', 4);
+    const form = { sections: [{ fields: [publishedMobile] }] } as AdmissionForm;
+    expect(
+      getAdmissionInquiryFields(form).find((item) => item.code === 'PARENT_MOBILE')?.required
+    ).toBe(true);
+    expect(publishedMobile.required).toBe(false);
+  });
+
+  it('reuses a populated legacy mobile alias with an unknown historic binding', () => {
+    const form = {
+      sections: [{ fields: [field('PARENT_PHONE', 'Legacy.ParentPhone', 4)] }],
+    } as AdmissionForm;
+    const draft = {
+      ...values,
+      parentRelationship: 'father' as const,
+      fields: { ...values.fields, PARENT_PHONE: '9876543211' },
+    };
+    const runtimeFields = getAdmissionInquiryFields(form, draft);
+    expect(runtimeFields.some((item) => item.id === 'inquiry-guardian-phone')).toBe(false);
+    expect(validateAdmissionInquiry(draft, runtimeFields, null, offering)).not.toHaveProperty(
+      'fields.PARENT_PHONE'
+    );
+    expect(buildAdmissionInquiryPayload(draft, runtimeFields, offering).guardianPhone).toBe(
+      '9876543211'
+    );
   });
 
   it('carries canonical and custom form values into the inquiry request', () => {

@@ -67,7 +67,7 @@ export default function StudentQuickSetupFeesSection({
               <FormSectionHeader
                 title="Fees"
                 icon="mdi:receipt-text-outline"
-                descriptionTooltip="Review the selected fee structure, payments and receipts."
+                descriptionTooltip="Fee assignment and payment are optional for activation. Review fees and receipts here."
               />
             </Box>
             <Box
@@ -92,7 +92,11 @@ export default function StudentQuickSetupFeesSection({
               )}
             </Box>
             <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 'auto' }}>
-              {state.confirmed && !state.loading && <Label color="success">Confirmed</Label>}
+              {!state.loading && !state.hasError && (
+                <Label color={state.confirmed ? 'success' : 'warning'}>
+                  {state.confirmed ? 'Confirmed' : 'Fees pending'}
+                </Label>
+              )}
               <Tooltip title={expanded ? 'Collapse fees' : 'Expand fees'}>
                 <span>
                   <IconButton

@@ -92,6 +92,31 @@ const makeServices = (current = makeCase()) => ({
 });
 
 describe('Student Setup assignment orchestration', () => {
+  it.each(['automatic', 'manual'] as const)(
+    'blocks %s GR assignment without Division in the shared tab flow',
+    async (mode) => {
+      const current = makeCase({ divisionId: null });
+      const services = makeServices(current);
+      expect(
+        getStudentSetupAssignmentEligibility(
+          mapOnboardingCaseToItem(current),
+          'gr-number',
+          mode,
+          'both'
+        ).eligible
+      ).toBe(false);
+      const [result] = await runStudentSetupAssignment({
+        type: 'gr-number',
+        mode,
+        grAssignmentMode: 'both',
+        services,
+        items: [workItem(current, { value: 'GR-0002' })],
+      });
+      expect(result.status).toBe('failed');
+      expect(services.getSeries).not.toHaveBeenCalled();
+      expect(services.assignGr).not.toHaveBeenCalled();
+    }
+  );
   it('includes linked completed cases in page Roll Auto without bypassing server enrollment checks', () => {
     const scope = { standardId: 'class-1', divisionId: 'division-a' };
     const pending = mapOnboardingCaseToItem(makeCase());

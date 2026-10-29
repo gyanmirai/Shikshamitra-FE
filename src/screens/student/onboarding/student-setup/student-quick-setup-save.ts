@@ -24,7 +24,8 @@ export async function runStudentQuickSetupSave({
   services,
 }: StudentQuickSetupSaveOptions): Promise<StudentOnboardingCase> {
   await services.saveAcademic();
-  await services.saveFees({ allowIncomplete: !activate });
+  // Fees may remain pending; an explicitly edited fee draft still validates and saves.
+  await services.saveFees({ allowIncomplete: true });
 
   if (!activate) return services.getCase();
 

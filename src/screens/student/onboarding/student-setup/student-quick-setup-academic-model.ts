@@ -4,6 +4,8 @@ import type {
   StudentOnboardingSettingsRecord,
 } from 'src/redux/student/onboarding/student-onboarding-types';
 
+import { ValidationError } from 'yup';
+
 import { mapOnboardingCaseToItem } from './student-onboarding-model';
 import { getOnboardingMessage } from './student-onboarding-messages';
 import { getStudentSetupAssignmentEligibility } from './student-setup-assignment-model';
@@ -128,6 +130,13 @@ export async function saveQuickAcademic({
       ? !baseline.rollNumber
       : Boolean(values.rollValue.trim() && Number(values.rollValue) !== baseline.rollNumber);
   if (!divisionChanged && !grChanged && !rollChanged) return current;
+  if ((grChanged || rollChanged) && !values.divisionId.trim()) {
+    throw new ValidationError(
+      'Select a division before assigning GR or roll numbers.',
+      values.divisionId,
+      'divisionId'
+    );
+  }
   let expectedRoll = baseline.rollNumber ?? null;
   if (current.studentEnrollmentId || [4, 5, 6].includes(current.status))
     throw new Error('This student is no longer editable in Student Setup.');

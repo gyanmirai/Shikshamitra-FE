@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   candidates: true,
   failing: false,
   readingError: false,
+  selectionError: false,
   optional: false,
 }));
 const structure = {
@@ -113,7 +114,7 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   }),
   useGetStudentOnboardingFeeStructureQuery: () => ({
     currentData: mocks.confirmed ? (mocks.automatic ? confirmed : manuallyConfirmed) : unconfirmed,
-    isError: false,
+    isError: mocks.selectionError,
     isFetching: false,
   }),
   useGetStudentOnboardingFeeCandidatesQuery: () => ({
@@ -132,6 +133,7 @@ beforeEach(() => {
   mocks.candidates = true;
   mocks.failing = false;
   mocks.readingError = false;
+  mocks.selectionError = false;
   mocks.optional = false;
   mocks.refreshCase.mockReturnValue({
     unwrap: () => Promise.resolve({ concurrencyStamp: 'fresh-stamp', status: 0 }),
@@ -156,6 +158,7 @@ function setup(props: { disabled?: boolean; canManage?: boolean } = {}) {
 
 it('saves the selected fee using a fresh case stamp from the parent footer', async () => {
   const ref = setup({ disabled: true });
+  fireEvent.change(screen.getByLabelText('Fee structure'), { target: { value: 'structure-1' } });
   await waitFor(() => expect(screen.getByLabelText('Fee structure')).toHaveValue('structure-1'));
   expect(screen.queryByRole('button', { name: 'Confirm fee structure' })).not.toBeInTheDocument();
   await act(() => ref.current!.save());
@@ -180,7 +183,7 @@ it('does not reconfirm a completed Admissions selection even without manage perm
   expect(mocks.confirm).not.toHaveBeenCalled();
 });
 
-it('allows Save for Later with no selection but prevents activation submission', async () => {
+it('allows optional blank fees but validates an explicit standalone confirmation', async () => {
   mocks.candidates = false;
   const ref = setup();
   await act(() => ref.current!.save({ allowIncomplete: true }));
@@ -188,7 +191,39 @@ it('allows Save for Later with no selection but prevents activation submission',
     await expect(ref.current!.save()).rejects.toThrow('Choose a published fee structure.');
   });
   expect(mocks.confirm).not.toHaveBeenCalled();
-  expect(screen.getByText('Choose a published fee structure.')).toBeInTheDocument();
+  expect(screen.getByRole('alert')).toHaveTextContent('No published fee structure matches');
+});
+
+it('allows optional empty fees through the activation save without confirming or reading a new case stamp', async () => {
+  mocks.candidates = false;
+  const ref = setup();
+  await act(() => ref.current!.save({ allowIncomplete: true }));
+  expect(mocks.confirm).not.toHaveBeenCalled();
+  expect(mocks.refreshCase).not.toHaveBeenCalled();
+});
+
+it('does not let an untouched unavailable fee read block activation when no fee is being changed', async () => {
+  mocks.candidates = false;
+  mocks.readingError = true;
+  const ref = setup();
+  await act(() => ref.current!.save({ allowIncomplete: true }));
+  expect(mocks.confirm).not.toHaveBeenCalled();
+});
+
+it('keeps a single available fee structure optional until staff select it', async () => {
+  const ref = setup();
+  expect(screen.getByLabelText('Fee structure')).toHaveValue('');
+  await act(() => ref.current!.save({ allowIncomplete: true }));
+  expect(mocks.confirm).not.toHaveBeenCalled();
+});
+
+it('allows untouched confirmed fees through activation after an independent fee refresh fails', async () => {
+  mocks.confirmed = true;
+  mocks.selectionError = true;
+  const ref = setup();
+  await act(() => ref.current!.save({ allowIncomplete: true }));
+  expect(mocks.confirm).not.toHaveBeenCalled();
+  expect(mocks.refreshCase).not.toHaveBeenCalled();
 });
 
 it('retains the draft and exposes server failure to the parent', async () => {
@@ -199,9 +234,10 @@ it('retains the draft and exposes server failure to the parent', async () => {
       ),
   });
   const ref = setup();
+  fireEvent.change(screen.getByLabelText('Fee structure'), { target: { value: 'structure-1' } });
   await waitFor(() => expect(screen.getByLabelText('Fee structure')).toHaveValue('structure-1'));
   await act(async () => {
-    await expect(ref.current!.save()).rejects.toMatchObject({
+    await expect(ref.current!.save({ allowIncomplete: true })).rejects.toMatchObject({
       data: { detail: 'Structure changed.' },
     });
   });
@@ -251,6 +287,7 @@ it('guards repeated parent saves while the first confirmation is running', async
       }),
   });
   const ref = setup();
+  fireEvent.change(screen.getByLabelText('Fee structure'), { target: { value: 'structure-1' } });
   await waitFor(() => expect(screen.getByLabelText('Fee structure')).toHaveValue('structure-1'));
   let first!: Promise<void>;
   await act(async () => {
@@ -269,6 +306,7 @@ it('guards repeated parent saves while the first confirmation is running', async
 it('collapses readonly fee details and payments while keeping the optional selection visible', async () => {
   mocks.optional = true;
   setup();
+  fireEvent.change(screen.getByLabelText('Fee structure'), { target: { value: 'structure-1' } });
   await waitFor(() => expect(screen.getByLabelText('Fee structure')).toHaveValue('structure-1'));
   expect(screen.getByRole('button', { name: 'Fee Details' })).toHaveAttribute(
     'aria-expanded',

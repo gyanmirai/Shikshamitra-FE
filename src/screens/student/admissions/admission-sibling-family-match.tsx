@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type {
   AdmissionFamilyParent,
   AdmissionSiblingParentSelection,
@@ -12,8 +13,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
-import { Box, Stack, Button, Typography } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Stack, Button, Divider, Typography } from '@mui/material';
 
 type Props = {
   parents: AdmissionFamilyParent[];
@@ -22,6 +23,8 @@ type Props = {
   disabled?: boolean;
   mobileDiffers?: boolean;
   enteredMobile?: string;
+  layout?: 'stacked' | 'inquiry';
+  secondaryAction?: ReactNode;
   onConfirm: (parent: AdmissionSiblingParentSelection) => void | Promise<void>;
 };
 
@@ -35,6 +38,8 @@ export function AdmissionSiblingFamilyMatch({
   disabled = false,
   mobileDiffers = false,
   enteredMobile,
+  layout = 'stacked',
+  secondaryAction,
   onConfirm,
 }: Props) {
   const confirmation = useBoolean();
@@ -65,64 +70,103 @@ export function AdmissionSiblingFamilyMatch({
   const showError = Boolean(
     (formik.touched.parent || formik.submitCount > 0) && formik.errors.parent
   );
+  const inquiryLayout = layout === 'inquiry';
 
   return (
-    <Stack spacing={1} sx={{ minWidth: 0 }}>
-      <Typography variant="body2">Existing family · {children}</Typography>
-      <ShakingTextField error={showError}>
-        <CustomSelect
-          name="siblingParent"
-          label="Parent"
-          required
-          size="small"
-          fullWidth
-          disabled={locked || disabled || !eligibleParents.length}
-          value={formik.values.parent}
-          onChange={(value) => formik.setFieldValue('parent', String(value))}
-          onBlur={() => formik.setFieldTouched('parent', true)}
-          options={eligibleParents.map((parent) => ({
-            value: parentKey(parent),
-            label: `${parent.relationship === 'father' ? 'Father' : parent.relationship === 'mother' ? 'Mother' : 'Parent'} · ${parent.name}${parent.email ? ` · ${parent.email}` : ''}`,
-          }))}
-          error={showError}
-          helperText={showError ? formik.errors.parent : undefined}
-        />
-      </ShakingTextField>
-      {selected && !selected.relationship && (
-        <ShakingTextField error={Boolean(formik.submitCount && formik.errors.relationship)}>
-          <CustomSelect
-            name="siblingParentRelationship"
-            label="Relationship"
-            required
-            fullWidth
-            size="small"
-            disabled={locked}
-            value={formik.values.relationship}
-            onChange={(value) => formik.setFieldValue('relationship', String(value))}
-            options={[
-              { value: 'father', label: 'Father' },
-              { value: 'mother', label: 'Mother' },
-            ]}
-            error={Boolean(formik.submitCount && formik.errors.relationship)}
-            helperText={formik.submitCount ? formik.errors.relationship : undefined}
-          />
-        </ShakingTextField>
-      )}
-      {selected && (
-        <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-          {[selected.email, selected.mobile].filter(Boolean).join(' · ')}
-        </Typography>
-      )}
-      {!eligibleParents.length && (
-        <Typography variant="body2" color="text.secondary">
-          No Father or Mother contact is available for this family.
-        </Typography>
-      )}
-      <Box>
+    <Stack spacing={inquiryLayout ? 2 : 1} sx={{ minWidth: 0 }}>
+      {!inquiryLayout && <Typography variant="body2">Existing family · {children}</Typography>}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: inquiryLayout
+            ? { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' }
+            : 'minmax(0, 1fr)',
+          gap: 2,
+        }}
+      >
+        <Stack spacing={1} sx={{ minWidth: 0 }}>
+          <ShakingTextField error={showError}>
+            <CustomSelect
+              name="siblingParent"
+              label="Parent"
+              required
+              size="small"
+              fullWidth
+              disabled={locked || disabled || !eligibleParents.length}
+              value={formik.values.parent}
+              onChange={(value) => formik.setFieldValue('parent', String(value))}
+              onBlur={() => formik.setFieldTouched('parent', true)}
+              options={eligibleParents.map((parent) => ({
+                value: parentKey(parent),
+                label: `${parent.relationship === 'father' ? 'Father' : parent.relationship === 'mother' ? 'Mother' : 'Parent'} · ${parent.name}${!inquiryLayout && parent.email ? ` · ${parent.email}` : ''}`,
+              }))}
+              error={showError}
+              helperText={showError ? formik.errors.parent : undefined}
+            />
+          </ShakingTextField>
+          {selected && !selected.relationship && (
+            <ShakingTextField error={Boolean(formik.submitCount && formik.errors.relationship)}>
+              <CustomSelect
+                name="siblingParentRelationship"
+                label="Relationship"
+                required
+                fullWidth
+                size="small"
+                disabled={locked}
+                value={formik.values.relationship}
+                onChange={(value) => formik.setFieldValue('relationship', String(value))}
+                options={[
+                  { value: 'father', label: 'Father' },
+                  { value: 'mother', label: 'Mother' },
+                ]}
+                error={Boolean(formik.submitCount && formik.errors.relationship)}
+                helperText={formik.submitCount ? formik.errors.relationship : undefined}
+              />
+            </ShakingTextField>
+          )}
+          {selected && (
+            <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+              {[selected.email, selected.mobile].filter(Boolean).join(' · ')}
+            </Typography>
+          )}
+          {!eligibleParents.length && (
+            <Typography variant="body2" color="text.secondary">
+              No Father or Mother contact is available for this family.
+            </Typography>
+          )}
+        </Stack>
+        {inquiryLayout && (
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+            <Iconify
+              icon={GlobalIcons.family}
+              width={24}
+              sx={{ color: 'text.secondary', flexShrink: 0 }}
+            />
+            <Box>
+              <Typography variant="subtitle2">Same family, a new inquiry</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Saved parent details stay unchanged.
+              </Typography>
+            </Box>
+          </Stack>
+        )}
+      </Box>
+      {inquiryLayout && <Divider />}
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent={
+          secondaryAction ? 'space-between' : inquiryLayout ? 'flex-end' : 'flex-start'
+        }
+        spacing={1}
+        useFlexGap
+        flexWrap="wrap"
+      >
+        {secondaryAction}
         <Button
           type="button"
           size="small"
-          variant="outlined"
+          variant={inquiryLayout ? 'contained' : 'outlined'}
           color="inherit"
           disabled={locked || disabled || !eligibleParents.length}
           startIcon={<Iconify icon={GlobalIcons.addIcon} width={18} />}
@@ -130,7 +174,7 @@ export function AdmissionSiblingFamilyMatch({
         >
           Add sibling
         </Button>
-      </Box>
+      </Stack>
       <ConfirmDialog
         open={confirmation.value && Boolean(selected)}
         title="Add Sibling?"

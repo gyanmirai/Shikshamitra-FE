@@ -37,25 +37,20 @@ export function AssessmentActionFields({
   const profile = assessmentResultProfile(assessment, latestAssessmentAttempt(assessment));
   return (
     <Stack spacing={2}>
-      {action === 'book' &&
-        (assessment.policy.schedulingEnabled ? (
-          <AssessmentBookingField
-            admissionOfferingId={admissionOfferingId}
-            workflowStageDefinitionId={workflowStageDefinitionId}
-            value={values.sessionId}
-            slotStartsAt={values.slotStartsAt ?? ''}
-            onSlotChange={(value) => formik.setFieldValue('slotStartsAt', value)}
-            onSlotRequirementChange={(value) => formik.setFieldValue('requiresSlot', value)}
-            slotError={touched.slotStartsAt ? errors.slotStartsAt : undefined}
-            onChange={(value) => formik.setFieldValue('sessionId', value)}
-            error={touched.sessionId ? errors.sessionId : undefined}
-            disabled={isSubmitting}
-          />
-        ) : (
-          <StudentFeedback notificationKey="STU-0239" presentation="inline" severity="info">
-            Start a new assessment attempt. This stage does not require a scheduled session.
-          </StudentFeedback>
-        ))}
+      {action === 'book' && assessment.policy.schedulingEnabled && (
+        <AssessmentBookingField
+          admissionOfferingId={admissionOfferingId}
+          workflowStageDefinitionId={workflowStageDefinitionId}
+          value={values.sessionId}
+          slotStartsAt={values.slotStartsAt ?? ''}
+          onSlotChange={(value) => formik.setFieldValue('slotStartsAt', value)}
+          onSlotRequirementChange={(value) => formik.setFieldValue('requiresSlot', value)}
+          slotError={touched.slotStartsAt ? errors.slotStartsAt : undefined}
+          onChange={(value) => formik.setFieldValue('sessionId', value)}
+          error={touched.sessionId ? errors.sessionId : undefined}
+          disabled={isSubmitting}
+        />
+      )}
       {action === 'attendance' && (
         <CustomSelect
           label="Attendance"
@@ -102,8 +97,7 @@ export function AssessmentActionFields({
             onValueChange={({ floatValue }) => formik.setFieldValue('marks', floatValue ?? '')}
             error={Boolean(touched.marks && errors.marks)}
             helperText={
-              (touched.marks && errors.marks) ||
-              `Passing marks: ${assessment.policy.passingMarks}. The result is calculated from these marks.`
+              (touched.marks && errors.marks) || `Passing marks: ${assessment.policy.passingMarks}.`
             }
           />
         ) : (
@@ -120,23 +114,6 @@ export function AssessmentActionFields({
             ]}
           />
         ))}
-      {action === 'retake' && (
-        <StudentFeedback notificationKey="STU-0241" presentation="inline" severity="info">
-          Allow another attempt within the configured limit of {assessment.policy.maxAttempts}. Book
-          the next attempt after saving.
-        </StudentFeedback>
-      )}
-      {action === 'cancel' && (
-        <StudentFeedback notificationKey="STU-0242" presentation="inline" severity="warning">
-          Cancel this attempt and release its session place. A new booking can then be made if the
-          stage allows it.
-        </StudentFeedback>
-      )}
-      {action === 'waive' && (
-        <StudentFeedback notificationKey="STU-0243" presentation="inline" severity="warning">
-          This records an assessment waiver. Enter the reason for the admission audit history.
-        </StudentFeedback>
-      )}
       {action !== 'book' && (
         <TextField
           fullWidth

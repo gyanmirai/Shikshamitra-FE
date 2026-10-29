@@ -1,7 +1,10 @@
+import { createRef } from 'react';
 import { it, vi, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentOnboardingFees from './student-onboarding-fees';
+
+import type { StudentOnboardingFeesHandle } from './student-onboarding-fees';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 
@@ -66,26 +69,31 @@ vi.mock('src/components/custom-select', () => ({
     options,
     onChange,
     disabled,
+    helperText,
   }: {
     label: string;
     value: string;
     options: Array<{ value: string; label: string }>;
     onChange: (value: string) => void;
     disabled: boolean;
+    helperText?: string;
   }) => (
-    <select
-      aria-label={label}
-      disabled={disabled}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-    >
-      <option value="">Select</option>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        aria-label={label}
+        disabled={disabled}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        <option value="">Select</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {helperText && <span>{helperText}</span>}
+    </>
   ),
 }));
 vi.mock('src/components/toast', () => ({
@@ -150,6 +158,35 @@ beforeEach(() => {
   mocks.automaticallyConfirmed = false;
   mocks.deferral = null;
   mocks.currentCandidatesAvailable = true;
+});
+
+it('replaces an empty fee selector with a recoverable configuration state and refreshes eligible structures', async () => {
+  mocks.currentCandidatesAvailable = false;
+  const view = render(<StudentOnboardingFees caseId="case-1" canManage compact />);
+  expect(screen.queryByRole('combobox', { name: 'Fee structure' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Refresh fee structures' }));
+  expect(mocks.candidatesRefetch).toHaveBeenCalledOnce();
+  mocks.currentCandidatesAvailable = true;
+  view.rerender(<StudentOnboardingFees caseId="case-1" canManage compact />);
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Fee structure' })).toBeEnabled()
+  );
+  expect(mocks.confirm).not.toHaveBeenCalled();
+});
+
+it('shows one field error when a fee selection is missing during compact parent save', async () => {
+  mocks.candidates.push({ ...mocks.candidates[0], structureId: 'fee-2' });
+  try {
+    const editor = createRef<StudentOnboardingFeesHandle>();
+    render(<StudentOnboardingFees caseId="case-1" canManage compact editorRef={editor} />);
+    await act(async () => {
+      await expect(editor.current!.save()).rejects.toThrow('Choose a published fee structure.');
+    });
+    expect(screen.getAllByText('Choose a published fee structure.')).toHaveLength(1);
+    expect(mocks.confirm).not.toHaveBeenCalled();
+  } finally {
+    mocks.candidates.pop();
+  }
 });
 it('confirms an existing fee structure through Onboarding without payment controls', async () => {
   render(<StudentOnboardingFees caseId="case-1" canManage />);

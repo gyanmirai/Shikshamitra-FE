@@ -345,6 +345,7 @@ export default function StudentOnboardingPortalAccounts({
     chosen.every(
       (recipient) => eligible(recipient) && (recipient.accountType === 'student' || confirmed)
     );
+  const needsActivation = compact && !student.studentEnrollmentId && chosen.length > 0;
   const currentRequest = (caseId: string) =>
     mounted.current && latest.current.caseId === caseId && latest.current.canManage;
   const accept = (result: StudentCredentialsWorkspace, baseSource: typeof source) => {
@@ -639,6 +640,11 @@ export default function StudentOnboardingPortalAccounts({
               'Login details cannot be sent yet. Review the onboarding requirements.'
             : undefined;
     const accepted = queued(recipient) || delivery?.status === 'Sent';
+    const activationReason =
+      needsActivation &&
+      /must be actively enrolled|activate .*enrollment before|complete enrollment activation before/i.test(
+        reason || ''
+      );
     const error = accepted ? undefined : errors[key];
     const failed = !accepted && Boolean(error || delivery?.status === 'Failed');
     const retryAllowed =
@@ -1023,7 +1029,7 @@ export default function StudentOnboardingPortalAccounts({
             )}
           </Box>
         )}
-        {(error || (reason && (!compact || activeSelected[accountType]))) && (
+        {(error || (reason && !activationReason && (!compact || activeSelected[accountType]))) && (
           <Typography
             variant="body2"
             color={error ? 'error.main' : 'text.secondary'}
@@ -1187,6 +1193,11 @@ export default function StudentOnboardingPortalAccounts({
           </Box>
         </FormBusyRegion>
         <Stack spacing={1} sx={{ borderTop: '1px solid', borderColor: 'divider', mt: 1.5, pt: 1 }}>
+          {needsActivation && (
+            <Typography variant="caption" color="text.secondary">
+              Use Save &amp; Activate first, then send login details.
+            </Typography>
+          )}
           {!compact && (
             <FormHelperText sx={{ m: 0 }}>
               Each selected person receives a separate email using their own saved login. Submitted

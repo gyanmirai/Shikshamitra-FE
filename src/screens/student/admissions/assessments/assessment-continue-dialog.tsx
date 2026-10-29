@@ -65,6 +65,7 @@ export function AssessmentContinueDialog({
     <CustomDialog
       open
       title="Continue to next stage"
+      titleInfo="The configured workflow determines the next stage."
       maxWidth="sm"
       handleClose={onClose}
       disableClose={busy}
@@ -74,7 +75,7 @@ export function AssessmentContinueDialog({
       <DialogScrollContent>
         <Typography variant="body2">
           Continue {row.applicantName}&apos;s application ({row.applicationNumber}) after completing
-          this assessment? The configured workflow determines the next stage.
+          this assessment?
         </Typography>
         {error && (
           <StudentFeedback
