@@ -170,3 +170,9 @@ describe('delivery history belongs to the selected employee', () => {
     expect(screen.getByRole('button', { name: /^Print$/ })).toBeDisabled();
   });
 });
+// Route/month behavior is covered by use-payroll-month and the browser workflow suite.
+vi.mock('../payroll-cycle/use-payroll-month', async () => {
+  const { useState } = await import('react');
+  const { default: payrollDate } = await import('dayjs');
+  return { usePayrollMonth: () => useState(payrollDate().startOf('month')) };
+});

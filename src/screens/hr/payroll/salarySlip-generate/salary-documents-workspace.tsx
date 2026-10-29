@@ -35,6 +35,7 @@ import {
 
 import { payslipActionError } from './payslip-action-error';
 import { buildPayslipEmployeeSearch } from './payslip-selection';
+import { usePayrollMonth } from '../payroll-cycle/use-payroll-month';
 import { useHrReportPermissions } from '../../reports/hooks/useHrReportPermissions';
 import { HrReportPreviewTable } from '../../reports/components/HrReportPreviewTable';
 import {
@@ -58,8 +59,9 @@ export default function SalaryDocumentsWorkspace({
   );
   const settings = useGetPayslipSettingsQuery(undefined, { skip: !canReadSettings });
   const [employee, setEmployee] = useState<{ id: string; label: string } | null>(null);
-  const [from, setFrom] = useState(dayjs().subtract(5, 'month').format('YYYY-MM'));
-  const [to, setTo] = useState(dayjs().format('YYYY-MM'));
+  const [payrollMonth, setPayrollMonth] = usePayrollMonth();
+  const [from, setFrom] = useState(payrollMonth.subtract(5, 'month').format('YYYY-MM'));
+  const to = payrollMonth.format('YYYY-MM');
   const [includeDrafts, setIncludeDrafts] = useState(false);
   const [columns, setColumns] = useState<string[]>(standardSalaryDocumentColumns);
   const [page, setPage] = useState({ number: 1, size: 25 });
@@ -259,7 +261,7 @@ export default function SalaryDocumentsWorkspace({
               size="small"
               value={to}
               onChange={(event) => {
-                setTo(event.target.value);
+                setPayrollMonth(dayjs(`${event.target.value}-01`));
                 setPage({ ...page, number: 1 });
               }}
               slotProps={{ inputLabel: { shrink: true } }}

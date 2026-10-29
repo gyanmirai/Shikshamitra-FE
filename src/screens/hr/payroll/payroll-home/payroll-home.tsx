@@ -1,16 +1,14 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
-import dayjs from 'dayjs';
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { RouterLink } from 'src/routes/components';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
+import { PAYROLL_ISSUE_LABELS } from 'src/constants/payroll-issues';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
@@ -24,17 +22,18 @@ import {
   Typography,
 } from '@mui/material';
 
+import { usePayrollMonth } from '../payroll-cycle/use-payroll-month';
 import { usePayrollPreviewRun } from '../run-payroll/use-payroll-preview-run';
 
 const PayrollHome = () => {
-  const [month, setMonth] = useState<Dayjs | null>(dayjs());
+  const [month, setMonth] = usePayrollMonth();
   const monthKey = month?.isValid() ? month.format('YYYY-MM') : '';
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const preview = usePayrollPreviewRun(monthKey, currentYear?.id || '');
   const data = preview.data?.readiness;
   const canLoad = Boolean(monthKey && currentYear?.id);
   const isLoading = canLoad && !data && !preview.error;
-  const isFetching = preview.busy || preview.fetching;
+  const isFetching = preview.busy || preview.fetching || preview.refreshingStatus;
   const hasCurrentReadiness = Boolean(data && preview.isCurrent);
   const issues = [
     {
@@ -49,7 +48,7 @@ const PayrollHome = () => {
       count: data?.missingSalaryStructureCount ?? 0,
       label: 'Missing salary structure',
       description: 'Complete salary setup for the affected staff.',
-      href: hrPaths.payroll.structure,
+      href: `${hrPaths.payroll.structure}?month=${monthKey}`,
       action: 'Review salary setup',
       icon: 'solar:wallet-money-linear',
     },
@@ -69,6 +68,19 @@ const PayrollHome = () => {
       : hrPaths.payroll.runPayroll;
   const nextLabel =
     nextPath === hrPaths.payroll.payslipGeneration ? 'Open payslips' : 'Open payroll workbench';
+  const forMonth = (path: string) => `${path}?month=${monthKey}`;
+  const blockerMessages = [
+    ...new Set(
+      (data?.blockingIssues ?? []).map((code) => {
+        const issue = Object.hasOwn(PAYROLL_ISSUE_LABELS, code)
+          ? PAYROLL_ISSUE_LABELS[code]
+          : undefined;
+        if (!issue)
+          return 'A payroll setup issue needs attention. Open the payroll workbench to review the affected staff.';
+        return `${issue.label.replace(/[.!?]$/, '')}. ${issue.guidance ?? 'Open the payroll workbench to review the affected staff.'}`;
+      })
+    ),
+  ];
   const metrics = [
     { label: 'Staff', value: data?.employeeCount },
     {
@@ -88,7 +100,7 @@ const PayrollHome = () => {
         action={
           <Button
             component={RouterLink}
-            href={nextPath}
+            href={forMonth(nextPath)}
             variant="contained"
             size="small"
             startIcon={<Iconify icon="solar:arrow-right-up-bold" />}
@@ -124,12 +136,16 @@ const PayrollHome = () => {
           size="small"
           variant="outlined"
           loading={isFetching}
-          disabled={!canLoad}
-          onClick={() => preview.loadPreview(true)}
+          disabled={!canLoad || !preview.requestedRunId || preview.busy || preview.refreshingStatus}
+          onClick={() => preview.refreshStatus()}
           startIcon={<Iconify icon="solar:refresh-bold" />}
         >
           Refresh status
         </Button>
+        <Typography variant="body2" color="text.secondary">
+          Checks the existing preview without recalculating or clearing reviews. Open the payroll
+          workbench to calculate updated amounts.
+        </Typography>
       </Stack>
 
       {!canLoad && (
@@ -139,7 +155,8 @@ const PayrollHome = () => {
       )}
       {preview.error && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Could not load payroll readiness for this month. Refresh status to try again.
+          Could not load payroll readiness for this month. Refresh status to retry an existing
+          preview, or open the payroll workbench to calculate payroll.
         </Alert>
       )}
       {!preview.isCurrent && data && (
@@ -221,7 +238,7 @@ const PayrollHome = () => {
                       </Button>
                     </Box>
                   ))}
-                  {data.blockingIssues.map((issue) => (
+                  {blockerMessages.map((issue) => (
                     <Typography key={issue} variant="body2" color="text.secondary">
                       {issue}
                     </Typography>
@@ -231,7 +248,7 @@ const PayrollHome = () => {
                 <Typography variant="body2" color="text.secondary">
                   {hasCurrentReadiness
                     ? 'No readiness blockers detected. Review the payroll register before locking.'
-                    : 'Refresh status to confirm readiness for this month.'}
+                    : 'Open the payroll workbench to calculate and review the updated payroll.'}
                 </Typography>
               )}
             </Stack>
@@ -246,7 +263,7 @@ const PayrollHome = () => {
             <Stack spacing={1} alignItems="flex-start">
               <Button
                 component={RouterLink}
-                href={hrPaths.payroll.runPayroll}
+                href={forMonth(hrPaths.payroll.runPayroll)}
                 size="small"
                 variant="outlined"
                 startIcon={<Iconify icon="solar:play-circle-bold" />}
@@ -255,7 +272,7 @@ const PayrollHome = () => {
               </Button>
               <Button
                 component={RouterLink}
-                href={hrPaths.payroll.payslipGeneration}
+                href={forMonth(hrPaths.payroll.payslipGeneration)}
                 size="small"
                 variant="outlined"
                 startIcon={<Iconify icon="solar:file-send-linear" />}
