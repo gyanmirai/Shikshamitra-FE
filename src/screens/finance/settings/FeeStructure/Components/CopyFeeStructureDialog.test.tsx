@@ -54,7 +54,7 @@ beforeEach(() => {
     isFetching: false,
   };
   state.save.mockReturnValue({
-    unwrap: async () => ({ id: 'copied', name: 'Annual fees (copy)' }),
+    unwrap: async () => ({ id: 'copied', name: 'Annual fees copy' }),
   });
 });
 afterEach(cleanup);
@@ -107,17 +107,17 @@ it('validates source selection and displays a searchable class → structure hie
 it('copies into the active class with fresh identities and preserves the parent dirty state', async () => {
   const store = setup();
   selectSource();
-  expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveValue('Annual fees (copy)');
+  expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveValue('Annual fees copy');
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() =>
-    expect(state.copied).toHaveBeenCalledWith({ id: 'copied', name: 'Annual fees (copy)' })
+    expect(state.copied).toHaveBeenCalledWith({ id: 'copied', name: 'Annual fees copy' })
   );
   const body = state.save.mock.calls[0][0];
   expect(body).toMatchObject({
     feeStructureMetadataId: 'metadata',
     standardId: 'class-2',
     standardFeeStructures: {
-      name: 'Annual fees (copy)',
+      name: 'Annual fees copy',
       saveAsDraft: true,
       feeHeads: [{ feeHeadId: 'head', amount: 1234.56 }],
     },
@@ -138,7 +138,7 @@ it('preserves values after failure and reuses the request ID for an unchanged re
   selectSource();
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   expect(await screen.findByText('Connection lost')).toBeVisible();
-  expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveValue('Annual fees (copy)');
+  expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveValue('Annual fees copy');
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(state.copied).toHaveBeenCalled());
   expect(state.save.mock.calls[0][0].requestId).toBe(state.save.mock.calls[1][0].requestId);
@@ -186,7 +186,7 @@ it('guards dirty cancellation without consuming the parent workspace edits', asy
   expect(await screen.findByRole('dialog', { name: /Discard unsaved changes/ })).toBeVisible();
   expect(state.close).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: /Keep editing/i }));
-  expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveValue('Annual fees (copy)');
+  expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveValue('Annual fees copy');
   expect(store.getState().confirmPopup.isChanges).toBe(true);
 });
 
@@ -320,7 +320,7 @@ it('keeps the named version error and entered values when the policy changes dur
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   expect(await screen.findByText(/selected snapshot v2; current active version v3/)).toBeVisible();
   expect(state.copied).not.toHaveBeenCalled();
-  expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveValue('Annual fees (copy)');
+  expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveValue('Annual fees copy');
   fireEvent.click(screen.getByRole('button', { name: 'Refresh and select current versions' }));
   expect(state.policiesRetry).toHaveBeenCalledOnce();
 });

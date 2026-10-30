@@ -11,7 +11,7 @@ describe('concession student information', () => {
       <StudentInformationAccordion
         student={{
           name: 'Aanya Example',
-          grNumber: '10260',
+          grNumber: 'GR-000002AD',
           rollNo: '2',
           standardName: 'Class 1',
           divisionName: 'A',
@@ -21,6 +21,7 @@ describe('concession student information', () => {
       />
     );
     expect(screen.getByText('CBSE / English')).toBeVisible();
+    expect(screen.getByText('GR-000002AD')).toBeVisible();
     [
       'Student name',
       'GR number',

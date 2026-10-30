@@ -1,3 +1,4 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import type { StructureRecord, StructureCandidate } from 'src/redux/finance/feeStructureWorkspace';
 
 import * as Yup from 'yup';
@@ -13,7 +14,7 @@ export default function useFeeStructureWorkspaceForm(
   const validationSchema = useMemo(
     () =>
       Yup.object({
-        name: Yup.string()
+        name: financeNameSchema('Fee Structure Name')
           .trim()
           .required('Enter a name for this Fee Structure.')
           .max(256, 'Use at most 256 characters.'),

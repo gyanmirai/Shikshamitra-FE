@@ -49,13 +49,22 @@ vi.mock('../hooks/usePaymentTermForm', () => ({
 vi.mock('src/components/back-popup-check/BackPopUpCheck', () => ({
   BackPopUpChecked: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock('src/screens/finance/components/FinancePrerequisiteState', () => ({ default: () => <div>Board calendar required</div> }));
+vi.mock('src/screens/finance/components/FinancePrerequisiteState', () => ({
+  default: () => <div>Board calendar required</div>,
+}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('src/utils/icons', () => ({
+  GlobalIcons: { calendar: 'test:calendar', refresh: 'test:refresh', cancel: 'test:cancel' },
+}));
 vi.mock('src/components/scrollbar', () => ({
   Scrollbar: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
-vi.mock('./sections/GeneralInfoSection', () => ({ GeneralInfoSection: () => <div>Board context</div> }));
-vi.mock('./sections/InstallmentSection', () => ({ InstallmentSection: () => <div>Installment fields</div> }));
+vi.mock('./sections/GeneralInfoSection', () => ({
+  GeneralInfoSection: () => <div>Board context</div>,
+}));
+vi.mock('./sections/InstallmentSection', () => ({
+  InstallmentSection: () => <div>Installment fields</div>,
+}));
 vi.mock('./panels/SummaryPanel', () => ({ SummaryPanel: () => null }));
 vi.mock('./PaymentTermUsage', () => ({
   PaymentTermDefaultSummary: () => null,
@@ -149,6 +158,27 @@ it('clears the shared navigation dirty flag when the form closes', () => {
     type: 'confirmPopup/setIsChanges',
     payload: false,
   });
+});
+
+it('shows the payment-term field skeleton while fetching instead of empty schedule fields', () => {
+  formState.loading = true;
+  formState.submitting = false;
+  renderForm('edit');
+  expect(screen.getByRole('status', { name: 'Loading payment term' })).toBeVisible();
+  expect(screen.queryByText('Board context')).not.toBeInTheDocument();
+  expect(screen.queryByText('Installment fields')).not.toBeInTheDocument();
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  formState.loading = false;
+});
+
+it('keeps fields visible during submission without showing a fetch skeleton', () => {
+  formState.submitting = true;
+  formState.loading = false;
+  renderForm('edit');
+  expect(screen.getByText('Board context')).toBeVisible();
+  expect(screen.getByText('Installment fields')).toBeVisible();
+  expect(screen.queryByRole('status', { name: 'Loading payment term' })).not.toBeInTheDocument();
+  formState.submitting = false;
 });
 
 it('keeps board context and Cancel when calendar setup replaces the dependent schedule', () => {

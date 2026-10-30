@@ -156,7 +156,6 @@ export default function FeeStructureReviewStep({
         title={locked ? 'Publication Validation' : 'Publish Readiness'}
         iconSize={16}
         iconContainerSize={28}
-        titleTypographyProps={{ variant: 'subtitle1', fontWeight: 700 }}
         contentSpacing={1}
         sx={{ p: 1.5, minWidth: 0 }}
         action={
@@ -336,7 +335,6 @@ export default function FeeStructureReviewStep({
             title="Payment Schedules"
             iconSize={16}
             iconContainerSize={28}
-            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 700 }}
             descriptionTooltip="Expand a fee head to review its payment term version, service periods, demand and due dates, allocation percentages, and installment amounts."
             contentSpacing={1}
             sx={{ p: 1.5, minWidth: 0 }}

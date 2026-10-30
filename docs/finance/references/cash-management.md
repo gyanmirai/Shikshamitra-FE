@@ -3,7 +3,7 @@ module: finance
 domain: cash-management
 content_type: Reference
 status: active
-updated_on: 2026-10-28
+updated_on: 2026-10-30
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -25,9 +25,12 @@ All months is available. Changing Board clears Medium; changing a display filter
 Filters, sorting, search and page selection remain URL-backed. Retired approval-status criteria in
 saved URLs are ignored.
 
-The right-aligned Collected, Spent, Deposited and Academic-year cash available metrics use
-the server's year-wide summary. The available amount and deposit action are independent of the
-visible page and every display filter. The table retains receipt/source, payer, collected, spent,
+The compact Board, Medium and Month dropdowns share one card with the left-aligned Collected,
+Spent, Deposited and Academic-year cash available metrics and the Deposit cash action. The action
+aligns with the dropdowns on wide screens and wraps below them on smaller screens. Metrics use
+the server's year-wide summary. Monetary table values remain right-aligned. The available amount
+and deposit action are independent of the visible page and every display filter. The table retains
+receipt/source, payer, collected, spent,
 deposited, remaining cash, receiving bank and collection date, with optional legacy transit through
 Columns. It has no Status or Actions column. Row activation opens the shared details drawer.
 

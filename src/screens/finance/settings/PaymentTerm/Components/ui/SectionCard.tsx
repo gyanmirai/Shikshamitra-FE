@@ -36,7 +36,7 @@ export function SectionCard({ title, subtitle, info, action, children }: Section
         }}
       >
         <Stack direction="row" spacing={0.75} alignItems="center">
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography variant="subtitle1">
             {title}
           </Typography>
           {(info || subtitle) && (

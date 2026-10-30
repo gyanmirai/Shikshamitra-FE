@@ -1,5 +1,6 @@
 'use client';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
@@ -240,8 +241,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                   size="small"
                   value={formik.values.name}
                   onChange={(e) => {
-                    const value = e.target.value
-                      .replace(/[^a-zA-Z\s]/g, '')
+                    const value = sanitizeFinanceName(e.target.value)
                       .split(' ')
                       .map((word) =>
                         word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
@@ -249,6 +249,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                       .join(' ');
                     formik.setFieldValue('name', value);
                   }}
+                  onBlur={formik.handleBlur}
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={
                     (formik.touched.name && formik.errors.name ? formik.errors.name : undefined) ||

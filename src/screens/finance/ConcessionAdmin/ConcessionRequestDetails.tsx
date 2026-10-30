@@ -10,6 +10,7 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 
 import type { IConcessionRequestItem } from './type';
+import { concessionAmountFields } from './concessionAmountFields';
 
 export default function ConcessionRequestDetails({
   open,
@@ -47,22 +48,9 @@ export default function ConcessionRequestDetails({
                 label="Requested on"
                 value={fDateTime(item.createdAt, 'DD MMM YYYY, h:mm:ss a')}
               />
-              <DetailField
-                label="Requested amount"
-                value={formatNumber(item.totalRequestedAmount ?? item.totalAmount, 'INR')}
-              />
-              <DetailField
-                label="Approved amount"
-                value={formatNumber(item.totalApprovedAmount, 'INR')}
-              />
-              <DetailField
-                label="Reversed amount"
-                value={formatNumber(item.totalReversedAmount, 'INR')}
-              />
-              <DetailField
-                label="Net approved amount"
-                value={formatNumber(item.netApprovedAmount, 'INR')}
-              />
+              {concessionAmountFields(item).map(({ label, amount }) => (
+                <DetailField key={label} label={label} value={formatNumber(amount, 'INR')} />
+              ))}
               {item.message && <DetailField fullWidth label="Remark" value={item.message} />}
             </DetailGrid>
           </DetailSection>

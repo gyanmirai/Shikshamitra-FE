@@ -12,7 +12,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import { Box, Chip, Alert, Stack, Switch, TextField, Typography } from '@mui/material';
-import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
+import AccountCategoryVersionDrawer from 'src/screens/finance/settings/components/AccountCategoryVersionDrawer';
 import {
   useGetIncomeCategoryVersionsQuery,
   usePatchIncomeCategoryStatusMutation,
@@ -318,7 +318,8 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
           </LoadingButton>
         }
       />
-      <AccountSettingVersionDialog
+      <AccountCategoryVersionDrawer
+        key={historyItem?.id}
         hiddenFields={['tags']}
         open={Boolean(historyItem)}
         title={historyItem?.name || 'Income category'}

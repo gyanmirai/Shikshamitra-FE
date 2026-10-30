@@ -3,6 +3,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { financePaymentNameSchema, isFinancePaymentNameField } from 'src/utils/finance-name';
 
 import {
   isRefundRequestField,
@@ -24,6 +25,7 @@ interface IPaymentDetailsContext {
 }
 
 export interface IFeeRefundEditData {
+  refundType?: 'full' | 'partial';
   boardId?: string;
   mediumId?: string;
   standardId?: string;
@@ -192,13 +194,16 @@ export const buildRefundInitialValues = (
     paymentDetails: mergedDetails,
     // Array of { feeHeadId, months: { month, amount }[] } — populated when student is selected
     feeHeadRefunds: (editData?.feeHeadRefunds || []) as IFeeHeadRefundItem[],
-    refundType: 'full',
+    refundType: editData?.refundType || 'full',
   };
 };
 
 // ─── Validation Schema ────────────────────────────────────────────────────────
 
-export const buildRefundValidationSchema = (currentYear: ICurrentYear) =>
+export const buildRefundValidationSchema = (
+  currentYear: ICurrentYear,
+  savedPayment?: { method?: string; paymentDetails?: Record<string, unknown> }
+) =>
   Yup.object({
     boardId: Yup.string().required('Board is required'),
     mediumId: Yup.string().required('Medium is required'),
@@ -245,7 +250,24 @@ export const buildRefundValidationSchema = (currentYear: ICurrentYear) =>
             // 'amount' is filtered from the refund UI (captured via the fee-head table instead),
             // so skip its validation here to avoid an invisible required-field blocker.
             .filter((field) => isRefundRequestField(field.name))
-            .map((field) => [field.name, buildFieldValidation(field, currentYear, context?.parent)])
+            .map((field) => {
+              const validation = buildFieldValidation(field, currentYear, context?.parent);
+              const saved = savedPayment?.paymentDetails?.[field.name];
+              // A saved masked identifier is retained by the server; new values use normal validation.
+              const preserveMasked =
+                savedPayment?.method === refundMethod &&
+                ['beneficiaryAccountNumber', 'upiId'].includes(field.name) &&
+                typeof saved === 'string' &&
+                saved.includes('*');
+              return [
+                field.name,
+                preserveMasked
+                  ? Yup.lazy((value) =>
+                      value === saved ? Yup.string().oneOf([saved]) : validation
+                    )
+                  : validation,
+              ];
+            })
         )
       );
     }),
@@ -256,6 +278,8 @@ export const buildFieldValidation = (
   currentYear: ICurrentYear,
   formValues: IPaymentDetailsContext
 ) => {
+  if (isFinancePaymentNameField(field.name)) return financePaymentNameSchema(field);
+
   let schema: Yup.Schema<unknown>;
 
   if (field.type === 'date') {

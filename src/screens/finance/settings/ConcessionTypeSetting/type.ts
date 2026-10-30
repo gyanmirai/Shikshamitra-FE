@@ -1,6 +1,5 @@
-import type { IParams } from 'src/components/customizabaleTable/types';
-
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { IParams } from 'src/components/customizabaleTable/types';
 
 export enum ConcessionBasedOn {
   Fixed = 0,
@@ -80,6 +79,7 @@ export interface IConcessionTableProps {
 
 export interface IConcessionTypeFormProps {
   open: UseBooleanReturn;
+  onBusyChange?: (busy: boolean) => void;
   onClose: (e: any, isSubmit: boolean) => void;
   editData: IConcessionTypeForm | null;
 }

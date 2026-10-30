@@ -1,3 +1,4 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
@@ -27,7 +28,7 @@ export const createUpdateChargeValidationSchema = (currentYear: any, isEditMode:
     chargeId: isEditMode ? Yup.string().required('Charge ID is required') : Yup.string().optional(),
 
     // Charge Details
-    chargeName: Yup.string()
+    chargeName: financeNameSchema('Charge Name')
       .required('Charge Name is required')
       .min(3, 'Charge Name must be at least 3 characters')
       .max(100, 'Charge Name cannot exceed 100 characters'),

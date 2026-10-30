@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-29
+updated_on: 2026-10-30
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -69,6 +69,11 @@ and lets the server apportion any policy cap, including sources whose payout sha
 See the [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#paid-charges-in-refund-requests).
 Focused checks: `RefundSelection.test.tsx` and `RefundForm.test.tsx` in the refund form folder.
 
+Refund detail responses include `concurrencyStamp`; `useUpdateFeeRefundMutation` sends it to `PUT /fee-refunds/{id}` with the edited payload and invalidates the existing refund cache tags.
+The edit form preserves unchanged masked beneficiary account/UPI values; entering a replacement uses ordinary payment-field validation.
+Create and replacement requests keep their existing mutation paths.
+See the [Pending edit contract](../../../Shikshamitra-BE/docs/modules/finance/references/fee-refund-payout-workflow.md#edit-a-pending-request).
+
 Collection Policy forms, summaries and saved details use calendar days for the grace period.
 Create/update and fee-head override requests omit `gracePeriodType`; the calculation selector has been removed.
 See the [backend policy contract](../../../Shikshamitra-BE/docs/modules/finance/api.md) for legacy snapshot compatibility.
@@ -82,6 +87,9 @@ The server recalculates money and rejects stale or altered allocations. See the
 
 TL;DR: Finance clients live mostly under `src/redux/finance/**`.
 Several older fee and receipt surfaces still use shared clients outside that folder.
+
+The Charge Category list waits for the selected academic year before fetching, including
+on a direct first visit and while the global academic context is being restored.
 
 Charge Category deletion uses `useLazyGetChargeCategoryUsageQuery` in
 `src/redux/finance/chargeCategory.tsx` for a fresh dependency preflight. The confirmation stays
@@ -213,13 +221,25 @@ Use [the workspace contract](./references/income-expense-workspaces.md) for UI b
 
 ## Receipt lifecycle client fields
 
+Collection responses optionally expose `feeReceiptAmount` and `chargeReceiptAmount`, the actual
+issued document totals. `collectionReceiptAmounts.ts` prefers these amounts, including receipt
+replays. When absent, the legacy contract places paid late fees on the fee receipt whenever a
+fee receipt exists; only a charge-only response places them on its charge receipt. Receipt IDs
+control which documents the form displays and downloads.
+
 Reconciliation list queries for every payment method wait until `queryParams.academicYearId` is available, matching the tab-count query guard. Initial academic-year hydration must not send an empty GUID to the API; selecting another year or month resumes querying with that scope.
 
-The feeReceiptApi list/detail contract adds paymentMethodLabel and pdfFileName. ReceiptPreviewDialog displays the method and downloads the authenticated PDF blob using pdfFileName. Receipt kind enum values remain unchanged; display labels use Provisional Receipt / Official Receipt. The combined document label is supplied by the backend. Reconciliation approve/reject mutations invalidate receiptType.receipt. Tab counts still include cashOfficial in the API contract; the Reconciliation screen renders only non-cash tabs and falls back to Cheque for unsupported tab parameters.
+The feeReceiptApi list/detail contract adds paymentMethodLabel and pdfFileName. ReceiptPreviewDialog displays the method and downloads the authenticated PDF blob using pdfFileName. Receipt kind enum values remain unchanged; display labels use Provisional Receipt / Receipt. The combined document label is supplied by the backend. Reconciliation approve/reject mutations invalidate receiptType.receipt. Tab counts still include cashOfficial in the API contract; the Reconciliation screen renders only non-cash tabs and falls back to Cheque for unsupported tab parameters.
 
-Reconciliation PDF downloads also use `/v1/fee-receipts/{id}/pdf`. The mutation returns `{ blob, fileName }`; `fileName` comes from the exposed Content-Disposition header (UTF-8 filename preferred). Approved rows select the linked official receipt ID, and their preview displays the official number.
+Reconciliation PDF downloads also use `/v1/fee-receipts/{id}/pdf`. The mutation returns `{ blob, fileName }`; `fileName` comes from the exposed Content-Disposition header (UTF-8 filename preferred). Approved rows select the linked receipt ID, and their preview displays the official number.
 
 Collection PDF downloads use that same endpoint for both `feeReceiptId` and `chargeReceiptId`;
 receipt scope does not select a separate charge-receipts API. Each preview tracks its own
 loading/failure state and retries only the PDF GET. Collection, receipt and refresh errors are
 handled in their owning regions so a PDF failure cannot report the accepted payment as failed.
+
+Receipt and reconciliation list clients carry serialized `filters` alongside the existing search/context/paging params. The reconciliation workspace passes numeric payment-method tab IDs; its shared query hook accepts those IDs, numeric strings and named methods, and enables server header filters for the six active methods. Unsupported legacy methods omit the server-filter callback. Applying/clearing criteria resets the page while preserving search and page size. Adjustment list requests carry existing `filter` text plus serialized `filters`, `page` and `pageSize`; the displayed total comes from the server.
+
+Charge detail student lists declare Collected, Waived and Outstanding as numeric filters. Equals, Greater Than, Less Than and Between compare raw currency amounts, including fractional values; INR formatting is applied only to the displayed cell.
+
+Cash expense Paid, adjustment target Applied Amount and collection outcome Paid/Pending after also use numeric criteria over raw amounts. Cash expense Payment date uses date criteria over the recorded datetime. These detail menus are independent of the table toolbar; hiding that toolbar does not disable the per-column filters.

@@ -1,5 +1,8 @@
 import React from 'react';
+import 'src/components/scrollbar/styles.css';
 import { useFormik } from 'formik';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { createRoot } from 'react-dom/client';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -9,6 +12,7 @@ import { ThemeProvider, useColorScheme } from '@mui/material/styles';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { Box, Stack, Button, Typography, CssBaseline } from '@mui/material';
 import ValueEntryStep from 'src/screens/finance/Concession/Components/ConcessionSteps/ValueEntryStep';
+import RequestEnteredInstallments from 'src/screens/finance/Concession/Components/ConcessionSteps/RequestEnteredInstallments';
 import ConcessionPolicyFields from 'src/screens/finance/Concession/Components/ConcessionPolicyFields';
 import ConcessionDocumentList from 'src/screens/finance/Concession/Components/ConcessionDocumentList';
 import ConcessionRequestWorkspace from 'src/screens/finance/Concession/Components/ConcessionRequestWorkspace';
@@ -16,6 +20,8 @@ import ReadOnlyConcessionApprovalView from 'src/screens/finance/ConcessionAdmin/
 import { validateConcessionInstallments } from 'src/screens/finance/Concession/Components/concessionValueValidation';
 
 import { policy, context, preview } from './data';
+
+const store = configureStore({ reducer: { confirmPopup: () => ({ isChanges: false }) } });
 
 function ThemeToggle() {
   const { mode, setMode } = useColorScheme();
@@ -60,6 +66,7 @@ function Fixture() {
     calculationMethod: mode === 'fixed' ? 'FixedAmount' : 'Percentage',
     percentageValue: 50,
     maximumFixedAmount: 11111,
+    applyOn: 'AllOutstanding',
   };
   const uiContext = {
     ...context,
@@ -70,7 +77,7 @@ function Fixture() {
     eligibleDueFees: [
       ...context.eligibleDueFees.map((line, index) => ({
         ...line,
-        dueFeeId: `school-${  index}`,
+        dueFeeId: `school-${index}`,
         feeHeadId: 'school',
         feeHeadName: 'General School Fees',
         originalAmount: 15000,
@@ -235,7 +242,7 @@ function Fixture() {
                       )
                   )}
                   valueFields={
-                    selected.length > 0 ? (
+                    selected.length > 0 && currentPolicy.valueSource === 'PolicyFixed' ? (
                       <ValueEntryStep
                         compact
                         formik={formik}
@@ -246,6 +253,18 @@ function Fixture() {
                         preview={result ?? undefined}
                       />
                     ) : undefined
+                  }
+                  renderFeeValueFields={
+                    currentPolicy.valueSource === 'RequestEnteredWithinLimits'
+                      ? (feeHeadId) => (
+                          <RequestEnteredInstallments
+                            formik={formik}
+                            requestContext={uiContext}
+                            policy={currentPolicy}
+                            feeHeadId={feeHeadId}
+                          />
+                        )
+                      : undefined
                   }
                   documents={
                     <ConcessionDocumentList
@@ -313,4 +332,8 @@ function Fixture() {
     </ThemeProvider>
   );
 }
-createRoot(document.getElementById('root')!).render(<Fixture />);
+createRoot(document.getElementById('root')!).render(
+  <Provider store={store}>
+    <Fixture />
+  </Provider>
+);

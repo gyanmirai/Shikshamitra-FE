@@ -181,14 +181,27 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
               <Box
                 key={docId}
                 sx={{
-                  py: 1,
+                  py: 0.75,
                   '& + &': { borderTop: 1 },
                   borderColor: 'divider',
                 }}
               >
-                <Stack spacing={0.75}>
-                  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr) auto',
+                    columnGap: 1,
+                    rowGap: 0.75,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
+                    alignItems="center"
+                    sx={{ minWidth: 0, gridColumn: 1, gridRow: 1 }}
+                  >
+                    <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
                       {doc.documentName}{' '}
                       {doc.isRequired && (
                         <Box component="span" color="error.main">
@@ -201,92 +214,99 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
                       label={`${doc.documentName} requirements`}
                     />
                   </Stack>
-                  <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-                    {submitted?.url ? (
-                      <Box
-                        display="flex"
-                        alignItems="center"
-                        gap={0.5}
-                        sx={{ minWidth: 0, maxWidth: '100%' }}
+                  {submitted?.url ? (
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      gap={0.5}
+                      sx={{ minWidth: 0, gridColumn: 1, gridRow: 2 }}
+                    >
+                      <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
+                      <Typography
+                        variant="caption"
+                        color="success.main"
+                        fontWeight={600}
+                        sx={{ overflowWrap: 'anywhere' }}
                       >
-                        <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
-                        <Typography
-                          variant="caption"
-                          color="success.main"
-                          fontWeight={600}
-                          sx={{ overflowWrap: 'anywhere' }}
-                        >
-                          Uploaded{submitted.fileName ? ` · ${submitted.fileName}` : ''}
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <Typography variant="caption" color="text.secondary">
-                        Not uploaded
+                        Uploaded{submitted.fileName ? ` · ${submitted.fileName}` : ''}
                       </Typography>
-                    )}
-                    <Box display="flex" gap={0.5} alignItems="center">
-                      {submitted?.url && (
-                        <>
-                          {canView && (
-                            <IconButton
-                              size="small"
-                              aria-label={`Preview ${doc.documentName}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPreviewDoc({
-                                  url: submitted.url,
-                                  name: submitted.documentName,
-                                });
-                              }}
-                            >
-                              <Iconify icon="carbon:view-filled" />
-                            </IconButton>
-                          )}
-                          {canUpload && (
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleRemove(docId)}
-                              aria-label={`Remove ${doc.documentName}`}
-                            >
-                              <Iconify icon="solar:trash-bin-trash-bold" />
-                            </IconButton>
-                          )}
-                        </>
-                      )}
-                      <UploadButton
-                        size="small"
-                        variant="outlined"
-                        accept={getFileAccept(doc)}
-                        onChange={(event) => handleFileChange(event, docId)}
-                        startIcon={
-                          isUploading && uploadingDocId === docId ? (
-                            <CircularProgress size={14} />
-                          ) : (
-                            <Iconify icon="eva:cloud-upload-outline" />
-                          )
-                        }
-                        disabled={!canUpload || isUploading}
-                        aria-label={`${submitted?.url ? 'Replace' : 'Upload'} ${doc.documentName}`}
-                        aria-describedby={isMissingRequired ? errorId : undefined}
-                        fileInputProps={{
-                          'aria-label': `Choose ${doc.documentName} file`,
-                          'aria-required': Boolean(doc.isRequired),
-                          'aria-invalid': isMissingRequired,
-                          'aria-describedby': isMissingRequired ? errorId : undefined,
-                        }}
-                      >
-                        {submitted?.url ? 'Replace' : 'Upload'}
-                      </UploadButton>
                     </Box>
-                  </Stack>
+                  ) : (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ gridColumn: 1, gridRow: 2 }}
+                    >
+                      Not uploaded
+                    </Typography>
+                  )}
+                  <Box
+                    display="flex"
+                    gap={0.5}
+                    alignItems="center"
+                    sx={{ gridColumn: 2, gridRow: 1, whiteSpace: 'nowrap' }}
+                  >
+                    {submitted?.url && (
+                      <>
+                        {canView && (
+                          <IconButton
+                            size="small"
+                            aria-label={`Preview ${doc.documentName}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewDoc({
+                                url: submitted.url,
+                                name: submitted.documentName,
+                              });
+                            }}
+                          >
+                            <Iconify icon="carbon:view-filled" />
+                          </IconButton>
+                        )}
+                        {canUpload && (
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleRemove(docId)}
+                            aria-label={`Remove ${doc.documentName}`}
+                          >
+                            <Iconify icon="solar:trash-bin-trash-bold" />
+                          </IconButton>
+                        )}
+                      </>
+                    )}
+                    <UploadButton
+                      size="small"
+                      variant="outlined"
+                      accept={getFileAccept(doc)}
+                      onChange={(event) => handleFileChange(event, docId)}
+                      startIcon={
+                        isUploading && uploadingDocId === docId ? (
+                          <CircularProgress size={14} />
+                        ) : (
+                          <Iconify icon="eva:cloud-upload-outline" />
+                        )
+                      }
+                      disabled={!canUpload || isUploading}
+                      aria-label={`${submitted?.url ? 'Replace' : 'Upload'} ${doc.documentName}`}
+                      aria-describedby={isMissingRequired ? errorId : undefined}
+                      fileInputProps={{
+                        'aria-label': `Choose ${doc.documentName} file`,
+                        'aria-required': Boolean(doc.isRequired),
+                        'aria-invalid': isMissingRequired,
+                        'aria-describedby': isMissingRequired ? errorId : undefined,
+                      }}
+                    >
+                      {submitted?.url ? 'Replace' : 'Upload'}
+                    </UploadButton>
+                  </Box>
                   {isMissingRequired && (
-                    <FormHelperText error id={errorId} sx={{ mx: 0 }}>
+                    <FormHelperText error id={errorId} sx={{ mx: 0, gridColumn: '1 / -1' }}>
                       {doc.documentName} is required.{' '}
                       {canUpload ? 'Upload this document to continue.' : ''}
                     </FormHelperText>
                   )}
-                </Stack>
+                </Box>
               </Box>
             );
           })}

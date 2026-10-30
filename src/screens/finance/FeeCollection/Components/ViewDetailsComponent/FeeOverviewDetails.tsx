@@ -38,7 +38,11 @@ export default function FeeOverview({
         <DetailField label="Concession" value={formatNumber(concession, 'INR')} />
         <DetailField label="Net fee" value={netFee == null ? null : formatNumber(netFee, 'INR')} />
         <DetailField label="Paid fee" value={formatNumber(paid, 'INR')} />
-        <DetailField label="Pending fee" value={formatNumber(pending, 'INR')} />
+        <DetailField
+          label="Pending fee"
+          value={formatNumber(pending, 'INR')}
+          secondary="Includes future and overdue installments"
+        />
         <DetailField label="Overdue fee" value={formatNumber(overdue, 'INR')} />
       </DetailGrid>
       {(refunded > 0 || overpayment > 0 || adjustment > 0) && (

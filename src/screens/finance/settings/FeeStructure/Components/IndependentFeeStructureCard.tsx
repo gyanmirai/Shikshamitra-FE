@@ -1,3 +1,5 @@
+import { sanitizeFinanceName } from 'src/utils/finance-name';
+import { financeNameSchema } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -67,7 +69,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 // Validation schema
 // ---------------------------------------------------------------------------
 const feeStructureSchema = Yup.object({
-  name: Yup.string().trim().required('Fee Structure name is required'),
+  name: financeNameSchema('Fee Structure Name').trim().required('Fee Structure name is required'),
   collectionPolicyId: Yup.string().required('Collection Policy is required'),
   feeHeads: Yup.array(
     Yup.object({
@@ -570,7 +572,9 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   size="small"
                   name="name"
                   value={formik.values.name}
-                  onChange={formik.handleChange}
+                  onChange={(event) =>
+                    formik.setFieldValue(event.target.name, sanitizeFinanceName(event.target.value))
+                  }
                   onBlur={formik.handleBlur}
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}

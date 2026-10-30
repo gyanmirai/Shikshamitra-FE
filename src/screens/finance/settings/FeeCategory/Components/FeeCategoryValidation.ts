@@ -1,3 +1,4 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import * as Yup from 'yup';
 
 import type { IFeeCategory } from './type';
@@ -8,7 +9,7 @@ export const feeCategoryValidationSchema = (
   existingCategories: IFeeCategory[] = []
 ) =>
   Yup.object().shape({
-    name: Yup.string()
+    name: financeNameSchema('Category Name')
       .required('Category Name is required')
       .test('min-length', 'Category Name must be between 3 and 100 characters', (value) =>
         value ? value.trim().length >= 3 : false
@@ -46,7 +47,7 @@ export const feeCategoryValidationSchema = (
       .of(
         Yup.object().shape({
           incomeCategoryId: Yup.string().required('Income Category is required'),
-          name: Yup.string()
+          name: financeNameSchema('Fee Head Name')
             .required('Fee Head Name is required')
             .test('min-length', 'Fee Head Name must be between 3 and 40 characters', (value) =>
               value ? value.trim().length >= 3 : false

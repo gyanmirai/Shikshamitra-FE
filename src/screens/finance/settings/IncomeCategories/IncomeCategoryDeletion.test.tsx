@@ -71,7 +71,7 @@ vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.suc
 vi.mock('src/components/custom-breadcrumbs', () => ({ CustomBreadcrumbs: () => null }));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('./Components/IncomeCategoryForm', () => ({ default: () => null }));
-vi.mock('src/screens/finance/settings/components/AccountSettingVersionDialog', () => ({
+vi.mock('src/screens/finance/settings/components/AccountCategoryVersionDrawer', () => ({
   default: () => null,
 }));
 vi.mock('src/components/customizabaleTable', () => ({

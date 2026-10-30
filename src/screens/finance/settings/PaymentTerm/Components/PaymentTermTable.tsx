@@ -120,7 +120,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         ],
         label: 'Status',
         align: 'left',
-        minWidth: 240,
+        minWidth: 140,
         sticky: true,
         stickyPosition: 'right',
         render: (_, row) => {
@@ -162,69 +162,69 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
               actions={[
                 ...(canEdit && !archived
                   ? [
-                      {
-                        id: 'edit',
-                        label: `Edit ${term.name}`,
-                        icon: 'solar:pen-bold',
-                        disabled: actionLoading,
-                        onClick: () => onEdit(term),
-                      },
-                    ]
+                    {
+                      id: 'edit',
+                      label: `Edit ${term.name}`,
+                      icon: 'solar:pen-bold',
+                      disabled: actionLoading,
+                      onClick: () => onEdit(term),
+                    },
+                  ]
                   : []),
                 ...(canActivate
                   ? [
-                      {
-                        id: 'activate',
-                        label: 'Activate',
-                        icon: 'mdi:check-decagram-outline',
-                        disabled: actionLoading,
-                        onClick: () => onPublish(term),
-                      },
-                    ]
+                    {
+                      id: 'activate',
+                      label: 'Activate',
+                      icon: 'mdi:check-decagram-outline',
+                      disabled: actionLoading,
+                      onClick: () => onPublish(term),
+                    },
+                  ]
                   : []),
                 ...(canView
                   ? [
-                      {
-                        id: 'history',
-                        label: 'Version History',
-                        icon: 'mdi:timeline-clock-outline',
-                        onClick: () => onVersionHistory(term),
-                      },
-                    ]
+                    {
+                      id: 'history',
+                      label: 'Version History',
+                      icon: 'mdi:timeline-clock-outline',
+                      onClick: () => onVersionHistory(term),
+                    },
+                  ]
                   : []),
                 ...(!archived && canArchive
                   ? [
-                      {
-                        id: 'archive',
-                        label: 'Archive',
-                        icon: 'mdi:archive-outline',
-                        disabled: archiveDisabled,
-                        onClick: () => onArchive(term),
-                      },
-                    ]
+                    {
+                      id: 'archive',
+                      label: 'Archive',
+                      icon: 'mdi:archive-outline',
+                      disabled: archiveDisabled,
+                      onClick: () => onArchive(term),
+                    },
+                  ]
                   : []),
                 ...(archived && canRestore
                   ? [
-                      {
-                        id: 'restore',
-                        label: 'Restore',
-                        icon: 'mdi:archive-arrow-up-outline',
-                        disabled: actionLoading,
-                        onClick: () => onRestore(term),
-                      },
-                    ]
+                    {
+                      id: 'restore',
+                      label: 'Restore',
+                      icon: 'mdi:archive-arrow-up-outline',
+                      disabled: actionLoading,
+                      onClick: () => onRestore(term),
+                    },
+                  ]
                   : []),
                 ...(canDelete
                   ? [
-                      {
-                        id: 'delete',
-                        label: 'Delete',
-                        icon: 'solar:trash-bin-trash-bold',
-                        color: 'error.main',
-                        disabled: deleteDisabled,
-                        onClick: () => onDelete(term),
-                      },
-                    ]
+                    {
+                      id: 'delete',
+                      label: 'Delete',
+                      icon: 'solar:trash-bin-trash-bold',
+                      color: 'error.main',
+                      disabled: deleteDisabled,
+                      onClick: () => onDelete(term),
+                    },
+                  ]
                   : []),
               ]}
             />
@@ -256,11 +256,11 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         getRowAction={(row) =>
           canView
             ? {
-                label: `Open ${row.name || 'record'}`,
-                onClick: () => {
-                  onView(row as PaymentTermListItem);
-                },
-              }
+              label: `Open ${row.name || 'record'}`,
+              onClick: () => {
+                onView(row as PaymentTermListItem);
+              },
+            }
             : undefined
         }
         tableId="payment-term-table"

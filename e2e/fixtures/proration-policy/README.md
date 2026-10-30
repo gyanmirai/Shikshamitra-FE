@@ -25,4 +25,4 @@ draft** for 12 monthly installments. Both retain their original short-list data 
 Run both fixtures and the desktop/mobile scroll checks with
 `npx playwright test --config e2e/finance/configuration-section-scroll.config.ts`.
 
-Check independent admission/withdrawal switches, all four models, both monthly strategies, invalid cutoff/minimum values, shared rounding, disabled one-time heads, saved fields, and light/dark/mobile layout. Student assignment inheritance is covered by the backend integration tests and the assignment workflow component tests.
+Check independent admission/withdrawal switches, all four models, both monthly strategies, invalid cutoff values, shared rounding, disabled one-time heads, saved fields, and light/dark/mobile layout. Student assignment inheritance is covered by the backend integration tests and the assignment workflow component tests.

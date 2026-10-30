@@ -1,5 +1,6 @@
 'use client';
 
+import { financeNameSchema } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -118,7 +119,7 @@ const validationSchema = Yup.object().shape({
   allocationBasis: Yup.string()
     .oneOf(['Legacy', 'Installment', 'FeeHead'])
     .required('Choose an allocation basis'),
-  policyName: Yup.string()
+  policyName: financeNameSchema('Collection Policy Name')
     .trim()
     .required('Collection Policy Name is required')
     .min(3, 'Must be at least 3 characters')
@@ -312,7 +313,10 @@ export function useCollectionPolicyForm({
    */
   const checks = useMemo(() => {
     const v = formik.values;
-    const nameValid = v.policyName.trim().length >= 3 && v.policyName.trim().length <= 100;
+    const nameValid =
+      v.policyName.trim().length >= 3 &&
+      v.policyName.trim().length <= 100 &&
+      financeNameSchema('Collection Policy Name').isValidSync(v.policyName);
     const graceValid = !v.enableLateFee || validCollectionNumber(v.gracePeriodDays, 'days');
     const headsValid = !v.enableLateFee || v.lateFeeApplyOnFeeHeads.length >= 1;
 
@@ -586,6 +590,7 @@ export function useCollectionPolicyForm({
     prerequisites: collectionPolicyPrerequisites(formik.values, feeHeadsQuery, routingQuery),
     refreshPrerequisites,
     feeHeads,
+    isFeeHeadsLoading: feeHeadsQuery.isFetching && !isSaving && !formik.isSubmitting,
     isSaving,
     unsavedChangesDialog,
     checks,

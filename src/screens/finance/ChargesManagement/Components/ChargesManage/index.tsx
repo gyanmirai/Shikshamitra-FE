@@ -5,12 +5,22 @@ import type { RootState } from 'src/redux/store';
 import { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
+import { formatNumber } from 'src/utils/formate_number';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
-import { Box, Card, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Card,
+  Stack,
+  Alert,
+  Button,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -292,7 +302,13 @@ const ChargesManagement = () => {
           <ChargesTable
             primaryAction={
               permissions.canAdd ? (
-                <Button startIcon={<Add />} variant="contained" onClick={addChargeDialog.onTrue} size="small" sx={{ px: 4 }}>
+                <Button
+                  startIcon={<Add />}
+                  variant="contained"
+                  onClick={addChargeDialog.onTrue}
+                  size="small"
+                  sx={{ px: 4 }}
+                >
                   Add Charge
                 </Button>
               ) : undefined
@@ -505,7 +521,8 @@ const ChargesManagement = () => {
         open={voidChargeDialog.value}
         handleClose={handleVoidClose}
         title="Cancel Charge"
-        maxWidth="xs"
+        titleInfo="Review the affected charge and enter the reason for cancellation."
+        maxWidth="sm"
         hasForm={false}
         guardUnsavedChanges={false}
         disableClose={isVoiding}
@@ -514,20 +531,62 @@ const ChargesManagement = () => {
         <DialogScrollContent>
           <Stack spacing={2}>
             <Typography id="cancel-charge-description" variant="body2">
-              This cancels the approved, uncollected charge lines. Charges with a collection cannot
-              be cancelled. Reverse the collection through reconciliation or use the refund workflow.
+              Cancel the approved, uncollected charges in this batch. Cancelled charges will no
+              longer be available for collection.
             </Typography>
+            <Box component="dl" sx={{ m: 0 }}>
+              {[
+                [
+                  'Charge name',
+                  selectedChargeData?.chargeName || selectedChargeData?.purposeDescription || '—',
+                ],
+                ['Category', selectedChargeData?.categoryName || '—'],
+                [
+                  'Amount per student',
+                  selectedChargeData ? formatNumber(selectedChargeData.amount, 'INR') : '—',
+                ],
+              ].map(([label, value]) => (
+                <Box
+                  key={label}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1.5fr)' },
+                    gap: { xs: 0.5, sm: 2 },
+                    py: 1,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography component="dt" variant="body2" color="text.secondary">
+                    {label}
+                  </Typography>
+                  <Typography
+                    component="dd"
+                    variant="body2"
+                    sx={{ m: 0, fontWeight: 600, overflowWrap: 'anywhere' }}
+                  >
+                    {value}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+            <Alert severity="warning">
+              Charges with a collection cannot be cancelled. Use reconciliation to reverse the
+              collection, or use the refund workflow to return a payment.
+            </Alert>
             <TextField
               autoFocus
               fullWidth
               multiline
               minRows={3}
-              label="Reason *"
+              size="small"
+              required
+              label="Cancellation reason"
               value={voidReason}
               disabled={isVoiding}
               onChange={(event) => setVoidReason(event.target.value)}
               error={voidReason.length > 0 && voidReason.trim().length < 10}
-              helperText="Enter a cancellation reason with at least 10 characters."
+              helperText="Explain why this charge is being cancelled (at least 10 characters)."
             />
           </Stack>
         </DialogScrollContent>
@@ -541,7 +600,7 @@ const ChargesManagement = () => {
             disabled={isVoiding}
             onClick={handleVoidClose}
           >
-            Cancel
+            Keep charge
           </Button>
           <Button
             type="button"
@@ -550,9 +609,12 @@ const ChargesManagement = () => {
             loadingPosition="start"
             startIcon={<Iconify icon="mdi:cancel" />}
             variant="contained"
-            color="warning"
-            disabled={isVoiding || voidReason.trim().length < 10 ||
-              !selectedChargeData?.availableActions?.includes('Void')}
+            color="error"
+            disabled={
+              isVoiding ||
+              voidReason.trim().length < 10 ||
+              !selectedChargeData?.availableActions?.includes('Void')
+            }
             onClick={async () => {
               if (!selectedChargeData?.availableActions?.includes('Void') || isVoiding) return;
               try {
@@ -576,7 +638,7 @@ const ChargesManagement = () => {
               }
             }}
           >
-            Cancel Charge
+            Cancel charge
           </Button>
         </DialogActions>
       </CustomDialog>

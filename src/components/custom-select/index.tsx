@@ -22,6 +22,13 @@ import {
 import { SearchHeader } from './search-header';
 import { useSearchMenu } from './use-search-menu';
 
+// Select clones direct children with role="option". Keep group labels presentational,
+// just like SearchHeader, and skip them during menu keyboard navigation.
+function OptionGroupHeader({ children }: { children: React.ReactNode }) {
+  return <ListSubheader role="presentation">{children}</ListSubheader>;
+}
+OptionGroupHeader.muiSkipListHighlight = true;
+
 export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   SelectProps<J extends true ? string[] | number[] : string | number>,
   'onChange' | 'value'
@@ -305,9 +312,9 @@ const CustomSelect = <T extends string, J extends boolean>({
                 const heading =
                   groupKey &&
                   (index === 0 || filteredOptions[index - 1][groupKey] !== option[groupKey]) ? (
-                    <ListSubheader key={`group-${option[valueKey]}`}>
+                    <OptionGroupHeader key={`group-${option[valueKey]}`}>
                       {option[groupKey]}
-                    </ListSubheader>
+                    </OptionGroupHeader>
                   ) : null;
                 return [
                   heading,

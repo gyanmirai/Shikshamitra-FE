@@ -1,9 +1,7 @@
 import dayjs from 'dayjs';
 import userEvent from '@testing-library/user-event';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, within, waitFor } from '@testing-library/react';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import BankAccountForm from './BankManageForm';
 import { bankAccountValidationSchema } from './BankValidationSchema';
@@ -48,15 +46,8 @@ const account = {
 } as IBankAccount;
 
 function renderForm(overrides: Partial<IBankAccount> = {}) {
-  return render(
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <BankAccountForm open onClose={vi.fn()} editData={{ ...account, ...overrides }} />
-    </LocalizationProvider>
-  );
+  return render(<BankAccountForm open onClose={vi.fn()} editData={{ ...account, ...overrides }} />);
 }
-
-const fromField = () => screen.getByRole('group', { name: /Effective from/ });
-const toField = () => screen.getByRole('group', { name: /Effective to/ });
 
 beforeEach(() => {
   save.mockReset().mockReturnValue({ unwrap });
@@ -100,62 +91,63 @@ describe('bank account effective dates', { timeout: 30000 }, () => {
     );
   });
 
-  it('blocks submission of an incomplete optional end date instead of saving it as empty', async () => {
-    const user = userEvent.setup();
-    renderForm();
-    await user.click(within(toField()).getByRole('spinbutton', { name: /Day/ }));
-    await user.keyboard('25');
-    await user.tab();
-    await user.click(screen.getByRole('button', { name: 'Update' }));
-    expect(await screen.findByText('Effective to must be a valid date (DD/MM/YYYY)')).toBeVisible();
-    expect(within(toField()).getByRole('spinbutton', { name: /Day/ })).toHaveTextContent('25');
-    expect(save).not.toHaveBeenCalled();
+  it('removes effective-date controls from create and edit forms', () => {
+    const { unmount } = renderForm();
+    expect(screen.queryByText(/Effective from/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Effective to/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+    unmount();
+
+    render(<BankAccountForm open onClose={vi.fn()} />);
+    expect(screen.queryByText(/Effective from/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Effective to/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
   });
 
-  it('revalidates the end date when the start changes and accepts an inclusive same-day range', async () => {
+  it('preserves the existing effective period when editing other account details', async () => {
     const user = userEvent.setup();
-    renderForm({ effectiveTo: '2026-10-24T23:59:59Z' });
-    // Touch the end before changing the start, so dependent errors must refresh.
-    await user.click(within(toField()).getByRole('spinbutton', { name: /Day/ }));
-    await user.tab();
-    await user.click(within(fromField()).getByRole('spinbutton', { name: /Day/ }));
-    await user.keyboard('25');
-    await user.tab();
-    expect(
-      await screen.findByText('Effective to must be on or after effective from')
-    ).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Update' }));
-    expect(save).not.toHaveBeenCalled();
-    await user.click(within(toField()).getByRole('spinbutton', { name: /Day/ }));
-    await user.keyboard('25');
-    await user.tab();
+    renderForm({ effectiveTo: '2027-03-31T23:59:59Z' });
+    await user.clear(screen.getByLabelText('Bank Name *'));
+    await user.type(screen.getByLabelText('Bank Name *'), 'Updated bank');
     await user.click(screen.getByRole('button', { name: 'Update' }));
     await waitFor(() =>
       expect(save).toHaveBeenCalledWith({
         bankAccountId: 'bank',
         body: expect.objectContaining({
-          effectiveFrom: '2026-10-25T00:00:00.000Z',
-          effectiveTo: '2026-10-25T23:59:59.000Z',
+          bankName: 'Updated bank',
+          effectiveFrom: '2026-10-24T00:00:00.000Z',
+          effectiveTo: '2027-03-31T23:59:59.000Z',
+          concurrencyStamp: 'version',
         }),
       })
     );
   });
 
-  it('blocks an impossible typed date and permits a valid leap day after correction', async () => {
+  it('creates an account with the existing default start date and no end date', async () => {
     const user = userEvent.setup();
-    renderForm({ effectiveFrom: '2028-02-29T00:00:00Z' });
-    await user.click(within(fromField()).getByRole('spinbutton', { name: /Year/ }));
-    await user.keyboard('2027');
-    await user.tab();
-    await user.click(screen.getByRole('button', { name: 'Update' }));
-    expect(
-      await screen.findByText('Effective from must be a valid date (DD/MM/YYYY)')
-    ).toBeVisible();
-    expect(save).not.toHaveBeenCalled();
-    await user.click(within(fromField()).getByRole('spinbutton', { name: /Year/ }));
-    await user.keyboard('2028');
-    await user.tab();
-    await user.click(screen.getByRole('button', { name: 'Update' }));
-    await waitFor(() => expect(save).toHaveBeenCalled());
+    const today = dayjs().format('YYYY-MM-DD');
+    render(<BankAccountForm open onClose={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Bank Name *'), { target: { value: account.bankName } });
+    fireEvent.change(screen.getByLabelText('Branch Name *'), {
+      target: { value: account.branchName },
+    });
+    fireEvent.change(screen.getByLabelText('Account Holder Name *'), {
+      target: { value: account.accountHolderName },
+    });
+    fireEvent.change(screen.getByLabelText('Account Number *'), {
+      target: { value: account.accountNumber },
+    });
+    fireEvent.change(screen.getByLabelText('IFSC Code *'), { target: { value: account.ifscCode } });
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(save).toHaveBeenCalledWith({
+        academicYearId: 'year',
+        body: expect.objectContaining({
+          bankName: account.bankName,
+          effectiveFrom: today + 'T00:00:00.000Z',
+          effectiveTo: null,
+        }),
+      })
+    );
   });
 });

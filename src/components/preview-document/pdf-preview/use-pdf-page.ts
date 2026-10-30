@@ -16,9 +16,9 @@ export function usePdfPage(url: string, pageNumber: number, retry: number) {
     setLoading(true);
     setError(false);
     const load = async () => {
-      const pdfjs = await import('pdfjs-dist');
+      const pdfjs = await import('./pdfjs');
       if (!active) return;
-      worker = new Worker(new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url), {
+      worker = new Worker(new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url), {
         type: 'module',
       });
       task = pdfjs.getDocument({

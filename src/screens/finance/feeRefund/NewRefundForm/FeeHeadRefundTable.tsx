@@ -34,6 +34,7 @@ interface FeeHeadRefundTableProps {
   onHasRecords?: (has: boolean) => void;
   mode?: 'refund' | 'adjustment';
   compact?: boolean;
+  lockedReceiptId?: string;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -45,6 +46,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   onHasRecords,
   mode = 'refund',
   compact = false,
+  lockedReceiptId,
 }): React.ReactElement | null => {
   const theme = useTheme();
   const isAdj = mode === 'adjustment';
@@ -94,9 +96,10 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   const selectedReceiptId = useMemo(
     () =>
+      lockedReceiptId ||
       formik.values.feeHeadRefunds.flatMap((x) => x.months).find((x) => x.sourceReceiptId)
         ?.sourceReceiptId,
-    [formik.values.feeHeadRefunds]
+    [formik.values.feeHeadRefunds, lockedReceiptId]
   );
 
   // Map eligibility API response to IFeeHeadPayment shape used by child components
@@ -465,7 +468,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   }
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
       {/* ── Overall Summary KPI Cards ── */}
       {!compact && (
         <OverallSummaryCard feeHeads={feeHeadsWithPayments} formik={formik} mode={mode} />

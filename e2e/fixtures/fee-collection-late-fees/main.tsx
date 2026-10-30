@@ -14,6 +14,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import confirmPopup, { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { financeModuleType } from 'src/redux/tagTypes';
 import FeeCollectionTable from 'src/screens/finance/FeeCollection/Components/FeeCollectionTable';
+import ViewFeeDetails from 'src/screens/finance/FeeCollection/Components/ViewFeeDetails';
 import FeeCollectComponentForm from 'src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm';
 import type { IFeeData, IStudentFee } from 'src/screens/finance/FeeCollection/Components/type';
 import type { UseFinanceAcademicFiltersResult } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
@@ -25,13 +26,14 @@ const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer, confirmPopup,
     globalState: () => ({ currentYear: { id: 'year-2026', name: '2026-2027', startDate: '2026-06-01', endDate: '2027-05-31', boards } }),
-    auth: () => ({ permissionsInitialized: true, loading: false, permissions: ['Finance.Fees.FeeCollections.View', 'Finance.Fees.FeeCollections.Add', 'Finance.Fees.FeeCollections.Waive'].map((name) => ({ name, isGranted: true })) }),
+    auth: () => ({ permissionsInitialized: true, loading: false, permissions: ['Finance.Fees.FeeCollections.View', 'Finance.Fees.FeeCollections.Add', 'Finance.Fees.FeeCollections.ApplyWaiver'].map((name) => ({ name, isGranted: true })) }),
   },
   middleware: (getDefault) => getDefault().concat(api.middleware),
 });
 
 function Fixture() {
   const dialog = useBoolean();
+  const viewDialog = useBoolean();
   const [student, setStudent] = React.useState<IStudentFee | null>(null);
   const { setMode } = useColorScheme();
   const [showRequests, setShowRequests] = React.useState(false);
@@ -45,7 +47,7 @@ function Fixture() {
     filterPayload: { academicYearId: 'year-2026', boardId: 'gseb', educationMediumId: 'english', standardId: 'class-3' },
     setSelectedBoard: () => {}, setSelectedMedium: () => {}, setSelectedStandardId: () => {}, setSelectedDivisionId: () => {},
   };
-  const close = () => { dialog.onFalse(); setStudent(null); store.dispatch(setIsChanges(false)); };
+  const close = () => { dialog.onFalse(); viewDialog.onFalse(); setStudent(null); store.dispatch(setIsChanges(false)); };
   const open = (row: IFeeData) => { setStudent(row as unknown as IStudentFee); dialog.onTrue(); };
   return (
     <Stack sx={{ height: '100vh', p: 2, bgcolor: 'background.neutral' }} spacing={1}>
@@ -55,19 +57,25 @@ function Fixture() {
         <Button onClick={() => { close(); resetFixture('statuses'); store.dispatch(api.util.resetApiState()); }}>Mixed statuses</Button>
         <Button onClick={() => { close(); resetFixture('selection'); store.dispatch(api.util.resetApiState()); }}>Selection regression</Button>
         <Button onClick={() => { close(); resetFixture('settled'); store.dispatch(api.util.resetApiState()); }}>Settled balances</Button>
+        <Button onClick={() => { close(); resetFixture('pending-balance'); store.dispatch(api.util.resetApiState()); }}>Pending balance regression</Button>
         <Button onClick={() => { close(); resetFixture('charge-receipt'); store.dispatch(api.util.resetApiState()); }}>Charge receipt regression</Button>
         <Button onClick={() => { close(); resetFixture('charge-receipt-retry'); store.dispatch(api.util.resetApiState()); }}>Charge receipt retry regression</Button>
+        <Button onClick={() => { close(); resetFixture('receipt-separate'); store.dispatch(api.util.resetApiState()); }}>Separate receipt grouping</Button>
+        <Button onClick={() => { close(); resetFixture('receipt-combined'); store.dispatch(api.util.resetApiState()); }}>Combined receipt grouping</Button>
         <Button onClick={() => setMode('light')}>Light</Button><Button onClick={() => setMode('dark')}>Dark</Button>
         <Button onClick={() => setShowRequests(!showRequests)}>Request evidence</Button>
       </Stack>
       <Typography variant="h5">Collections · late-fee regression</Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
-        <FeeCollectionTable onAddFee={dialog} onDelete={() => {}} onCollectFee={open} onView={() => {}} onGiveAdjustment={() => {}} academicFilters={filters} />
+        <FeeCollectionTable onAddFee={dialog} onDelete={() => {}} onCollectFee={open} onView={(row) => { setStudent(row as unknown as IStudentFee); viewDialog.onTrue(); }} onGiveAdjustment={() => {}} academicFilters={filters} />
       </Box>
       {showRequests && <Box component="pre" sx={{ maxHeight: 250, overflow: 'auto', fontSize: 12 }}>{JSON.stringify(requests.filter((request) => request.method === 'POST' || request.url.endsWith('/pdf')), null, 2)}</Box>}
       <CustomDialog open={dialog.value} fullScreen title={`Collect Fees – ${student?.name ?? 'Student'}`} handleClose={close}>
         <Button onClick={() => { refreshSelectionBalances(); store.dispatch(api.util.invalidateTags([financeModuleType.feeDetails, financeModuleType.feeCollection])); }}>Refresh selection balances</Button>
         {dialog.value && <FeeCollectComponentForm student={student} onCancel={close} />}
+      </CustomDialog>
+      <CustomDialog open={viewDialog.value} fullScreen title="Fee details" handleClose={close}>
+        {viewDialog.value && <ViewFeeDetails student={student} collectFeesDialog={dialog} viewDialog={viewDialog} />}
       </CustomDialog>
     </Stack>
   );

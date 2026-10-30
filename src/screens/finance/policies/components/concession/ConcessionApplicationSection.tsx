@@ -40,26 +40,25 @@ export default function ConcessionApplicationSection({ formik }: { formik: any }
           helperText={(formik.touched.applyOn && formik.errors.applyOn) || undefined}
         />
       </ShakingTextField>
-      <Stack spacing={0.5} sx={{ mt: 2 }}>
-        <FormControlLabel
-          control={
-            <Switch
-              name="autoCreateRefund"
-              checked={includesPaid && Boolean(formik.values.autoCreateRefund)}
-              disabled={!includesPaid}
-              onChange={(_, checked) => formik.setFieldValue('autoCreateRefund', checked)}
-            />
-          }
-          label="Automatically create refund requests on concession approval"
-        />
-        <Typography variant="caption" color="text.secondary">
-          {!includesPaid
-            ? 'Available when the application scope includes paid installments.'
-            : formik.values.autoCreateRefund
+      {includesPaid && (
+        <Stack spacing={0.5} sx={{ mt: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                name="autoCreateRefund"
+                checked={Boolean(formik.values.autoCreateRefund)}
+                onChange={(_, checked) => formik.setFieldValue('autoCreateRefund', checked)}
+              />
+            }
+            label="Automatically create refund requests on concession approval"
+          />
+          <Typography variant="caption" color="text.secondary">
+            {formik.values.autoCreateRefund
               ? 'The paid concession creates linked refund requests for separate review and payout.'
               : 'The paid concession remains refundable. Create the linked refund requests manually after approval.'}
-        </Typography>
-      </Stack>
+          </Typography>
+        </Stack>
+      )}
     </ConcessionSectionCard>
   );
 }

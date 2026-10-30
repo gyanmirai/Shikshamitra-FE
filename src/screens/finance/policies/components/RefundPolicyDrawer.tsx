@@ -25,7 +25,7 @@ import {
 } from '@mui/material';
 
 import { SectionCard } from './refund/RefundCommon';
-import FinancePolicySkeleton from './FinancePolicySkeleton';
+import PolicyFormSkeleton from './PolicyFormSkeleton';
 import RefundFooterActions from './refund/RefundFooterActions';
 import RefundGeneralSection from './refund/RefundGeneralSection';
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
@@ -167,10 +167,16 @@ function RefundPolicyDrawerSession({
           >
             <Scrollbar fillContent={isPrerequisiteBlocked} sx={{ height: 1 }}>
               <Box
-                sx={{ p: { xs: 2, sm: 3 }, minHeight: 1, display: 'flex', flexDirection: 'column', flex: isPrerequisiteBlocked ? 1 : undefined }}
+                sx={{
+                  p: { xs: 2, sm: 3 },
+                  minHeight: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: isPrerequisiteBlocked ? 1 : undefined,
+                }}
               >
-                {isInitializing ? (
-                  <FinancePolicySkeleton label="Loading refund policy" />
+                {isInitializing && !busy ? (
+                  <PolicyFormSkeleton policy="refund" activeEdit={activeEdit} />
                 ) : isLoadError ? (
                   <Alert
                     severity="error"

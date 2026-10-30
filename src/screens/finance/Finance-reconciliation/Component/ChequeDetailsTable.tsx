@@ -26,11 +26,12 @@ import {
 
 import { ApproveRejectForm } from './DemandDraftTable';
 import ReconciliationReceiptDialog from './ReconciliationReceiptDialog';
+import { useReconciliationTableQuery } from './useReconciliationTableQuery';
 
 const ChequeDetailsForm = ({
   queryParams,
 }: {
-  queryParams?: { academicYearId: string; month: number; year: number; paymentMethod: string };
+  queryParams?: { academicYearId: string; month: number; year: number; paymentMethod: string | number };
 }) => {
   const [isClearCheck, setIsClearCheck] = useState<boolean>(false);
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
@@ -47,14 +48,17 @@ const ChequeDetailsForm = ({
     (perm: any) => perm.name === financePermissions.accounts.reconciliationAdd && perm.isGranted
   );
 
+  const { params: listParams, tableProps } = useReconciliationTableQuery(queryParams);
+
   const {
     data: listResponse,
     isLoading,
     isFetching,
+    isError,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReconciliationListQuery,
-    params: queryParams,
+    params: listParams,
     options: { skip: !queryParams?.academicYearId },
   });
 
@@ -82,7 +86,9 @@ const ChequeDetailsForm = ({
   );
 
   useEffect(() => {
-    if (!isLoading && listResponse && (listResponse.items ?? []).length === 0) {
+    if (!isLoading && !isFetching && !isError && listResponse &&
+      (listResponse.items ?? []).length === 0 && !listParams?.search?.trim() &&
+      listParams?.status === undefined && !listParams?.filters) {
       const monthYear = queryParams
         ? dayjs(`${queryParams.year}-${String(queryParams.month).padStart(2, '0')}-01`).format(
             'MMM-YYYY'
@@ -94,7 +100,7 @@ const ChequeDetailsForm = ({
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, listResponse]);
+  }, [isLoading, isFetching, isError, listResponse, listParams?.search, listParams?.status, listParams?.filters]);
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -132,6 +138,8 @@ const ChequeDetailsForm = ({
       },
       {
         id: 'standardName',
+        isFilter: true,
+        filterType: 'string',
         label: 'Class/Div',
         align: 'left',
         width: 150,
@@ -151,7 +159,7 @@ const ChequeDetailsForm = ({
         maxWidth: 180,
         align: 'left',
         isFilter: true,
-        filterType: 'number',
+        filterType: 'string',
       },
       {
         id: 'bankName',
@@ -171,7 +179,7 @@ const ChequeDetailsForm = ({
         maxWidth: 120,
         align: 'left',
         isFilter: true,
-        filterType: 'string',
+        filterType: 'number',
         render(value) {
           return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
         },
@@ -349,6 +357,8 @@ const ChequeDetailsForm = ({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomizableTable
+        {...tableProps}
+        totalCount={listResponse?.totalCount ?? 0}
         isLoading={isLoading || isFetching}
         noDataText={<>No Cheque Data Found </>}
         tableId="cheque-details-table"

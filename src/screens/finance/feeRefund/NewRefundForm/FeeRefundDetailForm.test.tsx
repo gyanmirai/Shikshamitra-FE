@@ -113,8 +113,8 @@ describe('refund policy payment methods', () => {
     mocks.eligibility.isFetching = true;
     render(<FeeRefundDetailsForm formik={formik()} />);
     expect(screen.getByRole('status', { name: 'Loading refund details' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Refund details' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Refund payment details' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Refund Details' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Refund Payment Details' })).toBeInTheDocument();
   });
 
   it('hides refund controls when paid fees have no refundable balance left', () => {
@@ -159,9 +159,9 @@ describe('refund policy payment methods', () => {
   it('keeps one reason field and required recipient details in the shared sections', () => {
     mocks.eligibility.currentData = { ...eligible(['Cash']), refundPolicyName: 'Transport refund' };
     render(<FeeRefundDetailsForm formik={formik('Cash')} />);
-    expect(screen.getByRole('heading', { name: 'Refund details' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Refund payment details' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Refund details information' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Refund Details' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Refund Payment Details' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Refund Details information' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Received By *' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: /Refund reason/ })).toBeRequired();
     expect(screen.queryByRole('textbox', { name: /Remarks|Notes/ })).not.toBeInTheDocument();

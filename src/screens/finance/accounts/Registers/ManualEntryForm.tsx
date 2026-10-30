@@ -1,3 +1,9 @@
+import FinanceFormSkeleton, {
+  FinanceSkeletonFields,
+} from 'src/screens/finance/components/FinanceFormSkeleton';
+
+import { AccountEntryFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { Dayjs } from 'dayjs';
 import type { AccountsManualEntry } from 'src/redux/finance/accountsActivityApi';
 
@@ -333,7 +339,13 @@ export default function ManualEntryForm({
         autoFocus={name === 'name'}
         inputRef={name === 'name' ? nameInput : undefined}
         value={formik.values[name]}
-        onChange={formik.handleChange}
+        onChange={(event) => {
+          if (name === 'name' || name === 'counterparty') {
+            formik.setFieldValue(name, sanitizeFinanceName(event.target.value));
+          } else {
+            formik.handleChange(event);
+          }
+        }}
         onBlur={formik.handleBlur}
         disabled={fieldsBlocked}
         {...fieldError(name)}
@@ -381,7 +393,11 @@ export default function ManualEntryForm({
       >
         <Box
           sx={{
-            flex: 1, minHeight: 0, position: 'relative', overflow: 'auto', p: 2,
+            flex: 1,
+            minHeight: 0,
+            position: 'relative',
+            overflow: 'auto',
+            p: 2,
             display: missingCategory ? 'flex' : undefined,
             flexDirection: 'column',
           }}
@@ -416,7 +432,9 @@ export default function ManualEntryForm({
                 Categories and bank accounts could not be loaded.
               </Alert>
             )}
-            {missingCategory ? (
+            {options.isFetching && !options.currentData && !locked ? (
+              <AccountEntryFormSkeleton />
+            ) : missingCategory ? (
               <FinancePrerequisiteState
                 requirements={[{ key: income ? 'income-category' : 'expense-category' }]}
                 onRefresh={refreshPrerequisites}
@@ -589,10 +607,10 @@ export default function ManualEntryForm({
                               Available cash could not be loaded.
                             </Alert>
                           )}
-                          {cashOptions.isFetching ? (
-                            <Typography role="status" variant="body2">
-                              Loading available cash...
-                            </Typography>
+                          {cashOptions.isFetching && !locked ? (
+                            <FinanceFormSkeleton label="Loading available cash">
+                              <FinanceSkeletonFields fields={[{ columns: 6, height: 24 }]} />
+                            </FinanceFormSkeleton>
                           ) : !cashOptions.isError && availableCash !== undefined ? (
                             <Typography variant="body2" color="text.secondary">
                               Available cash: {formatNumber(availableCash, 'INR')}
@@ -660,7 +678,7 @@ export default function ManualEntryForm({
               </Box>
             )}
           </Stack>
-          {blocking && (
+          {blocking && !(options.isFetching && !options.currentData && !locked) && (
             <Box
               role="status"
               aria-live="polite"
@@ -690,6 +708,7 @@ export default function ManualEntryForm({
             borderColor: 'divider',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'flex-end',
             gap: 1,
             flexShrink: 0,
           }}

@@ -9,6 +9,7 @@ export interface GetFeeAdjustmentApplicationsInput {
   status?: AdjustmentStatusEnum;
   completedOnly?: boolean;
   filter?: string;
+  filters?: string;
   page?: number;
   pageSize?: number;
 }

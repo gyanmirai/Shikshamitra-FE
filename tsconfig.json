@@ -51,7 +51,11 @@
     "build-receipt-grouping-browser/types/**/*.ts",
     "build-receipt-grouping-browser/dev/types/**/*.ts",
     ".artifacts/academic-module-setup/next/types/**/*.ts",
-    ".artifacts/academic-module-setup/next/dev/types/**/*.ts"
+    ".artifacts/academic-module-setup/next/dev/types/**/*.ts",
+    ".artifacts/receipt-split-e2e-next/types/**/*.ts",
+    ".artifacts/receipt-split-e2e-next/dev/types/**/*.ts",
+    ".artifacts/finance-live-next/types/**/*.ts",
+    ".artifacts/finance-live-next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

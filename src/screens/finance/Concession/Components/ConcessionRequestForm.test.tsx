@@ -8,6 +8,7 @@ import ConcessionRequestForm from './ConcessionRequestForm';
 const state = vi.hoisted(() => ({
   detail: {} as any,
   context: {} as any,
+  contextFetching: false,
   contextError: null as any,
   queryError: null as any,
   preview: {} as any,
@@ -100,8 +101,16 @@ vi.mock('src/redux/class/classApi', () => ({
 }));
 vi.mock('./ConcessionDocumentList', () => ({ default: () => null }));
 vi.mock('./ConcessionPolicyFields', () => ({
-  default: ({ typeHelperText, policies, onPolicyChange }: any) => (
+  default: ({ typeHelperText, policies, types, policyVersionId, typeId, onPolicyChange }: any) => (
     <>
+      <div>
+        Selected policy:{' '}
+        {
+          policies.find((policy: any) => policy.concessionPolicyVersionId === policyVersionId)
+            ?.policyName
+        }
+      </div>
+      <div>Selected type: {types.find((type: any) => type.id === typeId)?.name}</div>
       {typeHelperText && <div>{typeHelperText}</div>}
       {policies.length > 1 && (
         <button type="button" onClick={() => onPolicyChange(policies[1])}>
@@ -140,6 +149,7 @@ vi.mock('src/redux/finance/ConcessionManagement/concessionManagementApi', () => 
     return {
       data: state.context,
       currentData: state.context,
+      isFetching: state.contextFetching,
       isError: Boolean(state.contextError),
       error: state.contextError,
       refetch: state.contextRefetch,
@@ -151,6 +161,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   state.queryError = null;
   state.contextError = null;
+  state.contextFetching = false;
   state.detail = {
     id: 'request',
     concessionRequestId: 'request',
@@ -219,6 +230,74 @@ const renderForm = () =>
   render(<ConcessionRequestForm {...formProps} editData={{ id: 'request' } as any} />);
 
 describe('concession request update concurrency', () => {
+  it('keeps selected policy and type visible while policy eligibility reloads, then uses the new response', async () => {
+    state.context.concessionPolicies.push({
+      ...state.context.concessionPolicies[0],
+      concessionPolicyId: 'other-policy',
+      concessionPolicyVersionId: 'other-version',
+      policyName: 'Alternative policy',
+    });
+    const view = renderForm();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Switch policy' }));
+    const refreshed = { ...state.context };
+    state.context = undefined;
+    state.contextFetching = true;
+    view.rerender(<ConcessionRequestForm {...formProps} editData={{ id: 'request' } as any} />);
+    expect(screen.getByText('Selected policy: Alternative policy')).toBeVisible();
+    expect(screen.getByText('Selected type: Test concession')).toBeVisible();
+    expect(
+      screen.queryByText('Select the student fee assignment to continue.')
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeDisabled();
+
+    state.context = refreshed;
+    state.contextFetching = false;
+    view.rerender(<ConcessionRequestForm {...formProps} editData={{ id: 'request' } as any} />);
+    expect(screen.getByText('Selected policy: Alternative policy')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+  });
+
+  it('blocks saving during a background eligibility refresh even when current data is retained', async () => {
+    const view = renderForm();
+    state.contextFetching = true;
+    view.rerender(<ConcessionRequestForm {...formProps} editData={{ id: 'request' } as any} />);
+    expect(screen.getByText('Selected type: Test concession')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+    await act(async () => {
+      fireEvent.submit(document.querySelector('form')!);
+    });
+    expect(state.previewRequest).not.toHaveBeenCalled();
+    expect(state.update).not.toHaveBeenCalled();
+  });
+
+  it('retains selected labels after an eligibility error while blocking commands', () => {
+    state.context.concessionPolicies[0].policyName = 'Original policy';
+    const view = renderForm();
+    state.context = undefined;
+    state.contextError = { data: { detail: 'Eligibility is temporarily unavailable.' } };
+    view.rerender(<ConcessionRequestForm {...formProps} editData={{ id: 'request' } as any} />);
+    expect(screen.getByText('Selected policy: Original policy')).toBeVisible();
+    expect(screen.getByText('Selected type: Test concession')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Retry loading policies' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeDisabled();
+  });
+
+  it('does not carry displayed eligibility into another student scope', () => {
+    const view = render(<ConcessionRequestForm {...formProps} />);
+    state.context = undefined;
+    state.contextFetching = true;
+    view.rerender(
+      <ConcessionRequestForm
+        {...formProps}
+        student={{ ...formProps.student, studentId: 'another-student' }}
+      />
+    );
+    expect(screen.queryByText('Selected type: Test concession')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+  });
+
   it('shows resolved missing types and policies for a new request without hiding student selection', () => {
     state.context = { ...state.context, concessionTypes: [], concessionPolicies: [] };
     render(<ConcessionRequestForm {...formProps} />);

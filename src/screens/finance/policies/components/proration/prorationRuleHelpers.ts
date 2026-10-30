@@ -19,8 +19,7 @@ export const isProratedRule = (rule: IProrationFeeHeadRule) =>
   rule.feeType !== 'OneTime' && enabledModels(rule).some(isProratedModel);
 
 export function defaultConfiguration(model: ProrationRuleType): IProrationRuleConfiguration {
-  if (model === 'DailyProration')
-    return { calculationBasis: 'CalendarDays', minimumChargeDays: 0, roundOff: 'RoundUp' };
+  if (model === 'DailyProration') return { calculationBasis: 'CalendarDays', roundOff: 'RoundUp' };
   if (model === 'MonthlyProration') return { monthlyRule: 'ChargeNextMonth', cutOffDay: 15 };
   return {};
 }
@@ -34,12 +33,6 @@ export function configurationErrors(model: ProrationRuleType, config: IProration
   if (model === 'DailyProration') {
     if (config.calculationBasis !== 'CalendarDays')
       errors.push({ field: 'calculationBasis', message: 'Calculation basis is required' });
-    const minimum = config.minimumChargeDays;
-    if (minimum != null && (!Number.isInteger(minimum) || minimum < 0 || minimum > 366))
-      errors.push({
-        field: 'minimumChargeDays',
-        message: 'Minimum charge days must be a whole number from 0 to 366',
-      });
   }
   if (model === 'MonthlyProration') {
     if (!['ChargeNextMonth', 'HalfMonthRule'].includes(config.monthlyRule ?? ''))

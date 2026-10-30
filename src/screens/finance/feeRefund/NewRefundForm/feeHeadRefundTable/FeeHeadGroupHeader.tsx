@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
-import { alpha, useTheme } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Chip, Button, Tooltip, Checkbox, IconButton, Typography } from '@mui/material';
+import { Box, Chip, Button, Tooltip, Checkbox, ButtonBase, Typography } from '@mui/material';
 
 import type { IFeeHeadPayment } from '../types';
 
@@ -13,6 +13,8 @@ export interface FeeHeadGroupHeaderProps {
   feeHead: IFeeHeadPayment;
   selectedMonths: string[];
   isOpen: boolean;
+  contentId?: string;
+  headerId?: string;
   totalRefundInput: number;
   mode?: 'refund' | 'adjustment';
   selectedReceiptId?: string;
@@ -28,6 +30,8 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   feeHead,
   selectedMonths,
   isOpen,
+  contentId,
+  headerId,
   totalRefundInput,
   mode = 'refund',
   selectedReceiptId,
@@ -38,7 +42,6 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   onApplyInAllAmountChange,
   onApplyInAll,
 }): React.ReactElement => {
-  const theme = useTheme();
   const isAdj = mode === 'adjustment';
   const refundableItems = feeHead.items.filter((i) => i.refundable > 0);
   const selectableItems = refundableItems.filter(
@@ -56,200 +59,179 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
 
   return (
     <Box
-      display="flex"
-      alignItems="center"
-      gap={1}
-      px={1.5}
-      py={1.25}
       sx={{
-        flexWrap: 'wrap',
+        p: 2,
+        bgcolor: 'background.neutral',
+        color: 'text.primary',
         minWidth: 0,
-        cursor: 'pointer',
-        userSelect: 'none',
-        bgcolor: isAllSelected ? alpha(theme.palette.primary.main, 0.06) : 'transparent',
-        transition: 'background-color 0.2s ease',
-        '&:hover': {
-          bgcolor: isAllSelected
-            ? alpha(theme.palette.primary.main, 0.09)
-            : alpha(theme.palette.action.hover, 0.8),
-        },
+        borderBottom: isOpen ? 1 : 0,
+        borderColor: 'divider',
       }}
-      onClick={onExpandToggle}
     >
-      {/* Checkbox */}
-      <Tooltip
-        title={
-          !hasSelectable && refundableItems.length > 0
-            ? 'Clear the selected installments to choose this receipt.'
-            : !hasSelectable
-              ? isAdj
-                ? 'No adjustable months for this fee head'
-                : 'No refundable months for this fee head'
-              : ''
-        }
-        placement="top"
-      >
-        <span>
-          <Checkbox
-            size="small"
-            checked={isAllSelected}
-            indeterminate={isPartialSelected}
-            disabled={!hasSelectable}
-            inputProps={{
-              'aria-label': `Select refundable installments for ${feeHead.feeHeadName}`,
-            }}
-            onChange={onCheckboxToggle}
-            onClick={(e) => e.stopPropagation()}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+        <Tooltip
+          title={
+            !hasSelectable && refundableItems.length > 0
+              ? 'Clear the selected installments to choose this receipt.'
+              : !hasSelectable
+                ? isAdj
+                  ? 'No adjustable months for this fee head'
+                  : 'No refundable months for this fee head'
+                : ''
+          }
+          placement="top"
+        >
+          <span>
+            <Checkbox
+              size="small"
+              checked={isAllSelected}
+              indeterminate={isPartialSelected}
+              disabled={!hasSelectable}
+              inputProps={{
+                'aria-label': `Select refundable installments for ${feeHead.feeHeadName}`,
+              }}
+              onChange={onCheckboxToggle}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </span>
+        </Tooltip>
+
+        <Box component="h3" sx={{ m: 0, flex: 1, minWidth: 0 }}>
+          <ButtonBase
+            type="button"
+            aria-label={(isOpen ? 'Collapse ' : 'Expand ') + feeHead.feeHeadName}
+            aria-expanded={isOpen}
+            aria-controls={contentId}
+            onClick={onExpandToggle}
             sx={{
-              p: 0.5,
-              borderRadius: '6px',
-              '&.Mui-checked': { color: 'primary.main' },
-              '&.MuiCheckbox-indeterminate': { color: 'primary.main' },
-              transition: 'transform 0.15s',
-              '&:hover': { transform: 'scale(1.1)' },
-            }}
-          />
-        </span>
-      </Tooltip>
-
-      {/* Fee head name */}
-      <Typography
-        variant="subtitle2"
-        fontWeight={700}
-        sx={{ lineHeight: 1.4, minWidth: 0, overflowWrap: 'anywhere', flex: '1 1 120px' }}
-      >
-        {feeHead.feeHeadName}
-      </Typography>
-
-      {/* Adjustable/Refundable months pill */}
-      <Box
-        sx={{
-          px: 1,
-          py: 0.25,
-          borderRadius: 999,
-          bgcolor: alpha(theme.palette.text.secondary, 0.08),
-          border: `1px solid ${alpha(theme.palette.text.secondary, 0.12)}`,
-        }}
-      >
-        <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: 10 }}>
-          {refundableItems.length} {isAdj ? 'adjustable' : 'refundable'}
-        </Typography>
-      </Box>
-
-      {/* Apply in all controls - visible only when months are selected */}
-
-      {/* Fully refunded badge */}
-      {refundableItems.length === 0 && (
-        <Chip
-          label={isAdj ? 'Fully Adjusted' : 'Fully Refunded'}
-          size="small"
-          color="success"
-          variant="soft"
-          sx={{ height: 18, fontSize: 10, fontWeight: 600 }}
-        />
-      )}
-      {totalRefundInput > 0 && (
-        <Typography
-          variant="caption"
-          fontWeight={700}
-          color="info.main"
-          sx={{
-            mr: 0.5,
-            px: 1,
-            py: 0.25,
-            borderRadius: '6px',
-            bgcolor: alpha(theme.palette.info.main, 0.08),
-            whiteSpace: 'nowrap',
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {formatNumber(totalRefundInput, 'INR')}
-        </Typography>
-      )}
-
-      {hasSelectedMonths && !isFullRefund && (
-        <Box
-          display="flex"
-          alignItems="center"
-          gap={1}
-          sx={{
-            width: { xs: 1, sm: 'auto' },
-            order: { xs: 1, sm: 0 },
-            justifyContent: 'flex-end',
-            flexShrink: 0,
-          }}
-        >
-          <NumericFormatCustom
-            size="small"
-            label="Amount per installment"
-            fullWidth
-            name={`apply-amount-${feeHead.feeHeadId}`}
-            roundToWholeRupees={false}
-            decimalScale={2}
-            value={applyInAllState.amount}
-            onValueChange={(vals, source) => {
-              if (source.source === 'event') onApplyInAllAmountChange?.(vals.value);
-            }}
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            inputProps={{
-              'aria-label': `Amount for selected installments in ${feeHead.feeHeadName}`,
-              // min: 0,
-              style: {
-                textAlign: 'right',
-                fontSize: 13,
-                fontVariantNumeric: 'tabular-nums',
+              width: 1,
+              minWidth: 0,
+              minHeight: 44,
+              py: 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              textAlign: 'left',
+              borderRadius: 1,
+              '&:focus-visible': {
+                outline: '2px solid',
+                outlineColor: 'primary.main',
+                outlineOffset: 2,
               },
             }}
-            sx={{
-              width: { xs: 'auto', sm: 180 },
-              minWidth: 140,
-              flex: { xs: 1, sm: 'initial' },
-            }}
-          />
-          <Tooltip
-            title={
-              hasValidApplyAmount
-                ? `Replace amounts for ${selectedMonths.length} selected installment${selectedMonths.length !== 1 ? 's' : ''}, up to each ${isAdj ? 'adjustable' : 'refundable'} balance`
-                : 'Enter an amount first'
-            }
           >
-            <span>
-              <Button
-                size="small"
-                variant="contained"
-                disabled={!hasValidApplyAmount}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onApplyInAll?.();
-                }}
-                sx={{ minWidth: 50, fontWeight: 700, fontSize: '0.72rem', borderRadius: 1 }}
-              >
-                Apply
-              </Button>
-            </span>
-          </Tooltip>
+            <Typography
+              id={headerId}
+              component="span"
+              variant="subtitle1"
+              sx={{ flex: 1, minWidth: 0, fontWeight: 600, overflowWrap: 'anywhere' }}
+            >
+              {feeHead.feeHeadName}
+            </Typography>
+            <Box
+              component="span"
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: 1,
+                minWidth: 0,
+              }}
+            >
+              <Typography component="span" variant="body2" color="text.secondary">
+                {refundableItems.length} {isAdj ? 'adjustable' : 'refundable'}
+              </Typography>
+              {refundableItems.length === 0 && (
+                <Chip
+                  component="span"
+                  label={isAdj ? 'Fully adjusted' : 'Fully refunded'}
+                  size="small"
+                  color="default"
+                  variant="soft"
+                />
+              )}
+              {totalRefundInput > 0 && (
+                <Typography
+                  component="span"
+                  variant="body2"
+                  sx={{ fontVariantNumeric: 'tabular-nums' }}
+                >
+                  {formatNumber(totalRefundInput, 'INR')}
+                </Typography>
+              )}
+            </Box>
+            <Iconify
+              icon="mdi:chevron-down"
+              width={20}
+              sx={{ flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            />
+          </ButtonBase>
         </Box>
-      )}
-      {/* Selected refund amount */}
-
-      {/* Expand / Collapse chevron */}
-      <IconButton
-        size="small"
-        aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${feeHead.feeHeadName}`}
-        aria-expanded={isOpen}
-        onClick={(e) => {
-          e.stopPropagation();
-          onExpandToggle();
-        }}
-        sx={{
-          p: 0.5,
-          borderRadius: '8px',
-          transition: 'transform 0.25s ease',
-          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-        }}
-      >
-        <Iconify icon="solar:alt-arrow-down-bold" width={16} />
-      </IconButton>
+      </Box>
+      <Box sx={{ '&:not(:empty)': { mt: 2 } }}>
+        {hasSelectedMonths && !isFullRefund && (
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={2}
+            sx={{
+              width: { xs: 1, sm: 'auto' },
+              order: { xs: 1, sm: 0 },
+              justifyContent: 'flex-end',
+              flexShrink: 0,
+            }}
+          >
+            <NumericFormatCustom
+              size="small"
+              label="Amount per installment"
+              fullWidth
+              name={`apply-amount-${feeHead.feeHeadId}`}
+              roundToWholeRupees={false}
+              decimalScale={2}
+              value={applyInAllState.amount}
+              onValueChange={(vals, source) => {
+                if (source.source === 'event') onApplyInAllAmountChange?.(vals.value);
+              }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              inputProps={{
+                'aria-label': `Amount for selected installments in ${feeHead.feeHeadName}`,
+                style: {
+                  fontVariantNumeric: 'tabular-nums',
+                },
+              }}
+              sx={{
+                width: { xs: 'auto', sm: 180 },
+                minWidth: 140,
+                flex: { xs: 1, sm: 'initial' },
+              }}
+            />
+            <Tooltip
+              title={
+                hasValidApplyAmount
+                  ? `Replace amounts for ${selectedMonths.length} selected installment${selectedMonths.length !== 1 ? 's' : ''}, up to each ${isAdj ? 'adjustable' : 'refundable'} balance`
+                  : 'Enter an amount first'
+              }
+            >
+              <span>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<Iconify icon={GlobalIcons.approvedIcon} />}
+                  disabled={!hasValidApplyAmount}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onApplyInAll?.();
+                  }}
+                >
+                  Apply
+                </Button>
+              </span>
+            </Tooltip>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };

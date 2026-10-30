@@ -128,7 +128,7 @@ const FinalPaymentReviewDialog = ({
       >
         {allocatedRows.map((row) => (
           <Stack
-            key={row.key}
+            key={`${row.type}:${row.key}`}
             component="li"
             direction="row"
             justifyContent="space-between"
@@ -188,7 +188,7 @@ const FinalPaymentReviewDialog = ({
         maxWidth="sm"
         hasForm={false}
         title="Review Cash Payment"
-        titleInfo="Review the student and allocated amounts before collecting cash and issuing an official receipt."
+        titleInfo="Review the student and allocated amounts before collecting cash and issuing a receipt."
         paperProps={{ sx: { backgroundImage: 'none' } }}
       >
         <DialogScrollContent>
@@ -291,7 +291,7 @@ const FinalPaymentReviewDialog = ({
           <FormSectionCard
             title="Verification Status"
             icon={GlobalIcons.history}
-            descriptionTooltip="When the provisional receipt becomes a linked official receipt."
+            descriptionTooltip="When the provisional receipt becomes a linked receipt."
             titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
           >
             <Stack spacing={1}>
@@ -302,8 +302,8 @@ const FinalPaymentReviewDialog = ({
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {isChequeOrDemandDraft(paymentMethod)
-                  ? 'A provisional receipt is generated immediately and appears in Receipts. The finance team issues a linked official receipt after clearance and approval in reconciliation.'
-                  : 'A provisional receipt is generated immediately and appears in Receipts. Approval in reconciliation issues a linked official receipt.'}
+                  ? 'A provisional receipt is generated immediately and appears in Receipts. The finance team issues a linked receipt after clearance and approval in reconciliation.'
+                  : 'A provisional receipt is generated immediately and appears in Receipts. Approval in reconciliation issues a linked receipt.'}
               </Typography>
             </Stack>
           </FormSectionCard>

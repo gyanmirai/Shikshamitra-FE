@@ -1,5 +1,13 @@
 'use client';
 
+import FinanceFormSkeleton, {
+  FinanceSkeletonRows,
+} from 'src/screens/finance/components/FinanceFormSkeleton';
+
+import { FeeStructureFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
+
+import { financeNameSchema } from 'src/utils/finance-name';
+
 import type {
   StructureLine,
   StructureRecord,
@@ -8,6 +16,7 @@ import type {
 } from 'src/redux/finance/feeStructureWorkspace';
 
 import { getIn } from 'formik';
+import { createPortal } from 'react-dom';
 import { LoadingButton } from '@mui/lab';
 import { uuidv4 } from 'src/utils/uuidv4';
 import { Label } from 'src/components/label';
@@ -20,7 +29,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { getStorage, setStorage } from 'src/hooks/use-local-storage';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
-import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Stack, Alert, Button, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
@@ -63,6 +72,8 @@ interface Props {
   onDirtyChange?: (dirty: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
   onNameChange?: (name: string) => void;
+  actionsContainer?: HTMLElement | null;
+  actionsInList?: boolean;
 }
 const workflowSteps = ['Fee heads & terms', 'Policies', 'Review & publish'];
 const workflowKeys = ['heads', 'policies', 'review'];
@@ -97,6 +108,8 @@ export default function FeeStructureWorkspaceCard({
   onDirtyChange,
   onBusyChange,
   onNameChange,
+  actionsContainer,
+  actionsInList = false,
 }: Props) {
   const contentRef = useRef<HTMLDivElement>(null);
   const focusErrorPending = useRef(false);
@@ -239,7 +252,9 @@ export default function FeeStructureWorkspaceCard({
     ? 'Enter a name for this Fee Structure.'
     : candidate.name.trim().length > 256
       ? 'Use at most 256 characters.'
-      : serverNameError;
+      : !financeNameSchema('Fee Structure Name').isValidSync(candidate.name)
+        ? 'Fee Structure Name can only contain letters, numbers, and spaces'
+        : serverNameError;
   const touch = (field: string) => {
     const term = field.startsWith('term:');
     const position = candidate.feeHeads.findIndex(
@@ -570,6 +585,28 @@ export default function FeeStructureWorkspaceCard({
     (step) => step >= 0
   );
   const canPublish = !viewOnly && !locked && !!record && !!settings?.permissions.publish;
+  const structureActions = (
+    <Stack direction="row" spacing={0.5} alignItems="center">
+      <AdaptiveThreeDotsActions
+        directActionLimit={1}
+        actions={
+          !viewOnly && !locked && settings?.permissions.delete
+            ? [
+                {
+                  id: 'delete',
+                  label: 'Delete Draft',
+                  icon: GlobalIcons.delete,
+                  color: 'error.main',
+                  disabled: navigationBusy,
+                  onClick: () => setConfirmation('delete'),
+                },
+              ]
+            : []
+        }
+      />
+      <Label color={locked ? 'default' : 'warning'}>{locked ? 'Published' : 'Draft'}</Label>
+    </Stack>
+  );
 
   return (
     <Box
@@ -646,29 +683,18 @@ export default function FeeStructureWorkspaceCard({
                         },
                       ]
                     : []),
-                  ...(!viewOnly && !locked && settings?.permissions.delete
-                    ? [
-                        {
-                          id: 'delete',
-                          label: 'Delete Draft',
-                          icon: GlobalIcons.delete,
-                          color: 'error.main',
-                          disabled: navigationBusy,
-                          onClick: () => setConfirmation('delete'),
-                        },
-                      ]
-                    : []),
                 ]}
               />
-              <Label color={locked ? 'success' : 'warning'}>{locked ? 'Published' : 'Draft'}</Label>
+              {actionsContainer
+                ? createPortal(structureActions, actionsContainer)
+                : !actionsInList && structureActions}
             </Stack>
           </Stack>
         </Stack>
       </Box>
       {isLoading && (
         <Stack spacing={1} sx={{ p: 2.5 }}>
-          <Skeleton height={60} />
-          <Skeleton height={160} />
+          <FeeStructureFormSkeleton />
         </Stack>
       )}
       {isError && (
@@ -706,6 +732,36 @@ export default function FeeStructureWorkspaceCard({
               minHeight: 0,
               minWidth: 0,
               pt: 1,
+              '& .MuiStepper-vertical .MuiStepConnector-root': { ml: 2.75 },
+              // The shared vertical mode uses a horizontal header below lg. Keep
+              // that compact header vertical here without changing other consumers.
+              '& .MuiStepper-horizontal': {
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                '& .MuiStep-root': { flex: 'none', width: 1 },
+                '& .MuiStepButton-root': { justifyContent: 'flex-start' },
+                '& .MuiStepLabel-root': { flexDirection: 'row', width: 1 },
+                '& .MuiStepLabel-iconContainer': { pr: 1 },
+                '& .MuiStepLabel-labelContainer': { width: 'auto', textAlign: 'left' },
+                '& .MuiStepLabel-label': {
+                  typography: 'subtitle2',
+                  textAlign: 'left',
+                  mt: '0 !important',
+                },
+                '& .MuiStepConnector-root': {
+                  position: 'relative',
+                  top: 'auto',
+                  left: 'auto',
+                  right: 'auto',
+                  ml: 2.75,
+                },
+                '& .MuiStepConnector-line': {
+                  borderTopWidth: 0,
+                  borderLeftWidth: 2,
+                  borderLeftStyle: 'solid',
+                  minHeight: 16,
+                },
+              },
               '& form > .MuiBox-root:last-child': {
                 borderTop: 1,
                 borderColor: 'divider',
@@ -714,6 +770,7 @@ export default function FeeStructureWorkspaceCard({
             }}
           >
             <CustomStepperWithFormik
+              viewMode="vertical"
               activeStep={activeStep}
               steps={workflowSteps}
               initialValues={formik.initialValues}
@@ -976,9 +1033,13 @@ export default function FeeStructureWorkspaceCard({
       />
       {scheduleLine && !scheduleTerm && (
         <Box sx={{ m: 2 }}>
-          {termDetail.isFetching
-            ? 'Loading the selected Payment Term version…'
-            : 'This term version could not be loaded. Close and reopen the schedule to retry. Its saved configuration has not changed.'}
+          {termDetail.isFetching && !busy ? (
+            <FinanceFormSkeleton label="Loading the selected payment term version">
+              <FinanceSkeletonRows columns={5} />
+            </FinanceFormSkeleton>
+          ) : (
+            'This term version could not be loaded. Close and reopen the schedule to retry. Its saved configuration has not changed.'
+          )}
           <Button
             size="small"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}

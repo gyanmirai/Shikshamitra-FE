@@ -1,13 +1,19 @@
 'use client';
 
 import { isNaN } from 'lodash';
-import React, { useMemo, useState } from 'react';
-import { alpha, useTheme } from '@mui/material/styles';
+import React, { useId, useMemo, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
-import { Box, Divider, Collapse, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Checkbox, Typography } from '@mui/material';
+import { Label } from 'src/components/label';
+import CustomizableTable from 'src/components/customizabaleTable';
+import CustomAccordion from 'src/components/custom-accordian';
+import type { IColumn } from 'src/components/customizabaleTable/types';
+import {
+  FeeCollectionStatusType,
+  FeeCollectionStatusTypeColors,
+} from 'src/enums/fee-collection-type';
 
-import RefundMonthRow from './RefundMonthRow';
-import RefundColHeader from './RefundColHeader';
+import RefundAmountField from './RefundMonthRow';
 import FeeHeadGroupHeader from './FeeHeadGroupHeader';
 
 import type { RefundFormik, IFeeHeadPayment } from '../types';
@@ -40,7 +46,8 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   onApplyInAllAmountChange,
   onApplyInAll,
 }): React.ReactElement => {
-  const theme = useTheme();
+  const contentId = useId();
+  const headerId = useId();
   const isAdj = mode === 'adjustment';
   const [open, setOpen] = useState(true);
   const isFullRefund = formik.values.refundType === 'full';
@@ -106,127 +113,218 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
     ? feeHead.items.filter((item) => item.refundable > 0 || item.refunded > 0)
     : feeHead.items.filter((item) => item.paid > 0);
 
+  const rows = visibleItems.map((item) => {
+    const refundable = Math.max(0, item.refundable);
+    const isSelected = selectedMonths.includes(item.month);
+    const refundValue = fhEntry?.months.find((month) => month.month === item.month)?.amount ?? '';
+    const receiptLocked = Boolean(
+      !isAdj && selectedReceiptId && item.sourceReceiptId !== selectedReceiptId
+    );
+    return {
+      ...item,
+      id: item.sourceAllocationId || item.month,
+      isSelected,
+      isDisabled: refundable === 0 || receiptLocked,
+      disabledReason: receiptLocked
+        ? 'Clear the selected installments to choose this receipt.'
+        : '',
+      refundValue,
+      inputError:
+        showValidation &&
+        isSelected &&
+        (refundValue === '' ||
+          !Number.isFinite(Number(refundValue)) ||
+          Number(refundValue) <= 0 ||
+          Number(refundValue) > refundable),
+    };
+  });
+  const columns: IColumn[] = [
+    {
+      id: 'month',
+      label: 'Month / receipt',
+      minWidth: 260,
+      rowHeader: true,
+      isSort: false,
+      isFilter: false,
+      render: (value, row) => (
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Tooltip title={row.disabledReason}>
+            <span>
+              <Checkbox
+                size="small"
+                checked={row.isSelected}
+                disabled={row.isDisabled}
+                inputProps={{ 'aria-label': `Select ${value}` }}
+                onChange={() => onToggleMonth(row.month, row.dueFeeId)}
+              />
+            </span>
+          </Tooltip>
+          <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+            {value}
+          </Typography>
+        </Stack>
+      ),
+    },
+    ...[
+      { id: 'total', label: 'Total' },
+      { id: 'paid', label: 'Paid' },
+      { id: 'refunded', label: isAdj ? 'Adjusted' : 'Refunded' },
+      { id: 'refundable', label: isAdj ? 'Adjustable' : 'Refundable' },
+    ].map(({ id, label }): IColumn => ({
+      id,
+      label,
+      minWidth: 110,
+      align: 'left',
+      isSort: false,
+      isFilter: false,
+      cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
+      render: (value) => formatNumber(value, 'INR'),
+    })),
+    {
+      id: 'refundValue',
+      label: isAdj ? 'Adjustment amount' : 'Refund amount',
+      width: 200,
+      minWidth: 200,
+      isSort: false,
+      isFilter: false,
+      excludeFromExport: true,
+      render: (_, row) =>
+        row.isSelected ? (
+          <RefundAmountField
+            item={row as (typeof rows)[number]}
+            refundValue={row.refundValue}
+            showInputError={row.inputError}
+            mode={mode}
+            isFullRefund={isFullRefund}
+            onAmountChange={(value) =>
+              handleAmountChange(row.month, Math.max(0, row.refundable), value)
+            }
+          />
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            {row.isDisabled ? '—' : 'Not selected'}
+          </Typography>
+        ),
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      sticky: true,
+      stickyPosition: 'right',
+      width: 110,
+      isSort: false,
+      isFilter: false,
+      render: (value: FeeCollectionStatusType) => (
+        <Label color={FeeCollectionStatusTypeColors[value]} variant="soft">
+          {FeeCollectionStatusType[value]}
+        </Label>
+      ),
+    },
+  ];
+
+  const hasInputError = rows.some((row) => row.inputError);
+  useEffect(() => {
+    if (hasInputError) setOpen(true);
+  }, [hasInputError, formik.submitCount]);
+
   return (
     <Box
+      component="section"
+      aria-labelledby={headerId}
       sx={{
-        mb: 1.5,
-        borderRadius: '14px',
+        minWidth: 0,
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 2,
         overflow: 'hidden',
-        border: `1px solid ${
-          selectedMonths.length > 0
-            ? alpha(theme.palette.primary.main, 0.25)
-            : theme.palette.divider
-        }`,
-        opacity: !hasSelectable ? 0.6 : 1,
-        transition: 'border-color 0.2s ease, opacity 0.2s ease',
-        '&:hover': hasSelectable
-          ? {
-              borderColor: alpha(theme.palette.primary.main, 0.3),
-              boxShadow: `0 2px 12px ${alpha(theme.palette.primary.main, 0.08)}`,
-            }
-          : {},
+        bgcolor: 'background.paper',
+        opacity: hasSelectable ? 1 : 0.6,
+        '& > .MuiAccordion-root': { m: 0, bgcolor: 'background.paper' },
+        '& .MuiAccordionDetails-root': { p: 0 },
       }}
     >
-      <FeeHeadGroupHeader
-        feeHead={feeHead}
-        selectedMonths={selectedMonths}
-        isOpen={open}
-        totalRefundInput={totalRefundInput}
-        mode={mode}
-        selectedReceiptId={selectedReceiptId}
-        isFullRefund={isFullRefund}
-        onCheckboxToggle={onToggleAll}
-        onExpandToggle={() => setOpen((o) => !o)}
-        applyInAllState={applyInAllState}
-        onApplyInAllAmountChange={onApplyInAllAmountChange}
-        onApplyInAll={onApplyInAll}
-      />
-
-      <Collapse in={open} timeout={250}>
-        <Box sx={{ overflowX: 'auto' }}>
-          <Box sx={{ minWidth: 960 }}>
-            <Divider />
-            <RefundColHeader mode={mode} />
-
-            {visibleItems.map((item, idx) => {
-              const refundable = Math.max(0, item.refundable);
-              const isSelected = selectedMonths.includes(item.month);
-              const refundValue = fhEntry?.months.find((m) => m.month === item.month)?.amount ?? '';
-              const inputError =
-                showValidation &&
-                isSelected &&
-                (refundValue === '' ||
-                  !Number.isFinite(Number(refundValue)) ||
-                  Number(refundValue) <= 0 ||
-                  Number(refundValue) > refundable);
-              const receiptLocked = Boolean(
-                !isAdj && selectedReceiptId && item.sourceReceiptId !== selectedReceiptId
-              );
-
-              return (
-                <React.Fragment key={item.month}>
-                  <RefundMonthRow
-                    item={item}
-                    isSelected={isSelected}
-                    isDisabled={refundable === 0 || receiptLocked}
-                    disabledReason={
-                      receiptLocked
-                        ? 'Clear the selected installments to choose this receipt.'
-                        : undefined
-                    }
-                    refundValue={refundValue}
-                    showInputError={inputError}
-                    mode={mode}
-                    isFullRefund={isFullRefund}
-                    onToggle={() => onToggleMonth(item.month, (item as any).dueFeeId ?? '')}
-                    onAmountChange={(value) => handleAmountChange(item.month, refundable, value)}
-                  />
-                  {idx < visibleItems.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.35 }} />}
-                </React.Fragment>
-              );
-            })}
-
-            {/* ── Per-head selection summary footer ── */}
+      <CustomAccordion
+        title={feeHead.feeHeadName}
+        expanded={open}
+        onChange={() => setOpen((value) => !value)}
+        summary={
+          <FeeHeadGroupHeader
+            feeHead={feeHead}
+            selectedMonths={selectedMonths}
+            isOpen={open}
+            contentId={contentId}
+            headerId={headerId}
+            totalRefundInput={totalRefundInput}
+            mode={mode}
+            selectedReceiptId={selectedReceiptId}
+            isFullRefund={isFullRefund}
+            onCheckboxToggle={onToggleAll}
+            onExpandToggle={() => setOpen((value) => !value)}
+            applyInAllState={applyInAllState}
+            onApplyInAllAmountChange={onApplyInAllAmountChange}
+            onApplyInAll={onApplyInAll}
+          />
+        }
+        content={
+          <Box id={contentId} role="region" aria-labelledby={headerId} hidden={!open}>
+            <CustomizableTable
+              tableId={`refund-installments-${mode}-${feeHead.feeHeadId}`}
+              tableTitle={feeHead.feeHeadName}
+              variant="embedded"
+              wrapperProps={{
+                sx: { '& > .MuiCard-root': { border: 0, borderRadius: 0, boxShadow: 'none' } },
+              }}
+              columns={columns}
+              data={rows}
+              page={0}
+              rowsPerPage={Math.max(1, rows.length)}
+              showToolbar={false}
+              isSearch={false}
+              isFilter={false}
+              isPagination={false}
+              isShowedDense={false}
+              rowProps={(row) => ({
+                selected: row.isSelected,
+                sx: {
+                  opacity: row.isDisabled ? 0.45 : 1,
+                  '&.Mui-selected': {
+                    bgcolor: 'action.selected',
+                    '&:hover': { bgcolor: 'action.hover' },
+                  },
+                },
+              })}
+              getRowAction={(row) => ({
+                label: `${row.isSelected ? 'Deselect' : 'Select'} ${row.month}`,
+                disabled: row.isDisabled,
+                onClick: () => onToggleMonth(row.month, row.dueFeeId),
+              })}
+            />
             {selectedMonths.length > 0 && (
-              <>
-                <Divider />
-                <Box
-                  display="flex"
-                  justifyContent="flex-end"
-                  alignItems="center"
-                  gap={1}
-                  px={2}
-                  py={1}
-                  sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}
-                >
-                  <Typography variant="caption" color="text.secondary">
-                    Selected:{' '}
-                    <strong>
-                      {selectedMonths.length} month{selectedMonths.length !== 1 ? 's' : ''}
-                    </strong>
+              <Stack
+                direction="row"
+                spacing={2}
+                useFlexGap
+                flexWrap="wrap"
+                justifyContent="flex-end"
+                sx={{ p: 2 }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Selected: {selectedMonths.length} month{selectedMonths.length !== 1 ? 's' : ''}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {isAdj ? 'Max adjustable' : 'Max refundable'}:{' '}
+                  {formatNumber(totalRefundable, 'INR')}
+                </Typography>
+                {totalRefundInput > 0 && (
+                  <Typography variant="body2">
+                    {isAdj ? 'Adjustment' : 'Refund'}: {formatNumber(totalRefundInput, 'INR')}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {isAdj ? 'Max adjustable' : 'Max refundable'}:{' '}
-                    <strong style={{ color: theme.palette.success.main }}>
-                      {formatNumber(totalRefundable, 'INR')}
-                    </strong>
-                  </Typography>
-                  {totalRefundInput > 0 && (
-                    <Typography
-                      variant="caption"
-                      color="primary.main"
-                      fontWeight={700}
-                      sx={{ fontVariantNumeric: 'tabular-nums' }}
-                    >
-                      {isAdj ? 'Adjustment' : 'Refund'}: {formatNumber(totalRefundInput, 'INR')}
-                    </Typography>
-                  )}
-                </Box>
-              </>
+                )}
+              </Stack>
             )}
           </Box>
-        </Box>
-      </Collapse>
+        }
+      />
     </Box>
   );
 };

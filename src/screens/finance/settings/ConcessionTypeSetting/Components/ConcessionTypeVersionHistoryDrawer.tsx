@@ -149,7 +149,7 @@ export default function ConcessionTypeVersionHistoryDrawer({
               minHeight: 0,
               overflow: 'hidden',
               p: 2,
-              gap: 2,
+              gap: 1,
             }}
           >
             <Box
@@ -168,8 +168,8 @@ export default function ConcessionTypeVersionHistoryDrawer({
               />
             </Box>
             <Scrollbar sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
-              <Stack spacing={2} sx={{ pr: { xs: 0.5, sm: 1 }, pb: 1, minWidth: 0 }}>
-                <VersionDiffTable selectedVersion={selectedVersion} />
+              <Stack spacing={1} sx={{ pr: { xs: 0.5, sm: 1 }, pb: 1, minWidth: 0 }}>
+                <VersionDiffTable selectedVersion={selectedVersion} collapsibleChanges />
                 {selectedVersion.changedFields.length === 0 && (
                   <Alert severity="info">
                     {selectedVersion.action === 'created'

@@ -26,7 +26,6 @@ import {
   Button,
   Typography,
   LinearProgress,
-  IconButton,
 } from '@mui/material';
 import {
   useGetRefundPoliciesQuery,
@@ -639,7 +638,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
                   </Box>
                 </CustomTooltip>
               ),
-              render: (value: string[], row: IData) => {
+              render: (value: string[]) => {
                 const methods = Array.isArray(value)
                   ? value.map(
                       (method) =>
@@ -653,29 +652,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
                     )
                   : [];
                 return (
-                  <Stack direction="row" alignItems="center" spacing={0.5}>
-                    <Typography variant="body2">
-                      {methods.length > 1 ? `${methods.length} methods` : methods[0] || '—'}
-                    </Typography>
-                    {methods.length > 1 && (
-                      <CustomTooltip
-                        arrow
-                        title={
-                          <Typography variant="body2" sx={{ p: 1.5 }}>
-                            {methods.join(', ')}
-                          </Typography>
-                        }
-                      >
-                        <IconButton
-                          size="small"
-                          aria-label={`Payout methods for ${row.policyName}`}
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} />
-                        </IconButton>
-                      </CustomTooltip>
-                    )}
-                  </Stack>
+                  <Typography variant="body2">
+                    {methods.length > 1 ? `${methods.length} methods` : methods[0] || '—'}
+                  </Typography>
                 );
               },
             },

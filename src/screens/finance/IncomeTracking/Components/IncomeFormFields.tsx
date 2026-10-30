@@ -1,3 +1,4 @@
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { Dayjs } from 'dayjs';
 import type { FormikProps } from 'formik';
 
@@ -93,8 +94,7 @@ const IncomeFormFields: React.FC<IncomeFormFieldsProps> = ({
                   name="name"
                   value={formik.values.name}
                   onChange={(e) => {
-                    const value = e.target.value
-                      .replace(/[^a-zA-Z0-9\s]/g, '')
+                    const value = sanitizeFinanceName(e.target.value)
                       .split(' ')
                       .map((word) =>
                         word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
@@ -102,6 +102,7 @@ const IncomeFormFields: React.FC<IncomeFormFieldsProps> = ({
                       .join(' ');
                     formik.setFieldValue('name', value);
                   }}
+                  onBlur={formik.handleBlur}
                   error={!!(formik.touched.name && formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
                 />

@@ -43,8 +43,18 @@ vi.mock('src/redux/feeCollection/feeCollection', () => ({ useGetFeeCollectionLis
 vi.mock('src/redux/customQueryAndMutation', () => ({
   default: () => ({
     data: {
-      totalCount: 4,
+      totalCount: 5,
       items: [
+        {
+          studentId: 'future-installments',
+          studentName: 'Future Installment Student',
+          totalFees: 43000,
+          paidFees: 13224,
+          pendingFees: 29776,
+          overdueFees: 3306,
+          isFeeStructureAssigned: true,
+          status: FeeCollectionStatusType.Overdue,
+        },
         {
           studentId: 'unassigned',
           studentName: 'Sara Hiren Akbari',
@@ -198,6 +208,7 @@ describe('Collections status', () => {
       .findIndex((header) => header.textContent === 'Pending Fees');
     expect(pendingIndex).toBeGreaterThanOrEqual(0);
     [
+      ['Future Installment Student', '₹ 29,776'],
       ['Partly Overdue Student', '₹ 12,000'],
       ['Fully Overdue Student', '₹ 6,000'],
       ['Paid Student', '₹ 0'],

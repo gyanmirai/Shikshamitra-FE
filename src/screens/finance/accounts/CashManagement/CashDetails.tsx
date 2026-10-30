@@ -252,11 +252,13 @@ export default function CashDetails({
                     {
                       id: 'amount',
                       label: 'Paid',
+                      filterType: 'number',
                       render: (value: number) => formatNumber(value, 'INR'),
                     },
                     {
                       id: 'paymentDate',
                       label: 'Payment date',
+                      filterType: 'date',
                       render: (value: string) => fDateTime(value),
                     },
                   ]}

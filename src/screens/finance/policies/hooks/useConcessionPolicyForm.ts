@@ -1,5 +1,6 @@
 'use client';
 
+import { financeNameSchema, sanitizeFinanceName } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -79,7 +80,7 @@ const getInitialValues = (
 // ─── Validation Schema ────────────────────────────────────────────────────────
 
 const validationSchema = Yup.object().shape({
-  policyName: Yup.string()
+  policyName: financeNameSchema('Policy name')
     .trim()
     .required('Policy name is required')
     .min(3, 'Must be at least 3 characters')
@@ -258,7 +259,7 @@ export function useConcessionPolicyForm({
   });
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    formik.setFieldValue('policyName', capitalizeWords(e.target.value));
+    formik.setFieldValue('policyName', capitalizeWords(sanitizeFinanceName(e.target.value)));
   };
 
   // ─── Close Handler ─────────────────────────────────────────────────────────
@@ -310,6 +311,7 @@ export function useConcessionPolicyForm({
     const generalValid =
       !!values.policyName &&
       values.policyName.trim().length >= 3 &&
+      financeNameSchema('Policy name').isValidSync(values.policyName) &&
       !errors.policyName &&
       !errors.status &&
       !errors.description;

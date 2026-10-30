@@ -169,6 +169,22 @@ export default function FeeStructureHeadDialog({
       categoryName: line.categoryName || '',
       isConcessionApplied: false,
     });
+  const headOptions = heads
+    .map((head) => {
+      const categoryName = head.categoryName?.trim() || 'Category unavailable';
+      const duplicateName = settings.heads.some(
+        (other) => other.id !== head.id && other.name === head.name
+      );
+      return {
+        ...head,
+        categoryName,
+        label: duplicateName ? `${head.name} · ${categoryName}` : head.name,
+      };
+    })
+    .sort(
+      (left, right) =>
+        left.categoryName.localeCompare(right.categoryName) || left.name.localeCompare(right.name)
+    );
   const terms = settings.terms.map((term) => ({
     value: term.versionId,
     label: `${term.name} · v${term.versionNumber}${term.isDefault ? ' · Default' : ''}`,
@@ -219,9 +235,11 @@ export default function FeeStructureHeadDialog({
                   required
                   isSearch
                   value={formik.values.feeHeadId}
-                  options={heads}
-                  labelKey="name"
+                  options={headOptions}
+                  labelKey="label"
                   valueKey="id"
+                  groupKey="categoryName"
+                  searchPlaceholder="Search fee category or fee head"
                   disabled={busy || headsLoading || headsError || !settings.permissions.headsRead}
                   isLoading={headsLoading}
                   onChange={(value) => formik.setFieldValue('feeHeadId', String(value ?? ''))}

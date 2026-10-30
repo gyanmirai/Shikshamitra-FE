@@ -3,7 +3,6 @@ import type { LabelColor } from 'src/components/label';
 import React from 'react';
 import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ReceiptStatusColors, ReceiptStatusOptions } from 'src/enums/finance-receipt-status';
 

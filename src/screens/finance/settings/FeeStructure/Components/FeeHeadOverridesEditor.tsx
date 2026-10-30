@@ -1,3 +1,6 @@
+import FinanceFormSkeleton, {
+  FinanceSkeletonRows,
+} from 'src/screens/finance/components/FinanceFormSkeleton';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -22,7 +25,6 @@ import {
   Typography,
   IconButton,
   TableContainer,
-  CircularProgress,
 } from '@mui/material';
 
 // ── types ────────────────────────────────────────────────────────────────────
@@ -254,9 +256,11 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
         }
       >
         <Box sx={{ minWidth: { sm: 560 } }}>
-          {isLoading ? (
-            <Box display="flex" justifyContent="center" py={4}>
-              <CircularProgress size={24} />
+          {isLoading && !isSaving ? (
+            <Box sx={{ p: 2 }}>
+              <FinanceFormSkeleton label="Loading fee head overrides">
+                <FinanceSkeletonRows columns={2} />
+              </FinanceFormSkeleton>
             </Box>
           ) : (
             <>

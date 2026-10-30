@@ -227,17 +227,17 @@ export default function CollectionLedgerTable({
     {
       id: 'period',
       label: 'Due Period',
-      minWidth: 190,
+      minWidth: 150,
       isFilter: false,
-      render: (_value, row) => (
-        <Box>
-          <Typography variant="body2">{row.periodLabel}</Typography>
-          {row.installmentLabel && (
-            <Typography variant="caption" color="text.secondary">
-              {row.installmentLabel}
-            </Typography>
-          )}
-        </Box>
+      render: (_value, row) => <Typography variant="body2">{row.periodLabel}</Typography>,
+    },
+    {
+      id: 'installmentLabel',
+      label: 'Installment',
+      minWidth: 150,
+      isFilter: false,
+      render: (value, row) => (
+        <Typography variant="body2">{row.charge ? '—' : value || '—'}</Typography>
       ),
     },
     {
@@ -275,8 +275,17 @@ export default function CollectionLedgerTable({
   ];
   const detail = rows.find((row) => row.id === detailId);
   const closeDetail = () => setDetailId(null);
-  const waiverApplied = () => {
-    if (detail && isSelected(detail)) toggleRows([detail]);
+  const waiverApplied = (row = detail) => {
+    if (row?.charge && charges.includes(row.charge.chargeId)) {
+      onChargesChange(charges.filter((id) => id !== row.charge!.chargeId));
+    } else if (row && !row.charge && isSelected(row)) {
+      const key = selectionItemKey(asSelection(row));
+      onSelectionChange(
+        selectedItems.map((item) =>
+          selectionItemKey(item) === key ? { ...item, lateFeeAmount: 0 } : item
+        )
+      );
+    }
     closeDetail();
   };
 
@@ -295,7 +304,7 @@ export default function CollectionLedgerTable({
             .filter(collectible)
             .reduce((sum, row) => sum + row.outstanding, 0);
           const expanded = !(collapsedGroups[group.id] ?? (index !== 0 && !selected.length));
-          const groupColumns = columns
+          const groupColumns: IColumn[] = columns
             .filter(
               (column) =>
                 column.id !== 'feeHeadName' ||
@@ -310,6 +319,64 @@ export default function CollectionLedgerTable({
               cellSx: { ...column.cellSx, py: 1.5 },
               headerSx: { py: 1 },
             }));
+          if (group.id === 'additional-charges') {
+            const amountColumn = groupColumns.findIndex((column) => column.id === 'outstanding');
+            const chargeAmountColumns: IColumn[] = [
+              {
+                id: 'total',
+                label: 'Original',
+                render: (_value, row) => formatNumber(row.total, 'INR'),
+              },
+              {
+                id: 'paid',
+                label: 'Collected',
+                render: (_value, row) => formatNumber(row.paid, 'INR'),
+              },
+              {
+                id: 'waived',
+                label: 'Waived',
+                render: (_value, row) => formatNumber(row.charge?.waivedAmount ?? 0, 'INR'),
+              },
+            ];
+            groupColumns.splice(
+              amountColumn,
+              0,
+              ...chargeAmountColumns.map((column) => ({
+                ...column,
+                minWidth: 110,
+                isFilter: false,
+                isSort: false,
+                cellSx: { py: 1.5 },
+              }))
+            );
+            if (allowWaivers)
+              groupColumns.push({
+                id: 'waiver',
+                label: 'Waiver',
+                width: 120,
+                sticky: true,
+                stickyPosition: 'right',
+                isFilter: false,
+                isSort: false,
+                excludeFromExport: true,
+                render: (_value, item) => {
+                  const row = item as LedgerRow;
+                  return row.charge &&
+                    row.charge.canWaive !== false &&
+                    collectible(row) &&
+                    row.due > 0 ? (
+                    <FeeWaiverToggle
+                      sourceType={row.charge.sourceType}
+                      sourceId={row.charge.sourceId || row.charge.chargeId}
+                      sourceName={row.feeHeadName}
+                      remainingAmount={row.due}
+                      canWaive={row.charge.canWaive}
+                      onApplied={() => waiverApplied(row)}
+                    />
+                  ) : null;
+                },
+              });
+          }
           return (
             <Accordion
               key={group.id}
@@ -553,24 +620,30 @@ export default function CollectionLedgerTable({
                 </DetailGrid>
               </DetailSection>
               {allowWaivers &&
-                (detail.charge ? (
-                  <FeeWaiverToggle
-                    sourceType={detail.charge.sourceType}
-                    sourceId={detail.charge.chargeId}
-                    remainingAmount={detail.due}
-                    onApplied={waiverApplied}
-                  />
-                ) : (
-                  detail.dueFeeId &&
-                  (detail.lateFeeAmount ?? 0) > 0 && (
-                    <FeeWaiverToggle
-                      sourceType="LateFee"
-                      sourceId={detail.dueFeeId}
-                      remainingAmount={detail.lateFeeAmount!}
-                      onApplied={waiverApplied}
-                    />
-                  )
-                ))}
+                (detail.charge
+                  ? detail.charge.canWaive !== false &&
+                    detail.due > 0 &&
+                    collectible(detail) && (
+                      <FeeWaiverToggle
+                        sourceType={detail.charge.sourceType}
+                        sourceId={detail.charge.sourceId || detail.charge.chargeId}
+                        sourceName={detail.feeHeadName}
+                        canWaive={detail.charge.canWaive}
+                        remainingAmount={detail.due}
+                        onApplied={() => waiverApplied()}
+                      />
+                    )
+                  : detail.dueFeeId &&
+                    detail.canWaive !== false &&
+                    (detail.lateFeeAmount ?? 0) > 0 && (
+                      <FeeWaiverToggle
+                        sourceType="LateFee"
+                        sourceId={detail.dueFeeId}
+                        sourceName={`${detail.feeHeadName}, ${detail.periodLabel}`}
+                        remainingAmount={detail.lateFeeAmount!}
+                        onApplied={() => waiverApplied()}
+                      />
+                    ))}
             </Stack>
           </DialogScrollContent>
         )}

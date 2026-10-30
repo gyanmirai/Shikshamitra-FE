@@ -12,6 +12,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomAccordion from 'src/components/custom-accordian';
 import { Box, Stack, Divider, Typography } from '@mui/material';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailField } from 'src/components/detail-view';
 
 import ConcessionImpactSummary from './ConcessionImpactSummary';
 import { concessionInstallmentLabel } from './concessionInstallmentLabel';
@@ -30,6 +31,7 @@ type Props = {
   loading?: boolean;
   feeSelectionMessage?: ReactNode;
   valueFields?: ReactNode;
+  renderFeeValueFields?: (feeHeadId: string) => ReactNode;
   documents?: ReactNode;
   missingDocumentNames?: string[];
 };
@@ -44,12 +46,14 @@ export default function ConcessionRequestWorkspace({
   loading = false,
   feeSelectionMessage,
   valueFields,
+  renderFeeValueFields,
   documents,
   missingDocumentNames = [],
 }: Props) {
   const detailsId = useId();
   const [inspectedId, setInspectedId] = useState('');
   const [detailsOpen, setDetailsOpen] = useState(true);
+  const [openFeeIds, setOpenFeeIds] = useState(selectedIds);
   const activeHead =
     feeHeads.find((head) => head.feeHeadId === inspectedId) ??
     feeHeads.find((head) => selectedIds.includes(head.feeHeadId)) ??
@@ -61,46 +65,56 @@ export default function ConcessionRequestWorkspace({
     const result = included
       ? preview?.feeHeadConcessions.find((item) => item.feeHeadId === head.feeHeadId)
       : undefined;
-    const expanded = activeHead?.feeHeadId === head.feeHeadId && detailsOpen;
+    const expanded = renderFeeValueFields
+      ? openFeeIds.includes(head.feeHeadId)
+      : activeHead?.feeHeadId === head.feeHeadId && detailsOpen;
 
     return (
       <CustomAccordion
         title="Fee Breakdown"
         expanded={expanded}
         onChange={() => {
+          if (renderFeeValueFields) {
+            setOpenFeeIds((ids) =>
+              expanded ? ids.filter((id) => id !== head.feeHeadId) : [...ids, head.feeHeadId]
+            );
+            return;
+          }
           setInspectedId(head.feeHeadId);
           setDetailsOpen(!expanded);
         }}
         content={
           <Stack id={headDetailsId} component="section" aria-label="Fee details" spacing={0.75}>
-            {lines.length > 0 && (
-              <Stack
-                component="ul"
-                aria-label={`${head.feeHeadName} installments`}
-                spacing={0.5}
-                sx={{ m: 0, p: 0, listStyle: 'none' }}
-              >
-                {lines.map((line) => (
+            {included && renderFeeValueFields
+              ? renderFeeValueFields(head.feeHeadId)
+              : lines.length > 0 && (
                   <Stack
-                    component="li"
-                    direction="row"
-                    justifyContent="space-between"
-                    gap={1}
-                    key={line.dueFeeId}
+                    component="ul"
+                    aria-label={`${head.feeHeadName} installments`}
+                    spacing={0.5}
+                    sx={{ m: 0, p: 0, listStyle: 'none' }}
                   >
-                    <Typography variant="body2">
-                      {concessionInstallmentLabel(line.installmentLabel, line.year)}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
-                    >
-                      {formatNumber(line.eligibleConcessionAmount, 'INR')}
-                    </Typography>
+                    {lines.map((line) => (
+                      <Stack
+                        component="li"
+                        direction="row"
+                        justifyContent="space-between"
+                        gap={1}
+                        key={line.dueFeeId}
+                      >
+                        <Typography variant="body2">
+                          {concessionInstallmentLabel(line.installmentLabel, line.year)}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+                        >
+                          {formatNumber(line.eligibleConcessionAmount, 'INR')}
+                        </Typography>
+                      </Stack>
+                    ))}
                   </Stack>
-                ))}
-              </Stack>
-            )}
+                )}
             <Divider />
             <Box
               aria-busy={loading}
@@ -130,21 +144,7 @@ export default function ConcessionRequestWorkspace({
                   value: result ? `−${formatNumber(result.discountAmount, 'INR')}` : '—',
                 },
               ].map((item) => (
-                <Box key={item.label} sx={{ minWidth: 0 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    {item.label}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: 600,
-                      overflowWrap: 'anywhere',
-                      fontVariantNumeric: 'tabular-nums',
-                    }}
-                  >
-                    {item.value}
-                  </Typography>
-                </Box>
+                <DetailField key={item.label} label={item.label} value={item.value} />
               ))}
             </Box>
             {!included && (
@@ -183,7 +183,7 @@ export default function ConcessionRequestWorkspace({
             {selectedIds.length} selected fee{selectedIds.length === 1 ? '' : 's'}
           </Label>
         }
-        sx={{ p: 1.25, minWidth: 0, containerType: 'inline-size', bgcolor: 'background.paper' }}
+        sx={{ p: 1.5, minWidth: 0, containerType: 'inline-size', bgcolor: 'background.paper' }}
       >
         {policyFields}
         <Box>
@@ -209,13 +209,16 @@ export default function ConcessionRequestWorkspace({
               activeId={activeHead?.feeHeadId}
               detailsId={detailsId}
               detailsExpanded={detailsOpen}
+              expandedIds={renderFeeValueFields ? openFeeIds : undefined}
               renderDetails={renderFeeDetails}
               onInspect={(id) => {
                 setInspectedId(id);
                 setDetailsOpen(true);
+                setOpenFeeIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
               }}
               onToggle={(id) => {
                 setInspectedId(id);
+                setOpenFeeIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
                 onToggle(id);
               }}
             />

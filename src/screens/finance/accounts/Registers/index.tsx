@@ -285,7 +285,7 @@ function RegisterContent({
             startIcon={<Iconify icon={GlobalIcons.addIcon} />}
             onClick={add.onTrue}
           >
-            {income ? 'Add Income' : 'Add Expense'}
+            {income ? 'Income' : 'Expense'}
           </Button>
         )
       )}
@@ -382,7 +382,7 @@ function RegisterContent({
                 onClick={add.onTrue}
                 sx={{ px: 4 }}
               >
-                {income ? 'Add Income' : 'Add Expense'}
+                {income ? 'Income' : 'Expense'}
               </Button>
             </Box>
           )}

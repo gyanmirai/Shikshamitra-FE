@@ -10,6 +10,7 @@ export default defineConfig({
   cacheDir: `${repo}/tmp/account-settings-qa-vite`,
   resolve: {
     alias: [
+      { find: 'next/navigation', replacement: `${here}/mock-navigation.tsx` },
       { find: /^@mui\/icons-material$/, replacement: `${here}/icon-barrel.ts` },
       { find: /^src\/routes\/(components|hooks)$/, replacement: `${here}/mock-navigation.tsx` },
       { find: /^src\/redux\/customQueryAndMutation$/, replacement: `${here}/mock-query.ts` },

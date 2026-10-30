@@ -72,7 +72,6 @@ export default function FeeStructureEditForm({
           display: 'flex',
           alignItems: 'center',
           gap: 1,
-          px: { xs: 1, sm: 2 },
           borderBottom: 1,
           borderColor: 'divider',
           flexShrink: 0,
@@ -82,31 +81,43 @@ export default function FeeStructureEditForm({
           value={selectedClassId || false}
           onChange={(_, value) => handleClassClick(String(value))}
           guardUnsavedChanges={false}
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
+          variant="standard"
+          scrollButtons={false}
           aria-label="Classes"
           sx={{
             flex: 1,
             minWidth: 0,
             [`& .${tabsClasses.indicator}`]: {
-              height: 2,
-              py: 0,
-              bgcolor: 'text.primary',
-              '& > span': { display: 'none' },
+              display: 'none',
             },
           }}
           slotProps={{
             tab: {
-              px: 1.5,
-              py: 0.5,
-              minWidth: 56,
+              px: 2,
+              py: 1,
+              minWidth: 64,
               minHeight: 44,
-              typography: 'body1',
+              borderRadius: 3,
+              border: 1,
+              borderColor: 'divider',
+              typography: 'body2',
               color: 'text.primary',
+              fontWeight: 500,
+              '&:hover': { bgcolor: 'action.hover' },
+              '&.Mui-focusVisible': {
+                outline: '2px solid',
+                outlineColor: 'text.secondary',
+                outlineOffset: -2,
+              },
             },
-            selected: { fontWeight: 'fontWeightBold' },
-            scroller: { p: 0 },
+            selected: {
+              bgcolor: 'action.selected',
+              borderColor: 'divider',
+              color: 'text.primary',
+              fontWeight: 500,
+              '&:hover': { bgcolor: 'action.selected', color: 'text.primary' },
+            },
+            flexContainer: { flexWrap: 'wrap', gap: 1 },
           }}
         >
           {classes.map((item) => (

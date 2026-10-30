@@ -1,5 +1,6 @@
 'use client';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { FormikProps } from 'formik';
 
 import { getIn } from 'formik';
@@ -123,8 +124,8 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
       >
         <Box
           sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1.5fr)' },
+            display: 'flex',
+            flexWrap: 'wrap',
             gap: 2,
             alignItems: 'start',
           }}
@@ -301,7 +302,12 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
                         label="Installment Name *"
                         name={`${prefix}.installmentName`}
                         value={inst.installmentName}
-                        onChange={formik.handleChange}
+                        onChange={(event) =>
+                          formik.setFieldValue(
+                            event.target.name,
+                            sanitizeFinanceName(event.target.value)
+                          )
+                        }
                         onBlur={formik.handleBlur}
                         error={Boolean(errObj?.installmentName)}
                         helperText={errObj?.installmentName}

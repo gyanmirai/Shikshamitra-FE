@@ -1,8 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
-import { useDebounceEffect } from 'src/hooks/use-debounce';
-import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   useGetFinanceAuditEventsQuery,
   useLazyGetFinanceAuditStudentLookupQuery,
@@ -94,24 +93,13 @@ export function useFinanceAuditTrail(initialFilters?: Partial<AuditFilterValues>
   >({});
 
   const [lookupStudents] = useLazyGetFinanceAuditStudentLookupQuery();
-  const previousSearchRef = useRef<string>('');
+  // Keep the visible filters immediate; debounce only the keyword sent to the query.
+  // Search changes (including Reset and chip clear) cancel the pending keyword.
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(filters.search), KEYWORD_DEBOUNCE_MS);
 
-  // Debounce only search input - other filters trigger API immediately
-  useDebounceEffect(
-    () => {
-      const trimmed = filters.search.trim();
-
-      // Skip if search value hasn't changed
-      if (trimmed === previousSearchRef.current) return;
-      previousSearchRef.current = trimmed;
-
-      setDebouncedSearch(filters.search);
-    },
-
-    KEYWORD_DEBOUNCE_MS,
-
-    [filters.search]
-  );
+    return () => clearTimeout(timeout);
+  }, [filters.search]);
 
   const queryArgs = useMemo(
     () => buildQueryParams(filters, debouncedSearch, currentYear?.id, skipCount),
@@ -231,6 +219,8 @@ export function useFinanceAuditTrail(initialFilters?: Partial<AuditFilterValues>
 
   const handleFilterChange = useCallback(
     <K extends keyof AuditFilterValues>(key: K, value: AuditFilterValues[K]) => {
+      if (key === 'search' && value === '') setDebouncedSearch('');
+
       setFilters((prev) => {
         const next = { ...prev, [key]: value };
 

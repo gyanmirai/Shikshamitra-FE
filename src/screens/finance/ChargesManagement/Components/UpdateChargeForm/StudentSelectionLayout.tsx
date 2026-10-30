@@ -114,13 +114,17 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
   const currentPage = Math.min(page, Math.max(0, Math.ceil(filteredStudents.length / 25) - 1));
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', width: 1, minWidth: 0 }}>
       {/* Search Header */}
       <Paper
         variant="outlined"
         sx={{
           p: 1.5,
           borderRadius: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minWidth: 0,
         }}
       >
         <Stack spacing={1.5}>

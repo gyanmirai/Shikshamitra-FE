@@ -1,3 +1,4 @@
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium, Organization } from 'src/types/school';
 
@@ -515,7 +516,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     label="Receipt Book Name *"
                     value={formik.values[field]}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^a-zA-Z0-9-\s]/g, '');
+                      const value = sanitizeFinanceName(e.target.value);
                       formik.setFieldValue(field, value);
                     }}
                     error={error}

@@ -1,3 +1,4 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import { getAllocationSummary, ALLOCATION_TOTAL_ERROR } from '../allocationValidation';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -11,7 +12,7 @@ import { getInvoiceDateError, getInvoiceOffsetLimit } from '../invoiceScheduleVa
 // ---------------------------------------------------------------------------
 const installmentSchema = Yup.object().shape({
   sequence: Yup.number().min(0, 'Sequence must be non-negative').required('Sequence is required'),
-  installmentName: Yup.string()
+  installmentName: financeNameSchema('Installment Name')
     .trim()
     .min(1, 'Installment name is required')
     .required('Installment name is required'),
@@ -50,7 +51,7 @@ export const paymentTermValidationSchema = (
   Yup.object().shape({
     boardId: Yup.string().required('Board is required'),
 
-    paymentTermName: Yup.string()
+    paymentTermName: financeNameSchema('Payment term name')
       .trim()
       .min(3, 'Name must be at least 3 characters')
       .max(100, 'Name must be at most 100 characters')

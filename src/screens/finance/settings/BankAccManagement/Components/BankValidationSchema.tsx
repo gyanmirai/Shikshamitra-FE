@@ -1,3 +1,4 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
@@ -28,19 +29,19 @@ const effectiveDate = (label: string) =>
     });
 
 export const bankAccountValidationSchema = Yup.object().shape({
-  bankName: Yup.string()
+  bankName: financeNameSchema('Bank Name')
     .trim()
     .max(100, 'Bank Name must be at most 100 characters')
     .required('Bank Name is required'),
 
-  branchName: Yup.string()
+  branchName: financeNameSchema('Branch Name')
     .trim()
     .max(100, 'Branch Name must be at most 100 characters')
     .required('Branch Name is required'),
 
   branchAddress: Yup.string().trim().nullable(),
 
-  accountHolderName: Yup.string()
+  accountHolderName: financeNameSchema('Account Holder Name')
     .trim()
     .max(100, 'Account Holder Name must be at most 100 characters')
     .required('Account Holder Name is required'),

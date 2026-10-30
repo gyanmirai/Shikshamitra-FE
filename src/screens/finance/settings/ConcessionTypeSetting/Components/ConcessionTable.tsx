@@ -1,19 +1,20 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { LoadingButton } from '@mui/lab';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
-
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Box, Stack, Button, TextField, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { usePatchConcessionTypeStatusMutation } from 'src/redux/finance/concessionType';
-import { Box, Chip, Stack, Button, TextField, Typography } from '@mui/material';
 
 import type { IConcessionTypeForm, IConcessionTableProps } from '../type';
 
@@ -25,7 +26,7 @@ function TruncatedText({ value, width = 240 }: { value: unknown; width?: number 
         variant="body2"
         noWrap
         tabIndex={text === '-' ? undefined : 0}
-        sx={{ maxWidth: width }}
+        sx={{ maxWidth: width, minWidth: 0 }}
       >
         {text}
       </Typography>
@@ -86,11 +87,14 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
       {
         id: 'name',
         isFilter: true,
-        label: 'Concession Type Name',
+        label: 'Name',
         filterType: 'string' as const,
         align: 'left',
-        width: 190,
-        minWidth: 180,
+        width: 180,
+        minWidth: 160,
+        maxWidth: 220,
+        rowHeader: true,
+        render: (value) => <TruncatedText value={value} width={188} />,
         sticky: true,
         stickyPosition: 'left',
       },
@@ -100,10 +104,11 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         label: 'Description',
         filterType: 'string' as const,
         align: 'left',
-        width: 240,
-        minWidth: 180,
+        width: 180,
+        minWidth: 150,
+        maxWidth: 240,
         cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-        render: (value) => <TruncatedText value={value} />,
+        render: (value) => <TruncatedText value={value} width={208} />,
       },
       {
         id: 'documents',
@@ -111,13 +116,14 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         label: 'Documents',
         filterType: 'string' as const,
         align: 'left',
-        width: 200,
-        minWidth: 160,
+        width: 180,
+        minWidth: 150,
+        maxWidth: 220,
         cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
         render: (value) => (
           <TruncatedText
             value={Array.isArray(value) ? value.map((doc: any) => doc.documentName).join(', ') : ''}
-            width={200}
+            width={188}
           />
         ),
         exportValue: (value) =>
@@ -130,7 +136,8 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         filterType: 'string' as const,
         align: 'left',
         width: 200,
-        minWidth: 170,
+        minWidth: 180,
+        maxWidth: 220,
         render: (value) => <TruncatedText value={value} width={200} />,
       },
       {
@@ -143,38 +150,40 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         ],
         label: 'Status',
         width: 110,
-        minWidth: 100,
-        align: 'left',
+        minWidth: 110,
+        maxWidth: 110,
+        align: 'center',
+        headerAlign: 'center',
         sticky: true,
         stickyPosition: 'right',
         render(value, row) {
           const concession = row as IConcessionTypeForm;
           return (
-            <Chip
-              size="small"
-              label={concession.isActive ? 'Active' : 'Archived'}
-              color={concession.isActive ? 'success' : 'default'}
-              variant="soft"
-            />
+            <Label color={concession.isActive ? 'success' : 'default'}>
+              {concession.isActive ? 'Active' : 'Archived'}
+            </Label>
           );
         },
       },
       {
         id: 'actions',
         label: 'Actions',
-        align: 'left',
+        align: 'center',
+        headerAlign: 'center',
         isSort: false,
         isFilter: false,
         sticky: true,
-        width: 128,
-        minWidth: 128,
+        width: 120,
+        minWidth: 120,
+        maxWidth: 120,
         stickyPosition: 'right',
         excludeFromExport: true,
         render: (value, row) => {
           const concessionType = row as IConcessionTypeForm;
           return (
             <AdaptiveThreeDotsActions
-              directActionLimit={3}
+              directActionLimit={2}
+              sx={{ justifyContent: 'center', flexWrap: 'nowrap' }}
               moreLabel={`More actions for ${concessionType.name}`}
               actions={[
                 ...(canEdit && concessionType.isActive
@@ -182,7 +191,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
                       {
                         id: 'edit',
                         label: `Edit ${concessionType.name}`,
-                        icon: 'solar:pen-bold',
+                        icon: GlobalIcons.edit,
                         onClick: () => onEdit?.(concessionType),
                       },
                     ]
@@ -192,7 +201,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
                       {
                         id: 'delete',
                         label: `Delete ${concessionType.name}`,
-                        icon: 'solar:trash-bin-trash-bold',
+                        icon: GlobalIcons.delete,
                         color: 'error.main',
                         disabled: !canDeleteConcessionType(concessionType),
                         tooltip:

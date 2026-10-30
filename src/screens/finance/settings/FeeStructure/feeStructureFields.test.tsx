@@ -45,6 +45,11 @@ vi.mock('src/components/iconify/iconify', () => ({ Iconify: () => <svg aria-hidd
 vi.mock('src/components/customizabaleTable', () => ({
   default: ({ data, columns }: any) => (
     <div>
+      {columns.map((column: any) => (
+        <div role="columnheader" key={column.id}>
+          {column.label}
+        </div>
+      ))}
       {data.map((row: any) => (
         <div key={row._id}>
           {columns.map((column: any) => (
@@ -143,6 +148,31 @@ async function chooseCollection(name: string) {
   fireEvent.click(screen.getByRole('button', { name: /^(Select|Change) Collection Policy$/ }));
   fireEvent.click(await screen.findByRole('button', { name: `Select ${name} version 1` }));
 }
+
+it('groups fee heads by non-selectable categories and searches both category and head names', async () => {
+  state.lookups.settings.heads = [
+    { id: 'sports', name: 'Sports', categoryName: 'Activities' },
+    { id: 'bus-tuition', name: 'Tuition', categoryName: 'Transport' },
+    { id: 'tuition', name: 'Tuition', categoryName: 'Academic' },
+    { id: 'lab', name: 'Laboratory', categoryName: 'Academic' },
+  ];
+  render(ui());
+  fireEvent.click(screen.getByRole('button', { name: 'Fee Head' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: /Fee head/ }));
+  const list = await screen.findByRole('listbox');
+  expect(within(list).getByText('Academic')).toBeVisible();
+  expect(within(list).queryByRole('option', { name: 'Academic' })).toBeNull();
+  expect(within(list).getByRole('option', { name: 'Tuition · Academic' })).toBeVisible();
+  expect(within(list).getByRole('option', { name: 'Tuition · Transport' })).toBeVisible();
+  const search = within(list).getByRole('textbox', { name: 'Search Fee head' });
+  fireEvent.change(search, { target: { value: 'academic' } });
+  expect(within(list).getAllByRole('option')).toHaveLength(2);
+  expect(within(list).queryByText('Sports')).toBeNull();
+  fireEvent.change(search, { target: { value: 'laboratory' } });
+  expect(within(list).getAllByRole('option')).toHaveLength(1);
+  fireEvent.click(within(list).getByRole('option', { name: 'Laboratory' }));
+  expect(screen.getByRole('combobox', { name: /Fee head/ })).toHaveTextContent('Laboratory');
+});
 
 it('requires a payment frequency for every head and has no admission collection option', async () => {
   state.lookups.settings.terms = [];
@@ -576,14 +606,21 @@ it('replaces an empty resolved collection-policy step and recovers without losin
   expect(screen.getByRole('heading', { name: 'Set up a collection policy first' })).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Select Collection Policy' })).toBeNull();
   expect(state.mutate).not.toHaveBeenCalled();
-  state.lookups.settings.policies = [{
-    family: 'collection', id: 'collection', name: 'Standard collection',
-    versionId: 'collection-v1', versionNumber: 1,
-  }];
+  state.lookups.settings.policies = [
+    {
+      family: 'collection',
+      id: 'collection',
+      name: 'Standard collection',
+      versionId: 'collection-v1',
+      versionNumber: 1,
+    },
+  ];
   view.rerender(ui());
   expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-  expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue('Preserved draft name');
+  expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue(
+    'Preserved draft name'
+  );
 });
 
 it('opens saved drafts with direct fee-head actions and keeps them available after saving and discarding', async () => {
@@ -593,6 +630,7 @@ it('opens saved drafts with direct fee-head actions and keeps them available aft
   expect(screen.queryByRole('button', { name: 'Edit Draft' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Edit Tuition' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Delete Tuition' })).toBeTruthy();
+  expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Edit Tuition' })).toBeTruthy());
   fireEvent.change(screen.getByRole('textbox', { name: 'Structure name' }), {
@@ -636,6 +674,7 @@ it.each(['published', 'view-only', 'no-edit-permission'])(
     expect(screen.queryByRole('button', { name: 'Edit Draft' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Edit Tuition' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Delete Tuition' })).toBeNull();
+    expect(screen.queryByRole('columnheader', { name: 'Actions' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Fee Head' })).toBeNull();
   }
 );

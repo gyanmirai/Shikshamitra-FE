@@ -53,6 +53,8 @@ const mocks = vi.hoisted(() => ({
   currentYear: { id: 'year-2026', year: 2026, name: '2026-2027' } as any,
   collectMutation: vi.fn(),
   downloadMutation: vi.fn(),
+  previewItems: [] as any[],
+  finalReviewItems: [] as any[],
 }));
 
 vi.mock('react-redux', () => ({
@@ -256,20 +258,24 @@ vi.mock('./FeeLedgerFilterBar', () => ({
   ),
 }));
 vi.mock('./preview/FeeCollectionPreviewDialog', () => ({
-  default: ({ open, onConfirm }: any) =>
-    open ? (
+  default: ({ open, onConfirm, formValues }: any) => {
+    mocks.previewItems = formValues.selectedItems;
+    return open ? (
       <button type="button" onClick={onConfirm}>
         Review payment
       </button>
-    ) : null,
+    ) : null;
+  },
 }));
 vi.mock('./preview/FinalPaymentReviewDialog', () => ({
-  default: ({ open, onConfirmCollect }: any) =>
-    open ? (
+  default: ({ open, onConfirmCollect, formValues }: any) => {
+    mocks.finalReviewItems = formValues.selectedItems;
+    return open ? (
       <button type="button" onClick={onConfirmCollect}>
         Confirm collection
       </button>
-    ) : null,
+    ) : null;
+  },
 }));
 
 const student = { id: 'diya', name: 'Diya Sweta Badgujar', pendingFees: 21996 } as any;
@@ -553,6 +559,20 @@ describe('Fee Collection automatic ledger selection', () => {
     mocks.data.summary = { totalFee: 6000, paidFee: 0, pendingFee: 6000 };
     mocks.data.allocationRevision = 'ledger-selection-revision';
   });
+
+  it('reviews only the funded installments in both dialogs without narrowing the collection candidates', async () => {
+    mocks.data.allocationBasis = 'Installment';
+    mocks.data.allocationDueFeeOrder = ['due-0', 'transport-june', 'tuition-july'];
+    render(<FeeCollectComponentForm student={student} />);
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/Amount to collect/), { target: { value: '2500' } });
+    });
+    expect(mocks.previewItems.map((item) => item.dueFeeId)).toEqual(['due-0', 'transport-june']);
+    expect(mocks.finalReviewItems.map((item) => item.dueFeeId)).toEqual([
+      'due-0',
+      'transport-june',
+    ]);
+  }, 60_000);
 
   it.each([
     {

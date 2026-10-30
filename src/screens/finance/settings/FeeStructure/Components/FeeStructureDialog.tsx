@@ -1,3 +1,4 @@
+import { financeNameSchema, sanitizeFinanceName } from 'src/utils/finance-name';
 import type { FormikProps } from 'formik';
 
 import { GlobalIcons } from 'src/utils/icons';
@@ -38,6 +39,11 @@ const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose, ed
       return;
     }
 
+    if (!financeNameSchema('Fee Structure Name').isValidSync(feeStructureName)) {
+      setError('Fee Structure Name can only contain letters, numbers, and spaces');
+      return;
+    }
+
     const updated = [...(formik.values.feeStructureClasses[className] ?? [])];
 
     if (editIndex !== null && editIndex !== undefined) {
@@ -72,7 +78,7 @@ const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose, ed
             label="Fee Structure Name *"
             value={feeStructureName}
             onChange={(e) => {
-              setFeeStructureName(e.target.value);
+              setFeeStructureName(sanitizeFinanceName(e.target.value));
               if (error) setError('');
             }}
             error={!!error}

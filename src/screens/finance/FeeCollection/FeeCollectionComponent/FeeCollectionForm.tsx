@@ -1,5 +1,6 @@
 'use client';
 
+import { isFinancePaymentNameField, sanitizeFinanceName } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 import type {
   ChargeDetail,
@@ -64,6 +65,7 @@ import {
 import { toPeriod } from './FeeLedgerShared';
 import { normalizeLedgerStatus } from './feeLedgerStatus';
 import UnifiedReceiptDisplay from './UnifiedReceiptDisplay';
+import { collectionReceiptAmounts } from './collectionReceiptAmounts';
 import CollectionLedgerTable from './CollectionLedgerTable';
 import SelectedCollectionItems from './SelectedCollectionItems';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
@@ -375,6 +377,7 @@ const FeeCollectComponentForm = ({
   });
 
   // Build receipt data from CollectFeeOutput response
+  const receiptAmounts = lastCollectResponse ? collectionReceiptAmounts(lastCollectResponse) : null;
   const feeReceiptData =
     lastCollectResponse && receiptPreviewState.feeReceipt
       ? {
@@ -383,22 +386,9 @@ const FeeCollectComponentForm = ({
           studentId: lastCollectResponse.studentId ?? '',
           studentName: resolvedStudentName,
           academicYearId: lastCollectResponse.academicYearId,
-          totalAmount:
-            lastCollectResponse.receiptGrouping === 'Combined' &&
-            !!lastCollectResponse.paidCharges?.length
-              ? lastCollectResponse.receivedAmount
-              : lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0) +
-                (lastCollectResponse.paidLateFees ?? []).reduce(
-                  (sum, line) => sum + line.amountPaid,
-                  0
-                ),
-          lateFeeAmount: (lastCollectResponse.paidLateFees ?? []).reduce(
-            (sum, line) => sum + line.amountPaid,
-            0
-          ),
-          combined:
-            lastCollectResponse.receiptGrouping === 'Combined' &&
-            !!lastCollectResponse.paidCharges?.length,
+          totalAmount: receiptAmounts!.feeTotal,
+          lateFeeAmount: receiptAmounts!.feeLateFee,
+          combined: receiptAmounts!.combined,
           paidCharges:
             lastCollectResponse.receiptGrouping === 'Combined'
               ? lastCollectResponse.paidCharges
@@ -418,10 +408,7 @@ const FeeCollectComponentForm = ({
           studentId: lastCollectResponse.studentId ?? '',
           studentName: resolvedStudentName,
           academicYearId: lastCollectResponse.academicYearId,
-          totalAmount: (lastCollectResponse.paidCharges ?? []).reduce(
-            (sum, c) => sum + c.amountPaid,
-            0
-          ),
+          totalAmount: receiptAmounts!.chargeTotal,
           collectedAt: lastCollectResponse.collectedAt,
           collectedBy: lastCollectResponse.collectedBy,
           paidCharges: lastCollectResponse.paidCharges ?? [],
@@ -918,7 +905,6 @@ const FeeCollectComponentForm = ({
       (sum, charge) => sum + charge.amount,
       0
     );
-  const allocationFormValues = { ...formik.values, selectedItems: orderedSelectedItems };
   const showLiveAllocation =
     usesAutomaticAllocation &&
     Number(formik.values.payment.amount) > 0 &&
@@ -1235,7 +1221,7 @@ const FeeCollectComponentForm = ({
       const collectResponse = await submitCollection(prepareCollectionCommand(false));
 
       shikshaMitraToast.success({
-        message: collectResponse.auditSummary?.headline || 'Payment saved as pending verification',
+        message: `${formatNumber(collectResponse.receivedAmount, 'INR')} payment saved as pending verification. Finance approval in Reconciliation will confirm the payment and issue an official receipt.`,
       });
       setFinalReviewOpen(false);
       submissionRef.current = null;
@@ -1457,6 +1443,12 @@ const FeeCollectComponentForm = ({
         (item) => (feeAllocationById.get(item.dueFeeId)?.paidAmount ?? 0) > 0
       )
     : formik.values.selectedItems;
+  // Reviews mirror the funded automatic highlights, while the command retains
+  // every policy candidate and its revision for server-side validation.
+  const allocationFormValues = {
+    ...formik.values,
+    selectedItems: isAmountOnly ? ledgerSelectedItems : orderedSelectedItems,
+  };
   const handleLedgerSelectionChange = (items: SelectedItem[]) => {
     handleSelectionChange(items);
     // Removing the last automatic highlight must not immediately allocate it again.
@@ -2308,7 +2300,9 @@ const FeeCollectComponentForm = ({
                                         let newValue = e.target.value;
 
                                         // Handle text-only fields (letters and spaces only)
-                                        if (field.type === 'text') {
+                                        if (isFinancePaymentNameField(field.name)) {
+                                          newValue = sanitizeFinanceName(newValue);
+                                        } else if (field.type === 'text') {
                                           newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
                                         }
 
@@ -2574,6 +2568,7 @@ const FeeCollectComponentForm = ({
                   variant="outlined"
                   startIcon={<Iconify icon="mdi:download" />}
                   onClick={() => handleDownloadReceipt(receipt, blobUrl)}
+                  sx={{ p: 1 }}
                 >
                   {feeReceiptData && chargeReceiptData ? `Download ${scope}` : 'Download'}
                 </Button>
@@ -2585,6 +2580,7 @@ const FeeCollectComponentForm = ({
             size="small"
             onClick={handleReceiptDialogClose}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
+            sx={{ p: 1 }}
           >
             Done
           </Button>

@@ -1,3 +1,4 @@
+import { FinanceFieldSkeleton } from 'src/screens/finance/components/FinanceFormSkeleton';
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium, Division } from 'src/types/school';
 
@@ -186,44 +187,50 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
           {/* Student */}
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.student && formik.errors.student) || false}>
-              <Autocomplete
-                loading={isLoading}
-                noOptionsText="No Student Found"
-                fullWidth
-                value={formik.values.student || null}
-                onChange={(e, value: any) => {
-                  formik.setFieldValue('student', value || null);
-                }}
-                renderTags={(tagValue, getTagProps) =>
-                  tagValue.map((option, index) => (
-                    <Chip
-                      label={option.name}
-                      variant="soft"
+              <FinanceFieldSkeleton
+                loading={isLoading && !formik.isSubmitting}
+                label="Loading students"
+              >
+                <Autocomplete
+                  loading={isLoading}
+                  noOptionsText="No Student Found"
+                  fullWidth
+                  value={formik.values.student || null}
+                  onChange={(e, value: any) => {
+                    formik.setFieldValue('student', value || null);
+                  }}
+                  renderTags={(tagValue, getTagProps) =>
+                    tagValue.map((option, index) => (
+                      <Chip
+                        key={index}
+                        label={option.name}
+                        variant="soft"
+                        size="small"
+                        {...getTagProps({ index })}
+                      />
+                    ))
+                  }
+                  options={tableData}
+                  getOptionLabel={(option: any) => option?.name || ''}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
                       size="small"
-                      {...getTagProps({ index })}
+                      label="Student *"
+                      fullWidth
+                      error={!!(formik.touched.student && formik.errors.student)}
+                      helperText={
+                        ((formik.touched.student && formik.errors.student) as string) || undefined
+                      }
                     />
-                  ))
-                }
-                options={tableData}
-                getOptionLabel={(option: any) => option?.name || ''}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Student *"
-                    fullWidth
-                    error={!!(formik.touched.student && formik.errors.student)}
-                    helperText={
-                      ((formik.touched.student && formik.errors.student) as string) || undefined
-                    }
-                  />
-                )}
-                renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.name}
-                  </li>
-                )}
-              />
+                  )}
+                  renderOption={(prop: any, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.name}
+                    </li>
+                  )}
+                />
+              </FinanceFieldSkeleton>
             </ShakingTextField>
           </Grid>
 

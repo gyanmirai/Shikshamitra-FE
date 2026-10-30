@@ -8,6 +8,7 @@ import { useGetStudentsByScopeQuery } from 'src/redux/student';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { FinanceFieldSkeleton } from 'src/screens/finance/components/FinanceFormSkeleton';
 
 import type { RefundFormik } from './types';
 
@@ -47,6 +48,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
     },
     {
       skip:
+        disabled ||
         !currentYear?.id ||
         !values.boardId ||
         !values.mediumId ||
@@ -69,6 +71,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
   useEffect(() => {
     const yearBoards = currentYear?.boards || [];
     setBoards(yearBoards);
+    if (disabled) return;
     if (yearBoards.length > 0) {
       if (!values.boardId) {
         const firstBoard = yearBoards[0];
@@ -81,7 +84,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
         setFieldValue('mediumId', firstMedium);
       }
     }
-  }, [currentYear, values.boardId, values.mediumId, setFieldValue]);
+  }, [currentYear, values.boardId, values.mediumId, setFieldValue, disabled]);
 
   useEffect(() => {
     const board = boards.find((b: any) => b.id === values.boardId);
@@ -99,7 +102,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <Grid container spacing={1}>
+    <Grid container spacing={2}>
       {/* Board */}
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
@@ -216,48 +219,53 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
       {/* Student */}
       <Grid size={{ xs: 12 }}>
         <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
-          <Autocomplete
-            loading={studentLoading || studentFetching}
-            noOptionsText={
-              studentsError
-                ? 'Unable to load students'
-                : values.divisionId
-                  ? 'No Student Found'
-                  : 'Select a division first'
-            }
-            fullWidth
-            disabled={disabled || !values.divisionId}
-            options={studentOptions}
-            value={
-              studentOptions.find((s) => s.studentId === values.studentId) ||
-              (disabled && values.studentId
-                ? { studentId: values.studentId, name: values.studentName }
-                : null)
-            }
-            isOptionEqualToValue={(option, value) => option.studentId === value.studentId}
-            onChange={(_e, value: any) => {
-              setFieldValue('studentId', value?.studentId || '');
-              setFieldTouched('studentId', false);
-              setFieldValue('studentName', value?.name || '');
-              setFieldValue('feeHeadRefunds', []);
-            }}
-            getOptionLabel={(option: any) => option.name || ''}
-            renderOption={(props, option: any) => (
-              <li {...props} key={option.studentId}>
-                {option.name}
-              </li>
-            )}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                label="Student *"
-                fullWidth
-                error={!!(touched.studentId && errors.studentId)}
-                helperText={(touched.studentId && errors.studentId) as string}
-              />
-            )}
-          />
+          <FinanceFieldSkeleton
+            loading={!disabled && (studentLoading || studentFetching) && !formik.isSubmitting}
+            label="Loading students"
+          >
+            <Autocomplete
+              loading={studentLoading || studentFetching}
+              noOptionsText={
+                studentsError
+                  ? 'Unable to load students'
+                  : values.divisionId
+                    ? 'No Student Found'
+                    : 'Select a division first'
+              }
+              fullWidth
+              disabled={disabled || !values.divisionId}
+              options={studentOptions}
+              value={
+                studentOptions.find((s) => s.studentId === values.studentId) ||
+                (disabled && values.studentId
+                  ? { studentId: values.studentId, name: values.studentName }
+                  : null)
+              }
+              isOptionEqualToValue={(option, value) => option.studentId === value.studentId}
+              onChange={(_e, value: any) => {
+                setFieldValue('studentId', value?.studentId || '');
+                setFieldTouched('studentId', false);
+                setFieldValue('studentName', value?.name || '');
+                setFieldValue('feeHeadRefunds', []);
+              }}
+              getOptionLabel={(option: any) => option.name || ''}
+              renderOption={(props, option: any) => (
+                <li {...props} key={option.studentId}>
+                  {option.name}
+                </li>
+              )}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  size="small"
+                  label="Student *"
+                  fullWidth
+                  error={!!(touched.studentId && errors.studentId)}
+                  helperText={(touched.studentId && errors.studentId) as string}
+                />
+              )}
+            />
+          </FinanceFieldSkeleton>
         </ShakingTextField>
       </Grid>
     </Grid>

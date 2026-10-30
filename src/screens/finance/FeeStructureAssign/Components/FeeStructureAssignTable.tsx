@@ -25,6 +25,7 @@ import type { IFeeStructureData, IFeeStructureTableProps } from './type';
 
 export default function FeeStructureAssignTable({
   onAssignStructure,
+  onEdit,
   onBulkAssign,
   feeHeadId,
 }: IFeeStructureTableProps & { feeHeadId?: string }) {
@@ -37,6 +38,10 @@ export default function FeeStructureAssignTable({
   const canAssign = hasGrantedPermission(
     permissions,
     `${financePermissions.fees.structureAssign}.Add`
+  );
+  const canEdit = hasGrantedPermission(
+    permissions,
+    `${financePermissions.fees.structureAssign}.OverridePolicies`
   );
   const context = useFinanceAcademicFilters();
   const [pagination, setPagination] = useState({ page: 1, scope: '' });
@@ -132,11 +137,11 @@ export default function FeeStructureAssignTable({
             selectedMedium={context.selectedMedium}
             onBoardChange={context.setSelectedBoard}
             onMediumChange={context.setSelectedMedium}
-            selectSx={{ width: { xs: 'calc(50% - 4px)', sm: 180 }, minWidth: 0 }}
+            selectSx={{ width: { xs: 'calc(50% - 4px)', sm: 248 }, minWidth: 0 }}
           />
           <CustomSelect
             label="Class"
-            formControlProps={{ sx: { width: { xs: 'calc(50% - 4px)', sm: 160 }, minWidth: 0 } }}
+            formControlProps={{ sx: { width: { xs: 'calc(50% - 4px)', sm: 248 }, minWidth: 0 } }}
             options={context.classOptions}
             value={context.selectedStandardId}
             onChange={(v) => context.setSelectedStandardId(String(v))}
@@ -146,7 +151,7 @@ export default function FeeStructureAssignTable({
           />
           <CustomSelect
             label="Division"
-            formControlProps={{ sx: { width: { xs: 'calc(50% - 4px)', sm: 140 }, minWidth: 0 } }}
+            formControlProps={{ sx: { width: { xs: 'calc(50% - 4px)', sm: 248 }, minWidth: 0 } }}
             options={context.divisionOptions}
             value={context.selectedDivisionId}
             onChange={(v) => context.setSelectedDivisionId(String(v))}
@@ -189,7 +194,6 @@ export default function FeeStructureAssignTable({
         data={rows}
         rowProps={(row) => ({
           'data-assignment-status': row.isFeeStructureAssigned ? 'assigned' : 'unassigned',
-          sx: row.isFeeStructureAssigned ? { bgcolor: 'action.hover' } : undefined,
         })}
         noDataText="No enrolled students in this academic context"
         errorContent={
@@ -236,6 +240,8 @@ export default function FeeStructureAssignTable({
                   id: 'select',
                   label: '',
                   width: 64,
+                  sticky: true,
+                  stickyPosition: 'left' as const,
                   isSort: false,
                   isFilter: false,
                   excludeFromExport: true,
@@ -267,9 +273,6 @@ export default function FeeStructureAssignTable({
                           }),
                         }}
                         checked={selectedEligible.some((s) => s.studentId === row.studentId)}
-                        {...(row.isFeeStructureAssigned && {
-                          icon: <Iconify icon="mdi:check-circle-outline" />,
-                        })}
                         disabled={
                           !standardId ||
                           query.isFetching ||
@@ -298,7 +301,7 @@ export default function FeeStructureAssignTable({
             : []),
           {
             id: 'studentName',
-            label: 'Student',
+            label: 'Student (GR No.)',
             width: 220,
             minWidth: 180,
             align: 'left',
@@ -308,10 +311,21 @@ export default function FeeStructureAssignTable({
             isSort: true,
             isFilter: true,
             filterType: 'string',
+            render: (value: unknown, rawRow: IData) => (
+              <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+                <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                  {value ? String(value) : '—'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  GR No.: {rawRow.grNumber ? String(rawRow.grNumber) : '—'}
+                </Typography>
+              </Stack>
+            ),
           },
           {
             id: 'grNumber',
             label: 'GR No.',
+            defaultHidden: true,
             width: 140,
             minWidth: 130,
             align: 'left',
@@ -441,6 +455,17 @@ export default function FeeStructureAssignTable({
                       disabled: query.isFetching,
                       onClick: () => onAssignStructure(row),
                     },
+                    ...(canEdit && onEdit
+                      ? [
+                          {
+                            id: 'edit',
+                            icon: GlobalIcons.edit,
+                            label: `Edit fee structure assignment for ${row.studentName || 'student'}`,
+                            disabled: query.isFetching,
+                            onClick: () => onEdit(row),
+                          },
+                        ]
+                      : []),
                   ]}
                   sx={{ justifyContent: 'flex-start' }}
                 />

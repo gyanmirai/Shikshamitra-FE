@@ -1,5 +1,7 @@
 'use client';
 
+import { financeNameSchema } from 'src/utils/finance-name';
+
 import type { FormikTouched } from 'formik';
 import type { RootState } from 'src/redux/store';
 
@@ -89,6 +91,7 @@ export interface UsePaymentTermFormReturn {
   demandLabel: string;
   isSubmitting: boolean;
   isLoadingDetail: boolean;
+  isLoadingOptions: boolean;
   handleSubmit: (confirmed?: boolean) => Promise<void>;
   defaultImpact?: PaymentTermDefaultImpact;
   termUsage?: PaymentTermUsage;
@@ -562,7 +565,10 @@ export function usePaymentTermForm(
     const hasNameConflict =
       Boolean(nameConflict) &&
       normalizePaymentTermName(nameConflict.name) === normalizePaymentTermName(v.paymentTermName);
-    const nameValid = v.paymentTermName.trim().length >= 3 && !hasNameConflict;
+    const nameValid =
+      v.paymentTermName.trim().length >= 3 &&
+      financeNameSchema('Payment term name').isValidSync(v.paymentTermName) &&
+      !hasNameConflict;
     const codeValid = /^[A-Z0-9-]{3,24}$/.test(v.paymentTermCode.trim());
     const hasInstallments = v.installments.length >= 1;
     const allDueDates =
@@ -719,6 +725,7 @@ export function usePaymentTermForm(
     demandLabel,
     isSubmitting,
     isLoadingDetail,
+    isLoadingOptions: boardQuery.isLoading || (boardQuery.isFetching && !boardQuery.currentData),
     handleSubmit,
     addInstallment,
     removeInstallment,

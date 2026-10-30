@@ -62,7 +62,6 @@ const FIELD_LABELS: Record<string, string> = {
   ruletype: 'Rule Type',
   cutoffday: 'Cut-off Day',
   aftercutoffaction: 'After Cut-off Action',
-  minimumchargedays: 'Minimum Charge Days',
   calculationbasis: 'Calculation Basis',
   monthlyrule: 'Monthly Rule',
 };

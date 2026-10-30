@@ -2,9 +2,9 @@
 
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
+import { useMemo, useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useMemo, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Alert, Paper, Drawer, Button, Typography } from '@mui/material';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
@@ -174,7 +174,7 @@ export default function FinancePolicyVersionDrawer({
               minHeight: 0,
               overflow: 'hidden',
               p: 2,
-              gap: 2,
+              gap: 1,
             }}
           >
             {/* Version List Sidebar */}
@@ -198,7 +198,12 @@ export default function FinancePolicyVersionDrawer({
             <Scrollbar sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
               <Box sx={{ pr: { xs: 0.5, sm: 1 }, pb: 1 }}>
                 {selectedVersion && (
-                  <VersionDiffTable selectedVersion={selectedVersion} valueContext={valueContext} />
+                  <VersionDiffTable
+                    selectedVersion={selectedVersion}
+                    valueContext={valueContext}
+                    collapsibleChanges
+                    showSavedDetails
+                  />
                 )}
               </Box>
             </Scrollbar>

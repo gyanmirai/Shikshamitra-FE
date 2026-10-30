@@ -16,7 +16,7 @@ const values = (
   overrides: Partial<IProrationPolicyFormValues> = {}
 ): IProrationPolicyFormValues => ({
   policyType: 'proration',
-  policyName: 'Mid-year admissions',
+  policyName: 'Mid year admissions',
   policyCode: 'PRO-01',
   description: '',
   status: 'Draft',
@@ -32,36 +32,30 @@ const dailyRule = (overrides: Partial<IProrationFeeHeadRule> = {}): IProrationFe
   ruleType: 'DailyProration',
   applyOnAdmission: true,
   applyOnEarlyWithdrawal: false,
-  configuration: { calculationBasis: 'CalendarDays', minimumChargeDays: 0, roundOff: 'NoRoundOff' },
+  configuration: { calculationBasis: 'CalendarDays', roundOff: 'NoRoundOff' },
   ...overrides,
 });
 
 describe('proration validation and checklist consistency', () => {
-  it.each([-1, 367, 1.5, Number.NaN])(
-    'rejects invalid minimum charge days: %s',
-    async (minimumChargeDays) => {
-      const form = values({
-        feeHeadRules: [
-          dailyRule({ configuration: { calculationBasis: 'CalendarDays', minimumChargeDays } }),
-        ],
-      });
-      await expect(buildProrationValidationSchema(false).validate(form)).rejects.toMatchObject({
-        path: 'feeHeadRules[0].configuration.minimumChargeDays',
-      });
-      expect(getProrationFormChecks(form).allRuleSettingsValid).toBe(false);
-    }
-  );
-
-  it.each([0, 366, null])('accepts minimum charge days boundary: %s', async (minimumChargeDays) => {
+  it('ignores retired daily floors and omits them from saved rules', async () => {
     const form = values({
       feeHeadRules: [
-        dailyRule({ configuration: { calculationBasis: 'CalendarDays', minimumChargeDays } }),
+        dailyRule({
+          configuration: { calculationBasis: 'CalendarDays', ...{ minimumChargeDays: -1 } },
+          applyOnEarlyWithdrawal: true,
+          earlyWithdrawalRuleType: 'DailyProration',
+          earlyWithdrawalConfiguration: {
+            calculationBasis: 'CalendarDays',
+            ...{ minimumChargeDays: 400 },
+          },
+        }),
       ],
     });
     await expect(buildProrationValidationSchema(false).validate(form)).resolves.toBeTruthy();
-    expect(getProrationFormChecks(form).isReadyToPublish).toBe(true);
+    const [rule] = toProrationPolicyPayload(form).feeHeadRules;
+    expect(rule).not.toHaveProperty('minimumChargeDays');
+    expect(rule).not.toHaveProperty('earlyWithdrawalMinimumChargeDays');
   });
-
   it.each([0, 32, 15.5, null])('rejects invalid monthly cutoff: %s', async (cutOffDay) => {
     const form = values({
       feeHeadRules: [
@@ -97,7 +91,7 @@ describe('proration validation and checklist consistency', () => {
           configuration: { cutOffDay: 32 },
           applyOnEarlyWithdrawal: true,
           earlyWithdrawalRuleType: 'DailyProration',
-          earlyWithdrawalConfiguration: { minimumChargeDays: -1 },
+          earlyWithdrawalConfiguration: {},
         }),
       ],
     });
@@ -110,7 +104,6 @@ describe('proration validation and checklist consistency', () => {
           'feeHeadRules[0].configuration.monthlyRule',
           'feeHeadRules[0].configuration.cutOffDay',
           'feeHeadRules[0].earlyWithdrawalConfiguration.calculationBasis',
-          'feeHeadRules[0].earlyWithdrawalConfiguration.minimumChargeDays',
         ])
       );
     }
@@ -120,7 +113,7 @@ describe('proration validation and checklist consistency', () => {
     const disabled = dailyRule({
       feeHeadId: 'inactive',
       applyOnAdmission: false,
-      configuration: { minimumChargeDays: -1 },
+      configuration: {},
       earlyWithdrawalRuleType: 'MonthlyProration',
       earlyWithdrawalConfiguration: { cutOffDay: 32 },
     });
@@ -255,7 +248,6 @@ describe('proration policy API mapping', () => {
             configuration: {
               calculationBasis: 'CalendarDays',
               roundOff: 'RoundUp',
-              minimumChargeDays: 5,
             },
           },
           {
@@ -273,7 +265,6 @@ describe('proration policy API mapping', () => {
         feeHeadId: 'd30b50a3-989b-4be7-b8a9-1cab0ea87704',
         ruleType: 'Daily',
         roundingMode: 'RoundUpRupee',
-        minimumChargeDays: 5,
       }),
     ]);
   });
@@ -350,7 +341,7 @@ describe('proration policy API mapping', () => {
           configuration: { roundOff: 'RoundDown' },
           applyOnEarlyWithdrawal: true,
           earlyWithdrawalRuleType: 'DailyProration',
-          earlyWithdrawalConfiguration: { calculationBasis: 'CalendarDays', minimumChargeDays: 3 },
+          earlyWithdrawalConfiguration: { calculationBasis: 'CalendarDays' },
         },
       ],
     });
@@ -360,7 +351,6 @@ describe('proration policy API mapping', () => {
         applyOnAdmission: false,
         applyOnEarlyWithdrawal: true,
         earlyWithdrawalRuleType: 'Daily',
-        earlyWithdrawalMinimumChargeDays: 3,
         roundingMode: 'RoundUpRupee',
       })
     );

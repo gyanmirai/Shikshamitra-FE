@@ -1,3 +1,4 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import * as Yup from 'yup';
 
 import type { IFeeHead } from './type';
@@ -5,7 +6,7 @@ import type { IFeeHead } from './type';
 export const feeHeadValidationSchema = (existingNames: Set<string>, editData?: IFeeHead | null) =>
   Yup.object().shape({
     feeCategoryId: Yup.string().required('Fee Category is required'),
-    name: Yup.string()
+    name: financeNameSchema('Fee Head Name')
       .required('Fee Head Name is required')
       .test('unique-fee-head', 'This fee head name already exists', (value) => {
         if (!value?.trim()) return true;

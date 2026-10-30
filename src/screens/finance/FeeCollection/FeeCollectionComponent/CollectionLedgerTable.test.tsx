@@ -36,8 +36,26 @@ vi.mock('src/components/customizabaleTable/hooks/useStickyColumns', () => ({
 }));
 // Never execute a financial write from these presentation capability tests.
 vi.mock('./FeeWaiverToggle', () => ({
-  default: ({ sourceType, sourceId }: { sourceType: string; sourceId: string }) => (
-    <button type="button" data-source-id={sourceId}>
+  default: ({
+    sourceType,
+    sourceId,
+    sourceName,
+    onApplied,
+  }: {
+    sourceType: string;
+    sourceId: string;
+    sourceName?: string;
+    onApplied?: () => void;
+  }) => (
+    <button
+      type="button"
+      data-source-id={sourceId}
+      data-source-name={sourceName}
+      onClick={(event) => {
+        event.stopPropagation();
+        onApplied?.();
+      }}
+    >
       Waive {sourceType}
     </button>
   ),
@@ -92,6 +110,60 @@ const ledgerProps = (): FeeLedgerListProps => ({
 });
 
 describe('collection ledger waiver capabilities', () => {
+  it('launches waiver from charge rows and removes only the waived charge from collection', () => {
+    const props = ledgerProps();
+    props.charges = ['charge-one', 'another-charge'];
+    render(
+      <LedgerTestProviders>
+        <CollectionLedgerTable {...props} layout="ledger" />
+      </LedgerTestProviders>
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Additional Charges/ }));
+    const row = screen.getByRole('row', { name: 'Open Lab charge, 2026-06-01' });
+    const waiver = within(row).getByRole('button', { name: 'Waive Charge' });
+    expect(waiver).toHaveAttribute('data-source-name', 'Lab charge');
+    fireEvent.click(waiver);
+    expect(props.onChargesChange).toHaveBeenCalledWith(['another-charge']);
+    expect(props.onSelectionChange).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('preserves selected principal when waiving only the installment late fee', () => {
+    const props = ledgerProps();
+    props.selectedItems = [
+      {
+        dueFeeId: 'due-one',
+        feeHeadId: 'tuition',
+        period: '2026-06',
+        dueAmount: 500,
+        lateFeeAmount: 50,
+      },
+    ];
+    render(
+      <LedgerTestProviders>
+        <CollectionLedgerTable {...props} layout="ledger" />
+      </LedgerTestProviders>
+    );
+    fireEvent.click(screen.getByRole('row', { name: 'Open Tuition, June 2026' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Waive LateFee' }));
+    expect(props.onSelectionChange).toHaveBeenCalledWith([
+      expect.objectContaining({ dueFeeId: 'due-one', dueAmount: 500, lateFeeAmount: 0 }),
+    ]);
+    expect(props.onChargesChange).not.toHaveBeenCalled();
+  });
+
+  it('does not expose row waivers for explicitly ineligible charges', () => {
+    const props = ledgerProps();
+    props.chargesData![0].canWaive = false;
+    render(
+      <LedgerTestProviders>
+        <CollectionLedgerTable {...props} layout="ledger" />
+      </LedgerTestProviders>
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Additional Charges/ }));
+    expect(screen.queryByRole('button', { name: 'Waive Charge' })).not.toBeInTheDocument();
+  });
+
   it('keeps the review in collection order across different installment months', () => {
     const makeRow = (key: string, name: string, period: string) => ({
       type: 'fee' as const,

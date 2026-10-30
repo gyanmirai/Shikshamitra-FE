@@ -7,6 +7,17 @@ export const useGetChargeCategoriesQuery = 'categories';
 export const usePostChargeMutation = 'create';
 export const useUpdateChargeMutation = 'update';
 export const useGetChargeByIdQuery = 'details';
+const categories = {
+  items: [
+    {
+      id: 'category',
+      name: 'Transport Pass Replacement',
+      isActive: true,
+      isApprovalRequired: !noApprovalMode,
+    },
+    { id: 'category2', name: 'Exam fee', isActive: true, isApprovalRequired: true },
+  ],
+};
 const classes = [
   {
     id: 'class3',
@@ -101,21 +112,12 @@ export default function useQueryAndMutation({ type, currentQueryAndMutation: kin
     };
   if (type === 'query')
     return {
-      data:
-        kind === 'categories'
-          ? {
-              items: [
-                {
-                  id: 'category',
-                  name: 'Transport Pass Replacement',
-                  isActive: true,
-                  isApprovalRequired: !noApprovalMode,
-                },
-                { id: 'category2', name: 'Exam fee', isActive: true, isApprovalRequired: true },
-              ],
-            }
-          : null,
+      data: kind === 'categories' ? categories : null,
+      currentData: kind === 'categories' ? categories : null,
       isLoading: false,
+      isFetching: false,
+      isError: false,
+      refetch: () => Promise.resolve({ data: categories }),
     };
   return [trigger, { data, isLoading: loading }];
 }

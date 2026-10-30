@@ -51,7 +51,18 @@ const mocks = vi.hoisted(() => ({
   filterProps: vi.fn(),
   selectionOverrides: undefined as any[] | undefined,
   refetch: vi.fn(),
+  receiptProps: vi.fn(),
 }));
+
+vi.mock('./UnifiedReceiptDisplay', async (importOriginal) => {
+  const original = await importOriginal<typeof import('./UnifiedReceiptDisplay')>();
+  return {
+    default: (props: React.ComponentProps<typeof original.default>) => {
+      mocks.receiptProps(props);
+      return <original.default {...props} />;
+    },
+  };
+});
 
 vi.mock('react-redux', () => ({
   useSelector: (selector: any) =>
@@ -855,6 +866,81 @@ describe('embedded Finance collection context', () => {
     await waitFor(() => expect(downloadReceiptPdf).toHaveBeenCalledWith('receipt-one', 'fee'));
     expect(mocks.defaultDownload).not.toHaveBeenCalled();
   });
+
+  it.each([
+    {
+      grouping: 'Separate',
+      principal: 20000,
+      ordinary: 0,
+      fee: 20000,
+      charge: 60600,
+      combined: false,
+    },
+    {
+      grouping: 'Separate',
+      principal: 20000,
+      ordinary: 1000,
+      fee: 20000,
+      charge: 61600,
+      combined: false,
+    },
+    {
+      grouping: 'Separate',
+      principal: 0,
+      ordinary: 0,
+      fee: undefined,
+      charge: 60600,
+      combined: undefined,
+    },
+    {
+      grouping: 'Combined',
+      principal: 20000,
+      ordinary: 0,
+      fee: 80600,
+      charge: undefined,
+      combined: true,
+    },
+  ])(
+    'groups late fees into the charge receipt for $grouping collection ($principal principal, $ordinary ordinary)',
+    async ({ grouping, principal, ordinary, fee, charge, combined }) => {
+      const collectOutput = {
+        ...output,
+        receiptGrouping: grouping,
+        feeReceiptId: principal > 0 || grouping === 'Combined' ? 'fee-receipt' : undefined,
+        feeReceiptAmount: fee,
+        chargeReceiptAmount: charge,
+        chargeReceiptId: grouping === 'Separate' ? 'charge-receipt' : undefined,
+        paidFeeHeads:
+          principal > 0
+            ? [{ feeHeadId: 'tuition', feeHeadName: 'Tuition', amountPaid: principal }]
+            : [],
+        paidDueFees:
+          principal > 0
+            ? [{ dueFeeId: 'due-one', feeHeadId: 'tuition', amountPaid: principal }]
+            : [],
+        paidLateFees: [{ dueFeeId: 'due-one', feeHeadId: 'tuition', amountPaid: 60600 }],
+        paidCharges:
+          ordinary > 0
+            ? [{ chargeId: 'manual-charge', chargeName: 'Manual charge', amountPaid: ordinary }]
+            : [],
+        receivedAmount: principal + 60600 + ordinary,
+        totalAmount: principal + 60600 + ordinary,
+      };
+      mocks.defaultCollect.mockReturnValue({ unwrap: () => Promise.resolve(collectOutput) });
+      mocks.defaultDownload.mockReturnValue({
+        unwrap: () => Promise.resolve(new Blob(['receipt'], { type: 'application/pdf' })),
+      });
+      render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
+      await beginCollection();
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
+      await waitFor(() => {
+        const props = mocks.receiptProps.mock.lastCall?.[0];
+        expect(props?.feeReceipt?.totalAmount).toBe(fee);
+        expect(props?.chargeReceipt?.totalAmount).toBe(charge);
+        expect(props?.feeReceipt?.combined).toBe(combined);
+      });
+    }
+  );
 
   it('keeps native Student collection and charge receipt routing intact', async () => {
     mocks.defaultCollect.mockReturnValue({

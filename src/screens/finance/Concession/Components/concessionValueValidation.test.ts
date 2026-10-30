@@ -12,6 +12,36 @@ describe('concession installment validation', () => {
     calculationMethod: 'FixedAmount',
     maximumFixedAmount: 11111,
   };
+  it('shares the percentage maximum across all entered installments in the request', () => {
+    const cappedPolicy = { ...policy, maximumPercentage: 50 };
+    expect(
+      validateConcessionInstallments(
+        ['tuition'],
+        { 'due-1': '30', 'due-2': '30' },
+        context,
+        cappedPolicy
+      )
+    ).toEqual({
+      'due-1': expect.stringContaining('total concession percentage'),
+      'due-2': expect.stringContaining('total concession percentage'),
+    });
+    expect(
+      validateConcessionInstallments(
+        ['tuition'],
+        { 'due-1': '30', 'due-2': '20' },
+        context,
+        cappedPolicy
+      )
+    ).toEqual({});
+    expect(
+      validateConcessionInstallments(
+        ['tuition'],
+        { 'due-1': '16.67', 'due-2': '33.33' },
+        context,
+        cappedPolicy
+      )
+    ).toEqual({});
+  });
   it('rejects fractional money without changing the typed value', () => {
     const entries = { 'due-1': '0.1' };
     expect(
@@ -149,7 +179,9 @@ describe('concession request error feedback', () => {
         },
         fallback
       )
-    ).toBe('This concession request cannot be edited because its status is Approved. Only draft requests can be edited.');
+    ).toBe(
+      'This concession request cannot be edited because its status is Approved. Only draft requests can be edited.'
+    );
   });
 
   it.each([

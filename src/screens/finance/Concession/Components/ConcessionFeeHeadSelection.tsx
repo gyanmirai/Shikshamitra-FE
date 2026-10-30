@@ -5,6 +5,7 @@ import type {
 } from 'src/redux/finance/ConcessionManagement/types';
 
 import { formatNumber } from 'src/utils/formate_number';
+import { DetailField } from 'src/components/detail-view';
 import { Stack, Checkbox, ButtonBase, Typography } from '@mui/material';
 
 export type ConcessionSelectableFeeHead = Pick<
@@ -21,6 +22,7 @@ export default function ConcessionFeeHeadSelection({
   onInspect,
   detailsId,
   detailsExpanded = true,
+  expandedIds,
   renderDetails,
 }: {
   feeHeads: ConcessionSelectableFeeHead[];
@@ -31,13 +33,14 @@ export default function ConcessionFeeHeadSelection({
   onInspect: (id: string) => void;
   detailsId: string;
   detailsExpanded?: boolean;
+  expandedIds?: string[];
   renderDetails: (head: ConcessionSelectableFeeHead, detailsId: string) => ReactNode;
 }) {
   return (
     <Stack
       component="ul"
       aria-label="Eligible fee heads"
-      spacing={1}
+      spacing={0.75}
       sx={{ m: 0, p: 0, listStyle: 'none' }}
     >
       {feeHeads.map((head, index) => {
@@ -65,11 +68,11 @@ export default function ConcessionFeeHeadSelection({
                 '&.Mui-expanded': { minHeight: 32 },
               },
               '& .MuiAccordionSummary-content': { my: 0.5 },
-              '& .MuiAccordionSummary-root .MuiTypography-root': { typography: 'caption' },
+              '& .MuiAccordionSummary-root .MuiTypography-root': { typography: 'subtitle2' },
               '& .MuiAccordionDetails-root': { pt: 0.5, px: 1.25, pb: 1 },
             }}
           >
-            <Stack direction="row" alignItems="center" sx={{ px: 1, py: 0.75 }}>
+            <Stack direction="row" alignItems="center" sx={{ px: 1, py: 0.5 }}>
               <Checkbox
                 size="small"
                 checked={selectedIds.includes(head.feeHeadId)}
@@ -82,7 +85,9 @@ export default function ConcessionFeeHeadSelection({
                 aria-label={`Inspect ${head.feeHeadName}`}
                 aria-pressed={active}
                 aria-controls={headDetailsId}
-                aria-expanded={active && detailsExpanded}
+                aria-expanded={
+                  expandedIds ? expandedIds.includes(head.feeHeadId) : active && detailsExpanded
+                }
                 sx={{
                   flex: 1,
                   minWidth: 0,
@@ -92,7 +97,7 @@ export default function ConcessionFeeHeadSelection({
                   '&.Mui-focusVisible': { outline: '2px solid', outlineColor: 'primary.main' },
                 }}
               >
-                <Typography component="h3" variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                <Typography component="h3" variant="body2" sx={{ overflowWrap: 'anywhere' }}>
                   {head.feeHeadName}
                 </Typography>
                 <Typography
@@ -106,12 +111,7 @@ export default function ConcessionFeeHeadSelection({
                 </Typography>
               </ButtonBase>
               <Stack sx={{ ml: 1, flexShrink: 0, textAlign: 'right' }}>
-                <Typography variant="caption" color="text.secondary">
-                  Eligible amount
-                </Typography>
-                <Typography variant="subtitle1" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                  {formatNumber(head.amount, 'INR')}
-                </Typography>
+                <DetailField label="Eligible amount" value={formatNumber(head.amount, 'INR')} />
               </Stack>
             </Stack>
             {renderDetails(head, headDetailsId)}

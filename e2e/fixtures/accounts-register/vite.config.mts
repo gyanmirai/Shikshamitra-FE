@@ -10,6 +10,7 @@ export default defineConfig({
     alias: [
       { find: /^src\/redux\/service$/, replacement: here + '/api.ts' },
       { find: /^next\/link$/, replacement: here + '/link.tsx' },
+      { find: /^next\/navigation$/, replacement: here + '/navigation.ts' },
       { find: /^@mui\/icons-material$/, replacement: here + '/icon-barrel.ts' },
       { find: 'src', replacement: repo + '/src' },
     ],

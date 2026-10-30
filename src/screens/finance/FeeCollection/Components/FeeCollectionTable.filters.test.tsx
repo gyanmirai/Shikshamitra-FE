@@ -2,6 +2,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
 import { configureStore } from '@reduxjs/toolkit';
+import { financePermissions } from 'src/constants/finance-menu';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
@@ -115,6 +116,7 @@ function setup() {
   const store = configureStore({
     reducer: {
       [api.reducerPath]: api.reducer,
+      auth: (state = { permissionsInitialized: true, loading: false, permissions: [{ name: `${financePermissions.fees.collections}.View`, isGranted: true }] }) => state,
       globalState: (state: { currentYear: typeof initialYear } | undefined, action: any) =>
         action.type === 'refreshYear'
           ? { currentYear: { ...initialYear, boards: [...initialYear.boards] } }

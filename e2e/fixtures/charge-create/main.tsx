@@ -22,6 +22,7 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 const year = {
   id: 'year',
+  name: '2026-2027',
   startDate: '2026-06-01',
   endDate: '2027-05-31',
   boards: [{ id: 'board', name: 'GSEB', educationMediums: [{ id: 'medium', name: 'English' }] }],
@@ -34,7 +35,12 @@ const store = configureStore({
       state: any = {
         permissionsInitialized: true,
         loading: false,
-        permissions: [{ name: financePermissions.fees.chargeActions.add, isGranted: true }],
+        permissions: [
+          { name: financePermissions.fees.chargeActions.add, isGranted: true },
+          ...(new URLSearchParams(window.location.search).has('admin')
+            ? [{ name: financePermissions.fees.chargeActions.approve, isGranted: true }]
+            : []),
+        ],
       },
       action: any
     ) =>

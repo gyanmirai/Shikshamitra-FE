@@ -82,7 +82,7 @@ vi.mock('src/redux/finance/BankAccountManage/bankAccountActivityApi', () => ({
 vi.mock('src/redux/finance/BankAccountManage/bankAccountApi', () => ({
   useGetBankAccountVersionsQuery: () => ({}),
 }));
-vi.mock('../../components/AccountSettingVersionDialog', () => ({ default: () => null }));
+vi.mock('../../components/AccountCategoryVersionDrawer', () => ({ default: () => null }));
 vi.mock('./BankActivityMovementDialog', () => ({ default: () => <div>Movement details</div> }));
 
 const bank = {

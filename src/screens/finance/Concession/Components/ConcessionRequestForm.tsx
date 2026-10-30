@@ -32,6 +32,10 @@ import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import { concessionBenefitBlockerMessage } from 'src/utils/concession-benefit-blocker';
+import FinanceFormSkeleton, {
+  FinanceSkeletonRows,
+  FinanceFieldSkeleton,
+} from 'src/screens/finance/components/FinanceFormSkeleton';
 import {
   Box,
   Grid,
@@ -58,6 +62,7 @@ import {
 import ConcessionDocumentList from './ConcessionDocumentList';
 import ConcessionPolicyFields from './ConcessionPolicyFields';
 import ValueEntryStep from './ConcessionSteps/ValueEntryStep';
+import RequestEnteredInstallments from './ConcessionSteps/RequestEnteredInstallments';
 import ConcessionRequestWorkspace from './ConcessionRequestWorkspace';
 import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
 import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
@@ -413,7 +418,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     },
     onSubmit: async (values) => {
       setSubmitError(null);
-      if (hasMissingPrerequisites) return;
+      if (hasMissingPrerequisites || !hasResolvedAssignment) return;
       const benefitBlocker = requestContext?.concessionTypes.find(
         (type) => type.concessionTypeId === values.concessionTypeId
       )?.benefitBlocker;
@@ -609,20 +614,43 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     { skip: !values.studentId || !currentYear?.id, refetchOnMountOrArgChange: true }
   );
 
-  const hasResolvedAssignment = Boolean(requestContext?.studentFeeStructureId);
+  const contextScope = JSON.stringify([
+    currentYear?.id,
+    values.studentId,
+    values.concessionRequestId,
+    concessionData?.data?.studentFeeStructureId || selectedAssignmentId,
+  ]);
+  const [displayContextSnapshot, setDisplayContextSnapshot] = useState<{
+    scope: string;
+    context: ConcessionRequestContext;
+  } | null>(null);
+  useEffect(() => {
+    if (requestContext) {
+      setDisplayContextSnapshot({ scope: contextScope, context: requestContext });
+    }
+  }, [contextScope, requestContext]);
+  // Policy/type changes temporarily clear RTK Query's currentData. Keep the
+  // same student's labels and document rules visible, without authorizing a
+  // preview or command using the preceding eligibility response.
+  const displayContext =
+    requestContext ??
+    (displayContextSnapshot?.scope === contextScope ? displayContextSnapshot.context : undefined);
+  const hasResolvedAssignment = Boolean(
+    requestContext?.studentFeeStructureId && !feeStructureFetching && !feeStructureIsError
+  );
 
   const concessionTypesList = useMemo(
     () =>
-      (requestContext?.concessionTypes || []).map((type) => ({
+      (displayContext?.concessionTypes || []).map((type) => ({
         ...type,
         id: type.concessionTypeId,
       })),
-    [requestContext?.concessionTypes]
+    [displayContext?.concessionTypes]
   );
 
   const concessionPoliciesList = useMemo(
-    () => requestContext?.concessionPolicies || [],
-    [requestContext?.concessionPolicies]
+    () => displayContext?.concessionPolicies || [],
+    [displayContext?.concessionPolicies]
   );
   const selectedTypeBenefitBlocker = concessionTypesList.find(
     (type) => type.id === values.concessionTypeId
@@ -630,7 +658,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const selectedTypeBenefitBlockerMessage = concessionBenefitBlockerMessage(
     selectedTypeBenefitBlocker
   );
-  const {setFieldError} = formik;
+  const { setFieldError } = formik;
   useEffect(() => {
     if (values.concessionTypeId) {
       setFieldError('concessionTypeId', selectedTypeBenefitBlockerMessage);
@@ -661,11 +689,11 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
   const feeHeads: any[] = useMemo(
     () =>
-      (requestContext?.feeHeads || []).map((item) => ({
+      (displayContext?.feeHeads || []).map((item) => ({
         ...item,
         amount: item.eligibleOutstanding,
       })),
-    [requestContext]
+    [displayContext]
   );
 
   const noFeeStructureError =
@@ -724,6 +752,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       )
     ).length > 0;
   const previewReady =
+    hasResolvedAssignment &&
     !selectedTypeBenefitBlocker &&
     !hasInvalidInstallmentValues &&
     Boolean(
@@ -777,10 +806,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   );
   const selectedTypeRequirements = useMemo(
     () =>
-      requestContext?.concessionTypes.find(
+      displayContext?.concessionTypes.find(
         (type) => type.concessionTypeId === values.concessionTypeId
       )?.documents || [],
-    [requestContext, values.concessionTypeId]
+    [displayContext, values.concessionTypeId]
   );
   const submittedDocumentIds = useMemo(() => {
     const block = values.concessionTypeDocuments?.find(
@@ -1276,56 +1305,62 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         </Grid>
                         <Grid size={{ xs: 12 }}>
                           <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
-                            <Autocomplete
-                              size="small"
-                              loading={studentLoading || studentFetching}
-                              noOptionsText={
-                                studentsError ? 'Unable to load students' : 'No Student Found'
-                              }
-                              fullWidth
-                              disabled={isEditMode || !values.divisionId}
-                              options={studentOptions}
-                              value={
-                                studentOptions.find((s) => s.studentId === values.studentId) ||
-                                (isEditMode && values.studentId
-                                  ? { studentId: values.studentId, name: values.studentName }
-                                  : null)
-                              }
-                              isOptionEqualToValue={(option, value) =>
-                                option.studentId === value.studentId
-                              }
-                              onChange={(_e, value: any) => {
-                                setSelectedAssignmentId('');
-                                setFieldValue('studentId', value?.studentId || '');
-                                setFieldTouched('studentId', false);
-                                setFieldValue('studentName', value?.name || '');
-                                setFieldValue('selectedStudent', value || null);
-                                setFieldValue('concessionPolicyId', '');
-                                setFieldValue('concessionPolicyVersionId', '');
-                                setFieldValue('dueFeeEntries', {});
-                              }}
-                              getOptionLabel={(option: any) => option.name || ''}
-                              renderOption={(props, option: any) => (
-                                <li {...props} key={option.studentId}>
-                                  {option.name}
-                                </li>
-                              )}
-                              renderInput={(params) => (
-                                <TextField
-                                  {...params}
-                                  size="small"
-                                  label="Student"
-                                  name="studentId"
-                                  required
-                                  onBlur={formik.handleBlur}
-                                  fullWidth
-                                  error={!!errors.studentId && touched.studentId}
-                                  helperText={
-                                    ((touched.studentId && errors.studentId) as string) || undefined
-                                  }
-                                />
-                              )}
-                            />
+                            <FinanceFieldSkeleton
+                              loading={(studentLoading || studentFetching) && !isSaving}
+                              label="Loading students"
+                            >
+                              <Autocomplete
+                                size="small"
+                                loading={studentLoading || studentFetching}
+                                noOptionsText={
+                                  studentsError ? 'Unable to load students' : 'No Student Found'
+                                }
+                                fullWidth
+                                disabled={isEditMode || !values.divisionId}
+                                options={studentOptions}
+                                value={
+                                  studentOptions.find((s) => s.studentId === values.studentId) ||
+                                  (isEditMode && values.studentId
+                                    ? { studentId: values.studentId, name: values.studentName }
+                                    : null)
+                                }
+                                isOptionEqualToValue={(option, value) =>
+                                  option.studentId === value.studentId
+                                }
+                                onChange={(_e, value: any) => {
+                                  setSelectedAssignmentId('');
+                                  setFieldValue('studentId', value?.studentId || '');
+                                  setFieldTouched('studentId', false);
+                                  setFieldValue('studentName', value?.name || '');
+                                  setFieldValue('selectedStudent', value || null);
+                                  setFieldValue('concessionPolicyId', '');
+                                  setFieldValue('concessionPolicyVersionId', '');
+                                  setFieldValue('dueFeeEntries', {});
+                                }}
+                                getOptionLabel={(option: any) => option.name || ''}
+                                renderOption={(props, option: any) => (
+                                  <li {...props} key={option.studentId}>
+                                    {option.name}
+                                  </li>
+                                )}
+                                renderInput={(params) => (
+                                  <TextField
+                                    {...params}
+                                    size="small"
+                                    label="Student"
+                                    name="studentId"
+                                    required
+                                    onBlur={formik.handleBlur}
+                                    fullWidth
+                                    error={!!errors.studentId && touched.studentId}
+                                    helperText={
+                                      ((touched.studentId && errors.studentId) as string) ||
+                                      undefined
+                                    }
+                                  />
+                                )}
+                              />
+                            </FinanceFieldSkeleton>
                           </ShakingTextField>
                         </Grid>
                       </Grid>
@@ -1458,8 +1493,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               }}
                               onPolicyBlur={() => setFieldTouched('concessionPolicyId', true)}
                               onTypeBlur={() => setFieldTouched('concessionTypeId', true)}
-                              policyDisabled={isSaving || feeStructureLoading || !requestContext}
-                              typeDisabled={isSaving || isEditMode}
+                              policyDisabled={isSaving || feeStructureFetching || !displayContext}
+                              typeDisabled={isSaving || isEditMode || feeStructureFetching}
                               policyError={Boolean(
                                 (touched.concessionPolicyId || formik.submitCount > 0) &&
                                 errors.concessionPolicyId
@@ -1472,7 +1507,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               policyHelperText={
                                 feeStructureIsError
                                   ? 'Could not load concession policies. Retry or check the student fee assignment.'
-                                  : !requestContext
+                                  : !displayContext
                                     ? 'Select the student fee assignment to continue.'
                                     : concessionPoliciesList.length === 0
                                       ? 'No active concession policy for this academic year.'
@@ -1530,10 +1565,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                             <Typography color="text.secondary" variant="body2">
                               Select a concession type to map fee heads.
                             </Typography>
-                          ) : feeStructureFetching ? (
-                            <Typography color="text.secondary" variant="body2">
-                              Loading eligible installments…
-                            </Typography>
+                          ) : feeStructureFetching && !isSaving ? (
+                            <FinanceFormSkeleton label="Loading eligible installments">
+                              <FinanceSkeletonRows columns={3} />
+                            </FinanceFormSkeleton>
                           ) : feeHeads.length === 0 &&
                             !(isEditMode && concessionData?.data?.feeHeadConcessions?.length) ? (
                             <Alert severity="error">
@@ -1543,7 +1578,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           ) : undefined
                         }
                         valueFields={
-                          values.concessionTypeId && hasSelectedFeeHeads ? (
+                          values.concessionTypeId &&
+                          hasSelectedFeeHeads &&
+                          selectedPolicy?.valueSource === 'PolicyFixed' ? (
                             <Box>
                               <ValueEntryStep
                                 compact
@@ -1562,6 +1599,18 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               />
                             </Box>
                           ) : undefined
+                        }
+                        renderFeeValueFields={
+                          selectedPolicy?.valueSource === 'RequestEnteredWithinLimits'
+                            ? (feeHeadId) => (
+                                <RequestEnteredInstallments
+                                  formik={formik}
+                                  requestContext={requestContext}
+                                  policy={selectedPolicy}
+                                  feeHeadId={feeHeadId}
+                                />
+                              )
+                            : undefined
                         }
                         documents={
                           values.concessionTypeId ? (

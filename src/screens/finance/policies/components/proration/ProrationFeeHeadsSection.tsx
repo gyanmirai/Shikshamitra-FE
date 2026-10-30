@@ -87,7 +87,6 @@ function EventSettings({
   const modelError = fieldError(formik, modelPath);
   const cutoffError = fieldError(formik, `${configPath}.cutOffDay`);
   const strategyError = fieldError(formik, `${configPath}.monthlyRule`);
-  const minimumError = fieldError(formik, `${configPath}.minimumChargeDays`);
   const basisError = fieldError(formik, `${configPath}.calculationBasis`);
   const setConfig = (field: string, value: string | number | null) =>
     update(index, { [configKey]: { ...config, [field]: value } });
@@ -139,13 +138,25 @@ function EventSettings({
               labelId={`${eventId}-model-label`}
               SelectDisplayProps={{
                 'aria-labelledby': `${eventId}-model-label`,
-                'aria-describedby': `${eventId}-model-helper`,
+                'aria-describedby':
+                  modelError || model === 'NoProration' ? `${eventId}-model-helper` : undefined,
               }}
               helperTextProps={{ id: `${eventId}-model-helper` }}
               name={modelPath}
-              options={RULE_OPTIONS}
+              options={RULE_OPTIONS.map((option) => ({
+                ...option,
+                description:
+                  option.value === 'DailyProration'
+                    ? 'Charge proportionally to active calendar days in the billing period.'
+                    : model === 'FullMonthCharge'
+                      ? description
+                      : withdrawal
+                        ? 'Use the last chargeable date to determine the exit-month charge.'
+                        : 'Use the admission date to determine the first-month charge.',
+              }))}
               labelKey="label"
               valueKey="value"
+              optionDescriptionKey="description"
               value={
                 model === 'NoProration'
                   ? ''
@@ -168,7 +179,7 @@ function EventSettings({
                 modelError ||
                 (model === 'NoProration'
                   ? 'Choose daily or monthly proration, or turn off this event.'
-                  : description)
+                  : undefined)
               }
             />
           </ShakingTextField>
@@ -193,26 +204,6 @@ function EventSettings({
                   onBlur={() => formik.setFieldTouched(`${configPath}.calculationBasis`, true)}
                   error={Boolean(basisError)}
                   helperText={basisError}
-                />
-              </ShakingTextField>
-              <ShakingTextField error={Boolean(minimumError)}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Minimum charge days"
-                  name={`${configPath}.minimumChargeDays`}
-                  value={config.minimumChargeDays ?? ''}
-                  onChange={(event) =>
-                    setConfig(
-                      'minimumChargeDays',
-                      event.target.value === '' ? null : Number(event.target.value)
-                    )
-                  }
-                  onBlur={formik.handleBlur}
-                  error={Boolean(minimumError)}
-                  helperText={minimumError}
-                  inputProps={{ min: 0, max: 366, step: 1 }}
                 />
               </ShakingTextField>
             </>

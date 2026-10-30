@@ -62,15 +62,43 @@ let ledger = initialLedger();
 let charges = initialCharges();
 let receiptSequence = 4;
 let chargeReceiptScenario = false;
+let receiptGroupingScenario: 'Separate' | 'Combined' | undefined;
 let remainingPdfFailures = 0;
 export const requests: Array<{ url: string; method: string; body?: unknown }> = [];
 const replay = new Map<string, CollectFeeOutput>();
 
-export function resetFixture(scenario?: 'statuses' | 'selection' | 'settled' | 'charge-receipt' | 'charge-receipt-retry') {
+export function resetFixture(scenario?: 'statuses' | 'selection' | 'settled' | 'charge-receipt' | 'charge-receipt-retry' | 'pending-balance' | 'receipt-separate' | 'receipt-combined') {
   ledger = initialLedger();
   charges = initialCharges();
   chargeReceiptScenario = scenario === 'charge-receipt' || scenario === 'charge-receipt-retry';
   remainingPdfFailures = scenario === 'charge-receipt-retry' ? 1 : 0;
+  receiptGroupingScenario = scenario === 'receipt-combined' ? 'Combined' : scenario === 'receipt-separate' ? 'Separate' : undefined;
+  if (receiptGroupingScenario) {
+    const principal = { ...ledger[0].items[0], total: 20000, due: 20000, paid: 0 };
+    ledger = [{ ...ledger[0], items: [principal], totalDue: 20000 }];
+    charges = [{ ...charges[0], amount: 60600, pendingAmount: 60600 }];
+  }
+  if (scenario === 'pending-balance') {
+    // API response contract for the reported split: 3306 due plus 26470 future unpaid.
+    ledger = [
+      { month: 5, year: 2026, totalDue: 0, items: [{
+        dueFeeId: 'paid-principal', feeHeadId: 'tuition', feeHeadName: 'Class 3 Tuition Fee',
+        installmentLabel: 'Paid installment', dueDate: '2026-06-05',
+        total: 13224, paid: 13224, due: 0, status: 'Paid',
+      }] },
+      { month: 9, year: 2026, totalDue: 3306, items: [{
+        dueFeeId: 'current-principal', feeHeadId: 'tuition', feeHeadName: 'Class 3 Tuition Fee',
+        installmentLabel: 'Current installment', dueDate: '2026-10-05',
+        total: 3306, paid: 0, due: 3306, status: 'Overdue',
+      }] },
+      { month: 2, year: 2027, totalDue: 26470, items: [{
+        dueFeeId: 'future-principal', feeHeadId: 'tuition', feeHeadName: 'Class 3 Tuition Fee',
+        installmentLabel: 'Future installment', dueDate: '2027-03-05',
+        total: 26470, paid: 0, due: 26470, status: 'Pending',
+      }] },
+    ];
+    charges = [];
+  }
   if (scenario === 'settled') {
     ledger.flatMap((group) => group.items).forEach((item) => {
       Object.assign(item, { paid: item.total, due: 0, status: 'Paid' });
@@ -122,8 +150,8 @@ const money = (value: number) => Math.round(value * 100) / 100;
 
 // A deliberately simple, valid PDF fixture, not a server-generated receipt.
 // ASCII-only content makes PDF byte offsets and stream length deterministic.
-function chargeReceiptPdf(receiptNumber: string): Blob {
-  const content = `BT /F1 22 Tf 48 760 Td (Charge Receipt) Tj 0 -40 Td /F1 12 Tf (${receiptNumber}) Tj 0 -28 Td (Synthetic charge collection - INR 1,000) Tj ET`;
+function chargeReceiptPdf(receiptNumber: string, title = 'Charge Receipt', amount = 1000): Blob {
+  const content = `BT /F1 22 Tf 48 760 Td (${title}) Tj 0 -40 Td /F1 12 Tf (${receiptNumber}) Tj 0 -28 Td (Synthetic collection - INR ${amount}) Tj ET`;
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
@@ -227,11 +255,8 @@ function collect(body: CollectFeeInput): CollectFeeOutput {
     totalAmount, status: 1, collectedBy: 'Synthetic cashier',
     collectedAt: '2026-10-01T12:00:00+05:30', createdAt: '2026-10-01T12:00:00+05:30',
     paidFeeHeads, paidDueFees, paidLateFees, receivedAmount: totalAmount,
-    paidCharges: [...paidCharges, ...paidLateFees.map((payment) => ({
-      chargeId: payment.dueFeeId,
-      chargeName: nextCharges.find((charge) => charge.sourceId === payment.dueFeeId)!.name,
-      amountPaid: payment.amountPaid,
-    }))],
+    paidCharges,
+    receiptGrouping: receiptGroupingScenario ?? 'Separate',
   };
   if (paidLateFees.length > 0 || paidCharges.length > 0) {
     result.chargeReceiptId = `${id}-charges`;
@@ -241,6 +266,18 @@ function collect(body: CollectFeeInput): CollectFeeOutput {
     result.feeReceiptId = undefined;
     result.feeReceiptNumber = undefined;
   }
+  if (result.receiptGrouping === 'Combined') {
+    result.feeReceiptId = id;
+    result.feeReceiptNumber = receiptNumber;
+    result.chargeReceiptId = undefined;
+    result.chargeReceiptNumber = undefined;
+  }
+  result.feeReceiptAmount = result.feeReceiptId
+    ? result.receiptGrouping === 'Combined' ? paymentTotal : paidFeeHeads.reduce((sum, head) => sum + head.amountPaid, 0)
+    : undefined;
+  result.chargeReceiptAmount = result.chargeReceiptId
+    ? [...paidCharges, ...paidLateFees].reduce((sum, line) => sum + line.amountPaid, 0)
+    : undefined;
   // Exercise the real UI's pending-response branch without inventing a bank
   // settlement model. Unverified payments have no generated receipt, and this
   // isolated fixture leaves the underlying balances unchanged.
@@ -248,6 +285,7 @@ function collect(body: CollectFeeInput): CollectFeeOutput {
     Object.assign(result, {
       status: 5, receiptNumber: '', feeReceiptId: undefined, feeReceiptNumber: undefined,
       chargeReceiptId: undefined, chargeReceiptNumber: undefined,
+      feeReceiptAmount: undefined, chargeReceiptAmount: undefined,
     });
     replay.set(body.idempotencyKey, result);
     return result;
@@ -282,6 +320,27 @@ export const fixtureBaseQuery = async (args: string | FetchArgs) => {
           status: chargeReceiptScenario ? (balances().pendingCharges === 0 ? 1 : 0) : 2,
         }] } };
       }
+      if (url.endsWith('/fee-details')) {
+        const balance = balances();
+        const feeHeads = ['tuition', 'transport'].map((feeHeadId) => {
+          const lines = ledger.flatMap(group => group.items).filter(line => line.feeHeadId === feeHeadId);
+          const amount = money(lines.reduce((sum, line) => sum + line.total, 0));
+          const paidAmount = money(lines.reduce((sum, line) => sum + line.paid, 0));
+          const pendingAmount = money(lines.reduce((sum, line) => sum + line.due, 0));
+          return { feeHeadId, feeHeadName: lines[0]?.feeHeadName ?? feeHeadId, amount, paidAmount, pendingAmount,
+            netFee: amount, concessionAmount: 0, grossPaidAmount: paidAmount, refundedAmount: 0,
+            overpaymentAmount: 0, adjustmentCreditAmount: 0, description: '', status: pendingAmount ? 0 : 1 };
+        }).filter(head => head.amount > 0);
+        return { data: {
+          student: { id: student.studentId, name: student.studentName, grNo: student.grNo,
+            standardName: student.standardName, divisionName: student.divisionName, rollNo: student.rollNo },
+          feeOverview: { totalFee: balance.totalFees, paidFee: balance.paidFees, pendingFee: balance.pendingFees,
+            overdueFee: ledger.flatMap(group => group.items).filter(line => line.status === 'Overdue' || line.status === 2).reduce((sum, line) => sum + line.due, 0),
+            netFee: balance.totalFees, grossPaidAmount: balance.paidFees, concessionAmount: 0,
+            refundedAmount: 0, overpaymentAmount: 0, adjustmentCreditAmount: 0 },
+          feeHeads, charges, concessions: [], payments: [],
+        } };
+      }
       if (url.endsWith('/collect-form')) {
         const balance = balances();
         const basis = new URLSearchParams(window.location.search).get('allocationBasis');
@@ -296,6 +355,7 @@ export const fixtureBaseQuery = async (args: string | FetchArgs) => {
           ...(configured ? { allocationBasis: basis, collectionPolicyId: 'sample-policy', collectionPolicyName: 'Screen order policy', collectionPolicyVersion: 2,
             allocationDueFeeOrder: order.map(line => line.dueFeeId), allocationRevision: '0'.repeat(64) } : {}),
         };
+        form.receiptGrouping = receiptGroupingScenario ?? 'Separate';
         return { data: structuredClone(form) };
       }
       if (url === '/bank-accounts') return { data: { items: [], totalCount: 0 } };
@@ -317,6 +377,16 @@ export const fixtureBaseQuery = async (args: string | FetchArgs) => {
         // Intentionally reject the obsolete /v1/charge-receipts route. Both fee
         // and charge IDs are served by the canonical fee-receipts resource.
         const match = /^\/v1\/fee-receipts\/([^/]+)\/pdf$/.exec(url);
+        if (receiptGroupingScenario && match) {
+          const result = [...replay.values()].find((item) => item.feeReceiptId === match[1] || item.chargeReceiptId === match[1]);
+          if (result) {
+            const isFee = result.feeReceiptId === match[1];
+            const amount = result.receiptGrouping === 'Combined' ? result.receivedAmount : isFee
+              ? result.paidFeeHeads.reduce((sum, head) => sum + head.amountPaid, 0)
+              : [...(result.paidLateFees ?? []), ...(result.paidCharges ?? [])].reduce((sum, line) => sum + line.amountPaid, 0);
+            return { data: chargeReceiptPdf(isFee ? result.feeReceiptNumber! : result.chargeReceiptNumber!, result.receiptGrouping === 'Combined' ? 'Combined Fee And Charge Receipt' : isFee ? 'Fee Receipt' : 'Charge Receipt', amount) };
+          }
+        }
         const collection = [...replay.values()].find((result) => result.chargeReceiptId === match?.[1]);
         if (chargeReceiptScenario && match && collection) {
           if (remainingPdfFailures > 0) {

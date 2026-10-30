@@ -16,9 +16,15 @@ const existing = {
 };
 
 export const useGetConcessionTypesQuery = () => ({ data: { data: { items: [] } } });
-export const useGetConcessionTypeByIdQuery = () => ({ data: { data: existing }, isLoading: false });
+export const useGetConcessionTypeByIdQuery = (_params: unknown, options?: { skip?: boolean }) => ({
+  data: options?.skip ? undefined : { data: existing },
+  currentData: options?.skip ? undefined : { data: existing },
+  isLoading: false,
+  isFetching: false,
+  refetch: () => undefined,
+});
 export const useGetConcessionTypeVersionHistoryQuery = () => ({
-  data: {
+  currentData: {
     data: {
       totalCount: 3,
       items: [
@@ -66,3 +72,4 @@ function useMutation(): any {
 
 export const usePostConcessionTypeMutation = useMutation;
 export const usePutConcessionTypeMutation = useMutation;
+export const usePatchConcessionTypeStatusMutation = useMutation;

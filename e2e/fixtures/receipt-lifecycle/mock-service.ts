@@ -16,12 +16,12 @@ function documentFor(id: string, transaction: any, scope: number, provisional: b
   const kind = scope === 2 ? provisional ? 3 : 4 : provisional ? 2 : 1;
   const prefix = scope === 2 ? provisional ? 'KCH' : 'FCH' : provisional ? 'KFE' : 'FIN';
   const receiptNumber = `${prefix}-2026-${String(sequence++).padStart(6, '0')}`;
-  const type = provisional ? 'Provisional' : 'Official';
+  const type = provisional ? 'Provisional Receipt' : 'Receipt';
   return {
     id, receiptNumber, receiptKind: kind, receiptScope: scope,
-    receiptKindLabel: `${type} Receipt (${scope === 2 ? 'Charge' : scope === 3 ? 'Fees and Charges' : 'Fee'})`,
+    receiptKindLabel: `${type} (${scope === 2 ? 'Charge' : scope === 3 ? 'Fees and Charges' : 'Fee'})`,
     verificationStatus: provisional ? 1 : 0, paymentMethodLabel: methodLabels[transaction.method],
-    pdfFileName: `${type}-Receipt_${scope === 2 ? 'Charge' : scope === 3 ? 'Fees-And-Charges' : 'Fee'}_${receiptNumber}_${date}.pdf`,
+    pdfFileName: `${type.replace(' ', '-')}_${scope === 2 ? 'Charge' : scope === 3 ? 'Fees-And-Charges' : 'Fee'}_${receiptNumber}_${date}.pdf`,
     feeCollectionTransactionId: transaction.id, totalPaidAmount: amount,
     feePaidAmount: scope === 1 ? amount : 0, chargePaidAmount: scope === 2 ? amount : 0,
     studentId: 'diya-10092', studentName: 'Diya Sweta Badgujar', grNo: 10092, rollNo: '2',
@@ -106,7 +106,7 @@ const query = async (args: string | FetchArgs): Promise<any> => {
       grNumber: d.grNo, rollNumber: 2, board: 'GSEB', medium: 'English', class: 'Class 3',
       paymentMethod: methodId, amount: d.totalPaidAmount, instrumentDetails: { ...payments.get(d.feeCollectionTransactionId).body.payments[0].details, upiTransactionId: payments.get(d.feeCollectionTransactionId).body.payments[0].details?.transactionId },
       status: d.verificationStatus === 3 ? 2 : d.verificationStatus === 1 ? 0 : 1,
-      statusLabel: methodId === 0 ? 'Official receipt issued' : d.verificationStatus === 2 ? 'Approved' : d.verificationStatus === 3 ? 'Rejected' : 'Pending',
+      statusLabel: methodId === 0 ? 'Receipt issued' : d.verificationStatus === 2 ? 'Approved' : d.verificationStatus === 3 ? 'Rejected' : 'Pending',
       provisionalReceiptId: methodId === 0 ? null : d.id, provisionalReceiptNumber: methodId === 0 ? null : d.receiptNumber,
       finalReceiptId: methodId === 0 ? d.id : d.linkedFinalReceiptId, finalReceiptNumber: methodId === 0 ? d.receiptNumber : d.linkedFinalReceiptNumber,
     }));

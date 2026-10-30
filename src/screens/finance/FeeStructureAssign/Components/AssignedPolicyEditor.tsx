@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type {
   AssignmentDetails,
   AssignmentPolicySelection,
@@ -5,11 +6,11 @@ import type {
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Stack, Alert, Button, Typography } from '@mui/material';
+import { Stack, Alert, Button } from '@mui/material';
 import {
   assignmentError,
   assignmentPolicyFamilies,
@@ -24,16 +25,17 @@ export default function AssignedPolicyEditor({
   onSaved,
   onBusyChange,
   onDirtyChange,
+  children,
 }: {
   data: AssignmentDetails;
   onCancel: () => void;
   onSaved: () => void;
   onBusyChange?: (busy: boolean) => void;
   onDirtyChange: (dirty: boolean) => void;
+  children?: ReactNode;
 }) {
   const [save, state] = useAssignmentUpdatePoliciesMutation();
   const [error, setError] = useState('');
-  const [confirmCancel, setConfirmCancel] = useState(false);
   const pending = useRef(false);
   const formik = useFormik<{ policies: AssignmentPolicySelection[]; reason: string }>({
     initialValues: {
@@ -89,66 +91,81 @@ export default function AssignedPolicyEditor({
     return () => onDirtyChange(false);
   }, [formik.dirty, onDirtyChange]);
   return (
-    <Stack spacing={2}>
-      <Typography variant="h6">Edit assigned policies</Typography>
-      <AssignmentPolicies
-        studentId={data.assignment.studentId}
-        academicYearId={data.assignment.academicYearId}
-        defaults={data.assignment.policies}
-        selections={formik.values.policies}
-        reason={formik.values.reason}
-        editing
-        canOverride
-        disabled={state.isLoading}
-        onChange={(policies, reason) => formik.setValues({ policies, reason })}
-      />
-      {formik.submitCount > 0 && formik.errors.reason && (
-        <Alert severity="error">{formik.errors.reason}</Alert>
-      )}
-      {error && (
-        <Alert severity="error">{error} Reopen the assignment if another user changed it.</Alert>
-      )}
-      <Stack direction="row" spacing={1} justifyContent="flex-end">
-        <Button
-          startIcon={<Iconify icon="mdi:close" />}
+    <Stack sx={{ flex: 1, minHeight: 0 }}>
+      <Stack
+        role="region"
+        aria-label="Assigned policy fields"
+        spacing={2}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          p: { xs: 2, sm: 3 },
+          '& > *': { flexShrink: 0 },
+        }}
+      >
+        {children}
+        <AssignmentPolicies
+          studentId={data.assignment.studentId}
+          academicYearId={data.assignment.academicYearId}
+          defaults={data.assignment.policies}
+          selections={formik.values.policies}
+          reason={formik.values.reason}
+          editing
+          canOverride
           disabled={state.isLoading}
-          onClick={() => {
-            if (formik.dirty) setConfirmCancel(true);
-            else onCancel();
-          }}
+          onChange={(policies, reason) => formik.setValues({ policies, reason })}
+        />
+        {formik.submitCount > 0 && formik.errors.reason && (
+          <Alert severity="error">{formik.errors.reason}</Alert>
+        )}
+        {error && (
+          <Alert severity="error">{error} Reopen the assignment if another user changed it.</Alert>
+        )}
+      </Stack>
+      <Stack
+        role="group"
+        aria-label="Fee assignment actions"
+        direction="row"
+        spacing={1}
+        alignItems="center"
+        justifyContent="flex-end"
+        sx={{
+          px: { xs: 2, sm: 3 },
+          py: 1.75,
+          bgcolor: 'background.paper',
+          borderTop: 1,
+          borderColor: 'divider',
+          flexShrink: 0,
+        }}
+      >
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+          disabled={state.isLoading}
+          onClick={onCancel}
         >
           Cancel
         </Button>
         <Button
+          size="small"
+          color="inherit"
           variant="contained"
           loading={state.isLoading}
           disabled={
+            state.isLoading ||
             !policiesChanged ||
             !formik.values.reason.trim() ||
             !formik.values.policies.find((p) => p.family === 'collection')?.versionId
           }
-          startIcon={<Iconify icon="mdi:content-save-outline" />}
+          startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
           onClick={() => formik.handleSubmit()}
         >
           Save policies
         </Button>
       </Stack>
-      <ConfirmDialog
-        open={confirmCancel}
-        onClose={() => setConfirmCancel(false)}
-        title="Discard policy changes?"
-        icon="warning"
-        content="Your unsaved policy selections and reason will be discarded."
-        action={
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mdi:exit-to-app" />}
-            onClick={onCancel}
-          >
-            Discard changes
-          </Button>
-        }
-      />
     </Stack>
   );
 }

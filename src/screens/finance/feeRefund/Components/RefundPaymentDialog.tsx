@@ -1,5 +1,7 @@
 'use client';
 
+import { FinanceFieldSkeleton } from 'src/screens/finance/components/FinanceFormSkeleton';
+
 import type { RoutingOption } from 'src/redux/finance/financeRoutingApi';
 
 import * as Yup from 'yup';
@@ -184,7 +186,7 @@ export default function RefundPaymentDialog({
         >
           <DialogScrollContent
             scrollBarProps={{ fillContent: true }}
-            sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+            sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}
           >
             <FormBusyRegion fillContent busy={busy} label="Recording payment…">
               {setupMissing ? (
@@ -262,33 +264,38 @@ export default function RefundPaymentDialog({
                     </Grid>
                     <Grid size={12}>
                       <ShakingTextField error={Boolean(fieldError('expenseCategoryId'))}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          required
-                          select
-                          label="Expense category"
-                          name="expenseCategoryId"
-                          value={formik.values.expenseCategoryId}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          disabled={busy || bankAccountsLoading}
-                          error={Boolean(fieldError('expenseCategoryId'))}
-                          helperText={
-                            fieldError('expenseCategoryId') ||
-                            (bankAccountsLoading
-                              ? 'Loading expense categories…'
-                              : expenseCategories.length === 0
-                                ? 'No expense categories are available.'
-                                : undefined)
-                          }
+                        <FinanceFieldSkeleton
+                          loading={bankAccountsLoading && !busy}
+                          label="Loading expense categories"
                         >
-                          {expenseCategories.map((category) => (
-                            <MenuItem key={category.id} value={category.id}>
-                              {category.label}
-                            </MenuItem>
-                          ))}
-                        </TextField>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            required
+                            select
+                            label="Expense category"
+                            name="expenseCategoryId"
+                            value={formik.values.expenseCategoryId}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            disabled={busy || bankAccountsLoading}
+                            error={Boolean(fieldError('expenseCategoryId'))}
+                            helperText={
+                              fieldError('expenseCategoryId') ||
+                              (bankAccountsLoading
+                                ? 'Loading expense categories…'
+                                : expenseCategories.length === 0
+                                  ? 'No expense categories are available.'
+                                  : undefined)
+                            }
+                          >
+                            {expenseCategories.map((category) => (
+                              <MenuItem key={category.id} value={category.id}>
+                                {category.label}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        </FinanceFieldSkeleton>
                       </ShakingTextField>
                     </Grid>
                     {nonCash && (
@@ -313,37 +320,42 @@ export default function RefundPaymentDialog({
                     )}
                     <Grid size={12}>
                       <ShakingTextField error={Boolean(fieldError('bankAccountId'))}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          required
-                          select
-                          label="Source school bank account"
-                          name="bankAccountId"
-                          value={formik.values.bankAccountId}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          disabled={
-                            busy ||
-                            bankAccountsLoading ||
-                            Boolean(refund._payoutPending && refund._payingBankAccountId)
-                          }
-                          error={Boolean(fieldError('bankAccountId'))}
-                          helperText={
-                            fieldError('bankAccountId') ||
-                            (bankAccountsLoading
-                              ? 'Loading bank accounts…'
-                              : bankAccounts.length === 0
-                                ? 'No school bank accounts are available.'
-                                : undefined)
-                          }
+                        <FinanceFieldSkeleton
+                          loading={bankAccountsLoading && !busy}
+                          label="Loading school bank accounts"
                         >
-                          {bankAccounts.map((account) => (
-                            <MenuItem key={account.id} value={account.id}>
-                              {account.label}
-                            </MenuItem>
-                          ))}
-                        </TextField>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            required
+                            select
+                            label="Source school bank account"
+                            name="bankAccountId"
+                            value={formik.values.bankAccountId}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            disabled={
+                              busy ||
+                              bankAccountsLoading ||
+                              Boolean(refund._payoutPending && refund._payingBankAccountId)
+                            }
+                            error={Boolean(fieldError('bankAccountId'))}
+                            helperText={
+                              fieldError('bankAccountId') ||
+                              (bankAccountsLoading
+                                ? 'Loading bank accounts…'
+                                : bankAccounts.length === 0
+                                  ? 'No school bank accounts are available.'
+                                  : undefined)
+                            }
+                          >
+                            {bankAccounts.map((account) => (
+                              <MenuItem key={account.id} value={account.id}>
+                                {account.label}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        </FinanceFieldSkeleton>
                       </ShakingTextField>
                     </Grid>
                   </Grid>

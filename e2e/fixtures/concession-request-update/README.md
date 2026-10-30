@@ -24,6 +24,7 @@ show the reviewed update stamp and the returned stamp used for submission.
 | policy | Missing policy version is explained |
 | eligibility | Ineligible fee selection is explained |
 | unknown | Fallback retains the exact unknown error code and support reference |
+| policy-refresh | Policy and type changes delay eligibility by 2.5 seconds; selected labels and document requirements stay visible, fee rows load, and Save/Submit remain disabled until the current response arrives |
 
 The unknown scenario deliberately uses the issue's originally transcribed `0030003` code.
 The supplied screenshot shows `030003`, which is covered by **stale**. These codes must not

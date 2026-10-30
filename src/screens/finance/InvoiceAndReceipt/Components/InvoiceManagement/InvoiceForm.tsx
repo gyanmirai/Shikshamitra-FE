@@ -1,3 +1,4 @@
+import { FinanceFieldSkeleton } from 'src/screens/finance/components/FinanceFormSkeleton';
 import type { Board, Division, Standards, AcademicYear } from 'src/types/school';
 
 import * as Yup from 'yup';
@@ -642,43 +643,51 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
               {/* Student (multi autocomplete) */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(touched.students && errors.students)}>
-                  <Autocomplete
-                    loading={isLoading}
-                    noOptionsText={<Typography variant="caption">No students found</Typography>}
-                    multiple
-                    fullWidth
-                    value={values.students}
-                    onChange={(_e, value: any) => setFieldValue('students', value)}
-                    onBlur={() => setFieldTouched('students', true)}
-                    renderTags={(tagValue, getTagProps) =>
-                      tagValue.map((option, index) => (
-                        <Chip
-                          label={option.name}
-                          variant="soft"
+                  <FinanceFieldSkeleton
+                    loading={isLoading && !formik.isSubmitting}
+                    label="Loading students"
+                  >
+                    <Autocomplete
+                      loading={isLoading}
+                      noOptionsText={<Typography variant="caption">No students found</Typography>}
+                      multiple
+                      fullWidth
+                      value={values.students}
+                      onChange={(_e, value: any) => setFieldValue('students', value)}
+                      onBlur={() => setFieldTouched('students', true)}
+                      renderTags={(tagValue, getTagProps) =>
+                        tagValue.map((option, index) => (
+                          <Chip
+                            key={index}
+                            label={option.name}
+                            variant="soft"
+                            size="small"
+                            {...getTagProps({ index })}
+                          />
+                        ))
+                      }
+                      options={tableData}
+                      getOptionLabel={(option: any) => option?.name || ''}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
                           size="small"
-                          {...getTagProps({ index })}
+                          label="Student *"
+                          fullWidth
+                          error={!!(touched.students && errors.students)}
+                          helperText={
+                            ((touched.students && errors.students) as string) || undefined
+                          }
                         />
-                      ))
-                    }
-                    options={tableData}
-                    getOptionLabel={(option: any) => option?.name || ''}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        size="small"
-                        label="Student *"
-                        fullWidth
-                        error={!!(touched.students && errors.students)}
-                        helperText={((touched.students && errors.students) as string) || undefined}
-                      />
-                    )}
-                    renderOption={(prop: any, option: any) => (
-                      <li {...prop} key={option.id}>
-                        {option.name}
-                      </li>
-                    )}
-                    disabled={values.divisions.length === 0}
-                  />
+                      )}
+                      renderOption={(prop: any, option: any) => (
+                        <li {...prop} key={option.id}>
+                          {option.name}
+                        </li>
+                      )}
+                      disabled={values.divisions.length === 0}
+                    />
+                  </FinanceFieldSkeleton>
                 </ShakingTextField>
               </Grid>
 

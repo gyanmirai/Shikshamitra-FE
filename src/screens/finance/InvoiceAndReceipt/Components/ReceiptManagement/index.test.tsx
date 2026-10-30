@@ -1,10 +1,10 @@
 import React from 'react';
-import { api } from 'src/redux/service';
 import { Provider } from 'react-redux';
+import { api } from 'src/redux/service';
 import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
-import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 import { feeCollectionApi } from 'src/redux/feeCollection/feeCollection';
+import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import ReceiptManagement from './index';
 
@@ -100,7 +100,7 @@ describe('ReceiptManagement collection visibility', () => {
     setup();
     await screen.findByText('OCT-001');
     fireEvent.click(screen.getByText('Next page'));
-    await waitFor(() => expect(receiptRequests().at(-1).params.skipCount).toBe(20));
+    await waitFor(() => expect(receiptRequests().at(-1).params.skipCount).toBe(10));
     fireEvent.change(screen.getByLabelText('Month'), { target: { value: month } });
     await waitFor(() => expect(receiptRequests().at(-1).params).toMatchObject({ month: Number(month), skipCount: 0 }));
     expect(await screen.findByText(receipt)).toBeTruthy();

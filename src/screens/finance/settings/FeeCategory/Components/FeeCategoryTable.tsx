@@ -77,17 +77,17 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   const [sorts, setSorts] = React.useState<IParams['sorts']>([]);
   const tableFilters = filters.length
     ? JSON.stringify(
-        filters.map(({ column, type, value }) => ({
-          column,
-          type,
-          value:
-            column === 'totalFeeHeads'
-              ? type === 'between'
-                ? { min: Number(value.min), max: Number(value.max) }
-                : Number(value)
-              : value,
-        }))
-      )
+      filters.map(({ column, type, value }) => ({
+        column,
+        type,
+        value:
+          column === 'totalFeeHeads'
+            ? type === 'between'
+              ? { min: Number(value.min), max: Number(value.max) }
+              : Number(value)
+            : value,
+      }))
+    )
     : undefined;
   const categoryQueryArgs = {
     academicYearId: currentYear?.id,
@@ -425,49 +425,49 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
             actions={[
               ...(canAdd && row.isActive
                 ? [
-                    {
-                      id: 'edit',
-                      label: 'Edit',
-                      icon: GlobalIcons.edit,
-                      onClick: () => {
-                        setEditData(row as IFeeCategory);
-                        onAddFeeCategory.onTrue();
-                      },
+                  {
+                    id: 'edit',
+                    label: 'Edit',
+                    icon: GlobalIcons.edit,
+                    onClick: () => {
+                      setEditData(row as IFeeCategory);
+                      onAddFeeCategory.onTrue();
                     },
-                  ]
+                  },
+                ]
                 : []),
               ...(canDelete && row.isActive
                 ? [
-                    {
-                      id: 'delete',
-                      label: 'Delete',
-                      icon: GlobalIcons.delete,
-                      color: 'error.main',
-                      disabled: row?.isUsedInDownstream,
-                      tooltip: row?.isUsedInDownstream
-                        ? 'This category is used elsewhere and cannot be deleted.'
-                        : undefined,
-                      onClick: () => {
-                        setSelectedFeeCategory(row as IFeeCategory);
-                        deleteFeeCategoryDialog.onTrue();
-                      },
+                  {
+                    id: 'delete',
+                    label: 'Delete',
+                    icon: GlobalIcons.delete,
+                    color: 'error.main',
+                    disabled: row?.isUsedInDownstream,
+                    tooltip: row?.isUsedInDownstream
+                      ? 'This category is used elsewhere and cannot be deleted.'
+                      : undefined,
+                    onClick: () => {
+                      setSelectedFeeCategory(row as IFeeCategory);
+                      deleteFeeCategoryDialog.onTrue();
                     },
-                  ]
+                  },
+                ]
                 : []),
               ...(canAdd
                 ? [
-                    {
-                      id: 'status',
-                      label: row.isActive ? 'Archive' : 'Restore',
-                      icon: row.isActive ? 'mdi:archive-outline' : 'mdi:archive-arrow-up-outline',
-                      disabled: row.isActive && Boolean(row?.isUsedInDownstream),
-                      tooltip:
-                        row.isActive && row?.isUsedInDownstream
-                          ? 'This category is used elsewhere and cannot be archived.'
-                          : undefined,
-                      onClick: () => handleOpenStatusConfirm(row as IFeeCategory),
-                    },
-                  ]
+                  {
+                    id: 'status',
+                    label: row.isActive ? 'Archive' : 'Restore',
+                    icon: row.isActive ? 'mdi:archive-outline' : 'mdi:archive-arrow-up-outline',
+                    disabled: row.isActive && Boolean(row?.isUsedInDownstream),
+                    tooltip:
+                      row.isActive && row?.isUsedInDownstream
+                        ? 'This category is used elsewhere and cannot be archived.'
+                        : undefined,
+                    onClick: () => handleOpenStatusConfirm(row as IFeeCategory),
+                  },
+                ]
                 : []),
             ]}
           />
@@ -593,27 +593,27 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         rowProps={(row) =>
           canView
             ? {
-                tabIndex: 0,
-                'aria-label': `View fee category ${row.name}`,
-                onKeyDown: (event) => {
-                  if (
-                    event.target === event.currentTarget &&
-                    (event.key === 'Enter' || event.key === ' ')
-                  ) {
-                    event.preventDefault();
-                    if (onView) onView(row as IFeeCategory);
-                    else setFeeHeadsCategoryId(row.id);
-                  }
+              tabIndex: 0,
+              'aria-label': `View fee category ${row.name}`,
+              onKeyDown: (event) => {
+                if (
+                  event.target === event.currentTarget &&
+                  (event.key === 'Enter' || event.key === ' ')
+                ) {
+                  event.preventDefault();
+                  if (onView) onView(row as IFeeCategory);
+                  else setFeeHeadsCategoryId(row.id);
+                }
+              },
+              sx: {
+                cursor: 'pointer',
+                '&:focus-visible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: -2,
                 },
-                sx: {
-                  cursor: 'pointer',
-                  '&:focus-visible': {
-                    outline: '2px solid',
-                    outlineColor: 'primary.main',
-                    outlineOffset: -2,
-                  },
-                },
-              }
+              },
+            }
             : {}
         }
         serverSidePagination

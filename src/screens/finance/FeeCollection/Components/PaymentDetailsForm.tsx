@@ -1,3 +1,8 @@
+import {
+  financePaymentNameSchema,
+  isFinancePaymentNameField,
+  sanitizeFinanceName,
+} from 'src/utils/finance-name';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { motion } from 'framer-motion';
@@ -160,6 +165,8 @@ export const buildValidationSchema = (currentYear: any) =>
     );
 
 export const buildCollectionFieldValidation = (field: IPaymentFieldConfig, currentYear: any) => {
+  if (isFinancePaymentNameField(field.name)) return financePaymentNameSchema(field);
+
   let schema: Yup.Schema<any>;
 
   if (field.type === 'date') {
@@ -495,7 +502,9 @@ export default function PaymentDetailsForm({
                                         let newValue = e.target.value;
 
                                         // Handle text-only fields (letters and spaces only)
-                                        if (field.type === 'text') {
+                                        if (isFinancePaymentNameField(field.name)) {
+                                          newValue = sanitizeFinanceName(newValue);
+                                        } else if (field.type === 'text') {
                                           newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
                                         }
 

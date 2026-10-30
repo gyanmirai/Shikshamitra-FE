@@ -18,6 +18,7 @@ import { financePermissions } from 'src/constants/finance-menu';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -160,11 +161,15 @@ const FeeRefundFormComponent = ({
     refetchOnMountOrArgChange: true,
   });
 
+  const canAutoApproveSubmission =
+    isAdminCreator && (!isEdit || editRefundDetail?.status === FeeRefundStatusType.Draft);
+
   const [getRefundEligibility] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetRefundEligibilityQuery,
   });
 
+  const [prefilledRefundType, setPrefilledRefundType] = React.useState<'full' | 'partial'>('full');
   const [prefilledFeeHeadRefunds, setPrefilledFeeHeadRefunds] = React.useState<
     IFeeHeadRefundItem[]
   >([]);
@@ -237,6 +242,23 @@ const FeeRefundFormComponent = ({
           .filter((feeHead) => feeHead.months.length > 0);
 
         if (cancelled) return;
+        let remaining =
+          eligibility.allowPartialRefund === false
+            ? Number.POSITIVE_INFINITY
+            : Number(eligibility.totalRefundable ?? 0);
+        const fullAmountsMatch = mappedFeeHeads.every((head) =>
+          head.months.every((month) => {
+            const source = eligibility.feeHeads
+              .flatMap((item) => item.months)
+              .find((item) => item.sourceAllocationId === month.sourceAllocationId);
+            const amount = Math.min(Math.max(0, source?.refundable ?? 0), Math.max(0, remaining));
+            remaining -= amount;
+            return Number(month.amount) === amount;
+          })
+        );
+        setPrefilledRefundType(
+          eligibility.allowPartialRefund === false || fullAmountsMatch ? 'full' : 'partial'
+        );
         setPrefilledFeeHeadRefunds(mappedFeeHeads);
       } catch (_err) {
         if (cancelled) return;
@@ -294,6 +316,7 @@ const FeeRefundFormComponent = ({
   const formInitialValues = useMemo(
     () =>
       buildRefundInitialValues({
+        refundType: hasSourceRefund ? prefilledRefundType : 'full',
         boardId: hasSourceRefund
           ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.boardId ??
             openingScope.defaultBoardId)
@@ -329,17 +352,38 @@ const FeeRefundFormComponent = ({
           : {},
         feeHeadRefunds: hasSourceRefund ? prefilledFeeHeadRefunds : [],
       }),
-    [openingScope, isEdit, hasSourceRefund, editRefundDetail, prefilledFeeHeadRefunds]
+    [
+      openingScope,
+      isEdit,
+      hasSourceRefund,
+      editRefundDetail,
+      prefilledFeeHeadRefunds,
+      prefilledRefundType,
+    ]
   );
 
   const formik = useFormik({
     initialValues: formInitialValues,
-    validationSchema: buildRefundValidationSchema(currentYear),
+    validationSchema: buildRefundValidationSchema(
+      currentYear,
+      isEdit
+        ? {
+            method: normalizeRefundMethod(editRefundDetail?.refundMethod ?? ''),
+            paymentDetails: editRefundDetail?.paymentDetails,
+          }
+        : undefined
+    ),
     enableReinitialize: true,
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values, helpers) => {
       if (activeSubmissionPrerequisite) return;
+      if (isEdit && !editRefundDetail?.availableActions?.includes('edit')) {
+        shikshaMitraToast.error({
+          message: 'This refund can no longer be edited. Close and refresh the refund list.',
+        });
+        return;
+      }
       if (!hasSourceRefund && !refundCanSubmit) {
         shikshaMitraToast.error({
           message: 'Choose a student with refundable paid fees before submitting.',
@@ -385,7 +429,7 @@ const FeeRefundFormComponent = ({
             return;
           }
           setReviewedPreview({ fingerprint, result: latest });
-          if (isAdminCreator && confirmedAdminFingerprint.current !== fingerprint) {
+          if (canAutoApproveSubmission && confirmedAdminFingerprint.current !== fingerprint) {
             if (!adminCanApprove) {
               shikshaMitraToast.error({
                 message:
@@ -405,7 +449,7 @@ const FeeRefundFormComponent = ({
             });
             return;
           }
-        } else if (isAdminCreator) {
+        } else if (canAutoApproveSubmission) {
           const fingerprint = JSON.stringify(payload);
           if (confirmedAdminFingerprint.current !== fingerprint) {
             if (!adminCanApprove) {
@@ -426,8 +470,11 @@ const FeeRefundFormComponent = ({
           }
         }
         if (isEdit && editRefundId) {
-          await updateFeeRefund({ id: editRefundId, body: payload }).unwrap();
-          if (submitIntent.current === 'submit') {
+          const updated = await updateFeeRefund({
+            id: editRefundId,
+            body: { ...payload, concurrencyStamp: editRefundDetail?.concurrencyStamp },
+          }).unwrap();
+          if (updated.status === FeeRefundStatusType.Draft && submitIntent.current === 'submit') {
             const submitted = await submitFeeRefund(editRefundId).unwrap();
             if (isAdminCreator && submitted.status !== 2) {
               shikshaMitraToast.warning({
@@ -442,7 +489,12 @@ const FeeRefundFormComponent = ({
               });
             }
           } else {
-            shikshaMitraToast.success({ message: 'Refund draft updated successfully.' });
+            shikshaMitraToast.success({
+              message:
+                updated.status === FeeRefundStatusType.Pending
+                  ? 'Refund request updated. It remains Pending for approval.'
+                  : 'Refund draft updated successfully.',
+            });
           }
         } else {
           const created = await createFeeRefund({
@@ -613,16 +665,23 @@ const FeeRefundFormComponent = ({
               ) : showSkeleton ? (
                 <RefundFormSkeleton />
               ) : (
-                <Stack spacing={1} sx={{ flex: 1 }}>
+                <Stack spacing={2} sx={{ flex: 1 }}>
                   {/* ── Student Information Card ── */}
                   <FormSectionCard
                     descriptionTooltip="Select the student's board, medium, class and division for the current academic year, then choose the student. Refund eligibility comes from paid fees and the linked refund policy."
-                    title="Student information"
+                    title="Student Information"
                     icon="solar:users-group-rounded-bold-duotone"
                   >
                     <RefundGeneralInfoCard formik={formik} disabled={hasSourceRefund} />
                   </FormSectionCard>
 
+                  {isEdit &&
+                    editRefundDetail &&
+                    !editRefundDetail.availableActions?.includes('edit') && (
+                      <Alert severity="warning">
+                        This refund can no longer be edited. Close and refresh the refund list.
+                      </Alert>
+                    )}
                   {/* ── Fee Refund Details ── */}
                   {prerequisite ? (
                     <FinancePrerequisiteState
@@ -632,6 +691,7 @@ const FeeRefundFormComponent = ({
                   ) : (
                     <FeeRefundDetailsForm
                       formik={formik}
+                      lockedReceiptId={isEdit ? editRefundDetail?.originalReceiptId : undefined}
                       allowedPayoutMethods={
                         isEdit || (replacementRefundId && editRefundDetail?.concessionRequestId)
                           ? editRefundDetail?.allowedPayoutMethods
@@ -652,7 +712,7 @@ const FeeRefundFormComponent = ({
           flexShrink: 0,
           borderTop: `1px solid ${theme.palette.divider}`,
           backdropFilter: 'blur(12px)',
-          px: { xs: 2, md: 3 },
+          px: { xs: 1, md: 2 },
           py: 1.5,
         }}
       >
@@ -681,7 +741,7 @@ const FeeRefundFormComponent = ({
                 <Chip
                   size="small"
                   label={`${totalSelectedMonths} month${totalSelectedMonths !== 1 ? 's' : ''} selected`}
-                  color={incompleteRefundMonths > 0 ? 'warning' : 'info'}
+                  color="default"
                   variant="soft"
                   icon={<Iconify icon="solar:calendar-bold" width={14} />}
                 />
@@ -694,9 +754,9 @@ const FeeRefundFormComponent = ({
                 {totalRefundRequested > 0 && (
                   <Box display="flex" alignItems="center" gap={1}>
                     <Typography variant="caption" color="text.secondary">
-                      Refund Amount:
+                      Refund amount:
                     </Typography>
-                    <Typography variant="subtitle2" fontWeight={800} color="primary.main">
+                    <Typography variant="subtitle2" fontWeight={600} color="text.primary">
                       {formatNumber(totalRefundRequested, 'INR')}
                     </Typography>
                   </Box>
@@ -734,6 +794,7 @@ const FeeRefundFormComponent = ({
                 busy ||
                 showSkeleton ||
                 editLoadError ||
+                (isEdit && !editRefundDetail?.availableActions?.includes('edit')) ||
                 sessionStatus === 'loading' ||
                 !formik.isValid ||
                 totalSelectedMonths === 0 ||
@@ -768,22 +829,57 @@ const FeeRefundFormComponent = ({
         handleClose={() => setAdminConfirmation(null)}
       >
         <DialogScrollContent>
-          <Stack spacing={1} sx={{ typography: 'body2' }}>
-            <Typography variant="body2">
-              {adminConfirmation?.studentName || 'Selected student'} · {currentYear?.name}
-            </Typography>
-            <Typography variant="body2">
-              Refund: {formatNumber(adminConfirmation?.amount ?? 0, 'INR')} via{' '}
-              {adminConfirmation?.method}
-            </Typography>
-            {adminConfirmation?.receiptNumber && (
-              <Typography variant="body2">Receipt: {adminConfirmation.receiptNumber}</Typography>
-            )}
-            <Typography variant="body2">
-              This request will be approved automatically when you confirm.
-            </Typography>
-            <Typography variant="body2">
-              Approval does not send the payout; payout is recorded separately.
+          <Stack spacing={2} sx={{ textAlign: 'left' }}>
+            <Box
+              component="dl"
+              sx={{
+                m: 0,
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 7rem) minmax(0, 1fr)',
+                columnGap: 2,
+                rowGap: 1,
+                '& dt': { color: 'text.secondary' },
+                '& dd': { m: 0, minWidth: 0, overflowWrap: 'anywhere' },
+              }}
+            >
+              <Typography component="dt" variant="body2">
+                Student
+              </Typography>
+              <Typography component="dd" variant="body2">
+                {adminConfirmation?.studentName || 'Selected student'}
+              </Typography>
+              <Typography component="dt" variant="body2">
+                Academic year
+              </Typography>
+              <Typography component="dd" variant="body2">
+                {currentYear?.name || '—'}
+              </Typography>
+              <Typography component="dt" variant="body2">
+                Refund amount
+              </Typography>
+              <Typography component="dd" variant="body2">
+                {formatNumber(adminConfirmation?.amount ?? 0, 'INR')}
+              </Typography>
+              <Typography component="dt" variant="body2">
+                Refund method
+              </Typography>
+              <Typography component="dd" variant="body2">
+                {adminConfirmation?.method}
+              </Typography>
+              {adminConfirmation?.receiptNumber && (
+                <>
+                  <Typography component="dt" variant="body2">
+                    Receipt
+                  </Typography>
+                  <Typography component="dd" variant="body2">
+                    {adminConfirmation.receiptNumber}
+                  </Typography>
+                </>
+              )}
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              This request will be approved automatically when you confirm. Approval does not send
+              the payout; payout is recorded separately.
             </Typography>
           </Stack>
         </DialogScrollContent>

@@ -1,7 +1,8 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import * as Yup from 'yup';
 
 export const receiptBookValidationSchema = Yup.object().shape({
-  name: Yup.string()
+  name: financeNameSchema('Receipt Book Name')
     .trim()
     .required('Receipt Book Name is required')
     .min(2, 'Must be at least 2 characters')

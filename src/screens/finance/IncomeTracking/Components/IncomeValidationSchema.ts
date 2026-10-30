@@ -1,10 +1,11 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
 export const getIncomeFormSchema = (currentYear: any) =>
   Yup.object().shape({
     categoryId: Yup.string().required('Income category is required'),
-    name: Yup.string()
+    name: financeNameSchema('Income Name')
       .min(1, 'Income name must be at least 1 character')
       .max(255, 'Income name cannot exceed 255 characters')
       .required('Income name is required'),
@@ -14,8 +15,10 @@ export const getIncomeFormSchema = (currentYear: any) =>
       .typeError('Amount must be a number')
       .min(0.01, 'Amount must be at least 0.01')
       .max(999999999999.99, 'Amount is too large')
-      .test('paise', 'Use no more than two decimal places', (value) =>
-        value == null || /^\d+(\.\d{1,2})?$/.test(String(value))
+      .test(
+        'paise',
+        'Use no more than two decimal places',
+        (value) => value == null || /^\d+(\.\d{1,2})?$/.test(String(value))
       ),
     paymentMethod: Yup.number()
       .required('Payment method is required')

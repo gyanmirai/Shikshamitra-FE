@@ -278,12 +278,20 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
       {entryContext && !query.isFetching && !query.isError && availableCash === 0 && (
         <Alert severity="info">There is no available cash to deposit for this academic year.</Alert>
       )}
-      <Card sx={{ flexShrink: 0, p: 1 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+      <Card component="section" aria-label="Cash filters and summary" sx={{ flexShrink: 0, p: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
           <CustomSelect
             label="Board"
             size="small"
             fullWidth
+            formControlProps={{ sx: { width: { xs: '100%', sm: 160 } } }}
             value={boardId}
             options={[{ id: 'all', name: 'All boards' }, ...boards]}
             valueKey="id"
@@ -294,6 +302,7 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
             label="Medium"
             size="small"
             fullWidth
+            formControlProps={{ sx: { width: { xs: '100%', sm: 150 } } }}
             value={mediumId}
             options={[{ id: 'all', name: 'All mediums' }, ...mediums]}
             valueKey="id"
@@ -305,67 +314,74 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
             label="Month"
             size="small"
             fullWidth
+            formControlProps={{ sx: { width: { xs: '100%', sm: 180 } } }}
             value={month}
             options={[{ value: 'all', label: 'All months' }, ...months]}
             disabled={!months.length}
             onChange={(value) => update({ month: String(value), page: 1 })}
           />
-        </Stack>
+          <Stack
+            direction="row"
+            useFlexGap
+            flexWrap="wrap"
+            spacing={2}
+            alignItems="center"
+            sx={{ ml: { sm: 'auto' }, minWidth: 0 }}
+          >
+            {(
+              [
+                ['collected', 'Collected'],
+                ['spent', 'Spent'],
+                ['deposited', 'Deposited'],
+              ] as const
+            ).map(([key, label]) => (
+              <Stack
+                key={key}
+                spacing={0.5}
+                alignItems="flex-start"
+                sx={{ pr: 2, borderRight: 1, borderColor: 'divider' }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  {label}
+                </Typography>
+                <Typography variant="subtitle2">
+                  {summary ? formatNumber(summary[key], 'INR') : '—'}
+                </Typography>
+              </Stack>
+            ))}
+            <Stack spacing={0.5} alignItems="flex-start" sx={{ minWidth: 0 }}>
+              <Typography variant="caption" color="text.secondary">
+                Academic-year cash available
+              </Typography>
+              <Typography variant="subtitle2">
+                {availableCash !== undefined ? formatNumber(availableCash, 'INR') : '—'}
+              </Typography>
+            </Stack>
+            {canDeposit && (
+              <Button
+                ref={depositButton}
+                variant="contained"
+                color="inherit"
+                size="small"
+                sx={{ flexShrink: 0 }}
+                startIcon={<Iconify icon={GlobalIcons.bankAccount} />}
+                disabled={
+                  query.isFetching || query.isError || !(availableCash && availableCash > 0)
+                }
+                onClick={() => {
+                  setDepositAmount(availableCash!);
+                  deposit.onTrue();
+                }}
+              >
+                Deposit cash
+              </Button>
+            )}
+          </Stack>
+        </Box>
       </Card>
       {!months.length && (
         <Alert severity="warning">Configure the academic-year dates to use the month filter.</Alert>
       )}
-      <Card sx={{ flexShrink: 0, p: 1 }}>
-        <Stack
-          direction="row"
-          useFlexGap
-          flexWrap="wrap"
-          spacing={2}
-          alignItems="center"
-          justifyContent="flex-end"
-        >
-          {(
-            [
-              ['collected', 'Collected'],
-              ['spent', 'Spent'],
-              ['deposited', 'Deposited'],
-            ] as const
-          ).map(([key, label]) => (
-            <Stack key={key} direction="row" spacing={0.5} alignItems="baseline">
-              <Typography variant="caption" color="text.secondary">
-                {label}
-              </Typography>
-              <Typography variant="subtitle2">
-                {summary ? formatNumber(summary[key], 'INR') : '—'}
-              </Typography>
-            </Stack>
-          ))}
-          <Stack direction="row" spacing={0.5} alignItems="baseline">
-            <Typography variant="caption" color="text.secondary">
-              Academic-year cash available
-            </Typography>
-            <Typography variant="subtitle2">
-              {availableCash !== undefined ? formatNumber(availableCash, 'INR') : '—'}
-            </Typography>
-          </Stack>
-          {canDeposit && (
-            <Button
-              ref={depositButton}
-              variant="contained"
-              color="inherit"
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.bankAccount} />}
-              disabled={query.isFetching || query.isError || !(availableCash && availableCash > 0)}
-              onClick={() => {
-                setDepositAmount(availableCash!);
-                deposit.onTrue();
-              }}
-            >
-              Deposit cash
-            </Button>
-          )}
-        </Stack>
-      </Card>
       <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="cash-management"

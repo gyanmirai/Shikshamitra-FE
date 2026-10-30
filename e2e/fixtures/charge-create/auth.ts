@@ -1,4 +1,12 @@
 export const useSession = () => ({
-  data: { user: { name: 'Synthetic Finance User', roles: [] } },
+  data: {
+    profile: {
+      role: new URLSearchParams(window.location.search).has('admin') ? ['admin'] : [],
+    },
+    user: {
+      name: 'Synthetic Finance User',
+      roles: [],
+    },
+  },
   status: 'authenticated',
 });

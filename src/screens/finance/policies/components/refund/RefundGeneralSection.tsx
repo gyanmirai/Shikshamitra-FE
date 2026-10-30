@@ -1,5 +1,6 @@
 'use client';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { FormikProps } from 'formik';
 import type { RefundPolicyImpactResponse } from 'src/redux/finance/refundPolicy';
 
@@ -64,7 +65,10 @@ export default function RefundGeneralSection({ formik, activeEdit }: RefundGener
               placeholder="e.g. Standard Admission Refund Policy"
               value={values.policyName}
               onChange={(event) => {
-                formik.setFieldValue('policyName', capitalizeWords(event.target.value));
+                formik.setFieldValue(
+                  'policyName',
+                  capitalizeWords(sanitizeFinanceName(event.target.value))
+                );
               }}
               onBlur={handleBlur}
               error={isFieldInvalid('policyName')}

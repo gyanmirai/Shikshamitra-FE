@@ -24,10 +24,13 @@ const collection = {
 };
 
 describe('policy prerequisites', () => {
-  it('allows all-head refund drafts without setup', () => {
-    expect(refundPolicyPrerequisites(refund, empty, routing)).toEqual([]);
+  it('requires fee heads immediately for the default all-head refund draft', () => {
+    expect(refundPolicyPrerequisites(refund, empty, routing)).toEqual([{ key: 'fee-head' }]);
   });
-  it('requires active heads only for selected-head refunds without saved choices', () => {
+  it('clears the fee-head prerequisite when active heads become available', () => {
+    expect(refundPolicyPrerequisites(refund, { currentData: [{ id: 'active' }] }, routing)).toEqual([]);
+  });
+  it('requires active heads for selected-head refunds without saved choices', () => {
     expect(
       refundPolicyPrerequisites({ ...refund, feeHeadScope: 'SelectedFeeHeads' }, empty, routing)
     ).toEqual([{ key: 'fee-head' }]);
@@ -41,6 +44,7 @@ describe('policy prerequisites', () => {
   });
   it('requires expense routing for active refund policies and bank routing for noncash methods', () => {
     expect(refundPolicyPrerequisites({ ...refund, status: 'Active' }, empty, routing)).toEqual([
+      { key: 'fee-head' },
       { key: 'expense-category' },
     ]);
     expect(
@@ -49,12 +53,13 @@ describe('policy prerequisites', () => {
         empty,
         routing
       )
-    ).toEqual([{ key: 'expense-category' }, { key: 'bank-account' }]);
+    ).toEqual([{ key: 'fee-head' }, { key: 'expense-category' }, { key: 'bank-account' }]);
     expect(
       refundPolicyPrerequisites(
         {
           ...refund,
           status: 'Active',
+          applicableFeeHeadIds: ['saved'],
           expenseCategoryId: 'saved',
           allowedPayoutMethods: ['Cheque'],
           defaultPayingBankAccountId: 'saved',
@@ -103,6 +108,7 @@ describe('policy prerequisites', () => {
     { isUninitialized: true },
     { currentData: undefined },
   ])('never treats pending, failed or previous-scope data as missing: %o', (state) => {
+    expect(refundPolicyPrerequisites(refund, { ...empty, ...state }, {})).toEqual([]);
     expect(
       refundPolicyPrerequisites(
         { ...refund, feeHeadScope: 'SelectedFeeHeads' },

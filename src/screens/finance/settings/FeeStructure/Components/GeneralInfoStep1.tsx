@@ -1,3 +1,4 @@
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
@@ -80,10 +81,11 @@ const GeneralInfoStep = ({ formik, editData, setClassList }: Props) => {
               label="Fee Structure Name *"
               value={formik?.values?.name}
               onChange={(e) => {
-                const onlyLetters = e.target.value.replace(/[^A-Za-z0-9&()_\-\s]/g, '');
+                const onlyLetters = sanitizeFinanceName(e.target.value);
                 const capitalized = onlyLetters.replace(/\b\w/g, (c) => c.toUpperCase());
                 formik.setFieldValue('name', capitalized);
               }}
+              onBlur={formik.handleBlur}
               error={formik?.touched?.name && Boolean(formik?.errors?.name)}
               helperText={formik?.touched?.name && formik?.errors?.name}
             />
