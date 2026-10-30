@@ -1,6 +1,11 @@
 'use client';
 
-import type { AdmissionFormFieldType } from 'src/redux/student/admissions/admission-forms-api';
+import type { AdmissionInquirySource } from 'src/redux/student/admissions/admission-inquiries-api';
+import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
+import type {
+  AdmissionFormField,
+  AdmissionFormFieldType,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -13,7 +18,10 @@ import { useAdmissionPhotoReads } from 'src/screens/student/admissions/use-admis
 import { isAdmissionRuleVisible } from 'src/screens/student/admissions/admission-visibility-rules';
 import { normalizeAdmissionEmailValue } from 'src/screens/student/admissions/admission-email-values';
 import { buildDynamicAdmissionYupSchema } from 'src/screens/student/admissions/admission-form-validation';
-import { preserveCompatibleInquiryAnswers } from 'src/screens/student/admissions/admission-inquiry-model';
+import {
+  buildAdmissionInquiryPayload,
+  preserveCompatibleInquiryAnswers,
+} from 'src/screens/student/admissions/admission-inquiry-model';
 import {
   Box,
   Card,
@@ -42,12 +50,15 @@ type PublicField = {
   visibilityRuleJson?: string | null;
   requiredRuleJson?: string | null;
   isIdentityFallback?: boolean;
+  bindingType?: number;
+  bindingKey?: string;
 };
 type PublicSection = {
   code: string;
   name: string;
   displayOrder: number;
   visibilityRuleJson?: string | null;
+  stepVisibilityRuleJson?: string | null;
   fields: PublicField[];
 };
 type PublicOffering = {
@@ -407,14 +418,28 @@ function InquiryForm({
 }) {
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
   const [requestError, setRequestError] = useState('');
-  const sections = context.form?.sections ?? [];
+  const sections = (context.form?.sections ?? [])
+    .map((section) => ({
+      ...section,
+      fields: section.fields.filter((field) => !field.isIdentityFallback),
+    }))
+    .filter((section) => section.fields.length > 0);
   const fields = sections.flatMap((section) => section.fields);
   const initialValues: InquiryValues = {
     fields: preserveCompatibleInquiryAnswers(draft?.fields ?? [], fields, draft?.values ?? {}),
     consentToContact: false,
   };
   const validationSchema = Yup.object({
-    fields: buildDynamicAdmissionYupSchema({ sections }),
+    fields: Yup.lazy((answers: unknown) =>
+      buildDynamicAdmissionYupSchema({
+        sections: sections.filter((section) =>
+          isAdmissionRuleVisible(
+            section.stepVisibilityRuleJson,
+            (answers && typeof answers === 'object' ? answers : {}) as Record<string, string>
+          )
+        ),
+      })
+    ),
     consentToContact: Yup.boolean().oneOf([true], 'Please agree to be contacted.'),
   });
   const formik = useFormik<InquiryValues>({
@@ -424,24 +449,51 @@ function InquiryForm({
       if (readingPhoto) return;
       setRequestError('');
       const visibleFields = sections
-        .filter((section) => isAdmissionRuleVisible(section.visibilityRuleJson, values.fields))
+        .filter(
+          (section) =>
+            isAdmissionRuleVisible(section.visibilityRuleJson, values.fields) &&
+            isAdmissionRuleVisible(section.stepVisibilityRuleJson, values.fields)
+        )
         .flatMap((section) => section.fields)
         .filter(
           (field) =>
             field.fieldType !== 12 &&
             isAdmissionRuleVisible(field.visibilityRuleJson, values.fields)
         );
-      const fallbackValue = (code: string) => values.fields[code]?.trim() ?? '';
+      const identity = buildAdmissionInquiryPayload(
+        {
+          admissionCycleId: '',
+          boardId: offering.boardId,
+          mediumId: offering.mediumId,
+          standardId: offering.standardId,
+          offeringId: offering.id,
+          source: context.source as AdmissionInquirySource,
+          sourceDetail: '',
+          sendAcknowledgement: false,
+          fields: values.fields,
+        },
+        visibleFields.map((field) => ({
+          ...field,
+          id: field.code,
+          bindingType: field.bindingType ?? (field.bindingKey ? 0 : 1),
+        })) as AdmissionFormField[],
+        { ...offering, admissionCycleId: '' } as AdmissionOfferingListItem
+      );
       const payload = {
         admissionOfferingId: offering.id,
         boardId: offering.boardId,
         mediumId: offering.mediumId,
         standardId: offering.standardId,
-        applicantFirstName: fallbackValue('PUBLIC_APPLICANT_FIRST_NAME'),
-        guardianFirstName: fallbackValue('PUBLIC_GUARDIAN_FIRST_NAME'),
-        guardianPhone: fallbackValue('PUBLIC_GUARDIAN_PHONE'),
+        applicantFirstName: identity.applicantFirstName,
+        applicantLastName: identity.applicantLastName,
+        applicantDateOfBirth: identity.applicantDateOfBirth,
+        guardianFirstName: identity.guardianFirstName,
+        guardianLastName: identity.guardianLastName,
+        guardianPhone: identity.guardianPhone,
+        guardianEmail: identity.guardianEmail,
+        parentRelationship: identity.parentRelationship,
         consentToContact: values.consentToContact,
-        preferredLanguageCode: 'en',
+        preferredLanguageCode: identity.preferredLanguageCode,
         formValues: visibleFields
           .filter((field) => !field.isIdentityFallback)
           .map((field) => ({
@@ -495,8 +547,10 @@ function InquiryForm({
             </Typography>
             <Stack component={FormFieldSpacing} spacing={2}>
               {sections
-                .filter((section) =>
-                  isAdmissionRuleVisible(section.visibilityRuleJson, formik.values.fields)
+                .filter(
+                  (section) =>
+                    isAdmissionRuleVisible(section.visibilityRuleJson, formik.values.fields) &&
+                    isAdmissionRuleVisible(section.stepVisibilityRuleJson, formik.values.fields)
                 )
                 .map((section) => (
                   <FormSectionCard

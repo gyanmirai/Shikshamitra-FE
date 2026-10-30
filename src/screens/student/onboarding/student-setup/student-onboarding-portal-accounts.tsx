@@ -20,6 +20,7 @@ import { studentPaths } from 'src/constants/student-menu';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -45,6 +46,7 @@ import {
 
 import StudentAppAccessDialog from './student-app-access-dialog';
 import GuardianProfileEmailDialog from './guardian-profile-email-dialog';
+import { requiresCredentialResendConfirmation } from './student-credential-delivery';
 import { getStudentParentSiblingActivationState } from './student-parent-sibling-state';
 import StudentCredentialProfileEmailDialog from './student-credential-profile-email-dialog';
 import { getOnboardingMessage, getOnboardingErrorMessage } from './student-onboarding-messages';
@@ -160,6 +162,23 @@ export default function StudentOnboardingPortalAccounts({
   const [confirmation, setConfirmation] = useState('');
   const adultIdentity = ownerIdentity(workspace, relationship);
   const confirmed = confirmation === adultIdentity;
+  const [resendTarget, setResendTarget] = useState<{
+    caseId: string;
+    recipient: StudentCredentialsRecipient;
+    adultIdentity: string;
+  } | null>(null);
+  const resendRecipient = recipients.find(
+    (recipient) =>
+      resendTarget?.caseId === student.id &&
+      recipientKey(recipient) === recipientKey(resendTarget.recipient) &&
+      recipient.email === resendTarget.recipient.email &&
+      requiresCredentialResendConfirmation(recipient.delivery) &&
+      !queued(recipient) &&
+      (recipient.accountType === 'student' || resendTarget.adultIdentity === adultIdentity)
+  );
+  useEffect(() => {
+    if (resendTarget && (!resendRecipient || !canManage)) setResendTarget(null);
+  }, [resendTarget, resendRecipient, canManage]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [mustRefresh, setMustRefresh] = useState(false);
   const [working, setWorking] = useState(false);
@@ -330,8 +349,20 @@ export default function StudentOnboardingPortalAccounts({
         !current.parentSibling.isLinked
       )
     );
-  const activeSelected =
-    selected.caseId === student.id ? selected : { student: false, guardian: false };
+  // canSend includes deliberate resends after the server cooldown. Successful or
+  // queued recipients never belong to the ordinary first-send batch.
+  const activeSelected = {
+    student:
+      selected.caseId === student.id &&
+      selected.student &&
+      !queued(studentRecipient) &&
+      !requiresCredentialResendConfirmation(studentRecipient?.delivery),
+    guardian:
+      selected.caseId === student.id &&
+      selected.guardian &&
+      !queued(adult) &&
+      !requiresCredentialResendConfirmation(adult?.delivery),
+  };
   const chosen = [
     activeSelected.student ? studentRecipient : undefined,
     activeSelected.guardian ? adult : undefined,
@@ -368,13 +399,16 @@ export default function StudentOnboardingPortalAccounts({
     setMustRefresh(false);
     return result.data;
   };
-  const send = async (only?: StudentCredentialsRecipient) => {
+  const send = async (only?: StudentCredentialsRecipient, resend = false) => {
     if (submitting.current || busy || unavailable || !canManage || !workspace) return;
     const targets = only ? [only] : chosen;
     if (
       !targets.length ||
       !targets.every(
-        (recipient) => eligible(recipient) && (recipient.accountType === 'student' || confirmed)
+        (recipient) =>
+          eligible(recipient) &&
+          requiresCredentialResendConfirmation(recipient.delivery) === resend &&
+          (recipient.accountType === 'student' || confirmed)
       )
     )
       return;
@@ -420,7 +454,10 @@ export default function StudentOnboardingPortalAccounts({
           }));
           break;
         }
-        if (!eligible(recipient, current)) {
+        if (
+          !eligible(recipient, current) ||
+          requiresCredentialResendConfirmation(recipient.delivery) !== resend
+        ) {
           setErrors((previous) => ({
             ...previous,
             [recipientKey(target)]: getOnboardingMessage(
@@ -609,6 +646,7 @@ export default function StudentOnboardingPortalAccounts({
     const validEmail = emailSchema.isValidSync(email);
     const key = recipient ? recipientKey(recipient) : accountType;
     const delivery = recipient?.delivery;
+    const needsResend = requiresCredentialResendConfirmation(delivery);
     const editable = canManage && recipient?.canEditEmail;
     const emailError = !validEmail
       ? editable
@@ -637,7 +675,9 @@ export default function StudentOnboardingPortalAccounts({
           ? sibling?.blockedReason
           : recipient && !eligible(recipient) && !queued(recipient) && validEmail
             ? recipient.blockedReason ||
-              'Login details cannot be sent yet. Review the onboarding requirements.'
+              (needsResend
+                ? undefined
+                : 'Login details cannot be sent yet. Review the onboarding requirements.')
             : undefined;
     const accepted = queued(recipient) || delivery?.status === 'Sent';
     const activationReason =
@@ -662,6 +702,7 @@ export default function StudentOnboardingPortalAccounts({
         : workspace?.studentAccessEnabled === false);
     const showConsent =
       !compact ||
+      needsResend ||
       activeSelected.guardian ||
       confirmed ||
       parentValidationAttempt ||
@@ -702,7 +743,7 @@ export default function StudentOnboardingPortalAccounts({
                 <Checkbox
                   size="small"
                   checked={Boolean(activeSelected[accountType])}
-                  disabled={busy || !canManage || !recipient}
+                  disabled={busy || !canManage || !recipient || accepted || needsResend}
                   slotProps={{
                     input: {
                       'aria-label': isAdult ? 'Send to parent / guardian' : 'Send to student',
@@ -750,8 +791,8 @@ export default function StudentOnboardingPortalAccounts({
               title={
                 reason
                   ? getOnboardingMessage(reason, 'Review the login requirements before sending.')
-                  : delivery?.status === 'Sent' && delivery.sentAt
-                    ? `Submitted for sending · ${fDateTime(delivery.sentAt)}`
+                  : delivery?.status === 'Sent'
+                    ? `Accepted by the email sender; inbox delivery is not confirmed${delivery.sentAt ? ` · ${fDateTime(delivery.sentAt)}` : ''}`
                     : 'Saved app login email'
               }
             >
@@ -781,7 +822,7 @@ export default function StudentOnboardingPortalAccounts({
                     : queued(recipient)
                       ? 'Queued'
                       : delivery?.status === 'Sent'
-                        ? 'Submitted'
+                        ? 'Login details sent'
                         : failed
                           ? 'Failed'
                           : 'Email saved'}
@@ -1053,14 +1094,14 @@ export default function StudentOnboardingPortalAccounts({
                     'Login email is queued. Refresh to check progress.'
                   )
                 : delivery.status === 'Sent'
-                  ? `Submitted for sending${delivery.sentAt ? ` · ${fDateTime(delivery.sentAt)}` : ''}.`
+                  ? `Accepted by the email sender${delivery.sentAt ? ` · ${fDateTime(delivery.sentAt)}` : ''}.`
                   : getOnboardingMessage(
                       delivery.message,
                       'Login email could not be sent. Refresh and try again.'
                     )}
             </Typography>
           )}
-        {failed && (
+        {failed && !needsResend && (
           <Button
             size="small"
             variant="outlined"
@@ -1070,6 +1111,22 @@ export default function StudentOnboardingPortalAccounts({
             onClick={() => send(recipient)}
           >
             {isAdult ? 'Retry parent email' : 'Retry student email'}
+          </Button>
+        )}
+        {needsResend && !queued(recipient) && (
+          <Button
+            type="button"
+            size="small"
+            variant="outlined"
+            sx={{ alignSelf: 'flex-start' }}
+            disabled={
+              !canManage || unavailable || busy || !eligible(recipient) || (isAdult && !confirmed)
+            }
+            onClick={() =>
+              setResendTarget({ caseId: student.id, recipient: recipient!, adultIdentity })
+            }
+          >
+            Resend login details
           </Button>
         )}
         {correctionAvailable && (
@@ -1200,8 +1257,7 @@ export default function StudentOnboardingPortalAccounts({
           )}
           {!compact && (
             <FormHelperText sx={{ m: 0 }}>
-              Each selected person receives a separate email using their own saved login. Submitted
-              means accepted by the sender.
+              Each selected person receives a separate email using their own saved login.
             </FormHelperText>
           )}
           <Stack
@@ -1247,6 +1303,43 @@ export default function StudentOnboardingPortalAccounts({
           </Stack>
         </Stack>
       </Box>
+      <ConfirmDialog
+        open={Boolean(resendRecipient && canManage)}
+        title="Resend Login Details?"
+        icon="info"
+        content={
+          <>
+            Send another login email to <strong>{resendRecipient?.email}</strong>? Their current
+            password stays unchanged.
+          </>
+        }
+        onClose={() => setResendTarget(null)}
+        disableCancel={working}
+        action={
+          <LoadingButton
+            type="button"
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon="mdi:email-send-outline" width={18} />}
+            loading={working}
+            disabled={
+              !resendRecipient ||
+              busy ||
+              unavailable ||
+              !canManage ||
+              !eligible(resendRecipient) ||
+              (resendRecipient.accountType === 'guardian' && !confirmed)
+            }
+            onClick={() => {
+              if (!resendRecipient) return;
+              setResendTarget(null);
+              send(resendRecipient, true);
+            }}
+          >
+            Resend login details
+          </LoadingButton>
+        }
+      />
       {emailEditor && workspace && (
         <StudentCredentialProfileEmailDialog
           key={`${student.id}:${recipientKey(emailEditor)}`}

@@ -426,7 +426,7 @@ export default function StudentSetupDrawer({
               <SectionCard
                 icon="mdi:receipt-text-outline"
                 title="Fee structure"
-                description="Confirm the existing published structure required for activation."
+                description="Fee assignment and payment are optional and do not block activation."
               >
                 <StudentOnboardingFees caseId={activeStudent.id} canManage={canManage} />
               </SectionCard>

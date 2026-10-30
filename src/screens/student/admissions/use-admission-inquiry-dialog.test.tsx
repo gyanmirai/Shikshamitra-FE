@@ -6,6 +6,7 @@ import { api } from 'src/redux/service';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
+import { shikshaMitraToast } from 'src/components/toast';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 import { it, vi, expect, afterEach, beforeEach } from 'vitest';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
@@ -61,6 +62,7 @@ const createStore = () =>
   });
 let store: ReturnType<typeof createStore>;
 beforeEach(() => {
+  vi.clearAllMocks();
   clearCachedAuthSession();
   store = createStore();
   mswServer.use(http.get('*/api/auth/session', () => HttpResponse.json(null)));
@@ -124,7 +126,12 @@ it.each(['guardian', 'father', 'mother'] as const)(
                       id: 'parent',
                       code: 'PARENT',
                       label: 'Parent name',
-                      bindingKey: 'Guardian.FirstName',
+                      bindingKey:
+                        role === 'guardian'
+                          ? 'Guardian.FirstName'
+                          : role === 'father'
+                            ? 'Father.Name'
+                            : 'Mother.Name',
                       fieldType: 0,
                       required: true,
                     },
@@ -139,7 +146,7 @@ it.each(['guardian', 'father', 'mother'] as const)(
                             ? 'Mother.Mobile'
                             : 'Guardian.Mobile',
                       fieldType: 4,
-                      required: false,
+                      required: true,
                     },
                   ],
                 },
@@ -199,6 +206,188 @@ it.each(['guardian', 'father', 'mother'] as const)(
     expect(submitted[0]).toMatchObject({ guardianPhone: '9876543210', phone: '9876543210' });
   }
 );
+
+it.each(['Guardian', 'Father', 'Mother'] as const)(
+  'creates using the optional identity fields of an existing published %s form',
+  async (parent) => {
+    const available = offering('class-a');
+    const submitted: Record<string, unknown>[] = [];
+    const onClose = vi.fn();
+    mswServer.use(
+      http.get(`${root}/capture-catalogue`, () =>
+        HttpResponse.json({ data: catalogue([available]) })
+      ),
+      http.get(`${root}/capture-context/${available.id}`, () =>
+        HttpResponse.json({
+          data: {
+            offering: available,
+            availability: { canCreateInquiry: true },
+            form: {
+              purpose: 0,
+              sections: [
+                {
+                  fields: [
+                    {
+                      code: 'CHILD',
+                      label: 'Child',
+                      bindingKey: 'Applicant.FirstName',
+                      fieldType: 0,
+                      required: false,
+                    },
+                    {
+                      code: 'ADULT',
+                      label: 'Parent',
+                      bindingKey: `${parent}.${parent === 'Guardian' ? 'FirstName' : 'Name'}`,
+                      fieldType: 0,
+                      required: false,
+                    },
+                    {
+                      code: 'PHONE',
+                      label: 'Mobile',
+                      bindingKey: `${parent}.Mobile`,
+                      fieldType: 4,
+                      required: false,
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        })
+      ),
+      http.post(`${root}/duplicate-check`, () => HttpResponse.json({ data: [] })),
+      http.post(root, async ({ request }) => {
+        submitted.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ data: { id: 'legacy-inquiry' } });
+      })
+    );
+    const { result } = renderHook(() => useAdmissionInquiryDialog(onClose), { wrapper });
+    await waitFor(() => expect(result.current.periods).toHaveLength(1));
+    await selectClass(result, 'class-a');
+    await waitFor(() => expect(result.current.canCreateInquiry).toBe(true));
+    expect(result.current.fields).toHaveLength(3);
+    expect(result.current.fields.every((field) => !field.required)).toBe(true);
+    expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+    await act(async () => {
+      await result.current.formik.setFieldValue(
+        'fields',
+        {
+          CHILD: 'Riya',
+          ADULT: 'Meera',
+          PHONE: '9876543210',
+        },
+        false
+      );
+    });
+    await act(async () => {
+      await result.current.formik.submitForm();
+    });
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(submitted).toHaveLength(1);
+    expect(submitted[0]).toMatchObject({
+      applicantFirstName: 'Riya',
+      guardianFirstName: 'Meera',
+      guardianPhone: '9876543210',
+    });
+    expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+  }
+);
+
+it('preserves an incomplete legacy form and shows the actual API error on attempted submission', async () => {
+  const available = offering('class-a');
+  const duplicate = vi.fn();
+  const create = vi.fn();
+  mswServer.use(
+    http.get(`${root}/capture-catalogue`, () =>
+      HttpResponse.json({ data: catalogue([available]) })
+    ),
+    http.get(`${root}/capture-context/${available.id}`, () =>
+      HttpResponse.json({
+        data: {
+          offering: available,
+          availability: { canCreateInquiry: true },
+          form: {
+            purpose: 0,
+            sections: [
+              {
+                id: 'school',
+                name: 'School questions',
+                fields: [
+                  {
+                    id: 'note',
+                    code: 'NOTE',
+                    label: 'Note',
+                    fieldType: 0,
+                    required: false,
+                    bindingType: 1,
+                    bindingKey: 'Custom.Note',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      })
+    ),
+    http.post(`${root}/duplicate-check`, () => {
+      duplicate();
+      return HttpResponse.json({ data: [] });
+    }),
+    http.post(root, () => {
+      create();
+      return HttpResponse.json(
+        {
+          status: 400,
+          detail: 'A parent mobile number is needed to create an inquiry.',
+          errorCode: 'Admissions.InquiryIdentityIncomplete',
+        },
+        { status: 400 }
+      );
+    })
+  );
+  const { result } = renderHook(() => useAdmissionInquiryDialog(vi.fn()), { wrapper });
+  await waitFor(() => expect(result.current.periods).toHaveLength(1));
+  await selectClass(result, 'class-a');
+  await waitFor(() => expect(result.current.canCreateInquiry).toBe(true));
+  expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+  expect(result.current.fields.map((field) => field.code)).toEqual(['NOTE']);
+  await act(async () => {
+    await result.current.formik.setFieldValue('fields.NOTE', 'Keep this draft', false);
+  });
+  await act(async () => {
+    await result.current.formik.submitForm();
+  });
+  expect(duplicate).toHaveBeenCalledOnce();
+  expect(create).toHaveBeenCalledOnce();
+  expect(shikshaMitraToast.error).toHaveBeenCalledWith({
+    message: 'A parent mobile number is needed to create an inquiry.',
+  });
+  expect(result.current.formik.values.fields.NOTE).toBe('Keep this draft');
+});
+
+it('keeps capture blocked when an available offering has no loaded published form', async () => {
+  const available = offering('class-a');
+  mswServer.use(
+    http.get(`${root}/capture-catalogue`, () =>
+      HttpResponse.json({ data: catalogue([available]) })
+    ),
+    http.get(`${root}/capture-context/${available.id}`, () =>
+      HttpResponse.json({
+        data: {
+          offering: available,
+          availability: { canCreateInquiry: true },
+          form: null,
+        },
+      })
+    )
+  );
+  const { result } = renderHook(() => useAdmissionInquiryDialog(vi.fn()), { wrapper });
+  await waitFor(() => expect(result.current.periods).toHaveLength(1));
+  await selectClass(result, 'class-a');
+  await waitFor(() => expect(result.current.runtimeError).toBe(true));
+  expect(result.current.canCreateInquiry).toBe(false);
+  expect(result.current.runtimeLoading).toBe(false);
+});
 
 it.each([
   [0, /setup is incomplete/i],

@@ -3,7 +3,9 @@ import 'simplebar-react/dist/simplebar.min.css';
 import type { DuplicateMatch } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { useState } from 'react';
+import { Provider } from 'react-redux';
 import { createRoot } from 'react-dom/client';
+import { configureStore } from '@reduxjs/toolkit';
 import { Snackbar } from 'src/components/snackbar';
 import { Scrollbar } from 'src/components/scrollbar';
 import { createTheme } from 'src/theme/create-theme';
@@ -14,6 +16,7 @@ import { Box, Stack, Button, TextField, Typography, CssBaseline } from '@mui/mat
 import { AdmissionInquiryDuplicateMatches } from 'src/screens/student/admissions/admission-inquiry-duplicate-matches';
 
 const params = new URLSearchParams(window.location.search);
+const fixtureStore = configureStore({ reducer: { confirmPopup: () => ({ isChanges: true }) } });
 const long = params.has('long');
 const parentName = long
   ? 'QA Father With A Very Long Saved Family Name For Responsive Review'
@@ -29,6 +32,8 @@ const match: DuplicateMatch = {
     : 'QA Existing Child',
   existingInquiryId: 'synthetic-inquiry-1',
   existingInquiryNumber: 'INQ-2026-000030',
+  existingInquiryAdmissionCycleId: params.has('previousCycle') ? 'previous-cycle' : 'current-cycle',
+  dateOfBirth: '2019-06-23',
   guardianPhone: '9876543210',
   guardianEmail: email,
   canLinkFamily: !params.has('denied'),
@@ -62,6 +67,7 @@ function Workspace() {
   const [links, setLinks] = useState(0);
   const [separate, setSeparate] = useState(0);
   const [opened, setOpened] = useState('');
+  const [reviewKey, setReviewKey] = useState(0);
   return (
     <Stack sx={{ height: '100dvh', minHeight: 0, bgcolor: 'background.default' }}>
       <Stack direction="row" alignItems="center" useFlexGap flexWrap="wrap" gap={1} sx={{ p: 2 }}>
@@ -112,6 +118,11 @@ function Workspace() {
             }
             guardianPhone={params.has('emailOnly') ? '9876543211' : '9876543210'}
             guardianEmail={email}
+            applicantName={params.has('duplicate') ? match.applicantName : 'QA New Child'}
+            applicantDateOfBirth="2019-06-23"
+            admissionCycleId="current-cycle"
+            presentation={params.has('dialog') ? 'dialog' : 'inline'}
+            reviewKey={reviewKey}
             busy={busy}
             overrideReason={reason}
             onOverrideReasonChange={setReason}
@@ -138,6 +149,15 @@ function Workspace() {
         <Typography variant="caption">
           Synthetic callbacks only. No real inquiry or parent account is changed.
         </Typography>
+        {params.has('dialog') && (
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setReviewKey((value) => value + 1)}
+          >
+            Review matches
+          </Button>
+        )}
         <Typography component="output" aria-label="Sibling confirmations">
           {links}
         </Typography>
@@ -154,8 +174,10 @@ function Workspace() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <ThemeProvider theme={createTheme(defaultSettings)} defaultMode="light">
-    <CssBaseline />
-    <Workspace />
-  </ThemeProvider>
+  <Provider store={fixtureStore}>
+    <ThemeProvider theme={createTheme(defaultSettings)} defaultMode="light">
+      <CssBaseline />
+      <Workspace />
+    </ThemeProvider>
+  </Provider>
 );

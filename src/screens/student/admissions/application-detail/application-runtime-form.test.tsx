@@ -60,6 +60,46 @@ const section = (id: string, name: string, stepId: string, order: number) => ({
   fields: [{ id: `${id}-field`, code: id, label: `${name} answer`, fieldType: 0, required: false }],
 });
 
+it('uses the source Inquiry label for an inherited field backend validation message', () => {
+  renderForm({
+    form: {
+      formVersion: 4,
+      status: 0,
+      academicYearId: 'year',
+      definition: {
+        name: 'Registration',
+        layoutType: 0,
+        fieldsPerRow: 2,
+        sections: [
+          {
+            ...section('student', 'Student Details', 'personal', 0),
+            fields: [
+              {
+                id: 'dob',
+                sectionId: 'student',
+                code: 'SOURCE_DOB',
+                label: 'DOB',
+                fieldType: 5,
+                bindingType: 0,
+                required: true,
+                readOnly: false,
+                displayOrder: 0,
+                inheritedFrom: {
+                  inquiryFormDefinitionId: 'source',
+                  sourceFieldCode: 'BIRTH',
+                  fieldIdentity: 'system:applicant.dateofbirth',
+                },
+              },
+            ],
+          },
+        ],
+      },
+    } as Props['form'],
+    fieldErrors: { SOURCE_DOB: 'SOURCE_DOB is required.' },
+  });
+  expect(screen.getByText('DOB is required.')).toBeVisible();
+});
+
 function renderForm(overrides: Partial<Props> = {}) {
   const onValidateStep = vi.fn(() => true);
   function TestForm() {

@@ -45,10 +45,14 @@ describe('AdmissionOfferingActionImpact', () => {
     expect(screen.getByText(/permanently delete “ADM-GRADE-5”/)).toBeVisible();
   });
 
-  it('keeps activation confirmation to one sentence without usage or extra information', () => {
+  it('highlights the activation target and explains the application consequence', () => {
     render(<AdmissionOfferingActionImpact action="activate" offering={offering} />);
 
-    expect(screen.getByText('“ADM-GRADE-5” will become active.')).toBeVisible();
+    const target = screen.getByText('ADM-GRADE-5', { selector: 'strong' });
+    expect(target).toBeVisible();
+    expect(target.parentElement).toHaveTextContent(
+      'Are you sure you want to activate “ADM-GRADE-5”? This offering will become active for student applications.'
+    );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Current usage|Main Campus|server will recheck/)

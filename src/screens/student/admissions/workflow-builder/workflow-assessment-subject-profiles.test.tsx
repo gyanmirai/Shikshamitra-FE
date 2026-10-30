@@ -11,6 +11,7 @@ import { mswServer } from 'src/test/mswServer';
 import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { act, screen, within, waitFor } from '@testing-library/react';
+import { admissionAssessmentCatalogApi } from 'src/redux/student/admissions/admission-assessment-catalog-api';
 import {
   DEFAULT_ASSESSMENT_POLICY,
   getAssessmentConfigurationError,
@@ -20,6 +21,8 @@ import { renderDocumentUi } from '../document-verification/document-ui-test-fixt
 import { WorkflowAssessmentSettings } from './components/workflow-assessment-settings';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+const toast = vi.hoisted(() => ({ error: vi.fn(), dismiss: vi.fn() }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 
 const catalog: AdmissionAssessmentCatalog = {
   classes: [
@@ -112,8 +115,8 @@ function setup(policy = DEFAULT_ASSESSMENT_POLICY, readOnly = false, catalogErro
         : HttpResponse.json({ data: catalog });
     })
   );
-  renderDocumentUi(<Harness policy={policy} onSave={onSave} readOnly={readOnly} />);
-  return { onSave, request, user: userEvent.setup() };
+  const store = renderDocumentUi(<Harness policy={policy} onSave={onSave} readOnly={readOnly} />);
+  return { onSave, request, store, user: userEvent.setup() };
 }
 const savedPolicy = (onSave: ReturnType<typeof vi.fn>) =>
   JSON.parse(onSave.mock.calls.at(-1)![0].configurationJson)
@@ -272,11 +275,18 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
     );
   });
 
-  it('renders catalog errors with retry while preserving configured values', async () => {
-    const { user } = setup(subjectPolicy, false, true);
-    await screen.findByText(
-      'Assessment classes and subjects could not load. Your configuration is retained.'
+  it('announces catalog errors and preserves configured values through a catalog refresh', async () => {
+    const { user, store, request } = setup(subjectPolicy, false, true);
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message:
+            'Assessment classes and subjects could not load. Your configuration is retained.',
+        })
+      )
     );
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(request).toHaveBeenCalledOnce();
     expect(screen.getByRole('textbox', { name: 'Maximum marks — English' })).toHaveValue('50');
     expect(screen.getByRole('combobox', { name: /^Board/ })).toHaveTextContent('Saved board');
     expect(screen.getByRole('combobox', { name: /^Medium/ })).toHaveTextContent('Saved medium');
@@ -299,7 +309,16 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
         return HttpResponse.json(catalog);
       })
     );
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    // The shared toast intentionally omits page Retry actions. A subscribed query can
+    // still refresh independently; preserve the draft during that request.
+    act(() => {
+      store.dispatch(
+        admissionAssessmentCatalogApi.endpoints.getAdmissionAssessmentCatalog.initiate(undefined, {
+          forceRefetch: true,
+          subscribe: false,
+        })
+      );
+    });
     expect(screen.getByRole('textbox', { name: 'Maximum marks — English' })).toHaveValue('45');
     expect(
       screen.queryByText(/No classes are available in your permitted scope/)
@@ -309,9 +328,9 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
     ).not.toBeInTheDocument();
     await act(async () => resolveCatalog());
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Add school subject' })).toBeEnabled()
     );
-    expect(screen.getByRole('button', { name: 'Add school subject' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Maximum marks — English' })).toHaveValue('45');
     expect(screen.getByRole('combobox', { name: /^Board/ })).toHaveTextContent('CBSE');
   });

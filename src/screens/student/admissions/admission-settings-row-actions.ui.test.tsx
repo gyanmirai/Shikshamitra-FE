@@ -32,7 +32,7 @@ vi.mock('src/components/custom-popover', async () => {
 });
 
 describe('Admissions settings row actions', () => {
-  it('keeps offering edit and delete direct while secondary actions use overflow', async () => {
+  it('keeps offering edit, delete and clone direct while deactivation uses overflow', async () => {
     const user = userEvent.setup();
     const handlers = {
       onView: vi.fn(),
@@ -67,10 +67,14 @@ describe('Admissions settings row actions', () => {
     expect(handlers.onView).not.toHaveBeenCalled();
     expect(handlers.onEdit).toHaveBeenCalledWith(row);
     expect(handlers.onDelete).toHaveBeenCalledWith(row);
+    await user.click(screen.getByRole('button', { name: 'Clone' }));
+    expect(handlers.onClone).toHaveBeenCalledWith(row);
 
     await user.click(screen.getByRole('button', { name: 'More actions' }));
-    expect(screen.getByRole('menuitem', { name: 'Clone' })).toBeVisible();
+    expect(screen.queryByRole('menuitem', { name: 'Clone' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Deactivate' })).toBeVisible();
+    await user.click(screen.getByRole('menuitem', { name: 'Deactivate' }));
+    expect(handlers.onToggleActive).toHaveBeenCalledWith(row);
   });
 
   it('opens offering setup instead of sending an invalid activation command', async () => {
@@ -104,9 +108,9 @@ describe('Admissions settings row actions', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'More actions' }));
-    expect(screen.queryByRole('menuitem', { name: 'Activate' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('menuitem', { name: /Complete setup.*activate/ }));
+    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Activate' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Complete setup.*activate/ }));
 
     expect(handlers.onEdit).toHaveBeenCalledWith(row);
     expect(handlers.onToggleActive).not.toHaveBeenCalled();
@@ -143,14 +147,14 @@ describe('Admissions settings row actions', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'More actions' }));
-    await user.click(screen.getByRole('menuitem', { name: 'Activate' }));
+    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Activate' }));
 
     expect(handlers.onToggleActive).toHaveBeenCalledWith(row);
     expect(handlers.onEdit).not.toHaveBeenCalled();
   });
 
-  it('keeps draft edit and publish direct with delete in overflow and no approval actions', async () => {
+  it('keeps draft edit, publish and delete direct with secondary actions in overflow', async () => {
     const user = userEvent.setup();
     const handlers = {
       onEdit: vi.fn(),
@@ -172,10 +176,11 @@ describe('Admissions settings row actions', () => {
 
     expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(handlers.onDelete).toHaveBeenCalledOnce();
 
     await user.click(screen.getByRole('button', { name: 'More actions' }));
-    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeEnabled();
+    expect(screen.queryByRole('menuitem', { name: 'Delete' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Clone as draft' })).toBeVisible();
     expect(screen.getByRole('menuitem', { name: 'History & versions' })).toBeVisible();
     expect(

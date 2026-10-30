@@ -1,5 +1,4 @@
 import { Provider } from 'react-redux';
-import { addIcon } from '@iconify/react';
 import { configureStore } from '@reduxjs/toolkit';
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
@@ -11,24 +10,8 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { WorkflowStandardTemplateDialog } from './components/workflow-standard-template-dialog';
 
-[
-  'close',
-  'auto-fix',
-  'open-in-new',
-  'school-outline',
-  'lightning-bolt-outline',
-  'clipboard-text-outline',
-  'email-seal-outline',
-  'radiobox-blank',
-  'check-circle',
-  'eye-outline',
-  'alert-outline',
-  'information-outline',
-  'sitemap-outline',
-  'form-select',
-].forEach((name) => {
-  addIcon(`mdi:${name}`, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
-});
+// Exercise the actual controls without external icon fetches during Happy DOM teardown.
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 
 const inquiryForm = { id: 'inquiry-form', name: 'Parent inquiry', version: 2 };
 const registrationForm = { id: 'registration-form', name: 'Student registration', version: 3 };
@@ -67,6 +50,20 @@ async function selectForm(user: ReturnType<typeof userEvent.setup>, label: strin
 }
 
 describe('manual workflow template drawer', () => {
+  it('offers only Standard when replacing a journey and preserves the optional inquiry form', async () => {
+    const user = userEvent.setup();
+    const props = renderDrawer(true);
+    expect(screen.getAllByRole('radio')).toHaveLength(1);
+    expect(screen.getByRole('radio', { name: /Standard admission/ })).toBeChecked();
+    expect(screen.queryByRole('radio', { name: /Post-Inquiry Admission/ })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Preview selected journey' }));
+    expect(screen.queryByText('Inquiry submitted')).toBeNull();
+    expect(screen.getByText('1. Entrance assessment')).toBeVisible();
+    expect(screen.getByText('5. Admission finalization')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Replace journey' }));
+    expect(props.onApply).toHaveBeenCalledWith('standard', 'registration-form', 'inquiry-form');
+  });
+
   it('keeps guidance in the header tooltip and previews the selected journey', async () => {
     const user = userEvent.setup();
     renderDrawer(true);

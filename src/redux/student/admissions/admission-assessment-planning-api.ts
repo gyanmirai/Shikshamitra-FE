@@ -54,6 +54,7 @@ export const admissionAssessmentPlanningApi = api.injectEndpoints({
         skipCount: number;
         maxResultCount: number;
         search?: string;
+        stageInstanceIds?: string[];
       }
     >({
       query: (body) => ({ url: `${ASSESSMENTS_URL}/sessions/preview`, method: 'POST', body }),
@@ -100,6 +101,7 @@ export const admissionAssessmentPlanningApi = api.injectEndpoints({
 export const {
   useGetAssessmentSessionWorkbenchQuery,
   useGetAssessmentSessionByIdQuery,
+  useLazyGetAssessmentSessionByIdQuery,
   useGetAssessmentSessionResourcesQuery,
   useGetAssessmentSessionSlotsQuery,
   useLazyGetAssessmentInterviewersQuery,

@@ -52,6 +52,21 @@ vi.mock('src/components/three-dots-actions', () => ({
 }));
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
+// Exercise the screen's retry callbacks independently of the shared toast host.
+vi.mock('./admission-query-error', () => ({
+  AdmissionQueryError: ({ onRetry }: { onRetry: () => void }) => (
+    <button type="button" onClick={onRetry}>
+      Retry
+    </button>
+  ),
+}));
+vi.mock('./application-detail/application-resume-journey', () => ({
+  ApplicationResumeJourney: () => (
+    <div role="dialog" aria-label="Resume Admission">
+      Resume preview
+    </div>
+  ),
+}));
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ id: 'application-1' }),
@@ -223,6 +238,21 @@ const query = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('approval finalization handoff', () => {
+  it('offers Resume only for a withdrawn application with the existing manage permission', () => {
+    loadPaymentDetail();
+    detailState.applicationQuery.data.status = 2;
+    detailState.canEndJourney = false;
+    detailState.workflowQuery.data.status = 2;
+    const view = render(<AdmissionApplicationDetailScreen />);
+    expect(screen.getByRole('button', { name: 'Resume admission' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Resume admission' }));
+    expect(screen.getByRole('dialog', { name: 'Resume Admission' })).toBeVisible();
+    view.unmount();
+    detailState.canEdit = false;
+    render(<AdmissionApplicationDetailScreen />);
+    expect(screen.queryByRole('button', { name: 'Resume admission' })).not.toBeInTheDocument();
+  });
   beforeEach(() => {
     push.mockReset();
     replace.mockReset();
@@ -764,7 +794,8 @@ describe('Applicant 360 full-page workspace', () => {
     expect(
       screen.queryByText('No application history has been recorded yet.')
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Resume admission' })).not.toBeInTheDocument();
   });
 
   it('permits editing a future draft form without submitting it or advancing the real current stage', () => {

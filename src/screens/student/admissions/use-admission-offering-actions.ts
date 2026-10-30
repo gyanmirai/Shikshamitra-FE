@@ -31,7 +31,11 @@ export type PendingOfferingAction = {
   row: AdmissionOfferingListItem;
 } | null;
 
-export function useAdmissionOfferingActions(cycle: AdmissionCycle | null, initialBulkOpen = false) {
+export function useAdmissionOfferingActions(
+  cycle: AdmissionCycle | null,
+  initialBulkOpen = false,
+  onSavedScopeChange?: (offering: AdmissionOffering) => void
+) {
   const granted = useSelector((state: RootState) => state.auth.permissions);
   const [loadOffering, detailState] = useLazyGetAdmissionOfferingQuery();
   const [createOffering, createState] = useCreateAdmissionOfferingMutation();
@@ -83,15 +87,16 @@ export function useAdmissionOfferingActions(cycle: AdmissionCycle | null, initia
   const save = async (values: AdmissionOfferingWriteInput, targetCycleId: string) => {
     if (!cycle || !dialogMode) return;
     try {
+      let saved: AdmissionOffering | undefined;
       if (dialogMode === 'create')
-        await createOffering({ admissionCycleId: cycle.id, body: values }).unwrap();
+        saved = await createOffering({ admissionCycleId: cycle.id, body: values }).unwrap();
       else if (dialogMode === 'edit' && selected)
-        await updateOffering({
+        saved = await updateOffering({
           id: selected.id,
           body: { ...values, concurrencyStamp: selected.concurrencyStamp },
         }).unwrap();
       else if (dialogMode === 'clone' && selected)
-        await cloneOffering({
+        saved = await cloneOffering({
           id: selected.id,
           body: {
             admissionCycleId: targetCycleId,
@@ -117,6 +122,23 @@ export function useAdmissionOfferingActions(cycle: AdmissionCycle | null, initia
       });
       setDialogMode(null);
       setSelected(null);
+      if (
+        saved &&
+        (dialogMode !== 'edit' ||
+          (selected &&
+            (
+              [
+                'admissionCycleId',
+                'boardId',
+                'mediumId',
+                'stageId',
+                'standardId',
+                'campusId',
+              ] as const
+            ).some((field) => (saved[field] ?? null) !== (selected[field] ?? null))))
+      ) {
+        onSavedScopeChange?.(saved);
+      }
     } catch (error) {
       shikshaMitraToast.error({
         message: getAdmissionApiError(error, 'Unable to save the offering.'),

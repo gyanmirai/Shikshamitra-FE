@@ -332,7 +332,9 @@ describe('AdmissionFeeSelectionPanel', () => {
       'Selected optional heads1'
     );
     expect(screen.queryByText(/Configured total/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Finance calculates dues/)).toBeVisible();
+    expect(screen.queryByText(/Finance calculates dues/)).not.toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'About Selection summary' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(/Finance calculates dues/);
   });
 
   it('reports readiness and the concurrency stamp to the shared page footer without a duplicate action', () => {
@@ -510,10 +512,12 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeEnabled();
   });
 
-  it('locks paid selections while the shared collection panel handles remaining dues', () => {
+  it('locks paid selections while the shared collection panel handles remaining dues', async () => {
     setRead({ ...selected, isLocked: true, canEdit: false });
     renderPanel({ compact: true });
-    expect(screen.getByText(/Payment has been recorded/)).toBeVisible();
+    expect(screen.queryByText(/Payment has been recorded/)).not.toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'Fee selection details' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(/Payment has been recorded/);
     expect(screen.queryByRole('button', { name: 'Change fee structure' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /waive|refund/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Test collection dialog' })).toBeEnabled();
@@ -615,11 +619,13 @@ describe('AdmissionFeeSelectionPanel', () => {
       ).not.toBeInTheDocument()
     );
   });
-  it('keeps paid and subsequent-stage selections read only with their saved revision', () => {
+  it('keeps paid and subsequent-stage selections read only with their saved revision', async () => {
     setRead({ ...selected, canEdit: false, isLocked: true, currentStageId: 'payment' });
     renderPanel();
     expect(screen.getByText('Class one fees · Revision 2')).toBeInTheDocument();
-    expect(screen.getByText(/Payment has been recorded/)).toBeInTheDocument();
+    expect(screen.queryByText(/Payment has been recorded/)).not.toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'Fee selection details' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(/Payment has been recorded/);
     expect(screen.queryByRole('button', { name: 'Change fee structure' })).not.toBeInTheDocument();
     expect(mocks.candidates).not.toHaveBeenCalled();
   });

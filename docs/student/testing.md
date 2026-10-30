@@ -3,12 +3,53 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-29
+updated_on: 2026-10-30
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Student-first assessment booking (30 October 2026)
+
+The focused 15-suite assessment/API run passes 142 tests. Coverage includes selected-only booking, scope retention, explicit unavailable students, capacity and duplicate-pupil blocking, individual appointment proposals, durable retries from both controls, and remove/Back/discard/reopen behavior. Existing Pipeline booking, assessment actions, results and Continue suites are included. The drawer/field presentation rerun passes all 11 cases. The page-state regression additionally keeps background rows/counts visible while the booking drawer is open.
+
+Synthetic component checks in the Codex in-app browser verify session readiness, Institute room/building/floor/capacity selection, and desktop/mobile drawer layout. At 390 x 844, document width remains 390 and footer buttons are 30 px high and reachable. Evidence is under `.artifacts/assessment-student-booking-ui/`; no real applicant was booked. Localhost application save/reload acceptance remains pending backend restart and a working signed-in browser; component QA does not establish live persistence.
+
+Changed-source TypeScript, ESLint, formatting and Student documentation checks pass. Full-repository TypeScript was stopped near its 8 GB compiler budget; no full-repository type/build pass is claimed. The focused configuration is `.artifacts/assessment-student-booking-types/tsconfig.json` and retains the application's MUI augmentations and strict compiler settings.
+
+## Admission stage presentation (30 October 2026)
+
+The document table/upload, fee selection, assessment dialog and bulk offering suites ran 67 cases: 62 pass, including the changed tooltip assertions and button/file-selection required-error recovery. Five existing fee-selection read-error tests still expect inline banners/Retry after shared feedback moved these errors to toast. The same five fail against an isolated copy of the unchanged HEAD panel, without replacing running source; baseline evidence is `.artifacts/admission-ui-polish/baseline-only.log`. Scoped ESLint passes. Full TypeScript remains blocked by five errors in unrelated Registration form/inheritance files; none refer to the touched files.
+
+Local signed-in browser checks confirm adjacent right-aligned Back/Preview controls at desktop and 390 x 844 mobile width. Proof is `.artifacts/admission-ui-polish/bulk-desktop.jpg` and `bulk-mobile.jpg`. Navigation to the admission QA case subsequently timed out with a blank page, so the Payment/upload/waiver screens have no new browser acceptance in this revision; their focused component checks and source review are separate evidence. No document was uploaded to the API, payment collected, waiver saved or offering created during this UI test. The temporary mobile viewport was reset.
+
+The browser follow-up subsequently verified waiver and upload on signed-in synthetic APP-002 (Class 1 / CBSE / English), at 1280 x 720 desktop and 390 x 844 mobile viewport sizes. Waiver shows no duplicate body guidance, its info tooltip opens, blank reason is rejected, and saving locks fields/dismissal before the synthetic attempt becomes Waived. Upload file opens the real file chooser at both widths; the selected PDF filename appears, missing-file and unsupported-TXT validation remain, a valid PDF clears the error, and saving locks the picker/notes/Cancel/X. The synthetic PDF persisted as Copy version 1 / Pending review. The test registration was completed normally to reach Documents and Payment; no real student, payment, refund, activation or school-wide setting was changed. New proof: `waiver-desktop.jpg`, `waiver-mobile.jpg`, `upload-desktop.jpg`, `upload-mobile.jpg`, `upload-saved-mobile.jpg` in the same artifact directory.
+
+Payment's three focused tooltip checks pass again, but its desktop/mobile browser acceptance is still pending. The local Class 1/year has no matching published fee structure; navigation to existing selections then reached a connection-refused page after the frontend stopped. The existing local API was preserved and the frontend was restarted using installed Next directly (without dependency installation); the browser error page requires manual reload before inspection can continue. The latest full TypeScript run reports one unrelated Form inheritance test type mismatch. These limitations do not establish a Payment tooltip browser pass. Machine-readable current evidence is `.artifacts/admission-ui-polish/browser-results.json`.
+
+## Configured Inquiry capture
+
+Run the Inquiry binding, model, page, hook, edit, public-form, match-review and duplicate-review suites with one Vitest worker, then the builder wizard/palette/publish suites and the runtime-field renderer suite. Coverage includes no injected questions/sections or required coercion, incomplete Draft saves, publish-time minimum contact paths, full versus split names, explicit parent ownership, saved/read-only identity, conditional-step visibility, Source option zero/blank values, translated copy, payload field codes, same-child current-cycle review, cross-cycle family review, explicit sibling confirmation, separate-family reasons and saving locks. The isolated `admission-sibling` UI fixture uses synthetic callbacks only; browser review must not be reported as real family/account mutation or stage deployment acceptance. Regression tests also cover legacy published optional Guardian/Father/Mother identity questions in staff create, optional public capture and saved inquiry edit, no publication toast/button gate at capture, missing-form blocking, and actual API-error draft retention. Run full `npm run ts`, changed-file ESLint and the Student documentation validator before handoff.
+
+## App Login duplicate-send prevention (29 October 2026)
+
+The batch, portal-account, credential-email and sibling UI suites cover sent/queued recipient exclusion, mixed sent/unsent batches, disabled ordinary sending when both are sent, failed initial-send retry, failed-resend confirmation, saved-email drift, parent consent, cooldown, permissions and existing-parent sign-in help. Sent is sender acceptance, not mailbox delivery. A retained historical `sentAt` requires deliberate resend confirmation even if a later attempt fails or an owner-verified address changes; it does not mark the current attempt as successful.
+
+The existing `e2e/fixtures/onboarding-app-login` fixture adds `sent`, `student-sent`, `resend-failed` and `cooldown` scenarios, with `layout=compact` for the page-card variant. It renders the production App Login component with synthetic hooks, never the real sender. Local authenticated Student Setup rendering and synthetic resend interaction are separate from real-mail or staging verification.
+
+The four focused suites pass 115 tests, and full `npm run ts` passes. Codex in-app browser checks confirm disabled sent-recipient checkboxes and ordinary send, no request on confirmation Cancel, one exact-recipient request after confirmation, parent consent, mixed sent/unsent sending and failed-resend handling. Evidence is in `.artifacts/credential-resend-20261029/`, including `sent-recipients.png` and `resend-confirmation.png`. No real credential email was sent; staging and mailbox delivery remain unverified. The task changed no backend contract or Finance file.
+
+## Unified admission forms (29 October 2026)
+
+- The list, query, preview-navigation, template, details and dialog suites cover one list without type tabs, legacy `view` URLs, restored criteria, type-specific starters, draft preservation, saved-type locking, validation, Back navigation and Inquiry/Registration save/publish payloads. The dialog integration uses the real shared stepper and Formik; field-library API reads and review rendering are isolated.
+- Focused verification covers 58 cases. The combined run passed 57 with one 30-second timeout under machine memory pressure; the isolated list rerun passed all 14 cases, including that case. Full `npm run ts`, scoped lint, formatting, diff checks and Student documentation validation pass.
+- Local in-app browser checks confirmed both types in the same table, Inquiry through all three steps, draft save/reopen with its type locked, and the Registration selector changing the heading and starter choices. A synthetic `UI QA Inquiry Type 29 Oct` draft remains for inspection.
+- Registration save/reopen and final responsive checks remain unverified: the local API at port 44332 became unavailable and the reloaded page could not verify account access. Earlier screenshots are `.artifacts/unified-forms-table.png` and `.artifacts/unified-forms-inquiry-review.png`. No form was published during browser testing; these are local results only.
+
+## Resume admission
+
+Focused coverage lives in `admission-journey-resume-api.test.ts`, `application-resume-journey-dialog.test.tsx` and `admission-application-detail.test.tsx`. It checks same-reference payload/cache refresh, required reason, actual blockers, failed-submit draft retention, busy dismissal and existing permission gating. Run these with the End Journey API/dialog and phase-return URL regressions. Browser acceptance additionally requires a disposable local withdrawn case to resume at desktop and phone widths; unit tests alone do not establish live runtime acceptance.
 
 ## Optional onboarding fees
 
@@ -231,6 +272,58 @@ The combined nine-file regression passed 104 tests, including the earlier email/
 The email regression reproduces required Guardian/Father/Mother/Student fields disappearing when `format: "email"` is routed to an unsupported specialized renderer. Coverage verifies email inputs, edits and read-only values after the repair. Collection regressions cover both fee-selection and summary refreshes: retain server balances, show the collection-button spinner, prevent preparation while refreshing and restore the eligible action when loading ends. Existing permission, settlement, retry and payment evidence safeguards remain covered. Live `APP-2026-000017` inspection was read-only; the fee-selection confirmation and enabled collection action were observed without recording a payment. Source fixes still require frontend deployment before live acceptance.
 
 The seven-file focused regression passed 88 tests. Scoped ESLint, formatting, Student docs and whitespace checks passed. A focused TypeScript project including the changed files and existing theme/global augmentations passed; the full repository TypeScript run was stopped under memory pressure and is not certified. Authenticated local browser verification showed the restored email input in the saved form and a usable collection action after Refresh. The local read completed too quickly to capture its transient spinner; delayed-loading coverage is provided by the controlled component tests. Screenshots and diagnostic logs remain ignored under `.artifacts/admission-live-blockers/`.
+
+## Offering default cycle and drawer context (2026-10-29)
+
+The focused gate passed 88 cases across cycle selection/hydration, URL and filter scope, drawer
+Preview/Back and draft retention, existing-class checks, creation, and single/bulk activation.
+It covers a newer QA Draft/Closed cycle ahead of a published/open period, the header academic year,
+an eligible default beyond the first cycle page, no eligible default, explicit historical links,
+default lookup loading/failure, and a drawer-selected older cycle pending by-ID hydration.
+
+Authenticated local DDVS browser verification opened the original Board/Medium-only URL, resolved
+and pinned General Admission Flow, and displayed ADM-CLASS-1/2/3 as Active. A deliberate Closed
+cycle selection remained selected and was inherited by the drawer. Changing the drawer back to
+General synchronized the URL and retained the unsaved Class 4 draft. No offerings were created or
+activated; read-only PostgreSQL recheck retained the existing three active records. The actual
+page was checked at 1440x900, 768x1024 and 390x844 without document horizontal overflow. Screenshots
+are ignored local `.artifacts/offering-cycle-live-*.jpg` files. This is local acceptance, not staging
+deployment. The owning shared components, backend APIs and permissions are unchanged by this fix.
+Scoped lint, Student docs and whitespace checks passed. An initial full TypeScript run passed;
+the final rerun reported six errors in concurrently added `application-resume-journey-dialog`
+source/tests outside this change, with no diagnostic in the cycle-fix files.
+
+```bash
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/student/admissions/use-admission-offerings-screen.test.tsx src/screens/student/admissions/bulk-admission-offering-dialog.test.tsx src/screens/student/admissions/admission-offering-filters.test.tsx src/screens/student/admissions/admission-offering-more-filters.test.tsx src/screens/student/admissions/admission-offering-filter-chips.test.tsx src/screens/student/admissions/admission-filter-navigation.test.tsx src/screens/student/admissions/use-admission-offering-actions.test.tsx src/screens/student/admissions/use-bulk-admission-offering-activation.test.tsx src/screens/student/admissions/use-bulk-admission-offering.test.tsx src/screens/student/admissions/bulk-admission-offering-model.test.ts src/screens/student/admissions/admission-offerings-add-action.test.tsx --pool=threads --maxWorkers=1 --testTimeout=20000
+```
+
+## Offering activation confirmation styling (2026-10-29)
+
+The row activation confirmation uses the shared `ConfirmDialog` shell through
+`admission-offering-action-dialog.tsx`, with an optional header Close control, semantic action icon,
+bold offering identity, scoped 4px backdrop blur, and theme primary Activate button. Other shared
+confirmations retain their default Close-control behavior. Activation, deactivation and deletion
+still call the existing action owner; permissions, fresh concurrency reads and blocking locks are
+unchanged.
+
+The full `vitest run offering --pool=threads --maxWorkers=1 --testTimeout=30000` selection passes
+188 tests across 28 files; the shared confirmation suite separately passes five tests. Drawer
+error checks follow the current Student toast contract without expecting orphan inline Retry
+buttons. The retained readiness compatibility screen tests inherited requirements, exact global
+login-policy saves, historical Offering-profile preservation, failed-save draft/retry behavior,
+and permission enforcement instead of the retired named-rule CRUD screen. Local Iconify mocks
+remove remote asset requests from dialog/detail unit fixtures; the final offering run reports no
+SSL, unhandled-request, or Fetch AbortError teardown failures. No production behavior, test skips,
+or per-test timeout increases are included in this cleanup.
+
+The Codex in-app browser checked the production dialog/theme in an isolated UI preview: light
+desktop, dark 390px long-name layout without document overflow, 4px backdrop blur, footer
+alignment, Close/Escape cancellation, focus return, blocking controls, and simulated failure
+recovery. Preview outcomes are simulated; no real Offering was activated or deleted. The
+authenticated local application was unavailable, and staging remains unverified. Evidence is
+under `.artifacts/offering-suite-20261029/`. External Azure attachment images were unavailable;
+visual comparison used the repository's shared confirmation reference and the written report.
+Repository TypeScript, scoped ESLint, and Student documentation validation also pass as separate gates.
 
 ## Activation dialog readiness (2026-10-18)
 
@@ -1023,6 +1116,8 @@ The 2026-09-18 focused Form Builder run passed 11 files and 62 tests covering th
 
 ## Workflow builder checks
 
+`workflow-builder/workflow-usage.test.tsx` covers used and unused usage results, loading, failed reads with cached data, and closed-panel error isolation. A successful View usage read must show its offerings and stage statistics without deletion advice or warning toasts. Keep the existing workflow-list concurrency tests in the regression set so delete/reopen handling remains separate from usage reads.
+
 ```bash
 npx vitest run src/utils/permissions.test.ts src/screens/student/admissions/workflow-builder-utils.test.ts src/screens/student/admissions/admission-visibility-rules.test.ts src/screens/student/admissions/admission-form-validation.test.ts --pool=threads
 npx playwright test e2e/student/admission-workflows.spec.ts --project=chromium --no-deps
@@ -1032,7 +1127,25 @@ npx eslint "src/screens/student/admissions/admission-workflow*.tsx" src/screens/
 The workflow Playwright flow covers the empty list, draft creation, stage add/remove/edit,
 transition conditions, stale concurrency recovery, validation feedback, publish, and read-only state.
 
+Journey mutation regressions live in `workflow-stage-graph.test.ts`, `workflow-draft-refresh.test.ts`, and `workflow-next-stage-flow.test.tsx`. They cover saved middle insertion, explicit Add stage position selection, clone/delete continuity, entry/ending transfers, exact preservation of historical conditional routes, rejected-operation immutability, and atomic Undo/Redo. Run these with the existing type-select, document-editor, transition-safety and transition-preservation suites. The editor regressions distinguish generated defaults from configured-stage type changes and require checklist-local guidance with Apply disabled for an empty document checklist.
+
+On 29 October 2026, 13 focused suites passed 108 tests; the affected graph, insertion and document suites passed a further 28-test rerun after lint cleanup. Full TypeScript, focused ESLint, Student documentation validation and scoped diff checks passed. The authenticated in-app browser verified middle insertion, connected cloning, bridged deletion, Undo/Redo, missing-next-step rebuilding, document guidance/Apply gating, and save/reload in the isolated `QA Journey mutations 29 Oct` draft. The 390px insertion drawer had no horizontal document overflow. The test draft remained unpublished; published workflows, offerings and applicants were unchanged.
+
+## Admission feedback verification (29 October 2026)
+
+- The focused 16-suite run passed 199 tests covering Inquiry/Registration preview return context, loading/error escape, section Edit/Delete confirmation, template graph construction and selection, existing workflow preservation, and onboarding readiness. Full TypeScript, scoped ESLint, formatting and Student documentation validation passed. Workflow dialog tests use local icon stubs to avoid external icon requests during test teardown; real controls and assertions remain intact.
+- Authenticated local in-app browser checks verified both preview Back controls, retention of the Inquiry search and Registration tab, direct section actions with Delete cancellation, and the Post-Inquiry journey preview. Preview layouts were inspected at 390, 768 and 1440px without horizontal document overflow. Unsaved verification forms/workflows were discarded; no published workflow, student activation, credential email or financial transaction was created. Screenshots and logs remain ignored under `.artifacts/admissions-feedback-20261029/`.
+- The unchanged backend passed all 46 tests selected by `FullyQualifiedName~Readiness_`. Current source includes required service handoffs in readiness and excludes the retired first-payment handoff, matching the current optional-fees rule. The legacy drawer's stale fee-activation guidance was corrected. The historical staging case `APP-2026-000007` was not verified against its deployed version; these local checks do not certify staging. All 1,849 tracked Finance-related files matched the task-start hashes.
+
 ## Backend coordination
+
+Final resume-dialog follow-up gates pass: full `npm run ts`, scoped ESLint (including the three matching Form Builder test-option corrections), and all five resume dialog/client tests. The event adapter retains both native-submit prevention and propagation stopping; shared dialog code and resume business behavior are unchanged. Final gate exit codes are recorded in `.artifacts/admissions-feedback-20261029/resume-final-status.json`.
+
+The follow-up resume-dialog typing fix adapts the shared dialog's general form event to Formik without a type cast, retains prevention of native submission, removes unsupported Testing Library options and uses the actual shared Close button label in the saving-lock test. Full repository TypeScript passes. The local DDVS save/reload check created the unpublished `QA GR Maximum Blank 29 Oct` series for CBSE / English / Class 1: cleared Maximum saved and reloaded blank on creation; a saved `500` reloaded correctly; clearing that saved limit and saving/reloading again remained blank. The default GR series stayed Published and the QA series stayed Draft. Screenshot: `.artifacts/admissions-feedback-20261029/gr-blank-saved-reloaded.png`. This is local runtime evidence, not staging acceptance; no GR numbers were issued and Finance was unchanged.
+
+GR optional-maximum regression verification (29 October 2026): the affected three FE suites pass 42 tests. Create/edit tests assert that clearing Maximum number persists JSON null, invalid finite bounds block submission, and a specific server rejection stays beside the field without discarding the draft. Provider coverage verifies the specific toast and rethrown original error; existing Roll and published-version flows remain covered. One stale checkbox assertion was corrected to the actual switch role, and the publish test now waits for the drawer to close before accessing its table action. The final serial run used a 15-second runner timeout after resource-contention timeouts; no test was skipped or assertion removed. Backend `StudentOnboarding_Tests` passes 45 tests, including omitted/null/numeric maximum acceptance and empty-string rejection; backend production validation is unchanged. Local in-app browser checks verify the no-limit helper, inline positive-number error and clearing recovery. The unsaved browser form was discarded, so no published settings were changed. Screenshots/logs are under `.artifacts/admissions-feedback-20261029/gr-maximum-*`.
+
+The 29 October template-removal follow-up passed 51 tests across six suites, full TypeScript, scoped ESLint and Student docs validation. Coverage verifies that create/edit offers only Standard admission and Blank workflow, replacement offers Standard, historical Post-Inquiry graphs retain their exact IDs/routes during ordinary edits, and existing inquiry handoff behavior remains intact. The authenticated in-app browser verified the two choices and Blank preview; its unsaved selection was discarded without changing saved workflows. Finance hashes remained unchanged. Screenshot: `.artifacts/admissions-feedback-20261029/standard-and-blank-only.png`.
 
 When a frontend contract changes, verify the matching backend contracts under `../../../Shikshamitra-BE/src/ShikshaMitra.Application.Contracts/Students/Enrollments/Admissions/**` and run the backend focused Admissions tests.
 
@@ -1492,3 +1605,24 @@ The existing browser tabs show connection-refused pages, so this revision has no
 - The four focused FE suites ran 72 cases: 67 passed; five existing fee-selection request-error assertions fail because they expect inline banners/Retry after the shared UI moved request errors to toast. Restoring the pre-task tooltip reproduced those same five failures (5/5), proving they are unrelated to this removal. New drawer/normalization tests pass. Full npm run ts and focused lint pass.
 - Backend coverage proves confirmed partial payment and mandatory-reason deferral work despite previously saved Full/off settings; verified zero payable, unprepared/pending evidence, permissions, concurrency, idempotency and Onboarding remain guarded. See backend Student testing documentation for execution details.
 - Local browser UI proof and Finance hash comparison are recorded under .artifacts/payment-completion-removal/. Browser UI/draft persistence and backend integration-test proof are separate from the running debugger Host; rebuild/restart that Host before expecting the changed runtime enforcement. No live payment, Finance code change or schema migration is involved.
+## Resume admission acceptance (29 October 2026)
+
+The five focused application-detail, resume-dialog/container and API suites pass 59 tests. Coverage includes existing permission/footer gating, required reason, dirty dismissal, saving guards, authoritative error handling, cache invalidation and uncertain-response retry with the original immutable command. The lost-response regression first failed when a refreshed active preview disabled replay, then passed after the same command remained retryable without editing its reason.
+
+Signed-in localhost browser acceptance used synthetic Class 1 / CBSE / English APP-002. At 1440 x 1000, blank submit showed the required reason; Keep editing preserved the draft; saving disabled conflicting controls; success returned the same application and Entrance assessment stage to Pipeline. At 390 x 844 a second End -> Resume cycle succeeded with readable summary, wrapped warnings, reachable reason/footer and no horizontal dialog overflow. History retained both withdrawal/resume pairs and earlier events. The viewport override was reset afterward. Screenshots: `.artifacts/admission-resume/desktop-dialog.jpg`, `desktop-resumed.jpg`, `mobile-dialog.jpg`, `mobile-resumed.jpg` and `mobile-history.jpg` in the same directory.
+
+Full `npm run ts`, scoped ESLint, both repository diff checks and Student documentation validation pass. The repository-wide documentation check still reports unrelated pre-existing `docs/testing/` inventory/frontmatter gaps. This is local in-app-browser viewport verification, not physical-device or staging acceptance; no actual payment, notification or student activation was performed.
+
+## Inquiry inheritance checks
+
+Run the feature-local `form-inheritance-model`, `form-inheritance-panel`, `use-form-inheritance`, custom-palette and existing builder/runtime suites with the Windows Vitest preload and one worker. Verify source A/B labels, approved-source isolation, unchanged base draft sections, inherited locks, requiredness strengthening, explicit custom-equivalence review, permission/loading/error states and stale-response rejection. Applicant inputs remain editable under their existing permissions; definition locks belong only to the builder.
+
+Full `npm run ts`, scoped ESLint and production build remain required. Browser acceptance should exercise both source previews and their applicant Registration views at 390x844, 768x1024 and 1440x900. Compare common-component content against the start-of-task baseline, including pre-existing edits. Automated tests alone do not establish browser or deployed acceptance.
+
+Local verification on 30 October 2026 passed the full `npm run ts` and isolated production build after the Assessment edits finished. Browser testing found an inheritance-toggle remount that reset the narrow-screen builder tab; the feature-local provider now keeps descendants mounted. The regression failed before the fix, and the six-file inheritance/runtime run passes 49 tests with no skips. Scoped ESLint and Prettier pass.
+
+The former Canvas Bank Details timeout reproduced under load in the pre-feature baseline. Its deletion fixture now contains the real Bank Details section and one retained step with one field, avoiding the unrelated full Registration preset rendering after deletion. All original assertions remain, with added checks that the Bank step disappears and the retained step remains. The default five-second timeout is unchanged; no shared controls or production components were modified for this test repair. The final broader selection passes all 152 tests across 17 files, including both Canvas cases and the full template-catalogue checks, with no skips.
+
+Authenticated Codex in-app browser verification used the existing local API configuration and rebuilt Release assemblies, with migrations, seeders and delivery workers disabled. The isolated unpublished `QA Inquiry Inheritance Review 30 Oct` Registration draft approves both existing Inquiry sources. Their applicant-facing builder previews contain 10 versus seven inherited questions, preserve their respective labels, retain the common Registration question and keep source-only fields isolated. Inherited label/type/delete locks, the source-mandatory lock, editable applicant preview inputs and optional Inquiry Date of birth becoming Registration-required were checked. Save, full reload and reopening retain both approvals, the requiredness override and the single base section. Desktop 1440x900, tablet 768x1024 and mobile 390x844 document/dialog widths match the viewport. Screenshots are retained with the session verification artifacts. No active Offering was changed and no real applicant was submitted; persisted applicant prefill, explicit clears, immutable schemas and Records evidence are covered by the backend service tests rather than a live applicant browser submission.
+
+The full backend Release solution build passes with zero errors and compiler/analyzer warnings; see [backend verification](../../../Shikshamitra-BE/docs/modules/student/testing.md#inquiry-inheritance-regression-checks). Common-component hashes are compared against the original 661-file snapshot, including pre-existing edits. Next-generated build-path changes to `tsconfig.json` and `next-env.d.ts` are restored byte-for-byte after verification. This is local verification, not staging or production acceptance.

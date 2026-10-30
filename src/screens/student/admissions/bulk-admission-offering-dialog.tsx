@@ -37,6 +37,8 @@ type Props = {
   open: boolean;
   cycle: AdmissionCycle;
   onClose: () => void;
+  onCreated?: (values: BulkOfferingValues) => void;
+  onCycleChange?: (cycle: AdmissionCycle) => void;
 };
 
 // Select classes + Configure are merged into step 0; Preview is step 1
@@ -45,11 +47,17 @@ const NO_STANDARDS: Standards[] = [];
 const cycleLabel = (cycle: AdmissionCycle) =>
   `${cycle.name} · ${cycle.academicYearName} · ${formatDateOnly(cycle.startDate, 'DD MMM YYYY')} – ${formatDateOnly(cycle.endDate, 'DD MMM YYYY')}`;
 
-export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
+export function BulkAdmissionOfferingDialog({
+  open,
+  cycle,
+  onClose,
+  onCreated,
+  onCycleChange,
+}: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const [classesReady, setClassesReady] = useState(true);
   const formikRef = useRef<FormikProps<BulkOfferingValues> | null>(null);
-  const bulk = useBulkAdmissionOffering(cycle, open, onClose);
+  const bulk = useBulkAdmissionOffering(cycle, open, onCreated ?? onClose);
   const [loadCycles, cyclesQuery] = useLazyGetAdmissionCyclesQuery();
   const [cycleOptionsRevision, setCycleOptionsRevision] = useState(0);
   const fetchCycles = useCallback(
@@ -78,7 +86,7 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
     },
     [loadCycles, cycle.academicYearId]
   );
-  const initialValues = bulkOfferingInitialValues;
+  const [initialValues] = useState(() => ({ ...bulkOfferingInitialValues, admissionCycle: cycle }));
   const selectedCount = bulk.preview?.items.length ?? 0;
 
   const requestClose = () => {
@@ -158,7 +166,6 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
 
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomStepperWithFormik
-          key={cycle.id}
           steps={STEPS}
           activeStep={activeStep}
           initialValues={initialValues}
@@ -172,7 +179,7 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
           completedSteps={activeStep === 1 ? [0] : []}
           validateForwardStepClick
           showSaveButton={false}
-          backButtonProps={{ sx: { ml: 'auto', mr: 1 } }}
+          backButtonProps={{ sx: { ml: 'auto', '& + .MuiBox-root': { ml: 0 } } }}
           nextButtonLabel="Preview offerings"
           finalButtonLabel={`Create ${selectedCount} offering${selectedCount === 1 ? '' : 's'}`}
           disableSubmit={activeStep === 1 && !bulk.canSaveInactive}
@@ -195,6 +202,7 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
                   activeStep={activeStep}
                   formik={formik}
                   scopeCycle={cycle}
+                  onCycleChange={onCycleChange}
                   fetchCycles={fetchCycles}
                   cycleOptionsRevision={cycleOptionsRevision}
                   cycleOptionsError={cyclesQuery.isError}
@@ -221,6 +229,7 @@ function BulkAdmissionOfferingStep({
   activeStep,
   formik,
   scopeCycle,
+  onCycleChange,
   fetchCycles,
   cycleOptionsRevision,
   cycleOptionsError,
@@ -233,6 +242,7 @@ function BulkAdmissionOfferingStep({
   activeStep: number;
   formik: FormikProps<BulkOfferingValues>;
   scopeCycle: AdmissionCycle;
+  onCycleChange?: (cycle: AdmissionCycle) => void;
   fetchCycles: (
     search: string,
     page: number
@@ -333,13 +343,14 @@ function BulkAdmissionOfferingStep({
               )}
               sx={{ mb: 1 }}
             >
-              <PaginatedSearchSelect<AdmissionCycle>
+              <PaginatedSearchSelect<AdmissionCycle, false, true>
                 key={cycleOptionsRevision}
                 fullWidth
                 size="small"
                 label="Admission cycle *"
+                disableClearable
                 name="admissionCycle"
-                value={formik.values.admissionCycle}
+                value={formik.values.admissionCycle ?? undefined}
                 fetchOptions={fetchCycles}
                 minChars={0}
                 getOptionLabel={cycleLabel}
@@ -347,7 +358,7 @@ function BulkAdmissionOfferingStep({
                 getOptionKey={(item) => item.id}
                 isOptionEqualToValue={(item, selected) => item.id === selected.id}
                 onChange={(_, selected) => {
-                  if (selected?.id === formik.values.admissionCycle?.id) return;
+                  if (!selected || selected.id === formik.values.admissionCycle?.id) return;
                   bulk.clearPreview();
                   formik.setValues(
                     {
@@ -360,6 +371,7 @@ function BulkAdmissionOfferingStep({
                     true
                   );
                   formik.setFieldTouched('admissionCycle', true, false);
+                  onCycleChange?.(selected);
                 }}
                 onBlur={() => formik.setFieldTouched('admissionCycle', true)}
                 error={Boolean(
@@ -472,6 +484,7 @@ function BulkAdmissionOfferingStep({
               change={change}
               fieldIssues={fieldIssues}
               configuredClassIds={configuredClassIds}
+              configuredOfferings={configuredClassesQuery.currentData}
               classesDisabled={!canCheckClasses}
               classesLoading={canCheckClasses && !classesReady && !configuredClassesQuery.isError}
               classesError={canCheckClasses && configuredClassesQuery.isError}

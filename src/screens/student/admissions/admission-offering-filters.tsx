@@ -21,6 +21,8 @@ import type { AdmissionOfferingFilters as FilterValues } from './use-admission-o
 
 type Props = {
   cycle: AdmissionCycle | null;
+  cycles?: AdmissionCycle[];
+  cyclesLoading?: boolean;
   values: FilterValues;
   onChange: (changes: Partial<FilterValues>) => void;
   filterAction: ReactNode;
@@ -28,7 +30,15 @@ type Props = {
 
 const ALL_FILTER_VALUE = '__all__';
 
-export function AdmissionOfferingFilters({ cycle, values, onChange, filterAction }: Props) {
+export function AdmissionOfferingFilters({
+  cycle,
+  cycles,
+  cyclesLoading = false,
+  values,
+  onChange,
+  filterAction,
+}: Props) {
+  const cycleOptions = cycles ?? (cycle ? [cycle] : []);
   const hierarchyQuery = useGetAcademicOrganizationOptionsQuery(
     { academicYearId: cycle?.academicYearId ?? '' },
     { skip: !cycle }
@@ -73,6 +83,27 @@ export function AdmissionOfferingFilters({ cycle, values, onChange, filterAction
       <Grid container spacing={1} alignItems="center">
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <CustomSelect
+            options={cycleOptions}
+            label="Admission cycle"
+            labelKey="name"
+            valueKey="id"
+            value={cycle?.id ?? ''}
+            isLoading={cyclesLoading}
+            disabled={!cycleOptions.length}
+            onChange={(id) =>
+              onChange({
+                admissionCycleId: String(id),
+                campusId: '',
+                boardId: '',
+                mediumId: '',
+                stageId: '',
+                standardId: '',
+              })
+            }
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+          <CustomSelect
             options={boards}
             label="Board"
             labelKey="name"
@@ -90,7 +121,7 @@ export function AdmissionOfferingFilters({ cycle, values, onChange, filterAction
             }
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 2 }}>
           <CustomSelect
             options={mediums}
             label="Medium"
@@ -126,7 +157,7 @@ export function AdmissionOfferingFilters({ cycle, values, onChange, filterAction
             }
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Grid size={{ xs: 12, sm: 12, md: 2 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           {filterAction}
         </Grid>
         {hierarchyQuery.isError && (

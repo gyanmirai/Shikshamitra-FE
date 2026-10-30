@@ -110,6 +110,57 @@ vi.mock('./bulk-admission-hierarchy-fields', () => ({
 }));
 
 describe('Bulk offering step navigation', () => {
+  it('starts in the table cycle and synchronizes a changed cycle without resetting the entered draft', async () => {
+    const user = userEvent.setup();
+    const cycle = {
+      id: 'cycle-1',
+      name: 'Table cycle',
+      academicYearId: 'year-1',
+      academicYearName: '2026-2027',
+      status: 1,
+      windowStatus: 1,
+      startDate: '2026-06-01',
+      endDate: '2027-03-31',
+    } as AdmissionCycle;
+    const second = { ...cycle, id: 'cycle-2', name: 'Second cycle' };
+    mocks.loadCycles.mockReturnValue({
+      unwrap: async () => ({ items: [cycle, second], totalCount: 2 }),
+    });
+    const onCycleChange = vi.fn();
+    const view = render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <BulkAdmissionOfferingDialog
+          open
+          cycle={cycle}
+          onClose={vi.fn()}
+          onCycleChange={onCycleChange}
+        />
+      </ThemeProvider>
+    );
+    expect(
+      (screen.getByRole('combobox', { name: 'Admission cycle *' }) as HTMLInputElement).value
+    ).toContain('Table cycle');
+    await user.click(screen.getByRole('button', { name: 'Select Class 1' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+    await user.keyboard('{ArrowDown}');
+    await user.click(await screen.findByRole('option', { name: /Second cycle/ }));
+    expect(onCycleChange).toHaveBeenCalledWith(second);
+    view.rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <BulkAdmissionOfferingDialog
+          open
+          cycle={second}
+          onClose={vi.fn()}
+          onCycleChange={onCycleChange}
+        />
+      </ThemeProvider>
+    );
+    expect(
+      (screen.getByRole('combobox', { name: 'Admission cycle *' }) as HTMLInputElement).value
+    ).toContain('Second cycle');
+    expect(screen.getByTestId('chosen-classes')).toHaveTextContent('["class-1"]');
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.cyclesQuery.isError = false;
@@ -264,7 +315,10 @@ describe('Bulk offering step navigation', () => {
       </ThemeProvider>
     );
     await user.click(screen.getByRole('button', { name: 'Preview offerings' }));
-    expect(await screen.findByText('Admission cycle is required')).toBeVisible();
+    expect(screen.queryByText('Admission cycle is required')).not.toBeInTheDocument();
+    expect(
+      (screen.getByRole('combobox', { name: 'Admission cycle *' }) as HTMLInputElement).value
+    ).toContain('General Admission');
     expect(mocks.preview).not.toHaveBeenCalled();
     await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
     await user.keyboard('{ArrowDown}');
@@ -366,14 +420,6 @@ describe('Bulk offering step navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Back' }));
     await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
     await user.keyboard('{Escape}');
-    await user.click(
-      within(
-        screen
-          .getByRole('combobox', { name: 'Admission cycle *' })
-          .closest('.MuiAutocomplete-root')! as HTMLElement
-      ).getByRole('button', { name: 'Clear' })
-    );
-    expect(screen.queryByRole('combobox', { name: 'Published workflow' })).not.toBeInTheDocument();
     await selectCycle(/Third cycle/);
     expect(mocks.clearPreview).toHaveBeenCalled();
     expect(screen.getByRole('combobox', { name: 'Published workflow' })).toHaveValue(
@@ -418,20 +464,23 @@ describe('Bulk offering step navigation', () => {
       endDate: '2026-10-31',
     } as AdmissionCycle;
     mocks.cyclesQuery.isError = true;
-    mocks.loadCycles.mockReturnValue({ unwrap: async () => ({ items: [], totalCount: 0 }) });
+    mocks.loadCycles.mockReturnValue({
+      unwrap: async () => {
+        throw new Error('Cycle lookup unavailable');
+      },
+    });
     render(
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <BulkAdmissionOfferingDialog open cycle={cycle} onClose={() => undefined} />
       </ThemeProvider>
     );
-    expect(
-      screen.getByText('Admission cycles could not be loaded.', { exact: false })
-    ).toBeVisible();
+    await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+    expect(await screen.findByRole('button', { name: 'Retry results' })).toBeVisible();
     await waitFor(() => expect(mocks.loadCycles).toHaveBeenCalled());
     mocks.loadCycles.mockClear();
     mocks.cyclesQuery.isError = false;
     mocks.loadCycles.mockReturnValue({ unwrap: async () => ({ items: [cycle], totalCount: 1 }) });
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    await user.click(screen.getByRole('button', { name: 'Retry results' }));
     await waitFor(() => expect(mocks.loadCycles).toHaveBeenCalled());
     await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
     await user.keyboard('{ArrowDown}');

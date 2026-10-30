@@ -208,6 +208,58 @@ const renderSettings = (children: React.ReactNode, onPersist?: any, initialSetti
 );
 
 describe('Onboarding numbering settings', () => {
+  it.each(['create', 'edit'] as const)('saves a cleared optional GR maximum as null on %s', async (mode) => {
+    const persist = vi.fn().mockResolvedValue(undefined);
+    const initial = structuredClone(defaultOnboardingSettings);
+    initial.grNumber.configurations[0].maximumNumber = 500;
+    renderSettings(<GrNumberSettingsScreen />, persist, initial);
+    fireEvent.click(screen.getByRole('button', { name: mode === 'create' ? 'Add series' : 'Edit Default GR series' }));
+    if (mode === 'create') fireEvent.change(screen.getByRole('textbox', { name: /Series name/ }), { target: { value: 'No upper limit' } });
+    selectAcademicPath();
+    const maximum = screen.getByRole('spinbutton', { name: 'Maximum number' });
+    expect(maximum).not.toBeRequired();
+    fireEvent.change(maximum, { target: { value: '500' } });
+    fireEvent.change(maximum, { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(persist).toHaveBeenCalledOnce());
+    const { configurations } = JSON.parse(JSON.stringify(persist.mock.calls[0][1])).grNumber;
+    expect(configurations[mode === 'create' ? configurations.length - 1 : 0].maximumNumber).toBeNull();
+  });
+
+  it('shows a maximum-number server rejection at the field and keeps the entered draft', async () => {
+    const persist = vi.fn().mockRejectedValue({ status: 400, data: {
+      errorCode: 'Students.Onboarding.PolicyScopeInvalid',
+      detail: 'One or more business rules were violated.',
+      data: { Reason: 'Invalid maximumNumber in onboarding settings.' },
+    } });
+    renderSettings(<GrNumberSettingsScreen />, persist);
+    fireEvent.click(screen.getByRole('button', { name: 'Add series' }));
+    fireEvent.change(screen.getByRole('textbox', { name: /Series name/ }), { target: { value: 'Retry maximum' } });
+    selectAcademicPath();
+    const maximum = screen.getByRole('spinbutton', { name: 'Maximum number' });
+    fireEvent.change(maximum, { target: { value: '100' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    expect(await screen.findByText('Enter a whole maximum number, or leave it blank for no limit.')).toBeInTheDocument();
+    expect(maximum).toHaveAttribute('aria-invalid', 'true');
+    expect(maximum).toHaveValue(100);
+    expect(screen.getByRole('textbox', { name: /Series name/ })).toHaveValue('Retry maximum');
+    expect(screen.queryByText('The draft could not be saved. Review the values and try again.')).toBeNull();
+  });
+
+  it.each(['0', '-1', '1.5', '9007199254740992', '9'])('blocks invalid GR maximum %s before saving', async (maximum) => {
+    const persist = vi.fn();
+    renderSettings(<GrNumberSettingsScreen />, persist);
+    fireEvent.click(screen.getByRole('button', { name: 'Add series' }));
+    fireEvent.change(screen.getByRole('textbox', { name: /Series name/ }), { target: { value: 'Invalid maximum' } });
+    selectAcademicPath();
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Starting number' }), { target: { value: '10' } });
+    const maximumInput = screen.getByRole('spinbutton', { name: 'Maximum number' });
+    fireEvent.change(maximumInput, { target: { value: maximum } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(maximumInput).toHaveAttribute('aria-invalid', 'true'));
+    expect(persist).not.toHaveBeenCalled();
+  });
+
   it.each(['gr', 'roll'] as const)('saves an inherited %s draft before publishing it', async (kind) => {
     const persist = vi.fn().mockResolvedValue(undefined);
     const section = kind === 'gr' ? 'grNumber' : 'rollNumber';
@@ -278,7 +330,8 @@ describe('Onboarding numbering settings', () => {
     selectAcademicPath();
     ['School levels', 'Divisions', 'Sequence scope', 'Reset policy', 'Format pattern', 'Effective from'].forEach((name) =>
       expect(screen.queryByLabelText(name, { exact: false })).not.toBeInTheDocument());
-    expect(screen.getAllByRole('checkbox')).toHaveLength(1);
+    expect(screen.getAllByRole('switch')).toHaveLength(1);
+    expect(screen.getByRole('switch', { name: 'Allow manual GR entry' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() => expect(persist).toHaveBeenCalledTimes(1));
     const saved = persist.mock.calls[0][1].grNumber.configurations.at(-1);
@@ -331,7 +384,8 @@ describe('Onboarding numbering settings', () => {
     expect(configs[0].isActive).toBe(true);
     expect(configs.at(-1)).toMatchObject({ version: 2, previousVersionId: 'default-gr-series', status: 'draft' });
     expect(configs.at(-1).id).not.toBe('default-gr-series');
-    fireEvent.click(await screen.findByRole('button', { name: 'Publish Updated series' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), { timeout: 10000 });
+    fireEvent.click(screen.getByRole('button', { name: 'Publish Updated series' }));
     await waitFor(() => expect(persist).toHaveBeenCalledTimes(2));
     expect(persist.mock.calls[1][1].grNumber.configurations[0]).toMatchObject({ status: 'superseded', isActive: false });
   });

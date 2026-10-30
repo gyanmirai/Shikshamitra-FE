@@ -25,6 +25,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('react-redux', () => ({ useSelector: () => undefined }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 vi.mock('src/redux/student/admissions/admission-cycles-api', () => ({
+  useGetAdmissionCycleQuery: () => ({}),
   useGetAdmissionCyclesQuery: () => ({
     data: { items: [{ id: 'cycle-2', academicYearId: 'year-2', status: 1 }] },
   }),

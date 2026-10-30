@@ -1,9 +1,20 @@
 import type { FormikProps } from 'formik';
 import type { AdmissionDocumentRequirement } from 'src/redux/student/admissions/admission-document-types';
 
-import { Stack, TextField, Typography } from '@mui/material';
+import { useId, useRef } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
+import {
+  Stack,
+  Button,
+  TextField,
+  FormLabel,
+  Typography,
+  FormControl,
+  FormHelperText,
+} from '@mui/material';
 
 import type { DocumentAction, DocumentActionValues } from './document-action-model';
 
@@ -21,6 +32,10 @@ export function DocumentActionFields({
   maxFileSizeMb: number;
 }) {
   const original = action === 'original';
+  const fileInput = useRef<HTMLInputElement>(null);
+  const fileId = useId();
+  const fileHelpId = `${fileId}-help`;
+  const fileError = Boolean(formik.touched.file && formik.errors.file);
   return (
     <Stack spacing={2}>
       <Typography variant="subtitle2">{requirement.name}</Typography>
@@ -34,31 +49,60 @@ export function DocumentActionFields({
                 : ''}
             </StudentFeedback>
           )}
-          <TextField
-            type="file"
-            label="Document"
-            required
-            fullWidth
-            size="small"
-            disabled={formik.isSubmitting}
-            name="file"
-            onChange={(event) => {
-              formik.setFieldValue('file', (event.target as HTMLInputElement).files?.[0] ?? null);
-            }}
-            onBlur={formik.handleBlur}
-            error={formik.touched.file && Boolean(formik.errors.file)}
-            helperText={
-              formik.touched.file && formik.errors.file
-                ? formik.errors.file
-                : `${extensions.join(', ').toUpperCase()} · Maximum ${maxFileSizeMb} MB`
-            }
-            slotProps={{
-              inputLabel: { shrink: true },
-              htmlInput: {
-                accept: extensions.map((extension) => `.${extension.replace(/^\./, '')}`).join(','),
-              },
-            }}
-          />
+          <ShakingTextField error={fileError}>
+            <FormControl fullWidth required error={fileError} disabled={formik.isSubmitting}>
+              <FormLabel htmlFor={fileId} sx={{ typography: 'body2', mb: 1 }}>
+                Document
+              </FormLabel>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1}
+                alignItems={{ sm: 'center' }}
+              >
+                <Button
+                  type="button"
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon={GlobalIcons.upload} width={18} />}
+                  disabled={formik.isSubmitting}
+                  aria-describedby={fileHelpId}
+                  onClick={() => fileInput.current?.click()}
+                  sx={{ alignSelf: 'flex-start', flexShrink: 0 }}
+                >
+                  Upload file
+                </Button>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ overflowWrap: 'anywhere', minWidth: 0 }}
+                >
+                  {formik.values.file?.name ?? 'No file selected'}
+                </Typography>
+              </Stack>
+              <input
+                ref={fileInput}
+                id={fileId}
+                hidden
+                type="file"
+                name="file"
+                required
+                disabled={formik.isSubmitting}
+                aria-describedby={fileHelpId}
+                aria-invalid={fileError}
+                accept={extensions.map((extension) => `.${extension.replace(/^\./, '')}`).join(',')}
+                onChange={(event) => {
+                  formik.setFieldTouched('file', true, false);
+                  formik.setFieldValue('file', event.target.files?.[0] ?? null);
+                }}
+                onBlur={formik.handleBlur}
+              />
+              <FormHelperText id={fileHelpId} sx={{ mx: 0 }}>
+                {fileError
+                  ? formik.errors.file
+                  : `${extensions.join(', ').toUpperCase()} · Maximum ${maxFileSizeMb} MB`}
+              </FormHelperText>
+            </FormControl>
+          </ShakingTextField>
         </>
       )}
       {original && (

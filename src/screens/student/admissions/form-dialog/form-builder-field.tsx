@@ -33,6 +33,7 @@ type Props = {
   selected: boolean;
   onSelect: () => void;
   onDelete: () => void;
+  reorderEnabled?: boolean;
 };
 
 export function FormBuilderField({
@@ -42,6 +43,7 @@ export function FormBuilderField({
   selected,
   onSelect,
   onDelete,
+  reorderEnabled = true,
 }: Props) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
   const fieldType = FIELD_TYPES.find(([, value]) => value === field.fieldType)?.[0] ?? 'Field';
@@ -49,6 +51,7 @@ export function FormBuilderField({
   const compactFourColumnCard = formik.values.fieldsPerRow === 4;
   const sortable = useSortable({
     id: `field:${formik.values.sections[sectionIndex].id}:${field.id}`,
+    disabled: !reorderEnabled,
   });
   return (
     <Box
@@ -79,29 +82,31 @@ export function FormBuilderField({
         alignItems="flex-start"
         sx={{ p: 0.5, position: 'relative' }}
       >
-        <CustomTooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
-          <IconButton
-            size="small"
-            className="admission-field-reorder"
-            ref={sortable.setActivatorNodeRef}
-            {...sortable.attributes}
-            {...sortable.listeners}
-            aria-label={`Reorder ${name}`}
-            sx={{
-              width: 44,
-              height: 44,
-              flexShrink: 0,
-              cursor: 'grab',
-              touchAction: 'none',
-              position: { lg: compactFourColumnCard ? 'absolute' : 'static' },
-              top: 4,
-              left: 4,
-              zIndex: 1,
-            }}
-          >
-            <Iconify icon="mdi:drag-vertical" width={20} />
-          </IconButton>
-        </CustomTooltip>
+        {reorderEnabled && (
+          <CustomTooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
+            <IconButton
+              size="small"
+              className="admission-field-reorder"
+              ref={sortable.setActivatorNodeRef}
+              {...sortable.attributes}
+              {...sortable.listeners}
+              aria-label={`Reorder ${name}`}
+              sx={{
+                width: 44,
+                height: 44,
+                flexShrink: 0,
+                cursor: 'grab',
+                touchAction: 'none',
+                position: { lg: compactFourColumnCard ? 'absolute' : 'static' },
+                top: 4,
+                left: 4,
+                zIndex: 1,
+              }}
+            >
+              <Iconify icon="mdi:drag-vertical" width={20} />
+            </IconButton>
+          </CustomTooltip>
+        )}
         <ButtonBase
           onClick={onSelect}
           aria-label={`Edit ${name} field`}
@@ -166,6 +171,11 @@ export function FormBuilderField({
                 {field.helpText || `Selected · ${fieldType} field`}
               </Typography>
             )}
+            {field.inheritedFrom && (
+              <Typography variant="caption" color="text.secondary">
+                From Inquiry · definition locked
+              </Typography>
+            )}
           </Stack>
         </ButtonBase>
         <Box
@@ -187,6 +197,7 @@ export function FormBuilderField({
             onEdit={onSelect}
             onDelete={onDelete}
             disabled={formik.isSubmitting}
+            deleteDisabled={Boolean(field.inheritedFrom)}
           />
         </Box>
       </Stack>

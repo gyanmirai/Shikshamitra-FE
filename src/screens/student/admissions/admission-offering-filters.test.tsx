@@ -84,7 +84,7 @@ describe('Admission Offering primary filters', () => {
     expect(screen.getByRole('combobox', { name: 'Medium' })).toBeVisible();
     expect(screen.getByRole('combobox', { name: 'Class' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Filters' })).toBeVisible();
-    expect(screen.queryByRole('combobox', { name: 'Admission cycle' })).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Admission cycle' })).toBeVisible();
 
     await user.click(screen.getByRole('combobox', { name: 'Board' }));
     await user.click(screen.getByRole('option', { name: 'CBSE' }));

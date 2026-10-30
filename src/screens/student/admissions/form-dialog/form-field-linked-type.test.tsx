@@ -28,6 +28,17 @@ const transport: AdmissionFormSystemFieldMetadata = {
   fieldType: 9,
   readOnly: false,
 };
+const minimumInquiryFields: AdmissionFormSystemFieldMetadata[] = [
+  'Applicant.FirstName',
+  'Guardian.FirstName',
+  'Guardian.Mobile',
+].map((key) => ({
+  key,
+  displayName: key,
+  description: '',
+  fieldType: key.endsWith('Mobile') ? 4 : 0,
+  readOnly: false,
+}));
 
 function mount(
   patch: Partial<AdmissionFormField>,
@@ -37,10 +48,21 @@ function mount(
     isError: boolean;
   } = { data: [transport], isLoading: false, isError: false }
 ) {
-  catalogue.mockReturnValue(query);
+  catalogue.mockReturnValue({
+    ...query,
+    data: query.data ? [...query.data, ...minimumInquiryFields] : undefined,
+  });
   const form = getBlankAdmissionFormInitialValues(0);
   form.sections[0].fields = [
     { ...newField(form.sections[0].id, 0, 9), bindingType: 0, bindingKey: transport.key, ...patch },
+    ...minimumInquiryFields.map((metadata, index) => ({
+      ...newField(form.sections[0].id, index + 1, metadata.fieldType),
+      code: metadata.key.replace(/\./g, '_').toUpperCase(),
+      label: metadata.displayName,
+      bindingType: 0 as const,
+      bindingKey: metadata.key,
+      required: true,
+    })),
   ];
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>

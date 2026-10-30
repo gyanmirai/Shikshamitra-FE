@@ -210,6 +210,7 @@ export type DuplicateMatch = {
   familyId: string;
   existingInquiryId?: string | null;
   existingInquiryNumber?: string | null;
+  existingInquiryAdmissionCycleId?: string | null;
   applicantName: string;
   guardianPhone?: string | null;
   guardianEmail?: string | null;

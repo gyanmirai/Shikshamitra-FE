@@ -10,6 +10,7 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { AdmissionOfferingDialog } from './admission-offering-dialog';
 import { getOfferingInitialValues } from './admission-offering-model';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 vi.mock('./admission-offering-edit-drawer', () => ({
   AdmissionOfferingEditDrawer: () => <div>Edit offering stepper drawer</div>,
 }));

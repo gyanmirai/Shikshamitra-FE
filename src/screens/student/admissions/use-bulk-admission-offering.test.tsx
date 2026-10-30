@@ -119,6 +119,14 @@ describe('Bulk offering preview and creation', () => {
       })
     );
     expect(onComplete).toHaveBeenCalledOnce();
+    expect(onComplete).toHaveBeenCalledWith(
+      expect.objectContaining({
+        admissionCycle: selectedCycle,
+        boardId: values.boardId,
+        mediumId: values.mediumId,
+        standardIds: values.standardIds,
+      })
+    );
     expect(mocks.success).toHaveBeenCalledWith({ message: '1 offering created' });
   });
 

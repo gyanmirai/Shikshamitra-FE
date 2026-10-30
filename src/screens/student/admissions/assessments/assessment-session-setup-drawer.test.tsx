@@ -10,6 +10,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 
 import { AssessmentSessionSetupDrawer } from './assessment-session-setup-drawer';
 
+const toast = vi.hoisted(() => ({ error: vi.fn(), dismiss: vi.fn() }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/custom-stepper', async () => {
   const { useFormik } = await import('formik');
@@ -195,7 +197,7 @@ it('keeps the applicant selection and fingerprint after a failed confirm for a s
   await waitFor(() => expect(options.onSubmit).toHaveBeenCalledTimes(2));
   expect(options.onSubmit.mock.calls[1]).toEqual(options.onSubmit.mock.calls[0]);
 });
-it('blocks preview when resources fail and exposes retry without discarding the form', async () => {
+it('blocks preview and announces resource failures without discarding the form', async () => {
   const options = props();
   const retry = vi.fn();
   render(
@@ -206,8 +208,12 @@ it('blocks preview when resources fail and exposes retry without discarding the 
     />
   );
   expect(screen.getByRole('button', { name: 'Preview booking' })).toBeDisabled();
-  await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(retry).toHaveBeenCalledOnce();
+  expect(toast.error).toHaveBeenCalledWith(
+    expect.objectContaining({ message: 'Institute rooms could not be loaded' })
+  );
+  expect(screen.getByText('Draft name:')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(retry).not.toHaveBeenCalled();
   expect(options.onPreview).not.toHaveBeenCalled();
 });
 

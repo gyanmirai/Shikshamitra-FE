@@ -11,6 +11,8 @@ export type ConfirmDialogProps = Omit<DialogProps, 'title' | 'content'> & {
   disableBackdropClick?: boolean;
   disableCancel?: boolean;
   cancelText?: string;
+  /** Opt into the standard header close control without changing existing confirmations. */
+  showCloseButton?: boolean;
   /** Opt into a blocking body loader; legacy action-loading behavior is unchanged. */
   bodyBusy?: boolean;
   busyLabel?: string;

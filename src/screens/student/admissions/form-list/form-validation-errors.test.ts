@@ -1,11 +1,18 @@
 import { it, expect, describe } from 'vitest';
 
+import { inquiryFormConfigurationMessages } from '../admission-inquiry-field-bindings';
 import {
   formatAdmissionFormValidationError,
   formatAdmissionFormValidationErrors,
 } from './form-validation-errors';
 
 describe('admission form validation messages', () => {
+  it.each(Object.values(inquiryFormConfigurationMessages))(
+    'keeps Inquiry minimum guidance readable: %s',
+    (message) => {
+      expect(formatAdmissionFormValidationError(message)).toBe(message);
+    }
+  );
   it('turns backend field errors into guidance for the user', () => {
     expect(formatAdmissionFormValidationError('UnsupportedRuntimeField:PHOTO')).toBe(
       'PHOTO is not available for applicant use yet.'

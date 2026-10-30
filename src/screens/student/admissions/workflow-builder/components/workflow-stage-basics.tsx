@@ -14,9 +14,10 @@ type Props = {
   metadata?: AdmissionWorkflowStageTypeMetadata;
   stageTypes: AdmissionWorkflowStageTypeMetadata[];
   readOnly: boolean;
+  isNewStage?: boolean;
 };
 
-export function WorkflowStageBasics({ formik, metadata, stageTypes, readOnly }: Props) {
+export function WorkflowStageBasics({ formik, metadata, stageTypes, readOnly, isNewStage }: Props) {
   return (
     <Stack spacing={2}>
       <Grid container spacing={1.5}>
@@ -26,6 +27,7 @@ export function WorkflowStageBasics({ formik, metadata, stageTypes, readOnly }: 
             metadata={metadata}
             stageTypes={stageTypes}
             readOnly={readOnly}
+            isNewStage={isNewStage}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>

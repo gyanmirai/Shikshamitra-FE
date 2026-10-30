@@ -1,3 +1,5 @@
+import { inquiryFormConfigurationMessages } from '../admission-inquiry-field-bindings';
+
 const VALIDATION_MESSAGES: Record<string, string> = {
   'Admissions.FormNoSections': 'Add at least one section.',
   'Admissions.FormDuplicateSectionCode': 'Each section needs a unique code.',
@@ -25,6 +27,8 @@ const FIELD_MESSAGES: Record<string, string> = {
 };
 
 export function formatAdmissionFormValidationError(error: string) {
+  if (Object.values(inquiryFormConfigurationMessages).some((message) => message === error))
+    return error;
   const [code, owner] = error.split(':', 2);
   if (owner && FIELD_MESSAGES[code]) return `${owner} ${FIELD_MESSAGES[code]}.`;
   return VALIDATION_MESSAGES[error] ?? 'Review the form settings before publishing.';

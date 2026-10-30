@@ -11,7 +11,7 @@ import DialogContent from '@mui/material/DialogContent';
 import CheckCircle from '@mui/icons-material/CheckCircle';
 import React, { cloneElement, isValidElement } from 'react';
 import WarningAmber from '@mui/icons-material/WarningAmber';
-import { Box, Typography, DialogTitle } from '@mui/material';
+import { Box, IconButton, Typography, DialogTitle } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { FormBusyRegion } from '../form-busy-region';
@@ -36,6 +36,7 @@ export function ConfirmDialog({
   disableBackdropClick = true,
   disableCancel = false,
   cancelText = 'Cancel',
+  showCloseButton = false,
   bodyBusy,
   busyLabel = 'Working…',
   ...other
@@ -67,10 +68,33 @@ export function ConfirmDialog({
         exit: 0,
       }}
     >
-      <DialogTitle id={titleId} sx={{ p: 2 }}>
+      <DialogTitle
+        component={showCloseButton ? 'div' : 'h2'}
+        id={showCloseButton ? `${titleId}-header` : titleId}
+        sx={{ p: 2 }}
+      >
         <Box display="flex" alignItems="center" gap={1}>
           {typeof icon === 'string' ? iconMap[icon as ConfirmIconType] : icon}
-          <Typography variant="h6">{title}</Typography>
+          <Typography
+            component={showCloseButton ? 'h2' : 'h6'}
+            id={showCloseButton ? titleId : undefined}
+            variant="h6"
+            sx={showCloseButton ? { flex: 1, minWidth: 0, overflowWrap: 'anywhere' } : undefined}
+          >
+            {title}
+          </Typography>
+          {showCloseButton && (
+            <IconButton
+              type="button"
+              size="small"
+              aria-label="Close"
+              onClick={onClose}
+              disabled={isBusy}
+              sx={{ flexShrink: 0 }}
+            >
+              <Iconify icon={GlobalIcons.cancel} width={20} />
+            </IconButton>
+          )}
         </Box>
       </DialogTitle>
       {content && (

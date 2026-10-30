@@ -4,7 +4,6 @@ import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { studentPaths } from 'src/constants/student-menu';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -15,13 +14,12 @@ import { AdmissionOfferingFilters } from './admission-offering-filters';
 import { useAdmissionOfferingsScreen } from './use-admission-offerings-screen';
 import { BulkAdmissionOfferingDialog } from './bulk-admission-offering-dialog';
 import { AdmissionOfferingMoreFilters } from './admission-offering-more-filters';
-import { AdmissionOfferingActionImpact } from './admission-offering-action-impact';
+import { AdmissionOfferingActionDialog } from './admission-offering-action-dialog';
 import { AdmissionOfferingDetailsDrawer } from './admission-offering-details-drawer';
 import { BulkAdmissionOfferingActivation } from './bulk-admission-offering-activation';
 
 export default function AdmissionOfferingsScreen() {
   const screen = useAdmissionOfferingsScreen();
-  const action = screen.pendingAction?.type;
   const hasActiveFilters = Boolean(
     screen.filters.campusId ||
     screen.filters.stageId ||
@@ -101,11 +99,12 @@ export default function AdmissionOfferingsScreen() {
       )}
       <AdmissionOfferingFilters
         cycle={screen.cycle}
+        cycles={screen.cycles}
+        cyclesLoading={screen.cyclesQuery.isFetching}
         values={screen.filters}
         onChange={screen.update}
         filterAction={
           <AdmissionOfferingMoreFilters
-            cycles={screen.cycles}
             cycle={screen.cycle}
             values={screen.filters}
             onChange={screen.update}
@@ -209,7 +208,13 @@ export default function AdmissionOfferingsScreen() {
         />
       )}
       {screen.cycle && screen.bulkOpen && (
-        <BulkAdmissionOfferingDialog open cycle={screen.cycle} onClose={screen.closeBulk} />
+        <BulkAdmissionOfferingDialog
+          open
+          cycle={screen.cycle}
+          onClose={screen.closeBulk}
+          onCreated={screen.showCreatedOfferings}
+          onCycleChange={screen.selectCycle}
+        />
       )}
       <AdmissionOfferingDetailsDrawer
         open={screen.detailsOpen}
@@ -217,47 +222,11 @@ export default function AdmissionOfferingsScreen() {
         canManage={screen.permissions.edit}
         onClose={screen.closeDetails}
       />
-      <ConfirmDialog
-        open={Boolean(screen.pendingAction)}
+      <AdmissionOfferingActionDialog
+        pendingAction={screen.pendingAction}
+        commanding={screen.commanding}
         onClose={screen.cancelAction}
-        icon={action === 'activate' ? null : action === 'delete' ? 'error' : 'warning'}
-        title={`${action === 'delete' ? 'Delete' : action === 'activate' ? 'Activate' : 'Deactivate'} Admission Offering?`}
-        aria-label={`${action === 'delete' ? 'Delete' : action === 'activate' ? 'Activate' : 'Deactivate'} Admission Offering?`}
-        aria-describedby="offering-action-description"
-        disableBackdropClick
-        disableCancel={screen.commanding}
-        disableEscapeKeyDown={screen.commanding}
-        bodyBusy={action === 'activate' ? screen.commanding : undefined}
-        busyLabel="Activating offering…"
-        content={
-          action && screen.pendingAction ? (
-            <Box id="offering-action-description">
-              <AdmissionOfferingActionImpact action={action} offering={screen.pendingAction.row} />
-            </Box>
-          ) : null
-        }
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            color={action === 'delete' ? 'error' : 'primary'}
-            loading={action !== 'activate' && screen.commanding}
-            disabled={screen.commanding}
-            startIcon={
-              <Iconify
-                icon={action === 'delete' ? 'mdi:delete-outline' : 'mdi:check-circle-outline'}
-              />
-            }
-            onClick={screen.confirmAction}
-            sx={
-              action === 'activate'
-                ? { bgcolor: 'text.primary', color: 'background.paper' }
-                : undefined
-            }
-          >
-            {action === 'delete' ? 'Delete' : action === 'activate' ? 'Activate' : 'Deactivate'}
-          </Button>
-        }
+        onConfirm={screen.confirmAction}
       />
     </Box>
   );

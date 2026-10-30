@@ -8,6 +8,7 @@ import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
 
+import { createStage } from '../workflow-builder-utils';
 import { WorkflowStageTypeSelect } from './components/workflow-stage-type-select';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -55,9 +56,11 @@ const initial: AdmissionWorkflowStage = {
 function Fixture({
   stage = initial,
   readOnly = false,
+  isNewStage = false,
 }: {
   stage?: AdmissionWorkflowStage;
   readOnly?: boolean;
+  isNewStage?: boolean;
 }) {
   const formik = useFormik({ initialValues: stage, onSubmit: vi.fn() });
   return (
@@ -67,6 +70,7 @@ function Fixture({
         metadata={types.find((item) => item.type === formik.values.stageType)}
         stageTypes={types}
         readOnly={readOnly}
+        isNewStage={isNewStage}
       />
       <output data-testid="draft">{JSON.stringify(formik.values)}</output>
     </>
@@ -75,6 +79,26 @@ function Fixture({
 const draft = () => JSON.parse(screen.getByTestId('draft').textContent!);
 
 describe('safe stage type changes', () => {
+  it('protects an attached form on a new stage until its type change is confirmed', async () => {
+    const user = userEvent.setup();
+    render(<Fixture isNewStage />);
+    await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+    await user.click(screen.getByRole('option', { name: 'Assessment' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(draft()).toEqual(initial);
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(draft()).toEqual(initial);
+  });
+  it('changes a newly created normalized stage without a destructive confirmation', async () => {
+    const user = userEvent.setup();
+    const stage = createStage(formType, 1, false);
+    expect(stage.configurationJson).toBeTruthy();
+    render(<Fixture stage={stage} isNewStage />);
+    await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+    await user.click(screen.getByRole('option', { name: 'Assessment' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(draft()).toMatchObject({ stageType: 2, code: stage.code, id: stage.id });
+  });
   it('preserves the chosen ending when changing to another stage type', async () => {
     const user = userEvent.setup();
     render(<Fixture stage={{ ...initial, isTerminalStage: true }} />);

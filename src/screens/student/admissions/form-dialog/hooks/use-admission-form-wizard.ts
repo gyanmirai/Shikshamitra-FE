@@ -10,6 +10,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 import { getAdmissionWizardSchema } from '../form-wizard-model';
+import { getInquiryFormConfigurationIssues } from '../../admission-inquiry-field-bindings';
 import {
   getAdmissionFormInitialValues,
   getBlankAdmissionFormInitialValues,
@@ -21,9 +22,17 @@ type Props = {
   onClose: () => void;
   onSave: (value: CreateUpdateAdmissionForm) => Promise<void>;
   onPublishNow: (value: CreateUpdateAdmissionForm) => Promise<void>;
+  canContinue?: () => boolean;
 };
 
-export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave, onPublishNow }: Props) {
+export function useAdmissionFormWizard({
+  editing,
+  initialPurpose,
+  onClose,
+  onSave,
+  onPublishNow,
+  canContinue,
+}: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const [initialValues] = useState(() =>
     editing
@@ -44,7 +53,12 @@ export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSav
     setLoading(true);
     submitting.onTrue();
     try {
-      await action({ ...values, name: values.name.trim(), code: editing?.code ?? '' });
+      await action({
+        ...values,
+        name: values.name.trim(),
+        code: editing?.code ?? '',
+        inheritance: values.purpose === 1 ? values.inheritance : undefined,
+      });
       formik.resetForm();
       onClose();
     } catch (error) {
@@ -68,13 +82,36 @@ export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSav
     values: CreateUpdateAdmissionForm,
     formik: FormikProps<CreateUpdateAdmissionForm>,
     setLoading: (loading: boolean) => void
-  ) => submit(onPublishNow, isLastStep, values, formik, setLoading);
+  ) =>
+    submit(
+      async (draft) => {
+        const issues = getInquiryFormConfigurationIssues(draft);
+        if (issues.length) throw new Error(issues.join(' '));
+        await onPublishNow(draft);
+      },
+      isLastStep,
+      values,
+      formik,
+      setLoading
+    );
   const next = async (
     isLastStep: boolean,
     values: CreateUpdateAdmissionForm,
     formik: FormikProps<CreateUpdateAdmissionForm>,
     setLoading: (loading: boolean) => void
   ) => {
+    if (
+      activeStep > 0 &&
+      values.purpose === 1 &&
+      values.inheritance?.enabled &&
+      (!values.inheritance.sources.length || (canContinue && !canContinue()))
+    ) {
+      shikshaMitraToast.error({
+        message: 'Review and approve the current Inquiry field compatibility before continuing.',
+      });
+      setLoading(false);
+      return;
+    }
     if (!isLastStep) {
       setActiveStep(Math.min(activeStep + 1, 2));
       return;
@@ -90,6 +127,14 @@ export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSav
     next,
     saveDraft,
     back: () => setActiveStep((step) => Math.max(step - 1, 0)),
-    goTo: (step: number) => setActiveStep(step),
+    goTo: (step: number) => {
+      if (step > activeStep && step === 2 && canContinue && !canContinue()) {
+        shikshaMitraToast.error({
+          message: 'Review and approve the current Inquiry field compatibility before continuing.',
+        });
+        return;
+      }
+      setActiveStep(step);
+    },
   };
 }

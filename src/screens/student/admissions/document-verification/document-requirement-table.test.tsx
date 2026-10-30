@@ -159,8 +159,17 @@ describe('admission document table', { timeout: 15000 }, () => {
     });
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(within(dialog).getByText('PDF · Maximum 10 MB')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Upload file' })).toBeEnabled();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Upload document' }));
     expect(await screen.findByText('Choose a document to upload')).toBeInTheDocument();
+    await userEvent.upload(
+      within(dialog).getByLabelText(/Document/),
+      new File(['copy'], 'birth.pdf', { type: 'application/pdf' })
+    );
+    expect(within(dialog).getByText('birth.pdf')).toBeVisible();
+    await waitFor(() =>
+      expect(within(dialog).queryByText('Choose a document to upload')).not.toBeInTheDocument()
+    );
   });
 
   it('retains the uploaded copy and shows the latest original and evidence history in View', async () => {

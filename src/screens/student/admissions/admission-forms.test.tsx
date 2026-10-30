@@ -13,10 +13,14 @@ import AdmissionFormsScreen from './admission-forms';
 
 const mocks = vi.hoisted(() => ({
   view: 'inquiry',
+  criteria: '',
   query: vi.fn(),
   create: vi.fn(),
   preview: vi.fn(),
   canManage: true,
+  editingId: null as string | null,
+  editing: undefined as AdmissionForm | undefined,
+  dialogProps: vi.fn(),
   result: {
     currentData: undefined as { items: AdmissionForm[]; totalCount: number } | undefined,
     data: undefined as { items: AdmissionForm[]; totalCount: number } | undefined,
@@ -30,7 +34,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams(`view=${mocks.view}`),
+  useSearchParams: () => new URLSearchParams(`view=${mocks.view}&${mocks.criteria}`),
   usePathname: () => '/student/admissions/settings/forms',
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
@@ -46,6 +50,9 @@ vi.mock('./form-list/use-form-list-actions', () => ({
     canManage: mocks.canManage,
     canPublish: mocks.canManage,
     canDelete: mocks.canManage,
+    editingId: mocks.editingId,
+    editing: mocks.editing,
+    creatingPurpose: 0,
     create: mocks.create,
     preview: mocks.preview,
     ...Object.fromEntries(
@@ -74,7 +81,12 @@ vi.mock('./form-list/use-form-list-actions', () => ({
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { error: mocks.errorToast, dismiss: mocks.dismissToast },
 }));
-vi.mock('./admission-form-dialog', () => ({ AdmissionFormDialog: () => null }));
+vi.mock('./admission-form-dialog', () => ({
+  AdmissionFormDialog: (props: unknown) => {
+    mocks.dialogProps(props);
+    return null;
+  },
+}));
 vi.mock('./admission-form-clone-dialog', () => ({ AdmissionFormCloneDialog: () => null }));
 vi.mock('./admission-form-publish-dialog', () => ({ AdmissionFormPublishDialog: () => null }));
 vi.mock('./admission-form-history-dialog', () => ({ AdmissionFormHistoryDialog: () => null }));
@@ -112,6 +124,13 @@ const form: AdmissionForm = {
   layoutType: 0,
   sections: [],
 };
+const registrationForm: AdmissionForm = {
+  ...form,
+  id: 'form-2',
+  name: 'Fresh registration',
+  code: 'REG',
+  purpose: 1,
+};
 const theme = createTheme(defaultSettings);
 const renderScreen = () => {
   const store = configureStore({
@@ -141,7 +160,10 @@ describe('Admission forms list workspace', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.view = 'inquiry';
+    mocks.criteria = '';
     mocks.canManage = true;
+    mocks.editingId = null;
+    mocks.editing = undefined;
     Object.assign(mocks.result, {
       data: { items: [form], totalCount: 26 },
       currentData: { items: [form], totalCount: 26 },
@@ -151,33 +173,76 @@ describe('Admission forms list workspace', () => {
     });
   });
 
-  it.each([
-    { view: 'inquiry', purpose: 0, title: 'Inquiry forms' },
-    { view: 'registration', purpose: 1, title: 'Registration forms' },
-  ])('keeps the $view tab, permissions and create purpose', ({ view, purpose, title }) => {
-    mocks.view = view;
-    renderScreen();
-    expect(screen.getByRole('heading', { name: 'Admission forms' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: title })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('table', { name: `${title} table` })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Add form' }));
-    expect(mocks.create).toHaveBeenCalledWith(purpose);
-    expect(mocks.query).toHaveBeenLastCalledWith(
-      expect.objectContaining({ purpose }),
-      expect.anything()
-    );
-    expect(screen.queryByRole('button', { name: 'Filter Purpose' })).not.toBeInTheDocument();
-    ['Form', 'Version', 'Sections', 'Status'].forEach((heading) =>
-      expect(screen.getByRole('button', { name: `Filter ${heading}` })).toBeInTheDocument()
-    );
-  });
+  it.each(['inquiry', 'registration', 'invalid'])(
+    'shows both form types without tabs for legacy view=%s and starts Inquiry',
+    (view) => {
+      mocks.view = view;
+      mocks.result.currentData = { items: [form, registrationForm], totalCount: 2 };
+      renderScreen();
+      expect(screen.getByRole('heading', { name: 'Admission forms' })).toBeInTheDocument();
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+      expect(screen.getByRole('table', { name: 'Admission forms table' })).toBeInTheDocument();
+      expect(screen.getByText('Fresh inquiry')).toBeInTheDocument();
+      expect(screen.getByText('Fresh registration')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: 'Form type' })).toBeInTheDocument();
+      expect(screen.getByRole('cell', { name: 'Inquiry' })).toBeInTheDocument();
+      expect(screen.getByRole('cell', { name: 'Registration' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Add form' }));
+      expect(mocks.create).toHaveBeenCalledWith(0);
+      expect(mocks.query.mock.lastCall![0]).not.toHaveProperty('purpose');
+      expect(screen.queryByRole('button', { name: 'Filter Purpose' })).not.toBeInTheDocument();
+      ['Form', 'Version', 'Sections', 'Status'].forEach((heading) =>
+        expect(screen.getByRole('button', { name: `Filter ${heading}` })).toBeInTheDocument()
+      );
+    }
+  );
+
+  it.each(['inquiry', 'registration'])(
+    'restores %s list position and criteria after closing preview',
+    async (view) => {
+      mocks.view = view;
+      const params = new URLSearchParams({
+        page: '2',
+        size: '25',
+        search: 'Fresh',
+        columns: JSON.stringify([
+          { column: 'status', type: 'equals', value: 1, valueType: 'enum', label: 'Status' },
+        ]),
+      });
+      mocks.criteria = params.toString();
+      renderScreen();
+      await waitFor(() =>
+        expect(mocks.query).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            search: 'Fresh',
+            skipCount: 25,
+            maxResultCount: 25,
+            status: 1,
+          }),
+          undefined
+        )
+      );
+      expect(screen.getByPlaceholderText('Search...')).toHaveValue('Fresh');
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      });
+      expect(mocks.query.mock.lastCall![0]).toMatchObject({ skipCount: 25 });
+      fireEvent.click(screen.getByText('Fresh inquiry'));
+      const destination = new URL(mocks.preview.mock.lastCall![1], 'https://school.test');
+      expect(mocks.query.mock.lastCall![0]).not.toHaveProperty('purpose');
+      expect(destination.searchParams.get('view')).toBeNull();
+      expect(destination.searchParams.get('page')).toBe('2');
+      expect(destination.searchParams.get('search')).toBe('Fresh');
+      expect(destination.searchParams.get('columns')).toBe(params.get('columns'));
+    }
+  );
 
   it('keeps safe current rows while refreshing the same query', () => {
     mocks.result.isFetching = true;
     renderScreen();
     expect(screen.getByText('Fresh inquiry')).toBeInTheDocument();
     expect(
-      screen.getByRole('progressbar', { name: 'Refreshing Inquiry forms' })
+      screen.getByRole('progressbar', { name: 'Refreshing Admission forms' })
     ).toBeInTheDocument();
     expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
   });
@@ -188,7 +253,7 @@ describe('Admission forms list workspace', () => {
     renderScreen();
     expect(screen.queryByText('Fresh inquiry')).not.toBeInTheDocument();
     expect(document.querySelector('.MuiSkeleton-root')).toBeInTheDocument();
-    expect(screen.queryByText(/No inquiry forms/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No admission forms/)).not.toBeInTheDocument();
   });
 
   it('does not show successful empty data after an API failure', async () => {
@@ -200,7 +265,7 @@ describe('Admission forms list workspace', () => {
       )
     );
     expect(
-      screen.queryByText('No inquiry forms configured yet. Create a draft to begin.')
+      screen.queryByText('No admission forms configured yet. Create a draft to begin.')
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /retry|reload/i })).not.toBeInTheDocument();
   });
@@ -213,7 +278,7 @@ describe('Admission forms list workspace', () => {
     expect(screen.queryByRole('button', { name: /retry|reload/i })).not.toBeInTheDocument();
   });
 
-  it('applies and clears a numeric filter within the current tab', async () => {
+  it('applies and clears a numeric filter across both form types', async () => {
     renderScreen();
     fireEvent.click(screen.getByRole('button', { name: 'Go to next page' }));
     fireEvent.click(screen.getByRole('button', { name: 'Filter Sections' }));
@@ -226,19 +291,18 @@ describe('Admission forms list workspace', () => {
     await waitFor(() =>
       expect(mocks.query).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          purpose: 0,
           skipCount: 0,
           columnFilters:
             '[{"column":"sectionCount","type":"equals","value":0,"valueType":"number"}]',
         }),
-        expect.anything()
+        undefined
       )
     );
     fireEvent.click(screen.getByRole('button', { name: 'Clear (1)' }));
     await waitFor(() =>
       expect(mocks.query).toHaveBeenLastCalledWith(
-        expect.objectContaining({ purpose: 0, skipCount: 0 }),
-        expect.anything()
+        expect.objectContaining({ skipCount: 0 }),
+        undefined
       )
     );
     expect(mocks.query.mock.lastCall![0].columnFilters).toBeUndefined();
@@ -251,10 +315,11 @@ describe('Admission forms list workspace', () => {
     expect(screen.getByRole('button', { name: 'Columns' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Export' })).toBeInTheDocument();
     fireEvent.click(screen.getByText('Fresh inquiry'));
-    expect(mocks.preview).toHaveBeenCalledWith('form-1');
+    expect(mocks.preview).toHaveBeenCalledWith('form-1', '/student/admissions/settings/forms');
   });
 
-  it('resets criteria on tab change without requesting the new purpose with old criteria', async () => {
+  it('keeps search, paging and filters when a legacy view parameter changes', async () => {
+    mocks.criteria = 'search=Fresh';
     const rendered = renderScreen();
     fireEvent.click(screen.getByRole('button', { name: 'Filter Status' }));
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status *' }));
@@ -268,16 +333,37 @@ describe('Admission forms list workspace', () => {
 
     await waitFor(() =>
       expect(mocks.query.mock.lastCall![0]).toMatchObject({
-        purpose: 1,
-        skipCount: 0,
-        status: undefined,
+        skipCount: 10,
+        search: 'Fresh',
+        status: 1,
       })
     );
     const activeRequests = mocks.query.mock.calls.filter(([, options]) => !options?.skip);
     expect(activeRequests.length).toBeGreaterThan(0);
-    activeRequests.forEach(([args]) =>
-      expect(args).toMatchObject({ purpose: 1, skipCount: 0, status: undefined })
-    );
-    expect(screen.queryByRole('button', { name: 'Clear (1)' })).not.toBeInTheDocument();
+    activeRequests.forEach(([args]) => {
+      expect(args).toMatchObject({ search: 'Fresh', skipCount: 10, status: 1 });
+      expect(args).not.toHaveProperty('purpose');
+    });
+    expect(screen.getByRole('button', { name: 'Clear (1)' })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search...')).toHaveValue('Fresh');
+  });
+
+  it('searches both form types on the server and resets pagination', async () => {
+    mocks.criteria = 'page=2';
+    renderScreen();
+    fireEvent.change(screen.getByPlaceholderText('Search...'), {
+      target: { value: '  Fresh  ' },
+    });
+    await waitFor(() => {
+      expect(mocks.query.mock.lastCall![0]).toMatchObject({ search: 'Fresh', skipCount: 0 });
+      expect(mocks.query.mock.lastCall![0]).not.toHaveProperty('purpose');
+    });
+  });
+
+  it('keeps a Registration edit in its actual context while details load', () => {
+    mocks.result.currentData = { items: [registrationForm], totalCount: 1 };
+    mocks.editingId = registrationForm.id;
+    renderScreen();
+    expect(mocks.dialogProps.mock.lastCall![0].initialPurpose).toBe(1);
   });
 });

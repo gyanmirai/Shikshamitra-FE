@@ -19,6 +19,7 @@ type Props = {
   forms: AdmissionForm[];
   formDefinitionId: string;
   readOnly: boolean;
+  isNewStage?: boolean;
 };
 
 export function WorkflowFormStageBasics({
@@ -28,6 +29,7 @@ export function WorkflowFormStageBasics({
   forms,
   formDefinitionId,
   readOnly,
+  isNewStage,
 }: Props) {
   const nameError = Boolean(formik.touched.name && formik.errors.name);
 
@@ -40,6 +42,7 @@ export function WorkflowFormStageBasics({
             metadata={metadata}
             stageTypes={stageTypes}
             readOnly={readOnly}
+            isNewStage={isNewStage}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>

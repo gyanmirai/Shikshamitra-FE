@@ -74,7 +74,7 @@ describe('FormTemplateChooser', () => {
       'true'
     );
     expect(
-      screen.getByRole('button', { name: 'Use recommended: Admission application' })
+      screen.getByRole('button', { name: 'Use recommended: Registration form' })
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Use inquiry form: Inquiry form' })
@@ -82,9 +82,7 @@ describe('FormTemplateChooser', () => {
     expect(screen.getAllByRole('button')).toHaveLength(2);
     expect(screen.queryByRole('button', { name: /Browse all templates/i })).not.toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole('button', { name: 'Use recommended: Admission application' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Use recommended: Registration form' }));
     expect(props.onSelect).toHaveBeenCalledWith('admission-application');
   });
 
@@ -94,7 +92,7 @@ describe('FormTemplateChooser', () => {
 
     expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Use recommended: Admission application' })
+      screen.queryByRole('button', { name: 'Use recommended: Registration form' })
     ).not.toBeInTheDocument();
     expect(screen.getAllByRole('button')).toHaveLength(2);
 

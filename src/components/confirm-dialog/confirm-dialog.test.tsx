@@ -8,6 +8,54 @@ import { ConfirmDialog } from './confirm-dialog';
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 describe('confirmation dismissal', () => {
+  it('offers an optional header close action without changing legacy dialogs', () => {
+    const close = vi.fn();
+    const { rerender } = renderWithProviders(
+      <ConfirmDialog
+        open
+        title="Activate Offering?"
+        onClose={close}
+        action={<Button>Activate</Button>}
+      />
+    );
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+    rerender(
+      <ConfirmDialog
+        open
+        showCloseButton
+        title="Activate Offering?"
+        onClose={close}
+        action={<Button>Activate</Button>}
+      />
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Activate Offering?' });
+    expect(dialog).toBeVisible();
+    const titleId = dialog.getAttribute('aria-labelledby');
+    expect(document.querySelectorAll(`[id="${titleId}"]`)).toHaveLength(1);
+    expect(screen.getByRole('heading', { name: 'Activate Offering?' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(close).toHaveBeenCalledOnce();
+  });
+
+  it('locks the optional header close action during a blocking command', () => {
+    const close = vi.fn();
+    renderWithProviders(
+      <ConfirmDialog
+        open
+        showCloseButton
+        bodyBusy
+        title="Activate Offering?"
+        onClose={close}
+        action={<Button>Activate</Button>}
+      />
+    );
+    const headerClose = screen.getByRole('button', { name: 'Close' });
+    expect(headerClose).toBeDisabled();
+    fireEvent.click(headerClose);
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(close).not.toHaveBeenCalled();
+  });
+
   it('ignores the backdrop and routes Escape through safe cancellation', () => {
     const close = vi.fn();
     renderWithProviders(

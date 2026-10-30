@@ -21,13 +21,14 @@ import {
 } from 'src/components/form-section-card';
 
 import AdmissionRuntimeField from '../admission-runtime-field';
-import { academicOptionsJson, isInstituteAcademicSource } from '../admission-academic-options';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
+import { ApplicationInquiryContext } from './application-inquiry-context';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
 import { AdmissionSectionFields } from '../components/admission-section-fields';
 import { dependentAdmissionFieldValues } from '../admission-field-dependencies';
 import { AdmissionFormStepNavigation } from '../components/admission-form-step-navigation';
+import { academicOptionsJson, isInstituteAcademicSource } from '../admission-academic-options';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import {
   parseRuntimeOptionsSource,
@@ -248,6 +249,13 @@ export function ApplicationRuntimeForm({
             entryIndex === undefined
               ? (values[field.code] ?? '')
               : (readRepeatableValues(values[field.code])[entryIndex] ?? '');
+          const fieldError = fieldErrors[`${field.code}[${entryIndex}]`] || fieldErrors[field.code];
+          const inheritedError =
+            field.inheritedFrom &&
+            fieldError?.startsWith(field.code) &&
+            [' ', '['].includes(fieldError[field.code.length])
+              ? `${field.label}${fieldError.slice(field.code.length)}`
+              : fieldError;
           return (
             <AdmissionRuntimeField
               field={{
@@ -266,10 +274,8 @@ export function ApplicationRuntimeForm({
               academicMediumId={academicMediumId}
               disabled={interactionLocked || readOnly || field.readOnly || application.status !== 0}
               error={
-                fieldErrors[`${field.code}[${entryIndex}]`] || fieldErrors[field.code]
-                  ? field.translations?.[language]?.validationMessage ||
-                    fieldErrors[`${field.code}[${entryIndex}]`] ||
-                    fieldErrors[field.code]
+                fieldError
+                  ? field.translations?.[language]?.validationMessage || inheritedError
                   : undefined
               }
               onBlur={() => onBlur(field.code)}
@@ -518,6 +524,13 @@ export function ApplicationRuntimeForm({
             )}
           </FormFieldSpacing>
         </Stack>
+        {!!form.inquiryContextSections?.length && (
+          <ApplicationInquiryContext
+            sections={form.inquiryContextSections}
+            values={form.inquiryContextValues ?? []}
+            language={language}
+          />
+        )}
         {documents && (!isStepper || safeActiveStep === visibleSteps.length - 1) && (
           <Stack sx={{ mt: 2 }}>{documents}</Stack>
         )}

@@ -1,5 +1,6 @@
 import type { FormikProps } from 'formik';
 import type {
+  AdmissionFormField,
   CreateUpdateAdmissionForm,
   AdmissionFormSystemFieldMetadata,
 } from 'src/redux/student/admissions/admission-forms-api';
@@ -7,14 +8,9 @@ import type {
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
+import { newField, nextFieldOrder, nextFieldDisplayOrder } from '../form-dialog-model';
 import { nextStepNumber, nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
 import { configureStudentField, connectStudentAddressFields } from '../student-field-configuration';
-import {
-  newField,
-  nextFieldOrder,
-  hasSystemBinding,
-  nextFieldDisplayOrder,
-} from '../form-dialog-model';
 import {
   type AdmissionFormSectionTemplateId,
   materializeAdmissionFormSectionTemplate,
@@ -25,7 +21,9 @@ import type { AdmissionFieldPreset } from '../form-field-presets';
 export function useFormBuilderCommands(
   formik: FormikProps<CreateUpdateAdmissionForm>,
   selectedSectionId: string | null,
-  onSelect: (sectionId: string, fieldId: string | null) => void
+  onSelect: (sectionId: string, fieldId: string | null) => void,
+  inheritedFields: AdmissionFormField[] = [],
+  onSelectInherited?: (field: AdmissionFormField) => void
 ) {
   const isStepper = formik.values.layoutType === 1;
   const steps = getAdmissionFormStepGroups(formik.values.sections);
@@ -124,10 +122,36 @@ export function useFormBuilderCommands(
     systemBinding?: string,
     preset?: AdmissionFieldPreset
   ) => {
-    if (systemBinding && hasSystemBinding(formik.values.sections, systemBinding)) {
-      shikshaMitraToast.error({
-        message: 'This student field is already added to the form.',
-      });
+    const inherited =
+      systemBinding &&
+      inheritedFields.find(
+        (field) =>
+          field.bindingType === 0 && field.bindingKey?.toLowerCase() === systemBinding.toLowerCase()
+      );
+    if (inherited) {
+      shikshaMitraToast.info({ message: 'This Student field is already included from Inquiry.' });
+      onSelectInherited?.(inherited);
+      return;
+    }
+    const existingSection =
+      systemBinding &&
+      formik.values.sections.find((section) =>
+        section.fields.some(
+          (field) =>
+            field.bindingType === 0 &&
+            field.bindingKey?.toLowerCase() === systemBinding.toLowerCase()
+        )
+      );
+    const existingField =
+      existingSection &&
+      existingSection.fields.find(
+        (field) =>
+          field.bindingType === 0 &&
+          field.bindingKey?.toLowerCase() === systemBinding!.toLowerCase()
+      );
+    if (existingSection && existingField) {
+      shikshaMitraToast.info({ message: 'This Student field is already included in the form.' });
+      onSelect(existingSection.id, existingField.id);
       return;
     }
     const selectedIndex = formik.values.sections.findIndex(
@@ -180,13 +204,16 @@ export function useFormBuilderCommands(
   };
 
   const addGroupSection = (name: string, groupFields: AdmissionFormSystemFieldMetadata[]) => {
-    const usedBindings = new Set(
-      formik.values.sections.flatMap((section) =>
+    const usedBindings = new Set([
+      ...inheritedFields
+        .filter((field) => field.bindingType === 0 && field.bindingKey)
+        .map((field) => field.bindingKey!.toLowerCase()),
+      ...formik.values.sections.flatMap((section) =>
         section.fields
           .filter((field) => field.bindingType === 0 && field.bindingKey)
           .map((field) => field.bindingKey!.toLowerCase())
-      )
-    );
+      ),
+    ]);
     const availableFields = groupFields.filter(
       (field) => !usedBindings.has(field.key.toLowerCase())
     );

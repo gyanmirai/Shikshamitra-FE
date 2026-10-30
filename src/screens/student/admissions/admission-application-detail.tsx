@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -42,6 +43,7 @@ import { ApplicationRuntimeForm } from './application-detail/application-runtime
 import { ApplicationStageJourney } from './application-detail/application-stage-journey';
 import { ApplicationDecisionCard } from './application-detail/application-decision-card';
 import { ApplicationManagedStages } from './application-detail/application-managed-stages';
+import { ApplicationResumeJourney } from './application-detail/application-resume-journey';
 import { ApplicationJourneyHistory } from './application-detail/application-journey-history';
 import { ApplicationActivityDrawer } from './application-detail/application-activity-drawer';
 import { ApplicationFormDocuments } from './document-verification/application-form-documents';
@@ -100,6 +102,8 @@ export default function AdmissionApplicationDetailScreen({
   );
   const completionDialog = useBoolean();
   const endJourneyDialog = useBoolean();
+  const resumeJourneyDialog = useBoolean();
+  const [resumeBusy, setResumeBusy] = useState(false);
   const activityDrawer = useBoolean();
   const actionsPopover = usePopover();
   const [finalizationOpen, setFinalizationOpen] = useState(false);
@@ -182,6 +186,7 @@ export default function AdmissionApplicationDetailScreen({
     workflowQuery.isError ||
     (!isLoading && (!application || !workflow));
   const workspaceBusy =
+    resumeBusy ||
     panelBusy.decision ||
     panelBusy.notes ||
     feeEditorState.busy ||
@@ -191,7 +196,8 @@ export default function AdmissionApplicationDetailScreen({
     detail.reopenState.isLoading ||
     detail.endJourneyState.isLoading ||
     (stageReadiness?.stageId === selectedStage?.id && Boolean(stageReadiness?.busy));
-  const navigationLocked = workspaceBusy || isLoading || finalizationOpen;
+  const navigationLocked =
+    workspaceBusy || isLoading || finalizationOpen || resumeJourneyDialog.value;
   useEffect(() => {
     if (
       ((applicationId || onClose) && !isDrawer) ||
@@ -902,29 +908,48 @@ export default function AdmissionApplicationDetailScreen({
                       End Journey
                     </Button>
                   )}
-                  <LoadingButton
-                    size="small"
-                    variant="contained"
-                    endIcon={<Iconify icon="mdi:arrow-right" />}
-                    loading={detail.advanceState.isLoading || detail.submitState.isLoading}
-                    loadingPosition="end"
-                    disabled={
-                      workspaceBusy ||
-                      detail.hasUnsavedAnswers ||
-                      !active ||
-                      !selectedCurrentStage ||
-                      historical ||
-                      workspace.view !== 'journey' ||
-                      !(canComplete || managedCanComplete || canRetryFormHandoff)
-                    }
-                    onClick={continueAdmission}
-                  >
-                    {detail.advanceState.isLoading
-                      ? 'Moving to next stage…'
-                      : detail.submitState.isLoading
-                        ? 'Submitting application…'
-                        : 'Continue admission'}
-                  </LoadingButton>
+                  {application.status === 2 ? (
+                    detail.canEdit && (
+                      <Button
+                        size="small"
+                        variant="contained"
+                        startIcon={<Iconify icon={GlobalIcons.retrunIcon} />}
+                        disabled={
+                          workspaceBusy ||
+                          detail.hasUnsavedAnswers ||
+                          feeEditorState.dirty ||
+                          stageDraftDirty
+                        }
+                        onClick={resumeJourneyDialog.onTrue}
+                      >
+                        Resume admission
+                      </Button>
+                    )
+                  ) : (
+                    <LoadingButton
+                      size="small"
+                      variant="contained"
+                      endIcon={<Iconify icon="mdi:arrow-right" />}
+                      loading={detail.advanceState.isLoading || detail.submitState.isLoading}
+                      loadingPosition="end"
+                      disabled={
+                        workspaceBusy ||
+                        detail.hasUnsavedAnswers ||
+                        !active ||
+                        !selectedCurrentStage ||
+                        historical ||
+                        workspace.view !== 'journey' ||
+                        !(canComplete || managedCanComplete || canRetryFormHandoff)
+                      }
+                      onClick={continueAdmission}
+                    >
+                      {detail.advanceState.isLoading
+                        ? 'Moving to next stage…'
+                        : detail.submitState.isLoading
+                          ? 'Submitting application…'
+                          : 'Continue admission'}
+                    </LoadingButton>
+                  )}
                 </>
               ))}
           </Stack>
@@ -968,6 +993,21 @@ export default function AdmissionApplicationDetailScreen({
           loading={detail.endJourneyState.isLoading}
           onClose={endJourneyDialog.onFalse}
           onSubmit={detail.endJourney}
+        />
+      )}
+      {resumeJourneyDialog.value && application?.status === 2 && detail.canEdit && (
+        <ApplicationResumeJourney
+          id={application.id}
+          applicationNumber={application.applicationNumber}
+          applicantName={application.applicantName}
+          onBusyChange={setResumeBusy}
+          onClose={resumeJourneyDialog.onFalse}
+          onResumed={() => {
+            resumeJourneyDialog.onFalse();
+            setWorkspace({ view: 'journey' });
+            applicationQuery.refetch();
+            workflowQuery.refetch();
+          }}
         />
       )}
       {leaveGuard.confirmation}

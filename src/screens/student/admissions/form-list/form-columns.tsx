@@ -39,9 +39,8 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
 
     {
       id: 'purpose',
-      label: 'Purpose',
+      label: 'Form type',
       minWidth: 130,
-      // The selected Inquiry/Registration tab already fixes this read-only context.
       isFilter: false,
       isSort: false,
       render: (value) => PURPOSE_LABELS[Number(value ?? 1)] ?? 'Registration',

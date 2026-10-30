@@ -12,7 +12,13 @@ import {
 
 describe('admissions workflow templates', () => {
   it('offers only Standard admission and Blank workflow while recognizing historical IDs', () => {
-    expect(WORKFLOW_TEMPLATE_IDS).toEqual(['standard', 'simple', 'assessment', 'selective']);
+    expect(WORKFLOW_TEMPLATE_IDS).toEqual([
+      'standard',
+      'post-inquiry',
+      'simple',
+      'assessment',
+      'selective',
+    ]);
     expect(ADMISSION_WORKFLOW_TEMPLATES.map((template) => template.name)).toEqual([
       'Standard admission',
     ]);
@@ -21,6 +27,22 @@ describe('admissions workflow templates', () => {
       'empty',
     ]);
     expect(ADMISSION_WORKFLOW_TEMPLATES.filter((template) => template.recommended)).toHaveLength(1);
+  });
+
+  it('keeps historical post-inquiry graphs readable without offering them as a starting point', () => {
+    const journey = getAdmissionWorkflowTemplate('post-inquiry', 'registration-form');
+
+    expect(journey.stages.map((stage) => stage.stageType)).toEqual([1, 5, 2, 7]);
+    expect(journey.stages[0]).toMatchObject({ isEntryStage: true, stageType: 1 });
+    expect(journey.stages.at(-1)).toMatchObject({ isTerminalStage: true, stageType: 7 });
+    expect(journey.transitions).toHaveLength(3);
+    expect(JSON.parse(journey.stages[0].configurationJson!)).toMatchObject({
+      formDefinitionId: 'registration-form',
+    });
+    expect(findMatchingWorkflowTemplate(journey.stages)).toBe('post-inquiry');
+    expect(ADMISSION_WORKFLOW_STARTERS.some((template) => template.id === 'post-inquiry')).toBe(
+      false
+    );
   });
 
   it.each(WORKFLOW_TEMPLATE_IDS)(

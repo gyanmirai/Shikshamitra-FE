@@ -1,5 +1,6 @@
 import type { FormikProps } from 'formik';
 import type { Standards } from 'src/types/school';
+import type { AdmissionOfferingClassIdentity } from 'src/redux/student/admissions/admission-offerings-api';
 import type { AcademicOrganizationOption } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
 import CustomSelect from 'src/components/custom-select';
@@ -23,6 +24,7 @@ type Props = {
   change: (updates: Partial<BulkOfferingValues>) => void;
   fieldIssues?: BulkOfferingFieldIssues;
   configuredClassIds?: string[];
+  configuredOfferings?: AdmissionOfferingClassIdentity[];
   classesLoading?: boolean;
   classesError?: boolean;
   classesDisabled?: boolean;
@@ -37,6 +39,7 @@ export function BulkAdmissionHierarchyFields({
   change,
   fieldIssues = {},
   configuredClassIds = [],
+  configuredOfferings = [],
   classesLoading = false,
   classesError = false,
   classesDisabled = false,
@@ -52,15 +55,26 @@ export function BulkAdmissionHierarchyFields({
   const allClassesSelected =
     availableClassIds.length > 0 &&
     availableClassIds.every((id) => values.standardIds.includes(id));
+  const labelledStandards = standards.map((standard) => {
+    const offering = configuredOfferings.find(
+      (item) => item.standardId === standard.id && item.stageId === standard.educationMediumStageId
+    );
+    return offering && typeof offering.isActive === 'boolean'
+      ? {
+          ...standard,
+          name: `${standard.name} (${offering.isActive ? 'Active' : 'Inactive'} offering)`,
+        }
+      : standard;
+  });
   const classOptions = availableClassIds.length
     ? [
         {
           id: ALL_CLASSES_OPTION,
           name: allClassesSelected ? 'Deselect all classes' : 'Select all classes',
         },
-        ...standards,
+        ...labelledStandards,
       ]
-    : standards;
+    : labelledStandards;
   const classError = Boolean(
     classesError || (touched.standardIds && errors.standardIds) || fieldIssues.standardIds?.blocking
   );

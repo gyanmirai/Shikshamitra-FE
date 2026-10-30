@@ -22,6 +22,7 @@ const context = vi.hoisted(() => ({
   stageId: 'current-form',
   applicationLoaded: true,
   emailForm: false,
+  readonlyInherited: false,
 }));
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), info: vi.fn() }));
 const application = { id: 'application', concurrencyStamp: 'current', status: 0 };
@@ -92,7 +93,27 @@ vi.mock('src/redux/student/admissions/admission-applications-api', () => {
     useGetAdmissionApplicationFormQuery: (input: unknown) => {
       requests.form(input);
       return {
-        data: input === skipToken ? undefined : context.emailForm ? emailForm : form,
+        data:
+          input === skipToken
+            ? undefined
+            : context.emailForm
+              ? context.readonlyInherited
+                ? {
+                    ...emailForm,
+                    definition: {
+                      ...emailForm.definition,
+                      inheritance: { enabled: true, sources: [] },
+                      sections: emailForm.definition.sections.map((section) => ({
+                        ...section,
+                        fields: section.fields.map((field) => ({
+                          ...field,
+                          readOnly: field.code === 'EMAIL',
+                        })),
+                      })),
+                    },
+                  }
+                : emailForm
+              : form,
       };
     },
     useGetAdmissionApplicationWorkflowQuery: (input: unknown) => {
@@ -129,6 +150,7 @@ describe('application answer validation timing', () => {
     context.stageId = 'current-form';
     context.applicationLoaded = true;
     context.emailForm = false;
+    context.readonlyInherited = false;
     requests.applicationRefetch.mockReset().mockReturnValue({ unwrap: async () => application });
     requests.workflowRefetch.mockReset().mockReturnValue({ unwrap: async () => ({ stages: [] }) });
     requests.end.mockReturnValue({ unwrap: async () => ({ status: 2 }) });
@@ -151,6 +173,14 @@ describe('application answer validation timing', () => {
     });
     expect(result.current.currentValues.EMAIL).toBe('existing@example.com');
     expect(result.current.currentValues.NOTE).toBe('KEEP Case');
+  });
+  it('does not submit normalized changes to readonly fields in an inherited schema', async () => {
+    context.emailForm = true;
+    context.readonlyInherited = true;
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => expect(await result.current.save()).toBe(true));
+    expect(requests.update).not.toHaveBeenCalled();
+    expect(result.current.currentValues.EMAIL).toBe('Existing@Example.COM');
   });
 
   it('starts workflow without waiting for the application response', () => {

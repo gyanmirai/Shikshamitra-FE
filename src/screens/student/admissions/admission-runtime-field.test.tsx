@@ -8,6 +8,35 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import AdmissionRuntimeField from './admission-runtime-field';
 
+it('keeps numeric zero options available and emits string values for configured inquiry source', async () => {
+  const user = userEvent.setup();
+  const onChange = vi.fn();
+  const field = {
+    code: 'SOURCE',
+    bindingKey: 'Inquiry.Source',
+    label: 'Source',
+    fieldType: 6,
+    required: false,
+    readOnly: false,
+    optionsJson: JSON.stringify([
+      { value: 0, label: 'Website' },
+      { value: 1, label: 'Walk-in' },
+      null,
+      { value: '', label: 'Empty' },
+    ]),
+  };
+  const view = render(
+    <AdmissionRuntimeField field={field} value="1" disabled={false} onChange={onChange} />
+  );
+  await user.click(screen.getByRole('combobox', { name: 'Source' }));
+  expect(screen.queryByRole('option', { name: 'Empty' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('option', { name: 'Website' }));
+  expect(onChange).toHaveBeenCalledWith('0');
+  view.rerender(<AdmissionRuntimeField field={field} value="0" disabled onChange={onChange} />);
+  expect(screen.getByRole('combobox', { name: 'Source' })).toHaveTextContent('Website');
+  expect(screen.getByRole('combobox', { name: 'Source' })).toHaveAttribute('aria-disabled', 'true');
+});
+
 it.each(['Guardian.Email', 'Father.Email', 'Mother.Email', 'Applicant.Email'])(
   'renders and updates the required %s with email format metadata',
   (bindingKey) => {
@@ -124,6 +153,7 @@ function renderChoice(fieldType: number, required: boolean) {
           optionsJson: '[{"value":"Class 1","label":"Class 1"}]',
         }}
         value={fieldType === 7 ? '[]' : ''}
+        optionsResolved
         disabled={false}
         onChange={vi.fn()}
       />

@@ -192,17 +192,23 @@ describe('Admission Offerings add action', () => {
     expect(screen.getByTestId('offering-table-loading')).toHaveTextContent('false');
     expect(screen.getByText('Edit offering drawer')).toBeVisible();
   });
-  it('shows a simple single-offering activation popup with the actual action label', () => {
-    useAdmissionOfferingsScreen.mockReturnValue({
+  it('uses the standard activation confirmation with a safe header close action', () => {
+    const state = {
       ...screenState(),
       pendingAction: { type: 'activate', row: { id: 'offering-1', name: 'Class 1 General' } },
-    });
+    };
+    useAdmissionOfferingsScreen.mockReturnValue(state);
     render(<AdmissionOfferingsScreen />);
-    expect(screen.getByRole('dialog', { name: 'Activate Admission Offering?' })).toBeVisible();
-    expect(screen.getByText('“Class 1 General” will become active.')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Activate' })).toBeVisible();
+    const dialog = screen.getByRole('dialog', { name: 'Activate Admission Offering?' });
+    expect(dialog).toBeVisible();
+    expect(within(dialog).getByText('Class 1 General', { selector: 'strong' })).toBeVisible();
+    expect(dialog).toHaveTextContent('This offering will become active for student applications.');
+    expect(screen.getByRole('button', { name: 'Activate' })).toHaveClass('MuiButton-colorPrimary');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByText(/Current usage|server will recheck/)).not.toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(state.cancelAction).toHaveBeenCalledOnce();
+    expect(state.confirmAction).not.toHaveBeenCalled();
   });
   it('disables cancel and activation while the single-offering command is running', () => {
     useAdmissionOfferingsScreen.mockReturnValue({
@@ -213,6 +219,7 @@ describe('Admission Offerings add action', () => {
     render(<AdmissionOfferingsScreen />);
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Activate' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
     const dialog = screen.getByRole('dialog', { name: 'Activate Admission Offering?' });
     expect(within(dialog).getByRole('status', { name: 'Activating offering…' })).toBeVisible();
     expect(

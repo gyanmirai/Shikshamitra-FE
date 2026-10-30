@@ -75,9 +75,9 @@ it.each(['plain', 'enveloped'] as const)(
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.currentData).toEqual([
-      { standardId: 'class-1', stageId: 'primary' },
-      { standardId: 'class-2', stageId: 'primary' },
-      { standardId: 'class-9', stageId: 'secondary' },
+      { standardId: 'class-1', stageId: 'primary', isActive: true },
+      { standardId: 'class-2', stageId: 'primary', isActive: false },
+      { standardId: 'class-9', stageId: 'secondary', isActive: true },
     ]);
     expect(requests.map((params) => params.get('skipCount'))).toEqual(['0', '2']);
     requests.forEach((params) => {
@@ -116,7 +116,9 @@ it('does not count another cycle, board, medium, campus or admission track as co
     wrapper,
   });
   await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  expect(result.current.currentData).toEqual([{ standardId: 'configured', stageId: 'primary' }]);
+  expect(result.current.currentData).toEqual([
+    { standardId: 'configured', stageId: 'primary', isActive: true },
+  ]);
 });
 
 it('reports no configured classes when the complete list is empty', async () => {
@@ -179,7 +181,9 @@ it('withholds old-cycle data during a cycle change and refreshes after offering 
   expect(result.current.isFetching).toBe(true);
   release();
   await waitFor(() =>
-    expect(result.current.currentData).toEqual([{ standardId: 'class-1', stageId: 'primary' }])
+    expect(result.current.currentData).toEqual([
+      { standardId: 'class-1', stageId: 'primary', isActive: true },
+    ])
   );
   configured = false;
   act(() => {

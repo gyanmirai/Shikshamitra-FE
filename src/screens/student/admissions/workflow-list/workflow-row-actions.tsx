@@ -1,6 +1,7 @@
 import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { useResponsive } from 'src/hooks/use-responsive';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { isAdmissionWorkflowPublishable } from '../workflow-access';
@@ -51,6 +52,8 @@ export function WorkflowRowActions({
   onDelete,
   onPublish,
 }: Props) {
+  const isMobile = useResponsive('down', 'sm');
+  const directActionLimit = 3;
   const actions: AdaptiveThreeDotsAction[] = [];
   const showPublish = Boolean(canPublish && isAdmissionWorkflowPublishable(workflow.status));
   const deleteAction: AdaptiveThreeDotsAction = {
@@ -123,14 +126,21 @@ export function WorkflowRowActions({
     <AdaptiveThreeDotsActions
       placement="right-top"
       moreLabel={`Actions for ${workflow.name}`}
-      directActionLimit={3}
+      directActionLimit={directActionLimit}
       mobileDirectActionLimit={showPublish ? 1 : 0}
       sx={{
         justifyContent: 'flex-end',
         gap: 0,
         '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } },
       }}
-      actions={actions.map((action) => ({ ...action, disabled: busy || action.disabled }))}
+      actions={actions.map((action, index) => ({
+        ...action,
+        label:
+          action.id === 'delete' && (isMobile || index >= directActionLimit)
+            ? 'Delete'
+            : action.label,
+        disabled: busy || action.disabled,
+      }))}
     />
   );
 }

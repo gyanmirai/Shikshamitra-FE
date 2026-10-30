@@ -70,6 +70,29 @@ let workspace: StudentCredentialsWorkspace = {
 };
 
 if (scenario === 'empty') workspace = { ...workspace, recipients: [] };
+if (['sent', 'student-sent', 'resend-failed', 'cooldown'].includes(scenario)) {
+  workspace = {
+    ...workspace,
+    recipients: workspace.recipients.map((recipient) =>
+      scenario === 'student-sent' && recipient.accountType !== 'student'
+        ? recipient
+        : {
+            ...recipient,
+            canSend: scenario !== 'cooldown',
+            delivery: {
+              id: `email-${recipient.accountType}`,
+              accountType: recipient.accountType,
+              email: recipient.email!,
+              status: scenario === 'resend-failed' ? 'Failed' : 'Sent',
+              sentAt: '2026-10-29T10:00:00Z',
+              attemptCount: 1,
+              canSend: scenario !== 'cooldown',
+              message: scenario === 'resend-failed' ? 'Email could not be sent. Try again.' : null,
+            },
+          }
+    ),
+  };
+}
 
 function notify() {
   listeners.forEach((listener) => listener());
@@ -215,6 +238,16 @@ export function useUpdateStudentCredentialsEmailMutation() {
 
 export const useRetryStudentOnboardingParentSetupMutation = () =>
   [() => ({ unwrap: async () => workspace }), { isLoading: false }] as const;
+
+export const useEnableStudentAppAccessMutation = () =>
+  [
+    () => ({
+      unwrap: async () => {
+        throw fixtureFailure('Not available in this fixture.');
+      },
+    }),
+    { isLoading: false },
+  ] as const;
 
 export function useFixtureRequests() {
   useSyncExternalStore(subscribe, () => `${workspace.concurrencyStamp}:${requests.length}`);

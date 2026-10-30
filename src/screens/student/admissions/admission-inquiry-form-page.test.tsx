@@ -170,6 +170,19 @@ function useValidationController() {
   return { ...fixture, formik } as unknown as ReturnType<typeof useAdmissionInquiryDialog>;
 }
 
+it('does not display publication requirements or disable capture for a legacy published form', () => {
+  vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+    controller({
+      configurationIssues: ['Add a required Student name field before publishing.'],
+    }) as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+  );
+  render(<AdmissionInquiryFormPage />);
+  expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeEnabled();
+  expect(shikshaMitraToast.error).not.toHaveBeenCalledWith(
+    expect.objectContaining({ message: expect.stringContaining('before publishing') })
+  );
+});
+
 function useMultilingualController() {
   const fixture = controller();
   const fields = fixture.sections[0].fields.map((field, index) =>
@@ -211,6 +224,65 @@ function useMultilingualController() {
 }
 
 describe('New inquiry form', () => {
+  it.each([
+    { name: 'ADM-STD-4', code: 'ADM-STD-4', expected: 'ADM-STD-4' },
+    { name: 'Class 4 admission', code: 'ADM-STD-4', expected: 'Class 4 admission' },
+    { name: '', code: 'ADM-STD-4', expected: 'ADM-STD-4' },
+    {
+      name: 'ADM-STD-4',
+      code: 'ADM-STD-4',
+      campusName: 'North Campus',
+      expected: 'ADM-STD-4 · North Campus',
+    },
+  ])('shows the offering once and keeps the admission period separate: $expected', (offering) => {
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      controller({
+        periods: [{ id: 'cycle-1', name: 'Side Admission Cycle' }],
+        offerings: [{ id: 'offering-1', ...offering, admissionCycleName: 'Side Admission Cycle' }],
+      }) as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    render(<AdmissionInquiryFormPage />);
+    expect(screen.getByRole('combobox', { name: 'Offering' }).textContent).toBe(offering.expected);
+    expect(screen.getByRole('combobox', { name: 'Admission period' })).toHaveTextContent(
+      'Side Admission Cycle'
+    );
+  });
+
+  it('keeps multilingual selection inside Admission Interest without a separate form row', () => {
+    vi.mocked(useAdmissionInquiryDialog).mockImplementation(useMultilingualController);
+    render(<AdmissionInquiryFormPage />);
+    const section = screen.getByRole('heading', { name: 'Admission Interest' }).closest('section');
+    expect(section).toContainElement(screen.getByRole('combobox', { name: 'Form language' }));
+  });
+
+  it('omits the language control for a single-language form', () => {
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      controller({
+        form: { id: 'form-1', version: 1, defaultLanguage: 'en', supportedLanguages: ['en'] },
+      }) as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    render(<AdmissionInquiryFormPage />);
+    expect(screen.queryByRole('combobox', { name: 'Form language' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Student details$/i })).toBeVisible();
+  });
+
+  it('retains the full-capacity restriction after dismissing its compact notice', () => {
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      controller({
+        classCapacity: { capacity: 24, remainingSeats: 0, isFull: true },
+        canCreateInquiry: false,
+        unavailableReason: 'No admission seats remain.',
+      }) as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    render(<AdmissionInquiryFormPage />);
+    expect(screen.getByText(/0 of 24 admission room seats available/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByText(/0 of 24 admission room seats available/)).not.toBeInTheDocument();
+    expect(screen.getByText('No admission seats remain.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeDisabled();
+  });
+
   it('reports failed prerequisite requests through standard toasts without inline errors or Retry rows', () => {
     const fixture = controller({ offeringsError: true, academicError: true });
     fixture.formik.values.standardId = '';
@@ -247,36 +319,45 @@ describe('New inquiry form', () => {
       fixture as unknown as ReturnType<typeof useAdmissionInquiryDialog>
     );
     render(<AdmissionInquiryFormPage />);
-    expect(screen.getByRole('combobox', { name: 'Class' })).not.toHaveAttribute('aria-disabled', 'true');
-    expect(screen.getByRole('combobox', { name: 'Offering' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('combobox', { name: 'Class' })).not.toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(screen.getByRole('combobox', { name: 'Offering' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     expect(screen.getByText('Checking latest admission offerings…')).toBeVisible();
     expect(screen.queryByText('Admission is closed.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeDisabled();
   });
 
-  it('shows a recoverable class-check failure instead of saying no admission is available', () => {
-    const retry = vi.fn();
+  it('reports a failed class check through the standard toast while keeping selection usable', () => {
     const fixture = controller({
       offeringsError: true,
       canCreateInquiry: false,
       offerings: [],
       sections: [],
-      retryOfferings: retry,
     });
     fixture.formik.values.offeringId = '';
     vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
       fixture as unknown as ReturnType<typeof useAdmissionInquiryDialog>
     );
     render(<AdmissionInquiryFormPage />);
+    expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Admission availability could not be checked. Please try again.',
+      })
+    );
     expect(
-      screen.getByText(
-        'Admission availability could not be checked. Retry or select another class.'
-      )
-    ).toBeVisible();
+      screen.queryByText('Admission availability could not be checked. Please try again.')
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/No inquiry offering/)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(retry).toHaveBeenCalledOnce();
-    expect(screen.getByRole('combobox', { name: 'Class' })).not.toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Class' })).not.toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeDisabled();
   });
 
@@ -431,15 +512,16 @@ describe('New inquiry form', () => {
     expect(shikshaMitraToast.warning).toHaveBeenCalledWith({ message: preferredClassMessage });
   });
 
-  it('keeps source details optional even when a saved policy required them', () => {
+  it('does not insert source or parent-role controls outside the configured form', () => {
     const fixture = controller({ policy: { requireSourceDetailFor: [0] } });
     vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
       fixture as unknown as ReturnType<typeof useAdmissionInquiryDialog>
     );
     render(<AdmissionInquiryFormPage />);
 
-    expect(screen.getByRole('textbox', { name: 'Source details' })).not.toBeRequired();
-    expect(screen.getByText('Optional inquiry context.')).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Source details' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Parent relationship' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Inquiry Details' })).not.toBeInTheDocument();
   });
 
   it('keeps the published family fields without the extra family-contact controls', () => {

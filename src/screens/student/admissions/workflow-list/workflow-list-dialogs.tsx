@@ -68,7 +68,7 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
           <Stack spacing={1.5}>
             <Typography variant="body2">
               {deleting
-                ? 'This permanently removes the unused draft and its stage configuration.'
+                ? `Are you sure you want to delete '${pending?.workflow.name}'? This permanently removes the unused draft and its stage configuration.`
                 : reopening
                   ? `Re-open ${pending?.workflow.name} (version ${pending?.workflow.version}) with its published content kept read-only. It returns to Published unless it was already Superseded or another published version exists; in those cases it remains Superseded. Offerings stay unchanged.`
                   : 'Archived workflows cannot be selected for new admission offerings.'}

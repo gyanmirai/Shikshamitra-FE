@@ -10,14 +10,21 @@ import type {
 
 import { isEqual } from 'src/utils/helper';
 import { useRef, useState, useEffect } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
 
 import { createStage } from '../../workflow-builder-utils';
 import { isApplicationStageType } from '../workflow-stage-configuration';
 import { getSequentialAppendRoute } from '../workflow-route-diagnostics';
 import { useAdmissionUnsavedChanges } from '../../use-admission-unsaved-changes';
 import { type WorkflowTemplateId, getAdmissionWorkflowTemplate } from '../../workflow-template';
+import {
+  insertWorkflowStage,
+  removeWorkflowStage,
+  duplicateWorkflowStage,
+} from '../workflow-stage-graph';
 
 import type { WorkflowSidePanel } from '../workflow-builder-types';
+import type { WorkflowGraphChange } from '../workflow-stage-graph';
 
 type WorkflowSnapshot = {
   stages: AdmissionWorkflowStage[];
@@ -140,35 +147,16 @@ export function useWorkflowBuilderDraft(
     return true;
   };
   const saveStage = (stage: AdmissionWorkflowStage, autoConnect = true, nextStepFrom?: string) => {
-    recordHistory();
-    const source = stages.find((item) => item.id === nextStepFrom);
-    if (
-      source &&
-      isApplicationStageType(source.stageType) &&
-      isApplicationStageType(stage.stageType) &&
-      !source.isTerminalStage &&
-      !stage.isEntryStage &&
-      !stages.some((item) => item.id === stage.id) &&
-      !transitions.some((item) => item.fromStageId === source.id && item.isDefault)
-    ) {
-      const next: AdmissionWorkflowTransition = {
-        id: crypto.randomUUID(),
-        fromStageId: source.id,
-        toStageId: stage.id,
-        priority:
-          Math.max(
-            -1,
-            ...transitions
-              .filter((item) => item.fromStageId === source.id)
-              .map((item) => item.priority)
-          ) + 1,
-        isDefault: true,
-      };
-      setTransitions((current) => [...current, next]);
-    } else if (autoConnect && workflow?.stages.length === 0 && workflow.transitions.length === 0) {
-      const next = getSequentialAppendRoute(stages, transitions, stage);
-      if (next) setTransitions((current) => [...current, next]);
+    if (!stages.some((item) => item.id === stage.id)) {
+      const inferredSource =
+        autoConnect && workflow?.stages.length === 0 && workflow.transitions.length === 0
+          ? getSequentialAppendRoute(stages, transitions, stage)?.fromStageId
+          : undefined;
+      return applyGraphChange(
+        insertWorkflowStage({ stages, transitions }, stage, nextStepFrom ?? inferredSource)
+      );
     }
+    recordHistory();
     setStages((current) => {
       const normalized = stage.isEntryStage
         ? current.map((item) => ({ ...item, isEntryStage: false }))
@@ -178,21 +166,23 @@ export function useWorkflowBuilderDraft(
         : [...normalized, stage];
     });
     markDirty();
+    return true;
   };
-  const deleteStage = (stageId: string) => {
+  const applyGraphChange = (change: WorkflowGraphChange) => {
+    if (change.error) {
+      shikshaMitraToast.warning({ message: change.error });
+      return false;
+    }
     recordHistory();
-    setStages((current) =>
-      current
-        .filter((stage) => stage.id !== stageId)
-        .map((stage, index) => ({ ...stage, displayOrder: index }))
-    );
-    setTransitions((current) =>
-      current.filter(
-        (transition) => transition.fromStageId !== stageId && transition.toStageId !== stageId
-      )
-    );
+    setStages(change.stages);
+    setTransitions(change.transitions);
     markDirty();
+    return true;
   };
+  const deleteStage = (stageId: string) =>
+    applyGraphChange(removeWorkflowStage({ stages, transitions }, stageId));
+  const duplicateStage = (stageId: string) =>
+    applyGraphChange(duplicateWorkflowStage({ stages, transitions }, stageId));
   const saveTransition = (transition: AdmissionWorkflowTransition) => {
     recordHistory();
     setTransitions((current) => {
@@ -256,6 +246,7 @@ export function useWorkflowBuilderDraft(
     addStage,
     saveStage,
     deleteStage,
+    duplicateStage,
     saveTransition,
     applyWorkflowTemplate,
   };

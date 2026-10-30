@@ -1,3 +1,4 @@
+import type { Window } from 'happy-dom';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AssessmentRosterItem } from 'src/redux/student/admissions/admission-assessment-roster-api';
 import type {
@@ -6,12 +7,12 @@ import type {
   AssessmentEffectiveProfile,
 } from 'src/redux/student/admissions/admission-assessment-types';
 
-import { it, vi, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
-import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { it, vi, expect, afterEach, beforeEach } from 'vitest';
 import { assessmentResponse } from 'src/redux/student/admissions/assessment-test-fixture';
+import { render, screen, within, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import { AssessmentBatchDialog } from './assessment-batch-dialog';
 
@@ -24,7 +25,31 @@ const mocks = vi.hoisted(() => ({
   nativeSubmit: vi.fn(),
   state: new Map<string, ApplicationAssessment>(),
 }));
+const browser = window as unknown as Window;
+const requests = vi.fn();
+let previousInterceptor: typeof browser.happyDOM.settings.fetch.interceptor;
+
+// MSW's strict strategy still ignores asset .json requests. This unit fixture
+// expects zero browser network calls: capture unexpected requests and fail in
+// afterEach instead of allowing them to open live TLS sockets.
+beforeEach(() => {
+  previousInterceptor = browser.happyDOM.settings.fetch.interceptor;
+  browser.happyDOM.settings.fetch.interceptor = {
+    beforeAsyncRequest: async ({ request, window: requestWindow }) => {
+      requests(request.url);
+      return new requestWindow.Response(null, { status: 404 });
+    },
+  };
+});
+
+afterEach(() => {
+  cleanup();
+  browser.happyDOM.settings.fetch.interceptor = previousInterceptor;
+  expect(requests).not.toHaveBeenCalled();
+});
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
+// SubmitButton imports the implementation directly rather than the barrel.
+vi.mock('src/components/iconify/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
 vi.mock('src/redux/student/admissions/admission-assessments-api', () => ({
   admissionAssessmentsApi: { useLazyGetApplicationAssessmentQuery: () => [mocks.get] },
   useRecordAssessmentResultMutation: () => [mocks.result],

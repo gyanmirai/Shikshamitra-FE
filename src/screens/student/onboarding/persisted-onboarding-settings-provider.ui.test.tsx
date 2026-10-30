@@ -88,6 +88,20 @@ const view = () => (
 );
 
 describe('Persisted onboarding settings year isolation', () => {
+  it('shows the specific maximum-number save reason instead of a generic settings failure', async () => {
+    mocks.permissions = [{ name: 'Students.Onboarding.Add', isGranted: true }];
+    const failure = { status: 400, data: {
+      errorCode: 'Students.Onboarding.PolicyScopeInvalid',
+      data: { Reason: 'Invalid maximumNumber in onboarding settings.' },
+    } };
+    mocks.save.mockReturnValue({ unwrap: () => Promise.reject(failure) });
+    const { result } = renderHook(() => useOnboardingSettings(), { wrapper: PersistedOnboardingSettingsProvider });
+    await act(async () => {
+      await expect(result.current.applyReadinessAccess(result.current.settings.readinessAccess)).rejects.toBe(failure);
+    });
+    expect(mocks.error).toHaveBeenCalledWith({ message: 'Enter a whole maximum number, or leave it blank for no limit.' });
+  });
+
   beforeEach(() => {
     mocks.error.mockClear();
     mocks.permissions = [{ name: 'Students.Onboarding.View', isGranted: true }];

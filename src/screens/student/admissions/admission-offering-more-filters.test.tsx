@@ -66,7 +66,7 @@ const renderFilters = (filters = values) => {
   ] as AdmissionCycle[];
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
-      <AdmissionOfferingMoreFilters cycles={cycles} cycle={cycles[0]} values={filters} onChange={onChange} />
+      <AdmissionOfferingMoreFilters cycle={cycles[0]} values={filters} onChange={onChange} />
     </ThemeProvider>
   );
   return onChange;
@@ -85,7 +85,6 @@ describe('AdmissionOfferingMoreFilters', () => {
 
     await user.click(screen.getByRole('button', { name: 'Apply filters' }));
     expect(onChange).toHaveBeenCalledWith({
-      admissionCycleId: 'cycle-1',
       campusId: '',
       availabilityStatus: '',
       stageId: '',
@@ -110,7 +109,7 @@ describe('AdmissionOfferingMoreFilters', () => {
     });
   });
 
-  it('moves cycle and availability into Filters and clears academic selections when cycle changes', async () => {
+  it('keeps cycle in the main context and applies availability without changing academic selections', async () => {
     const user = userEvent.setup();
     const onChange = renderFilters({
       ...values,
@@ -122,25 +121,19 @@ describe('AdmissionOfferingMoreFilters', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Filters (2)' }));
-    expect(screen.getByRole('combobox', { name: 'Admission cycle' })).toBeVisible();
+    expect(screen.queryByRole('combobox', { name: 'Admission cycle' })).not.toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Availability' })).toBeVisible();
     expect(screen.getByRole('combobox', { name: 'Campus' })).toBeVisible();
     expect(screen.queryByRole('combobox', { name: 'Board' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('combobox', { name: 'Admission cycle' }));
-    await user.click(screen.getByRole('option', { name: 'Admissions 2027–28' }));
     await user.click(screen.getByRole('combobox', { name: 'Availability' }));
     await user.click(screen.getByRole('option', { name: 'Open' }));
     await user.click(screen.getByRole('button', { name: 'Apply filters' }));
 
     expect(onChange).toHaveBeenCalledWith({
-      admissionCycleId: 'cycle-2',
-      campusId: '',
+      campusId: 'campus-1',
       availabilityStatus: '2',
-      boardId: '',
-      mediumId: '',
-      stageId: '',
-      standardId: '',
+      stageId: 'stage-1',
       isActive: '',
       configurationStatus: '',
     });

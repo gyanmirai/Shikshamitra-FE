@@ -148,7 +148,8 @@ export type AdmissionOfferingClassScope = {
 export type AdmissionOfferingClassIdentity = Pick<
   AdmissionOfferingListItem,
   'standardId' | 'stageId'
->;
+> &
+  Partial<Pick<AdmissionOfferingListItem, 'isActive'>>;
 
 export type ValidateAdmissionOfferingInput = AdmissionOfferingWriteInput & {
   admissionCycleId: string;
@@ -256,7 +257,7 @@ export const admissionOfferingsApi = api.injectEndpoints({
                   (offering.campusId ?? null) === scope.campusId &&
                   offering.track === scope.track
               )
-              .map(({ standardId, stageId }) => ({ standardId, stageId }))
+              .map(({ standardId, stageId, isActive }) => ({ standardId, stageId, isActive }))
           );
           skipCount += page.items.length;
           if (skipCount >= page.totalCount) return { data: identities };

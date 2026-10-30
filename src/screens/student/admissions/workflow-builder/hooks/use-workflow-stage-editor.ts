@@ -28,7 +28,7 @@ type Props = {
   forms: AdmissionForm[];
   readOnly: boolean;
   onClose: () => void;
-  onSave: (stage: AdmissionWorkflowStage) => void;
+  onSave: (stage: AdmissionWorkflowStage) => void | boolean;
 };
 
 const schema = Yup.object({
@@ -72,7 +72,7 @@ export function useWorkflowStageEditor({
     validate: (values) => validateConfiguration(values, stageTypes, stages, forms),
     onSubmit: (values, helpers) => {
       if (readOnly || !isApplicationStageType(values.stageType)) return;
-      onSave({
+      const applied = onSave({
         ...normalizeStageConfiguration(values),
         name: values.name.trim(),
         code: values.code.trim().toUpperCase(),
@@ -82,6 +82,10 @@ export function useWorkflowStageEditor({
             ? false
             : values.allowManualSkip,
       });
+      if (applied === false) {
+        helpers.setSubmitting(false);
+        return;
+      }
       helpers.resetForm({ values });
       onClose();
     },

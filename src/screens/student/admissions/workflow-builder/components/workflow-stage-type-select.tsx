@@ -6,9 +6,11 @@ import type {
 
 import { useState } from 'react';
 import { Button } from '@mui/material';
+import { isEqual } from 'src/utils/helper';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
 
 import {
   isApplicationStageType,
@@ -20,9 +22,16 @@ type Props = {
   metadata?: AdmissionWorkflowStageTypeMetadata;
   stageTypes: AdmissionWorkflowStageTypeMetadata[];
   readOnly: boolean;
+  isNewStage?: boolean;
 };
 
-export function WorkflowStageTypeSelect({ formik, metadata, stageTypes, readOnly }: Props) {
+export function WorkflowStageTypeSelect({
+  formik,
+  metadata,
+  stageTypes,
+  readOnly,
+  isNewStage = false,
+}: Props) {
   const [pending, setPending] = useState<AdmissionWorkflowStageTypeMetadata | null>(null);
   const applyType = (next: AdmissionWorkflowStageTypeMetadata) => {
     if (readOnly) return;
@@ -65,8 +74,22 @@ export function WorkflowStageTypeSelect({ formik, metadata, stageTypes, readOnly
         onChange={(value) => {
           const next = stageTypes.find((item) => item.type === Number(value));
           if (!next || readOnly || next.type === formik.values.stageType) return;
-          if (formik.values.configurationJson?.trim()) setPending(next);
-          else applyType(next);
+          const generatedConfiguration = normalizeStageConfiguration({
+            ...formik.values,
+            configurationJson: undefined,
+          }).configurationJson;
+          const hasOnlyGeneratedSettings = isEqual(
+            readStageConfiguration(formik.values.configurationJson),
+            readStageConfiguration(generatedConfiguration)
+          );
+          if (
+            formik.values.configurationJson?.trim() &&
+            (!isNewStage || !hasOnlyGeneratedSettings)
+          ) {
+            setPending(next);
+          } else {
+            applyType(next);
+          }
         }}
       />
       <ConfirmDialog

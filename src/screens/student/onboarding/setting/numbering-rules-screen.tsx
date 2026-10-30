@@ -26,6 +26,7 @@ import RollOrderingFields from './roll-ordering-fields';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import { SettingsDrawer, SettingsSectionCard } from './onboarding-settings-drawer';
 import { useOnboardingAcademicStructure } from './use-onboarding-academic-structure';
+import { getOnboardingErrorMessage } from '../student-setup/student-onboarding-messages';
 import {
   formatGrNumber,
   getNumberingRuleStatus,
@@ -77,9 +78,10 @@ const grSchema = Yup.object({
   maximumNumber: Yup.number()
     .nullable()
     .transform((value, original) => (original === '' ? null : value))
+    .typeError('Enter a whole maximum number')
     .integer('Enter a whole number')
-    .min(1)
-    .max(Number.MAX_SAFE_INTEGER)
+    .min(1, 'Maximum number must be at least 1')
+    .max(Number.MAX_SAFE_INTEGER, 'Maximum number is too large. Enter a smaller whole number')
     .test(
       'after-start',
       'Maximum number must be greater than or equal to the starting number',
@@ -198,6 +200,7 @@ function NumberingRulesScreen({
         ? {
             ...(common as GrNumberConfiguration),
             name: (values as GrNumberConfiguration).name.trim(),
+            maximumNumber: grSchema.cast(values).maximumNumber ?? null,
             formatPattern: '{PREFIX}{SEQUENCE}{SUFFIX}',
             sequenceScope: 'school',
             resetPolicy: 'continuous',
@@ -239,8 +242,23 @@ function NumberingRulesScreen({
         await save(configuration);
         helpers.resetForm();
         setEditorOpen(false);
-      } catch {
-        helpers.setStatus('The draft could not be saved. Review the values and try again.');
+      } catch (saveError) {
+        const fallback = 'The draft could not be saved. Review the values and try again.';
+        const problem = parseApiProblemDetail(saveError);
+        const message =
+          saveError instanceof Error ? fallback : getOnboardingErrorMessage(saveError, fallback);
+        if (
+          isGr &&
+          [
+            'Invalid maximumNumber in onboarding settings.',
+            'Maximum number must not be below the starting number.',
+          ].includes(problem.detail)
+        ) {
+          await helpers.setFieldTouched('maximumNumber', true, false);
+          helpers.setFieldError('maximumNumber', message);
+        } else {
+          helpers.setStatus(message);
+        }
       }
     },
   });
@@ -630,7 +648,10 @@ function NumberingRulesScreen({
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       error={Boolean(touched[name] && errors[name])}
-                      helperText={touched[name] && errors[name]}
+                      helperText={
+                        (touched[name] && errors[name]) ||
+                        (name === 'maximumNumber' ? 'Leave blank for no limit.' : undefined)
+                      }
                     />
                   ))}
                 </Box>

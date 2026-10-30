@@ -3,6 +3,8 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { useRef } from 'react';
+import { useFormik } from 'formik';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -84,9 +86,27 @@ function AdmissionFormEditor({
   onSave,
   onPublishNow,
 }: Omit<Props, 'open'>) {
-  const wizard = useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave, onPublishNow });
+  const inheritanceReadiness = useRef({
+    enabled: Boolean(editing?.inheritance?.enabled),
+    ready: false,
+  });
+  const wizard = useAdmissionFormWizard({
+    editing,
+    initialPurpose,
+    onClose,
+    onSave,
+    onPublishNow,
+    canContinue: () => !inheritanceReadiness.current.enabled || inheritanceReadiness.current.ready,
+  });
+  const editorFormik = useFormik<CreateUpdateAdmissionForm>({
+    initialValues: wizard.initialValues,
+    validationSchema: wizard.validationSchema,
+    validateOnMount: true,
+    validateOnChange: true,
+    onSubmit: () => undefined,
+  });
   const busy = saving || wizard.submitting;
-  const formType = wizard.initialValues.purpose === 0 ? 'Inquiry' : 'Registration';
+  const formType = editorFormik.values.purpose === 0 ? 'Inquiry' : 'Registration';
   return (
     <CustomDialog
       open
@@ -153,6 +173,7 @@ function AdmissionFormEditor({
         <Box sx={getFormWizardLayout(wizard.activeStep)}>
           <CustomStepperWithFormik
             initialValues={wizard.initialValues}
+            formikInstance={editorFormik}
             steps={ADMISSION_FORM_STEPS}
             activeStep={wizard.activeStep}
             footerPlacement={wizard.activeStep === 1 ? 'content' : 'outside'}
@@ -200,6 +221,12 @@ function AdmissionFormEditor({
                 activeStep={wizard.activeStep}
                 footer={footer}
                 editing={editing}
+                onInheritanceReadinessChange={(ready) => {
+                  inheritanceReadiness.current = {
+                    enabled: Boolean(editorFormik.values.inheritance?.enabled),
+                    ready,
+                  };
+                }}
               />
             )}
           />

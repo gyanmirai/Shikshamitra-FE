@@ -251,6 +251,99 @@ const inquiry = {
 } as AdmissionInquiry;
 
 describe('Edit inquiry page', () => {
+  it('edits a saved inquiry with optional legacy identity questions without republication', async () => {
+    const saved = {
+      ...inquiry,
+      formDefinition: {
+        ...originalForm,
+        sections: originalForm.sections.map((section) => ({
+          ...section,
+          fields: section.fields.map((field) => ({ ...field, required: false })),
+        })),
+      },
+    } as AdmissionInquiry;
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: saved,
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    render(<AdmissionInquiryEditPage />);
+    expect(screen.getByRole('textbox', { name: 'Mobile number' })).not.toBeRequired();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Guardian name' }), {
+      target: { value: 'Meera Shah' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            phone: '9876543210',
+            formValues: expect.arrayContaining([
+              { fieldCode: 'guardian', valueJson: '"Meera Shah"' },
+            ]),
+          }),
+        })
+      )
+    );
+    expect(shikshaMitraToast.error).not.toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('before publishing') })
+    );
+  });
+
+  it('retains the captured parent on historical forms with both parents and no new selector', async () => {
+    const sourceFields = originalForm.sections[0].fields;
+    const own = (code: string, bindingKey: string, label: string, phone = false) => ({
+      ...sourceFields[phone ? 2 : 1],
+      id: code,
+      code,
+      bindingKey,
+      label,
+    });
+    const saved = {
+      ...inquiry,
+      parentRelationship: 'mother',
+      formDefinition: {
+        ...originalForm,
+        sections: [
+          {
+            ...originalForm.sections[0],
+            fields: [
+              sourceFields[0],
+              own('FATHER', 'Father.Name', 'Father name'),
+              own('FATHER_PHONE', 'Father.Mobile', 'Father mobile', true),
+              own('MOTHER', 'Mother.Name', 'Mother name'),
+              own('MOTHER_PHONE', 'Mother.Mobile', 'Mother mobile', true),
+            ],
+          },
+        ],
+      },
+      formValues: [
+        { fieldCode: 'name', valueJson: '"Riya Shah"' },
+        { fieldCode: 'FATHER', valueJson: '"Amit"' },
+        { fieldCode: 'FATHER_PHONE', valueJson: '"9876543212"' },
+        { fieldCode: 'MOTHER', valueJson: '"Meera"' },
+        { fieldCode: 'MOTHER_PHONE', valueJson: '"9876543210"' },
+      ],
+    } as AdmissionInquiry;
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: saved,
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    render(<AdmissionInquiryEditPage />);
+    expect(screen.queryByRole('combobox', { name: 'Parent relationship' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Parent Details' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Mother mobile' }), {
+      target: { value: '9876543211' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({ body: expect.objectContaining({ phone: '9876543211' }) })
+      )
+    );
+  });
+
   it('updates the captured parent mobile independently of the main school contact', async () => {
     const saved = {
       ...inquiry,
