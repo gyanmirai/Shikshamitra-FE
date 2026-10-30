@@ -4,7 +4,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { normalizeHrFailure } from './hr-failure';
 import { HrRecoveryProvider } from './hr-recovery-provider';
@@ -84,6 +84,37 @@ const report = (
 describe('HR recovery presentation and source form lifetime', () => {
   beforeEach(() => window.history.replaceState(null, '', '/hr/employee'));
   afterEach(() => setHrRecoveryVisible(false));
+  it('shows one concise salary summary, keeps genuine field messages and preserves dismissal drafts', () => {
+    mount();
+    const failure = normalizeHrFailure({ status: 400, data: {
+      errorCode: 'HR:Payroll:SalaryTemplateAllocationMismatch',
+      errors: { rules: ['Choose an earning basis.'] },
+    } });
+    report(failure);
+    const dialog = screen.getByRole('dialog', { name: 'Review Salary Preview' });
+    expect(screen.getAllByText(failure.message)).toHaveLength(1);
+    expect(dialog).toHaveTextContent('Earning rules: Choose an earning basis.');
+    expect(dialog).not.toHaveTextContent('The server will validate');
+    expect(dialog).not.toHaveTextContent('Keep this tab open while you review');
+    expect(screen.queryByRole('button', { name: 'Dismiss error' })).toBeNull();
+    expect(within(dialog).getByRole('link', { name: /Review salary templates/ })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByLabelText('Draft note')).toHaveValue('synthetic unsaved note');
+  });
+  it('omits repeated preview-summary rows while retaining distinct field errors', () => {
+    mount();
+    const failure = normalizeHrFailure({ status: 400, data: { errorCode: 'HR:Payroll:SalaryTemplateAllocationMismatch' } });
+    report({ ...failure, fields: [
+      { name: 'Monthly amount', message: failure.message },
+      { name: 'Earning rules', message: failure.message },
+      { name: 'Earning rules', message: 'Choose an earning basis.' },
+      { name: 'Earning rules', message: 'Choose an earning basis.' },
+    ] });
+    expect(screen.getAllByText(failure.message)).toHaveLength(1);
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
+    expect(screen.getByRole('listitem')).toHaveTextContent('Earning rules: Choose an earning basis.');
+  });
 
   it('preserves mounted values and clears feedback on Keep editing without leaking it to another record', () => {
     mount();

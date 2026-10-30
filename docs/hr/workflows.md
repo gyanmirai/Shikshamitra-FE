@@ -193,6 +193,12 @@ Failures retain a Retry action, and navigation or changing month/year clears pen
 
 ## Salary template preview recovery
 
+Salary-preview failures use one concise summary, optional validated server amount evidence and a short correction hint.
+Subpaise differences remain explicit instead of appearing as a zero mismatch; structural failures without amounts keep generic guidance.
+The salary-template editor owns known business failures inline for its exact preview request, retaining amount/rule focus actions, retry and drafts.
+Additional server field validation, access, transport and unknown failures retain global recovery with genuine field messages; generated copies of the salary summary are not field errors.
+The global salary-preview fallback retains the setup link and Keep editing action without repeating the long new-tab or server-validation explanation.
+
 The salary-template editor keeps failed-preview guidance beside the sample controls and retains every entered value.
 Known target/allocation failures highlight the monthly amount and offer correction actions for the amount and earning rules; reviewing earning rules expands the first earning's controls before focusing them.
 PF rule failures direct the operator to the selected rule or preview month. The shared salary-error mapper handles exact known codes in both ProblemDetails and ABP responses, including older generic responses; it never renders arbitrary diagnostic data.

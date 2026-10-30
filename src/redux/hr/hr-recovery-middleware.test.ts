@@ -1,5 +1,6 @@
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { HR_RECOVERY_EVENT } from 'src/screens/hr/recovery/hr-recovery-events';
+import { claimInlineSalaryPreviewRecovery } from 'src/screens/hr/recovery/inline-salary-preview-recovery';
 
 import { hrRecoveryMiddleware } from './hr-recovery-middleware';
 
@@ -25,6 +26,37 @@ describe('HR mutation recovery observer', () => {
   });
   afterEach(() => window.removeEventListener(HR_RECOVERY_EVENT, receive));
 
+  it('avoids a duplicate global message for the exact inline-owned salary preview request', () => {
+    const pending = action('pending', 'owned');
+    pending.meta.arg.endpointName = 'previewSalaryTemplate';
+    dispatch(pending);
+    const release = claimInlineSalaryPreviewRecovery('owned');
+    try {
+      dispatch({ ...pending, type: 'api/executeMutation/rejected', payload: {
+        status: 400, data: { errorCode: 'HR:Payroll:SalaryTemplateAllocationMismatch' },
+      } });
+      expect(receive).not.toHaveBeenCalled();
+    } finally { release(); }
+  });
+  it.each(['unowned', 'other-endpoint', 'fields', 'access', 'transport', 'unknown'])(
+    'preserves global recovery for %s errors', (scenario) => {
+      const pending = action('pending', `required-${scenario}`);
+      pending.meta.arg.endpointName = scenario === 'other-endpoint' ? 'saveSynthetic' : 'previewSalaryTemplate';
+      dispatch(pending);
+      const release = scenario === 'unowned' ? () => {} : claimInlineSalaryPreviewRecovery(pending.meta.requestId);
+      try {
+        dispatch({ ...pending, type: 'api/executeMutation/rejected', payload: {
+          status: scenario === 'access' ? 403 : scenario === 'transport' ? 'FETCH_ERROR' : 400,
+          data: { errorCode: scenario === 'unknown' ? 'HR:Unknown' : 'HR:Payroll:SalaryTemplateAllocationMismatch',
+            ...(scenario === 'fields' ? { errors: { rules: ['Choose an earning basis.'] } } : {}),
+          },
+        } });
+        expect(receive).toHaveBeenCalledOnce();
+        if (scenario === 'fields') expect((receive.mock.calls[0][0] as CustomEvent).detail.failure.fields)
+          .toContainEqual({ name: 'Earning rules', message: 'Choose an earning basis.' });
+      } finally { release(); }
+    }
+  );
   it('publishes a normalized failure, followed by success cleanup; never request arguments', () => {
     dispatch(action('pending'));
     dispatch(action('rejected'));

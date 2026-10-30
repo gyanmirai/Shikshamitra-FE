@@ -3,12 +3,17 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 ## HR setup readiness wizard
+
+Salary-preview recovery tests include `salary-preview-error.test.ts`, `hr-failure.test.ts`, `hr-recovery-provider.test.tsx`, `hr-recovery-middleware.test.ts`, `inline-salary-preview-recovery.test.ts` and `salary-preview-recovery.integration.test.ts`.
+Cover deficit/excess, numeric strings, exact-paise and subpaise boundaries, malformed or absent metadata, genuine field messages, request/route ownership, abort cleanup and unhandled/access/network fallback.
+Run the salary-template editor, component-picker, setup and salary-structure regressions alongside these checks to preserve drafts, correction focus, fresh preview requirements and the merged picker behavior.
+Finish with Codex in-app browser checks using real components and synthetic responses; this does not certify the user's template configuration or deployed financial calculations.
 
 Adjacent recovery regression coverage includes `payroll-component-session.test.tsx`, `payroll-component-options.test.ts`, `employee-payroll-options.contract.test.ts`, `hr-setup-editor.test.tsx` and `SalaryStructureBuilder.test.tsx`. These cover fresh Add sessions after edit/discard, exact create/update/delete gates, pending mutation locks, visible embedded impact decisions, choices beyond the former 20/200 limits, incomplete-page failures, cached-query draft retention and salary-history retry. Component table tests also preserve the exact pressed Edit node during a same-scope refresh and exclude prior-scope rows during a new query. The salary-components browser config runs `salary-component-recovery.spec.ts` with real forms and synthetic paginated API responses; this is frontend evidence rather than live persistence or backend financial-calculation certification.
 
