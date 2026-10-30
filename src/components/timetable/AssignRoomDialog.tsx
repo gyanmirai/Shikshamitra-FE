@@ -1,13 +1,8 @@
 import { useDispatch } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useState, useCallback } from 'react';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetDivisionByIdQuery } from 'src/redux/division/divisionApi';
-import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { GroupedRoomSelector } from 'src/components/room-selection/GroupedRoomSelector';
-import { sortRoomOptions, createRoomOption } from 'src/components/room-selection/roomOptions';
-import { useGetRoomAvailabilityQuery } from 'src/redux/academicAPI/timetableApi/roomAvailabilityApi';
 import {
   Box,
   Alert,
@@ -24,6 +19,7 @@ import {
 import { Iconify } from '../iconify';
 import CustomDialog from '../customDialog';
 import CustomTooltip from '../custom-tooltip';
+import { useWeeklyRoomOptions } from './useWeeklyRoomOptions';
 import { addDivisionRoomDefault, createSavedRoomSelections } from './roomAssignmentDefaults';
 
 import type { TimeSlot, DayOfWeek, SlotSubject } from './types';
@@ -62,15 +58,6 @@ interface AssignRoomDialogProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const DAY_NAME_MAP: Record<DayOfWeek, string> = {
-  MONDAY: 'Monday',
-  TUESDAY: 'Tuesday',
-  WEDNESDAY: 'Wednesday',
-  THURSDAY: 'Thursday',
-  FRIDAY: 'Friday',
-  SATURDAY: 'Saturday',
-};
-
 function splitPipeSubjects(subjects: SlotSubject[]): SlotSubject[] {
   const result: SlotSubject[] = [];
   subjects.forEach((sub) => {
@@ -108,81 +95,9 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
   onSave,
 }) => {
   const dispatch = useDispatch();
-  const {
-    data: rooms,
-    isLoading: roomsLoading,
-    isFetching: roomsFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRoomsQuery,
-  });
-  const {
-    data: division,
-    isLoading: divisionLoading,
-    isFetching: divisionFetching,
-  } = useGetDivisionByIdQuery(divisionId, {
-    skip: !open || !divisionId,
-    refetchOnMountOrArgChange: true,
-  });
-
   const currentSlot = open ? slots[open.day]?.[open.slotIndex] : null;
-
-  const queryDate = React.useMemo(() => {
-    if (!open) return '';
-    const dayOfWeek = open.day;
-    const dayIndexMap: Record<string, number> = {
-      SUNDAY: 0,
-      MONDAY: 1,
-      TUESDAY: 2,
-      WEDNESDAY: 3,
-      THURSDAY: 4,
-      FRIDAY: 5,
-      SATURDAY: 6,
-    };
-    const targetDayIndex = dayIndexMap[dayOfWeek.toUpperCase()] ?? 1;
-    const result = new Date();
-    const currentDayIndex = result.getDay();
-    const distance = targetDayIndex - currentDayIndex;
-    result.setDate(result.getDate() + distance);
-
-    const year = result.getFullYear();
-    const month = String(result.getMonth() + 1).padStart(2, '0');
-    const dStr = String(result.getDate()).padStart(2, '0');
-    return `${year}-${month}-${dStr}`;
-  }, [open]);
-
-  const queryParams = React.useMemo(() => {
-    if (!open || !currentSlot) return null;
-
-    const formatTime = (t: string) => {
-      if (!t) return undefined;
-      const parts = t.split(':');
-      if (parts.length === 2) return `${t}:00`;
-      return t;
-    };
-
-    return {
-      date: queryDate,
-      startTime: formatTime(currentSlot.startTime),
-      endTime: formatTime(currentSlot.endTime),
-      standardId,
-      divisionId,
-      includeOccupied: true,
-    };
-  }, [open, currentSlot, queryDate, standardId, divisionId]);
-
-  const {
-    data: availableRoomsData,
-    isLoading: availabilityLoading,
-    isFetching: availabilityFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRoomAvailabilityQuery,
-    params: queryParams,
-    options: {
-      skip: !queryParams,
-    },
-  });
+  const { roomList, divisionRoomId, isRoomsLoading, hasRoomError, retryRooms } =
+    useWeeklyRoomOptions(open?.day, currentSlot, standardId, divisionId);
 
   const [selectedIds, setSelectedIds] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -207,31 +122,14 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
     onClose();
   }, [dispatch, onClose]);
 
-  const roomList: RoomOption[] = React.useMemo(() => {
-    if (availableRoomsData && availableRoomsData.length > 0) {
-      return sortRoomOptions(availableRoomsData.map((room: any) => createRoomOption(room)));
-    }
-    return sortRoomOptions(
-      (rooms?.items ?? []).map((room: any) => createRoomOption({ ...room, status: 'available' }))
-    );
-  }, [availableRoomsData, rooms]);
-
-  const isRoomsLoading =
-    roomsLoading ||
-    roomsFetching ||
-    availabilityLoading ||
-    availabilityFetching ||
-    divisionLoading ||
-    divisionFetching;
-
   React.useEffect(() => {
-    if (!open || !division?.roomId || !roomList.some((room) => room.id === division.roomId)) {
+    if (!open || !divisionRoomId || !roomList.some((room) => room.id === divisionRoomId)) {
       return;
     }
 
     const subjects = splitPipeSubjects(open.subjects);
-    setSelectedIds((current) => addDivisionRoomDefault(current, subjects, division.roomId));
-  }, [division?.roomId, open, roomList]);
+    setSelectedIds((current) => addDivisionRoomDefault(current, subjects, divisionRoomId));
+  }, [divisionRoomId, open, roomList]);
 
   const splitSubjects = open ? splitPipeSubjects(open.subjects) : [];
 
@@ -244,7 +142,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
   );
 
   const handleSave = async () => {
-    if (!open) return;
+    if (!open || isRoomsLoading || hasRoomError) return;
 
     const newErrors: Record<string, string> = {};
 
@@ -350,7 +248,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
           <CustomTooltip
             arrow
             placement="right"
-            title="Select an available classroom or lab for this period slot. Options include applying to all slots of this subject or all slots in the timetable."
+            title="Choose a room for this weekly period. Room conflicts are checked before applying your selection. You can apply the room to other periods using the options below."
           >
             <IconButton size="small" color="info" sx={{ p: 0.5 }}>
               <Iconify icon="lucide:info" width={18} />
@@ -361,6 +259,27 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
     >
       <DialogContent sx={{ pb: 2 }}>
         <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {hasRoomError && (
+            <Alert
+              severity="error"
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => retryRooms()}
+                >
+                  Retry
+                </Button>
+              }
+            >
+              Unable to load rooms for this weekly period.
+            </Alert>
+          )}
+          {!hasRoomError && !isRoomsLoading && roomList.length === 0 && (
+            <Alert severity="info">
+              No rooms are configured. Add rooms in Institute Setup before assigning this period.
+            </Alert>
+          )}
           {conflictIssues.length > 0 && (
             <Alert severity="error" icon={<Iconify icon="mdi:door-closed-lock" />}>
               <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
@@ -487,7 +406,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
           onClick={handleSave}
           variant="contained"
           size="small"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isRoomsLoading || hasRoomError || roomList.length === 0}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
         >
           {isSubmitting ? 'Checking...' : 'Submit'}

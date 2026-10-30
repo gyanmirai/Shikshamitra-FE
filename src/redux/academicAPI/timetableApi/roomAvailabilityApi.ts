@@ -1,12 +1,21 @@
-import { academicType } from 'src/redux/tagTypes';
+import { academicType, instituteSetupType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../academicApi';
 import { reservationPageUrl } from './roomReadContracts';
 
+import type { WeeklyRoomRow, WeeklyRoomInput } from './weeklyRoomReadContracts';
 import type { ReservationPage, RoomAuditReadRow, RoomAuditPageInput, ReservationPageInput } from './roomReadContracts';
 
 export const roomAvailabilityApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
+    getWeeklyTimetableRooms: builder.query<WeeklyRoomRow[], WeeklyRoomInput>({
+      query: (params) => ({
+        url: 'academics/timetable/room-availability',
+        method: 'GET',
+        params,
+      }),
+      providesTags: [academicType.timetableManagement, instituteSetupType.rooms],
+    }),
     getReservationPage: builder.query<ReservationPage, ReservationPageInput>({
       query: reservationPageUrl,
       providesTags: [academicType.timetableManagement],
@@ -123,6 +132,7 @@ export const roomAvailabilityApi = academicApi.injectEndpoints({
 });
 
 export const {
+  useGetWeeklyTimetableRoomsQuery,
   useGetReservationPageQuery,
   useLazyGetReservationPageQuery,
   useGetReservationSummaryQuery,
