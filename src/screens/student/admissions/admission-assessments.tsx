@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { IParams } from 'src/components/customizabaleTable/types';
 import type { AssessmentRosterItem } from 'src/redux/student/admissions/admission-assessment-roster-api';
 import type {
+  AssessmentScope,
   AssessmentSession,
   AssessmentSelectedBooking,
   AssessmentSharedSessionInput,
@@ -34,12 +35,14 @@ import { AssessmentBatchDialog } from './assessments/assessment-batch-dialog';
 import { AssessmentActionDialog } from './assessments/assessment-action-dialog';
 import { AssessmentApplicantTable } from './assessments/assessment-applicant-table';
 import { AssessmentContinueDialog } from './assessments/assessment-continue-dialog';
+import { studentBookingReason } from './assessments/assessment-student-booking-model';
 import { AssessmentApplicantDrawer } from './assessments/assessment-workbench-drawers';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import { useAssessmentWorkspaceData } from './assessments/use-assessment-workspace-data';
 import { AssessmentWorkspaceControls } from './assessments/assessment-workspace-controls';
 import { AssessmentSessionSetupDrawer } from './assessments/assessment-session-setup-drawer';
 import { AssessmentManageSessionsDrawer } from './assessments/assessment-manage-sessions-drawer';
+import { AssessmentStudentBookingDrawer } from './assessments/assessment-student-booking-drawer';
 import {
   useAssessmentPermissions,
   canAdvanceAssessmentApplications,
@@ -61,8 +64,15 @@ export default function AdmissionAssessmentsScreen() {
     action: AssessmentBatchAction;
     rows: AssessmentRosterItem[];
   } | null>(null);
+  const [booking, setBooking] = useState<{
+    rows: AssessmentRosterItem[];
+    scopes: AssessmentScope[];
+  } | null>(null);
+  const [preferredSession, setPreferredSession] = useState<AssessmentSession | null>(null);
   const workbench = useAssessmentWorkspaceData(permissions.view, !!batch);
   const { academic, scopes, state, applicants, updateWorkbench } = workbench;
+  const openStudentBooking = (rows: AssessmentRosterItem[]) =>
+    setBooking({ rows, scopes: scopes.currentData ?? [] });
   const tableFilters = useMemo<IParams['filters']>(
     () => [
       ...readAssessmentColumnFilters(state.columnFilters),
@@ -282,23 +292,8 @@ export default function AdmissionAssessmentsScreen() {
               disabled={!permissions.view || !academic.academicYearId}
               onClick={manage.onTrue}
             >
-              Manage sessions
+              Sessions
             </Button>
-            {permissions.manageSessions && (
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<Iconify icon="mdi:plus" />}
-                disabled={
-                  scopes.isFetching ||
-                  scopes.isError ||
-                  !workbench.visibleScopes.some((scope) => scope.schedulingEnabled)
-                }
-                onClick={() => openSetup(null, 'create')}
-              >
-                Create session
-              </Button>
-            )}
           </Stack>
         }
       />
@@ -319,6 +314,21 @@ export default function AdmissionAssessmentsScreen() {
               sx={{ px: 1, flexShrink: 0 }}
             >
               <Typography variant="body2">{selection.length} selected</Typography>
+              {permissions.book && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="inherit"
+                  disabled={
+                    !selection.some((row) => !studentBookingReason(row)) ||
+                    scopes.isFetching ||
+                    scopes.isError
+                  }
+                  onClick={() => openStudentBooking(selection)}
+                >
+                  Book Session ({selection.length})
+                </Button>
+              )}
               {permissions.attendance && (
                 <Button
                   size="small"
@@ -373,12 +383,16 @@ export default function AdmissionAssessmentsScreen() {
               selectedSessionId={state.sessionId}
               selectedIds={selectedIds}
               onSelectionChange={
-                permissions.attendance || permissions.results || canAdvance
+                permissions.book || permissions.attendance || permissions.results || canAdvance
                   ? onSelection
                   : undefined
               }
               canAdvance={canAdvance}
-              onAction={(row, nextAction) => setAction({ row, action: nextAction })}
+              onAction={(row, nextAction) => {
+                if (nextAction === 'book' && row.assessment.policy?.schedulingEnabled)
+                  openStudentBooking([row]);
+                else setAction({ row, action: nextAction });
+              }}
               onDetails={setDetails}
               isLoading={
                 scopes.isLoading ||
@@ -458,7 +472,9 @@ export default function AdmissionAssessmentsScreen() {
           canAdvance={canAdvance}
           onAction={(row, next) => {
             setDetails(null);
-            setAction({ row, action: next });
+            if (next === 'book' && row.assessment.policy?.schedulingEnabled)
+              openStudentBooking([row]);
+            else setAction({ row, action: next });
           }}
           returnUrl={workbench.href({})}
           onClose={() => setDetails(null)}
@@ -522,6 +538,22 @@ export default function AdmissionAssessmentsScreen() {
           }}
         />
       )}
+      {booking && (
+        <AssessmentStudentBookingDrawer
+          rows={booking.rows}
+          scopes={booking.scopes}
+          academicYearId={academic.academicYearId}
+          initialSession={preferredSession}
+          canBook={permissions.view && permissions.book}
+          canCreate={permissions.view && permissions.manageSessions}
+          onClose={() => setBooking(null)}
+          onBooked={() => {
+            setBooking(null);
+            setSelection([]);
+            setPreferredSession(null);
+          }}
+        />
+      )}
       {manage.value && (
         <AssessmentManageSessionsDrawer
           open
@@ -548,7 +580,23 @@ export default function AdmissionAssessmentsScreen() {
             manage.onFalse();
           }}
           onEdit={(session) => openSetup(session, 'edit')}
-          onBook={(session) => openSetup(session, 'book')}
+          onBook={(session) => {
+            setPreferredSession(session);
+            setSelection([]);
+            manage.onFalse();
+            updateWorkbench({
+              assessmentSession: undefined,
+              assessmentStatus: 'pending',
+              assessmentPage: 0,
+              assessmentSearch: undefined,
+              assessmentFilters: undefined,
+              assessmentScope:
+                session.scopeDetails?.length === 1
+                  ? `${session.scopeDetails[0].admissionOfferingId}:${session.scopeDetails[0].workflowStageDefinitionId}`
+                  : undefined,
+            });
+            shikshaMitraToast.success({ message: `Select students to book into ${session.name}` });
+          }}
           onCancel={async (session, notes) => {
             await cancel({
               id: session.id,

@@ -5,7 +5,6 @@ import Box from '@mui/material/Box';
 import { Label } from 'src/components/label';
 import { fNumber } from 'src/utils/format-number';
 import { formatDateOnly } from 'src/utils/date-only';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 import { AdmissionTableText } from './admission-table-text';
 import { AdmissionOfferingRowActions } from './admission-offering-row-actions';
@@ -39,6 +38,14 @@ export const buildAdmissionOfferingColumns = (
         strong
       />
     ),
+  },
+  {
+    id: 'admissionCycleName',
+    label: 'Admission cycle',
+    isFilter: false,
+    isSort: false,
+    minWidth: 170,
+    render: (value) => <AdmissionTableText text={String(value ?? '—')} />,
   },
   {
     id: 'boardName',
@@ -132,8 +139,18 @@ export const buildAdmissionOfferingColumns = (
     minWidth: 120,
   },
   {
+    id: 'isActive',
+    label: 'Active status',
+    isFilter: false,
+    isSort: false,
+    minWidth: 110,
+    render: (value) => (
+      <Label color={value ? 'success' : 'default'}>{value ? 'Active' : 'Inactive'}</Label>
+    ),
+  },
+  {
     id: 'availabilityStatus',
-    label: 'Status',
+    label: 'Availability',
     isFilter: true,
     filterType: 'enum',
     filterOperators: ['equals'],

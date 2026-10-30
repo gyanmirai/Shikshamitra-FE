@@ -19,7 +19,7 @@ import type { BulkOfferingValues } from './bulk-admission-offering-model';
 export function useBulkAdmissionOffering(
   cycle: AdmissionCycle,
   open: boolean,
-  onComplete: () => void
+  onComplete: (values: BulkOfferingValues) => void
 ) {
   const [preview, setPreview] = useState<BulkAdmissionOfferingResult | null>(null);
   const [previewStandards, setPreviewStandards] = useState<Standards[]>([]);
@@ -66,7 +66,7 @@ export function useBulkAdmissionOffering(
         shikshaMitraToast.success({
           message: `${result.createdCount} offering${result.createdCount === 1 ? '' : 's'} created`,
         });
-        onComplete();
+        onComplete(values);
       }
       return result;
     } catch (error) {

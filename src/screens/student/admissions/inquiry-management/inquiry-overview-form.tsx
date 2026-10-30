@@ -14,16 +14,7 @@ import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
-import {
-  Box,
-  Grid,
-  Stack,
-  Button,
-  MenuItem,
-  TextField,
-  Typography,
-  LinearProgress,
-} from '@mui/material';
+import { Box, Stack, Button, MenuItem, TextField, Typography, LinearProgress } from '@mui/material';
 import {
   useUpdateAdmissionInquiryMutation,
   useGetAdmissionInquiryCaptureContextQuery,
@@ -32,6 +23,7 @@ import {
 
 import AdmissionRuntimeField from '../admission-runtime-field';
 import { useAdmissionInquiryAge } from '../use-admission-inquiry-age';
+import { canonicalInquiryBinding } from '../admission-inquiry-field-bindings';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { useAdmissionFormLanguage } from '../use-admission-form-language';
@@ -42,12 +34,11 @@ import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dia
 import {
   validateAdmissionInquiry,
   getAdmissionInquiryFields,
+  getAdmissionInquiryPrimaryContact,
   getAdmissionInquirySections,
   buildAdmissionInquiryPayload,
-  admissionInquirySourceOptions,
   readAdmissionInquiryFormValues,
   type AdmissionInquiryFormValues,
-  admissionInquiryLanguageOptions,
   isAdmissionInquiryBirthDateField,
   preserveCompatibleInquiryAnswers,
   getAdmissionInquiryVisibleSections,
@@ -98,6 +89,7 @@ export function InquiryOverviewForm({
       preferredLanguageCode: current.preferredLanguageCode || 'en',
       sendAcknowledgement: false,
       parentRelationship: current.parentRelationship ?? undefined,
+      capturedParentRelationship: current.parentRelationship ?? undefined,
       fields: readAdmissionInquiryFormValues(current.formValues),
     }),
     [current]
@@ -134,14 +126,14 @@ export function InquiryOverviewForm({
             phone: payload.phone || current.normalizedPhone,
             email: fields.some(
               (field) =>
-                field.bindingKey === 'Guardian.Email' ||
-                ['GUARDIAN_EMAIL', 'PARENT_EMAIL'].includes(field.code.toUpperCase())
+                canonicalInquiryBinding(field) ===
+                getAdmissionInquiryPrimaryContact(fields, values).emailBinding
             )
               ? payload.email
               : current.email,
-            source: values.source,
-            sourceDetail: values.sourceDetail.trim() || null,
-            preferredLanguageCode: values.preferredLanguageCode,
+            source: payload.source,
+            sourceDetail: payload.sourceDetail,
+            preferredLanguageCode: payload.preferredLanguageCode,
             formValues: payload.formValues,
             concurrencyStamp: current.concurrencyStamp,
           },
@@ -345,7 +337,7 @@ export function InquiryOverviewForm({
                 <Box
                   sx={{
                     display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                    gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
                     gap: 2,
                   }}
                 >
@@ -462,9 +454,34 @@ export function InquiryOverviewForm({
                 </StudentFeedback>
               )}
             {form && (
-              <Typography variant="body2" color="text.secondary">
-                {form.name} · Version {form.version}
-              </Typography>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                justifyContent="space-between"
+                spacing={2}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
+                >
+                  {form.name} · Version {form.version}
+                </Typography>
+                {!loading && !loadError && supportedLanguages.length > 1 && (
+                  <CustomSelect
+                    size="small"
+                    label="Form language"
+                    value={language}
+                    options={supportedLanguages.map((code) => ({
+                      value: code,
+                      label: getAdmissionLanguageLabel(code),
+                    }))}
+                    onChange={(value) => setLanguage(String(value))}
+                    disabled={updateState.isLoading || readingPhoto}
+                    formControlProps={{ sx: { width: 1, maxWidth: { sm: 220 } } }}
+                  />
+                )}
+              </Stack>
             )}
             {!formId && !loading && (
               <StudentFeedback
@@ -475,22 +492,6 @@ export function InquiryOverviewForm({
                 The original attached inquiry form is unavailable. Select an open admission offering
                 to resolve this historical inquiry.
               </StudentFeedback>
-            )}
-            {form && !loading && !loadError && supportedLanguages.length > 1 && (
-              <Stack direction="row" justifyContent="flex-end">
-                <CustomSelect
-                  size="small"
-                  label="Form language"
-                  value={language}
-                  options={supportedLanguages.map((code) => ({
-                    value: code,
-                    label: getAdmissionLanguageLabel(code),
-                  }))}
-                  onChange={(value) => setLanguage(String(value))}
-                  disabled={updateState.isLoading || readingPhoto}
-                  formControlProps={{ sx: { width: { xs: 1, sm: 220 } } }}
-                />
-              </Stack>
             )}
             {!loading &&
               !loadError &&
@@ -545,61 +546,6 @@ export function InquiryOverviewForm({
                     />
                   </FormSectionCard>
                 ))}
-            <FormSectionCard
-              title="Inquiry Details"
-              icon={GlobalIcons.admissionDetails}
-              descriptionTooltip="Record the inquiry source and communication language."
-            >
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    select
-                    fullWidth
-                    size="small"
-                    label="Source"
-                    value={formik.values.source}
-                    disabled={locked}
-                    onChange={(event) => formik.setFieldValue('source', Number(event.target.value))}
-                  >
-                    {admissionInquirySourceOptions.map((label, value) => (
-                      <MenuItem key={label} value={value}>
-                        {label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    select
-                    fullWidth
-                    size="small"
-                    label="Communication language"
-                    value={formik.values.preferredLanguageCode}
-                    disabled={locked}
-                    onChange={formik.handleChange}
-                    name="preferredLanguageCode"
-                  >
-                    {admissionInquiryLanguageOptions.map((item) => (
-                      <MenuItem key={item.value} value={item.value}>
-                        {item.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Source details"
-                    name="sourceDetail"
-                    value={formik.values.sourceDetail}
-                    disabled={locked}
-                    onChange={formik.handleChange}
-                    slotProps={{ htmlInput: { maxLength: 128 } }}
-                  />
-                </Grid>
-              </Grid>
-            </FormSectionCard>
             {requestError && (
               <StudentFeedback notificationKey="STU-0425" presentation="inline" severity="error">
                 {requestError}

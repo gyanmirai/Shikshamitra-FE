@@ -21,7 +21,8 @@ export function AdmissionOfferingActionImpact({ action, offering }: Props) {
   if (action === 'activate') {
     return (
       <Typography variant="body2">
-        “{offering.name || offering.code}” will become active.
+        Are you sure you want to activate “<strong>{offering.name || offering.code}</strong>”? This
+        offering will become active for student applications.
       </Typography>
     );
   }

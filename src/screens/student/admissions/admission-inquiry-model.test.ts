@@ -81,15 +81,298 @@ const offering = {
 } as AdmissionOfferingListItem;
 
 describe('admission inquiry model', () => {
+  it('uses configured split names instead of a stale full-name answer and preserves both raw answers', () => {
+    const configured = [
+      ...fields,
+      field('FULL', 'Applicant.Name'),
+      field('MIDDLE', 'Applicant.MiddleName'),
+      field('LAST', 'Applicant.LastName'),
+    ];
+    const payload = buildAdmissionInquiryPayload(
+      {
+        ...values,
+        fields: {
+          ...values.fields,
+          FIRST_NAME: 'Riya',
+          MIDDLE: 'Kumar',
+          LAST: 'Shah',
+          FULL: 'Old copied name',
+        },
+      },
+      configured,
+      offering
+    );
+    expect(payload).toMatchObject({
+      applicantName: 'Riya Kumar Shah',
+      applicantFirstName: 'Riya',
+      applicantLastName: 'Shah',
+    });
+    expect(payload.formValues).toContainEqual({
+      fieldCode: 'FULL',
+      valueJson: '"Old copied name"',
+    });
+    expect(
+      buildAdmissionInquiryPayload(
+        {
+          ...values,
+          fields: { ...values.fields, FIRST_NAME: '', LAST: 'Shah', FULL: 'Riya Shah' },
+        },
+        configured,
+        offering
+      )
+    ).toMatchObject({
+      applicantName: 'Riya Shah',
+      applicantFirstName: 'Riya Shah',
+      applicantLastName: null,
+    });
+  });
+
+  it.each(['Father', 'Mother'])(
+    'uses an explicitly configured generic primary email for a single %s contact',
+    (role) => {
+      const configured = [
+        field('CHILD', 'Applicant.Name', 0, true),
+        field('PARENT', `${role}.Name`, 0, true),
+        field('PHONE', `${role}.Mobile`, 4, true),
+        field('PRIMARY_EMAIL', 'Guardian.Email', 3),
+      ];
+      const draft = {
+        ...values,
+        fields: {
+          CHILD: 'Riya',
+          PARENT: 'Parent',
+          PHONE: '9876543210',
+          PRIMARY_EMAIL: 'Primary@Example.COM',
+        },
+      };
+      expect(buildAdmissionInquiryPayload(draft, configured, offering).guardianEmail).toBe(
+        'primary@example.com'
+      );
+      expect(
+        buildAdmissionInquiryPayload(
+          { ...draft, fields: { ...draft.fields, OWN_EMAIL: '' } },
+          [...configured, field('OWN_EMAIL', `${role}.Email`, 3)],
+          offering
+        ).guardianEmail
+      ).toBeNull();
+    }
+  );
+
+  it.each(['', 'en', 'gu', 'en-IN', 'zh-Hans-CN'])(
+    'accepts blank optional or formatted configured language %s',
+    (language) => {
+      const configured = [...fields, field('LANGUAGE', 'Inquiry.PreferredLanguageCode', 6)];
+      expect(
+        validateAdmissionInquiry(
+          { ...values, fields: { ...values.fields, LANGUAGE: language } },
+          configured,
+          null,
+          offering
+        )
+      ).toEqual({});
+    }
+  );
+  it.each(['x', 'bad code', 'en_India', 'abcdefghijklmnooo'])(
+    'validates malformed configured communication language %s at its owning field',
+    (language) => {
+      const configured = [...fields, field('LANGUAGE', 'Inquiry.PreferredLanguageCode', 6)];
+      expect(
+        validateAdmissionInquiry(
+          { ...values, fields: { ...values.fields, LANGUAGE: language } },
+          configured,
+          null,
+          offering
+        )
+      ).toMatchObject({
+        fields: { LANGUAGE: 'Enter a valid language code of 2 to 16 characters.' },
+      });
+    }
+  );
+
+  it('hides and excludes validation from configured conditional steps', () => {
+    const form = {
+      sections: [
+        {
+          id: 'conditional',
+          code: 'CONDITIONAL',
+          name: 'Conditional questions',
+          displayOrder: 0,
+          stepVisibilityRuleJson: JSON.stringify({
+            field: 'SHOW',
+            operator: 'Equals',
+            value: 'yes',
+          }),
+          fields: [field('STEP_REQUIRED', 'Custom.Step', 0, true)],
+        },
+      ],
+    } as AdmissionForm;
+    const hidden = { ...values, fields: { ...values.fields, SHOW: 'no', STEP_REQUIRED: '' } };
+    const sections = getAdmissionInquirySections(form);
+    expect(getAdmissionInquiryVisibleSections(sections, hidden)).toEqual([]);
+    expect(
+      validateAdmissionInquiry(hidden, getAdmissionInquiryFields(form), null, offering)
+    ).toEqual({});
+    const visible = { ...hidden, fields: { ...hidden.fields, SHOW: 'yes' } };
+    expect(getAdmissionInquiryVisibleSections(sections, visible)).toHaveLength(1);
+    expect(
+      validateAdmissionInquiry(visible, getAdmissionInquiryFields(form), null, offering)
+    ).toMatchObject({ fields: { STEP_REQUIRED: 'STEP_REQUIRED is required' } });
+  });
+
+  it('preserves the saved primary contact when another parent is the only configured complete pair in an old form', () => {
+    const configured = [
+      field('CHILD', 'Applicant.Name', 0, true),
+      field('DAD', 'Father.Name', 0, true),
+      field('DAD_PHONE', 'Father.Mobile', 4, true),
+    ];
+    const draft = {
+      ...values,
+      capturedParentRelationship: 'mother' as const,
+      parentRelationship: 'mother' as const,
+      fields: { CHILD: 'Riya', DAD: 'Amit', DAD_PHONE: '9876543212' },
+    };
+    const payload = buildAdmissionInquiryPayload(draft, configured, offering);
+    expect(payload.parentRelationship).toBe('mother');
+    expect(payload.guardianPhone).toBe('');
+    expect(payload.guardianFirstName).toBe('');
+  });
+
+  it('maps configured source zero and language without inserting operational controls', () => {
+    const configured = [
+      ...fields,
+      field('ORIGIN', 'Inquiry.Source', 6),
+      field('DETAIL', 'Inquiry.SourceDetail'),
+      field('LANGUAGE', 'Inquiry.PreferredLanguageCode', 6),
+    ];
+    const payload = buildAdmissionInquiryPayload(
+      {
+        ...values,
+        source: 8,
+        sourceDetail: 'Saved context',
+        preferredLanguageCode: 'en',
+        fields: { ...values.fields, ORIGIN: '0', DETAIL: '', LANGUAGE: 'hi' },
+      },
+      configured,
+      offering
+    );
+    expect(payload).toMatchObject({ source: 0, sourceDetail: null, preferredLanguageCode: 'hi' });
+    expect(
+      buildAdmissionInquiryPayload(
+        { ...values, source: 8, sourceDetail: 'Saved context', preferredLanguageCode: 'gu' },
+        fields,
+        offering
+      )
+    ).toMatchObject({ source: 8, sourceDetail: 'Saved context', preferredLanguageCode: 'gu' });
+  });
+
+  it('keeps configured primary-parent contact values together', () => {
+    const selector = {
+      ...field('PRIMARY', 'Inquiry.ParentRelationship', 6, true),
+      optionsJson: '[{"value":"father","label":"Father"},{"value":"mother","label":"Mother"}]',
+    };
+    const configured = [
+      field('CHILD', 'Applicant.Name', 0, true),
+      field('DAD', 'Father.Name', 0, true),
+      field('DAD_PHONE', 'Father.Mobile', 4, true),
+      field('DAD_MAIL', 'Father.Email', 3),
+      field('MOM', 'Mother.Name', 0, true),
+      field('MOM_PHONE', 'Mother.Mobile', 4, true),
+      field('MOM_MAIL', 'Mother.Email', 3),
+      selector,
+    ];
+    const payload = buildAdmissionInquiryPayload(
+      {
+        ...values,
+        fields: {
+          CHILD: 'Riya',
+          DAD: 'Amit',
+          DAD_PHONE: '9876543210',
+          DAD_MAIL: 'father@example.com',
+          MOM: 'Meera',
+          MOM_PHONE: '9876543211',
+          MOM_MAIL: '',
+          PRIMARY: 'mother',
+        },
+      },
+      configured,
+      offering
+    );
+    expect(payload).toMatchObject({
+      guardianFirstName: 'Meera',
+      guardianPhone: '9876543211',
+      guardianEmail: null,
+      parentRelationship: 'mother',
+    });
+  });
+
+  it('renders only the published sections and keeps configured requiredness unchanged', () => {
+    const configured = field('SCHOOL_NOTE', 'Custom.Note', 0);
+    const form = {
+      sections: [
+        { id: 'own', code: 'OWN', name: 'School questions', displayOrder: 0, fields: [configured] },
+      ],
+    } as AdmissionForm;
+    const runtime = getAdmissionInquirySections(form);
+    expect(runtime).toHaveLength(1);
+    expect(runtime[0].fields).toEqual([
+      expect.objectContaining({ code: 'SCHOOL_NOTE', required: false }),
+    ]);
+    expect(getAdmissionInquiryFields()).toEqual([]);
+    const mobileForm = {
+      sections: [{ fields: [field('PHONE', 'Guardian.Mobile', 4)] }],
+    } as AdmissionForm;
+    expect(getAdmissionInquiryFields(mobileForm)[0].required).toBe(false);
+  });
+
+  it.each(['Father', 'Mother'])(
+    'maps one configured %s contact without adding generic inputs',
+    (role) => {
+      const configured = [
+        field('CHILD', 'Applicant.Name', 0, true),
+        field('ADULT', `${role}.Name`, 0, true),
+        field('CONTACT', `${role}.Mobile`, 4, true),
+        field('MAIL', `${role}.Email`, 3),
+      ];
+      const draft = {
+        ...values,
+        parentRelationship: undefined,
+        fields: {
+          CHILD: 'Riya Shah',
+          ADULT: 'Amit Shah',
+          CONTACT: '9876543210',
+          MAIL: 'amit@example.com',
+        },
+      };
+      const payload = buildAdmissionInquiryPayload(draft, configured, offering);
+      expect(payload).toMatchObject({
+        applicantName: 'Riya Shah',
+        guardianFirstName: 'Amit Shah',
+        guardianPhone: '9876543210',
+        guardianEmail: 'amit@example.com',
+        parentRelationship: role.toLowerCase(),
+      });
+      expect(payload.formValues).toHaveLength(configured.length);
+    }
+  );
+
   it.each(['father', 'mother'] as const)(
     'reuses the selected %s mobile for capture and duplicate checking',
     (relationship) => {
       const prefix = relationship === 'father' ? 'Father' : 'Mother';
-      const parentFields = [...fields, field('PARENT_PHONE', `${prefix}.Mobile`, 4)];
+      const parentFields = [
+        ...fields.filter((item) => !item.bindingKey?.startsWith('Guardian.')),
+        field('PARENT_NAME', `${prefix}.Name`, 0, true),
+        field('PARENT_PHONE', `${prefix}.Mobile`, 4, true),
+      ];
       const draft = {
         ...values,
         parentRelationship: relationship,
-        fields: { ...values.fields, GUARDIAN_MOBILE: '', PARENT_PHONE: '9876543211' },
+        fields: {
+          ...values.fields,
+          GUARDIAN_MOBILE: '',
+          PARENT_NAME: 'QA parent',
+          PARENT_PHONE: '9876543211',
+        },
       };
       const form = { sections: [{ fields: parentFields }] } as AdmissionForm;
       const sections = getAdmissionInquirySections(form, draft);
@@ -106,7 +389,7 @@ describe('admission inquiry model', () => {
       const payload = buildAdmissionInquiryPayload(draft, runtimeFields, offering);
       expect(payload).toMatchObject({ guardianPhone: '9876543211', phone: '9876543211' });
       expect(payload.formValues).toContainEqual({
-        fieldCode: 'GUARDIAN_MOBILE',
+        fieldCode: 'PARENT_PHONE',
         valueJson: '"9876543211"',
       });
       expect(draft.fields.GUARDIAN_MOBILE).toBe('');
@@ -122,7 +405,7 @@ describe('admission inquiry model', () => {
       parentRelationship: 'father',
     });
     expect(runtimeFields.some((item) => item.id === 'inquiry-guardian-phone')).toBe(false);
-    expect(runtimeFields.find((item) => item.code === 'DAD_PHONE')?.required).toBe(true);
+    expect(runtimeFields.find((item) => item.code === 'DAD_PHONE')?.required).toBe(false);
   });
 
   it('keeps the visible mobile when the selected parent section is hidden', () => {
@@ -147,7 +430,7 @@ describe('admission inquiry model', () => {
     );
   });
 
-  it('shows published shared-mobile validation on the reused parent field', () => {
+  it('keeps each published mobile validation on its own configured field', () => {
     const runtimeFields = [
       field('DAD_PHONE', 'Father.Mobile', 4),
       {
@@ -161,10 +444,10 @@ describe('admission inquiry model', () => {
     const draft = {
       ...values,
       parentRelationship: 'father' as const,
-      fields: { DAD_PHONE: '8765432109', SHARED_PHONE: '' },
+      fields: { DAD_PHONE: '9876543210', SHARED_PHONE: '8765432109' },
     };
     expect(validateAdmissionInquiry(draft, runtimeFields, null, offering)).toMatchObject({
-      fields: { DAD_PHONE: 'Use the configured contact format.' },
+      fields: { SHARED_PHONE: 'Use the configured contact format.' },
     });
   });
 
@@ -188,16 +471,23 @@ describe('admission inquiry model', () => {
 
   it('does not borrow the other parent mobile when the selected parent is missing it', () => {
     const parentFields = [
-      ...fields,
-      field('DAD_PHONE', 'Father.Mobile', 4),
-      field('MOM_PHONE', 'Mother.Mobile', 4),
+      ...fields.filter((item) => !item.bindingKey?.startsWith('Guardian.')),
+      field('DAD_NAME', 'Father.Name', 0, true),
+      field('MOM_NAME', 'Mother.Name', 0, true),
+      field('DAD_PHONE', 'Father.Mobile', 4, true),
+      field('MOM_PHONE', 'Mother.Mobile', 4, true),
+      {
+        ...field('PRIMARY', 'Inquiry.ParentRelationship', 6, true),
+        optionsJson: '[{"value":"father","label":"Father"},{"value":"mother","label":"Mother"}]',
+      },
     ];
     const draft = {
       ...values,
-      parentRelationship: 'mother' as const,
       fields: {
         ...values.fields,
-        GUARDIAN_MOBILE: '9876543210',
+        PRIMARY: 'mother',
+        DAD_NAME: 'Father',
+        MOM_NAME: 'Mother',
         DAD_PHONE: '9876543211',
         MOM_PHONE: '',
       },
@@ -444,40 +734,35 @@ describe('admission inquiry model', () => {
 
     expect(errors).toMatchObject({
       fields: {
-        GUARDIAN_MOBILE: 'Guardian mobile number must be a valid 10-digit Indian mobile number.',
+        GUARDIAN_MOBILE: 'Parent mobile number must be a valid 10-digit Indian mobile number.',
       },
     });
   });
 
-  it.each(['', '   '])(
-    'requires the parent mobile even when the published field is optional (%j)',
-    (mobile) => {
-      const optionalFields = fields.map((item) =>
-        item.code === 'GUARDIAN_MOBILE'
-          ? { ...item, label: 'Parent mobile', required: false }
-          : item
-      );
-      expect(
-        validateAdmissionInquiry(
-          {
-            ...values,
-            parentRelationship: 'father',
-            fields: { ...values.fields, GUARDIAN_MOBILE: mobile },
-          },
-          optionalFields,
-          null,
-          offering
-        )
-      ).toMatchObject({ fields: { GUARDIAN_MOBILE: 'Parent mobile is required' } });
-    }
-  );
+  it.each(['', '   '])('preserves optional mobile requiredness at runtime (%j)', (mobile) => {
+    const optionalFields = fields.map((item) =>
+      item.code === 'GUARDIAN_MOBILE' ? { ...item, label: 'Parent mobile', required: false } : item
+    );
+    expect(
+      validateAdmissionInquiry(
+        {
+          ...values,
+          parentRelationship: 'father',
+          fields: { ...values.fields, GUARDIAN_MOBILE: mobile },
+        },
+        optionalFields,
+        null,
+        offering
+      )
+    ).toEqual({});
+  });
 
-  it('marks the parent mobile as required at capture without changing the published definition', () => {
+  it('keeps published optional mobile unchanged during capture', () => {
     const publishedMobile = field('PARENT_MOBILE', 'Guardian.Mobile', 4);
     const form = { sections: [{ fields: [publishedMobile] }] } as AdmissionForm;
     expect(
       getAdmissionInquiryFields(form).find((item) => item.code === 'PARENT_MOBILE')?.required
-    ).toBe(true);
+    ).toBe(false);
     expect(publishedMobile.required).toBe(false);
   });
 
@@ -572,20 +857,12 @@ describe('admission inquiry model', () => {
     expect(payload.duplicateOverrideReason).toBe('Different guardian');
   });
 
-  it('adds the guardian name required by the domain when a legacy form omits it', () => {
-    const legacyForm = {
-      sections: [{ fields: [field('GUARDIAN_MOBILE', 'Guardian.Mobile', 4, true)] }],
-    } as AdmissionForm;
-
-    expect(getAdmissionInquiryFields(legacyForm)).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          code: 'guardianFirstName',
-          bindingKey: 'Guardian.FirstName',
-          required: true,
-        }),
-      ])
-    );
+  it('does not add a guardian name when the published legacy form omits it', () => {
+    const mobile = field('GUARDIAN_MOBILE', 'Guardian.Mobile', 4, true);
+    const legacyForm = { sections: [{ fields: [mobile] }] } as AdmissionForm;
+    expect(getAdmissionInquiryFields(legacyForm)).toEqual([
+      expect.objectContaining({ code: mobile.code }),
+    ]);
   });
 
   it.each([
@@ -593,7 +870,7 @@ describe('admission inquiry model', () => {
     ['guardian', fields.filter((item) => !item.bindingKey?.startsWith('Guardian.'))],
     ['all identity', [fields[5]]],
   ])(
-    'keeps generated %s identity fields out of published form answers',
+    'ignores unconfigured %s identity answers rather than generating fields',
     (_name, publishedFields) => {
       const form = { sections: [{ fields: publishedFields }] } as AdmissionForm;
       const runtimeFields = getAdmissionInquiryFields(form);
@@ -611,12 +888,15 @@ describe('admission inquiry model', () => {
         offering
       );
 
-      expect(payload).toMatchObject({
-        applicantFirstName: 'Aanya',
-        guardianFirstName: 'Meera',
-        guardianPhone: '9876543210',
-        phone: '9876543210',
-      });
+      expect(payload.applicantFirstName).toBe(
+        publishedFields.some((item) => item.bindingKey === 'Applicant.FirstName') ? 'Aanya' : ''
+      );
+      expect(payload.guardianFirstName).toBe(
+        publishedFields.some((item) => item.bindingKey === 'Guardian.FirstName') ? 'Meera' : ''
+      );
+      expect(payload.guardianPhone).toBe(
+        publishedFields.some((item) => item.bindingKey === 'Guardian.Mobile') ? '9876543210' : ''
+      );
       expect(payload.formValues?.map((item) => item.fieldCode)).toEqual(
         publishedFields.map((item) => item.code)
       );
@@ -650,7 +930,7 @@ describe('admission inquiry model', () => {
     ]);
   });
 
-  it('sends identity without synthetic form answers when the offering has no configured form', () => {
+  it('does not read unconfigured identity answers when no form exists', () => {
     const payload = buildAdmissionInquiryPayload(
       {
         ...values,
@@ -665,9 +945,9 @@ describe('admission inquiry model', () => {
     );
 
     expect(payload).toMatchObject({
-      applicantFirstName: 'Aanya',
-      guardianFirstName: 'Meera',
-      guardianPhone: '9876543210',
+      applicantFirstName: '',
+      guardianFirstName: '',
+      guardianPhone: '',
       formValues: [],
     });
   });

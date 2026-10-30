@@ -15,6 +15,7 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { Box, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
 
+import { WorkflowInquiryContext } from './workflow-inquiry-context';
 import { WorkflowTemplateSelector } from './workflow-template-selector';
 import { AdmissionDefinitionSelect } from '../../admission-definition-select';
 import {
@@ -209,6 +210,7 @@ export function WorkflowStandardTemplateDialog({
                           {Math.max(selectedTemplate.stages.length - 1, 0)} routes
                         </Label>
                       </Stack>
+                      {selectedTemplate.inquiryLinked && <WorkflowInquiryContext />}
                       {selectedTemplate.stages.map((stage, index) => (
                         <Typography key={stage.code} variant="body2">
                           {index + 1}. {stage.name}

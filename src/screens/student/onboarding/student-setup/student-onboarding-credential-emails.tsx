@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
+import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { LoadingButton } from 'src/components/loading-button';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Stack, Button, IconButton, Typography, LinearProgress } from '@mui/material';
 import {
@@ -15,6 +17,7 @@ import {
 
 import { StudentSetupLoadingRows } from './student-setup-loading';
 import GuardianCredentialEmailDialog from './guardian-credential-email-dialog';
+import { requiresCredentialResendConfirmation } from './student-credential-delivery';
 import { getOnboardingMessage, getOnboardingErrorMessage } from './student-onboarding-messages';
 
 export default function StudentOnboardingCredentialEmails({
@@ -31,8 +34,38 @@ export default function StudentOnboardingCredentialEmails({
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const emails = useGetStudentCredentialEmailsQuery(caseId);
   const [sendEmail, sending] = useSendStudentCredentialEmailMutation();
+  const submitting = useRef(false);
+  const [resendTarget, setResendTarget] = useState<{
+    caseId: string;
+    accountType: 'student' | 'guardian';
+    email: string;
+  } | null>(null);
+  const resendEmail = emails.data?.find(
+    (email) =>
+      resendTarget?.caseId === caseId &&
+      email.accountType === resendTarget.accountType &&
+      email.email === resendTarget.email &&
+      requiresCredentialResendConfirmation(email) &&
+      !['Pending', 'Processing'].includes(email.status)
+  );
+  useEffect(() => {
+    if (resendTarget && !resendEmail) setResendTarget(null);
+  }, [resendTarget, resendEmail]);
 
-  const send = async (accountType: 'student' | 'guardian') => {
+  const send = async (accountType: 'student' | 'guardian', resend = false) => {
+    const email = emails.data?.find((item) => item.accountType === accountType);
+    if (
+      submitting.current ||
+      sending.isLoading ||
+      emails.isFetching ||
+      emails.isError ||
+      !email?.canSend ||
+      email.emailEnabled === false ||
+      ['Pending', 'Processing'].includes(email.status) ||
+      requiresCredentialResendConfirmation(email) !== resend
+    )
+      return;
+    submitting.current = true;
     try {
       const result = await sendEmail({ id: caseId, accountType, concurrencyStamp }).unwrap();
       if (result.status === 'Failed' || result.status === 'Blocked') {
@@ -52,6 +85,8 @@ export default function StudentOnboardingCredentialEmails({
           'Login email could not be requested. Refresh and try again.'
         ),
       });
+    } finally {
+      submitting.current = false;
     }
   };
 
@@ -62,7 +97,7 @@ export default function StudentOnboardingCredentialEmails({
           Login Emails
         </Typography>
         <CustomTooltip
-          title="Submitted means accepted for sending. Existing parent accounts keep their password when another child is linked."
+          title="Sent means accepted by the email sender; inbox delivery is not confirmed. Existing parent accounts keep their password when another child is linked."
           arrow
         >
           <IconButton size="small" aria-label="Login Emails information">
@@ -128,7 +163,7 @@ export default function StudentOnboardingCredentialEmails({
                     : email.status === 'Pending'
                       ? 'Queued'
                       : email.status === 'Sent'
-                        ? 'Submitted'
+                        ? 'Login details sent'
                         : email.status}
               </Label>
             </Stack>
@@ -154,12 +189,16 @@ export default function StudentOnboardingCredentialEmails({
               )}
             {email.message && (
               <Typography variant="body2" color="text.secondary">
-                {getOnboardingMessage(email.message, 'Review the login email status before retrying.')}
+                {getOnboardingMessage(
+                  email.message,
+                  'Review the login email status before retrying.'
+                )}
               </Typography>
             )}
             {email.sentAt && (
               <Typography variant="caption" color="text.secondary">
-                Submitted {fDateTime(email.sentAt)} · {email.attemptCount} attempt(s)
+                Accepted by the email sender · {fDateTime(email.sentAt)} · {email.attemptCount}{' '}
+                attempt(s)
               </Typography>
             )}
             {email.status === 'Pending' && (
@@ -176,16 +215,21 @@ export default function StudentOnboardingCredentialEmails({
                   !email.canSend ||
                   sending.isLoading ||
                   emails.isFetching ||
-                  email.status === 'Pending'
+                  emails.isError ||
+                  ['Pending', 'Processing'].includes(email.status)
                 }
-                onClick={() => send(email.accountType)}
+                onClick={() => {
+                  if (requiresCredentialResendConfirmation(email))
+                    setResendTarget({ caseId, accountType: email.accountType, email: email.email });
+                  else send(email.accountType);
+                }}
               >
                 {sending.isLoading && sending.originalArgs?.accountType === email.accountType
                   ? 'Requesting email…'
-                  : email.status === 'Failed'
-                    ? 'Retry email'
-                    : email.status === 'Sent'
-                      ? 'Send access email again'
+                  : requiresCredentialResendConfirmation(email)
+                    ? 'Resend login details'
+                    : email.status === 'Failed'
+                      ? 'Retry email'
                       : 'Send login details'}
               </Button>
             )}
@@ -207,6 +251,42 @@ export default function StudentOnboardingCredentialEmails({
           Refresh email status
         </Button>
       )}
+      <ConfirmDialog
+        open={Boolean(resendEmail)}
+        title="Resend Login Details?"
+        icon="info"
+        content={
+          <>
+            Send another login email to <strong>{resendEmail?.email}</strong>? Their current
+            password stays unchanged.
+          </>
+        }
+        onClose={() => setResendTarget(null)}
+        disableCancel={sending.isLoading}
+        action={
+          <LoadingButton
+            type="button"
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon="mdi:email-send-outline" width={18} />}
+            loading={sending.isLoading}
+            disabled={
+              !resendEmail?.canSend ||
+              resendEmail.emailEnabled === false ||
+              emails.isFetching ||
+              emails.isError ||
+              sending.isLoading
+            }
+            onClick={() => {
+              if (!resendEmail) return;
+              setResendTarget(null);
+              send(resendEmail.accountType, true);
+            }}
+          >
+            Resend login details
+          </LoadingButton>
+        }
+      />
       {correctionOpen && canEnableGuardianEmail && concurrencyStamp && (
         <GuardianCredentialEmailDialog
           caseId={caseId}

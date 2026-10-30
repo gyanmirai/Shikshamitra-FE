@@ -20,6 +20,7 @@ import {
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import { OnboardingSettingsProvider } from './onboarding-settings-context';
+import { getOnboardingErrorMessage } from './student-setup/student-onboarding-messages';
 import {
   defaultOnboardingSettings,
   defaultOnboardingConfigurationScope,
@@ -151,7 +152,10 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
         shikshaMitraToast.success({ message: 'Onboarding settings saved.' });
       } catch (error) {
         shikshaMitraToast.error({
-          message: 'Onboarding settings could not be saved. Refresh and try again.',
+          message: getOnboardingErrorMessage(
+            error,
+            'Onboarding settings could not be saved. Refresh and try again.'
+          ),
         });
         throw error;
       }

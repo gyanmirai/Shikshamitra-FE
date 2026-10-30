@@ -27,6 +27,8 @@ import {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import { getAdmissionFormAccess } from '../form-access';
+import { getAdmissionFormPreviewUrl } from '../form-preview/form-preview-navigation';
+import { getInquiryFormConfigurationIssues } from '../admission-inquiry-field-bindings';
 import {
   formatAdmissionFormValidationError,
   formatAdmissionFormValidationErrors,
@@ -84,6 +86,8 @@ export function useFormListActions() {
     setEditingForm(null);
   };
   const saveAndPublish = async (values: CreateUpdateAdmissionForm) => {
+    const issues = getInquiryFormConfigurationIssues(values);
+    if (issues.length) throw new Error(issues.join(' '));
     const draft = await (editingId
       ? update({ id: editingId, body: values }).unwrap()
       : create(values).unwrap());
@@ -136,7 +140,8 @@ export function useFormListActions() {
       setCreatingPurpose(purpose);
       dialog.onTrue();
     },
-    preview: (id: string) => router.push(`/student/admissions/settings/forms/${id}/preview`),
+    preview: (id: string, returnTo?: string) =>
+      router.push(getAdmissionFormPreviewUrl(id, returnTo)),
     requestClone: (form: AdmissionForm) => setPendingClone(form),
     pendingClone,
     clearPendingClone: () => setPendingClone(null),
@@ -234,7 +239,9 @@ export function useFormListActions() {
           throw new Error('Only a draft admission form can be deleted. Refresh the list.');
         }
         if (!current.concurrencyStamp) {
-          throw new Error('Unable to verify the latest form version. Refresh the list and try again.');
+          throw new Error(
+            'Unable to verify the latest form version. Refresh the list and try again.'
+          );
         }
         await deleteForm({
           id: pendingDelete.id,

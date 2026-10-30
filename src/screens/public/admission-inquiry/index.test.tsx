@@ -3,6 +3,8 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import PublicAdmissionInquiryScreen from './index';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+
 vi.mock('src/screens/student/admissions/admission-runtime-field', () => ({
   default: ({
     field,
@@ -53,27 +55,30 @@ const form = {
       displayOrder: 0,
       fields: [
         {
-          code: 'PUBLIC_APPLICANT_FIRST_NAME',
+          code: 'CHILD',
+          bindingKey: 'Applicant.Name',
           label: 'Student name',
           fieldType: 0,
           required: true,
-          isIdentityFallback: true,
+
           displayOrder: 0,
         },
         {
-          code: 'PUBLIC_GUARDIAN_FIRST_NAME',
+          code: 'PARENT',
+          bindingKey: 'Guardian.FirstName',
           label: 'Guardian name',
           fieldType: 0,
           required: true,
-          isIdentityFallback: true,
+
           displayOrder: 1,
         },
         {
-          code: 'PUBLIC_GUARDIAN_PHONE',
+          code: 'MOBILE',
+          bindingKey: 'Guardian.Mobile',
           label: 'Mobile',
           fieldType: 4,
           required: true,
-          isIdentityFallback: true,
+
           displayOrder: 2,
         },
         { code: 'NOTE', label: 'Note', fieldType: 0, required: false, displayOrder: 3 },
@@ -102,6 +107,56 @@ describe('public admission availability gate', () => {
     );
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('submits existing published optional identity questions without requiring republication', async () => {
+    const legacyForm = {
+      ...form,
+      sections: form.sections.map((section) => ({
+        ...section,
+        fields: section.fields.map((field) => ({ ...field, required: false })),
+      })),
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, options?: RequestInit) => ({
+        ok: true,
+        json: async () =>
+          options?.method === 'POST'
+            ? {}
+            : url.includes('?offeringId=')
+              ? { ...context, form: legacyForm }
+              : context,
+      }))
+    );
+    render(<PublicAdmissionInquiryScreen token="public-token" />);
+    await screen.findByRole('combobox', { name: 'Board' });
+    await select('CBSE', 'Board');
+    await select('English', 'Medium');
+    await select('Class 1', 'Class');
+    await screen.findByRole('textbox', { name: 'Student name' });
+    [
+      ['Student name', 'Riya'],
+      ['Guardian name', 'Meera'],
+      ['Mobile', '9876543210'],
+    ].forEach(([name, value]) => {
+      fireEvent.change(screen.getByRole('textbox', { name }), { target: { value } });
+    });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Send inquiry' }));
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ method: 'POST' })
+      )
+    );
+    const submission = vi
+      .mocked(fetch)
+      .mock.calls.find(([, options]) => options?.method === 'POST');
+    expect(JSON.parse(String(submission?.[1]?.body))).toMatchObject({
+      applicantFirstName: 'Riya',
+      guardianFirstName: 'Meera',
+      guardianPhone: '9876543210',
+    });
+  });
   it('normalizes mixed-case email answers at the public submission boundary', async () => {
     const emailForm = {
       ...form,
@@ -204,7 +259,12 @@ describe('public admission availability gate', () => {
       mediumId: 'medium-1',
       standardId: 'class-1',
       applicantFirstName: 'Riya',
-      formValues: [{ fieldCode: 'NOTE', valueJson: '"Call afternoon"' }],
+      formValues: expect.arrayContaining([
+        { fieldCode: 'CHILD', valueJson: '"Riya"' },
+        { fieldCode: 'PARENT', valueJson: '"Meera"' },
+        { fieldCode: 'MOBILE', valueJson: '"9876543210"' },
+        { fieldCode: 'NOTE', valueJson: '"Call afternoon"' },
+      ]),
     });
   });
 });

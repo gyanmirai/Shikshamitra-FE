@@ -5,6 +5,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import { AdmissionOfferingDetailsDrawer } from './admission-offering-details-drawer';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
   useGetAdmissionClassCapacityQuery: () => ({
     data: null,

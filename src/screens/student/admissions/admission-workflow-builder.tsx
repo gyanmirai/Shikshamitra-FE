@@ -25,8 +25,6 @@ import {
   useGetAdmissionWorkflowStageTypesQuery,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { duplicateStage } from './workflow-builder-utils';
-import { getAdmissionWorkflowAccess, isAdmissionWorkflowPublishable } from './workflow-access';
 import { findMatchingWorkflowTemplate } from './workflow-template';
 import { AdmissionWorkflowDialog } from './admission-workflow-dialog';
 import { useAdmissionDefinitionOptions } from './use-admission-definition-options';
@@ -34,9 +32,11 @@ import { WorkflowSidePanel } from './workflow-builder/components/workflow-side-p
 import { useWorkflowBuilderDraft } from './workflow-builder/hooks/use-workflow-builder-draft';
 import { WorkflowBuilderCanvas } from './workflow-builder/components/workflow-builder-canvas';
 import { WorkflowSetupProgress } from './workflow-builder/components/workflow-setup-progress';
+import { getAdmissionWorkflowAccess, isAdmissionWorkflowPublishable } from './workflow-access';
 import { WorkflowBuilderEditors } from './workflow-builder/components/workflow-builder-editors';
 import { useWorkflowBuilderCommands } from './workflow-builder/hooks/use-workflow-builder-commands';
 import { WorkflowBuilderPageState } from './workflow-builder/components/workflow-builder-page-state';
+import { getDefaultStageInsertionSource } from './workflow-builder/components/workflow-stage-position';
 import { WorkflowStandardTemplateDialog } from './workflow-builder/components/workflow-standard-template-dialog';
 import {
   WorkflowBuilderHeader,
@@ -59,6 +59,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
     standardTemplateDialog.value || detailsDialog.value
   );
   const [pendingRouteSourceId, setPendingRouteSourceId] = useState<string | null>(null);
+  const [insertionSourceLocked, setInsertionSourceLocked] = useState(false);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const workflowAccess = getAdmissionWorkflowAccess(permissions);
   const canEdit = workflowAccess.canManage;
@@ -132,6 +133,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
       return;
     }
     setPendingRouteSourceId(stage.id);
+    setInsertionSourceLocked(true);
   };
   const openEditTransition = (transition: AdmissionWorkflowTransition) => {
     draft.setEditingTransition(transition);
@@ -206,16 +208,20 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
             readOnly={readOnly || commands.publishState.isLoading || commands.updateState.isLoading}
             loadingStageTypes={stageTypesQuery.isLoading}
             issueCountByStage={draft.issueCountByStage}
-            onAddStage={() => draft.addStage(stageTypesQuery.data ?? [])}
+            onAddStage={() => {
+              if (!draft.addStage(stageTypesQuery.data ?? [])) return;
+              setPendingRouteSourceId(
+                getDefaultStageInsertionSource(draft.stages, draft.transitions)
+              );
+              setInsertionSourceLocked(false);
+            }}
             onEditStage={(stage) => {
+              setPendingRouteSourceId(null);
+              setInsertionSourceLocked(false);
               draft.setEditingStage(stage);
               draft.setStageDrawerOpen(true);
             }}
-            onDuplicateStage={(stage) => {
-              draft.recordHistory();
-              draft.setStages((current) => duplicateStage(current, stage.id));
-              draft.markDirty();
-            }}
+            onDuplicateStage={(stage) => draft.duplicateStage(stage.id)}
             onDeleteStage={draft.setStageToDelete}
             onAddTransition={openAddTransition}
             onEditTransition={openEditTransition}
@@ -283,10 +289,14 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         stageTypes={stageTypesQuery.data ?? []}
         forms={publishedFormsQuery.data?.items ?? []}
         readOnly={readOnly}
+        insertionSourceId={pendingRouteSourceId}
+        insertionSourceLocked={insertionSourceLocked}
+        onChangeInsertionSource={setPendingRouteSourceId}
         onCloseStage={() => {
           draft.setStageDrawerOpen(false);
           draft.setEditingStage(null);
           setPendingRouteSourceId(null);
+          setInsertionSourceLocked(false);
         }}
         onCloseTransition={() => {
           draft.setTransitionDrawerOpen(false);
@@ -294,8 +304,13 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         }}
         onCloseDelete={() => draft.setStageToDelete(null)}
         onSaveStage={(stage) => {
-          draft.saveStage(stage, !pendingRouteSourceId, pendingRouteSourceId ?? undefined);
-          setPendingRouteSourceId(null);
+          const saved = draft.saveStage(
+            stage,
+            !pendingRouteSourceId,
+            pendingRouteSourceId ?? undefined
+          );
+          if (saved) setPendingRouteSourceId(null);
+          return saved;
         }}
         onSaveTransition={draft.saveTransition}
         onDeleteStage={draft.deleteStage}
@@ -306,8 +321,9 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         stages={draft.stages}
         transitions={draft.transitions}
         versions={versionsQuery.data}
-        usage={usageQuery.data}
+        usage={usageQuery.currentData}
         usageLoading={usageQuery.isLoading}
+        usageError={usageQuery.isError}
         canCreateVersion={canCreateVersion}
         governanceLoading={false}
         onClose={() => draft.setSidePanel(null)}

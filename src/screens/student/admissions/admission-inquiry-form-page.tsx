@@ -1,7 +1,6 @@
 'use client';
 
 import type { ReactNode, FormEvent } from 'react';
-import type { AdmissionInquirySource } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -18,17 +17,14 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
 import {
   Box,
-  Grid,
   Paper,
   Stack,
   Button,
-  Switch,
   Skeleton,
   MenuItem,
   TextField,
   Typography,
   LinearProgress,
-  FormControlLabel,
 } from '@mui/material';
 
 import AdmissionRuntimeField from './admission-runtime-field';
@@ -41,7 +37,6 @@ import { getDependentAdmissionFieldCodes } from './admission-field-dependencies'
 import { AdmissionInquiryDuplicateMatches } from './admission-inquiry-duplicate-matches';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from './form-dialog/form-languages';
 import {
-  admissionInquirySourceOptions,
   isAdmissionInquiryBirthDateField,
   getAdmissionInquiryPreferredClassError,
 } from './admission-inquiry-model';
@@ -354,12 +349,7 @@ export default function AdmissionInquiryFormPage() {
                     >
                       {controller.offerings.map((offering) => (
                         <MenuItem key={offering.id} value={offering.id}>
-                          {[
-                            offering.name || offering.code,
-                            offering.code,
-                            offering.campusName,
-                            offering.admissionCycleName,
-                          ]
+                          {[offering.name || offering.code, offering.campusName]
                             .filter(Boolean)
                             .join(' · ')}
                         </MenuItem>
@@ -367,6 +357,23 @@ export default function AdmissionInquiryFormPage() {
                     </TextField>
                   </ShakingTextField>
                 )}
+                {!controller.runtimeLoading &&
+                  !controller.runtimeError &&
+                  controller.form &&
+                  supportedLanguages.length > 1 && (
+                    <CustomSelect
+                      size="small"
+                      label="Form language"
+                      value={language}
+                      options={supportedLanguages.map((code) => ({
+                        value: code,
+                        label: getAdmissionLanguageLabel(code),
+                      }))}
+                      onChange={(value) => setLanguage(String(value))}
+                      disabled={controller.busy || controller.formLoading}
+                      formControlProps={{ sx: { width: 1, maxWidth: { sm: 220 } } }}
+                    />
+                  )}
                 {hierarchySelected &&
                   !controller.offeringsLoading &&
                   !controller.offeringsError &&
@@ -384,21 +391,10 @@ export default function AdmissionInquiryFormPage() {
                 {hierarchySelected && !controller.offeringsLoading && controller.offeringsError && (
                   <StudentFeedback
                     notificationKey="STU-INQUIRY-CLASS-LOOKUP"
-                    presentation="inline"
+                    presentation="toast"
                     severity="error"
-                    sx={{ gridColumn: '1 / -1' }}
-                    action={
-                      <Button
-                        size="small"
-                        type="button"
-                        startIcon={<Iconify icon={GlobalIcons.refresh} />}
-                        onClick={controller.retryOfferings}
-                      >
-                        Retry
-                      </Button>
-                    }
                   >
-                    Admission availability could not be checked. Retry or select another class.
+                    Admission availability could not be checked. Please try again.
                   </StudentFeedback>
                 )}
                 {formik.values.offeringId &&
@@ -420,22 +416,28 @@ export default function AdmissionInquiryFormPage() {
                 {controller.classCapacity &&
                   formik.values.offeringId &&
                   dismissedCapacityOfferingId !== formik.values.offeringId && (
-                    <Box sx={{ gridColumn: '1 / -1' }}>
-                      <StudentFeedback
-                        notificationKey="STU-0081"
-                        presentation={controller.classCapacity.isFull ? 'persistent' : 'inline'}
-                        severity={controller.classCapacity.isFull ? 'warning' : 'info'}
-                        onClose={() => setDismissedCapacityOfferingId(formik.values.offeringId)}
-                      >
-                        {controller.classCapacity.capacity == null
-                          ? 'Admission room capacity is not set. Division seats are checked during onboarding. You can continue this inquiry.'
-                          : `${controller.classCapacity.remainingSeats} of ${controller.classCapacity.capacity} admission room seats available.`}
-                        {controller.classCapacity.isFull &&
-                          (controller.canCreateInquiry
-                            ? ` ${controller.unavailableReason || 'The configured admission capacity rules allow this inquiry. Division allocation is checked during onboarding.'}`
-                            : ' Capacity is full and this offering does not accept further inquiries.')}
-                      </StudentFeedback>
-                    </Box>
+                    <StudentFeedback
+                      notificationKey="STU-0081"
+                      presentation={controller.classCapacity.isFull ? 'persistent' : 'inline'}
+                      severity={controller.classCapacity.isFull ? 'warning' : 'info'}
+                      onClose={() => setDismissedCapacityOfferingId(formik.values.offeringId)}
+                      sx={{
+                        gridColumn: '1 / -1',
+                        display: 'grid',
+                        gridTemplateColumns: 'minmax(0, 1fr) auto',
+                        alignItems: 'center',
+                        columnGap: 1,
+                        '& > :not(style) ~ :not(style)': { mt: 0 },
+                      }}
+                    >
+                      {controller.classCapacity.capacity == null
+                        ? 'Admission room capacity is not set. Division seats are checked during onboarding. You can continue this inquiry.'
+                        : `${controller.classCapacity.remainingSeats} of ${controller.classCapacity.capacity} admission room seats available.`}
+                      {controller.classCapacity.isFull &&
+                        (controller.canCreateInquiry
+                          ? ` ${controller.unavailableReason || 'The configured admission capacity rules allow this inquiry. Division allocation is checked during onboarding.'}`
+                          : ' Capacity is full and this offering does not accept further inquiries.')}
+                    </StudentFeedback>
                   )}
               </InquiryFormSection>
 
@@ -463,25 +465,6 @@ export default function AdmissionInquiryFormPage() {
                   The inquiry form for this offering could not be loaded. Try again.
                 </StudentFeedback>
               )}
-              {!controller.runtimeLoading &&
-                !controller.runtimeError &&
-                controller.form &&
-                supportedLanguages.length > 1 && (
-                  <Stack direction="row" justifyContent="flex-end">
-                    <CustomSelect
-                      size="small"
-                      label="Form language"
-                      value={language}
-                      options={supportedLanguages.map((code) => ({
-                        value: code,
-                        label: getAdmissionLanguageLabel(code),
-                      }))}
-                      onChange={(value) => setLanguage(String(value))}
-                      disabled={controller.busy || controller.formLoading}
-                      formControlProps={{ sx: { width: { xs: 1, sm: 220 } } }}
-                    />
-                  </Stack>
-                )}
               {controller.sections
                 .map((section) => localizeAdmissionSection(section, language))
                 .filter((section) =>
@@ -550,118 +533,14 @@ export default function AdmissionInquiryFormPage() {
                   </FormSectionCard>
                 ))}
 
-              {controller.canCreateInquiry &&
-                !controller.runtimeLoading &&
-                !controller.runtimeError && (
-                  <InquiryFormSection title="Inquiry Details" icon={GlobalIcons.admissionDetails}>
-                    <ShakingTextField
-                      error={Boolean(
-                        (formik.touched.parentRelationship || formik.submitCount) &&
-                        formik.errors.parentRelationship
-                      )}
-                    >
-                      <CustomSelect
-                        label="Parent relationship"
-                        name="parentRelationship"
-                        required
-                        fullWidth
-                        size="small"
-                        disabled={controller.busy}
-                        value={formik.values.parentRelationship ?? ''}
-                        options={[
-                          { value: 'father', label: 'Father' },
-                          { value: 'mother', label: 'Mother' },
-                        ]}
-                        onChange={(value) =>
-                          formik.setFieldValue('parentRelationship', String(value))
-                        }
-                        onBlur={() => formik.setFieldTouched('parentRelationship', true)}
-                        error={Boolean(
-                          (formik.touched.parentRelationship || formik.submitCount) &&
-                          formik.errors.parentRelationship
-                        )}
-                        helperText={
-                          formik.touched.parentRelationship || formik.submitCount
-                            ? formik.errors.parentRelationship
-                            : undefined
-                        }
-                      />
-                    </ShakingTextField>
-                    <ShakingTextField
-                      error={Boolean(formik.touched.source && formik.errors.source)}
-                    >
-                      <TextField
-                        select
-                        fullWidth
-                        required
-                        size="small"
-                        name="source"
-                        label="Source"
-                        value={formik.values.source}
-                        disabled={
-                          controller.busy || controller.runtimeLoading || controller.runtimeError
-                        }
-                        error={Boolean(formik.touched.source && formik.errors.source)}
-                        helperText={formik.touched.source && formik.errors.source}
-                        onBlur={formik.handleBlur}
-                        onChange={(event) => {
-                          formik.setFieldValue(
-                            'source',
-                            Number(event.target.value) as AdmissionInquirySource
-                          );
-                          formik.setFieldValue('sourceDetail', '');
-                        }}
-                      >
-                        {admissionInquirySourceOptions.map((label, index) =>
-                          controller.allowedSources.includes(index) ? (
-                            <MenuItem key={label} value={index}>
-                              {label}
-                            </MenuItem>
-                          ) : null
-                        )}
-                      </TextField>
-                    </ShakingTextField>
-                    <ShakingTextField
-                      error={Boolean(formik.touched.sourceDetail && formik.errors.sourceDetail)}
-                    >
-                      <TextField
-                        fullWidth
-                        size="small"
-                        name="sourceDetail"
-                        label="Source details"
-                        value={formik.values.sourceDetail}
-                        disabled={controller.runtimeLoading || controller.runtimeError}
-                        inputProps={{ maxLength: 128 }}
-                        error={Boolean(formik.touched.sourceDetail && formik.errors.sourceDetail)}
-                        helperText={
-                          (formik.touched.sourceDetail || formik.submitCount > 0) &&
-                          formik.errors.sourceDetail
-                            ? formik.errors.sourceDetail
-                            : 'Optional inquiry context.'
-                        }
-                        onBlur={formik.handleBlur}
-                        onChange={formik.handleChange}
-                      />
-                    </ShakingTextField>
-                    {controller.canAutoAcknowledge && (
-                      <FormControlLabel
-                        label="Send acknowledgement automatically after saving"
-                        control={
-                          <Switch
-                            disabled={controller.busy}
-                            checked={formik.values.sendAcknowledgement}
-                            onChange={(_, checked) =>
-                              formik.setFieldValue('sendAcknowledgement', checked)
-                            }
-                          />
-                        }
-                      />
-                    )}
-                  </InquiryFormSection>
-                )}
-
               <AdmissionInquiryDuplicateMatches
                 matches={controller.matches}
+                applicantName={controller.currentApplicantName}
+                applicantDateOfBirth={controller.currentApplicantDateOfBirth}
+                admissionCycleId={controller.currentAdmissionCycleId}
+                parentRelationship={controller.currentParentRelationship}
+                presentation="dialog"
+                reviewKey={formik.submitCount}
                 guardianPhone={controller.currentGuardianPhone}
                 guardianEmail={controller.currentGuardianEmail}
                 busy={controller.busy}
@@ -751,23 +630,21 @@ function InquiryFormSection({
       icon={icon}
       descriptionTooltip={description || `Enter the ${title.toLocaleLowerCase()} for this inquiry.`}
     >
-      <Grid size={{ xs: 12 }}>
-        {description && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {description}
-          </Typography>
-        )}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' },
-            gap: 2,
-            alignItems: 'start',
-          }}
-        >
-          {children}
-        </Box>
-      </Grid>
+      {description && (
+        <Typography variant="body2" color="text.secondary">
+          {description}
+        </Typography>
+      )}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+          gap: 2,
+          alignItems: 'start',
+        }}
+      >
+        {children}
+      </Box>
     </FormSectionCard>
   );
 }

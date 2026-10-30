@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type { AssessmentScope } from 'src/redux/student/admissions/admission-assessment-types';
 
@@ -38,6 +39,7 @@ type Props = {
   identityLocked?: boolean;
   bookedCount: number;
   pipeline?: boolean;
+  classSummary?: ReactNode;
 };
 
 export function AssessmentSessionSetupFields({
@@ -51,6 +53,7 @@ export function AssessmentSessionSetupFields({
   identityLocked = false,
   bookedCount,
   pipeline = false,
+  classSummary,
 }: Props) {
   const feedback = (key: keyof SessionSetupValues) => ({
     error: Boolean(formik.touched[key] && formik.errors[key]),
@@ -95,7 +98,7 @@ export function AssessmentSessionSetupFields({
     <Stack spacing={2}>
       <FormSectionCard
         icon="mdi:clipboard-text-outline"
-        title={pipeline ? 'Session details' : 'Assessment details'}
+        title={pipeline ? 'Session Details' : 'Assessment Details'}
         descriptionTooltip={
           pipeline
             ? "Create a slot for this student's current assessment."
@@ -159,6 +162,7 @@ export function AssessmentSessionSetupFields({
               </ShakingTextField>
             </Grid>
           )}
+          {pipeline && classSummary && <Grid size={12}>{classSummary}</Grid>}
           {!pipeline &&
             classIds.map((id) => {
               const matches = scopes.filter((scope) => sessionClassKey(scope) === id);
@@ -199,7 +203,7 @@ export function AssessmentSessionSetupFields({
       </FormSectionCard>
       <FormSectionCard
         icon="mdi:calendar-clock-outline"
-        title="Schedule and room"
+        title="Schedule And Room"
         descriptionTooltip="Rooms come from Institute Setup. Availability and capacity are checked again before confirmation."
       >
         <Grid container spacing={1}>
@@ -389,7 +393,7 @@ export function AssessmentSessionSetupFields({
       {formik.values.sessionType !== 'exam' && (
         <FormSectionCard
           icon="mdi:account-clock-outline"
-          title="Interview arrangement"
+          title="Interview Arrangement"
           descriptionTooltip="Individual interviews use one applicant per generated slot. Group interviews share the session time."
         >
           <Grid container spacing={1}>

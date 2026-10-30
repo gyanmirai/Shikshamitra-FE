@@ -174,7 +174,7 @@ it('preserves saved default and historical routes when adding a stage', () => {
   expect(result.current.transitions).toEqual(existing.transitions);
 });
 
-it('does not create a next-step route after a terminal stage', () => {
+it('inserts before a sole terminal stage and keeps the ending stage without outgoing routes', () => {
   const workflow = { ...original, stages: [{ ...original.stages[0], isTerminalStage: true }] };
   const { result } = renderHook(() => useWorkflowBuilderDraft(workflow, null));
   const next = {
@@ -185,5 +185,10 @@ it('does not create a next-step route after a terminal stage', () => {
     isEntryStage: false,
   };
   act(() => result.current.saveStage(next, false, 'form'));
-  expect(result.current.transitions).toEqual([]);
+  expect(result.current.stages.map((stage) => stage.id)).toEqual(['next', 'form']);
+  expect(result.current.stages[0].isEntryStage).toBe(true);
+  expect(result.current.stages[1]).toMatchObject({ isEntryStage: false, isTerminalStage: true });
+  expect(result.current.transitions).toEqual([
+    expect.objectContaining({ fromStageId: 'next', toStageId: 'form', isDefault: true }),
+  ]);
 });

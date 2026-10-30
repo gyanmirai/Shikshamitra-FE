@@ -7,6 +7,29 @@ export type AdmissionFormLayoutType = 0 | 1;
 export type AdmissionFormPurpose = 0 | 1;
 export type AdmissionFormFieldType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionFormBindingType = 0 | 1;
+export type AdmissionFormInheritedOrigin = {
+  inquiryFormDefinitionId: string;
+  sourceFieldCode: string;
+  sourceFieldIdentity?: string | null;
+  fieldIdentity: string;
+  sourceRequired?: boolean;
+  sourceReadOnly?: boolean;
+  sourceBindingKey?: string | null;
+};
+export type AdmissionFormInheritanceSource = {
+  inquiryFormDefinitionId: string;
+  requiredFieldIdentities: string[];
+  fieldMappings: { sourceFieldCode: string; registrationFieldCode: string }[];
+  layouts: {
+    fieldIdentity: string;
+    targetSectionCode?: string | null;
+    displayOrder?: number | null;
+  }[];
+};
+export type AdmissionFormInheritance = {
+  enabled: boolean;
+  sources: AdmissionFormInheritanceSource[];
+};
 export type AdmissionFormTranslation = {
   label?: string | null;
   placeholder?: string | null;
@@ -33,6 +56,8 @@ export type AdmissionFormField = {
   visibilityRuleJson?: string | null;
   requiredRuleJson?: string | null;
   translations?: Record<string, AdmissionFormTranslation>;
+  fieldIdentity?: string | null;
+  inheritedFrom?: AdmissionFormInheritedOrigin | null;
 };
 export type AdmissionFormSection = {
   id: string;
@@ -71,6 +96,7 @@ export type AdmissionForm = {
   publishedAt?: string | null;
   publishedBy?: string | null;
   concurrencyStamp?: string;
+  inheritance?: AdmissionFormInheritance | null;
 };
 export type CreateUpdateAdmissionForm = {
   name: string;
@@ -83,6 +109,21 @@ export type CreateUpdateAdmissionForm = {
   supportedLanguages: string[];
   concurrencyStamp?: string | null;
   sections: AdmissionFormSection[];
+  inheritance?: AdmissionFormInheritance | null;
+};
+export type AdmissionFormInheritancePreview = {
+  definition: AdmissionForm;
+  inquiryFormDefinitionId?: string | null;
+  inquiryContextSections: AdmissionFormSection[];
+  issues: { code: string; message: string; fieldIdentity?: string | null }[];
+  isValid: boolean;
+};
+export type AdmissionFormConnectedSource = {
+  inquiryFormDefinitionId: string;
+  name: string;
+  version: number;
+  connections: { offeringId: string; offeringName: string }[];
+  isApproved: boolean;
 };
 export type AdmissionFormFieldMetadata = {
   fieldType: AdmissionFormFieldType;
@@ -154,6 +195,38 @@ const unwrap = <T>(r: Result<T> | T): T => {
 };
 export const admissionFormsApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getAdmissionFormInheritanceSources: builder.query<
+      { totalCount: number; items: AdmissionFormConnectedSource[] },
+      string | { id: string; skipCount?: number; maxResultCount?: number }
+    >({
+      query: (input) => {
+        const { id, ...params } = typeof input === 'string' ? { id: input } : input;
+        return { url: `/student/enrollment/admissions/forms/${id}/inheritance/sources`, params };
+      },
+      transformResponse: (
+        r:
+          | Result<{ totalCount: number; items: AdmissionFormConnectedSource[] }>
+          | { totalCount: number; items: AdmissionFormConnectedSource[] }
+      ) => unwrap(r),
+      providesTags: [studentAdmissionsCrmType.admissionForm],
+    }),
+    previewAdmissionFormInheritance: builder.mutation<
+      AdmissionFormInheritancePreview,
+      {
+        inquiryFormDefinitionId: string;
+        registrationFormDefinitionId?: string;
+        draft?: CreateUpdateAdmissionForm;
+      }
+    >({
+      query: (body) => ({
+        url: '/student/enrollment/admissions/forms/inheritance/preview',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (
+        r: Result<AdmissionFormInheritancePreview> | AdmissionFormInheritancePreview
+      ) => unwrap(r),
+    }),
     getAdmissionForms: builder.query<
       { totalCount: number; items: AdmissionForm[] },
       {
@@ -354,6 +427,8 @@ export const admissionFormsApi = api.injectEndpoints({
   }),
 });
 export const {
+  useGetAdmissionFormInheritanceSourcesQuery,
+  usePreviewAdmissionFormInheritanceMutation,
   useGetAdmissionFormsQuery,
   useLazyGetAdmissionFormsQuery,
   useGetAdmissionFormQuery,

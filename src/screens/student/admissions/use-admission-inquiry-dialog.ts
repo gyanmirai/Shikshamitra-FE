@@ -26,6 +26,7 @@ import {
 import { useAdmissionPhotoReads } from './use-admission-photo-reads';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
 import { getAdmissionSiblingParentReviewError } from './admission-family-contacts-model';
+import { getConfiguredInquiryParentRelationship } from './admission-inquiry-field-bindings';
 import { useAdmissionInquiryClassOfferings } from './use-admission-inquiry-class-offerings';
 import { getInquiryCommunicationTemplate } from './inquiry-management/inquiry-communication-templates';
 import {
@@ -118,7 +119,9 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
   });
   const offeringDetail = runtime.currentData?.offering;
   const form = runtime.currentData?.form ?? undefined;
-  const runtimeError = runtime.isError;
+  const runtimeError =
+    runtime.isError ||
+    Boolean(runtime.currentData?.availability.canCreateInquiry && !runtime.currentData.form);
   const runtimeLoading =
     Boolean(formik.values.offeringId) &&
     !runtimeError &&
@@ -142,13 +145,11 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     ? policy.allowedSources
     : ALL_INQUIRY_SOURCES;
   const selectedOffering = offeringChoices.find((item) => item.id === formik.values.offeringId);
-  const currentGuardianPhone = selectedOffering
-    ? buildAdmissionInquiryDuplicateInput(formik.values, fields, selectedOffering).guardianPhone
-    : '';
-  const currentGuardianEmail = selectedOffering
-    ? (buildAdmissionInquiryDuplicateInput(formik.values, fields, selectedOffering).guardianEmail ??
-      '')
-    : '';
+  const duplicateInput = selectedOffering
+    ? buildAdmissionInquiryDuplicateInput(formik.values, fields, selectedOffering)
+    : undefined;
+  const currentGuardianPhone = duplicateInput?.guardianPhone ?? '';
+  const currentGuardianEmail = duplicateInput?.guardianEmail ?? '';
   const identityKey = selectedOffering
     ? JSON.stringify([
         selectedOffering.id,
@@ -283,6 +284,10 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     matches: currentMatches,
     currentGuardianPhone,
     currentGuardianEmail,
+    currentApplicantName: duplicateInput?.applicantName ?? '',
+    currentApplicantDateOfBirth: duplicateInput?.applicantDateOfBirth,
+    currentAdmissionCycleId: selectedOffering?.admissionCycleId,
+    currentParentRelationship: getConfiguredInquiryParentRelationship(fields, formik.values.fields),
     requestError,
     duplicateOverrideReason,
     setDuplicateOverrideReason,
@@ -365,7 +370,11 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
       }
       const parentReviewError = getAdmissionSiblingParentReviewError(
         formik.values.familyContacts,
-        formik.values.parentRelationship,
+        getConfiguredInquiryParentRelationship(
+          fields,
+          formik.values.fields,
+          formik.values.parentRelationship
+        ),
         parent.relationship
       );
       if (parentReviewError) {

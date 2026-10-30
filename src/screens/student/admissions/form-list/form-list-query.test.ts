@@ -27,16 +27,15 @@ describe('admission form list query', () => {
     ).toBe(0);
   });
 
-  it('sends the selected form purpose to the backend', () => {
+  it('does not impose a hidden type restriction on the unified list', () => {
     expect(
       buildAdmissionFormListQuery({
         page: 0,
         rowsPerPage: 10,
         search: '',
         filters: [],
-        purpose: 0,
       })
-    ).toMatchObject({ purpose: 0 });
+    ).not.toHaveProperty('purpose');
   });
 
   it('ignores unsupported status values', () => {
@@ -52,12 +51,11 @@ describe('admission form list query', () => {
     ).toBeUndefined();
   });
 
-  it('sends text and numeric criteria without presentation labels and retains tab scope', () => {
+  it('sends text and numeric criteria without labels or an implicit type restriction', () => {
     expect(
       buildAdmissionFormListQuery({
         page: 2,
         rowsPerPage: 10,
-        purpose: 1,
         search: ' parent ',
         filters: [
           {
@@ -79,7 +77,6 @@ describe('admission form list query', () => {
       })
     ).toEqual({
       search: 'parent',
-      purpose: 1,
       status: undefined,
       skipCount: 20,
       maxResultCount: 10,

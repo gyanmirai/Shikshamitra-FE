@@ -1,7 +1,7 @@
 import type { StudentCredentialsWorkspace } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import { it, vi, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
 
@@ -432,11 +432,133 @@ it.each(['Pending', 'Processing'])(
     expect(screen.getByText('Queued')).toBeVisible();
   }
 );
-it('shows submitted as sender acceptance without a mailbox-delivery claim', () => {
+it('shows sent as sender acceptance and excludes that recipient from the initial send', () => {
   state.workspace = delivered('student', 'Sent');
   panel();
-  expect(screen.getByText('Submitted')).toBeVisible();
-  expect(screen.getByText('Submitted for sending.')).toBeVisible();
+  expect(screen.getByText('Login details sent')).toBeVisible();
+  expect(screen.getByText('Accepted by the email sender.')).toBeVisible();
+  expect(screen.getByRole('checkbox', { name: 'Send to student' })).toBeDisabled();
+  selectStudent();
+  expect(send()).toBeDisabled();
+  selectParent();
+  confirm();
+  expect(send()).toBeEnabled();
+  fireEvent.click(send());
+  expect(state.send).toHaveBeenCalledOnce();
+  expect(state.send.mock.calls[0][0].accountType).toBe('guardian');
+});
+it('disables normal sending when both recipients have already been sent', () => {
+  state.workspace = delivered('guardian', 'Sent', delivered('student', 'Sent'));
+  panel({ compact: true });
+  expect(screen.getAllByText('Login details sent')).toHaveLength(2);
+  expect(screen.getByRole('checkbox', { name: 'Send to student' })).toBeDisabled();
+  expect(screen.getByRole('checkbox', { name: 'Send to parent / guardian' })).toBeDisabled();
+  expect(send()).toBeDisabled();
+  expect(state.send).not.toHaveBeenCalled();
+});
+it('requires a separate confirmation for resending the exact sent recipient', async () => {
+  state.workspace = delivered('student', 'Sent');
+  panel();
+  fireEvent.click(screen.getByRole('button', { name: 'Resend login details' }));
+  let dialog = screen.getByRole('dialog', { name: 'Resend Login Details?' });
+  expect(dialog).toHaveTextContent('jay@example.test');
+  expect(state.send).not.toHaveBeenCalled();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+  await waitFor(() =>
+    expect(screen.queryByRole('dialog', { name: 'Resend Login Details?' })).not.toBeInTheDocument()
+  );
+  expect(state.send).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Resend login details' }));
+  dialog = screen.getByRole('dialog', { name: 'Resend Login Details?' });
+  expect(within(dialog).getByRole('button', { name: 'Resend login details' })).toBeEnabled();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Resend login details' }));
+  await waitFor(() => expect(state.send).toHaveBeenCalledOnce());
+  expect(state.send.mock.calls[0][0]).toMatchObject({
+    accountType: 'student',
+    expectedEmail: 'jay@example.test',
+    concurrencyStamp: state.workspace!.concurrencyStamp,
+  });
+});
+it.each(['cooldown', 'permission', 'loading'])(
+  'keeps sent-recipient resend unavailable during %s',
+  (reason) => {
+    state.workspace = delivered('student', 'Sent');
+    if (reason === 'cooldown') {
+      state.workspace.recipients[0].canSend = false;
+      state.workspace.recipients[0].blockedReason =
+        'Wait two minutes before sending credentials again.';
+    }
+    if (reason === 'loading') state.fetching = true;
+    panel({ canManage: reason !== 'permission' });
+    expect(screen.getByRole('button', { name: 'Resend login details' })).toBeDisabled();
+    if (reason === 'cooldown')
+      expect(
+        screen.getByText('Wait two minutes before sending login details again.')
+      ).toBeVisible();
+  }
+);
+it('invalidates resend confirmation when the saved recipient changes', async () => {
+  state.workspace = delivered('student', 'Sent');
+  const view = panel();
+  fireEvent.click(screen.getByRole('button', { name: 'Resend login details' }));
+  state.workspace = {
+    ...state.workspace!,
+    recipients: state.workspace!.recipients.map((recipient) =>
+      recipient.accountType === 'student' ? { ...recipient, email: 'new@example.test' } : recipient
+    ),
+  };
+  view.rerender(<StudentOnboardingPortalAccounts student={student} canManage />);
+  await waitFor(() =>
+    expect(screen.queryByRole('dialog', { name: 'Resend Login Details?' })).not.toBeInTheDocument()
+  );
+  expect(state.send).not.toHaveBeenCalled();
+});
+it('requires parent access confirmation before a separate resend in compact setup', async () => {
+  state.workspace = delivered('guardian', 'Sent');
+  panel({ compact: true });
+  const resend = screen.getByRole('button', { name: 'Resend login details' });
+  expect(resend).toBeDisabled();
+  confirm();
+  expect(resend).toBeEnabled();
+  fireEvent.click(resend);
+  fireEvent.click(
+    within(screen.getByRole('dialog', { name: 'Resend Login Details?' })).getByRole('button', {
+      name: 'Resend login details',
+    })
+  );
+  await waitFor(() => expect(state.send).toHaveBeenCalledOnce());
+  expect(state.send.mock.calls[0][0]).toMatchObject({
+    accountType: 'guardian',
+    confirmRecipientAccess: true,
+    expectedEmail: 'raj@example.test',
+  });
+});
+it('removes a stale checked recipient when a refresh reports it was already sent', () => {
+  const view = panel();
+  selectStudent();
+  expect(send()).toBeEnabled();
+  state.workspace = delivered('student', 'Sent');
+  view.rerender(<StudentOnboardingPortalAccounts student={student} canManage />);
+  expect(screen.getByRole('checkbox', { name: 'Send to student' })).not.toBeChecked();
+  expect(send()).toBeDisabled();
+  fireEvent.submit(screen.getByRole('form', { name: 'Send credentials' }));
+  expect(state.send).not.toHaveBeenCalled();
+});
+it('keeps failed resends outside ordinary sending and requires confirmation again', async () => {
+  state.workspace = delivered('student', 'Failed');
+  state.workspace.recipients[0].delivery!.sentAt = '2026-10-29T10:00:00Z';
+  panel();
+  expect(screen.getByText('Failed')).toBeVisible();
+  expect(screen.getByRole('checkbox', { name: 'Send to student' })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: 'Retry student email' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Resend login details' }));
+  expect(state.send).not.toHaveBeenCalled();
+  fireEvent.click(
+    within(screen.getByRole('dialog', { name: 'Resend Login Details?' })).getByRole('button', {
+      name: 'Resend login details',
+    })
+  );
+  await waitFor(() => expect(state.send).toHaveBeenCalledOnce());
 });
 it.each(['permission', 'loading', 'unavailable'])(
   'prevents sends while %s blocks action',

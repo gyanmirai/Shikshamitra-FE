@@ -32,6 +32,7 @@ function renderBuilder(
           <>
             <FormBuilderSections formik={formik} />
             <output data-testid="form-json">{JSON.stringify(formik.values)}</output>
+            <output data-testid="form-dirty">{String(formik.dirty)}</output>
           </>
         )}
       </Formik>
@@ -88,40 +89,67 @@ it('keeps earlier sections visible when adding and selecting another section in 
   expect(screen.queryByRole('button', { name: 'Add custom field' })).not.toBeInTheDocument();
 }, 15000);
 
-it('edits the section heading in place while preserving existing repeatable and conditional metadata', async () => {
-  const user = userEvent.setup({ delay: null });
-  const values = getBlankAdmissionFormInitialValues();
-  Object.assign(values.sections[0], {
-    isRepeatable: true,
-    minEntries: 0,
-    maxEntries: 3,
-    entryLabel: 'Sibling',
-    visibilityRuleJson: '{"field":"HAS_SIBLING","equals":true}',
-  });
-  renderBuilder(values);
-  await user.click(screen.getByRole('button', { name: 'Actions for Student Details section' }));
-  await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
-  expect(screen.queryByRole('textbox', { name: 'Section name *' })).not.toBeInTheDocument();
-  expect(screen.queryByText('Advanced settings')).not.toBeInTheDocument();
-  expect(screen.queryByText('Allow multiple entries')).not.toBeInTheDocument();
-  const heading = screen.getByRole('textbox', { name: 'Section heading' });
-  await user.clear(heading);
-  await user.paste('Student information');
-  await user.keyboard('{Enter}');
-  expect(screen.getByRole('heading', { name: 'Student information' })).toBeVisible();
-  expect(
-    screen.getByRole('button', { name: 'Actions for Student information section' })
-  ).toHaveFocus();
-  expect(savedForm().sections[0]).toMatchObject({
-    name: 'Student information',
-    code: values.sections[0].code,
-    isRepeatable: true,
-    minEntries: 0,
-    maxEntries: 3,
-    entryLabel: 'Sibling',
-    visibilityRuleJson: values.sections[0].visibilityRuleJson,
-  });
-}, 15000);
+it.each([0, 1] as const)(
+  'edits the section heading directly for purpose %s while preserving existing repeatable and conditional metadata',
+  async (purpose) => {
+    const user = userEvent.setup({ delay: null });
+    const values = getBlankAdmissionFormInitialValues();
+    values.purpose = purpose;
+    Object.assign(values.sections[0], {
+      isRepeatable: true,
+      minEntries: 0,
+      maxEntries: 3,
+      entryLabel: 'Sibling',
+      visibilityRuleJson: '{"field":"HAS_SIBLING","equals":true}',
+    });
+    renderBuilder(values);
+    await user.click(screen.getByRole('button', { name: 'Edit Student Details section' }));
+    expect(screen.queryByRole('textbox', { name: 'Section name *' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Advanced settings')).not.toBeInTheDocument();
+    expect(screen.queryByText('Allow multiple entries')).not.toBeInTheDocument();
+    const heading = screen.getByRole('textbox', { name: 'Section heading' });
+    await user.clear(heading);
+    await user.paste('Student information');
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('heading', { name: 'Student information' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Edit Student information section' })).toHaveFocus();
+    expect(savedForm().sections[0]).toMatchObject({
+      name: 'Student information',
+      code: values.sections[0].code,
+      isRepeatable: true,
+      minEntries: 0,
+      maxEntries: 3,
+      entryLabel: 'Sibling',
+      visibilityRuleJson: values.sections[0].visibilityRuleJson,
+    });
+  },
+  15000
+);
+
+it.each([0, 1] as const)(
+  'confirms direct section deletion for purpose %s and preserves the draft on cancel',
+  async (purpose) => {
+    const user = userEvent.setup({ delay: null });
+    const values = { ...getBlankAdmissionFormInitialValues(), purpose };
+    renderBuilder(values);
+    expect(
+      screen.queryByRole('button', { name: 'Actions for Student Details section' })
+    ).not.toBeInTheDocument();
+    const remove = screen.getByRole('button', { name: 'Delete Student Details section' });
+    await user.click(remove);
+    expect(screen.getByRole('dialog', { name: 'Delete section?' })).toBeVisible();
+    expect(savedForm()).toEqual(values);
+    expect(screen.getByTestId('form-dirty')).toHaveTextContent('false');
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(remove).toHaveFocus());
+    expect(savedForm()).toEqual(values);
+    await user.click(remove);
+    await user.click(screen.getByRole('button', { name: 'Delete section' }));
+    expect(savedForm().sections).toEqual([]);
+    expect(screen.getByTestId('form-dirty')).toHaveTextContent('true');
+  },
+  15000
+);
 
 it('adds a step, edits its heading inline, and returns to earlier sections without losing the draft', async () => {
   const user = userEvent.setup({ delay: null });

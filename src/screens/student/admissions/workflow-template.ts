@@ -8,7 +8,13 @@ import { ensureAdmissionFormStageConfiguration } from 'src/redux/student/admissi
 
 import { normalizeStageConfiguration } from './workflow-builder/workflow-stage-configuration';
 
-export const WORKFLOW_TEMPLATE_IDS = ['standard', 'simple', 'assessment', 'selective'] as const;
+export const WORKFLOW_TEMPLATE_IDS = [
+  'standard',
+  'post-inquiry',
+  'simple',
+  'assessment',
+  'selective',
+] as const;
 
 export type WorkflowTemplateId = (typeof WORKFLOW_TEMPLATE_IDS)[number];
 export type WorkflowStarterId = WorkflowTemplateId | 'empty';
@@ -27,6 +33,7 @@ export type AdmissionWorkflowTemplateDefinition = {
   bestFor: string;
   icon: string;
   recommended?: boolean;
+  inquiryLinked?: boolean;
   stages: readonly WorkflowTemplateStageDefinition[];
 };
 
@@ -77,6 +84,42 @@ const WORKFLOW_TEMPLATE_DEFINITIONS: readonly AdmissionWorkflowTemplateDefinitio
     ],
     description: '',
     bestFor: '',
+  },
+  {
+    id: 'post-inquiry',
+    name: 'Post-Inquiry Admission',
+    description: 'Continue an Interested inquiry after staff choose Move to next stage.',
+    bestFor:
+      'Schools collecting registration and documents before assessment and admission decision',
+    icon: 'mdi:form-select',
+    inquiryLinked: true,
+    stages: [
+      {
+        code: 'APPLICATION_FORM',
+        name: 'Registration',
+        stageType: 1,
+        description:
+          'Complete and submit the published Registration form using the linked inquiry details.',
+      },
+      {
+        code: 'DOCUMENT_VERIFICATION',
+        name: 'Document verification',
+        stageType: 5,
+        description: 'Collect and verify the documents required by the school.',
+      },
+      {
+        code: 'ENTRANCE_ASSESSMENT',
+        name: 'Assessment',
+        stageType: 2,
+        description: 'Schedule and record the configured test, interaction, or interview outcome.',
+      },
+      {
+        code: 'ADMISSION_DECISION',
+        name: 'Admission decision',
+        stageType: 7,
+        description: 'Record the authorized approval, waitlist, or rejection decision.',
+      },
+    ],
   },
   {
     id: 'simple',

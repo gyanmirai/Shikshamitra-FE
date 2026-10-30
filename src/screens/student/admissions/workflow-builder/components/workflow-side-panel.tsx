@@ -37,6 +37,7 @@ type Props = {
   versions?: AdmissionWorkflow[];
   usage?: AdmissionWorkflowUsage;
   usageLoading: boolean;
+  usageError?: boolean;
   canCreateVersion: boolean;
   governanceHistory?: AdmissionWorkflowGovernanceHistory[];
   governanceLoading: boolean;
@@ -51,6 +52,7 @@ export function WorkflowSidePanel({
   versions,
   usage,
   usageLoading,
+  usageError = false,
   canCreateVersion,
   governanceHistory,
   governanceLoading,
@@ -110,6 +112,7 @@ export function WorkflowSidePanel({
             versions={versions}
             usage={usage}
             usageLoading={usageLoading}
+            usageError={usageError}
             canCreateVersion={canCreateVersion}
             governanceHistory={governanceHistory}
             governanceLoading={governanceLoading}

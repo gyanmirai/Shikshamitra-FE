@@ -6,6 +6,11 @@ import type {
 
 import * as Yup from 'yup';
 
+import {
+  createAdmissionCustomFieldIdentity,
+  ensureAdmissionCustomFieldIdentities,
+} from './form-field-identity';
+
 import type { AdmissionFieldPreset } from './form-field-presets';
 
 const admissionFormFieldSchema = Yup.object({
@@ -59,13 +64,21 @@ const admissionFormSectionSchema = Yup.object({
     .optional(),
   entryLabel: Yup.string().nullable().optional(),
   translations: Yup.object().optional(),
-  fields: Yup.array().of(admissionFormFieldSchema).min(1, 'Add at least one field'),
+  fields: Yup.array()
+    .of(admissionFormFieldSchema)
+    .test('fields-or-inheritance', 'Add at least one field', function (fields) {
+      const root = this.from?.at(-1)?.value as CreateUpdateAdmissionForm | undefined;
+      return Boolean(
+        fields?.length ||
+        (root?.purpose === 1 && root.inheritance?.enabled && root.inheritance.sources.length)
+      );
+    }),
 });
 
 export const admissionFormSchema = Yup.object({
   name: Yup.string().trim().max(128).required('Form name is required'),
   layoutType: Yup.number().oneOf([0, 1]).required('Choose a form layout'),
-  purpose: Yup.number().oneOf([0, 1]).required('Choose a form purpose'),
+  purpose: Yup.number().oneOf([0, 1]).required('Choose a form type'),
   fieldsPerRow: Yup.number().oneOf([1, 2, 3, 4]).required('Choose fields per row'),
   defaultLanguage: Yup.string().trim().required('Choose the default language'),
   supportedLanguages: Yup.array()
@@ -78,7 +91,15 @@ export const admissionFormSchema = Yup.object({
         return Boolean(value?.includes(this.parent.defaultLanguage));
       }
     ),
-  sections: Yup.array().of(admissionFormSectionSchema).min(1, 'Add at least one section'),
+  sections: Yup.array()
+    .of(admissionFormSectionSchema)
+    .test('sections-or-inheritance', 'Add at least one section', function (sections) {
+      const root = this.parent as CreateUpdateAdmissionForm;
+      return Boolean(
+        sections?.length ||
+        (root.purpose === 1 && root.inheritance?.enabled && root.inheritance.sources.length)
+      );
+    }),
 });
 
 export const FIELD_TYPES: [string, AdmissionFormField['fieldType']][] = [
@@ -177,6 +198,8 @@ export const newField = (
   fieldType: preset?.fieldType ?? fieldType,
   bindingType: 1,
   bindingKey: `FIELD_${order + 1}`,
+  fieldIdentity:
+    (preset?.fieldType ?? fieldType) === 12 ? undefined : createAdmissionCustomFieldIdentity(),
   required: preset?.required ?? false,
   readOnly: false,
   displayOrder: order,
@@ -192,11 +215,12 @@ export function getAdmissionFormInitialValues(
 ): CreateUpdateAdmissionForm {
   const sectionId = editing?.sections[0]?.id ?? crypto.randomUUID();
   const stepId = editing?.sections[0]?.stepId ?? crypto.randomUUID();
-  return {
+  return ensureAdmissionCustomFieldIdentities({
     name: editing?.name ?? '',
     code: editing?.code ?? '',
     description: editing?.description ?? '',
     concurrencyStamp: editing?.concurrencyStamp,
+    inheritance: editing?.inheritance,
     layoutType: editing?.layoutType ?? 0,
     purpose: editing?.purpose ?? purpose,
     fieldsPerRow: editing?.fieldsPerRow ?? 1,
@@ -218,7 +242,7 @@ export function getAdmissionFormInitialValues(
         fields: [newField(sectionId, 0)],
       },
     ],
-  };
+  });
 }
 
 export function getBlankAdmissionFormInitialValues(

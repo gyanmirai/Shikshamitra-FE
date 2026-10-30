@@ -4,13 +4,16 @@ import type { AdmissionFormSection } from 'src/redux/student/admissions/admissio
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { useRef, useEffect } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ButtonBase from '@mui/material/ButtonBase';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
-import { FormBuilderUnitActions } from './form-builder-unit-actions';
+import { FormBuilderDeleteUnit } from './form-builder-delete-unit';
 import { FormBuilderUnitSettings } from './form-builder-unit-settings';
 
 type Props = {
@@ -49,6 +52,7 @@ export function FormBuilderSectionHeader({
   onDelete,
 }: Props) {
   const name = section.name || `Section ${sectionIndex + 1}`;
+  const confirmDelete = useBoolean();
   const actionsRef = useRef<HTMLDivElement>(null);
   const wasEditing = useRef(settingsOpen);
   useEffect(() => {
@@ -147,17 +151,40 @@ export function FormBuilderSectionHeader({
         </CustomTooltip>
       ) : (
         <Box ref={actionsRef}>
-          <FormBuilderUnitActions
-            name={name}
-            unit="section"
-            onEdit={() => {
-              onSelect();
-              onToggleSettings();
-            }}
-            onDelete={onDelete}
+          <AdaptiveThreeDotsActions
+            directActionLimit={2}
+            collapseOnOverflow={false}
+            moreLabel={`More actions for ${name} section`}
+            sx={{ flexShrink: 0, gap: 0.5, '& .MuiIconButton-root': { width: 44, height: 44 } }}
+            actions={[
+              {
+                id: 'edit',
+                label: `Edit ${name} section`,
+                icon: GlobalIcons.edit,
+                onClick: () => {
+                  onSelect();
+                  onToggleSettings();
+                },
+              },
+              {
+                id: 'delete',
+                label: `Delete ${name} section`,
+                icon: GlobalIcons.delete,
+                color: 'error.main',
+                onClick: confirmDelete.onTrue,
+              },
+            ]}
           />
         </Box>
       )}
+      <FormBuilderDeleteUnit
+        name={name}
+        unit="section"
+        onDelete={onDelete}
+        open={confirmDelete.value}
+        onClose={confirmDelete.onFalse}
+        hideTrigger
+      />
     </Stack>
   );
 }

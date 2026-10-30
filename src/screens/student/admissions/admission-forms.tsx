@@ -1,14 +1,11 @@
 'use client';
 
 import type { IParams } from 'src/components/customizabaleTable/types';
-import type {
-  AdmissionForm,
-  AdmissionFormPurpose,
-} from 'src/redux/student/admissions/admission-forms-api';
+import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useMemo, useState, useEffect } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Stack, Button, Typography } from '@mui/material';
@@ -26,41 +23,36 @@ import { buildAdmissionFormListQuery } from './form-list/form-list-query';
 import { AdmissionFormPublishDialog } from './admission-form-publish-dialog';
 import { AdmissionFormHistoryDialog } from './admission-form-history-dialog';
 import { normalizeAdmissionFormFilters } from './form-list/form-column-filters';
-import { ApplicationExperienceNavigation } from './application-experience-navigation';
-
-import type { ApplicationExperienceView } from './application-experience-navigation';
-
-const FORM_PURPOSES: Record<ApplicationExperienceView, AdmissionFormPurpose> = {
-  inquiry: 0,
-  registration: 1,
-};
-const VIEWS: ApplicationExperienceView[] = ['inquiry', 'registration'];
+import {
+  getAdmissionFormListReturnUrl,
+  readAdmissionFormListReturnState,
+} from './form-preview/form-preview-navigation';
 
 export default function AdmissionFormsScreen() {
   const searchParams = useSearchParams();
-  const requestedView = searchParams.get('view') as ApplicationExperienceView | null;
-  const view = requestedView && VIEWS.includes(requestedView) ? requestedView : 'inquiry';
-  const purpose = FORM_PURPOSES[view];
   const actions = useFormListActions();
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<IParams['filters']>([]);
-  const [filterScope, setFilterScope] = useState(view);
-  const scopeChanging = filterScope !== view;
-  useEffect(() => {
-    setPage(0);
-    setSearch('');
-    setFilters([]);
-    setFilterScope(view);
-  }, [view]);
+  const [restoredState] = useState(() => readAdmissionFormListReturnState(searchParams));
+  const [page, setPage] = useState(restoredState.page);
+  const [rowsPerPage, setRowsPerPage] = useState(restoredState.rowsPerPage);
+  const [search, setSearch] = useState(restoredState.search);
+  const [filters, setFilters] = useState<IParams['filters']>(restoredState.filters);
+  const preview = (id: string) =>
+    actions.preview(
+      id,
+      getAdmissionFormListReturnUrl({
+        page,
+        rowsPerPage,
+        search,
+        filters,
+      })
+    );
   const listQuery = useMemo(
-    () => buildAdmissionFormListQuery({ page, rowsPerPage, search, filters, purpose }),
-    [filters, page, purpose, rowsPerPage, search]
+    () => buildAdmissionFormListQuery({ page, rowsPerPage, search, filters }),
+    [filters, page, rowsPerPage, search]
   );
-  const query = useGetAdmissionFormsQuery(listQuery, { skip: scopeChanging });
-  const currentData = scopeChanging ? undefined : query.currentData;
-  const listError = !scopeChanging && query.isError;
+  const query = useGetAdmissionFormsQuery(listQuery);
+  const { currentData } = query;
+  const listError = query.isError;
   const hasSafeRows = Boolean(currentData?.items.length);
   const columns = createFormColumns({
     canManage: actions.canManage,
@@ -108,23 +100,17 @@ export default function AdmissionFormsScreen() {
             variant="contained"
             disabled={!actions.canManage}
             startIcon={<Iconify icon="mdi:plus" />}
-            onClick={() => actions.create(purpose)}
+            onClick={() => actions.create(0)}
           >
             Add form
           </Button>
         }
       />
-      <ApplicationExperienceNavigation value={view} />
       {listError && hasSafeRows && <AdmissionQueryError onRetry={() => query.refetch()} />}
-      <Box
-        role="tabpanel"
-        id={`application-experience-${view}-panel`}
-        aria-labelledby={`application-experience-${view}-tab`}
-        sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}
-      >
+      <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
         <CustomizableTable
-          tableId={`admission-forms-${view}`}
-          tableTitle={`${view[0].toUpperCase()}${view.slice(1)} forms`}
+          tableId="admission-forms"
+          tableTitle="Admission forms"
           wrapperProps={{ sx: { flex: 1, height: 1, minHeight: 0, minWidth: 0 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
@@ -134,7 +120,7 @@ export default function AdmissionFormsScreen() {
               <AdmissionQueryError onRetry={() => query.refetch()} />
             ) : undefined
           }
-          handleRowClick={(row) => actions.preview((row as AdmissionForm).id)}
+          handleRowClick={(row) => preview((row as AdmissionForm).id)}
           rowProps={(row) => ({
             tabIndex: 0,
             sx: { cursor: 'pointer' },
@@ -144,7 +130,7 @@ export default function AdmissionFormsScreen() {
                 (event.key === 'Enter' || event.key === ' ')
               ) {
                 event.preventDefault();
-                actions.preview((row as AdmissionForm).id);
+                preview((row as AdmissionForm).id);
               }
             },
           })}
@@ -153,7 +139,7 @@ export default function AdmissionFormsScreen() {
           rowsPerPage={rowsPerPage}
           searchTerm={search}
           filters={filters}
-          isLoading={scopeChanging || query.isLoading || (query.isFetching && !currentData)}
+          isLoading={query.isLoading || (query.isFetching && !currentData)}
           isRefreshing={query.isFetching && Boolean(currentData)}
           isPagination
           isSearch
@@ -167,6 +153,7 @@ export default function AdmissionFormsScreen() {
             setRowsPerPage(nextRowsPerPage);
           }}
           onServerSearch={(value) => {
+            if (value === search) return;
             setSearch(value);
             setPage(0);
           }}
@@ -179,7 +166,7 @@ export default function AdmissionFormsScreen() {
             setFilters([]);
             setPage(0);
           }}
-          noDataText={`No ${view} forms configured yet. Create a draft to begin.`}
+          noDataText="No admission forms configured yet. Create a draft to begin."
         />
       </Box>
       <AdmissionFormDialog
@@ -189,7 +176,13 @@ export default function AdmissionFormsScreen() {
         editing={actions.editing}
         editingError={actions.editingError}
         onRetryEditing={actions.retryEditing}
-        initialPurpose={actions.editingId ? purpose : actions.creatingPurpose}
+        initialPurpose={
+          actions.editingId
+            ? (actions.editing?.purpose ??
+              currentData?.items.find((form) => form.id === actions.editingId)?.purpose ??
+              0)
+            : actions.creatingPurpose
+        }
         saving={actions.saving}
         onSave={actions.save}
         onPublishNow={actions.saveAndPublish}

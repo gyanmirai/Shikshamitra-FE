@@ -6,6 +6,13 @@ import { getBuilderIssues } from './form-builder-issues';
 import { newField, getBlankAdmissionFormInitialValues } from './form-dialog-model';
 
 const metadata: AdmissionFormSystemFieldMetadata[] = [
+  ...['Applicant.FirstName', 'Guardian.FirstName', 'Guardian.Mobile'].map((key) => ({
+    key,
+    displayName: key,
+    description: '',
+    fieldType: key.endsWith('Mobile') ? (4 as const) : (0 as const),
+    readOnly: false,
+  })),
   {
     key: 'Preference.TransportRequired',
     displayName: 'Transport needed',
@@ -26,6 +33,14 @@ function inquiry(fieldType: 6 | 9 = 6) {
       bindingKey: 'Preference.TransportRequired',
       optionsJson: '[{"value":"Bus","label":"Bus"}]',
     },
+    ...metadata.slice(0, 3).map((item, index) => ({
+      ...newField(form.sections[0].id, index + 1, item.fieldType),
+      code: item.key.replace(/\./g, '_').toUpperCase(),
+      label: item.key,
+      bindingType: 0 as const,
+      bindingKey: item.key,
+      required: true,
+    })),
   ];
   return form;
 }
@@ -44,7 +59,7 @@ describe('admission linked-field review', () => {
     expect(getBuilderIssues(inquiry(9), { fields: metadata })).toEqual([]);
     const custom = inquiry();
     Object.assign(custom.sections[0].fields[0], { bindingType: 1, bindingKey: 'MY_TRANSPORT' });
-    expect(getBuilderIssues(custom, { isLoading: true })).toEqual([]);
+    expect(getBuilderIssues(custom, { fields: metadata })).toEqual([]);
   });
 
   it.each(['missing', 'unknown', 'duplicate'])('flags %s linked bindings', (kind) => {

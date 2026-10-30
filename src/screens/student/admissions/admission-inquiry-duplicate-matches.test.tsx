@@ -1,7 +1,9 @@
 import type { DuplicateMatch } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { useState } from 'react';
+import { Provider } from 'react-redux';
 import { it, vi, expect } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { shikshaMitraToast } from 'src/components/toast';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
@@ -56,6 +58,66 @@ const match: DuplicateMatch = {
   parents: [parent],
 };
 
+it('prioritizes an existing current-cycle inquiry while retaining deliberate sibling review', () => {
+  const openExisting = vi.fn();
+  const useFamily = vi.fn();
+  render(
+    <AdmissionInquiryDuplicateMatches
+      matches={[
+        { ...match, existingInquiryId: 'inquiry-1', existingInquiryAdmissionCycleId: 'cycle-1' },
+      ]}
+      applicantName=" Asha   Patel "
+      admissionCycleId="cycle-1"
+      guardianPhone="9876543210"
+      busy={false}
+      onUseExisting={useFamily}
+      onOpenExisting={openExisting}
+      onCreateSeparate={vi.fn()}
+      overrideReason=""
+      onOverrideReasonChange={vi.fn()}
+    />
+  );
+  expect(screen.getByRole('heading', { name: 'Possible Duplicate Inquiry' })).toBeVisible();
+  expect(screen.queryByLabelText('Parent')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Open existing inquiry' }));
+  expect(openExisting).toHaveBeenCalledWith('inquiry-1');
+  expect(useFamily).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Different child? Review family' }));
+  expect(screen.getByLabelText('Parent')).toHaveValue('');
+  expect(screen.getByRole('button', { name: 'Add sibling' })).toBeEnabled();
+});
+
+it('keeps the review dialog local, reopens after resubmission and locks dismissal during saving', async () => {
+  const store = configureStore({ reducer: { confirmPopup: () => ({ isChanges: true }) } });
+  const props = {
+    matches: [match],
+    presentation: 'dialog' as const,
+    guardianPhone: '9876543210',
+    onUseExisting: vi.fn(),
+    onOpenExisting: vi.fn(),
+    onCreateSeparate: vi.fn(),
+    overrideReason: '',
+    onOverrideReasonChange: vi.fn(),
+  };
+  const view = render(
+    <Provider store={store}>
+      <AdmissionInquiryDuplicateMatches {...props} reviewKey={1} busy={false} />
+    </Provider>
+  );
+  const review = screen.getByRole('dialog', { name: 'Existing Family Found' });
+  fireEvent.click(within(review).getByRole('button', { name: 'Back to form' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(store.getState().confirmPopup.isChanges).toBe(true);
+  view.rerender(
+    <Provider store={store}>
+      <AdmissionInquiryDuplicateMatches {...props} reviewKey={2} busy />
+    </Provider>
+  );
+  const busyReview = await screen.findByRole('dialog', { name: 'Existing Family Found' });
+  expect(within(busyReview).getByRole('button', { name: 'Back to form' })).toBeDisabled();
+  expect(within(busyReview).getByRole('button', { name: /^close$/i })).toBeDisabled();
+});
+
 function renderMatches(guardianPhone: string, candidate = match) {
   const onUseExisting = vi.fn();
   render(
@@ -81,6 +143,27 @@ it('requires parent selection and explicit family confirmation before adding a s
   expect(onUseExisting).not.toHaveBeenCalled();
   fireEvent.click(within(confirmation).getByRole('button', { name: 'Add sibling' }));
   await waitFor(() => expect(onUseExisting).toHaveBeenCalledWith('family-1', parent));
+});
+
+it('offers only the configured parent role without selecting or relabelling another saved parent', () => {
+  render(
+    <AdmissionInquiryDuplicateMatches
+      matches={[
+        { ...match, parents: [parent, { ...parent, relationship: 'mother', name: 'Meera Patel' }] },
+      ]}
+      parentRelationship="father"
+      guardianPhone="9876543210"
+      busy={false}
+      onUseExisting={vi.fn()}
+      onOpenExisting={vi.fn()}
+      onCreateSeparate={vi.fn()}
+      overrideReason=""
+      onOverrideReasonChange={vi.fn()}
+    />
+  );
+  expect(screen.getByRole('option', { name: 'Father · Rahul Patel' })).toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: /Mother/ })).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Parent')).toHaveValue('');
 });
 
 it('does not offer family linking for a name-only match with a different mobile', () => {

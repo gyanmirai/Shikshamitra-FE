@@ -31,12 +31,24 @@ import { FormBuilderPalette } from './form-builder-palette';
 import { FormValidationPanel } from './form-validation-panel';
 import { AdmissionDialogTitle } from '../admission-dialog-title';
 import { FormBuilderProperties } from './form-builder-properties';
+import { useFormInheritance } from './hooks/use-form-inheritance';
 import { FormBuilderCanvas } from './components/form-builder-canvas';
 import { FormBuilderWorkspace } from './components/form-builder-workspace';
 import { useFormBuilderCommands } from './hooks/use-form-builder-commands';
 import { useFormBuilderSelection } from './hooks/use-form-builder-selection';
 import { FormBuilderLivePreview } from './components/form-builder-live-preview';
 import { FormBuilderValidationNotice } from './components/form-builder-validation-notice';
+import {
+  getInheritedFields,
+  getInheritancePreviewValues,
+  markInheritedRegistrationFields,
+} from './form-inheritance-model';
+import {
+  FormInheritancePanel,
+  InheritedFieldDrawer,
+  InheritedFieldsCanvas,
+  InheritedFieldSettings,
+} from './components/form-inheritance-panel';
 
 export function FormBuilderSections({
   formik,
@@ -45,6 +57,12 @@ export function FormBuilderSections({
   formik: FormikProps<CreateUpdateAdmissionForm>;
   footer?: ReactNode;
 }) {
+  const inheritance = useFormInheritance();
+  const inheritedFields = getInheritedFields(inheritance?.preview?.definition);
+  const builderFormik = {
+    ...formik,
+    values: markInheritedRegistrationFields(formik.values, inheritance?.preview?.definition),
+  };
   const selection = useFormBuilderSelection(formik.values.sections);
   const theme = useTheme();
   const desktop = useResponsive('up', 'lg');
@@ -53,7 +71,13 @@ export function FormBuilderSections({
   const [mobilePanel, setMobilePanel] = useState<'fields' | 'form'>('form');
   const [sidePanel, setSidePanel] = useState<'settings' | null>(null);
   const [gridAnchor, setGridAnchor] = useState<HTMLElement | null>(null);
-  const commands = useFormBuilderCommands(formik, selection.selectedSectionId, selection.select);
+  const commands = useFormBuilderCommands(
+    formik,
+    selection.selectedSectionId,
+    selection.select,
+    inheritedFields,
+    (field) => inheritance?.selectField(field)
+  );
   const addStep = (afterStepId?: string) => {
     const stepId = commands.addCanvasUnit(afterStepId);
     setNewStepId(stepId ?? null);
@@ -61,6 +85,18 @@ export function FormBuilderSections({
     setMobilePanel('form');
   };
   const selectCanvasField = (sectionId: string, fieldId: string | null) => {
+    const inherited = builderFormik.values.sections
+      .find((section) => section.id === sectionId)
+      ?.fields.find((field) => field.id === fieldId)?.inheritedFrom;
+    if (inherited) {
+      inheritance?.selectField(
+        inheritedFields.find(
+          (field) => field.inheritedFrom?.fieldIdentity === inherited.fieldIdentity
+        ) ?? null
+      );
+      setSidePanel(null);
+      return;
+    }
     selection.select(sectionId, fieldId);
     if (fieldId) setSidePanel('settings');
     else setSidePanel(null);
@@ -91,7 +127,27 @@ export function FormBuilderSections({
       </Stack>
       <Divider />
       <Box sx={{ flex: 1, minHeight: 0 }}>
-        <FormBuilderProperties formik={formik} selectedLocation={selection.selectedLocation} />
+        {selection.selectedLocation &&
+        builderFormik.values.sections[selection.selectedLocation.sectionIndex]?.fields[
+          selection.selectedLocation.fieldIndex
+        ]?.inheritedFrom ? (
+          <Box sx={{ p: 1.5 }}>
+            <InheritedFieldSettings
+              formik={formik}
+              field={
+                builderFormik.values.sections[selection.selectedLocation.sectionIndex].fields[
+                  selection.selectedLocation.fieldIndex
+                ]
+              }
+              sourceName={inheritance?.source?.name ?? 'Source Inquiry'}
+            />
+          </Box>
+        ) : (
+          <FormBuilderProperties
+            formik={builderFormik}
+            selectedLocation={selection.selectedLocation}
+          />
+        )}
       </Box>
       <Stack
         direction="row"
@@ -116,6 +172,7 @@ export function FormBuilderSections({
           onPanelChange={setMobilePanel}
           fields={
             <Stack sx={{ flex: 1, minHeight: 0 }}>
+              <FormInheritancePanel />
               {commands.systemFieldsQuery.isError && (
                 <StudentFeedback
                   notificationKey="STU-0368"
@@ -131,12 +188,18 @@ export function FormBuilderSections({
                 </StudentFeedback>
               )}
               <FormBuilderPalette
+                purpose={formik.values.purpose}
                 systemFields={commands.systemFieldsQuery.data ?? []}
-                usedBindings={formik.values.sections.flatMap((section) =>
-                  section.fields
+                usedBindings={[
+                  ...inheritedFields
                     .filter((field) => field.bindingType === 0 && field.bindingKey)
-                    .map((field) => field.bindingKey!)
-                )}
+                    .map((field) => field.bindingKey!),
+                  ...formik.values.sections.flatMap((section) =>
+                    section.fields
+                      .filter((field) => field.bindingType === 0 && field.bindingKey)
+                      .map((field) => field.bindingKey!)
+                  ),
+                ]}
                 targetLabel={selectedSection?.name}
                 loading={commands.systemFieldsQuery.isLoading}
                 error={commands.systemFieldsQuery.isError}
@@ -207,6 +270,13 @@ export function FormBuilderSections({
                         icon={canvasMode === 'preview' ? 'mdi:pencil-outline' : 'mdi:eye-outline'}
                       />
                     }
+                    disabled={Boolean(
+                      inheritance?.enabled &&
+                      (inheritance.loading ||
+                        inheritance.failed ||
+                        !inheritance.preview?.isValid ||
+                        !inheritance.approved)
+                    )}
                     onClick={() => setCanvasMode(canvasMode === 'preview' ? 'design' : 'preview')}
                   >
                     {canvasMode === 'preview' ? 'Back to builder' : 'Preview'}
@@ -235,7 +305,7 @@ export function FormBuilderSections({
               <Box sx={{ flex: 1, minHeight: 0 }}>
                 {canvasMode === 'design' ? (
                   <FormBuilderCanvas
-                    formik={formik}
+                    formik={builderFormik}
                     selectedSectionId={selection.selectedSectionId}
                     selectedFieldId={selection.selectedFieldId}
                     onSelect={selectCanvasField}
@@ -243,11 +313,17 @@ export function FormBuilderSections({
                     onAddStep={addStep}
                     onNewStepReady={setNewStepId}
                     footer={desktop ? footer : undefined}
+                    beforeSections={<InheritedFieldsCanvas />}
                   />
                 ) : (
                   <Stack sx={{ height: 1, minHeight: 0 }}>
                     <Box sx={{ flex: 1, minHeight: 0 }}>
-                      <FormBuilderLivePreview form={formik.values} />
+                      <FormBuilderLivePreview
+                        form={getInheritancePreviewValues(
+                          formik.values,
+                          inheritance?.preview?.definition
+                        )}
+                      />
                     </Box>
                     {desktop && footer}
                   </Stack>
@@ -271,6 +347,7 @@ export function FormBuilderSections({
         >
           {settingsContent}
         </Drawer>
+        <InheritedFieldDrawer />
       </>
     </DndContext>
   );

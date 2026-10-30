@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import type {
   AdmissionFormOption,
   AdmissionFormOptionsQuery,
+  AdmissionFormInheritedOrigin,
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import dayjs from 'dayjs';
@@ -16,14 +17,23 @@ import { normalizeEmail } from 'src/utils/input-format';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
-import { Box, Grid, Checkbox, TextField, FormHelperText, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Stack,
+  Checkbox,
+  TextField,
+  Typography,
+  FormHelperText,
+  FormControlLabel,
+} from '@mui/material';
 
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { isAdmissionEmailField } from './admission-email-values';
 import { parseFieldConfiguration } from './form-dialog/form-field-presets';
 import { AdmissionProfilePhotoField } from './admission-profile-photo-field';
-import { AdmissionSpecializedRuntimeField } from './admission-specialized-runtime-field';
 import { AdmissionMasterDataRuntimeField } from './admission-master-data-runtime-field';
+import { AdmissionSpecializedRuntimeField } from './admission-specialized-runtime-field';
 import { academicOptionsJson, isInstituteAcademicSource } from './admission-academic-options';
 import {
   isAdmissionSiblingField,
@@ -42,6 +52,7 @@ type Field = {
   helpTextDetails?: string;
   optionsJson?: string | null;
   validationJson?: string | null;
+  inheritedFrom?: AdmissionFormInheritedOrigin | null;
 };
 export type AdmissionRuntimeFieldProps = {
   field: Field;
@@ -78,23 +89,43 @@ const GENDER_OPTIONS: ChoiceOption[] = [
 export default function AdmissionRuntimeField(props: AdmissionRuntimeFieldProps) {
   const helperId = useId();
   const { field, formValues, optionsResolved } = props;
+  const withSource = (content: ReactNode) =>
+    field.inheritedFrom ? (
+      <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+        {content}
+        <Typography variant="caption" color="text.secondary">
+          From Inquiry
+        </Typography>
+      </Stack>
+    ) : (
+      content
+    );
   const { format } = parseFieldConfiguration(field.validationJson);
-  if (isAdmissionSiblingField(field)) return <AdmissionSiblingRuntimeField {...props} />;
-  if (!optionsResolved && [6, 7, 8].includes(field.fieldType) && isInstituteAcademicSource(academicOptionsJson(field)))
-    return <AdmissionMasterDataRuntimeField {...props} />;
-  if (format === 'photo') return <AdmissionProfilePhotoField {...props} />;
+  if (isAdmissionSiblingField(field))
+    return withSource(<AdmissionSiblingRuntimeField {...props} />);
+  if (
+    !optionsResolved &&
+    [6, 7, 8].includes(field.fieldType) &&
+    isInstituteAcademicSource(academicOptionsJson(field))
+  )
+    return withSource(<AdmissionMasterDataRuntimeField {...props} />);
+  if (format === 'photo') return withSource(<AdmissionProfilePhotoField {...props} />);
   if ((format && format !== 'email') || field.fieldType === 4) {
-    return <AdmissionSpecializedRuntimeField {...props} formValues={formValues ?? {}} />;
+    return withSource(
+      <AdmissionSpecializedRuntimeField {...props} formValues={formValues ?? {}} />
+    );
   }
   const renderer = fieldRendererRegistry[field.fieldType] ?? renderInput;
-  return renderer({
-    ...props,
-    helperId,
-    options:
-      field.bindingKey === 'Applicant.Gender' || field.code === 'Gender'
-        ? GENDER_OPTIONS
-        : readOptions(field.optionsJson),
-  });
+  return withSource(
+    renderer({
+      ...props,
+      helperId,
+      options:
+        field.bindingKey === 'Applicant.Gender' || field.code === 'Gender'
+          ? GENDER_OPTIONS
+          : readOptions(field.optionsJson),
+    })
+  );
 }
 
 function renderStatic({ field, value }: RendererProps) {
@@ -299,17 +330,18 @@ function readOptions(optionsJson?: string | null): ChoiceOption[] {
   try {
     const parsed = JSON.parse(optionsJson) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map((option) =>
-        typeof option === 'string'
-          ? { value: option, label: option }
-          : (option as { value?: string; label?: string })
-      )
-      .filter((option) => Boolean(option.value))
-      .map((option) => ({
-        value: option.value as string,
-        label: option.label ?? (option.value as string),
-      }));
+    return parsed.flatMap((option): ChoiceOption[] => {
+      const candidate = typeof option === 'string' ? { value: option, label: option } : option;
+      if (!candidate || typeof candidate !== 'object' || !('value' in candidate)) return [];
+      const rawValue: unknown = candidate.value;
+      if (typeof rawValue !== 'string' && typeof rawValue !== 'number') return [];
+      if (typeof rawValue === 'number' && !Number.isFinite(rawValue)) return [];
+      const value = String(rawValue);
+      if (!value.trim()) return [];
+      const label =
+        'label' in candidate && candidate.label != null ? String(candidate.label) : value;
+      return [{ value, label }];
+    });
   } catch {
     return [];
   }

@@ -6,6 +6,7 @@ import type {
 import { FIELD_TYPES } from './form-dialog-model';
 import { parseFieldConfiguration } from './form-field-presets';
 import { getAdmissionFormStepGroups } from './form-step-groups';
+import { getInquiryFormConfigurationIssues } from '../admission-inquiry-field-bindings';
 import { isJsonObject, parseOptions, extractRuleFields } from './form-builder-issue-utils';
 
 type Issue = { message: string; fieldId?: string };
@@ -19,10 +20,14 @@ export function getBuilderIssues(
   form: CreateUpdateAdmissionForm,
   catalogue: StudentFieldCatalogue = {}
 ): Issue[] {
-  const issues: Issue[] = [];
+  const issues: Issue[] = getInquiryFormConfigurationIssues(form).map((message) => ({ message }));
   const steps = getAdmissionFormStepGroups(form.sections);
-  if (!form.sections.length) issues.push({ message: 'Add at least one section.' });
-  if (form.layoutType === 1 && steps.length < 2)
+  const inheritedOnly = Boolean(
+    form.purpose === 1 && form.inheritance?.enabled && form.inheritance.sources.length
+  );
+  if (!form.sections.length && !inheritedOnly)
+    issues.push({ message: 'Add at least one section.' });
+  if (form.layoutType === 1 && steps.length < 2 && !inheritedOnly)
     issues.push({ message: 'Step-by-step forms should have at least two steps.' });
   if (form.layoutType === 1) {
     const stepCodes = new Set<string>();
@@ -75,7 +80,10 @@ export function getBuilderIssues(
     }
   });
   form.sections.forEach((section) => {
-    if (!section.fields.length)
+    if (
+      !section.fields.length &&
+      !(form.purpose === 1 && form.inheritance?.enabled && form.inheritance.sources.length)
+    )
       issues.push({
         message: `${section.name || section.code || 'Section'} has no fields. Add at least one field before publishing.`,
       });

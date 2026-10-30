@@ -50,6 +50,48 @@ const deferred = () => {
 
 describe('Offering edit detail loading', () => {
   beforeEach(() => vi.clearAllMocks());
+  it.each(['clone', 'edit'] as const)(
+    'reveals the authoritative saved scope after %s moves an offering to another class or cycle',
+    async (mode) => {
+      const onSaved = vi.fn();
+      const original = { ...detail, admissionCycleId: cycle.id, standardId: 'old-class' };
+      const saved = { ...original, admissionCycleId: 'target-cycle', standardId: 'new-class' };
+      mocks.load.mockReturnValue({ unwrap: async () => original });
+      mocks.other.mockReturnValue({ unwrap: async () => saved });
+      mocks.update.mockReturnValue({ unwrap: async () => saved });
+      const { result } = renderHook(() => useAdmissionOfferingActions(cycle, false, onSaved));
+      await act(async () => result.current.openDetailed(mode, row));
+      await act(async () => {
+        await result.current.save(toOfferingWriteInput(getOfferingInitialValues()), 'target-cycle');
+      });
+      expect(onSaved).toHaveBeenCalledExactlyOnceWith(saved);
+      expect(result.current.dialogMode).toBeNull();
+    }
+  );
+  it('preserves table filters after an ordinary edit and never reveals a failed clone', async () => {
+    const onSaved = vi.fn();
+    mocks.load.mockReturnValue({ unwrap: async () => detail });
+    mocks.update.mockReturnValue({ unwrap: async () => detail });
+    const { result } = renderHook(() => useAdmissionOfferingActions(cycle, false, onSaved));
+    await act(async () => result.current.openDetailed('edit', row));
+    await act(async () =>
+      result.current.save(toOfferingWriteInput(getOfferingInitialValues()), cycle.id)
+    );
+    expect(onSaved).not.toHaveBeenCalled();
+    await act(async () => result.current.openDetailed('clone', row));
+    mocks.other.mockReturnValue({
+      unwrap: async () => {
+        throw new Error('Clone failed');
+      },
+    });
+    await act(async () => {
+      await expect(
+        result.current.save(toOfferingWriteInput(getOfferingInitialValues()), 'target-cycle')
+      ).rejects.toThrow('Clone failed');
+    });
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(result.current.dialogMode).toBe('clone');
+  });
   it('opens Edit immediately without exposing stale form data, then uses the latest details', async () => {
     const request = deferred();
     mocks.load.mockReturnValue({ unwrap: () => request.promise });

@@ -14,8 +14,12 @@ const mocks = vi.hoisted(() => ({
   validate: vi.fn(),
   save: vi.fn(),
   retry: vi.fn(),
+  errorToast: vi.fn(),
   valid: true,
   queryFailed: false,
+}));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: { error: mocks.errorToast, dismiss: vi.fn() },
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 vi.mock('./use-admission-unsaved-changes', () => ({ useAdmissionUnsavedChanges: () => undefined }));
@@ -119,7 +123,7 @@ describe('Offering edit drawer experience', () => {
     mocks.validate.mockResolvedValue({ isValid: true, errors: [] });
     mocks.save.mockResolvedValue(true);
   });
-  it('opens a locked loading shell with no editable stale values, then exposes error Retry', async () => {
+  it('opens a locked loading shell, then announces the detail failure through the standard toast', async () => {
     const retry = vi.fn();
     const view = show({ offering: null, loadingDetail: true });
     expect(screen.getByRole('status', { name: 'Loading admission offering' })).toBeVisible();
@@ -136,9 +140,16 @@ describe('Offering edit drawer experience', () => {
         />
       </ThemeProvider>
     );
-    expect(screen.getByText('Unable to load offering', { exact: false })).toBeVisible();
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(retry).toHaveBeenCalledOnce();
+    await waitFor(() =>
+      expect(mocks.errorToast).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Unable to load offering' })
+      )
+    );
+    expect(screen.queryByText('Unable to load offering')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Offering name *' })).not.toBeInTheDocument();
+    expect(retry).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Close admission offering' })).toBeEnabled();
   });
   it('merges class and configuration, shows cycle below two steps and preserves choices after Preview/Back', async () => {
@@ -267,15 +278,23 @@ describe('Offering edit drawer experience', () => {
     await screen.findByRole('heading', { name: 'Preview offering' });
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled();
   });
-  it('shows option-load errors with Retry while blocking Continue', async () => {
+  it('announces option-load errors through the standard toast while blocking Continue', async () => {
     mocks.queryFailed = true;
     show();
+    await waitFor(() =>
+      expect(mocks.errorToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Some academic options could not be loaded. Retry before saving.',
+        })
+      )
+    );
     expect(
-      screen.getByText('Some academic options could not be loaded', { exact: false })
-    ).toBeVisible();
+      screen.queryByText('Some academic options could not be loaded', { exact: false })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(mocks.retry).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(mocks.validate).not.toHaveBeenCalled();
+    expect(mocks.save).not.toHaveBeenCalled();
   });
   it('does not advance or save when the server validation request fails', async () => {
     mocks.validate.mockResolvedValue(null);

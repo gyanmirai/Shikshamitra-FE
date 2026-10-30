@@ -14,7 +14,12 @@ const mocks = vi.hoisted(() => ({
   query: vi.fn(),
   refetch: vi.fn(),
   run: vi.fn(),
+  error: vi.fn(),
+  dismiss: vi.fn(),
   permissions: { view: true, book: true, attendance: true, results: true, waive: true },
+}));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: { error: mocks.error, dismiss: mocks.dismiss },
 }));
 vi.mock('src/redux/student/admissions/admission-assessments-api', () => ({
   useGetApplicationAssessmentQuery: mocks.query,
@@ -179,15 +184,18 @@ it('does not expose assessment controls without view access and skips the query'
   expect(screen.getByText('Assessment access is required', { exact: false })).toBeVisible();
 });
 
-it('locks compact stage controls during refresh and supports query retry', () => {
+it('locks compact stage controls during refresh and announces query failures through the shared toast', () => {
   mocks.query.mockReturnValue(query(base, { isFetching: true }));
   const { unmount } = panel();
   expect(screen.getByRole('button', { name: 'Start assessment' })).toBeDisabled();
   unmount();
   mocks.query.mockReturnValue(query(base, { isError: true }));
   panel();
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(mocks.refetch).toHaveBeenCalledOnce();
+  expect(mocks.error).toHaveBeenCalledWith(
+    expect.objectContaining({ message: 'Unable to load this enrollment data.' })
+  );
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(mocks.refetch).not.toHaveBeenCalled();
 });
 
 it.each([false, true])(

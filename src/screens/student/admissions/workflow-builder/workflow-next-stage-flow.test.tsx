@@ -133,9 +133,9 @@ afterEach(() => {
   stores.length = 0;
 });
 
-async function setup() {
+async function setup(openNextStage = true, initialWorkflow = workflow) {
   const saves: Array<Pick<AdmissionWorkflow, 'stages' | 'transitions'>> = [];
-  let saved = workflow;
+  let saved = initialWorkflow;
   mswServer.use(
     http.get('*/api/student/enrollment/admissions/workflows/stage-types', () =>
       HttpResponse.json({ data: [metadata] })
@@ -170,6 +170,7 @@ async function setup() {
   );
   await screen.findByRole('list', { name: 'Journey stage sequence' });
   await waitFor(() => expect(screen.getByRole('button', { name: 'Add stage' })).toBeEnabled());
+  if (!openNextStage) return { saves };
   const source = within(screen.getByRole('list', { name: 'Journey stage sequence' })).getAllByRole(
     'listitem'
   )[0];
@@ -207,10 +208,55 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     await waitFor(() => expect(saves).toHaveLength(1), { timeout: 10000 });
     const added = saves[0].stages.find((stage) => stage.name === 'Additional assessment');
     expect(added).toMatchObject({ stageType: 2, isEntryStage: false });
-    expect(saves[0].stages).toHaveLength(3);
+    expect(saves[0].stages.map((stage) => stage.id)).toEqual(['source', added!.id, 'decision']);
     expect(saves[0].transitions).toEqual([
       expect.objectContaining({ fromStageId: 'source', toStageId: added!.id, isDefault: true }),
+      expect.objectContaining({ fromStageId: added!.id, toStageId: 'decision', isDefault: true }),
     ]);
+  });
+  it('lets Add stage choose an insertion point and splits the saved usual path', async () => {
+    const { saves } = await setup(false, {
+      ...workflow,
+      transitions: [
+        { id: 'usual', fromStageId: 'source', toStageId: 'decision', priority: 0, isDefault: true },
+      ],
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add stage' }));
+    expect(await screen.findByRole('combobox', { name: 'Insert after *' })).toBeVisible();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
+      target: { value: 'Inserted assessment' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument()
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(saves).toHaveLength(1));
+    const inserted = saves[0].stages.find((stage) => stage.name === 'Inserted assessment')!;
+    expect(saves[0].stages.map((stage) => stage.id)).toEqual(['source', inserted.id, 'decision']);
+    expect(saves[0].transitions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'usual',
+          fromStageId: 'source',
+          toStageId: inserted.id,
+          isDefault: true,
+        }),
+        expect.objectContaining({
+          fromStageId: inserted.id,
+          toStageId: 'decision',
+          isDefault: true,
+        }),
+      ])
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(
+      within(screen.getByRole('list', { name: 'Journey stage sequence' })).getAllByRole('listitem')
+    ).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
+    expect(
+      within(screen.getByRole('list', { name: 'Journey stage sequence' })).getAllByRole('listitem')
+    ).toHaveLength(3);
   });
   it('abandons the next-stage editor without adding a stage or route', async () => {
     const { saves } = await setup();
@@ -234,5 +280,51 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
     expect(saves).toHaveLength(0);
+  });
+  it('honors the selected insertion position instead of the default last non-ending stage', async () => {
+    const middle = {
+      ...workflow.stages[0],
+      id: 'middle',
+      code: 'MIDDLE',
+      name: 'Middle assessment',
+      displayOrder: 1,
+      isEntryStage: false,
+    };
+    const { saves } = await setup(false, {
+      ...workflow,
+      stages: [workflow.stages[0], middle, { ...workflow.stages[1], displayOrder: 2 }],
+      transitions: [
+        { id: 'first', fromStageId: 'source', toStageId: 'middle', priority: 0, isDefault: true },
+        { id: 'last', fromStageId: 'middle', toStageId: 'decision', priority: 0, isDefault: true },
+      ],
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add stage' }));
+    const position = await screen.findByRole('combobox', { name: 'Insert after *' });
+    expect(position).toHaveTextContent('Middle assessment');
+    fireEvent.mouseDown(position);
+    fireEvent.click(await screen.findByRole('option', { name: 'Entrance assessment' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
+      target: { value: 'Chosen position assessment' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument()
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(saves).toHaveLength(1));
+    const inserted = saves[0].stages.find((stage) => stage.name === 'Chosen position assessment')!;
+    expect(saves[0].stages.map((stage) => stage.id)).toEqual([
+      'source',
+      inserted.id,
+      'middle',
+      'decision',
+    ]);
+    expect(saves[0].transitions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'first', fromStageId: 'source', toStageId: inserted.id }),
+        expect.objectContaining({ fromStageId: inserted.id, toStageId: 'middle', isDefault: true }),
+        expect.objectContaining({ id: 'last', fromStageId: 'middle', toStageId: 'decision' }),
+      ])
+    );
   });
 });

@@ -637,7 +637,7 @@ it('uses the server completion-timing message on the matching recipient', () => 
 it('shows sender acceptance without exposing an editable password', () => {
   setRecipients(workspaceWithDelivery('Sent').recipients);
   panel();
-  expect(screen.getAllByText('Submitted')).toHaveLength(2);
+  expect(screen.getAllByText('Login details sent')).toHaveLength(2);
   expect(screen.queryByRole('textbox', { name: /password/i })).not.toBeInTheDocument();
 });
 it('preserves the actual safe server Reason in one toast after a rejected send', async () => {

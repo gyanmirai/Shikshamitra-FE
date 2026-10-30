@@ -9,6 +9,7 @@ import { Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
+import { WorkflowStagePosition } from './workflow-stage-position';
 import { AdmissionWorkflowStageDrawer } from '../../admission-workflow-stage-drawer';
 import { AdmissionWorkflowTransitionDrawer } from '../../admission-workflow-transition-drawer';
 
@@ -23,12 +24,15 @@ type Props = {
   stageTypes: AdmissionWorkflowStageTypeMetadata[];
   forms: AdmissionForm[];
   readOnly: boolean;
+  insertionSourceId?: string | null;
+  insertionSourceLocked?: boolean;
+  onChangeInsertionSource?: (id: string) => void;
   onCloseStage: () => void;
   onCloseTransition: () => void;
   onCloseDelete: () => void;
-  onSaveStage: (stage: AdmissionWorkflowStage) => void;
+  onSaveStage: (stage: AdmissionWorkflowStage) => void | boolean;
   onSaveTransition: (transition: AdmissionWorkflowTransition) => void;
-  onDeleteStage: (stageId: string) => void;
+  onDeleteStage: (stageId: string) => void | boolean;
 };
 
 export function WorkflowBuilderEditors({
@@ -42,6 +46,9 @@ export function WorkflowBuilderEditors({
   stageTypes,
   forms,
   readOnly,
+  insertionSourceId = null,
+  insertionSourceLocked = false,
+  onChangeInsertionSource,
   onCloseStage,
   onCloseTransition,
   onCloseDelete,
@@ -67,6 +74,20 @@ export function WorkflowBuilderEditors({
         readOnly={readOnly}
         onClose={onCloseStage}
         onSave={onSaveStage}
+        placementField={
+          !readOnly &&
+          editingStage &&
+          stages.length > 0 &&
+          !stages.some((stage) => stage.id === editingStage.id) &&
+          onChangeInsertionSource ? (
+            <WorkflowStagePosition
+              stages={stages}
+              sourceId={insertionSourceId}
+              locked={insertionSourceLocked}
+              onChange={onChangeInsertionSource}
+            />
+          ) : undefined
+        }
       />
       <AdmissionWorkflowTransitionDrawer
         open={transitionOpen}
@@ -85,7 +106,7 @@ export function WorkflowBuilderEditors({
         title="Remove workflow stage?"
         content={
           stageToDelete
-            ? `Removing ${stageToDelete.name} will also remove ${connectedTransitions} connected path(s). This change is saved only when you save the draft.`
+            ? `Removing ${stageToDelete.name} updates ${connectedTransitions} connected path(s) and reconnects its usual sequence where safe. Stages with special paths or ambiguous connections must be repaired before removal. This change is saved only when you save the draft.`
             : ''
         }
         action={
@@ -96,8 +117,7 @@ export function WorkflowBuilderEditors({
             startIcon={<Iconify icon="mdi:delete-outline" />}
             onClick={() => {
               if (!stageToDelete) return;
-              onDeleteStage(stageToDelete.id);
-              onCloseDelete();
+              if (onDeleteStage(stageToDelete.id) !== false) onCloseDelete();
             }}
           >
             Remove stage

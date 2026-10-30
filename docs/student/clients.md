@@ -12,6 +12,10 @@ audience: humans-and-agents
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
 
+## Resume admission client
+
+`admission-applications-api.ts` provides the scoped `getAdmissionJourneyResumePreview` query and `resumeAdmissionApplicationJourney` mutation. The command sends reason, preview stamp, closure ID and a stable request key. Successful changes invalidate Admissions application, applicant, inquiry, offering, task/exam and dashboard tags; failed requests do not invalidate Finance money data. `application-resume-journey.tsx` retains the command key on retry, parses the actual server blocker and refreshes eligibility without discarding the reason. See the [backend contract](../../../Shikshamitra-BE/docs/modules/student/api.md#admission-journey-preparation-and-closure).
+
 ## Parent and optional-guardian contact clients
 
 Inquiry and Direct Registration requests add optional `familyContacts` while retaining the original parent/sibling proof fields. Inquiry reads add `mainSchoolContact` for communication preview; the contact helper keeps missing destination fields empty instead of borrowing from another person.
@@ -64,6 +68,8 @@ The existing Onboarding settings client persists the school's `readinessAccess` 
 Workflow advance accepts `deferFeeCollection: true` with the required trimmed `reason`, expected stage, application stamp and idempotency key. Fee-selection reads include `hasRecordedFeePayment` and nullable `feeCollectionDeferral` (stage, reason, actor and timestamp), which is also displayed in Onboarding Fees. Finalization follows the existing decision path. See the [backend collection contract](../../../Shikshamitra-BE/docs/modules/finance/references/admission-fee-collection.md).
 
 ## Subject-wise Assessment clients
+
+`assessment-student-booking-drawer.tsx` and `use-assessment-student-booking.ts` own student-first session selection and Create & Book. `admission-assessment-planning-api.ts` sends optional `stageInstanceIds` to preview; selected rows retain their exact application/stage identity and use fresh server stamps. Confirmation reuses the existing atomic endpoint and cache tags. Uncertain responses replay the exact durable command; no confirmed payment or admission transition is performed by booking.
 
 `admission-assessment-catalog-api.ts` reads `/student/enrollment/admissions/workflows/assessment-catalog` only when the stage uses subject-wise marks.
 The existing Workflow View guard owns catalog access; the returned year/Board/Medium/classes and subject suggestions do not require an Academic menu grant.
@@ -179,6 +185,8 @@ Deployment, data freezing, approval policy, concurrency, tenant scope and custom
 
 ### Admissions clients
 
+`admission-inquiry-field-bindings.ts` resolves configured identity ownership and minimum Inquiry publication issues for the existing builder, staff runtime and public form. It adds no lookup request. Question labels remain presentation; stable bindings and safe historical codes identify Student and primary-contact values. The Inquiry palette includes optional `Inquiry.ParentRelationship`, `Inquiry.Source`, `Inquiry.SourceDetail` and `Inquiry.PreferredLanguageCode` questions. `duplicate-check` matches optionally include `existingInquiryAdmissionCycleId`; the review UI uses it with the entered name/DOB to prioritize a possible current-cycle duplicate without inferring a sibling relationship. Missing cycle metadata retains legacy family review. Public question metadata includes its binding information; the backend remains authoritative for identity and public-link attribution.
+
 New Inquiry keeps the academic-year `capture-catalogue` subscription for period/academic choices. `use-admission-inquiry-class-offerings.ts` force-refreshes that same Inquiry-authorized endpoint for each complete period/board/medium/class selection and Retry. Class scope and a per-check identity isolate the RTK cache, including rapid A → B → A transitions; only `academicYearId` is sent to the existing server endpoint. No Offering-settings permission or backend contract is added. The hook filters the fresh catalogue, ignores previous-selection completions, follows later tag refreshes, and separates failed checks from successful empty results. The selected offering's existing `capture-context` remains authoritative for form, policy, capacity and save availability.
 
 | Client                          | Responsibilities                                                                                                                                                                                                                             | Main screens                                                |
@@ -197,7 +205,8 @@ New Inquiry keeps the academic-year `capture-catalogue` subscription for period/
 visible as read-only context. `form-list/form-column-filters.ts` serializes Form name, Version
 and Sections criteria into the existing list request's `columnFilters`; Status retains its scalar
 parameter and replaces the previous status choice. The server filters before count/paging.
-Search/filter changes reset the page; tab changes clear criteria before requesting the new purpose.
+Search/filter changes reset the page. One unified request lists Inquiry and Registration forms;
+legacy `view` parameters do not restrict the form type. Preview return restores table criteria.
 The list uses `currentData` to avoid rows from another query scope, retains safe rows while
 refreshing or after a refresh failure, and prevents a failed first request from showing a
 successful empty state. Existing utilities, row actions, permissions and form-builder commands
@@ -493,3 +502,9 @@ See [backend email contracts](../../../Shikshamitra-BE/docs/modules/student/api.
 ## Actual handling history
 
 `admission-applicants-api.ts` reads `/student/enrollment/admissions/activities/applicant/{id}` through the existing authenticated service and inquiry/applicant/application cache tags. History mounts lazily in the selected History view. Activity/timeline DTOs include `actorName`, workflow/Onboarding steps include `completedByName`, and Onboarding events include `actorName`. The shared timeline keeps all returned events accessible with Show all; no owner is substituted for an actor. The public-link drawer no longer queries intake setups and always sends a null legacy assignment-profile reference.
+
+## Inquiry inheritance clients
+
+`admission-forms-api.ts` owns paged `GET forms/{id}/inheritance/sources` (`skipCount` / `maxResultCount`, 25 per request) and read-only `POST forms/inheritance/preview`. Source usage summaries require the existing Form usage grant; preview requires Form management. The builder accumulates authorized pages and offers Load more connected forms. Preview carries the current Registration draft and selected exact Inquiry version without saving either. Existing form create/update/version/publish operations retain the versioned inheritance policy.
+
+`form-dialog/hooks/use-form-inheritance.tsx` debounces draft compatibility previews, ignores stale responses and keeps effective sections separate from base Formik sections. Legacy forms do not request inheritance data. `admission-applications-api.ts` receives the frozen effective definition and safe Inquiry context; runtime fields use server provenance instead of inferring labels from field codes. Common API/UI components are reused unchanged.

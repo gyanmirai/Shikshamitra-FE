@@ -11,10 +11,18 @@ type Props = {
   onEdit: () => void;
   onDelete: () => void;
   disabled?: boolean;
+  deleteDisabled?: boolean;
 };
 
 // Match the existing admissions workflow-card actions while keeping deletion confirmation mounted.
-export function FormBuilderUnitActions({ name, unit, onEdit, onDelete, disabled }: Props) {
+export function FormBuilderUnitActions({
+  name,
+  unit,
+  onEdit,
+  onDelete,
+  disabled,
+  deleteDisabled,
+}: Props) {
   const confirm = useBoolean();
   return (
     <>
@@ -34,7 +42,7 @@ export function FormBuilderUnitActions({ name, unit, onEdit, onDelete, disabled 
               <Iconify icon="mdi:pencil-outline" /> Edit
             </MenuItem>
             <MenuItem
-              disabled={disabled}
+              disabled={disabled || deleteDisabled}
               sx={{ color: 'error.main' }}
               onClick={() => {
                 popover.onClose();

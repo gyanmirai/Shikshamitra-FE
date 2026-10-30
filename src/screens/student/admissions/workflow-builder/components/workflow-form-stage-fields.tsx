@@ -20,6 +20,7 @@ type Props = {
   stages: AdmissionWorkflowStage[];
   formDefinitionId: string;
   readOnly: boolean;
+  isNewStage?: boolean;
 };
 
 export function WorkflowFormStageFields(props: Props) {

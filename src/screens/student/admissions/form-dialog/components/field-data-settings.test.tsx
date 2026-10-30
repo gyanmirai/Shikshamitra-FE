@@ -12,6 +12,8 @@ import { FieldDataSettings } from './field-data-settings';
 import { newField, getAdmissionFormInitialValues } from '../form-dialog-model';
 
 const catalogueQuery = vi.hoisted(() => vi.fn());
+const toast = vi.hoisted(() => ({ error: vi.fn(), dismiss: vi.fn() }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   useGetAdmissionFormSystemFieldsQuery: () => catalogueQuery(),
 }));
@@ -130,14 +132,20 @@ describe('custom field student-record mapping', () => {
     expect(currentField().bindingKey).toBe('Applicant.FirstName');
   });
 
-  it('reports catalogue failure and offers retry without changing the saved mapping', async () => {
-    const user = userEvent.setup();
+  it('reports catalogue failure through standard feedback without changing the saved mapping', () => {
     const refetch = vi.fn();
     catalogueQuery.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch });
     renderSettings(0, 'Applicant.FirstName');
-    expect(screen.getByText('Could not load student record fields.')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(refetch).toHaveBeenCalledOnce();
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Could not load student record fields.' })
+    );
+    expect(screen.queryByText('Could not load student record fields.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Student record field' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(refetch).not.toHaveBeenCalled();
     expect(currentField().bindingKey).toBe('Applicant.FirstName');
   });
 });

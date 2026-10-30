@@ -34,8 +34,8 @@ const STARTERS: Array<{
   },
   {
     id: 'admission-application',
-    title: 'Admission application',
-    description: 'Start with the recommended application for most schools.',
+    title: 'Registration form',
+    description: 'Start with the recommended registration form for most schools.',
     detail: 'Includes student, guardian, address, academic history, and declaration sections.',
     action: 'Use recommended',
     icon: 'mdi:file-document-edit-outline',

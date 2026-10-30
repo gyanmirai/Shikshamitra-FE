@@ -76,6 +76,7 @@ function Preview() {
           <StudentOnboardingPortalAccounts
             student={student}
             canManage={scenario !== 'permission'}
+            compact={new URLSearchParams(window.location.search).get('layout') === 'compact'}
             onBusyChange={setBusy}
           />
         </FormSectionCard>

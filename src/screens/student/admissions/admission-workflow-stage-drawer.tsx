@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type {
   AdmissionWorkflowStage,
@@ -11,6 +12,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
+import { getDocumentConfigurationError } from 'src/redux/student/admissions/admission-document-policy-validation';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { isApplicationStageType } from './workflow-builder/workflow-stage-configuration';
@@ -25,11 +27,23 @@ type Props = {
   stages?: AdmissionWorkflowStage[];
   readOnly: boolean;
   onClose: () => void;
-  onSave: (stage: AdmissionWorkflowStage) => void;
+  onSave: (stage: AdmissionWorkflowStage) => void | boolean;
+  placementField?: ReactNode;
 };
 
 export function AdmissionWorkflowStageDrawer(props: Props) {
-  const { open, stage, stageTypes, forms, stages = [], readOnly, onClose, onSave } = props;
+  const {
+    open,
+    stage,
+    stageTypes,
+    forms,
+    stages: suppliedStages,
+    readOnly,
+    onClose,
+    onSave,
+    placementField,
+  } = props;
+  const stages = suppliedStages ?? [];
   const {
     formik,
     metadata,
@@ -39,6 +53,9 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
     close,
     requestClose,
   } = useWorkflowStageEditor({ open, stage, stageTypes, stages, forms, readOnly, onClose, onSave });
+  const invalidDocumentSettings =
+    formik.values.stageType === 5 &&
+    Boolean(getDocumentConfigurationError(formik.values.configurationJson));
 
   return (
     <>
@@ -110,6 +127,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                   {formik.errors.stageType}
                 </StudentFeedback>
               )}
+              {placementField}
               <WorkflowStageFields
                 formik={formik}
                 metadata={metadata}
@@ -118,6 +136,9 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 stages={stages}
                 formDefinitionId={formDefinitionId}
                 readOnly={readOnly}
+                isNewStage={
+                  suppliedStages !== undefined && !stages.some((item) => item.id === stage?.id)
+                }
               />
             </Scrollbar>
             <Stack
@@ -134,7 +155,10 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 variant="contained"
                 type={readOnly ? 'button' : 'submit'}
                 onClick={readOnly ? requestClose : undefined}
-                disabled={!readOnly && !isApplicationStageType(formik.values.stageType)}
+                disabled={
+                  !readOnly &&
+                  (!isApplicationStageType(formik.values.stageType) || invalidDocumentSettings)
+                }
                 startIcon={<Iconify icon={readOnly ? 'mdi:close' : 'mdi:content-save-outline'} />}
               >
                 {readOnly ? 'Close' : 'Apply changes'}

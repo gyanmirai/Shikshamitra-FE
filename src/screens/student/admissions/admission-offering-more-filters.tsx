@@ -19,16 +19,10 @@ import type { AdmissionOfferingFilters } from './use-admission-offering-filters'
 
 type AdvancedFilters = Pick<
   AdmissionOfferingFilters,
-  | 'admissionCycleId'
-  | 'campusId'
-  | 'availabilityStatus'
-  | 'stageId'
-  | 'isActive'
-  | 'configurationStatus'
+  'campusId' | 'availabilityStatus' | 'stageId' | 'isActive' | 'configurationStatus'
 >;
 
 type Props = {
-  cycles: AdmissionCycle[];
   cycle: AdmissionCycle | null;
   values: AdmissionOfferingFilters;
   onChange: (changes: Partial<AdmissionOfferingFilters>) => void;
@@ -44,11 +38,7 @@ const EMPTY_OPTIONAL_FILTERS = {
   configurationStatus: '',
 };
 
-const pickAdvancedFilters = (
-  values: AdmissionOfferingFilters,
-  cycle: AdmissionCycle | null
-): AdvancedFilters => ({
-  admissionCycleId: values.admissionCycleId || cycle?.id || '',
+const pickAdvancedFilters = (values: AdmissionOfferingFilters): AdvancedFilters => ({
   campusId: values.campusId,
   availabilityStatus: values.availabilityStatus,
   stageId: values.stageId,
@@ -56,16 +46,15 @@ const pickAdvancedFilters = (
   configurationStatus: values.configurationStatus,
 });
 
-export function AdmissionOfferingMoreFilters({ cycles, cycle, values, onChange }: Props) {
+export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props) {
   const popover = usePopover();
-  const [draft, setDraft] = useState<AdvancedFilters>(() => pickAdvancedFilters(values, cycle));
+  const [draft, setDraft] = useState<AdvancedFilters>(() => pickAdvancedFilters(values));
   const activeCount = [
     values.campusId,
     values.availabilityStatus,
     values.stageId,
     values.isActive,
     values.configurationStatus,
-    values.admissionCycleId && values.admissionCycleId !== cycles[0]?.id,
   ].filter(Boolean).length;
   const hierarchyQuery = useGetAcademicOrganizationOptionsQuery(
     { academicYearId: cycle?.academicYearId ?? '' },
@@ -92,7 +81,7 @@ export function AdmissionOfferingMoreFilters({ cycles, cycle, values, onChange }
         aria-haspopup="dialog"
         aria-expanded={popover.open}
         onClick={(event) => {
-          setDraft(pickAdvancedFilters(values, cycle));
+          setDraft(pickAdvancedFilters(values));
           popover.onOpen(event);
         }}
       >
@@ -130,17 +119,6 @@ export function AdmissionOfferingMoreFilters({ cycles, cycle, values, onChange }
           <Divider />
 
           <Stack spacing={1.5} sx={{ p: 2, overflowY: 'auto', minHeight: 0 }}>
-            <CustomSelect
-              options={cycles}
-              label="Admission cycle"
-              labelKey="name"
-              valueKey="id"
-              value={draft.admissionCycleId}
-              disabled={!cycles.length}
-              onChange={(id) =>
-                updateDraft({ admissionCycleId: String(id), campusId: '', stageId: '' })
-              }
-            />
             <AdmissionCampusSelect
               label="Campus"
               valueId={draft.campusId || ALL_FILTER_VALUE}
@@ -194,12 +172,7 @@ export function AdmissionOfferingMoreFilters({ cycles, cycle, values, onChange }
               labelKey="name"
               valueKey="id"
               value={draft.stageId || ALL_FILTER_VALUE}
-              disabled={
-                !values.mediumId ||
-                draft.admissionCycleId !== (values.admissionCycleId || cycle?.id) ||
-                hierarchyQuery.isFetching ||
-                hierarchyQuery.isError
-              }
+              disabled={!values.mediumId || hierarchyQuery.isFetching || hierarchyQuery.isError}
               onChange={(id) =>
                 updateDraft({
                   stageId: id === ALL_FILTER_VALUE ? '' : String(id),
@@ -259,15 +232,10 @@ export function AdmissionOfferingMoreFilters({ cycles, cycle, values, onChange }
               variant="contained"
               startIcon={<Iconify icon="mdi:check" />}
               onClick={() => {
-                const cycleChanged =
-                  draft.admissionCycleId !== (values.admissionCycleId || cycle?.id);
                 const stageChanged = draft.stageId !== values.stageId;
                 onChange({
                   ...draft,
-                  ...(cycleChanged
-                    ? { boardId: '', mediumId: '', stageId: '', standardId: '' }
-                    : {}),
-                  ...(!cycleChanged && stageChanged ? { standardId: '' } : {}),
+                  ...(stageChanged ? { standardId: '' } : {}),
                 });
                 popover.onClose();
               }}

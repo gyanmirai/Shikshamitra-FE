@@ -126,6 +126,11 @@ export function WorkflowTemplateSelector({
                             Recommended
                           </Label>
                         )}
+                        {'inquiryLinked' in template && template.inquiryLinked && (
+                          <Label color="info" variant="soft">
+                            Inquiry linked
+                          </Label>
+                        )}
                       </Stack>
                       <Typography variant="caption" color="text.secondary">
                         {template.description}

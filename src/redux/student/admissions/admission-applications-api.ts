@@ -8,6 +8,7 @@ import {
 } from 'src/redux/tagTypes';
 
 import type { ReviewDecisionCapabilities } from './admission-review-types';
+import type { AdmissionFormInheritance, AdmissionFormInheritedOrigin } from './admission-forms-api';
 import type {
   AdmissionFamilyParent,
   AdmissionFamilyContacts,
@@ -15,6 +16,22 @@ import type {
 } from './admission-parent-family-types';
 
 const dashboardTag = { type: studentType.student, id: 'MODULE-DASHBOARD-admissions' } as const;
+export type ResumeAdmissionJourneyInput = {
+  reason: string;
+  concurrencyStamp: string;
+  closureHistoryId: string;
+  idempotencyKey: string;
+};
+export type AdmissionJourneyResumePreview = {
+  canResume: boolean;
+  closureHistoryId: string | null;
+  concurrencyStamp: string;
+  targetStageId: string | null;
+  targetStageName: string;
+  targetWorkspace: 'Pipeline' | 'Applications';
+  blockers: string[];
+  warnings: string[];
+};
 const applicationMutationTags = (_result: unknown, error: unknown) =>
   error ? [] : [studentAdmissionsCrmType.admissionApplication, dashboardTag];
 
@@ -174,6 +191,9 @@ export type AdmissionFormField = {
   label: string;
   fieldType: number;
   bindingType: number;
+  bindingKey?: string | null;
+  fieldIdentity?: string | null;
+  inheritedFrom?: AdmissionFormInheritedOrigin | null;
   required: boolean;
   readOnly: boolean;
   displayOrder: number;
@@ -213,6 +233,9 @@ export type AdmissionFormSection = {
   fields: AdmissionFormField[];
 };
 export type AdmissionApplicationForm = {
+  inquiryFormDefinitionId?: string | null;
+  inquiryContextSections?: AdmissionFormSection[];
+  inquiryContextValues?: { fieldCode: string; valueJson?: string | null }[];
   formInstanceId: string;
   formDefinitionId: string;
   formVersion: number;
@@ -220,6 +243,7 @@ export type AdmissionApplicationForm = {
   submittedAt?: string | null;
   academicYearId: string;
   definition: {
+    inheritance?: AdmissionFormInheritance | null;
     name: string;
     layoutType: number;
     fieldsPerRow: 1 | 2 | 3 | 4;
@@ -533,6 +557,37 @@ export const admissionApplicationsApi = api.injectEndpoints({
         unwrap(response),
       invalidatesTags: applicationMutationTags,
     }),
+    getAdmissionJourneyResumePreview: builder.query<AdmissionJourneyResumePreview, string>({
+      query: (id) => `/student/enrollment/admissions/applications/${id}/resume-preview`,
+      transformResponse: (
+        response: Result<AdmissionJourneyResumePreview> | AdmissionJourneyResumePreview
+      ) => unwrap(response),
+      providesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    resumeAdmissionApplicationJourney: builder.mutation<
+      AdmissionApplication,
+      { id: string; input: ResumeAdmissionJourneyInput }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/resume-journey`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: (result) =>
+        result
+          ? [
+              dashboardTag,
+              studentAdmissionsCrmType.admissionApplication,
+              studentAdmissionsCrmType.admissionApplicant,
+              studentAdmissionsCrmType.admissionInquiry,
+              studentAdmissionsCrmType.admissionOffering,
+              studentAdmissionsCrmType.task,
+              studentAdmissionsCrmType.exam,
+            ]
+          : [],
+    }),
     endAdmissionApplicationJourney: builder.mutation<
       AdmissionApplication,
       { id: string; input: { reason: string; concurrencyStamp: string } }
@@ -659,6 +714,8 @@ export const {
   useRejectAdmissionApplicationMutation,
   useWaitlistAdmissionApplicationMutation,
   useEndAdmissionApplicationJourneyMutation,
+  useGetAdmissionJourneyResumePreviewQuery,
+  useResumeAdmissionApplicationJourneyMutation,
   useGetAdmissionFinalizationPreviewQuery,
   useFinalizeAdmissionApplicationMutation,
   useAdvanceAdmissionApplicationWorkflowMutation,

@@ -23,6 +23,7 @@ type Props = {
   onAddStep: (afterStepId?: string) => void;
   onNewStepReady: (stepId: string | null) => void;
   footer?: ReactNode;
+  beforeSections?: ReactNode;
 };
 
 export function FormBuilderCanvas({
@@ -35,6 +36,7 @@ export function FormBuilderCanvas({
   onAddStep,
   onNewStepReady,
   footer,
+  beforeSections,
 }: Props) {
   const isStepper = formik.values.layoutType === 1;
   const steps = getAdmissionFormStepGroups(formik.values.sections);
@@ -131,6 +133,7 @@ export function FormBuilderCanvas({
           }}
         >
           <Stack spacing={1} sx={{ pb: 0.5, pl: 0.25, pr: footer ? 2 : 0.25 }}>
+            {beforeSections}
             {!formik.values.sections.length && (
               <Typography variant="body2" color="text.secondary">
                 This draft has no sections. Add a section to start building the form.

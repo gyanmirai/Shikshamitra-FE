@@ -1,4 +1,5 @@
 import type {
+  AdmissionFormPurpose,
   AdmissionFormFieldType,
   AdmissionFormSystemFieldMetadata,
 } from 'src/redux/student/admissions/admission-forms-api';
@@ -7,7 +8,6 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import { useId, useState } from 'react';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 
 import { CustomFieldPalette } from './components/custom-field-palette';
 import { StudentFieldPalette } from './components/student-field-palette';
@@ -15,6 +15,7 @@ import { StudentFieldPalette } from './components/student-field-palette';
 import type { AdmissionFieldPreset } from './form-field-presets';
 
 type Props = {
+  purpose?: AdmissionFormPurpose;
   systemFields: AdmissionFormSystemFieldMetadata[];
   usedBindings?: readonly string[];
   targetLabel?: string;
@@ -29,6 +30,7 @@ type Props = {
 };
 
 export function FormBuilderPalette({
+  purpose,
   systemFields,
   usedBindings,
   targetLabel,
@@ -37,6 +39,9 @@ export function FormBuilderPalette({
   onAddField,
   onAddGroupSection,
 }: Props) {
+  const availableSystemFields = systemFields.filter(
+    (field) => purpose === 0 || !field.key.toLowerCase().startsWith('inquiry.')
+  );
   const tabId = useId();
   const [activeTab, setActiveTab] = useState<'system' | 'custom'>('system');
   return (
@@ -75,7 +80,7 @@ export function FormBuilderPalette({
         >
           {tab === 'system' ? (
             <StudentFieldPalette
-              fields={systemFields}
+              fields={availableSystemFields}
               usedBindings={usedBindings}
               loading={loading}
               error={error}
@@ -85,7 +90,7 @@ export function FormBuilderPalette({
           ) : (
             <CustomFieldPalette
               onAddField={onAddField}
-              systemFields={systemFields}
+              systemFields={availableSystemFields}
               usedBindings={usedBindings}
             />
           )}

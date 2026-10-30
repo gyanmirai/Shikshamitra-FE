@@ -36,6 +36,7 @@ export function configureStudentField(
     fieldType: metadata.fieldType,
     bindingType: 0,
     bindingKey: metadata.key,
+    fieldIdentity: undefined,
     readOnly: metadata.readOnly,
     optionsJson: metadata.optionsJson,
     validationJson:

@@ -1,5 +1,5 @@
-import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 import type { ReactElement } from 'react';
+import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { it, vi, expect } from 'vitest';
 import { createTheme } from 'src/theme/create-theme';
@@ -49,7 +49,7 @@ it('keeps Publish visible before overflow and does not trigger the row click', (
   expect(screen.getByRole('button', { name: 'Edit Regular admission' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Clone as draft' })).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Actions for Regular admission' }));
-  expect(screen.getByRole('menuitem', { name: 'Delete Regular admission' })).toBeVisible();
+  expect(screen.getByRole('menuitem', { name: /^Delete$/ })).toBeVisible();
 });
 
 it.each([0, 3, 5, 6] as const)('shows Publish for eligible status %s', (status) => {

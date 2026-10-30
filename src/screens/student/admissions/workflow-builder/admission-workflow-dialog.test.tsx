@@ -1,6 +1,5 @@
 import { createRef } from 'react';
 import { Provider } from 'react-redux';
-import { addIcon } from '@iconify/react';
 import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
@@ -14,32 +13,7 @@ import { getAdmissionWorkflowTemplate } from '../workflow-template';
 import { type WorkflowDetails, AdmissionWorkflowDialog } from '../admission-workflow-dialog';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
-addIcon('ic:round-arrow-forward', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
-addIcon('eva:checkmark-fill', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
-addIcon('lucide:info', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
-
-[
-  'close',
-  'plus',
-  'information-outline',
-  'pencil-outline',
-  'school-outline',
-  'lightning-bolt-outline',
-  'clipboard-text-outline',
-  'email-seal-outline',
-  'pencil-outline',
-  'text-box-plus-outline',
-  'format-list-numbered',
-  'chevron-down',
-  'arrow-left',
-  'sitemap-outline',
-  'radiobox-blank',
-  'check-circle',
-  'content-save-outline',
-].forEach((name) => {
-  addIcon(`mdi:${name}`, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
-});
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 const registrationForm = { id: 'registration-form', name: 'Student registration', version: 3 };
 const fetchRegistrationForms = vi.fn(async () => ({ data: [registrationForm], hasMore: false }));
@@ -78,6 +52,33 @@ async function selectForm(user: ReturnType<typeof userEvent.setup>, label: strin
 }
 
 describe('workflow creation first step', () => {
+  it('offers only Standard and Blank and saves Standard with the selected registration form', async () => {
+    const user = userEvent.setup();
+    const onSave = renderCreate();
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
+    expect(screen.getByRole('radio', { name: /Standard admission/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /Blank workflow/ })).toBeInTheDocument();
+    expect(screen.getByText('Blank workflow')).toBeVisible();
+    expect(screen.queryByRole('radio', { name: /Post-Inquiry Admission/ })).toBeNull();
+    expect(screen.queryByText('Inquiry linked')).toBeNull();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+      target: { value: 'After inquiry' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(await screen.findByText('Select a published registration form')).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
+    await selectForm(user, 'Registration form *', 'Student registration · v3');
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        starterJourney: 'standard',
+        registrationFormDefinitionId: 'registration-form',
+        defaultInquiryFormDefinitionId: null,
+      })
+    );
+  }, 15000);
+
   it('guards closing the in-page form when details are unsaved', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();

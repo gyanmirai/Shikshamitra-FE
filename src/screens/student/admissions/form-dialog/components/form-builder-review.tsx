@@ -10,15 +10,20 @@ import { Box, Card, Stack, Typography } from '@mui/material';
 import { FormReviewSection } from './form-review-section';
 import { getAdmissionLanguageLabel } from '../form-languages';
 import { FormValidationPanel } from '../form-validation-panel';
+import { FormInheritancePanel } from './form-inheritance-panel';
 import { getAdmissionFormStepGroups } from '../form-step-groups';
+import { useFormInheritance } from '../hooks/use-form-inheritance';
 import { AdmissionDialogTitle } from '../../admission-dialog-title';
+import { getInheritancePreviewValues } from '../form-inheritance-model';
 import { getDependentAdmissionFieldCodes } from '../../admission-field-dependencies';
 import { AdmissionFormStepNavigation } from '../../components/admission-form-step-navigation';
 
 type Props = { formik: FormikProps<CreateUpdateAdmissionForm> };
 
 export function FormBuilderReview({ formik }: Props) {
-  const form = formik.values;
+  const inheritance = useFormInheritance();
+  const form = getInheritancePreviewValues(formik.values, inheritance?.preview?.definition);
+  const previewFormik = { ...formik, values: form };
   const [language, setLanguage] = useState(form.defaultLanguage ?? 'en');
   const supportedLanguages = form.supportedLanguages?.length
     ? form.supportedLanguages
@@ -118,6 +123,7 @@ export function FormBuilderReview({ formik }: Props) {
         )}
       </Stack>
       <FormValidationPanel form={form} />
+      {inheritance?.enabled && <FormInheritancePanel />}
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         spacing={2}
@@ -167,7 +173,7 @@ export function FormBuilderReview({ formik }: Props) {
             {sections.map(({ section, sectionIndex }) => (
               <FormReviewSection
                 key={section.id}
-                formik={formik}
+                formik={previewFormik}
                 sectionIndex={sectionIndex}
                 language={language}
                 answers={previewAnswers}

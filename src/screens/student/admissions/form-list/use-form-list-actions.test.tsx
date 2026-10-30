@@ -14,8 +14,9 @@ const saving = vi.hoisted(() => ({ create: vi.fn(), update: vi.fn() }));
 const deletion = vi.hoisted(() => ({ remove: vi.fn() }));
 const freshForm = vi.hoisted(() => ({ load: vi.fn() }));
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
+const navigation = vi.hoisted(() => ({ push: vi.fn() }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('next/navigation', () => ({ useRouter: () => navigation }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 vi.mock('react-redux', () => ({
   useSelector: (selector: (state: unknown) => unknown) =>
@@ -46,6 +47,26 @@ describe('useFormListActions editor mode', () => {
       unwrap: () => Promise.resolve({ id: 'draft', status: 0, concurrencyStamp: 'latest' }),
       unsubscribe: vi.fn(),
     });
+  });
+
+  it('passes the originating Forms list context to the shared preview route', () => {
+    const { result } = renderHook(() => useFormListActions());
+    const origin = '/student/admissions/settings/forms?view=registration&page=2';
+    act(() => result.current.preview('registration-form', origin));
+    const destination = new URL(navigation.push.mock.lastCall![0], 'https://school.test');
+    expect(destination.pathname).toBe(
+      '/student/admissions/settings/forms/registration-form/preview'
+    );
+    expect(destination.searchParams.get('returnTo')).toBe(origin);
+  });
+
+  it('checks Inquiry minimum questions before creating a draft for Publish now', async () => {
+    const { result } = renderHook(() => useFormListActions());
+    await act(async () => {
+      await expect(result.current.saveAndPublish({ name: 'Inquiry', purpose: 0, sections: [] } as unknown as CreateUpdateAdmissionForm)).rejects.toThrow('Add a required Student name field before publishing.');
+    });
+    expect(saving.create).not.toHaveBeenCalled();
+    expect(publication.publish).not.toHaveBeenCalled();
   });
 
   it('shows form validation issues before publishing a draft', async () => {
@@ -100,9 +121,9 @@ describe('useFormListActions editor mode', () => {
     const { result } = renderHook(() => useFormListActions());
 
     await act(async () => {
-      await expect(result.current.saveAndPublish({ name: 'New form' } as CreateUpdateAdmissionForm)).rejects.toThrow(
-        'Draft saved, but not published.'
-      );
+      await expect(
+        result.current.saveAndPublish({ name: 'New form' } as CreateUpdateAdmissionForm)
+      ).rejects.toThrow('Draft saved, but not published.');
     });
 
     expect(result.current.editingId).toBe('new-draft');
@@ -119,7 +140,10 @@ describe('useFormListActions editor mode', () => {
 
     expect(saving.create).toHaveBeenCalledOnce();
     expect(saving.update).toHaveBeenCalledWith({ id: 'new-draft', body: { name: 'New form' } });
-    expect(publication.publish).toHaveBeenCalledWith({ id: 'new-draft', concurrencyStamp: 'saved' });
+    expect(publication.publish).toHaveBeenCalledWith({
+      id: 'new-draft',
+      concurrencyStamp: 'saved',
+    });
   });
 
   it('opens Create with a fresh form after Edit, even if the old query data remains', async () => {

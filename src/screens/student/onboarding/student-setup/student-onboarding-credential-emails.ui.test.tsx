@@ -1,6 +1,6 @@
 import { shikshaMitraToast } from 'src/components/toast';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentOnboardingDocuments from './student-onboarding-documents';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
@@ -205,16 +205,19 @@ describe('Onboarding credential email recovery', () => {
       />
     );
     await waitFor(() =>
-      expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('parent@example.com')
+      expect(screen.getByRole('textbox', { name: 'Parent / guardian email' })).toHaveValue(
+        'parent@example.com'
+      )
     );
     expect(screen.getByText('Failed')).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: /Profile email/ })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Create and link account' })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Send login details' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('checkbox', { name: /confirm this person may access/i }));
-    fireEvent.click(screen.getByRole('button', { name: 'Send login details' }));
+    expect(screen.getByRole('button', { name: 'Send selected login details' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Send to parent / guardian' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /I confirm Parent may access/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send selected login details' }));
     await waitFor(() =>
       expect(mocks.sendCredentials).toHaveBeenCalledWith({
         id: 'case-1',
@@ -241,17 +244,20 @@ describe('Onboarding credential email recovery', () => {
       />
     );
     await waitFor(() =>
-      expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('parent@example.com')
+      expect(screen.getByRole('textbox', { name: 'Parent / guardian email' })).toHaveValue(
+        'parent@example.com'
+      )
     );
-    expect(screen.getByRole('button', { name: 'Send login details' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('checkbox', { name: /confirm this person may access/i }));
+    expect(screen.getByRole('button', { name: 'Send selected login details' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Send to parent / guardian' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /I confirm Parent may access/i }));
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Send login details' })).toBeEnabled()
+      expect(screen.getByRole('button', { name: 'Send selected login details' })).toBeEnabled()
     );
     expect(
       screen.queryByRole('button', { name: 'Create and link account' })
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Send login details' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send selected login details' }));
     await waitFor(() => expect(mocks.sendCredentials).toHaveBeenCalledOnce());
     expect(mocks.provision).not.toHaveBeenCalled();
   });
@@ -284,8 +290,14 @@ describe('Onboarding credential email recovery', () => {
     mocks.send.mockReturnValue({ unwrap: () => Promise.resolve({ status: 'Sent' }) });
     mocks.emails.data[0].status = 'Sent';
     render(<StudentOnboardingCredentialEmails caseId="case-1" concurrencyStamp="case-stamp" />);
-    expect(screen.getByText('Submitted')).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Send access email again' }));
+    expect(screen.getByText('Login details sent')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Resend login details' }));
+    expect(mocks.send).not.toHaveBeenCalled();
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Resend Login Details?' })).getByRole('button', {
+        name: 'Resend login details',
+      })
+    );
     await waitFor(() =>
       expect(shikshaMitraToast.success).toHaveBeenCalledWith({
         message: 'Login email submitted for sending.',
@@ -309,6 +321,14 @@ describe('Onboarding credential email recovery', () => {
       expect.objectContaining({ message: 'Credential email status could not be loaded.' })
     );
     expect(screen.queryByRole('button', { name: 'Retry email status' })).not.toBeInTheDocument();
+  });
+  it('confirms a failed resend instead of replaying it as an initial retry', () => {
+    mocks.emails.data[0].sentAt = '2026-10-29T10:00:00Z';
+    render(<StudentOnboardingCredentialEmails caseId="case-1" concurrencyStamp="case-stamp" />);
+    expect(screen.queryByRole('button', { name: 'Retry email' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Resend login details' }));
+    expect(screen.getByRole('dialog', { name: 'Resend Login Details?' })).toBeVisible();
+    expect(mocks.send).not.toHaveBeenCalled();
   });
 });
 

@@ -3,6 +3,8 @@ import type { AdmissionFeeHead } from 'src/redux/student/admissions/admission-fe
 import { fNumber, fCurrency } from 'src/utils/format-number';
 import { Box, Stack, Divider, Typography } from '@mui/material';
 
+import { AdmissionDialogTitle } from '../admission-dialog-title';
+
 export function formatAdmissionFeeHeadAmount(head: AdmissionFeeHead, currency: string | null) {
   if (head.isVariable) return 'Entered during Finance assignment';
   return currency
@@ -83,7 +85,12 @@ export function AdmissionFeeSelectionSummary({
       spacing={1.5}
       sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5, minWidth: 0, height: 1 }}
     >
-      <Typography variant="subtitle2">Selection summary</Typography>
+      <Typography variant="subtitle2">
+        <AdmissionDialogTitle
+          title="Selection summary"
+          helpText="Published amounts are shown for reference. Finance calculates dues and handles payment separately."
+        />
+      </Typography>
       <Divider />
       <Box
         component="dl"
@@ -106,11 +113,6 @@ export function AdmissionFeeSelectionSummary({
           </Box>
         ))}
       </Box>
-      <Divider />
-      <Typography variant="caption" color="text.secondary">
-        Published amounts are shown for reference. Finance calculates dues and handles payment
-        separately.
-      </Typography>
     </Stack>
   );
 }

@@ -1,9 +1,12 @@
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { isEqual } from 'src/utils/helper';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Grid, Stack, Button, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
@@ -15,13 +18,27 @@ import { FormTemplateChooser, type AdmissionFormStarter } from './form-template-
 type Props = { formik: FormikProps<CreateUpdateAdmissionForm>; editing: boolean };
 
 export function FormBuilderDetails({ formik, editing }: Props) {
-  const [purpose] = useState(formik.values.purpose ?? 1);
-  const [selectedStarter, setSelectedStarter] = useState<AdmissionFormStarter | null>('blank');
+  const purpose = formik.values.purpose ?? 0;
+  const [selectedStarter, setSelectedStarter] = useState<AdmissionFormStarter | null>(() =>
+    formik.values.sections.every((section) => section.fields.length === 0) ? 'blank' : null
+  );
   const [pendingStarter, setPendingStarter] = useState<{
     label: string;
     values: CreateUpdateAdmissionForm;
     starter: AdmissionFormStarter;
   } | null>(null);
+  const purposeError = Boolean(
+    (formik.touched.purpose || formik.submitCount > 0) && formik.errors.purpose
+  );
+  useEffect(() => {
+    setSelectedStarter((starter) =>
+      starter === 'blank' ||
+      starter === (purpose === 0 ? 'admission-inquiry' : 'admission-application')
+        ? starter
+        : null
+    );
+    setPendingStarter(null);
+  }, [purpose]);
   const createStarter = (starter: AdmissionFormStarter) =>
     starter === 'blank'
       ? getBlankAdmissionFormInitialValues(purpose)
@@ -35,7 +52,11 @@ export function FormBuilderDetails({ formik, editing }: Props) {
   const selectStarter = (starter: AdmissionFormStarter) => {
     const values = createStarter(starter);
     const label = starter === 'blank' ? 'Blank form' : values.name;
-    if (formik.dirty) setPendingStarter({ label, values, starter });
+    const hasDraftChanges = !isEqual(
+      { ...formik.values, purpose: formik.initialValues.purpose },
+      formik.initialValues
+    );
+    if (hasDraftChanges) setPendingStarter({ label, values, starter });
     else applyStarter(values, starter);
   };
   return (
@@ -43,6 +64,27 @@ export function FormBuilderDetails({ formik, editing }: Props) {
       spacing={2}
       sx={{ width: 1, minWidth: 0, maxWidth: 1120, mx: 'auto', p: { xs: 1.5, sm: 2 } }}
     >
+      <Box sx={{ width: { xs: 1, sm: 280 }, maxWidth: 1 }}>
+        <ShakingTextField error={purposeError}>
+          <CustomSelect
+            name="purpose"
+            label="Form type"
+            required
+            size="small"
+            fullWidth
+            options={[
+              { label: 'Inquiry', value: 0 },
+              { label: 'Registration', value: 1 },
+            ]}
+            value={purpose}
+            disabled={editing}
+            onChange={(value) => formik.setFieldValue('purpose', Number(value))}
+            onBlur={() => formik.setFieldTouched('purpose', true)}
+            error={purposeError}
+            helperText={purposeError ? formik.errors.purpose : undefined}
+          />
+        </ShakingTextField>
+      </Box>
       {!editing && (
         <Box component="section" aria-label="Form templates">
           <FormTemplateChooser

@@ -2,6 +2,10 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 // Keep staff wording local to Onboarding. The shared parser serves other modules too.
 const messages: Record<string, string> = {
+  'Invalid maximumNumber in onboarding settings.':
+    'Enter a whole maximum number, or leave it blank for no limit.',
+  'Maximum number must not be below the starting number.':
+    'Maximum number must be greater than or equal to the starting number.',
   'Student and adult app logins need different saved email addresses.':
     'Use different saved emails for the student and parent / guardian logins.',
   'This email is already used by a conflicting, inactive or restricted account. Existing accounts cannot be merged or repurposed through a profile email change.':

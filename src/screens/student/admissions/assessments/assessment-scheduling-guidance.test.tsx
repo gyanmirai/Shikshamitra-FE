@@ -9,7 +9,25 @@ import {
   getAvailableAssessmentSessions,
 } from './assessment-session-availability';
 
-const mocks = vi.hoisted(() => ({ query: vi.fn(), refetch: vi.fn(), push: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  query: vi.fn(),
+  refetch: vi.fn(),
+  push: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+  warning: vi.fn(),
+  success: vi.fn(),
+  dismiss: vi.fn(),
+}));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: mocks.error,
+    info: mocks.info,
+    warning: mocks.warning,
+    success: mocks.success,
+    dismiss: mocks.dismiss,
+  },
+}));
 vi.mock('src/redux/student/admissions/admission-assessment-sessions-api', () => ({
   useGetAssessmentSessionsQuery: mocks.query,
 }));
@@ -90,8 +108,13 @@ it('keeps guidance loading and errors distinct from an empty slot list', () => {
   unmount();
   mocks.query.mockReturnValue(query(undefined, { isError: true }));
   renderGuidance();
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(mocks.refetch).toHaveBeenCalledOnce();
+  expect(mocks.error).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: 'Assessment slots could not be loaded. Retry before booking the entrance exam.',
+    })
+  );
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(mocks.refetch).not.toHaveBeenCalled();
   expect(screen.queryByRole('button', { name: 'Go to Assessments' })).not.toBeInTheDocument();
 });
 

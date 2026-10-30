@@ -33,6 +33,7 @@ describe('FormBuilderFieldLibraryDrawer', () => {
     );
 
     await user.click(screen.getByRole('tab', { name: 'Custom fields' }));
+    await user.click(screen.getByRole('button', { name: 'More field formats' }));
     await user.click(screen.getByRole('button', { name: 'Add Text' }));
     await user.click(screen.getByRole('button', { name: 'Add Number' }));
 

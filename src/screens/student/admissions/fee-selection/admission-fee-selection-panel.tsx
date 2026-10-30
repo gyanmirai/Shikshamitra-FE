@@ -20,6 +20,7 @@ import {
   useConfirmAdmissionFeeSelectionOnboardingMutation,
 } from 'src/redux/student/admissions/admission-fee-selection-api';
 
+import { AdmissionDialogTitle } from '../admission-dialog-title';
 import AdmissionFeeCollectionPanel from './admission-fee-collection-panel';
 import { AdmissionFeeSelectionEditor } from './admission-fee-selection-editor';
 import { getAdmissionFeeCollectionAccess } from './admission-fee-collection-permissions';
@@ -380,11 +381,11 @@ export default function AdmissionFeeSelectionPanel({
             ) : selection ? (
               <>
                 <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
-                  {selection.structureName} · Revision {selection.revisionNumber}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Fee structure confirmed {fDateTime(selection.savedAt)}
-                  {state.ownerStageName ? ` in ${state.ownerStageName}` : ''}
+                  <AdmissionDialogTitle
+                    title={`${selection.structureName} · Revision ${selection.revisionNumber}`}
+                    helpLabel="Fee selection details"
+                    helpText={`Fee structure confirmed ${fDateTime(selection.savedAt)}${state.ownerStageName ? ` in ${state.ownerStageName}` : ''}.${state.isLocked ? ' Payment has been recorded. This fee selection is locked; ask Finance to review any adjustment or refund.' : ''}`}
+                  />
                 </Typography>
                 {compact && mode === 'admissions' ? (
                   <Box
@@ -551,12 +552,6 @@ export default function AdmissionFeeSelectionPanel({
               {continuing ? 'Continuing...' : 'Continue'}
             </Button>
           </Stack>
-        )}
-        {state.isLocked && (
-          <StudentFeedback notificationKey="STU-0354" presentation="inline" severity="info">
-            Payment has been recorded. This fee selection is locked; ask Finance to review any
-            adjustment or refund.
-          </StudentFeedback>
         )}
         {!canEdit && !state.isLocked && mode === 'admissions' && state.ownerStageName && (
           <Typography variant="caption" color="text.secondary">

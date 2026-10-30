@@ -7,6 +7,7 @@ import type {
 
 import { templateStudentBinding } from './template-student-fields';
 import { getRegistrationFormTemplate } from './registration-form-template';
+import { ensureAdmissionCustomFieldIdentities } from './form-field-identity';
 import { configureStudentField, connectStudentAddressFields } from './student-field-configuration';
 
 export type AdmissionFormTemplateCategory =
@@ -967,7 +968,7 @@ export const SYSTEM_ADMISSION_FORM_TEMPLATES: AdmissionFormTemplateSummary[] = D
 export function getSystemAdmissionFormTemplate(id: SystemAdmissionFormTemplateId) {
   const definition = DEFINITIONS.find((item) => item.id === id);
   if (!definition) throw new Error(`Unknown admission form template: ${id}`);
-  return definition.create();
+  return ensureAdmissionCustomFieldIdentities(definition.create());
 }
 
 export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdmissionForm {
@@ -992,7 +993,7 @@ export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdm
     };
   });
 
-  return {
+  return ensureAdmissionCustomFieldIdentities({
     name: `${source.name} copy`,
     code: copyCode,
     description: source.description,
@@ -1004,5 +1005,5 @@ export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdm
     defaultLanguage: source.defaultLanguage ?? 'en',
     supportedLanguages: source.supportedLanguages?.length ? source.supportedLanguages : ['en'],
     sections,
-  };
+  });
 }

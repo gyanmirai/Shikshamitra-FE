@@ -26,6 +26,7 @@ type Props = {
   versions?: AdmissionWorkflow[];
   usage?: AdmissionWorkflowUsage;
   usageLoading: boolean;
+  usageError?: boolean;
   canCreateVersion: boolean;
   governanceHistory?: AdmissionWorkflowGovernanceHistory[];
   governanceLoading: boolean;
@@ -39,6 +40,7 @@ export function WorkflowPanelContent({
   versions,
   usage,
   usageLoading,
+  usageError = false,
   canCreateVersion,
   governanceHistory,
   governanceLoading,
@@ -56,7 +58,8 @@ export function WorkflowPanelContent({
         canCreateVersion={canCreateVersion}
       />
     );
-  if (panel === 'usage') return <WorkflowUsage usage={usage} loading={usageLoading} />;
+  if (panel === 'usage')
+    return <WorkflowUsage usage={usage} loading={usageLoading} error={usageError} />;
   if (panel === 'governance')
     return (
       <WorkflowGovernanceHistory
@@ -142,20 +145,25 @@ function WorkflowPreview({
   });
 }
 
-function WorkflowUsage({ usage, loading }: { usage?: AdmissionWorkflowUsage; loading: boolean }) {
+function WorkflowUsage({
+  usage,
+  loading,
+  error,
+}: {
+  usage?: AdmissionWorkflowUsage;
+  loading: boolean;
+  error: boolean;
+}) {
   if (loading) return <Skeleton variant="rounded" height={120} />;
+  if (error)
+    return (
+      <StudentFeedback notificationKey="STU-0568" presentation="toast" severity="error">
+        Workflow usage could not be loaded. Refresh the page to try again.
+      </StudentFeedback>
+    );
   if (!usage) return null;
   return (
     <>
-      <StudentFeedback
-        notificationKey="STU-0568"
-        presentation={usage.canDelete ? 'inline' : 'persistent'}
-        severity={usage.canDelete ? 'info' : 'warning'}
-      >
-        {usage.canDelete
-          ? 'This draft is not in use.'
-          : 'This workflow is in use and cannot be deleted.'}
-      </StudentFeedback>
       <Box
         sx={{
           display: 'grid',

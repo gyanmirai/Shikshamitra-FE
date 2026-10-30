@@ -42,6 +42,7 @@ import {
 import { getWorkflowStarterDefinition } from './workflow-template';
 import { AdmissionDefinitionSelect } from './admission-definition-select';
 import { WorkflowSetupProgress } from './workflow-builder/components/workflow-setup-progress';
+import { WorkflowInquiryContext } from './workflow-builder/components/workflow-inquiry-context';
 import { WorkflowTemplateSelector } from './workflow-builder/components/workflow-template-selector';
 
 import type { WorkflowStarterId } from './workflow-template';
@@ -135,6 +136,7 @@ function WorkflowTemplatePreview({
   template: {
     name: string;
     bestFor: string;
+    inquiryLinked?: boolean;
     stages: ReadonlyArray<{ code: string; name: string; description?: string }>;
   };
   routeCount?: number;
@@ -152,6 +154,8 @@ function WorkflowTemplatePreview({
       {showCounts && (
         <WorkflowJourneyCounts stageCount={template.stages.length} routeCount={routeCount} />
       )}
+
+      {template.inquiryLinked && <WorkflowInquiryContext />}
 
       {template.stages.length > 0 ? (
         <Stack spacing={0} aria-label={`${template.name} stage preview`}>

@@ -144,6 +144,21 @@ beforeEach(async () => {
 });
 
 describe('Student Setup drawer readiness UI', () => {
+  it('explains in Fees help that fee assignment and payment do not block activation', async () => {
+    render(
+      <StudentSetupDrawer
+        open
+        taskView="fees"
+        student={{ ...student, source: 'onboarding-case' }}
+        onClose={vi.fn()}
+      />
+    );
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'Fee structure information' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Fee assignment and payment are optional and do not block activation.'
+    );
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.caseEvents = null;

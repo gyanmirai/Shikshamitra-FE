@@ -6,12 +6,15 @@ import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { assessmentResponse } from 'src/redux/student/admissions/assessment-test-fixture';
 
 import AdmissionAssessmentsScreen from '../admission-assessments';
 
 const mocks = vi.hoisted(() => ({
+  book: false,
+  select: undefined as ((rows: any[], checked: boolean) => void) | undefined,
   table: null as Pick<ICustomizableTableProps, 'filters' | 'onServerFilter'> | null,
   workbench: {
     academic: { academicYearId: 'year', boardId: '', mediumId: '', standardId: '' },
@@ -19,7 +22,7 @@ const mocks = vi.hoisted(() => ({
       isError: false,
       isLoading: false,
       isFetching: false,
-      currentData: [],
+      currentData: [] as any[],
       refetch: vi.fn(),
     },
     state: {
@@ -52,10 +55,16 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('./use-assessment-workspace-data', () => ({
-  useAssessmentWorkspaceData: () => mocks.workbench,
+  useAssessmentWorkspaceData: (_canView: boolean, pause: boolean) => ({
+    ...mocks.workbench,
+    scopes: pause ? { ...mocks.workbench.scopes, currentData: undefined } : mocks.workbench.scopes,
+    applicants: pause
+      ? { ...mocks.workbench.applicants, currentData: undefined }
+      : mocks.workbench.applicants,
+  }),
 }));
 vi.mock('./use-assessment-permissions', () => ({
-  useAssessmentPermissions: () => ({ view: true }),
+  useAssessmentPermissions: () => ({ view: true, book: mocks.book, manageSessions: mocks.book }),
   canAdvanceAssessmentApplications: () => false,
 }));
 vi.mock('./assessment-workspace-controls', () => ({ AssessmentWorkspaceControls: () => null }));
@@ -66,12 +75,15 @@ vi.mock('./assessment-applicant-table', () => ({
     noDataText,
     filters,
     onServerFilter,
+    onSelectionChange,
   }: {
     items: { applicantName: string }[];
     errorContent?: ReactNode;
     noDataText?: ReactNode;
+    onSelectionChange?: (rows: any[], checked: boolean) => void;
   } & Pick<ICustomizableTableProps, 'filters' | 'onServerFilter'>) => {
     mocks.table = { filters, onServerFilter };
+    mocks.select = onSelectionChange;
     return (
       <div>
         {items.map((row) => (
@@ -84,6 +96,13 @@ vi.mock('./assessment-applicant-table', () => ({
 }));
 vi.mock('../admission-query-error', () => ({ AdmissionQueryError: () => null }));
 vi.mock('./assessment-session-setup-drawer', () => ({ AssessmentSessionSetupDrawer: () => null }));
+vi.mock('./assessment-student-booking-drawer', () => ({
+  AssessmentStudentBookingDrawer: ({ rows, scopes }: any) => (
+    <div data-testid="student-booking">
+      {rows.map((row: any) => row.applicantName).join(', ')} · {scopes.length} scopes
+    </div>
+  ),
+}));
 vi.mock('./assessment-manage-sessions-drawer', () => ({
   AssessmentManageSessionsDrawer: () => null,
 }));
@@ -98,12 +117,43 @@ vi.mock('src/redux/student/admissions/admission-assessment-planning-api', () => 
 }));
 
 beforeEach(() => {
+  mocks.book = false;
+  mocks.workbench.scopes.currentData = [];
   mocks.workbench.state.status = 'all';
   mocks.workbench.state.columnFilters = '';
   mocks.workbench.updateWorkbench.mockClear();
   mocks.workbench.scopes.isError = false;
   mocks.workbench.applicants.isError = false;
   mocks.workbench.applicants.currentData = undefined;
+});
+
+it('carries selected students into booking and keeps Sessions as the secondary page action', () => {
+  mocks.book = true;
+  mocks.workbench.scopes.currentData = [
+    { admissionOfferingId: 'offering', workflowStageDefinitionId: 'definition' },
+  ];
+  const row = {
+    applicationId: 'app',
+    stageInstanceId: 'stage',
+    applicantName: 'Sweta',
+    isActive: true,
+    admissionOfferingId: 'offering',
+    workflowStageDefinitionId: 'definition',
+    assessment: {
+      ...assessmentResponse,
+      policy: { ...assessmentResponse.policy!, schedulingEnabled: true },
+    },
+  };
+  mocks.workbench.applicants.currentData = { items: [row], totalCount: 1 };
+  renderPage();
+  expect(screen.getByRole('button', { name: 'Sessions' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Create session' })).not.toBeInTheDocument();
+  expect(mocks.select).toBeDefined();
+  act(() => mocks.select!([row], true));
+  fireEvent.click(screen.getByRole('button', { name: 'Book Session (1)' }));
+  expect(screen.getByTestId('student-booking')).toHaveTextContent('Sweta');
+  expect(screen.getByTestId('student-booking')).toHaveTextContent('1 scopes');
+  expect(screen.getByText('Sweta', { exact: true })).toBeVisible();
 });
 
 it('keeps precise Status filtering independent of the progress-tab chip and resets paging', () => {

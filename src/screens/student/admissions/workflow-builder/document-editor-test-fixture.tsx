@@ -54,9 +54,10 @@ const createEditorStore = () =>
 export async function renderDocumentEditor(
   configurationJson?: string,
   readOnly = false,
-  available = true
+  available = true,
+  saveResult?: boolean
 ) {
-  const onSave = vi.fn();
+  const onSave = vi.fn().mockReturnValue(saveResult);
   const onClose = vi.fn();
   clearCachedAuthSession();
   mswServer.use(

@@ -84,10 +84,12 @@ export function WorkflowDocumentSettings({ formik, available, readOnly }: Props)
               {invalid && (
                 <StudentFeedback
                   notificationKey="STU-0546"
-                  presentation="persistent"
-                  severity="error"
+                  presentation="inline"
+                  severity={policy.requirements.length === 0 ? 'info' : 'error'}
                 >
-                  {invalid}
+                  {policy.requirements.length === 0
+                    ? 'Add at least one document before applying this stage.'
+                    : invalid}
                 </StudentFeedback>
               )}
             </>

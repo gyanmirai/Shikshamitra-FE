@@ -7,6 +7,7 @@ const groups: {
 }[] = [
   { name: 'Student profile', prefixes: ['Applicant'] },
   { name: 'Parents and guardians', prefixes: ['Guardian', 'Father', 'Mother', 'Family'] },
+  { name: 'Inquiry details', prefixes: ['Inquiry'] },
   {
     name: 'Contact and addresses',
     prefixes: ['Address', 'Contact', 'Emergency', 'PermanentAddress'],

@@ -11,6 +11,32 @@ import { CREATABLE_FIELD_TYPES } from '../form-dialog-model';
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
 
 describe('Admission Form Builder custom field palette', () => {
+  it('requires confirmation before using an included Student field alias as a different custom question', () => {
+    const onAddField = vi.fn();
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <CustomFieldPalette
+          onAddField={onAddField}
+          usedBindings={['Applicant.FirstName']}
+          systemFields={[
+            {
+              key: 'Applicant.FirstName',
+              displayName: 'First name',
+              description: '',
+              fieldType: 0,
+              readOnly: false,
+            },
+          ]}
+        />
+      </ThemeProvider>
+    );
+    fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'fname' } });
+    expect(screen.getByRole('button', { name: 'Add custom field' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Go to existing field' }));
+    expect(onAddField).toHaveBeenLastCalledWith(0, 'Applicant.FirstName');
+    fireEvent.click(screen.getByRole('button', { name: 'Different question' }));
+    expect(screen.getByRole('button', { name: 'Add custom field' })).toBeEnabled();
+  });
   it('collects choices while creating the question without a second settings visit', () => {
     const onAddField = vi.fn();
     render(

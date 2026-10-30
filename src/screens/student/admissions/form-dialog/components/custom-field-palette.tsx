@@ -18,6 +18,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import { PaletteFieldButton } from './palette-field-button';
 import { CUSTOM_FIELD_PRESETS } from '../form-field-presets';
 import { matchesStudentField } from '../student-field-configuration';
+import { findExistingStudentFieldAlias } from '../form-inheritance-model';
 import { fieldTypeIcon, CREATABLE_FIELD_TYPES } from '../form-dialog-model';
 import {
   appendPastedAdmissionChoices,
@@ -41,15 +42,22 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
   const [type, setType] = useState<AdmissionFormFieldType>(0);
   const [required, setRequired] = useState(false);
   const [choices, setChoices] = useState('');
+  const [confirmedDifferent, setConfirmedDifferent] = useState<string | null>(null);
   const needsChoices = [6, 7, 8].includes(type);
   const [showTypes, setShowTypes] = useState(false);
   const formatsId = useId();
   const normalized = label.trim().toLowerCase();
+  const alias = findExistingStudentFieldAlias(label, systemFields);
+  const aliasIncluded = Boolean(
+    alias && usedBindings.some((key) => key.toLowerCase() === alias.key.toLowerCase())
+  );
+  const needsIdentityReview = aliasIncluded && confirmedDifferent !== normalized;
   const suggestions =
     normalized.length >= 3
       ? systemFields
           .filter(
             (field) =>
+              field === alias ||
               matchesStudentField(field, normalized) ||
               normalized.includes(field.displayName.toLowerCase())
           )
@@ -72,7 +80,10 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
           fullWidth
           label="Question"
           value={label}
-          onChange={(event) => setLabel(event.target.value)}
+          onChange={(event) => {
+            setLabel(event.target.value);
+            setConfirmedDifferent(null);
+          }}
         />
         {suggestions.length > 0 && (
           <Stack spacing={0.5}>
@@ -91,6 +102,26 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
                 }}
               />
             ))}
+          </Stack>
+        )}
+        {needsIdentityReview && alias && (
+          <Stack spacing={0.5}>
+            <Typography variant="caption" color="warning.main">
+              {alias.displayName} is already included. Reuse it unless this asks for different
+              information.
+            </Typography>
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => onAddField(alias.fieldType, alias.key)}
+              >
+                Go to existing field
+              </Button>
+              <Button size="small" onClick={() => setConfirmedDifferent(normalized)}>
+                Different question
+              </Button>
+            </Stack>
           </Stack>
         )}
         <TextField
@@ -131,7 +162,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
           size="small"
           variant="contained"
           startIcon={<Iconify icon="mdi:plus" />}
-          disabled={!normalized || (needsChoices && !choices.trim())}
+          disabled={!normalized || needsIdentityReview || (needsChoices && !choices.trim())}
           onClick={() => {
             onAddField(type, undefined, {
               label: label.trim(),
@@ -146,6 +177,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
             });
             setLabel('');
             setChoices('');
+            setConfirmedDifferent(null);
           }}
         >
           Add custom field

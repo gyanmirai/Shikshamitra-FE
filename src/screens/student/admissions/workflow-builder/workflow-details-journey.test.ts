@@ -6,12 +6,15 @@ import { getWorkflowDetailsJourney } from './workflow-details-journey';
 
 const details = { name: 'School admission', code: 'SCHOOL' };
 
-it('retains the exact graph during ordinary name/description editing', () => {
-  const graph = getAdmissionWorkflowTemplate('assessment', 'form-1');
-  const result = getWorkflowDetailsJourney(details, graph.stages, graph.transitions);
-  expect(result.stages).toBe(graph.stages);
-  expect(result.transitions).toBe(graph.transitions);
-});
+it.each(['assessment', 'post-inquiry'] as const)(
+  'retains the exact saved %s graph during ordinary name/description editing',
+  (templateId) => {
+    const graph = getAdmissionWorkflowTemplate(templateId, 'form-1');
+    const result = getWorkflowDetailsJourney(details, graph.stages, graph.transitions);
+    expect(result.stages).toBe(graph.stages);
+    expect(result.transitions).toBe(graph.transitions);
+  }
+);
 
 it('changes only the earliest Form attachment, preserving IDs, routes and other settings', () => {
   const graph = getAdmissionWorkflowTemplate('assessment', 'form-1');
