@@ -1,3 +1,4 @@
+import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { useGetUserDirectoryQuery } from 'src/redux/user/userApi';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -6,11 +7,12 @@ import { Box, Avatar, Typography, LinearProgress } from '@mui/material';
 
 import UserRowActions from './user-row-actions';
 import { getUserDisplayName } from './user-record';
-import { userRoleColumn } from './user-role-column';
+import { createUserRoleColumn } from './user-role-column';
 
 import type { UserRecord, UserActionHandler } from './user-record';
 
 export default function UserTable({ onAction }: { onAction: UserActionHandler }) {
+  const { data: roles } = useGetRolesQuery();
   const { data, isLoading, isFetching, error, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetUserDirectoryQuery,
@@ -72,7 +74,7 @@ export default function UserTable({ onAction }: { onAction: UserActionHandler })
               </Box>
             ),
           },
-          userRoleColumn,
+          createUserRoleColumn(roles?.items ?? []),
           {
             id: 'email',
             label: 'Email',

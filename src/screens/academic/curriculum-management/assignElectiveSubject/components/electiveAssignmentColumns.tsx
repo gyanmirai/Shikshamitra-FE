@@ -46,6 +46,7 @@ export function getElectiveAssignmentColumns({
       label: 'Student Name',
       minWidth: '175px',
       sticky: true,
+      stickyOnMobile: false,
       stickyPosition: 'left',
       filterType: 'string',
       headerSx: compactHeader,
@@ -108,7 +109,7 @@ export function getElectiveAssignmentColumns({
             subjects={row.selectableSubjects}
             selectedSubjectId={studentSelections[row.studentId]}
             onToggle={(subjectId) => onToggleSubject(row.studentId, subjectId)}
-            disabled={isLocked}
+            disabled={isLocked || row.isLocked}
             ariaLabelPrefix={row.studentName}
           />
         );

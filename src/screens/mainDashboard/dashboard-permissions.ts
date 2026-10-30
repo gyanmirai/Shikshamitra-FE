@@ -2,6 +2,7 @@ import { hasGrantedPermission, type GrantedPermission } from 'src/utils/permissi
 
 import { DASHBOARD_ZONE_KEYS } from './dashboard-types';
 import { getDashboardWidgetRegistryEntry } from './dashboard-widget-registry';
+import { isVerifiedDashboardPersonalContext } from './dashboard-focus-access';
 
 import type {
   DashboardWidget,
@@ -30,10 +31,9 @@ export const canShowDashboardWidget = (
     return false;
   }
 
-  return hasGrantedPermission(
-    permissions,
-    widget.requiredPermissions ?? registryEntry.requiredPermissions
-  );
+  const required = widget.requiredPermissions ?? registryEntry.requiredPermissions;
+  const names = Array.isArray(required) ? required : [required];
+  return names.length > 0 && names.every((name) => hasGrantedPermission(permissions, name));
 };
 
 const filterWidgets = <T extends DashboardWidget>(
@@ -47,7 +47,16 @@ export const filterDashboardDataByPermissions = (
   data: DashboardDataContract,
   permissions: GrantedPermission[] | undefined,
   options: FilterOptions
-): DashboardDataContract => ({
+): DashboardDataContract => {
+  if (isVerifiedDashboardPersonalContext(data)) {
+    const keep = (widgets: DashboardWidget[], zone: DashboardZoneKey) => widgets.filter((widget) =>
+      personalWidgetIds.has(widget.id) && getDashboardWidgetRegistryEntry(widget.id, zone))
+      .map((widget) => ({ ...widget, drilldownUrl: undefined }));
+    return { ...data, kpiCards: keep(data.kpiCards, 'kpis'), actionItems: keep(data.actionItems, 'actions'),
+      riskAlerts: [], moduleSnapshots: keep(data.moduleSnapshots, 'modules'),
+      calendarItems: keep(data.calendarItems, 'calendar'), announcements: [] };
+  }
+  return {
   ...data,
   kpiCards: filterWidgets(data.kpiCards, permissions, options, DASHBOARD_ZONE_KEYS.kpis),
   actionItems: filterWidgets<DashboardActionItem>(
@@ -80,4 +89,8 @@ export const filterDashboardDataByPermissions = (
     options,
     DASHBOARD_ZONE_KEYS.announcements
   ),
-});
+  };
+};
+
+const personalWidgetIds = new Set(['student-attendance', 'student-assignments', 'student-upcoming-exams',
+  'student-latest-result', 'student-fee-status', 'student-academic-summary', 'student-learning-tasks', 'student-upcoming-exam']);

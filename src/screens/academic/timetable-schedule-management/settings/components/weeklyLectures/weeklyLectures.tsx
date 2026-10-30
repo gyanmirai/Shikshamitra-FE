@@ -3,12 +3,14 @@
 import type { RootState } from 'src/redux/store';
 
 import { useMemo } from 'react';
-import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
+import { Box, Stack, Button, LinearProgress } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { TIMETABLE_STATUS_LABEL, normalizeTimetableStatus } from 'src/utils/timetable-capacity';
 import { useGetWeeklyLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
@@ -32,14 +34,18 @@ const WeeklyLectures = () => {
   );
 
   const {
-    data: weeklyLectureData,
+    currentData: weeklyLectureData,
     isLoading,
     isFetching,
+    isError,
+    error,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetWeeklyLectureSlotsQuery,
     params: { AcademicMediumId: medium?.id },
     options: { skip: !medium?.id },
+    popupConfig: { error: false },
   });
 
   const {
@@ -136,13 +142,33 @@ const WeeklyLectures = () => {
           { name: 'Settings' },
           { name: 'Weekly Lectures Slots' },
         ]}
-        action={<TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />}
+        action={
+          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+            <TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />
+            {canAdd && (
+              <Button
+                size="small"
+                variant="contained"
+                color="inherit"
+                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                onClick={openCreate}
+              >
+                Weekly Lecture
+              </Button>
+            )}
+          </Stack>
+        }
       />
 
+      {(isLoading || isFetching) && (
+        <LinearProgress aria-label="Loading weekly lectures" sx={{ flexShrink: 0 }} />
+      )}
       <CustomizableTable
         tableTitle="Weekly Lectures"
         tableId="weekly-lectures-setting-table"
         isLoading={isLoading || isFetching}
+        error={isError && !isFetching ? error : undefined}
+        onRetry={refetch}
         noDataText={
           <>
             Weekly lectures not configured{' '}

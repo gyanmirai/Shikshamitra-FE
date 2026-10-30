@@ -2,10 +2,10 @@ import type { BoxProps } from '@mui/material/Box';
 
 import { memo } from 'react';
 import Box from '@mui/material/Box';
-import { CONFIG } from 'src/config-global';
 import { useTheme } from '@mui/material/styles';
 
 import { BackgroundShape } from './background-shape';
+import { STUDENT_CHARACTER_SRC } from './student-character-asset';
 
 // ----------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ function ServerErrorIllustration({ hideBackground, sx, ...other }: Props) {
       {!hideBackground && <BackgroundShape />}
 
       <image
-        href={`${CONFIG.site.basePath}/assets/illustrations/characters/character-8.webp`}
+        href={STUDENT_CHARACTER_SRC}
         height="300"
         x="340"
         y="30"

@@ -104,8 +104,7 @@ export function ChapterDetailsSection({
                 error={Boolean(dateError)}
                 helperText={dateHelperText}
                 onChange={([startDate, endDate]) => {
-                  formik.setFieldValue('startDate', startDate);
-                  formik.setFieldValue('endDate', endDate);
+                  formik.setValues((values) => ({ ...values, startDate, endDate }));
                   formik.setFieldTouched('startDate', true, false);
                   formik.setFieldTouched('endDate', true, false);
                 }}

@@ -6,20 +6,23 @@ import { Box, Tab, Tabs, Stack, Alert, Typography } from '@mui/material';
 
 import AcademicSetupManager from './AcademicSetupManager';
 import { academicSetupStatusLabel } from './AcademicSetupChecklist';
+import AcademicSetupLoadingSetting from './AcademicSetupLoadingSetting';
 import { academicSetupStages, academicSetupSettings } from './academic-setup-catalog';
 
 import type { AcademicSetupPosition } from './academic-setup-catalog';
 
-export default function AcademicSetupSettingPanel({ position, state, deferred, disabled, onOpen }: {
+export default function AcademicSetupSettingPanel({ position, state, deferred, disabled, loading = false, onOpen }: {
   position: AcademicSetupPosition; state: AcademicSetupState; deferred: string[]; disabled: boolean;
   onOpen: (position: AcademicSetupPosition) => void;
+  loading?: boolean;
 }) {
   const items = academicSetupSettings.filter((item) => item.stage === position.stage
     && state.settings.some((status) => status.key === item.key && status.canView));
   const current = items.find((item) => item.key === position.setting);
   const status = state.settings.find((item) => item.key === current?.key);
+  const tableStage = position.stage === 'curriculum' || position.stage === 'timetable';
   return (
-    <Stack spacing={2.5}>
+    <Stack spacing={tableStage ? 1.5 : 2.5} sx={tableStage ? { flex: { xs: '1 0 auto', sm: 1 }, minHeight: 0, '& > *': { flexShrink: 0 } } : undefined}>
       <Stack spacing={0.75}>
         <Typography variant="overline" color="text.secondary">Academic setup</Typography>
         <Typography variant="h4" component="h1">{academicSetupStages.find((item) => item.key === position.stage)?.title}</Typography>
@@ -37,7 +40,14 @@ export default function AcademicSetupSettingPanel({ position, state, deferred, d
           </Typography>
         </Stack>
         {!status?.canManage && <Alert severity="info">You can review this setting. Changes require the relevant management permission.</Alert>}
-        <Box><AcademicSetupManager key={current.key} setting={current.key} /></Box>
+        <Box sx={{ position: 'relative', ...(tableStage && { flex: { xs: '0 0 520px', sm: '1 1 0' },
+          minHeight: 0, maxHeight: { xs: 520, sm: 'none' }, display: 'flex', flexDirection: 'column' }) }}>
+          {loading && <Box sx={{ position: 'absolute', inset: 0, display: 'flex' }}><AcademicSetupLoadingSetting /></Box>}
+          <Box aria-hidden={loading || undefined} inert={loading} sx={{ flex: 1, minHeight: 0,
+            display: 'flex', flexDirection: 'column', visibility: loading ? 'hidden' : 'visible' }}>
+            <AcademicSetupManager key={current.key} setting={current.key} />
+          </Box>
+        </Box>
       </> : <Alert severity="info">Choose an available setting above. You only see settings you have permission to view.</Alert>}
     </Stack>
   );

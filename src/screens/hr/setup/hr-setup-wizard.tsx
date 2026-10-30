@@ -23,12 +23,13 @@ import {
   Stack,
   Button,
   MenuItem,
-  useTheme,
   TextField,
   Typography,
   DialogActions,
   useMediaQuery,
 } from '@mui/material';
+
+import { useTheme } from '@mui/material/styles';
 
 import { HrSetupEditor } from './hr-setup-editor';
 import {

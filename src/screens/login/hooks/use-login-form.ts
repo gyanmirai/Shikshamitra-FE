@@ -7,17 +7,13 @@ import { AUTH_ERROR_CODE, getLoginErrorMessage } from 'src/constants/auth-errors
 
 export type LoginValues = { organization: string; email: string; password: string };
 
-const loginSchema = (hostLogin: boolean) =>
-  Yup.object({
-    organization: hostLogin
-      ? Yup.string().trim()
-      : Yup.string().trim().required('School Code is required'),
-    email: Yup.string().trim().required('Email or Username is required'),
-    password: Yup.string().required('Password is required'),
-  });
+const loginSchema = Yup.object({
+  organization: Yup.string().trim(),
+  email: Yup.string().trim().required('Email or Username is required'),
+  password: Yup.string().required('Password is required'),
+});
 
 export function useLoginForm() {
-  const [hostLogin, setHostLogin] = useState(false);
   const [tenantInactive, setTenantInactive] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -29,7 +25,7 @@ export function useLoginForm() {
 
   const formik = useFormik<LoginValues>({
     initialValues: { organization: '', email: '', password: '' },
-    validationSchema: loginSchema(hostLogin),
+    validationSchema: loginSchema,
     onSubmit: async (values) => {
       setTenantInactive(false);
       setErrorMessage('');
@@ -37,7 +33,7 @@ export function useLoginForm() {
         const res = await signIn('credentials', {
           email: values.email.trim(),
           password: values.password,
-          organizationName: hostLogin ? '' : values.organization.trim(),
+          organizationName: values.organization.trim(),
           redirect: false,
         });
         if (res?.error) {
@@ -63,15 +59,5 @@ export function useLoginForm() {
     if (organization) setFieldValue('organization', organization, false);
   }, [setFieldValue]);
 
-  const toggleHostLogin = () => {
-    if (formik.isSubmitting) return;
-    setHostLogin((value) => !value);
-    formik.setFieldValue('organization', '', false);
-    formik.setFieldTouched('organization', false, false);
-    formik.setFieldError('organization', undefined);
-    setTenantInactive(false);
-    setErrorMessage('');
-  };
-
-  return { formik, tenantInactive, errorMessage, hostLogin, toggleHostLogin };
+  return { formik, tenantInactive, errorMessage };
 }

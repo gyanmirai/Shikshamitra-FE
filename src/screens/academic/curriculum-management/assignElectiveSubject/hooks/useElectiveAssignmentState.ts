@@ -33,6 +33,13 @@ export default function useElectiveAssignmentState({
   const [statusFilter, setStatusFilter] = useState<AssignmentFilterValue>('all');
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
 
+  // Share the roster lookup across row callbacks and avoid scanning the roster for every bulk edit.
+  const editableStudentIds = useMemo(
+    () =>
+      new Set(students.filter((student) => !student.isLocked).map((student) => student.studentId)),
+    [students]
+  );
+
   // Reset selections whenever server data changes (new context loaded / refetch after save)
   useEffect(() => {
     if (!serverRecords) return undefined;
@@ -48,7 +55,7 @@ export default function useElectiveAssignmentState({
   // Keep the row callback stable because it is passed to every subject-pill control in the table.
   const toggleSubject = useCallback(
     (studentId: string, subjectId: string) => {
-      if (isLocked) return;
+      if (isLocked || !editableStudentIds.has(studentId)) return;
       setStudentSelections((prev) => {
         const next = { ...prev };
         if (next[studentId] === subjectId) delete next[studentId];
@@ -56,51 +63,57 @@ export default function useElectiveAssignmentState({
         return next;
       });
     },
-    [isLocked]
+    [isLocked, editableStudentIds]
   );
 
+  // Stable handlers share the editable roster with the table's bulk assignment controls.
   const bulkAssignSubject = useCallback(
     (studentIds: string[], subjectId: string) => {
       if (isLocked) return;
       setStudentSelections((prev) => {
         const next = { ...prev };
         studentIds.forEach((id) => {
-          next[id] = subjectId;
+          if (editableStudentIds.has(id)) next[id] = subjectId;
         });
         return next;
       });
     },
-    [isLocked]
+    [isLocked, editableStudentIds]
   );
 
-  const clearSelections = useCallback((studentIds?: string[]) => {
-    if (!studentIds) {
-      setStudentSelections({});
-      return;
-    }
+  const clearSelections = (studentIds?: string[]) => {
+    if (isLocked) return;
     setStudentSelections((prev) => {
       const next = { ...prev };
-      studentIds.forEach((id) => delete next[id]);
+      students.forEach((student) => {
+        if (!student.isLocked && (!studentIds || studentIds.includes(student.studentId))) {
+          delete next[student.studentId];
+        }
+      });
       return next;
     });
-  }, []);
+  };
 
   const resetSelections = useCallback(() => {
     setStudentSelections(serverSelections);
   }, [serverSelections]);
 
-  const toggleRowSelected = useCallback((studentId: string) => {
+  const toggleRowSelected = (studentId: string) => {
+    if (isLocked || !editableStudentIds.has(studentId)) return;
     setSelectedRowIds((prev) => {
       const next = new Set(prev);
       if (next.has(studentId)) next.delete(studentId);
       else next.add(studentId);
       return next;
     });
-  }, []);
+  };
 
-  const toggleAllRowsSelected = useCallback((studentIds: string[], checked: boolean) => {
-    setSelectedRowIds(checked ? new Set(studentIds) : new Set());
-  }, []);
+  const toggleAllRowsSelected = (studentIds: string[], checked: boolean) => {
+    if (isLocked) return;
+    setSelectedRowIds(
+      checked ? new Set(studentIds.filter((id) => editableStudentIds.has(id))) : new Set()
+    );
+  };
 
   const clearRowSelection = useCallback(() => setSelectedRowIds(new Set()), []);
 

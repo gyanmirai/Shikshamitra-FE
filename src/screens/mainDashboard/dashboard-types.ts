@@ -1,5 +1,7 @@
 import type { PermissionName } from 'src/utils/permissions';
 
+import type { DashboardFocus, DashboardStudentOption, DashboardPresentationRole } from './dashboard-focus-types';
+
 export const DASHBOARD_TEMPLATES = {
   leadership: 'leadership',
   principalAdmin: 'principalAdmin',
@@ -66,6 +68,10 @@ export type DashboardDateRange = {
 
 export type DashboardDataContract = {
   dashboardTemplate: DashboardTemplate;
+  presentationRole?: DashboardPresentationRole;
+  students?: DashboardStudentOption[];
+  selectedStudentId?: string;
+  focus?: DashboardFocus;
   academicYearId?: string;
   dateRange: DashboardDateRange;
   scopeLabel?: string;
@@ -87,6 +93,7 @@ export type DashboardDataSourceResult = {
   source: DashboardDataSourceName;
   globalError?: string;
   retry?: () => void;
+  isRefreshing?: boolean;
 };
 
 export type DashboardTemplateMeta = {

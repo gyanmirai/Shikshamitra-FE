@@ -34,7 +34,8 @@ export default function AcademicSetupWorkspace({ scope: baseScope, returnTo, cla
   const { position } = progress;
   const activeStep = academicSetupStages.findIndex((item) => item.key === position.stage);
   const blocked = form.dirty || form.busy;
-  const guideBusy = progress.saving || reloading;
+  const guideBusy = progress.saving || progress.navigating || reloading;
+  const tableStage = position.stage === 'curriculum' || position.stage === 'timetable';
   const failed = progress.failed || progress.conflict;
   const disabled = blocked || guideBusy || query.isFetching || query.isError || !state;
   const visible = academicSetupSettings.filter((item) => state?.settings.some((status) => status.key === item.key && status.canView));
@@ -62,6 +63,7 @@ export default function AcademicSetupWorkspace({ scope: baseScope, returnTo, cla
     move(previous ? { stage: previous.stage, setting: previous.key } : { stage: 'welcome', setting: null });
   };
   return <SetupFlowShell steps={academicSetupStages} activeStep={activeStep} furthestStep={academicSetupStages.length - 1}
+    fillContent={tableStage}
     stepStates={state ? getAcademicSetupStepStates(state.settings, progress.deferred, state.reviewedAt) : {}}
     disabled={disabled} onStep={(index) => move(getAcademicSetupPosition(academicSetupStages[index].key, null))}
     schoolCode="Academic module" sidebarTitle="Academic setup" headerLabel="Academic setup guide"
@@ -71,10 +73,11 @@ export default function AcademicSetupWorkspace({ scope: baseScope, returnTo, cla
       saveStatus={progress.saving ? 'Saving…' : progress.message && !failed ? 'Saved' : ''}
       onSave={() => { progress.persist(); }} onExit={() => { progress.persist(position, progress.deferred, false, returnTo); }}
       onContinue={() => next()} onDefer={() => next(true)} />}>
-    <Stack spacing={3} useFlexGap sx={{ position: 'relative' }}>
+    <Stack spacing={tableStage ? 1.5 : 3} useFlexGap sx={{ position: 'relative',
+      ...(tableStage && { flex: 1, minHeight: { xs: 0, sm: 700 }, '& > *': { flexShrink: 0 } }) }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ sm: 'center' }} justifyContent="space-between" gap={2}>
         <Box inert={blocked || guideBusy} sx={{ flex: 1, minWidth: 0 }}><GlobalAcademicSearch /></Box>
-        <Button size="small" color="inherit" variant="text" disabled={blocked || guideBusy} onClick={() => {
+        <Button size="small" color="inherit" variant="outlined" sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }} disabled={blocked || guideBusy} onClick={() => {
           if (state) progress.persist(position, progress.deferred, false, returnTo); else router.push(returnTo);
         }}>Exit setup</Button>
       </Stack>
@@ -90,18 +93,19 @@ export default function AcademicSetupWorkspace({ scope: baseScope, returnTo, cla
             if (fresh.data) progress.restore(fresh.data);
           } finally { setReloading(false); }
         }}>Reload</Button> : undefined}>{progress.message}</Alert>}
-      <LinearProgress aria-label="Refreshing setup status" aria-hidden={!query.isFetching}
-        sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, visibility: query.isFetching ? 'visible' : 'hidden' }} />
+      <LinearProgress aria-label={guideBusy ? 'Switching setup setting' : 'Refreshing setup status'} aria-hidden={!query.isFetching && !guideBusy}
+        sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, visibility: query.isFetching || guideBusy ? 'visible' : 'hidden' }} />
       {query.isError && <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => { query.refetch(); }}>Retry</Button>}>
           Setup status could not be loaded. Your saved settings are unchanged.
         </Alert>}
       {!scope.academicYearId ? <Alert severity="info">Select an academic year, board and medium to begin.</Alert>
         : !state && !query.isError ? <Stack alignItems="center" spacing={2}><CircularProgress size={24} /><Typography>Loading setup…</Typography></Stack>
-          : state ? <Box inert={guideBusy} aria-busy={guideBusy}>
+          : state ? <Box inert={reloading || (progress.saving && !progress.navigating)} aria-busy={guideBusy}
+            sx={tableStage ? { flex: { xs: '1 0 auto', sm: '1 1 0' }, minHeight: 280, display: 'flex', flexDirection: 'column' } : undefined}>
             <AcademicSetupEmbeddingProvider onFormStateChange={setForm} onStandardChange={setStandardId}>
             {position.stage === 'welcome' || position.stage === 'review'
               ? <AcademicSetupChecklist state={state} deferred={progress.deferred} review={position.stage === 'review'} disabled={disabled} onOpen={move} />
-              : <AcademicSetupSettingPanel position={position} state={state} deferred={progress.deferred} disabled={disabled} onOpen={move} />}
+              : <AcademicSetupSettingPanel position={position} state={state} deferred={progress.deferred} disabled={disabled} loading={progress.navigating} onOpen={move} />}
             </AcademicSetupEmbeddingProvider></Box> : null}
       {state && position.stage !== 'welcome' && <Typography variant="caption" color="text.secondary">
         Save progress remembers your place in this guide. Use each setting’s own form to save its values.

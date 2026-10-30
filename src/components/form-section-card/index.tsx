@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import type { Theme, SxProps } from '@mui/material/styles';
 
 import { useId, useState } from 'react';
-import Box from '@mui/material/Box';
 import { Iconify } from 'src/components/iconify';
 import { Card, Stack, Tooltip, Collapse, IconButton } from '@mui/material';
 
@@ -16,6 +15,7 @@ interface FormSectionCardProps extends FormSectionHeaderProps {
   defaultExpanded?: boolean;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
+  'aria-label'?: string;
   children?: ReactNode;
   contentSpacing?: number;
   contentSx?: SxProps<Theme>;
@@ -23,6 +23,7 @@ interface FormSectionCardProps extends FormSectionHeaderProps {
 }
 
 export function FormSectionCard({
+  'aria-label': ariaLabel,
   icon,
   iconSize,
   iconContainerSize,
@@ -51,6 +52,7 @@ export function FormSectionCard({
   return (
     <Card
       component="section"
+      aria-label={ariaLabel}
       variant="outlined"
       sx={[{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }, ...(Array.isArray(sx) ? sx : [sx])]}
     >

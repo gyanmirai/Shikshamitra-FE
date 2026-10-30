@@ -10,6 +10,8 @@ import { useTheme } from '@mui/material/styles';
 import { BaseChart } from 'src/components/charts/base/BaseChart';
 import { apexToHighcharts } from 'src/components/charts/base/apexCompat';
 
+import { withChartHeight } from './chart-height';
+
 import type { ChartProps } from './types';
 
 // ----------------------------------------------------------------------
@@ -35,8 +37,8 @@ export function Chart({
   const theme = useTheme();
 
   const hcOptions = useMemo(
-    () => apexToHighcharts(type as any, series, options, theme),
-    [type, series, options, theme]
+    () => withChartHeight(apexToHighcharts(type as any, series, options, theme), height),
+    [type, series, options, theme, height]
   );
 
   const isEmpty = useMemo(() => {

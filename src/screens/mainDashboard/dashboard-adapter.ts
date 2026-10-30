@@ -1,8 +1,10 @@
+import { toSafeDashboardHref } from './dashboard-navigation';
 import { isDashboardTemplate } from './dashboard-template-resolver';
 import {
   type DashboardWidgetRegistry,
   enrichDashboardDataFromRegistry,
 } from './dashboard-widget-registry';
+import { parseDashboardFocus, parseDashboardPersonalContext, parseDashboardPresentationRole } from './dashboard-focus-adapter';
 import {
   DASHBOARD_ZONE_KEYS,
   DASHBOARD_TEMPLATES,
@@ -16,6 +18,10 @@ import {
 } from './dashboard-types';
 
 type DashboardPayload = {
+  presentationRole?: unknown;
+  students?: unknown;
+  selectedStudentId?: unknown;
+  focus?: unknown;
   dashboardTemplate?: unknown;
   academicYearId?: unknown;
   dateRange?: unknown;
@@ -39,9 +45,6 @@ export type AdaptedDashboardPayloadResult = {
   zoneErrors: DashboardZoneErrors;
 };
 
-const toSafeDrilldownUrl = (value: unknown) =>
-  typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') ? value : undefined;
-
 const toWidget = (value: any): DashboardWidget | null => {
   if (!value || typeof value.id !== 'string' || typeof value.title !== 'string') {
     return null;
@@ -49,7 +52,7 @@ const toWidget = (value: any): DashboardWidget | null => {
 
   return {
     ...value,
-    drilldownUrl: toSafeDrilldownUrl(value.drilldownUrl),
+    drilldownUrl: toSafeDashboardHref(value.drilldownUrl),
   };
 };
 
@@ -97,6 +100,9 @@ export function mapDashboardPayload(
 
   return {
     dashboardTemplate,
+    presentationRole: parseDashboardPresentationRole(payload?.presentationRole),
+    ...parseDashboardPersonalContext(payload),
+    focus: parseDashboardFocus(payload?.focus),
     academicYearId:
       typeof payload?.academicYearId === 'string' ? payload.academicYearId : undefined,
     dateRange: toDashboardDateRange(payload?.dateRange),
@@ -118,7 +124,7 @@ export function adaptDashboardPayload(
   fallbackTemplate: DashboardTemplate = DASHBOARD_TEMPLATES.principalAdmin,
   registry?: DashboardWidgetRegistry
 ): DashboardDataContract {
-  return enrichDashboardDataFromRegistry(mapDashboardPayload(payload, fallbackTemplate), registry);
+  return enrichDashboardDataFromRegistry(mapDashboardPayload(payload, fallbackTemplate), registry, !payload?.presentationRole);
 }
 
 export function adaptDashboardSummaryPayload(

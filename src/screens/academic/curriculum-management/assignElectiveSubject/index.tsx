@@ -428,7 +428,7 @@ const AssignElectiveSubject = () => {
         onClose={lockDialog.onFalse}
         disableBackdropClick
         title="Lock Elective Assignments"
-        content="Are you sure you want to lock these elective assignments? Once locked, you will not be able to edit or assign subjects to students for this class and division."
+        content="Lock the saved elective assignments? Locked student assignments cannot be changed. Students added later can still be assigned electives and locked separately."
         action={
           <LoadingButton variant="contained" color="error" onClick={handleLock} loading={isLocking}>
             Lock

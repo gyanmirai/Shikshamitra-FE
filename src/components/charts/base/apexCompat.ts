@@ -4,6 +4,7 @@ import type Highcharts from 'highcharts';
 import type { Theme } from '@mui/material/styles';
 
 import { mergeDeep } from './deepMerge';
+import { scatterOptions } from './scatterOptions';
 import { getThemePalette, makeAreaGradient, premiumTooltipFormatter } from './chartUtils';
 
 // ----------------------------------------------------------------------
@@ -383,6 +384,7 @@ export function apexToHighcharts(
   const hcSeries = translateSeries(apexType, series, options);
   const dataLabels = translateDataLabels(options?.dataLabels);
   const plotOptions = translatePlotOptions(apexType, options, colors);
+  if (apexType === 'scatter') plotOptions.scatter = scatterOptions(options);
 
   // Apply data labels to the series-level plotOptions so they cascade.
   if (dataLabels.enabled !== undefined || dataLabels.formatter) {

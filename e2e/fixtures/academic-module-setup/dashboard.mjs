@@ -1,3 +1,5 @@
+import { insightsResponse } from './insights.mjs';
+
 const responses = {
   '/api/academic/dashboard/context': {
     defaultMode: 'admin',
@@ -41,6 +43,15 @@ const responses = {
 };
 
 export function handleDashboard(url, method, send, fixture) {
+  if (method === 'GET' && url.pathname === '/api/academic/dashboard/insights') {
+    fixture.state.requests.push({
+      method,
+      path: url.pathname,
+      query: Object.fromEntries(url.searchParams),
+    });
+    send(200, insightsResponse(fixture.state.insights, url.searchParams.get('studentId')));
+    return true;
+  }
   const data = responses[url.pathname];
   if (method !== 'GET' || !data) return false;
   fixture.state.requests.push({ method, path: url.pathname });

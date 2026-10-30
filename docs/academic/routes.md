@@ -3,7 +3,7 @@ module: academic
 domain: navigation
 content_type: Reference
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -14,6 +14,14 @@ TL;DR: `/academic/setup` is the guided configuration workspace; the nine existin
 Use `academicPaths` and `academicPermissions` from `src/constants/academic-menu.ts` instead of duplicating route or permission strings.
 
 ## Guide and shell
+
+`/academic/dashboard` mounts `src/screens/academic/academic-image-dashboard.tsx`, which loads the separate approved-image presentation under `src/screens/academic/dashboard-design/`.
+The prior `src/screens/academic/academic-dashboard.tsx` and all `src/screens/academic/insights/` files remain preserved in code. The new screen reuses their scoped query hook and permission-filtered catalogue without mounting the prior presentation.
+The dashboard requires `ShikshaMitra.Module.Academics` and `Academics.Dashboard.View`.
+Its section catalogue reuses existing route constants and checks each destination's exact View grant and module-navigation visibility.
+Role ordering does not grant access.
+Verified personal dashboards omit staff workflow links.
+No additional routes or top module-name strip are introduced.
 
 Ordinary Academic pages use the protected application layout, dashboard shell, and module navigation.
 The Academic layout in `src/app/(auth-route)/academic/layout.tsx` checks the initialized permission state and Academic route access before rendering module content.

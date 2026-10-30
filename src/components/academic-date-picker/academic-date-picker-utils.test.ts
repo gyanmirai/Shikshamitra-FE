@@ -1,7 +1,8 @@
 import dayjs from 'dayjs';
 import { it, expect, describe } from 'vitest';
+import { DayType } from 'src/enums/academic-calendar';
 
-import { toDateKey } from './academic-date-picker-utils';
+import { toDateKey, appliesToScope } from './academic-date-picker-utils';
 
 describe('academic calendar date keys', () => {
   it.each([
@@ -15,5 +16,12 @@ describe('academic calendar date keys', () => {
 
   it('uses the selected picker date', () => {
     expect(toDateKey(dayjs('2026-09-14'))).toBe('2026-09-14');
+  });
+
+  it('does not block an exam for a different division of the same class', () => {
+    const day = { id: 'holiday', date: '2026-10-29', dayType: DayType.Vacation,
+      standardId: 'class-10', divisionId: 'division-b', appliesToAll: false };
+    expect(appliesToScope(day, 'class-10', null, ['division-a'])).toBe(false);
+    expect(appliesToScope(day, 'class-10', null, ['division-a', 'division-b'])).toBe(true);
   });
 });

@@ -47,11 +47,11 @@
         {
           "name": "Dashboard",
           "routes": ["/academic/dashboard"],
-          "apis": ["/api/academic/dashboard"],
-          "roles": ["academic-admin"],
-          "permissions": ["ShikshaMitra.Academics.Dashboard", "Academics.Dashboard"],
+          "apis": ["/api/academic/dashboard/insights"],
+          "roles": ["academic-admin", "teacher", "parent", "student"],
+          "permissions": ["ShikshaMitra.Module.Academics", "Academics.Dashboard.View"],
           "forms": [],
-          "businessActions": ["view dashboard KPIs", "drill into academic health"],
+          "businessActions": ["view role-scoped academic graphs", "open permitted academic workflows", "select verified linked student"],
           "risk": "high",
           "status": "confirmed"
         },

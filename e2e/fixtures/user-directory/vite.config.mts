@@ -43,6 +43,14 @@ export default defineConfig({
             response.end(JSON.stringify(data));
           };
           if (url.pathname === '/api/auth/session') return send(null);
+          if (url.pathname === '/api/identity/roles/all')
+            return send({
+              items: [
+                { id: 'role-admin', name: 'Admin', extraProperties: { color: '#FF5630' } },
+                { id: 'role-hr', name: 'HR Manager', extraProperties: { color: '#22C55E' } },
+                { id: 'role-teacher', name: 'Teacher', extraProperties: { Color: '#00B8D9' } },
+              ],
+            });
           if (url.pathname === '/fixture/reset') {
             fail = false;
             empty = false;

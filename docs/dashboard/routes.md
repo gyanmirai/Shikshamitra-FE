@@ -3,7 +3,7 @@ module: dashboard
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -34,6 +34,10 @@ Template selection lives in `src/screens/mainDashboard/**`.
 | `teacher` | Teacher, head of department, academic coordinator, and class teacher |
 | `financeHr` | Finance officer, HR manager, payroll operator, and attendance operator |
 | `studentParent` | Student, parent, and guardian |
+
+Presentation roles refine these templates into leadership, principal, admissions, teacher, finance, HR, student, and parent priorities without creating additional routes or granting permissions.
+Role labels never authorize a widget or destination.
+The shared header appears before feedback and data regions, and native links open permitted module workflows.
 
 ## Related routes outside this module
 

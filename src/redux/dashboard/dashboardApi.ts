@@ -1,3 +1,4 @@
+import type { DashboardPresentationRole } from 'src/screens/mainDashboard/dashboard-focus-types';
 import type {
   DashboardWidget,
   DashboardTemplate,
@@ -14,9 +15,16 @@ export type DashboardSummaryQuery = {
   academicYearId?: string;
   from?: string;
   to?: string;
+  studentId?: string;
+  presentationRole?: DashboardPresentationRole;
+  accessKey?: string;
 };
 
 export type DashboardSummaryResponse = {
+  presentationRole?: unknown;
+  students?: unknown;
+  selectedStudentId?: unknown;
+  focus?: unknown;
   dashboardTemplate?: string;
   academicYearId?: string;
   dateRange?: Partial<DashboardDateRange>;
@@ -45,6 +53,8 @@ export const buildDashboardSummaryQueryParams = ({
   academicYearId,
   from,
   to,
+  studentId,
+  presentationRole,
 }: DashboardSummaryQuery): Record<string, string> => {
   const params: Record<string, string> = {
     dashboardTemplate,
@@ -61,6 +71,8 @@ export const buildDashboardSummaryQueryParams = ({
   if (to?.trim()) {
     params.to = to.trim();
   }
+  if (studentId?.trim()) params.studentId = studentId.trim();
+  if (presentationRole) params.presentationRole = presentationRole;
 
   return params;
 };

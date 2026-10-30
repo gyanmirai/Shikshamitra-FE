@@ -1,8 +1,6 @@
-import type { Dayjs } from 'dayjs';
+import type { DayType } from 'src/enums/academic-calendar';
 import type { DatePickerProps } from '@mui/x-date-pickers/DatePicker';
 import type { DateTimePickerProps } from '@mui/x-date-pickers/DateTimePicker';
-
-import type { DayType } from 'src/enums/academic-calendar';
 
 export type AcademicCalendarDay = {
   id: string;
@@ -38,6 +36,7 @@ export type AcademicDatePickerProps = Omit<
   standardId?: string | null;
   divisionId?: string | null;
   validationType?: AcademicDatePickerValidationType;
+  divisionIds?: string[];
   blockedDayTypes?: DayType[];
   showCalendarMarkers?: boolean;
   helperText?: string;

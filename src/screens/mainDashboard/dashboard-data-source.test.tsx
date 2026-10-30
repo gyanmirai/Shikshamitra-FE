@@ -3,8 +3,8 @@ import type { PropsWithChildren } from 'react';
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
 import { configureStore } from '@reduxjs/toolkit';
-import { waitFor, renderHook } from '@testing-library/react';
 import { it, vi, expect, describe, afterEach } from 'vitest';
+import { act, waitFor, renderHook } from '@testing-library/react';
 
 import { dashboardWidgetRegistry } from './dashboard-widget-registry';
 import { DASHBOARD_TEMPLATES, DASHBOARD_ZONE_KEYS } from './dashboard-types';
@@ -13,8 +13,8 @@ import {
   getDashboardDataSourceMode,
   fetchDashboardContractPreview,
   DASHBOARD_CONTRACT_PREVIEW_PATH,
-  createEmptyDashboardDataSourceResult,
   createDashboardMockDataSourceResult,
+  createEmptyDashboardDataSourceResult,
 } from './dashboard-data-source';
 
 vi.hoisted(() => {
@@ -55,6 +55,56 @@ describe('dashboard data source', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
+  });
+
+  it('never retains another identity or academic context while its new request is pending', async () => {
+    let dataCalls = 0;
+    vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => {
+      if (getFetchUrl(input).includes('/api/auth/session')) return sessionResponse();
+      dataCalls += 1;
+      if (dataCalls > 1) return new Promise<Response>(() => {});
+      return new Response(JSON.stringify({ dashboardTemplate: 'principalAdmin',
+        kpiCards: [{ id: 'principal-student-attendance', title: 'First context', value: 88 }] }), { status: 200 });
+    }));
+    const { result, rerender } = renderHook(({ accessKey, academicYearId }) =>
+      useDashboardDataSource({ template: DASHBOARD_TEMPLATES.principalAdmin, accessKey, academicYearId }),
+    { initialProps: { accessKey: 'tenant-a:user-a:1', academicYearId: 'year-a' }, wrapper: createDashboardHookWrapper() });
+    await waitFor(() => expect(result.current.data.kpiCards[0]?.value).toBe(88));
+    rerender({ accessKey: 'tenant-b:user-b:2', academicYearId: 'year-b' });
+    expect(result.current.data.kpiCards).toEqual([]);
+    expect(result.current.data.focus).toBeUndefined();
+    await waitFor(() => expect(dataCalls).toBe(2));
+  });
+
+  it('hides cached data as soon as current access becomes unavailable', async () => {
+    vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => getFetchUrl(input).includes('/api/auth/session')
+      ? sessionResponse() : new Response(JSON.stringify({ dashboardTemplate: 'teacher',
+        kpiCards: [{ id: 'teacher-periods', title: 'Private count', value: 6 }] }), { status: 200 })));
+    const { result, rerender } = renderHook(({ enabled }) => useDashboardDataSource({
+      template: DASHBOARD_TEMPLATES.teacher, enabled, accessKey: 'teacher-identity' }),
+    { initialProps: { enabled: true }, wrapper: createDashboardHookWrapper() });
+    await waitFor(() => expect(result.current.data.kpiCards).toHaveLength(1));
+    rerender({ enabled: false });
+    expect(result.current.data.kpiCards).toEqual([]);
+    expect(result.current.retry).toBeUndefined();
+  });
+
+  it('clears cached child data when the server revokes access during a refresh', async () => {
+    let denied = false;
+    vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => {
+      if (getFetchUrl(input).includes('/api/auth/session')) return sessionResponse();
+      return denied ? new Response(JSON.stringify({ error: { message: 'Access denied' } }), { status: 403 })
+        : new Response(JSON.stringify({ dashboardTemplate: 'studentParent',
+          kpiCards: [{ id: 'student-attendance', title: 'Private attendance', value: 94 }] }), { status: 200 });
+    }));
+    const { result } = renderHook(() => useDashboardDataSource({ template: DASHBOARD_TEMPLATES.studentParent,
+      accessKey: 'guardian-same-context' }), { wrapper: createDashboardHookWrapper() });
+    await waitFor(() => expect(result.current.data.kpiCards).toHaveLength(1));
+    denied = true;
+    await act(async () => { await result.current.retry?.(); });
+    await waitFor(() => expect(result.current.data.kpiCards).toEqual([]));
+    expect(result.current.data.focus).toBeUndefined();
+    expect(result.current.globalError).toContain('access');
   });
 
   it('uses API mode unless a gated dev/test source is explicitly requested', () => {

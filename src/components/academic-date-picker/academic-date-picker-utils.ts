@@ -21,9 +21,13 @@ export const isActiveCalendarDay = (day: AcademicCalendarDay) =>
 export const appliesToScope = (
   day: AcademicCalendarDay,
   standardId?: string | null,
-  divisionId?: string | null
+  divisionId?: string | null,
+  divisionIds?: string[]
 ) => {
   if (day.appliesToAll) return true;
+  if (divisionIds && day.divisionId) {
+    return (!day.standardId || day.standardId === standardId) && divisionIds.includes(day.divisionId);
+  }
   if (divisionId && day.divisionId === divisionId) return true;
   if (standardId && day.standardId === standardId && !divisionId) return true;
   if (standardId && day.standardId === standardId && !day.divisionId) return true;

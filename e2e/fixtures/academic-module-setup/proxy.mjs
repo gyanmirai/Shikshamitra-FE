@@ -2,7 +2,8 @@ import http from 'node:http';
 import { createAcademicFixture } from './state.mjs';
 import { handleManagers } from './managers.mjs';
 import { handleDashboard } from './dashboard.mjs';
-import { permissionNames, paged, year, board, medium, ids } from './data.mjs';
+import { insightsPermissions } from './insights.mjs';
+import { paged, year, board, medium, ids } from './data.mjs';
 
 const upstream = 'http://127.0.0.1:4469';
 let fixture = createAcademicFixture();
@@ -58,7 +59,14 @@ export const server = http.createServer(async (request, response) => {
   }
   if (url.pathname === '/api/permission-management/permissions') {
     send(200, {
-      groups: [{ permissions: permissionNames.map((name) => ({ name, isGranted: true })) }],
+      groups: [
+        {
+          permissions: insightsPermissions(fixture.state.insights).map((name) => ({
+            name,
+            isGranted: true,
+          })),
+        },
+      ],
     });
     return;
   }

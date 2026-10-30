@@ -1,7 +1,7 @@
 'use client';
 
 import type { LabelColor } from 'src/components/label';
-import type { IColumn, IData } from 'src/components/customizabaleTable/types';
+import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
 import { Checkbox } from '@mui/material';
 import { Label } from 'src/components/label';
@@ -24,21 +24,25 @@ export function getSelectionColumn({
   onToggleRow,
   onToggleAllRows,
 }: SelectionColumnOptions): IColumn {
+  const editableStudents = students.filter((student) => !student.isLocked);
   return {
     id: 'rowSelect',
     label: (
       <Checkbox
         size="small"
         inputProps={{ 'aria-label': 'Select all visible students' }}
-        disabled={students.length === 0}
-        checked={students.length > 0 && students.every((row) => selectedRowIds.has(row.studentId))}
+        disabled={editableStudents.length === 0}
+        checked={
+          editableStudents.length > 0 &&
+          editableStudents.every((row) => selectedRowIds.has(row.studentId))
+        }
         indeterminate={
-          students.some((row) => selectedRowIds.has(row.studentId)) &&
-          !students.every((row) => selectedRowIds.has(row.studentId))
+          editableStudents.some((row) => selectedRowIds.has(row.studentId)) &&
+          !editableStudents.every((row) => selectedRowIds.has(row.studentId))
         }
         onChange={(event) =>
           onToggleAllRows(
-            students.map((row) => row.studentId),
+            editableStudents.map((row) => row.studentId),
             event.target.checked
           )
         }
@@ -48,6 +52,7 @@ export function getSelectionColumn({
     isFilter: false,
     isSort: false,
     sticky: true,
+    stickyOnMobile: false,
     stickyPosition: 'left',
     // headerSx: { ...compactHeader, px: 0.75 },
     // cellSx: { ...compactCell, px: 0.75 },
@@ -58,6 +63,7 @@ export function getSelectionColumn({
           size="small"
           inputProps={{ 'aria-label': `Select ${row.studentName}` }}
           checked={selectedRowIds.has(row.studentId)}
+          disabled={row.isLocked}
           onChange={() => onToggleRow(row.studentId)}
         />
       );
@@ -84,6 +90,7 @@ export function getStatusColumn(
     label: 'Status',
     minWidth: '105px',
     sticky: true,
+    stickyOnMobile: false,
     stickyPosition: 'right',
     filterType: 'enum',
     enumOptions: [
@@ -94,6 +101,13 @@ export function getStatusColumn(
     headerSx: compactHeader,
     cellSx: compactCell,
     render: (_, data) => {
+      if ((data as StudentElectiveRow).isLocked) {
+        return (
+          <Label color="default" variant="soft">
+            Locked
+          </Label>
+        );
+      }
       const status = getRowStatus(data as StudentElectiveRow);
       return (
         <Label color={statusColors[status]} variant="soft">

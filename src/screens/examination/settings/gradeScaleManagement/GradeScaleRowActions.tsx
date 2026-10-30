@@ -66,7 +66,7 @@ export function GradeScaleRowActions({
           : []),
         {
           id: 'archive',
-          label: `Archive grade scale ${scale.name}`,
+          label: 'Archive',
           icon: 'solar:archive-bold',
           color: 'warning.main',
           disabled: !canDelete || isArchiveLoading,

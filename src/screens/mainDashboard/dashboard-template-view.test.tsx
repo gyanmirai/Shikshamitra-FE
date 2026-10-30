@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 import type { PermissionName } from 'src/utils/permissions';
 
-import { it, expect, describe } from 'vitest';
+import { it, vi, expect, describe } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 
 import { getDashboardMockData } from './dashboard-mock-data';
@@ -11,6 +11,9 @@ import { DASHBOARD_TEMPLATES, DASHBOARD_ZONE_KEYS } from './dashboard-types';
 import { createDashboardMockDataSourceResult } from './dashboard-data-source';
 
 import type { DashboardDataContract } from './dashboard-types';
+
+vi.mock('@iconify/react', () => ({ Icon: () => null, disableCache: () => {} }));
+vi.mock('src/components/chart', () => ({ Chart: () => null, useChart: (options: unknown) => options }));
 
 const allZoneTestIds = [
   'dashboard-zone-kpis',
@@ -57,13 +60,13 @@ describe('DashboardTemplateView', () => {
     });
   });
 
-  it('orders operational actions before metrics for the Principal/Admin template', () => {
+  it('keeps compact metrics before the focus and action region for Principal/Admin', () => {
     renderDashboard(createDashboardMockDataSourceResult(DASHBOARD_TEMPLATES.principalAdmin).data);
 
     const actions = screen.getByTestId('dashboard-zone-actions');
     const metrics = screen.getByTestId('dashboard-zone-kpis');
 
-    expect(actions.compareDocumentPosition(metrics)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(metrics.compareDocumentPosition(actions)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it('keeps the school pulse first for the Leadership template', () => {
@@ -73,7 +76,19 @@ describe('DashboardTemplateView', () => {
     const actions = screen.getByTestId('dashboard-zone-actions');
 
     expect(metrics.compareDocumentPosition(actions)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(screen.getByRole('heading', { level: 1, name: 'Leadership dashboard' })).toBeVisible();
+    expect(screen.getByRole('heading', { level: 1, name: 'Leadership Dashboard' })).toBeVisible();
+  });
+
+  it('renders the live role focus before priorities with no mock toolbar', () => {
+    renderDashboard({ ...emptyDashboardData, presentationRole: 'principal', focus: {
+      kind: 'attendance', widgetId: 'principal-student-attendance', title: 'Recorded Attendance',
+      description: 'Submitted observations only', status: 'empty', accessMode: 'staff',
+      requiredPermissions: ['Students.Attendance.View'], series: [], items: [], metrics: [],
+      message: 'No submitted observations in this period.' } });
+    expect(screen.getByRole('heading', { name: 'Recorded Attendance' })).toBeVisible();
+    expect(screen.getByTestId('dashboard-zone-focus').compareDocumentPosition(screen.getByTestId('dashboard-zone-actions')))
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(screen.queryByText('Interactive Mockup')).not.toBeInTheDocument();
   });
 
   it('shows zone empty states when no permitted items are available', () => {
@@ -85,7 +100,7 @@ describe('DashboardTemplateView', () => {
   });
 
   it('shows a zone loading state without blanking unaffected zones', () => {
-    renderDashboard(getDashboardMockData(DASHBOARD_TEMPLATES.principalAdmin), {
+    renderDashboard({ ...getDashboardMockData(DASHBOARD_TEMPLATES.principalAdmin), actionItems: [] }, {
       loadingZones: [DASHBOARD_ZONE_KEYS.actions],
     });
 
@@ -142,7 +157,7 @@ describe('DashboardTemplateView', () => {
       enforcePermissions: true,
       permissions: [
         permissionGrant(dashboardWidgetRegistry['finance-collection'].requiredPermissions),
-        permissionGrant(dashboardWidgetRegistry['finance-dashboard'].requiredPermissions),
+        ...(dashboardWidgetRegistry['finance-dashboard'].requiredPermissions as string[]).map(permissionGrant),
       ],
     });
 

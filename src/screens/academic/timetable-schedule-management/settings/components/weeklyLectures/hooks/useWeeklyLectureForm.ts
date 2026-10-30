@@ -5,7 +5,7 @@ import type { Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { useMemo, useEffect } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { getTimetableSettingStatus } from 'src/utils/timetable-capacity';
@@ -43,8 +43,11 @@ interface UseWeeklyLectureFormResult {
   isCapacityLoading: boolean;
   detailsError: boolean;
   capacityError: boolean;
+  subjectsError: boolean;
+  classContext: string;
   refetchDetails: () => unknown;
   refetchCapacity: () => unknown;
+  refetchSubjects: () => unknown;
   isSubmitting: boolean;
   availableCapacity: number;
   hasSlots: boolean;
@@ -65,7 +68,11 @@ export function useWeeklyLectureForm({
   tableData,
   onClose,
 }: UseWeeklyLectureFormArgs): UseWeeklyLectureFormResult {
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const {
+    currentMedium: medium,
+    currentYear,
+    currentBoard,
+  } = useSelector((state: RootState) => state.globalState);
 
   const [addWeeklyLectureSlot, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -91,7 +98,7 @@ export function useWeeklyLectureForm({
   });
 
   const {
-    data: lectureSlotsData,
+    currentData: lectureSlotsData,
     isLoading: isCapacityLoading,
     isFetching: isCapacityFetching,
     isError: capacityError,
@@ -102,10 +109,6 @@ export function useWeeklyLectureForm({
     params: { AcademicMediumId: medium?.id },
     options: { skip: !medium?.id },
   });
-
-  const selectedClassSlot = (lectureSlotsData?.items ?? []).find(
-    (item: any) => item.standardId === (editData?.standardId || selectedClass)
-  );
 
   const formik = useFormik<ISubjectFormValues>({
     initialValues: getNoOfLectureInitialValues(
@@ -154,14 +157,19 @@ export function useWeeklyLectureForm({
       });
       if (res.data) {
         shikshaMitraToast.success({
-          message: `Weekly No. of lectures added for {values.className}`,
+          message: `Weekly No. of lectures added for ${values.className}`,
         });
         onClose?.(null, true);
       }
     },
   });
 
-  const { data: subjectTableData, isLoading: isSubjectsLoading } = useQueryAndMutation({
+  const {
+    currentData: subjectTableData,
+    isFetching: isSubjectsLoading,
+    isError: subjectsError,
+    refetch: refetchSubjects,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: {
@@ -169,7 +177,7 @@ export function useWeeklyLectureForm({
       standardId: formik.values.classId,
     },
     options: {
-      skip: !medium?.id || !formik.values.classId,
+      skip: !!editData || !medium?.id || !formik.values.classId,
     },
   });
 
@@ -178,9 +186,7 @@ export function useWeeklyLectureForm({
     [tableData]
   );
 
-  // Build the available class list once (intentionally excluded from deps to
-  // match the legacy snapshot-on-mount semantics – pre-existing rows stay
-  // editable while new-add hides already-configured classes).
+  // Stable options let context loading initialize the form without resetting ordinary field edits.
   const allClass = useMemo<IClassOption[]>(
     () =>
       editData
@@ -193,29 +199,51 @@ export function useWeeklyLectureForm({
                 (standard: IClassOption) => !createdStandardIds.includes(standard.id)
               ) || []
           ) as IClassOption[]) || [],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [medium?.educationMediumStages, editData, createdStandardIds]
   );
 
-  // Default classId to the first available class once the list is known.
+  const { setValues } = formik;
+  const { classId } = formik.values;
   useEffect(() => {
-    formik.setFieldValue('classId', editData?.standardId || allClass?.[0]?.id || '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allClass]);
+    if (!allClass.length || allClass.some((item) => item.id === classId)) return;
+    setValues((values) => {
+      const firstClass = allClass[0];
+      return {
+        ...values,
+        classId: firstClass.id,
+        className: firstClass.name,
+        subjects: [],
+        totalLectures: 0,
+      };
+    }, false);
+  }, [allClass, classId, setValues]);
 
   // External `selectedClass` (e.g. coming from SubjectPalette) -> sync into form.
+  const appliedSelectedClass = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!editData && selectedClass) {
-      const matched = allClass.find((c) => c.name === selectedClass || c.id === selectedClass);
-      if (matched) {
-        formik.setFieldValue('classId', matched.id);
-        formik.setFieldValue('className', matched.name);
-      }
-      formik.setFieldValue('subjects', []);
-      formik.setFieldValue('totalLectures', 0);
+    if (editData || !selectedClass) {
+      appliedSelectedClass.current = undefined;
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClass, editData, allClass]);
+    const matched = allClass.find(
+      (item) => item.name === selectedClass || item.id === selectedClass
+    );
+    if (!matched || appliedSelectedClass.current === matched.id) return;
+    appliedSelectedClass.current = matched.id;
+    setValues(
+      (values) =>
+        values.classId === matched.id
+          ? values
+          : {
+              ...values,
+              classId: matched.id,
+              className: matched.name,
+              subjects: [],
+              totalLectures: 0,
+            },
+      false
+    );
+  }, [selectedClass, editData, allClass, setValues]);
 
   // When subject assignments are loaded (create flow only), seed the rows.
   useEffect(() => {
@@ -260,6 +288,18 @@ export function useWeeklyLectureForm({
     [formik.values.subjects]
   );
 
+  const selectedClassSlot = (lectureSlotsData?.items ?? []).find(
+    (item: { standardId: string }) => item.standardId === formik.values.classId
+  );
+  const className = allClass.find((item) => item.id === formik.values.classId)?.name;
+  const classContext = [
+    className || formik.values.classId,
+    currentYear?.name,
+    currentBoard?.name,
+    medium?.name,
+  ]
+    .filter(Boolean)
+    .join(' / ');
   const hasSlots = Boolean(selectedClassSlot);
   const availableCapacity = selectedClassSlot?.weeklyTeachingCapacity ?? 0;
   const status = getTimetableSettingStatus({
@@ -277,8 +317,11 @@ export function useWeeklyLectureForm({
     isCapacityLoading: Boolean(isCapacityLoading || isCapacityFetching),
     detailsError: Boolean(detailsError),
     capacityError: Boolean(capacityError),
+    subjectsError: Boolean(subjectsError),
+    classContext,
     refetchDetails,
     refetchCapacity,
+    refetchSubjects,
     isSubmitting: isAddLoading || isUpdateLoading,
     availableCapacity,
     hasSlots,

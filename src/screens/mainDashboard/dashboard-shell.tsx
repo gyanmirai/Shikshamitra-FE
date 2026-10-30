@@ -2,140 +2,126 @@
 
 import type { ReactNode } from 'react';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { varAlpha } from 'src/theme/styles';
-import { alpha, useTheme } from '@mui/material/styles';
-import { Box, Card, Chip, Stack, Typography } from '@mui/material';
+import { Box, Stack, Button, Typography } from '@mui/material';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { DASHBOARD_TEMPLATE_META, type DashboardDataContract } from './dashboard-types';
 
 type DashboardShellProps = {
   data: DashboardDataContract;
   children: ReactNode;
+  presentationRole?: string;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  headerAction?: ReactNode;
+  contextAction?: ReactNode;
 };
 
-const formatUpdatedAt = (value?: string) => {
-  if (!value) {
-    return null;
-  }
+const roleTitles: Record<string, string> = {
+  leadership: 'Leadership',
+  principal: 'Principal',
+  admissions: 'Admissions',
+  teacher: 'Teacher',
+  finance: 'Finance',
+  hr: 'HR',
+  student: 'Student',
+  parent: 'Parent',
+  principalAdmin: 'Principal/Admin',
+  financeHr: 'Finance/HR',
+  studentParent: 'Student/Parent',
+};
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
+function formatUpdatedAt(value?: string) {
+  if (!value || Number.isNaN(new Date(value).getTime())) return null;
   return `Updated ${new Intl.DateTimeFormat(undefined, {
+    day: 'numeric',
+    month: 'short',
     hour: 'numeric',
     minute: '2-digit',
-  }).format(date)}`;
-};
+  }).format(new Date(value))}`;
+}
 
-export function DashboardShell({ data, children }: DashboardShellProps) {
-  const theme = useTheme();
-  const palette = theme.vars?.palette ?? theme.palette;
-  const primaryAlpha = (opacity: number) =>
-    palette.primary.mainChannel
-      ? varAlpha(palette.primary.mainChannel, opacity)
-      : alpha(palette.primary.main, opacity);
-  const templateMeta = DASHBOARD_TEMPLATE_META[data.dashboardTemplate];
+export function DashboardShell({
+  data,
+  children,
+  presentationRole,
+  onRefresh,
+  isRefreshing = false,
+  headerAction,
+  contextAction,
+}: DashboardShellProps) {
+  const meta = DASHBOARD_TEMPLATE_META[data.dashboardTemplate];
+  const title = `${roleTitles[presentationRole ?? data.dashboardTemplate] ?? meta.label} Dashboard`;
   const updatedAt = formatUpdatedAt(data.generatedAtUtc);
-  const isPartial = data.dataState === 'partial';
 
   return (
-    <DashboardContent
-      sx={{
-        width: '100%',
-        maxWidth: 1600,
-        mx: 'auto',
-        px: { xs: 2, sm: 3, lg: 'var(--layout-dashboard-content-px)' },
-        py: { xs: 2, md: 3 },
-      }}
-    >
+    <DashboardContent sx={{ width: 1, minWidth: 0, maxWidth: 1600, mx: 'auto', py: 1 }}>
       <Stack
-        spacing={{ xs: 2.5, md: 3 }}
+        spacing={1.5}
         data-testid="dashboard-root"
         data-dashboard-template={data.dashboardTemplate}
       >
-        <Card
-          sx={{
-            p: { xs: 2.5, md: 3.5 },
-            overflow: 'hidden',
-            border: '1px solid',
-            borderColor: primaryAlpha(0.2),
-            background: `radial-gradient(circle at 88% 12%, ${primaryAlpha(0.2)}, transparent 34%), linear-gradient(145deg, ${primaryAlpha(0.08)}, ${palette.background.paper} 72%)`,
-          }}
-          data-testid={`dashboard-template-${data.dashboardTemplate}`}
+        <Box data-testid={`dashboard-template-${data.dashboardTemplate}`}>
+          <CustomBreadcrumbs
+            heading={title}
+            headingComponent="h1"
+            description={meta.description}
+            links={[{ name: 'Dashboard' }]}
+            action={
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                {onRefresh && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    onClick={onRefresh}
+                    loading={isRefreshing}
+                    loadingPosition="start"
+                    disabled={isRefreshing}
+                    startIcon={<Iconify icon="mdi:refresh" width={18} aria-hidden />}
+                  >
+                    Refresh
+                  </Button>
+                )}
+                {headerAction}
+              </Stack>
+            }
+          />
+        </Box>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          justifyContent="space-between"
+          spacing={1}
+          sx={{ px: 1 }}
         >
           <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={2.5}
-            alignItems={{ xs: 'flex-start', md: 'center' }}
-            justifyContent="space-between"
+            direction="row"
+            spacing={1.5}
+            alignItems="center"
+            useFlexGap
+            flexWrap="wrap"
+            sx={{ minWidth: 0, '& > *': { overflowWrap: 'anywhere' } }}
           >
-            <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ minWidth: 0 }}>
-              <Box
-                aria-hidden="true"
-                sx={{
-                  width: 50,
-                  height: 50,
-                  flex: '0 0 auto',
-                  display: 'grid',
-                  placeItems: 'center',
-                  borderRadius: 2,
-                  color: 'primary.main',
-                  bgcolor: primaryAlpha(0.14),
-                }}
-              >
-                <Iconify icon="solar:buildings-3-bold-duotone" width={29} />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="overline" color="primary.main">
-                  {templateMeta.eyebrow}
-                </Typography>
-                <Typography component="h1" variant="h3" sx={{ textWrap: 'balance' }}>
-                  {templateMeta.label} dashboard
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, maxWidth: 720 }}>
-                  {templateMeta.description}
-                </Typography>
-              </Box>
-            </Stack>
-
-            <Stack
-              direction="row"
-              spacing={1}
-              flexWrap="wrap"
-              useFlexGap
-              justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
-            >
-              <Chip
-                icon={<Iconify aria-hidden="true" icon="solar:calendar-date-linear" width={18} />}
-                label={data.dateRange.label}
-                variant="outlined"
-              />
-              <Chip
-                icon={
-                  <Iconify aria-hidden="true" icon="solar:users-group-rounded-linear" width={18} />
-                }
-                label={data.scopeLabel || 'Your permitted scope'}
-                variant="outlined"
-              />
-              {updatedAt ? (
-                <Chip
-                  icon={<Iconify aria-hidden="true" icon="solar:refresh-linear" width={18} />}
-                  label={updatedAt}
-                  color={isPartial ? 'warning' : 'success'}
-                  variant="soft"
-                />
-              ) : null}
-            </Stack>
+            <Typography variant="body2">{data.scopeLabel || 'Your permitted scope'}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {data.dateRange.label}
+            </Typography>
+            {updatedAt && (
+              <Typography variant="caption" color="text.secondary">
+                {updatedAt}
+              </Typography>
+            )}
+            {data.dataState === 'partial' && (
+              <Label color="warning">Some data is unavailable</Label>
+            )}
           </Stack>
-        </Card>
-
+          {contextAction}
+        </Stack>
         {children}
-
-        <Typography variant="caption" color="text.secondary" sx={{ pb: 1 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ px: 1, pb: 1 }}>
           Values and actions are limited by your permissions and school data scope.
         </Typography>
       </Stack>

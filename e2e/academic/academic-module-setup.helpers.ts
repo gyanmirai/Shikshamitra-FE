@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies -- Playwright helpers run only in the development test suite. */
 import { expect, type Page, type APIRequestContext } from '@playwright/test';
 
-export const fixtureApi = 'http://127.0.0.1:4467';
+export const fixtureApi = process.env.ACADEMIC_SETUP_FIXTURE_API ?? 'http://127.0.0.1:4467';
 export const ordinaryPath = '/academic/audits?source=setup-smoke';
 
 export async function snapshot(request: APIRequestContext) {

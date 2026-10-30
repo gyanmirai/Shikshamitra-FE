@@ -33,13 +33,17 @@ test.describe(
         .getByRole('button', { name: 'Save & exit', exact: true })
         .click();
       await expect(page).toHaveURL(/\/academic\/dashboard$/);
-      await expect(page.getByText('Academic Health', { exact: true })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: 'Academic Dashboard', exact: true })
+      ).toBeVisible();
       expect(runtimeErrors).toEqual([]);
-      const health = page.getByRole('region', { name: 'Academic Health', exact: true });
-      await expect(health.getByRole('heading', { name: '0', exact: true, level: 3 })).toBeVisible();
-      await expect(health.getByText('Needs Attention', { exact: true })).toBeVisible();
-      await expect(health.getByText('0%', { exact: true })).toHaveCount(3);
-      await expect(health.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
+      const insight = page.getByRole('region', { name: 'Student Academic 360', exact: true });
+      await expect(insight.locator('svg image')).toHaveAttribute('href', /shikshamitra-student\.png$/);
+      await expect(
+        insight.getByText('No comparable student samples are available.', { exact: true })
+      ).toBeVisible();
+      await expect(page.getByText('Academic Health', { exact: true })).toHaveCount(0);
+      await expect(page.getByText('Needs Attention', { exact: true })).toHaveCount(0);
       await expectHealthy(page);
       expect(runtimeErrors).toEqual([]);
     });
@@ -53,25 +57,31 @@ test.describe(
       page.on('console', (message) => {
         if (/NaN/.test(message.text())) runtimeErrors.push(message.text());
       });
-      const curriculumEndpoint = '**/api/academic/dashboard/admin/curriculum';
+      const curriculumEndpoint = '**/api/academic/dashboard/insights?*';
       await page.route(curriculumEndpoint, (route) =>
         route.fulfill({ status: 200, json: { items: [], totalCount: 0 } })
       );
       await request.post(`${fixtureApi}/fixture/mark-visited`);
       await login(page);
       await page.goto('/academic/dashboard');
-      const health = page.getByRole('region', { name: 'Academic Health', exact: true });
-      await expect(health.getByText(/unavailable/i)).toBeVisible();
-      await expect(health.getByRole('heading', { name: '0', exact: true, level: 3 })).toHaveCount(0);
-      await expect(health.getByText('Healthy', { exact: true })).toHaveCount(0);
+      await expect(
+        page.getByRole('alert').filter({ hasText: 'Academic insights could not be loaded' })
+      ).toBeVisible();
+      await expect(
+        page.getByRole('region', { name: 'Student Academic 360', exact: true })
+      ).toHaveCount(0);
+      await expect(page.getByText('Academic Health', { exact: true })).toHaveCount(0);
       await expectHealthy(page);
       expect(runtimeErrors).toEqual([]);
       await page.unroute(curriculumEndpoint);
-      await health.getByRole('button', { name: 'Retry', exact: true }).click();
-      await expect(health.getByRole('heading', { name: '0', exact: true, level: 3 })).toBeVisible();
-      await expect(health.getByText('Needs Attention', { exact: true })).toBeVisible();
-      await expect(health.getByText('0%', { exact: true })).toHaveCount(3);
-      await expect(health.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
+      await page.getByRole('button', { name: 'Retry', exact: true }).click();
+      const recovered = page.getByRole('region', { name: 'Student Academic 360', exact: true });
+      await expect(
+        recovered.getByText('No comparable student samples are available.', { exact: true })
+      ).toBeVisible();
+      await expect(
+        page.getByRole('alert').filter({ hasText: 'Academic insights could not be loaded' })
+      ).toHaveCount(0);
       await expectHealthy(page);
       expect(runtimeErrors).toEqual([]);
     });
@@ -167,7 +177,7 @@ test.describe(
         ['timetable', 'lecture-slots', 'Lecture Slots', '/lecture-slots'],
         ['homework', 'homework-types', 'Homework Types', '/homework-type'],
         ['homework', 'assignment-types', 'Assignment Types', '/assignment-type'],
-        ['homework', 'rubrics', 'Rubric Templates', '/rubrics'],
+        ['homework', 'rubrics', 'Rubric Templates', '/rubrics/templates/paged'],
         ['examination', 'grading-scales', 'Grade Scaling', '/grading-scales'],
         ['examination', 'exam-types', 'Exam Types', '/exam-type'],
       ];

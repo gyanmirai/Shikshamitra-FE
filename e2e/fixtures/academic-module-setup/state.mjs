@@ -7,6 +7,7 @@ export function createAcademicFixture(options = {}) {
     visitRequests: [],
     settings: {},
     requests: [],
+    insights: options.insights ?? {},
     failNext: options.failNext ?? null,
     saveDelay: options.saveDelay ?? 0,
     progress: {

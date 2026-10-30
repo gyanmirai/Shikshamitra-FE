@@ -9,6 +9,14 @@ import {
 } from './dashboard-adapter';
 
 describe('dashboard adapter', () => {
+  it('preserves exact server permissions and does not infer a missing modern drilldown', () => {
+    const data = adaptDashboardPayload({ dashboardTemplate: 'leadership', presentationRole: 'leadership',
+      kpiCards: [{ id: 'leadership-fee-collection', title: 'Verified', value: 0,
+        requiredPermissions: ['Finance.Fees.FeeCollections.View'] }] });
+    expect(data.kpiCards[0].requiredPermissions).toEqual(['Finance.Fees.FeeCollections.View']);
+    expect(data.kpiCards[0].drilldownUrl).toBeUndefined();
+  });
+
   it('maps a complete dashboard payload into the frontend contract', () => {
     const data = mapDashboardPayload({
       dashboardTemplate: DASHBOARD_TEMPLATES.principalAdmin,

@@ -46,6 +46,8 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
     data: electiveGroupData,
     isLoading,
     isFetching,
+    error,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetElectiveGroupsQuery,
@@ -353,6 +355,8 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
 
       <CustomizableTable
         tableTitle="Elective Groups"
+        error={error}
+        onRetry={refetch}
         isLoading={isLoading || isFetching}
         tableId="elective-subject-data-table"
         noDataText={

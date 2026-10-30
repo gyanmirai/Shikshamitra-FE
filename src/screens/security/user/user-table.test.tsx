@@ -49,6 +49,14 @@ it('shows assigned roles and a truthful no-role state, loading every API page', 
     { id: 'qa-2', userName: 'QA User 2', roleNames: [] },
   ];
   mswServer.use(
+    http.get('*/api/identity/roles/all', () =>
+      HttpResponse.json({
+        items: [
+          { id: 'role-teacher', name: 'Teacher', extraProperties: { color: '#00B8D9' } },
+          { id: 'role-hr', name: 'HR Manager', extraProperties: { Color: '#22C55E' } },
+        ],
+      })
+    ),
     http.get('*/api/identity/users', () => HttpResponse.json({ items: users, totalCount: 2 })),
     http.get('*/api/security/user-directory', ({ request }) => {
       const skip = Number(new URL(request.url).searchParams.get('skipCount'));

@@ -3,7 +3,7 @@ module: academic
 domain: validation
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -34,6 +34,23 @@ Run ESLint with `--max-warnings=0` against changed guide, embedding, route, clie
 Run the existing tests for any owning form, validator, mapper, or API client changed by the implementation.
 
 ## Focused evidence
+
+For Insights, run the response/API tests and the screen's model, context and visualization tests:
+
+```powershell
+npx vitest run src/redux/academicAPI/academicInsightsResponse.test.ts src/redux/academicAPI/academicInsightsApi.test.ts src/screens/academic/insights
+npx vitest run src/screens/academic/dashboard-design
+```
+
+These cover strict response parsing, exact scope parameters, cache separation by identity/context/child, mutation refresh, permission filtering, role ordering, context switching and accessible chart alternatives.
+Overview tests verify semantic metric definitions, role-supplied priority and genuine zero values without exposing links or substituting sample counts. Progress-headline tests verify the server aggregate instead of the preview average and omit an unavailable aggregate.
+Separate dashboard tests cover exact administrator image order, unchanged priorities for other roles, authoritative mapped totals, null/zero timetable counts, compact lesson summaries, numeric donut legends, source dates/values, read-only templates and five audit rows.
+Dashboard browser cases assert the active image-dashboard root, exact administrator row pairs, compact chart geometry, two columns on desktop and one column on narrow screens, all role priorities, linked students, both themes and chart containment. The prior presentation remains in code and its existing tests remain applicable.
+`src/components/chart/chart-sizing.test.tsx` covers forwarding pixel frame heights to the chart renderer, including conflicting options and adaptive CSS heights.
+Browser chart checks compare every rendered SVG against its visible frame and verify that donut labels expose real counts and percentages.
+Scatter presentation tests cover padded data domains, genuine zero values and escaped names with both coordinates in the tooltip.
+Browser acceptance must also exercise real dashboard rendering in both themes at desktop and phone widths, permitted workflow links, empty/error retry, linked children and absence of the top module-name strip.
+Use synthetic fixtures for browser evidence; they are not production fallbacks.
 
 | Surface | Test ownership |
 | --- | --- |
@@ -73,6 +90,10 @@ Run automated checks before the final Codex in-app browser confirmation.
 Keep source checks, automated results, browser evidence, and any unverified environments separate in delivery notes.
 
 ## Operational read regressions
+
+Homework calendar regression: `e2e/academic/homework-calendar.spec.ts` runs with `node node_modules/@playwright/test/cli.js test --config e2e/academic/homework-calendar.config.mjs`. It checks the 29 October publish / 30 October midnight due payload, publishing from India/UTC/Los Angeles browsers at desktop/tablet/phone widths, one-toast calendar rejection with retained input, and division-vacation picker rules. The isolated API uses synthetic data; backend application tests verify real validation separately. Unit coverage includes `src/utils/learning-task-date-time.test.ts`, the homework serialization test, shared picker tests and query-hook error ownership tests.
+
+Elective late admissions: run the state, column and save-payload tests under `src/screens/academic/curriculum-management/assignElectiveSubject`. The isolated browser regression runs with `node node_modules/@playwright/test/cli.js test --config e2e/academic/elective-late-admission.config.mjs` and covers desktop, tablet and dark phone layouts; admission after locking, discard, keyboard assignment, saving only editable students, final locking and reload. Its synthetic API does not establish deployed acceptance; backend enforcement is tested separately in the [backend testing guide](../../../Shikshamitra-BE/docs/modules/academic/testing.md).
 
 The [backend read reference](../../../Shikshamitra-BE/docs/modules/academic/references/ui-read-performance.md) maps service/provider coverage and its limits.
 Frontend regression sources cover query ownership and UI behavior:
