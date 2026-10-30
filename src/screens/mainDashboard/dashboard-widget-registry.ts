@@ -10,6 +10,7 @@ import { transportPaths, transportPermissions } from 'src/constants/transport-me
 import { securityGuardPaths, securityGuardPermissions } from 'src/constants/security-gaurd-menu';
 
 import { DASHBOARD_ZONE_KEYS } from './dashboard-types';
+import { toSafeDashboardHref } from './dashboard-navigation';
 
 import type {
   DashboardWidget,
@@ -30,6 +31,10 @@ export type DashboardWidgetRegistryEntry = {
 export type DashboardWidgetRegistry = Record<string, DashboardWidgetRegistryEntry>;
 
 export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
+  'student-learning-tasks': { id: 'student-learning-tasks', zone: DASHBOARD_ZONE_KEYS.actions, requiredPermissions: [], owner: 'Student' },
+  'student-upcoming-exam': { id: 'student-upcoming-exam', zone: DASHBOARD_ZONE_KEYS.calendar, requiredPermissions: [], owner: 'Student' },
+  'student-upcoming-exams': { id: 'student-upcoming-exams', zone: DASHBOARD_ZONE_KEYS.kpis, requiredPermissions: [], owner: 'Student' },
+  'student-latest-result': { id: 'student-latest-result', zone: DASHBOARD_ZONE_KEYS.kpis, requiredPermissions: [], owner: 'Student' },
   'announcement-board-practical': {
     id: 'announcement-board-practical',
     zone: DASHBOARD_ZONE_KEYS.announcements,
@@ -64,7 +69,7 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
     id: 'leadership-fee-collection',
     zone: DASHBOARD_ZONE_KEYS.kpis,
     drilldownUrl: financePaths.feeCollection,
-    requiredPermissions: financePermissions.fees.collections,
+    requiredPermissions: `${financePermissions.fees.collections}.View`,
   },
   'leadership-attendance': {
     id: 'leadership-attendance',
@@ -84,6 +89,13 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
     owner: 'HR',
     drilldownUrl: hrPaths.payroll.runPayroll,
     requiredPermissions: hrPermissions.payroll.runPayroll,
+  },
+  'leadership-admission-approvals': {
+    id: 'leadership-admission-approvals',
+    zone: DASHBOARD_ZONE_KEYS.actions,
+    owner: 'Admissions',
+    drilldownUrl: studentPaths.enrollment.applications,
+    requiredPermissions: studentPermissions.enrollment.applications,
   },
   'leadership-certificate-risk': {
     id: 'leadership-certificate-risk',
@@ -121,6 +133,13 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
     zone: DASHBOARD_ZONE_KEYS.kpis,
     drilldownUrl: academicPaths.curriculum.chaptersManagement,
     requiredPermissions: academicPermissions.curriculum.chaptersManagement,
+  },
+  'principal-pending-admissions': {
+    id: 'principal-pending-admissions',
+    zone: DASHBOARD_ZONE_KEYS.kpis,
+    owner: 'Admissions',
+    drilldownUrl: studentPaths.enrollment.applications,
+    requiredPermissions: studentPermissions.enrollment.applications,
   },
   'principal-leave-approvals': {
     id: 'principal-leave-approvals',
@@ -197,13 +216,13 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
     id: 'finance-collection',
     zone: DASHBOARD_ZONE_KEYS.kpis,
     drilldownUrl: financePaths.feeCollection,
-    requiredPermissions: financePermissions.fees.collections,
+    requiredPermissions: `${financePermissions.fees.collections}.View`,
   },
   'finance-dues': {
     id: 'finance-dues',
     zone: DASHBOARD_ZONE_KEYS.kpis,
     drilldownUrl: financePaths.feeCollection,
-    requiredPermissions: financePermissions.fees.collections,
+    requiredPermissions: `${financePermissions.fees.collections}.View`,
   },
   'hr-payroll-readiness': {
     id: 'hr-payroll-readiness',
@@ -222,7 +241,7 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
     zone: DASHBOARD_ZONE_KEYS.actions,
     owner: 'Finance',
     drilldownUrl: financePaths.reconciliation,
-    requiredPermissions: financePermissions.accounts.reconciliation,
+    requiredPermissions: `${financePermissions.accounts.reconciliation}.View`,
   },
   'hr-leave-approvals': {
     id: 'hr-leave-approvals',
@@ -236,19 +255,19 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
     zone: DASHBOARD_ZONE_KEYS.risks,
     owner: 'Finance officer',
     drilldownUrl: financePaths.concession,
-    requiredPermissions: financePermissions.fees.concessions,
+    requiredPermissions: financePermissions.fees.concessionActions.view,
   },
   'finance-dashboard': {
     id: 'finance-dashboard',
     zone: DASHBOARD_ZONE_KEYS.modules,
     drilldownUrl: financePaths.dashboard,
-    requiredPermissions: [financePermissions.dashboard, 'ShikshaMitra.Module.Finance'],
+    requiredPermissions: ['ShikshaMitra.Module.Finance', financePermissions.dashboard, `${financePermissions.fees.collections}.View`, financePermissions.fees.concessionActions.view],
   },
   'hr-dashboard': {
     id: 'hr-dashboard',
     zone: DASHBOARD_ZONE_KEYS.modules,
     drilldownUrl: hrPaths.dashboard,
-    requiredPermissions: hrPermissions.dashboard,
+    requiredPermissions: [hrPermissions.dashboard, `${hrPermissions.payroll.dashboard}.View`, `${hrPermissions.attendance.attendanceTracking}.View`],
   },
   'student-attendance': {
     id: 'student-attendance',
@@ -266,7 +285,7 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
     id: 'student-fee-status',
     zone: DASHBOARD_ZONE_KEYS.kpis,
     drilldownUrl: financePaths.feeCollection,
-    requiredPermissions: financePermissions.fees.collections,
+    requiredPermissions: `${financePermissions.fees.collections}.View`,
   },
   'student-document-update': {
     id: 'student-document-update',
@@ -309,7 +328,8 @@ export const isRegisteredDashboardWidget = (widgetId: string, zone?: DashboardZo
 const enrichWidgetsFromRegistry = <T extends DashboardWidget>(
   widgets: T[],
   zone: DashboardZoneKey,
-  registry: DashboardWidgetRegistry
+  registry: DashboardWidgetRegistry,
+  inferDrilldowns: boolean
 ): T[] =>
   widgets.map((widget) => {
     const registryEntry = getDashboardWidgetRegistryEntry(widget.id, zone, registry);
@@ -319,43 +339,49 @@ const enrichWidgetsFromRegistry = <T extends DashboardWidget>(
 
     return {
       ...widget,
-      owner: registryEntry.owner,
-      drilldownUrl: registryEntry.drilldownUrl,
-      requiredPermissions: registryEntry.requiredPermissions,
+      owner: inferDrilldowns ? registryEntry.owner : widget.owner ?? registryEntry.owner,
+      drilldownUrl: inferDrilldowns ? toSafeDashboardHref(registryEntry.drilldownUrl) : toSafeDashboardHref(widget.drilldownUrl),
+      requiredPermissions: inferDrilldowns ? registryEntry.requiredPermissions : widget.requiredPermissions ?? registryEntry.requiredPermissions,
     };
   });
 
 export function enrichDashboardDataFromRegistry(
   data: DashboardDataContract,
-  registry: DashboardWidgetRegistry = dashboardWidgetRegistry
+  registry: DashboardWidgetRegistry = dashboardWidgetRegistry,
+  inferDrilldowns = true
 ): DashboardDataContract {
   return {
     ...data,
-    kpiCards: enrichWidgetsFromRegistry(data.kpiCards, DASHBOARD_ZONE_KEYS.kpis, registry),
+    kpiCards: enrichWidgetsFromRegistry(data.kpiCards, DASHBOARD_ZONE_KEYS.kpis, registry, inferDrilldowns),
     actionItems: enrichWidgetsFromRegistry<DashboardActionItem>(
       data.actionItems,
       DASHBOARD_ZONE_KEYS.actions,
-      registry
+      registry,
+      inferDrilldowns
     ),
     riskAlerts: enrichWidgetsFromRegistry<DashboardActionItem>(
       data.riskAlerts,
       DASHBOARD_ZONE_KEYS.risks,
-      registry
+      registry,
+      inferDrilldowns
     ),
     calendarItems: enrichWidgetsFromRegistry<DashboardActionItem>(
       data.calendarItems,
       DASHBOARD_ZONE_KEYS.calendar,
-      registry
+      registry,
+      inferDrilldowns
     ),
     moduleSnapshots: enrichWidgetsFromRegistry<DashboardModuleSnapshot>(
       data.moduleSnapshots,
       DASHBOARD_ZONE_KEYS.modules,
-      registry
+      registry,
+      inferDrilldowns
     ),
     announcements: enrichWidgetsFromRegistry<DashboardActionItem>(
       data.announcements,
       DASHBOARD_ZONE_KEYS.announcements,
-      registry
+      registry,
+      inferDrilldowns
     ),
   };
 }

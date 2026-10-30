@@ -19,6 +19,7 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { resolveAcademicCalendarId } from 'src/utils/academic-calendar-selection';
 import { Box, Paper, Stack, Avatar, Button, Skeleton, Typography } from '@mui/material';
 import { DayType, CalendarStatus, CalendarDayStatus } from 'src/enums/academic-calendar';
 import { AcademicContextContent } from 'src/screens/academic/components/AcademicContextContent';
@@ -219,15 +220,13 @@ const CalendarManagement = () => {
     }
   }, [calendars, calendarsLoading, currentYear, medium, createCalendar, currentBoard]);
 
-  // Auto-select published calendar
   React.useEffect(() => {
-    if (calendars.length > 0) {
-      const published = calendars.find((c) => c.status === CalendarStatus.Published);
-      setSelectedCalendarId(published?.id ?? calendars[0]?.id ?? '');
-    } else {
-      setSelectedCalendarId('');
-    }
-  }, [calendars]);
+    const today = dayjs().format('YYYY-MM-DD');
+    const start = (currentBoard?.startDate || currentYear?.startDate)?.slice(0, 10);
+    const end = (currentBoard?.endDate || currentYear?.endDate)?.slice(0, 10);
+    const date = start && end && (today < start || today > end) ? start : today;
+    setSelectedCalendarId(resolveAcademicCalendarId(calendars, date));
+  }, [calendars, currentBoard?.endDate, currentBoard?.startDate, currentYear?.endDate, currentYear?.startDate]);
 
   // Handlers
 

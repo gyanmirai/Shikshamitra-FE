@@ -22,16 +22,16 @@ import WeeklyLectures from './components/weeklyLectures/weeklyLectures';
 
 const TABS = [
   {
-    icon: <Iconify icon="mdi:lecture" width={20} />,
-    value: 'weeklyLectures',
-    label: 'Weekly Lectures',
-    component: (props: any) => <WeeklyLectures {...props} />,
-  },
-  {
     icon: <Iconify icon="lucide-lab:slot-card" width={20} />,
     value: 'lectureSlots',
     label: 'Lecture Slots',
     component: (props: any) => <LectureSlots {...props} />,
+  },
+  {
+    icon: <Iconify icon="mdi:lecture" width={20} />,
+    value: 'weeklyLectures',
+    label: 'Weekly Lectures',
+    component: (props: any) => <WeeklyLectures {...props} />,
   },
   {
     icon: <Iconify icon="cbi:roomsother" width={20} />,
@@ -42,8 +42,7 @@ const TABS = [
 ];
 
 const TimetableSettingScreen = () => {
-  // URL search parameter state for managing active tab, defaults to 'weeklyLectures'
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'weeklyLectures' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'lectureSlots' });
   const [isEdit, setIsEdit] = useState(false);
 
   const { permissions } = useSelector((state: RootState) => state.auth);

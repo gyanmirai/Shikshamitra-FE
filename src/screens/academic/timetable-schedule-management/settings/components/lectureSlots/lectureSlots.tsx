@@ -11,10 +11,10 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Card, Stack, Button, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { Box, Card, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import { useGetLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 import { TimetableStatusChip } from 'src/components/timetable-status-chip/TimetableStatusChip';
 import { TIMETABLE_STATUS_LABEL, normalizeTimetableStatus } from 'src/utils/timetable-capacity';
@@ -79,11 +79,19 @@ const LectureSlots = () => {
     `${academicPermissions.timetable.settings.lectureSlots}.View`
   );
 
-  const { data: lectureSlotsData, isLoading: isLectureSlotsLoading } = useQueryAndMutation({
+  const {
+    currentData: lectureSlotsData,
+    isLoading: isLectureSlotsLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLectureSlotsQuery,
     params: { AcademicMediumId: medium?.id },
     options: { skip: !medium?.id },
+    popupConfig: { error: false },
   });
 
   const tableData = useMemo(
@@ -174,7 +182,8 @@ const LectureSlots = () => {
 
     if (isSubmit) resetState();
     else if (embedded) navigation.requestNavigation(resetState);
-    else if (!isChanges || window.confirm('Are you sure you want to leave this page?')) resetState();
+    else if (!isChanges || window.confirm('Are you sure you want to leave this page?'))
+      resetState();
   };
 
   // Mock data with proper structure
@@ -310,7 +319,9 @@ const LectureSlots = () => {
                       setDisabled(true);
                       setIsEdit(false);
                       setEditData(row as any);
-                      router.push(lectureSlotActionLocation(pathname, searchParams.toString(), 'view'));
+                      router.push(
+                        lectureSlotActionLocation(pathname, searchParams.toString(), 'view')
+                      );
                     },
                   },
                 ]
@@ -326,7 +337,9 @@ const LectureSlots = () => {
                       setIsEdit(true);
                       setEditData(row as any);
                       addLectureSlotDialog.onTrue();
-                      router.push(lectureSlotActionLocation(pathname, searchParams.toString(), 'edit'));
+                      router.push(
+                        lectureSlotActionLocation(pathname, searchParams.toString(), 'edit')
+                      );
                     },
                   },
                   {
@@ -336,7 +349,9 @@ const LectureSlots = () => {
                     onClick: () => {
                       setEditData(row);
                       assignSlotsDialog.onTrue();
-                      router.push(lectureSlotActionLocation(pathname, searchParams.toString(), 'assign'));
+                      router.push(
+                        lectureSlotActionLocation(pathname, searchParams.toString(), 'assign')
+                      );
                     },
                   },
                 ]
@@ -354,7 +369,16 @@ const LectureSlots = () => {
         },
       },
     ],
-    [addLectureSlotDialog, assignSlotsDialog, viewSlotsDialog, canAdd, canView, router, pathname, searchParams]
+    [
+      addLectureSlotDialog,
+      assignSlotsDialog,
+      viewSlotsDialog,
+      canAdd,
+      canView,
+      router,
+      pathname,
+      searchParams,
+    ]
   );
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -428,7 +452,9 @@ const LectureSlots = () => {
                     setEditData(null);
                     setIsEdit(false);
                     addLectureSlotDialog.onTrue();
-                    router.push(lectureSlotActionLocation(pathname, searchParams.toString(), 'add'));
+                    router.push(
+                      lectureSlotActionLocation(pathname, searchParams.toString(), 'add')
+                    );
                   }}
                   variant="contained"
                   size="small"
@@ -466,37 +492,46 @@ const LectureSlots = () => {
           />
         </Card>
       ) : (
-        <CustomizableTable
-          tableTitle="Lecture Slots"
-          tableId="lecture-slots-setting-table"
-          noDataText={
-            <>
-              Lecture slots not configured{' '}
-              {canAdd && (
-                <Box
-                  onClick={() => {
-                    addLectureSlotDialog.onTrue();
-                    router.push(lectureSlotActionLocation(pathname, searchParams.toString(), 'add'));
-                  }}
-                  color="primary.main"
-                  fontWeight={600}
-                  sx={{
-                    '&:hover': {
-                      cursor: 'pointer',
-                      color: 'primary.main',
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Create Slots
-                </Box>
-              )}
-            </>
-          }
-          columns={columns}
-          data={tableData}
-          isLoading={isLectureSlotsLoading}
-        />
+        <>
+          {(isLectureSlotsLoading || isFetching) && (
+            <LinearProgress aria-label="Loading lecture slots" sx={{ flexShrink: 0 }} />
+          )}
+          <CustomizableTable
+            tableTitle="Lecture Slots"
+            tableId="lecture-slots-setting-table"
+            noDataText={
+              <>
+                Lecture slots not configured{' '}
+                {canAdd && (
+                  <Box
+                    onClick={() => {
+                      addLectureSlotDialog.onTrue();
+                      router.push(
+                        lectureSlotActionLocation(pathname, searchParams.toString(), 'add')
+                      );
+                    }}
+                    color="primary.main"
+                    fontWeight={600}
+                    sx={{
+                      '&:hover': {
+                        cursor: 'pointer',
+                        color: 'primary.main',
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    Create Slots
+                  </Box>
+                )}
+              </>
+            }
+            columns={columns}
+            data={tableData}
+            isLoading={isLectureSlotsLoading || isFetching}
+            error={isError && !isFetching ? error : undefined}
+            onRetry={refetch}
+          />
+        </>
       )}
     </Box>
   );

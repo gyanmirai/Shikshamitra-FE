@@ -18,6 +18,23 @@ const endpoints = [
 ];
 export async function handleManagers(url, method, body, send, fixture, claims) {
   const path = url.pathname;
+  if (method === 'GET' && path === '/api/academic/rubrics/templates/paged') {
+    fixture.state.requests.push({ method, path });
+    const rows = fixture.state.settings.rubrics ?? [];
+    send(200, {
+      ...paged(rows),
+      page: Number(url.searchParams.get('page') ?? 1),
+      pageSize: Number(url.searchParams.get('pageSize') ?? 10),
+      summary: {
+        total: rows.length,
+        published: rows.filter((row) => row.status === 1).length,
+        draft: rows.filter((row) => !row.status).length,
+        archived: rows.filter((row) => row.status === 2).length,
+        linked: rows.filter((row) => row.isUsed).length,
+      },
+    });
+    return true;
+  }
   if (path === '/api/app/academic-year') {
     send(200, paged([year]));
     return true;

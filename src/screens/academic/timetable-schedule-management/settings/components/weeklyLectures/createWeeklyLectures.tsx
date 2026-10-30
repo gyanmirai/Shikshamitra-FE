@@ -34,8 +34,11 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     isCapacityLoading,
     detailsError,
     capacityError,
+    subjectsError,
+    classContext,
     refetchDetails,
     refetchCapacity,
+    refetchSubjects,
     isSubmitting,
     availableCapacity,
     hasSlots,
@@ -108,6 +111,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                 availableCapacity={availableCapacity}
                 requiredLectures={requiredLectures}
                 hasSlots={hasSlots}
+                classContext={classContext}
               />
             ))}
 
@@ -123,6 +127,23 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                 </Stack>
               ) : detailsError ? (
                 <Alert severity="error">Subject lecture targets could not be loaded.</Alert>
+              ) : !editData && subjectsError ? (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button size="small" onClick={refetchSubjects}>
+                      Retry
+                    </Button>
+                  }
+                >
+                  Subject assignments could not be loaded for {classContext}.
+                </Alert>
+              ) : formik.values.subjects.length === 0 ? (
+                <Alert severity="info">
+                  No published subject assignments were found for {classContext}. Publish this
+                  class&apos;s subject assignments in Subject Allocation before entering weekly
+                  lecture targets.
+                </Alert>
               ) : (
                 <SubjectsLectureTable formik={formik} disabled={disabled} isEdit={isEdit} />
               )}

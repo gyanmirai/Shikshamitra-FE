@@ -49,7 +49,9 @@
     ".artifacts/onboarding-next/types/**/*.ts",
     ".artifacts/onboarding-next/dev/types/**/*.ts",
     "build-receipt-grouping-browser/types/**/*.ts",
-    "build-receipt-grouping-browser/dev/types/**/*.ts"
+    "build-receipt-grouping-browser/dev/types/**/*.ts",
+    ".artifacts/academic-module-setup/next/types/**/*.ts",
+    ".artifacts/academic-module-setup/next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

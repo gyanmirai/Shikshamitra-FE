@@ -3,14 +3,14 @@ module: academic
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
 
-# Configure academics through the guided setup
+# Use Academic insights and guided setup
 
-TL;DR: these pages describe the Academic setup guide, its nine visible settings destinations, shared screen embedding, and frontend validation.
+TL;DR: these pages describe the role-aware Academic Insights dashboard, the setup guide, existing settings destinations, and frontend validation.
 The guide reuses the existing configuration managers and their real save operations.
 The client notes also cover validation of the dashboard sections reached when leaving setup.
 Operational Academic routes remain mapped in the module constants and test inventory; Examination also has its own maintained documentation.
@@ -19,6 +19,8 @@ Operational Academic routes remain mapped in the module constants and test inven
 
 | Need | Read |
 | --- | --- |
+| Dashboard data, cache ownership and graph states | [Clients](clients.md#insights-dashboard-client) |
+| Role ordering, permitted workflows and personal dashboards | [Workflows](workflows.md#use-the-insights-dashboard) |
 | Guide route, visible settings, and permissions | [Routes](routes.md) |
 | Progress queries, configuration clients, and cache behavior | [Clients](clients.md) |
 | First visit, resume, real form saves, and review | [Workflows](workflows.md) |
@@ -30,6 +32,9 @@ Operational Academic routes remain mapped in the module constants and test inven
 
 | Responsibility | Source |
 | --- | --- |
+| Active approved-image dashboard presentation | `src/screens/academic/dashboard-design/`, `src/screens/academic/academic-image-dashboard.tsx` |
+| Preserved Insights screen, shared query hook, role ordering and permission-filtered workflow catalogue | `src/screens/academic/insights/`, `src/screens/academic/academic-dashboard.tsx` |
+| Insights response validation and RTK Query client | `src/redux/academicAPI/academicInsightsApi.ts`, `academicInsightsResponse.ts` |
 | Academic routes, sidebar labels, and permission identifiers | `src/constants/academic-menu.ts` |
 | Permitted module navigation | `src/utils/academic-navigation-access.ts` |
 | Guide stages and the nine-setting catalogue | `src/screens/academic/setup/academic-setup-catalog.ts` |

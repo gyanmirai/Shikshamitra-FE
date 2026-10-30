@@ -1,6 +1,7 @@
 import type { PermissionName } from 'src/utils/permissions';
 import type { DashboardWidgetMetadataResponse } from 'src/redux/dashboard/dashboardApi';
 
+import { toSafeDashboardHref } from './dashboard-navigation';
 import { DASHBOARD_ZONE_KEYS, type DashboardZoneKey } from './dashboard-types';
 import {
   dashboardWidgetRegistry,
@@ -9,9 +10,6 @@ import {
 } from './dashboard-widget-registry';
 
 const allowedDashboardZones = new Set<string>(Object.values(DASHBOARD_ZONE_KEYS));
-
-const toSafeDrilldownUrl = (value: unknown) =>
-  typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') ? value : undefined;
 
 const toRequiredPermissions = (value: unknown): PermissionName | undefined => {
   if (!Array.isArray(value)) {
@@ -51,7 +49,7 @@ export const normalizeDashboardWidgetMetadata = (
       id: item.id,
       zone: item.zone as DashboardZoneKey,
       requiredPermissions,
-      drilldownUrl: toSafeDrilldownUrl(item.drilldownUrl),
+      drilldownUrl: toSafeDashboardHref(item.drilldownUrl),
       owner: typeof item.owner === 'string' && item.owner.trim() ? item.owner.trim() : undefined,
     };
 

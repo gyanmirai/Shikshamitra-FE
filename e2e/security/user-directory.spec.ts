@@ -41,7 +41,7 @@ test('Role sorts and filters the entire directory and toggles through Columns', 
 });
 
 [1440, 390].forEach((width) => {
-  test(`role pills wrap and controls remain accessible at ${width}px in both themes`, async ({
+  test(`role labels wrap and controls remain accessible at ${width}px in both themes`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -58,6 +58,9 @@ test('Role sorts and filters the entire directory and toggles through Columns', 
       await expect(page.getByText('Teacher', { exact: true })).toBeInViewport();
     }
     const checkTheme = async (theme: string) => {
+      await page.locator('.MuiInputLabel-root').evaluate(async (element) => {
+        await Promise.all(element.getAnimations().map((animation) => animation.finished));
+      });
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
       ).toBe(true);

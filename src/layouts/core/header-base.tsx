@@ -15,7 +15,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 
 import { HeaderSection } from './header-section';
-import { Searchbar } from '../components/searchbar';
+// import { Searchbar } from '../components/searchbar';
 import { MenuButton } from '../components/menu-button';
 import { SignInButton } from '../components/sign-in-button';
 import { AccountDrawer } from '../components/account-drawer';
@@ -107,7 +107,7 @@ export function HeaderBase({
     settings = true,
     purchase = true,
     contacts = true,
-    searchbar = true,
+    // searchbar = true,
     workspaces = true,
     menuButton = true,
     localization = true,
@@ -205,14 +205,14 @@ export function HeaderBase({
                 <GlobalAcademicSearch />
                 // </Box>
               )}
-              {/* -- Searchbar -- */}
+              {/* Search Module is temporarily hidden.
               {searchbar && (
                 <Searchbar
                   data-slot="searchbar"
                   data={data?.nav}
                   sx={{ display: { xs: 'none', sm: 'flex' } }}
                 />
-              )}
+              )} */}
 
               {/* -- Language popover -- */}
               {/* {localization && <LanguagePopover data-slot="localization" data={data?.langs} />} */}
@@ -229,7 +229,13 @@ export function HeaderBase({
               {settings && <SettingsButton data-slot="settings" />}
 
               {/* -- Account drawer -- */}
-              {account && <AccountDrawer data-slot="account" data={data?.account} />}
+              {account && (
+                <AccountDrawer
+                  data-slot="account"
+                  data={data?.account}
+                  institutionName={isHost ? undefined : schoolName}
+                />
+              )}
 
               {/* -- Sign in button -- */}
               {signIn && <SignInButton />}

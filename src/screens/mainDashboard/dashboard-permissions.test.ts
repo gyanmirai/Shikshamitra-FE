@@ -52,6 +52,24 @@ const dashboardData: DashboardDataContract = {
 };
 
 describe('dashboard permissions', () => {
+  it('requires all exact source permissions supplied by modern combined widgets', () => {
+    const combined = { ...dashboardData, presentationRole: 'principal' as const,
+      kpiCards: [{ id: 'principal-student-attendance', title: 'Attendance', requiredPermissions: ['Attendance.View', 'Records.View'] }] };
+    expect(filterDashboardDataByPermissions(combined, [{ name: 'Attendance.View', isGranted: true }], { enforcePermissions: true }).kpiCards).toEqual([]);
+  });
+
+  it('displays only registered personal facts for a verified selected child without staff grants', () => {
+    const personal: DashboardDataContract = { ...dashboardData, dashboardTemplate: 'studentParent', presentationRole: 'parent',
+      students: [{ id: 'child', label: 'Child' }], selectedStudentId: 'child',
+      focus: { kind: 'results', widgetId: 'student-academic-summary', title: 'Results', description: '', status: 'empty',
+        accessMode: 'personal', requiredPermissions: [], series: [], items: [], metrics: [] },
+      kpiCards: [{ id: 'student-upcoming-exams', title: 'My exams', value: 0 },
+        { id: 'finance-collection', title: 'School collections', value: 999 }],
+    };
+    const permitted = filterDashboardDataByPermissions(personal, [], { enforcePermissions: true });
+    expect(permitted.kpiCards.map((widget) => widget.id)).toEqual(['student-upcoming-exams']);
+    expect(filterDashboardDataByPermissions({ ...personal, selectedStudentId: 'unlinked' }, [], { enforcePermissions: true }).kpiCards).toEqual([]);
+  });
   it('shows all widgets before permission enforcement is enabled', () => {
     expect(
       filterDashboardDataByPermissions(dashboardData, [], { enforcePermissions: false }).kpiCards
@@ -112,7 +130,7 @@ describe('dashboard permissions', () => {
     expect(filteredData.announcements).toHaveLength(0);
   });
 
-  it('supports permission arrays from registry metadata', () => {
+  it('does not expose a combined summary from just one registry permission', () => {
     expect(
       canShowDashboardWidget(
         {
@@ -123,7 +141,7 @@ describe('dashboard permissions', () => {
         { enforcePermissions: true },
         DASHBOARD_ZONE_KEYS.modules
       )
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('uses widget metadata permissions when backend metadata overrides the local registry', () => {

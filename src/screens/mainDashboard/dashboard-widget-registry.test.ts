@@ -21,7 +21,7 @@ import {
 type BackendDashboardWidgetDefinition = {
   id: string;
   zone: string;
-  drilldownUrl: string;
+  drilldownUrl?: string;
   requiredPermissions: string[];
   owner?: string;
 };
@@ -85,7 +85,7 @@ const collectPageRouteGuardSources = (
   if (fs.existsSync(layoutPath)) {
     const layoutSource = fs.readFileSync(layoutPath, 'utf8');
 
-    [...layoutSource.matchAll(/permissionKey=\{([^}]+)\}/g)].forEach(([, permissionSource]) =>
+    [...layoutSource.matchAll(/permissionKey=\{(`[^`]*`|[^}]+)\}/g)].forEach(([, permissionSource]) =>
       guardSources.push(permissionSource.trim())
     );
     [...layoutSource.matchAll(/perm\.name\s*===\s*([A-Za-z0-9_.]+(?:\.[A-Za-z0-9_]+)*)/g)].forEach(
@@ -147,6 +147,11 @@ const resolveObjectPath = (source: string): string | string[] | undefined => {
 
 const resolveRoutePermissionSource = (source: string): string[] => {
   const trimmedSource = source.trim();
+  const template = trimmedSource.match(/^`\$\{([A-Za-z0-9_.]+)\}([^`]*)`$/);
+  if (template) {
+    const value = resolveObjectPath(template[1]);
+    return (Array.isArray(value) ? value : value ? [value] : []).map((permission) => `${permission}${template[2]}`);
+  }
 
   if (trimmedSource.startsWith('[')) {
     return trimmedSource
@@ -201,6 +206,13 @@ const resolveBackendPermissionExpression = (expression: string) => {
 
   if (nestedPermissionMatch) {
     const [, moduleName, submodulePath, action] = nestedPermissionMatch;
+    if (moduleName === 'Students' && submodulePath === 'AdmissionApplications') {
+      const source = readBackendFile('src', 'ShikshaMitra.Domain.Shared', 'Constants', 'Permissions',
+        'SubmodulePermissions', 'Students', 'ShikshaMitraSubmodulePermissions.Students.Admissions.cs');
+      const suffix = source.match(/class AdmissionApplications\s*\{\s*private const string SubmoduleName = \$"\{ModuleName\}([^"]+)"/);
+      if (!suffix) throw new Error(`Unable to resolve backend dashboard permission: ${expression}`);
+      return `${moduleName}${suffix[1]}.${action}`;
+    }
     return `${BACKEND_PERMISSION_ROOT}.${moduleName}.${submodulePath.replaceAll('_', '.')}.${action}`;
   }
 
@@ -240,11 +252,12 @@ const parseBackendDashboardWidgetDefinitions = (): BackendDashboardWidgetDefinit
   );
   const permissionAliases = parseBackendPermissionAliases(backendReaderSource);
   const widgetDefinitionMatches = backendReaderSource.matchAll(
-    /^\s*\["([^"]+)"\]\s*=\s*new\(\s*([A-Za-z0-9_]+),\s*"([^"]+)",\s*(\[[\s\S]*?\]|[A-Za-z0-9_]+)(?:,\s*"([^"]+)")?\s*\),?/gm
+    /^\s*\["([^"]+)"\]\s*=\s*new\(\s*([A-Za-z0-9_]+),\s*("[^"]*"|string\.Empty),\s*(\[[\s\S]*?\]|[A-Za-z0-9_]+)(?:,\s*"([^"]+)")?\s*\),?/gm
   );
 
   return [...widgetDefinitionMatches].map(
-    ([, id, zoneAlias, drilldownUrl, permissionsSource, owner]) => {
+    ([, id, zoneAlias, pathLiteral, permissionsSource, owner]) => {
+      const drilldownUrl = pathLiteral === 'string.Empty' ? undefined : pathLiteral.slice(1, -1) || undefined;
       const zone = backendZoneAliases[zoneAlias];
       if (!zone) {
         throw new Error(`Unable to resolve backend dashboard widget zone: ${id}`);
@@ -254,7 +267,8 @@ const parseBackendDashboardWidgetDefinitions = (): BackendDashboardWidgetDefinit
         ? resolveBackendPermissionExpressions(permissionsSource)
         : permissionAliases.get(permissionsSource);
 
-      if (!requiredPermissions?.length) {
+      const personal = ['student-learning-tasks', 'student-upcoming-exam', 'student-upcoming-exams', 'student-latest-result'].includes(id);
+      if (!requiredPermissions || (!requiredPermissions.length && !personal)) {
         throw new Error(`Unable to resolve backend dashboard widget permissions: ${id}`);
       }
 
@@ -325,6 +339,20 @@ const mustHaveWidgetIdsByTemplate = {
 };
 
 describe('dashboard widget registry', () => {
+  backendContractIt('registers every widget referenced by production summary and focus readers', () => {
+    const directory = path.dirname(backendDashboardWidgetCatalogPath);
+    const source = fs.readdirSync(directory).filter((name) => name.endsWith('.cs'))
+      .map((name) => fs.readFileSync(path.join(directory, name), 'utf8')).join('\n');
+    const referenced = [...source.matchAll(/(?:Widget\(|WidgetDefinitions\[)\s*"([^"]+)"/g)]
+      .map((match) => match[1]);
+    const focusSource = fs.readFileSync(path.join(directory, 'DashboardFocusReader.cs'), 'utf8');
+    const anchors = [...focusSource.matchAll(/"([a-z]+(?:-[a-z]+)+)"/g)].map((match) => match[1]);
+    const requiredIds = [...new Set([...referenced, ...anchors])];
+    const backendIds = new Set(parseBackendDashboardWidgetDefinitions().map((definition) => definition.id));
+    expect(requiredIds.filter((id) => !dashboardWidgetRegistry[id])).toEqual([]);
+    expect(requiredIds.filter((id) => !backendIds.has(id))).toEqual([]);
+  });
+
   it('registers every mock dashboard widget id in the expected zone', () => {
     Object.values(dashboardMockDataByTemplate).forEach((templateData) => {
       const missingCoverage = buildMissingDashboardRegistryCoverage(templateData);
@@ -409,7 +437,8 @@ describe('dashboard widget registry', () => {
             )
         );
 
-        if (hasSharedPermissionFamily && !unexpectedPermissions.length) {
+        const personalOwnership = !frontendPermissions.length && backendDefinition?.requiredPermissions.length === 0;
+        if ((hasSharedPermissionFamily || personalOwnership) && !unexpectedPermissions.length) {
           return [];
         }
 

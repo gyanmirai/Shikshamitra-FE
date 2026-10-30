@@ -81,19 +81,25 @@ function renderActions(overrides = {}) {
 
 describe('grade scale row actions', () => {
   it.each([
-    ['Edit MAIN GRADE SCALE', 'onEdit'],
-    ['Delete MAIN GRADE SCALE', 'onDelete'],
-    ['Archive grade scale MAIN GRADE SCALE', 'onArchive'],
-  ] as const)('routes %s to its handler without selecting the row', (name, handler) => {
+    ['Edit MAIN GRADE SCALE', 'onEdit', 'button'],
+    ['Delete MAIN GRADE SCALE', 'onDelete', 'button'],
+    ['Archive', 'onArchive', 'menuitem'],
+  ] as const)('routes %s to its handler without selecting the row', (name, handler, role) => {
     const { callbacks, onRowClick } = renderActions();
-    fireEvent.click(screen.getByRole('button', { name }));
+    if (role === 'menuitem') {
+      fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    }
+    fireEvent.click(screen.getByRole(role, { name }));
     expect(callbacks[handler]).toHaveBeenCalledOnce();
     expect(onRowClick).not.toHaveBeenCalled();
   });
 
-  it('shows three direct actions without a more-actions button', () => {
+  it('shows edit and delete directly with archive in the more-actions menu', () => {
     renderActions();
     expect(screen.getAllByRole('button')).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(screen.getAllByRole('menuitem')).toHaveLength(1);
+    expect(screen.getByRole('menuitem', { name: 'Archive' })).toBeInTheDocument();
   });
 
   it('offers restore for archived scales', () => {
@@ -106,9 +112,7 @@ describe('grade scale row actions', () => {
   it('preserves permission restrictions', () => {
     renderActions({ canAdd: false, canDelete: false });
     expect(screen.getAllByRole('button')).toHaveLength(1);
-    expect(
-      screen.getByRole('button', { name: 'Archive grade scale MAIN GRADE SCALE' })
-    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled();
   });
 
   it('prevents deleting a scale used by exams', () => {

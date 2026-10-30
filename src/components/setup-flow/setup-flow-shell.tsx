@@ -26,6 +26,7 @@ export default function SetupFlowShell({
   children,
   footer,
   heightMode = 'viewport',
+  fillContent = false,
 }: SetupFlowShellProps) {
   const body = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -105,7 +106,8 @@ export default function SetupFlowShell({
             key={activeStep}
             className={styles.step}
             data-setup-step={activeStep}
-            sx={{ width: '100%', maxWidth: 1040, mx: 'auto', p: { xs: 2, sm: 3, lg: 4 } }}
+            sx={{ width: '100%', maxWidth: 1040, mx: 'auto', p: { xs: 2, sm: 3, lg: 4 },
+              ...(fillContent && { height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }) }}
           >
             {children}
           </Box>

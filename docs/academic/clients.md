@@ -3,7 +3,7 @@ module: academic
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -50,12 +50,29 @@ Preserve each client's parameter casing, response adapter, payload mapper, and c
 The guide does not duplicate these mutations or serialize unsubmitted form fields into progress.
 Rubric templates retain their own Save draft and Publish Rubric operations and their `isTemplate` contract.
 
-## Dashboard section responses
+## Insights dashboard client
+
+`src/redux/academicAPI/academicInsightsApi.ts` reads `GET /academic/dashboard/insights` through the shared authenticated RTK Query API.
+The dashboard requires the selected year, board and medium; verified family accounts can additionally select a linked student returned by the service.
+`academicInsightsResponse.ts` rejects malformed sections, duplicate keys, non-finite values and invalid timestamps before caching.
+Zero remains a real measurement; null metrics and absent samples remain unavailable.
+
+The query key includes academic context, child selection, tenant, user and permission initialization revision.
+The identity key is never sent as a request parameter.
+`use-academic-insights.ts` renders only `currentData`, clears child selection on context changes, and skips requests without initialized module and dashboard grants.
+Academic, calendar, class-management and student-attendance mutation tags invalidate active insights.
+Refresh and retry re-read the current scope without changing selection.
+
+The new route uses this aggregate response instead of the legacy administrator section calls below.
+See the [backend API reference](../../../Shikshamitra-BE/docs/modules/academic/api.md) for authorization and aggregation rules.
+
+## Legacy dashboard section responses
 
 `src/redux/academicAPI/academicDashboardApi.ts` reads the administrator dashboard's curriculum, timetable, and assessment sections.
 `admin-dashboard-response.ts` verifies their required numeric metrics are finite and their list fields are arrays before those responses enter the query cache.
 Malformed successful responses become section errors with retry; missing metrics are never converted into valid zero scores.
-Real numeric zeros remain valid and retain the existing empty-setup readiness rules.
+These retained clients and components are not mounted by the Insights dashboard.
+Real numeric zeros remain valid for their existing consumers.
 `AcademicHealthScoreCard` also renders an unavailable state for a non-finite score, without showing misleading factors or a numeric progress bar.
 
 ## Operational read clients

@@ -43,7 +43,7 @@ export function TableLoadingIllustration({ sx }: { sx?: SxProps<Theme> }) {
             '--student-search-outline': palette.grey[800],
             '--student-search-detail': palette.grey[600],
             '--student-search-grid': palette.grey[400],
-            '--student-search-backdrop': varAlpha(palette.primary.mainChannel, 0.12),
+            '--student-search-backdrop': palette.grey[200],
             '--student-loader-accent': '#A4E279',
             '--student-loader-table': '#13232F',
             '--student-loader-border': '#718C9E',

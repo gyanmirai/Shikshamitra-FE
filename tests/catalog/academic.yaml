@@ -1,10 +1,94 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-HOMEWORK-CALENDAR-MIDNIGHT-001
+    module: Academic
+    submodule: Homework and Assignment
+    title: Homework midnight schedules preserve IST dates across payloads, calendar errors and one-toast feedback
+    risk: high
+    priority: P1
+    type: [regression, functional, responsive]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/homeworkCreation]
+    automated: true
+    automationFile: e2e/academic/homework-calendar.spec.ts
+    status: automated
+    tags: ['@module-academic', '@critical', '@regression']
+  - id: ACM-ELECTIVE-LATE-ADMISSION-001
+    module: Academic
+    submodule: Elective Assignment
+    title: Late admissions can save and lock electives while existing locked selections remain protected
+    risk: high
+    priority: P1
+    type: [regression, functional, responsive]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/assign-elective-subject]
+    automated: true
+    automationFile: e2e/academic/elective-late-admission.spec.ts
+    status: automated
+    tags: ['@module-academic', '@critical', '@regression']
+  - id: ACM-SHARED-STUDENT-MASCOT-001
+    module: Academic
+    submodule: Dashboard
+    title: Empty Academic sections use the supplied student beside a blank clipboard in light and dark desktop, tablet and phone layouts
+    risk: low
+    priority: P3
+    type: [visual, regression, responsive]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/student-mascot.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-dashboard', '@responsive']
+  - id: ACM-WEEKLY-LECTURE-CLASS-CAPACITY-001
+    module: Academic
+    submodule: Timetable Settings
+    title: Weekly Lectures detects saved capacity for the selected class and separates missing slots from unpublished subjects
+    risk: high
+    priority: P1
+    type: [functional, regression, resilience]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/timetableSettings/lectureSlots, /academic/timetableSettings/weeklyLectures]
+    automated: true
+    automationFile: e2e/academic/weekly-lecture-slots.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-timetable', '@regression']
+  - id: ACM-TIMETABLE-SETUP-FEEDBACK-001
+    module: Academic
+    submodule: Setup Guide
+    title: Lecture Slots precedes Weekly Lectures with a persistent create action and loading and retry feedback
+    risk: medium
+    priority: P2
+    type: [functional, regression, resilience, responsive]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/setup]
+    automated: true
+    automationFile: e2e/academic/timetable-settings-feedback.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-setup', '@regression']
+  - id: ACM-SETUP-CURRICULUM-BOUNDS-001
+    module: Academic
+    submodule: Setup Guide
+    title: Curriculum tables and dialogs scroll internally with visible actions, immediate tab loading and retryable data errors
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, resilience]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/setup]
+    automated: true
+    automationFile: e2e/academic/academic-setup-curriculum.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-setup', '@critical', '@regression']
   - id: ACM-DASHBOARD-EMPTY-AFTER-SETUP-001
     module: Academic
     submodule: Dashboard
-    title: Save and exit from the setup guide opens the empty Academic dashboard with a zero score, Needs Attention status, and no NaN or application errors
+    title: Save and exit from setup opens Academic Insights with section-specific empty guidance and the supplied transparent student mascot without invented health scores or runtime errors
     risk: high
     priority: P1
     type: [functional, regression, workflow, resilience]
@@ -18,7 +102,7 @@ scenarios:
   - id: ACM-DASHBOARD-MALFORMED-SECTION-RETRY-001
     module: Academic
     submodule: Dashboard
-    title: A malformed successful curriculum response makes Academic health unavailable and the section retry recovers valid zero data
+    title: A malformed successful Insights response shows a retryable error and recovers section-specific empty guidance without a fabricated health score
     risk: high
     priority: P1
     type: [functional, regression, resilience]
@@ -29,6 +113,48 @@ scenarios:
     automationFile: e2e/academic/academic-module-setup.spec.ts
     status: automated
     tags: ['@module-academic', '@submodule-setup', '@submodule-dashboard', '@critical', '@regression']
+  - id: ACM-INSIGHTS-CALENDAR-PREVIEW-001
+    module: Academic
+    submodule: Dashboard
+    title: Academic calendar preview excludes recurring weekend holidays before showing at most five events and keeps real events on weekends
+    risk: medium
+    priority: P2
+    type: [functional, regression, responsive]
+    roles: [academic-admin, student]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-calendar-preview.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-dashboard', '@regression', '@responsive']
+  - id: ACM-INSIGHTS-ROLE-RESPONSIVE-001
+    module: Academic
+    submodule: Dashboard
+    title: Academic dashboard uses compact classroom and relevant top-right section reminders with independent card heights while preserving role order and responsive scoped graphs
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility, permission]
+    roles: [academic-admin, director, principal, vice-principal, coordinator, hod, teacher, class-teacher, exam-coordinator, timetable-coordinator, student, parent]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-insights.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-dashboard', '@regression', '@responsive']
+  - id: ACM-INSIGHTS-CONTEXT-001
+    module: Academic
+    submodule: Dashboard
+    title: Academic context changes hide old data while verified linked-student selection renders the six personal portal sections and recovers failed child reads
+    risk: critical
+    priority: P0
+    type: [functional, regression, resilience, permission]
+    roles: [academic-admin, parent]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-insights.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-dashboard', '@critical', '@regression']
   - id: ACM-SETUP-GUIDE-STABLE-TABS-001
     module: Academic
     submodule: Setup Guide
@@ -74,7 +200,7 @@ scenarios:
   - id: ACM-SETUP-GUIDE-MANAGERS-001
     module: Academic
     submodule: Setup Guide
-    title: The nine existing configuration managers load in their owning stages and Subject creation submits its production API payload
+    title: Nine configuration managers load through their current read contracts including paged rubric templates and Subject creation submits its production API payload
     risk: critical
     priority: P0
     type: [functional, regression, workflow]

@@ -10,8 +10,6 @@ export const field = (page: Page, label: string) =>
 export async function login(page: Page, code = '') {
   await page.goto('/login');
   if (code) await page.getByLabel(/^School code$/i).fill(code);
-  else
-    await page.getByRole('button', { name: 'Platform administrator sign in', exact: true }).click();
   await page.getByLabel(/^Email (?:\/|or) username$/i).fill('admin');
   await page.getByLabel('Password', { exact: true }).fill('Fixture-Password-29!');
   await page.getByRole('button', { name: /^Sign in$/i }).click();

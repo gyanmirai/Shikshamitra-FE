@@ -1,11 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Skeleton } from '@mui/material';
+
+import LoadingSetting from './AcademicSetupLoadingSetting';
 
 import type { AcademicSetupSettingKey } from './academic-setup-catalog';
 
-const LoadingSetting = () => <Skeleton variant="rounded" height={240} aria-label="Loading setting" />;
 const managers = {
   subjects: dynamic(() => import('src/screens/academic/curriculum-management/setting/subjectCreation'), { loading: LoadingSetting }),
   'elective-groups': dynamic(() => import('src/screens/academic/curriculum-management/setting/electiveSubjectSetting'), { loading: LoadingSetting }),

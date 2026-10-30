@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: How-to
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-30
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -52,7 +52,7 @@ Expand or collapse a group with its chevron to show or hide its descendants with
 
 ## Review user roles
 
-User Management places Role between Full Name and Email. Each assigned role appears as a neutral pill; users without assignments show No role assigned. These labels describe membership, independently of direct user permission overrides.
+User Management places Role between Full Name and Email. Each assigned role appears as plain text beside its saved color marker, matching Role Management. Multiple roles stack within the cell; users without assignments show No role assigned. Missing color metadata uses a neutral marker. These labels describe membership, independently of direct user permission overrides.
 
 Use the Role header to sort alphabetically by the displayed role list. Its text filter supports Contains to find a role within a multi-role list; Equals compares the complete comma-separated list. Columns can hide or show Role. Filtering and sorting apply to the complete loaded directory before table pagination.
 

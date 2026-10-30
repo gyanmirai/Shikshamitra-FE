@@ -173,6 +173,7 @@ interface SubjectScheduleRowProps {
   isGradeScalingsLoading: boolean;
   currentYear: any;
   standardId?: string | null;
+  divisionIds?: string[];
   isReadOnly?: boolean;
 }
 
@@ -187,6 +188,7 @@ const SubjectScheduleRow = memo(
     isGradeScalingsLoading,
     currentYear,
     standardId,
+    divisionIds,
     isReadOnly = false,
   }: SubjectScheduleRowProps) => (
     <TableRow
@@ -286,6 +288,7 @@ const SubjectScheduleRow = memo(
             maxDate={dayjs(currentYear?.endDate)}
             academicYearId={currentYear?.id}
             standardId={standardId}
+            divisionIds={divisionIds}
             validationType="ExamSchedule"
             slotProps={{
               textField: {
@@ -857,6 +860,7 @@ const ElectiveGroupCard = memo(
                     isGradeScalingsLoading={isGradeScalingsLoading}
                     currentYear={currentYear}
                     standardId={standardId}
+                    divisionIds={formik.values.divisions}
                     isReadOnly={!!sub.isExamSelectionDisabled}
                   />
                 );
@@ -1045,6 +1049,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                       isGradeScalingsLoading={isGradeScalingsLoading}
                       currentYear={currentYear}
                       standardId={formik.values.className}
+                      divisionIds={formik.values.divisions}
                     />
                   );
                 })}

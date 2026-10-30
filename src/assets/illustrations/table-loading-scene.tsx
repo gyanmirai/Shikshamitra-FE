@@ -14,17 +14,9 @@ export function TableLoadingScene() {
     <Box
       component="g"
       sx={{
-        '& .search-arm': {
-          transformOrigin: '93.75px 165px',
-          animation: 'student-search-inspect 3.2s ease-in-out infinite',
-        },
         '& .search-trace': { animation: 'student-search-trace 3.2s linear infinite' },
         '& .search-progress': { animation: 'student-search-progress 1.6s ease-in-out infinite' },
         '& .search-dot': { animation: 'student-search-dot 1.6s ease-in-out infinite' },
-        '@keyframes student-search-inspect': {
-          '0%, 100%': { transform: 'rotate(-3deg)' },
-          '50%': { transform: 'rotate(4deg)' },
-        },
         '@keyframes student-search-trace': { to: { strokeDashoffset: -100 } },
         '@keyframes student-search-progress': {
           from: { transform: 'translateX(0)' },
@@ -35,7 +27,7 @@ export function TableLoadingScene() {
           '35%': { opacity: 1 },
         },
         '@media (prefers-reduced-motion: reduce)': {
-          '& .search-arm, & .search-trace, & .search-progress, & .search-dot': {
+          '& .search-trace, & .search-progress, & .search-dot': {
             animation: 'none',
           },
           '& .search-progress': { display: 'none' },

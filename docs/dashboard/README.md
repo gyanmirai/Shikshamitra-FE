@@ -3,7 +3,7 @@ module: dashboard
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-08-03
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,7 +12,8 @@ audience: humans-and-agents
 
 TL;DR: use this page as the entrypoint for the main `/dashboard` command center.
 Dashboard frontend docs own template selection, widget rendering, client integration, and browser validation.
-The shared command-center renderer composes different information priorities for Leadership, Principal/Admin, Teacher, Finance/HR, and Student/Parent templates.
+The shared renderer composes eight presentations for leadership, principal, admissions, teacher, finance, HR, student, and parent, while retaining the five backend templates.
+Each presentation uses the shared breadcrumb header, equal KPI cards, a role-specific focus, priority actions, module summaries, agenda, exceptions, and updates.
 
 ## Read order
 

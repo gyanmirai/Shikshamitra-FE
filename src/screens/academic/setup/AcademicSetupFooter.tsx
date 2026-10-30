@@ -28,8 +28,8 @@ export default function AcademicSetupFooter({ welcome, review, disabled, blocked
           </Typography>
         </Stack>
         <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="flex-end">
-          <Button size="small" color="inherit" variant="text" disabled={disabled} onClick={onExit}>Save & exit</Button>
-          {!welcome && !review && <Button size="small" color="inherit" variant="text" disabled={disabled} onClick={onDefer}>Do this later</Button>}
+          <Button size="small" color="inherit" variant="outlined" disabled={disabled} onClick={onExit}>Save & exit</Button>
+          {!welcome && !review && <Button size="small" color="inherit" variant="outlined" disabled={disabled} onClick={onDefer}>Do this later</Button>}
           <Button size="small" color="inherit" variant="outlined" disabled={disabled} onClick={onSave}>Save progress</Button>
           <Button size="small" color="inherit" variant="contained" disabled={disabled} onClick={onContinue}>
             {saving ? 'Saving…' : welcome ? 'Get started' : review ? 'Finish review' : 'Save & continue'}

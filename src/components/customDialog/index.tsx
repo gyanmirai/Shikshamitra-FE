@@ -93,6 +93,7 @@ const CustomDialog = ({
           display: 'flex',
           overflow: 'hidden',
           flexDirection: 'column',
+          '& .MuiDialogActions-root': { flexShrink: 0 },
           borderRadius: '16px', // Modern rounded corners
           boxShadow: theme.customShadows?.dialog || theme.shadows[24], // Premium shadow
           backgroundRepeat: 'no-repeat',
@@ -114,7 +115,7 @@ const CustomDialog = ({
     >
       <FormComponent
         id="dialog-form"
-        style={{ height: '100%' }}
+        style={{ minHeight: 0, maxHeight: 'inherit', display: 'flex', flexDirection: 'column' }}
         onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
         }}
@@ -125,6 +126,7 @@ const CustomDialog = ({
           alignItems="center"
           justifyContent="space-between"
           sx={{
+            flexShrink: 0,
             py: 2.1,
             px: 2,
             boxShadow: 'var(--shadows-3)',
@@ -163,7 +165,7 @@ const CustomDialog = ({
         </Box>
 
         {/* Subtle separator using border instead of full Divider for cleaner look */}
-        <Box sx={{ borderBottom: `1px solid ${theme.palette.divider}`, width: '100%' }} />
+        <Box sx={{ borderBottom: `1px solid ${theme.palette.divider}`, width: '100%', flexShrink: 0 }} />
 
         {children}
       </FormComponent>

@@ -1,3 +1,3 @@
-import AcademicDashboard from 'src/screens/academic/academic-dashboard';
+import AcademicImageDashboard from 'src/screens/academic/academic-image-dashboard';
 
-export default AcademicDashboard;
+export default AcademicImageDashboard;

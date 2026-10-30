@@ -12,12 +12,17 @@ import {
 describe('Academic setup entry and navigation', () => {
   it('covers exactly the nine visible settings in their owning stages', () => {
     expect(academicSetupSettings.map((setting) => setting.key)).toEqual([
-      'subjects', 'elective-groups', 'weekly-lectures', 'lecture-slots', 'homework-types',
+      'subjects', 'elective-groups', 'lecture-slots', 'weekly-lectures', 'homework-types',
       'assignment-types', 'rubrics', 'grading-scales', 'exam-types',
     ]);
     expect(new Set(academicSetupSettings.map((setting) => setting.stage))).toEqual(
       new Set(['curriculum', 'timetable', 'homework', 'examination'])
     );
+  });
+
+  it('starts timetable setup with the prerequisite while retaining saved weekly-lecture links', () => {
+    expect(getAcademicSetupPosition('timetable', null)).toEqual({ stage: 'timetable', setting: 'lecture-slots' });
+    expect(getAcademicSetupPosition('timetable', 'weekly-lectures')).toEqual({ stage: 'timetable', setting: 'weekly-lectures' });
   });
 
   it('recognizes exact configuration routes without prefix collisions', () => {

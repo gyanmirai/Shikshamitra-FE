@@ -46,6 +46,8 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
     data: subjectData,
     isLoading,
     isFetching,
+    error,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
@@ -268,6 +270,8 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         tableTitle="Subjects"
         tableId="subject-data-table"
         isLoading={isLoading || isFetching}
+        error={error}
+        onRetry={refetch}
         noDataText={
           <>
             Subject Data Not Found{' '}

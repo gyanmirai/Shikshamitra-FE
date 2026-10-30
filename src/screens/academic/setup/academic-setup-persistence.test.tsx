@@ -39,6 +39,32 @@ beforeEach(() => {
 });
 
 describe('Academic guide first visit and saved navigation', () => {
+  it('reports navigation immediately, through the save and until the destination URL arrives', async () => {
+    let complete: () => void = () => {};
+    mocks.save.mockReturnValue({ unwrap: () => new Promise<void>((resolve) => { complete = resolve; }) });
+    const hook = renderHook(() => useAcademicSetupProgress({ tenantCacheKey: 'a', academicYearId: 'year-a' }, saved));
+    let pending: Promise<boolean>;
+    act(() => { pending = hook.result.current.move({ stage: 'review', setting: null }); });
+    expect(hook.result.current.navigating).toBe(true);
+    await act(async () => { complete(); await pending; });
+    expect(hook.result.current.navigating).toBe(true);
+    mocks.query = 'stage=review';
+    hook.rerender();
+    expect(hook.result.current.navigating).toBe(false);
+    mocks.query = 'stage=curriculum&setting=subjects';
+    hook.rerender();
+    expect(hook.result.current.navigating).toBe(false);
+  });
+
+  it('stops navigation feedback after a failed save and retains the current position', async () => {
+    mocks.save.mockReturnValue({ unwrap: () => Promise.reject(new Error('offline')) });
+    const hook = renderHook(() => useAcademicSetupProgress({ tenantCacheKey: 'a', academicYearId: 'year-a' }, saved));
+    await act(async () => { await hook.result.current.move({ stage: 'timetable', setting: 'lecture-slots' }); });
+    expect(hook.result.current.navigating).toBe(false);
+    expect(hook.result.current.position).toEqual({ stage: 'curriculum', setting: 'subjects' });
+    expect(hook.result.current.message).toContain('could not be saved');
+  });
+
   it('records once under StrictMode and removes automatic opening after the winning visit', async () => {
     const hook = renderHook(
       ({ query }) => useAcademicSetupVisit('school-a', query, '/academic/courseSubjects'),

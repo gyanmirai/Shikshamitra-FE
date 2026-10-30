@@ -27,6 +27,54 @@ const students: StudentElectiveRow[] = [
 ];
 
 describe('useElectiveAssignmentState dirty tracking', () => {
+  it('protects locked students during individual, bulk, and clear operations while admitting new edits', async () => {
+    const mixedStudents = [
+      { ...students[0], isLocked: true },
+      { ...students[1], isLocked: false },
+    ];
+    const { result } = renderHook(() =>
+      useElectiveAssignmentState({
+        students: mixedStudents,
+        serverRecords: mixedStudents,
+        isLocked: false,
+      })
+    );
+    await waitFor(() =>
+      expect(result.current.studentSelections['student-one']).toBe('computer-science')
+    );
+    act(() => result.current.toggleRowSelected('student-one'));
+    expect(result.current.selectedRowIds.size).toBe(0);
+    act(() => result.current.toggleAllRowsSelected(['student-one', 'student-two'], true));
+    expect(Array.from(result.current.selectedRowIds)).toEqual(['student-two']);
+    act(() => result.current.toggleSubject('student-one', 'pt'));
+    expect(result.current.studentSelections['student-one']).toBe('computer-science');
+    act(() => result.current.bulkAssignSubject(['student-one', 'student-two'], 'pt'));
+    expect(result.current.studentSelections).toEqual({
+      'student-one': 'computer-science',
+      'student-two': 'pt',
+    });
+    act(() => result.current.clearSelections());
+    expect(result.current.studentSelections).toEqual({ 'student-one': 'computer-science' });
+    act(() => result.current.toggleSubject('student-two', 'pt'));
+    expect(result.current.unsavedChangesCount).toBe(1);
+  });
+
+  it('preserves selections when the entire page is locked or read-only', async () => {
+    const { result } = renderHook(() =>
+      useElectiveAssignmentState({ students, serverRecords: students, isLocked: true })
+    );
+    await waitFor(() => expect(result.current.studentSelections['student-one']).toBe('computer-science'));
+    act(() => {
+      result.current.toggleSubject('student-two', 'pt');
+      result.current.bulkAssignSubject(['student-one', 'student-two'], 'pt');
+      result.current.clearSelections();
+      result.current.toggleAllRowsSelected(['student-two'], true);
+    });
+    expect(result.current.studentSelections).toEqual({ 'student-one': 'computer-science' });
+    expect(result.current.selectedRowIds.size).toBe(0);
+    expect(result.current.hasUnsavedChanges).toBe(false);
+  });
+
   it('searches students by name, roll number, and GR number', () => {
     const searchableStudents: StudentElectiveRow[] = [
       { ...students[0], grNo: 'GR-101' },

@@ -1,7 +1,7 @@
 import type { TeacherProfile } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
 import dayjs from 'dayjs';
-import { learningTaskDateTime } from 'src/utils/learning-task-date-time';
+import { learningTaskNow, learningTaskDateTime } from 'src/utils/learning-task-date-time';
 
 import type { IHomework } from '../type';
 
@@ -24,12 +24,12 @@ export const getHomeworkInitialValues = (
         ? learningTaskDateTime(div.publishAt)
         : div.publishDate
           ? learningTaskDateTime(div.publishDate)
-          : dayjs(),
+          : learningTaskNow(),
       dueDate: div.dueAt
         ? learningTaskDateTime(div.dueAt)
         : div.dueDate
           ? learningTaskDateTime(div.dueDate)
-          : dayjs(),
+          : learningTaskNow(),
       status: div.status ?? 0,
     })) || [],
   subject: editData?.subject || '',

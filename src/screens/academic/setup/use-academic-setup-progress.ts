@@ -16,6 +16,7 @@ export function useAcademicSetupProgress(scope: AcademicSetupScope, state?: Acad
   const [save, mutation] = useSaveAcademicSetupProgressMutation();
   const [message, setMessage] = useState('');
   const [conflict, setConflict] = useState(false);
+  const [destination, setDestination] = useState<AcademicSetupPosition | null>(null);
   const [draft, setDraft] = useState<{ year: string; keys: string[] } | null>(null);
   const mounted = useRef(false);
   useEffect(() => {
@@ -32,9 +33,19 @@ export function useAcademicSetupProgress(scope: AcademicSetupScope, state?: Acad
     state?.settings.filter((item) => item.canView).map((item) => item.key)
   );
   const deferred = draft?.year === scope.academicYearId ? draft.keys : state?.deferredSettingKeys ?? [];
+  const navigating = destination !== null
+    && (destination.stage !== position.stage || destination.setting !== position.setting);
+  useEffect(() => {
+    if (destination && destination.stage === position.stage && destination.setting === position.setting) {
+      setDestination(null);
+    }
+  }, [destination, position.stage, position.setting]);
 
   async function persist(target = position, keys = deferred, finishReview = false, exitTo?: string) {
     if (!state || mutation.isLoading) return false;
+    if (!exitTo && (target.stage !== position.stage || target.setting !== position.setting)) {
+      setDestination(target);
+    }
     setMessage('');
     setConflict(false);
     setDraft({ year: scope.academicYearId, keys });
@@ -62,6 +73,7 @@ export function useAcademicSetupProgress(scope: AcademicSetupScope, state?: Acad
       return true;
     } catch (error) {
       if (!mounted.current) return false;
+      setDestination(null);
       const stale = typeof error === 'object' && error !== null && 'status' in error && error.status === 409;
       setConflict(stale);
       setMessage(stale
@@ -77,6 +89,7 @@ export function useAcademicSetupProgress(scope: AcademicSetupScope, state?: Acad
     const restored = getAcademicSetupPosition(saved.currentStageKey, saved.currentSettingKey,
       saved.settings.filter((item) => item.canView).map((item) => item.key));
     resumed.current = restored;
+    setDestination(null);
     setDraft(null); setMessage(''); setConflict(false);
     const next = new URLSearchParams(params.toString());
     next.set('stage', restored.stage);
@@ -84,6 +97,6 @@ export function useAcademicSetupProgress(scope: AcademicSetupScope, state?: Acad
     next.delete('action'); next.delete('recordId');
     router.replace(`/academic/setup?${next}`, { scroll: false });
   };
-  return { position, deferred, persist, move, saving: mutation.isLoading, failed: mutation.isError,
+  return { position, deferred, persist, move, navigating, saving: mutation.isLoading, failed: mutation.isError,
     message, conflict, restore };
 }

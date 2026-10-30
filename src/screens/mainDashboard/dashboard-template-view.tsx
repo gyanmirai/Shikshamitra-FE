@@ -1,200 +1,66 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { GrantedPermission } from 'src/utils/permissions';
 
-import { useMemo } from 'react';
-import { Grid } from '@mui/material';
+import { Box, Alert, Stack, Typography } from '@mui/material';
 
-import { DashboardZone } from './dashboard-zone';
 import { DashboardShell } from './dashboard-shell';
-import { filterDashboardDataByPermissions } from './dashboard-permissions';
+import { DashboardWorkList } from './dashboard-work-list';
+import { DashboardFocusView } from './dashboard-focus-view';
 import { DashboardWidgetGrid } from './dashboard-widget-card';
-import {
-  DASHBOARD_TEMPLATES,
-  DASHBOARD_ZONE_KEYS,
-  DASHBOARD_TEMPLATE_META,
-  type DashboardTemplate,
-  type DashboardZoneKey,
-  type DashboardZoneErrors,
-  type DashboardDataContract,
-} from './dashboard-types';
+import { selectDashboardFocus } from './dashboard-focus-access';
+import { DashboardMetricsRegion } from './dashboard-metrics-region';
+import { filterDashboardDataByPermissions } from './dashboard-permissions';
 
-type RoleDashboardViewProps = {
-  data: DashboardDataContract;
-  permissions: GrantedPermission[];
-  enforcePermissions: boolean;
-  loadingZones?: DashboardZoneKey[];
-  zoneErrors?: DashboardZoneErrors;
-  onRetry?: () => void;
+import type { DashboardZoneKey, DashboardZoneErrors, DashboardDataContract } from './dashboard-types';
+
+type Props = {
+  data: DashboardDataContract; permissions: GrantedPermission[]; enforcePermissions: boolean;
+  loadingZones?: DashboardZoneKey[]; zoneErrors?: DashboardZoneErrors; onRetry?: () => void;
+  isRefreshing?: boolean; contextAction?: ReactNode; headerAction?: ReactNode;
+  blockedMessage?: string; notification?: ReactNode;
 };
 
-type RoleLayout = {
-  prioritiesFirst: boolean;
-  actionTitle: string;
-  actionDescription: string;
-  riskTitle: string;
-  moduleTitle: string;
-};
-
-const ROLE_LAYOUTS: Record<DashboardTemplate, RoleLayout> = {
-  [DASHBOARD_TEMPLATES.leadership]: {
-    prioritiesFirst: false,
-    actionTitle: 'Priority decisions',
-    actionDescription: 'Approvals and reviews that need leadership attention.',
-    riskTitle: 'Risks and compliance',
-    moduleTitle: 'School health by module',
-  },
-  [DASHBOARD_TEMPLATES.principalAdmin]: {
-    prioritiesFirst: true,
-    actionTitle: 'Today’s action queue',
-    actionDescription: 'Operational work waiting for principal or administrative follow-up.',
-    riskTitle: 'Exceptions to watch',
-    moduleTitle: 'Operational health',
-  },
-  [DASHBOARD_TEMPLATES.teacher]: {
-    prioritiesFirst: true,
-    actionTitle: 'My next actions',
-    actionDescription: 'Attendance, review, and class work ordered for your day.',
-    riskTitle: 'Students needing follow-up',
-    moduleTitle: 'My class health',
-  },
-  [DASHBOARD_TEMPLATES.financeHr]: {
-    prioritiesFirst: true,
-    actionTitle: 'Finance and HR queue',
-    actionDescription: 'Only work permitted for your finance or people-operations role.',
-    riskTitle: 'Month-close risks',
-    moduleTitle: 'Finance and workforce health',
-  },
-  [DASHBOARD_TEMPLATES.studentParent]: {
-    prioritiesFirst: false,
-    actionTitle: 'What needs attention',
-    actionDescription: 'Personal actions for the linked student record.',
-    riskTitle: 'Important alerts',
-    moduleTitle: 'Academic overview',
-  },
-};
-
-export default function DashboardTemplateView({
-  data,
-  permissions,
-  enforcePermissions,
-  loadingZones = [],
-  zoneErrors = {},
-  onRetry,
-}: RoleDashboardViewProps) {
-  const filteredData = useMemo(
-    () => filterDashboardDataByPermissions(data, permissions, { enforcePermissions }),
-    [data, permissions, enforcePermissions]
-  );
-  const layout = ROLE_LAYOUTS[filteredData.dashboardTemplate];
-  const templateMeta = DASHBOARD_TEMPLATE_META[filteredData.dashboardTemplate];
-  const isZoneLoading = (zone: DashboardZoneKey) => loadingZones.includes(zone);
-
-  const metricZone = (
-    <DashboardZone
-      title={templateMeta.primaryZoneTitle}
-      description="Current indicators across the period and scope shown above."
-      testId="dashboard-zone-kpis"
-      itemCount={filteredData.kpiCards.length}
-      isEmpty={!filteredData.kpiCards.length}
-      isLoading={isZoneLoading(DASHBOARD_ZONE_KEYS.kpis)}
-      error={zoneErrors.kpis}
-      onRetry={onRetry}
-    >
-      <DashboardWidgetGrid widgets={filteredData.kpiCards} kind="metric" featureFirst />
-    </DashboardZone>
-  );
-
-  const priorityZones = (
-    <Grid container spacing={2.5}>
-      <Grid size={{ xs: 12, lg: 8 }}>
-        <DashboardZone
-          title={layout.actionTitle}
-          description={layout.actionDescription}
-          testId="dashboard-zone-actions"
-          itemCount={filteredData.actionItems.length}
-          isEmpty={!filteredData.actionItems.length}
-          isLoading={isZoneLoading(DASHBOARD_ZONE_KEYS.actions)}
-          error={zoneErrors.actions}
-          onRetry={onRetry}
-        >
-          <DashboardWidgetGrid widgets={filteredData.actionItems} kind="action" />
-        </DashboardZone>
-      </Grid>
-      <Grid size={{ xs: 12, lg: 4 }}>
-        <DashboardZone
-          title={layout.riskTitle}
-          description="Exceptions are shown only when your role can open the underlying workflow."
-          testId="dashboard-zone-risks"
-          itemCount={filteredData.riskAlerts.length}
-          isEmpty={!filteredData.riskAlerts.length}
-          isLoading={isZoneLoading(DASHBOARD_ZONE_KEYS.risks)}
-          error={zoneErrors.risks}
-          onRetry={onRetry}
-        >
-          <DashboardWidgetGrid widgets={filteredData.riskAlerts} kind="risk" />
-        </DashboardZone>
-      </Grid>
-    </Grid>
-  );
-
-  return (
-    <DashboardShell data={filteredData}>
-      {layout.prioritiesFirst ? (
-        <>
-          {priorityZones}
-          {metricZone}
-        </>
-      ) : (
-        <>
-          {metricZone}
-          {priorityZones}
-        </>
-      )}
-
-      <DashboardZone
-        title={layout.moduleTitle}
-        description="Open a module for the records and analysis behind each signal."
-        testId="dashboard-zone-modules"
-        itemCount={filteredData.moduleSnapshots.length}
-        isEmpty={!filteredData.moduleSnapshots.length}
-        isLoading={isZoneLoading(DASHBOARD_ZONE_KEYS.modules)}
-        error={zoneErrors.modules}
-        onRetry={onRetry}
-      >
-        <DashboardWidgetGrid widgets={filteredData.moduleSnapshots} kind="health" />
-      </DashboardZone>
-
-      <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, lg: 6 }}>
-          <DashboardZone
-            title="Coming up"
-            description="Events and deadlines relevant to your permitted school context."
-            testId="dashboard-zone-calendar"
-            itemCount={filteredData.calendarItems.length}
-            isEmpty={!filteredData.calendarItems.length}
-            isLoading={isZoneLoading(DASHBOARD_ZONE_KEYS.calendar)}
-            error={zoneErrors.calendar}
-            onRetry={onRetry}
-          >
-            <DashboardWidgetGrid widgets={filteredData.calendarItems} kind="timeline" />
-          </DashboardZone>
-        </Grid>
-        <Grid size={{ xs: 12, lg: 6 }}>
-          <DashboardZone
-            title="School updates"
-            description="Announcements that connect to a workflow you can access."
-            testId="dashboard-zone-announcements"
-            itemCount={filteredData.announcements.length}
-            isEmpty={!filteredData.announcements.length}
-            isLoading={isZoneLoading(DASHBOARD_ZONE_KEYS.announcements)}
-            error={zoneErrors.announcements}
-            onRetry={onRetry}
-          >
-            <DashboardWidgetGrid widgets={filteredData.announcements} kind="announcement" />
-          </DashboardZone>
-        </Grid>
-      </Grid>
-    </DashboardShell>
-  );
+export default function DashboardTemplateView({ data, permissions, enforcePermissions, loadingZones = [],
+  zoneErrors = {}, onRetry, isRefreshing, contextAction, headerAction, blockedMessage, notification }: Props) {
+  const filtered = filterDashboardDataByPermissions(data, permissions, { enforcePermissions });
+  const focus = selectDashboardFocus(filtered, permissions, enforcePermissions);
+  const personal = filtered.dashboardTemplate === 'studentParent';
+  const loading = (zone: DashboardZoneKey) => loadingZones.includes(zone);
+  const selectionRequired = personal && Boolean(filtered.students?.length) && !filtered.selectedStudentId;
+  return <DashboardShell data={filtered} presentationRole={filtered.presentationRole} onRefresh={onRetry}
+    isRefreshing={isRefreshing} headerAction={headerAction} contextAction={contextAction}>
+    {notification}
+    {blockedMessage ? <Alert severity="info">{blockedMessage}</Alert> : <>
+      <DashboardMetricsRegion widgets={filtered.kpiCards} isLoading={loading('kpis')} error={zoneErrors.kpis} onRetry={onRetry} />
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0,1fr)', lg: 'minmax(0,1.65fr) minmax(0,1fr)' }, gap: 2 }}>
+        <Box data-testid="dashboard-zone-focus" sx={{ minWidth: 0 }}>
+          {selectionRequired ? <Alert severity="info">Select a linked student to view their dashboard.</Alert> :
+            <DashboardFocusView focus={focus} isLoading={loading('kpis')}
+              onRetry={focus?.status === 'error' ? onRetry : undefined} isRefreshing={isRefreshing} />}
+        </Box>
+        <DashboardWorkList widgets={filtered.actionItems} title={personal ? 'Needs Your Attention' : 'Priority Actions'}
+          description="Workflows awaiting your review" testId="dashboard-zone-actions" isLoading={loading('actions')}
+          error={zoneErrors.actions} onRetry={onRetry} emptyMessage="No priority actions are available for this period." />
+      </Box>
+      <Box data-testid="dashboard-zone-modules" sx={{ minWidth: 0 }}>
+        <Typography variant="h6" component="h2" sx={{ px: 1, mb: 1.5 }}>{personal ? 'Personal Overview' : 'Across Your Modules'}</Typography>
+        {loading('modules') ? <Typography data-testid="dashboard-zone-modules-loading">Loading module summaries...</Typography> :
+          filtered.moduleSnapshots.length ? <DashboardWidgetGrid widgets={filtered.moduleSnapshots} kind="health" /> :
+            !zoneErrors.modules && <Typography variant="body2" color="text.secondary" sx={{ px: 1 }} data-testid="dashboard-zone-modules-empty">
+              No module summaries are available for this period.
+            </Typography>}
+        {zoneErrors.modules && <Alert severity="warning" data-testid="dashboard-zone-modules-error">{zoneErrors.modules}</Alert>}
+      </Box>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0,1fr)', md: 'repeat(2,minmax(0,1fr))' }, gap: 2 }}>
+        <DashboardWorkList widgets={filtered.calendarItems} title="Coming Up" kind="timeline" testId="dashboard-zone-calendar"
+          isLoading={loading('calendar')} error={zoneErrors.calendar} onRetry={onRetry} emptyMessage="No calendar items are available for this period." />
+        <DashboardWorkList widgets={filtered.riskAlerts} title="Follow-up and Exceptions" kind="risk" testId="dashboard-zone-risks"
+          isLoading={loading('risks')} error={zoneErrors.risks} onRetry={onRetry} emptyMessage="No exceptions are available for this period." />
+      </Box>
+      <Stack><DashboardWorkList widgets={filtered.announcements} title="School Updates" kind="announcement" testId="dashboard-zone-announcements"
+        isLoading={loading('announcements')} error={zoneErrors.announcements} onRetry={onRetry} emptyMessage="No school updates are available for this period." /></Stack>
+    </>}
+  </DashboardShell>;
 }

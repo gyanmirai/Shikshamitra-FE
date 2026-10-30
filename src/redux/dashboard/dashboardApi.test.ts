@@ -24,4 +24,10 @@ describe('dashboardApi', () => {
 
     expect(endpoint).toBeDefined();
   });
+
+  it('sends child selection and presentation without transmitting the local access key', () => {
+    expect(buildDashboardSummaryQueryParams({ dashboardTemplate: DASHBOARD_TEMPLATES.studentParent,
+      academicYearId: 'year', studentId: ' child ', presentationRole: 'parent', accessKey: 'tenant:user:permission-version' }))
+      .toEqual({ dashboardTemplate: 'studentParent', academicYearId: 'year', studentId: 'child', presentationRole: 'parent' });
+  });
 });

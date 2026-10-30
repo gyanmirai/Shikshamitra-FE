@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useGetDashboardSummaryQuery } from 'src/redux/dashboard/dashboardApi';
 
 import { getDashboardMockData } from './dashboard-mock-data';
 import { adaptDashboardSummaryPayload } from './dashboard-adapter';
+import { useDashboardApiSource, type DashboardApiSourceOptions } from './dashboard-api-source';
 import {
   DASHBOARD_ZONE_KEYS,
   type DashboardTemplate,
@@ -18,8 +18,7 @@ const allDashboardZones = Object.values(DASHBOARD_ZONE_KEYS);
 
 type DashboardDataSourceMode = 'api' | 'mock' | 'contractPreview';
 
-type DashboardDataSourceOptions = {
-  template: DashboardTemplate;
+type DashboardDataSourceOptions = DashboardApiSourceOptions & {
   mode?: DashboardDataSourceMode;
   academicYearId?: string;
   from?: string;
@@ -108,70 +107,16 @@ export function useDashboardDataSource({
   academicYearId,
   from,
   to,
+  studentId,
+  presentationRole,
+  accessKey,
+  enabled = true,
 }: DashboardDataSourceOptions): DashboardDataSourceResult {
   const mockResult = useMemo(() => createDashboardMockDataSourceResult(template), [template]);
   const emptyResult = useMemo(() => createEmptyDashboardDataSourceResult(template), [template]);
-  const errorResult = useMemo(
-    () => createEmptyDashboardDataSourceResult(template, 'apiError'),
-    [template]
-  );
   const [result, setResult] = useState<DashboardDataSourceResult>(mockResult);
-  const apiQueryArgs = useMemo(
-    () => ({
-      dashboardTemplate: template,
-      academicYearId,
-      from,
-      to,
-    }),
-    [academicYearId, from, template, to]
-  );
-  const apiQuery = useGetDashboardSummaryQuery(apiQueryArgs, {
-    skip: mode !== 'api',
-  });
-  const apiResult = useMemo<DashboardDataSourceResult>(() => {
-    if (mode !== 'api') {
-      return mockResult;
-    }
-
-    if (apiQuery.data) {
-      const adapted = adaptDashboardSummaryPayload(apiQuery.data, template);
-
-      return {
-        ...adapted,
-        isLoading: false,
-        loadingZones: [],
-        source: 'api',
-        retry: apiQuery.refetch,
-      };
-    }
-
-    if (apiQuery.isError) {
-      return {
-        ...errorResult,
-        globalError: 'Dashboard data could not be loaded. Retry to see current school information.',
-        retry: apiQuery.refetch,
-      };
-    }
-
-    return {
-      ...emptyResult,
-      isLoading: apiQuery.isLoading || apiQuery.isFetching,
-      loadingZones: apiQuery.isLoading || apiQuery.isFetching ? allDashboardZones : [],
-      source: 'api',
-      retry: apiQuery.refetch,
-    };
-  }, [
-    apiQuery.data,
-    apiQuery.isError,
-    apiQuery.isFetching,
-    apiQuery.isLoading,
-    apiQuery.refetch,
-    emptyResult,
-    errorResult,
-    mode,
-    mockResult,
-    template,
-  ]);
+  const apiResult = useDashboardApiSource({ template, academicYearId, from, to, studentId,
+    presentationRole, accessKey, enabled: enabled && mode === 'api' });
 
   useEffect(() => {
     let isActive = true;

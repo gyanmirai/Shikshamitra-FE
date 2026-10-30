@@ -17,6 +17,7 @@ export interface StudentElectiveRow {
   grNo?: string;
   rollNo: string;
   selectedSubjectId?: string;
+  isLocked?: boolean;
   selectedSubjectName?: string;
   studentPreference?: string;
   selectableSubjects: ElectiveSubjectOption[];

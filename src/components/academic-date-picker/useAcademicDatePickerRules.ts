@@ -1,17 +1,15 @@
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { CalendarStatus } from 'src/enums/academic-calendar';
+import { useMemo, useState, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { resolveAcademicCalendarId } from 'src/utils/academic-calendar-selection';
 import {
   useGetCalendarsQuery,
   useGetCalendarDaysQuery,
 } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
-
-import type { RootState } from 'src/redux/store';
-import type { AcademicCalendarDay } from './types';
 
 import {
   toDateKey,
@@ -20,11 +18,14 @@ import {
   DEFAULT_BLOCKED_DAY_TYPES,
 } from './academic-date-picker-utils';
 
+import type { AcademicCalendarDay } from './types';
+
 type Params = {
   academicMediumId?: string;
   calendarId?: string;
   standardId?: string | null;
   divisionId?: string | null;
+  divisionIds?: string[];
   blockedDayTypes?: number[];
   anchorDate?: Dayjs | null;
 };
@@ -33,6 +34,7 @@ export function useAcademicDatePickerRules({
   calendarId,
   standardId,
   divisionId,
+  divisionIds,
   academicMediumId,
   anchorDate,
   blockedDayTypes = DEFAULT_BLOCKED_DAY_TYPES,
@@ -40,12 +42,14 @@ export function useAcademicDatePickerRules({
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const [visibleMonth, setVisibleMonth] = useState<Dayjs>(anchorDate || dayjs());
   const resolvedAcademicMediumId = academicMediumId || medium?.id;
+  const anchorDateKey = anchorDate?.isValid() ? toDateKey(anchorDate) : undefined;
 
   useEffect(() => {
-    if (anchorDate?.isValid() && !anchorDate.isSame(visibleMonth, 'month')) {
-      setVisibleMonth(anchorDate);
+    if (anchorDateKey) {
+      const date = dayjs(anchorDateKey);
+      setVisibleMonth((previous) => date.isSame(previous, 'month') ? previous : date);
     }
-  }, [anchorDate, visibleMonth]);
+  }, [anchorDateKey]);
 
   const { data: calendarsData } = useQueryAndMutation({
     type: 'query',
@@ -66,14 +70,8 @@ export function useAcademicDatePickerRules({
    */
   const resolvedCalendarId = useMemo(() => {
     if (calendarId) return calendarId;
-    const calendars = calendarsData?.items || [];
-    return (
-      calendars.find((item: { status?: number }) => item.status === CalendarStatus.Published)?.id ||
-      calendars.find((item: { isDefault?: boolean }) => item.isDefault)?.id ||
-      calendars[0]?.id ||
-      ''
-    );
-  }, [calendarId, calendarsData?.items]);
+    return resolveAcademicCalendarId(calendarsData?.items || [], toDateKey(visibleMonth));
+  }, [calendarId, calendarsData?.items, visibleMonth]);
 
   const { data: calendarDaysData, isFetching } = useQueryAndMutation({
     type: 'query',
@@ -98,8 +96,8 @@ export function useAcademicDatePickerRules({
     const days = Array.isArray(calendarDaysData) ? calendarDaysData : calendarDaysData?.items || [];
     return days
       .filter(isActiveCalendarDay)
-      .filter((day: AcademicCalendarDay) => appliesToScope(day, standardId, divisionId));
-  }, [calendarDaysData, divisionId, standardId]);
+      .filter((day: AcademicCalendarDay) => appliesToScope(day, standardId, divisionId, divisionIds));
+  }, [calendarDaysData, divisionId, divisionIds, standardId]);
 
   /**
    * Memoization Justification:

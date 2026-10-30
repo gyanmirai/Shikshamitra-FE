@@ -12,6 +12,7 @@ interface CapacityBannerProps {
   availableCapacity: number;
   requiredLectures: number;
   hasSlots: boolean;
+  classContext: string;
 }
 
 const BANNER_CONFIG: Record<
@@ -30,14 +31,14 @@ export function CapacityBanner({
   availableCapacity,
   requiredLectures,
   hasSlots,
+  classContext,
 }: CapacityBannerProps) {
   const { color, icon } = BANNER_CONFIG[status];
   const remaining = availableCapacity - requiredLectures;
 
   let message: ReactNode;
   if (!hasSlots) {
-    message =
-      'Lecture Slots are not configured for this class. Please configure Lecture Slots first to calculate available capacity.';
+    message = `Lecture Slots are not configured for ${classContext}. Configure Lecture Slots for this class and academic context to calculate available capacity.`;
   } else if (status === 'OverCapacity') {
     message = `Over capacity by ${Math.abs(remaining)} lecture${Math.abs(remaining) === 1 ? '' : 's'}. Please reduce subject lectures or increase Lecture Slots.`;
   } else if (status === 'FreeSlotsAvailable') {

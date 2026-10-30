@@ -13,6 +13,7 @@ import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { DayType } from 'src/enums/academic-calendar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -25,6 +26,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
+import { learningTaskNow, LEARNING_TASK_TIME_ZONE } from 'src/utils/learning-task-date-time';
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
@@ -69,6 +71,14 @@ import { LearningTaskFormSection as SectionCard } from '../../components/Learnin
 
 import type { IHomeWorkCreationFormProps } from '../type';
 
+const homeworkDueBlockedDayTypes = [DayType.Holiday, DayType.Vacation, DayType.EmergencyClosure];
+// Tall calendar/time popups must remain inside the viewport when neither side of the field fits.
+const homeworkSchedulePopper = {
+  placement: 'top-start' as const,
+  modifiers: [{ name: 'preventOverflow', options: { altAxis: true, tether: false, padding: 8 } }],
+  sx: { zIndex: 1300 },
+};
+
 export const cardStyle = {
   p: { xs: 1.5, sm: 2 },
   borderRadius: 2,
@@ -111,16 +121,19 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   const [addHomework] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddHomeworkMutation,
+    popupConfig: { error: false },
   });
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const [updateHomework] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkMutation,
+    popupConfig: { error: false },
   });
   const [updateHomeworkStatus] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkStatusMutation,
+    popupConfig: { error: false },
   });
   const {
     data: homeworkData,
@@ -545,7 +558,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
                         const newDivisions = selectedDivs.map((divId) => {
                           const existing = existingDivs.find((d) => d.divisionId === divId);
-                          const publishDate = dayjs();
+                          const publishDate = learningTaskNow();
                           return (
                             existing || {
                               divisionId: divId,
@@ -746,7 +759,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                             selectedType.defaultDueDays !== null
                           ) {
                             const newDivisions = formik.values.divisions.map((d: any) => {
-                              const pubDate = d.publishDate ? dayjs(d.publishDate) : dayjs();
+                              const pubDate = d.publishDate ? dayjs(d.publishDate) : learningTaskNow();
                               return {
                                 ...d,
                                 dueDate: pubDate.add(selectedType.defaultDueDays, 'day'),
@@ -894,6 +907,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                 >
                                   <DateTimePicker
                                     label="Publish date (IST) *"
+                                    timezone={LEARNING_TASK_TIME_ZONE}
+                                    academicMediumId={medium?.id}
+                                    standardId={formik.values.classId || formik.values.class}
+                                    divisionId={div.divisionId}
+                                    blockedDayTypes={[]}
                                     format="DD/MM/YYYY HH:mm"
                                     minDate={dayjs(currentYear?.startDate)}
                                     maxDate={dayjs(currentYear?.endDate)}
@@ -926,7 +944,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                         : 'When to show this homework to students'
                                     }
                                     slotProps={{
-                                      popper: { placement: 'top-start', sx: { zIndex: 1300 } },
+                                      popper: homeworkSchedulePopper,
                                       textField: {
                                         fullWidth: true,
                                         size: 'small',
@@ -952,6 +970,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                 >
                                   <DateTimePicker
                                     label="Due date (IST) *"
+                                    timezone={LEARNING_TASK_TIME_ZONE}
+                                    academicMediumId={medium?.id}
+                                    standardId={formik.values.classId || formik.values.class}
+                                    divisionId={div.divisionId}
+                                    blockedDayTypes={homeworkDueBlockedDayTypes}
                                     format="DD/MM/YYYY HH:mm"
                                     minDate={dayjs(currentYear?.startDate)}
                                     maxDate={dayjs(currentYear?.endDate)}
@@ -970,7 +993,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                         : 'Must be after the publish date'
                                     }
                                     slotProps={{
-                                      popper: { placement: 'top-start', sx: { zIndex: 1300 } },
+                                      popper: homeworkSchedulePopper,
                                       textField: {
                                         fullWidth: true,
                                         size: 'small',
