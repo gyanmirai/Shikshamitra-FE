@@ -200,15 +200,18 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                     formik.setFieldValue('student', value || null);
                   }}
                   renderTags={(tagValue, getTagProps) =>
-                    tagValue.map((option, index) => (
-                      <Chip
-                        key={index}
-                        label={option.name}
-                        variant="soft"
-                        size="small"
-                        {...getTagProps({ index })}
-                      />
-                    ))
+                    tagValue.map((option, index) => {
+                      const { key, ...tagProps } = getTagProps({ index });
+                      return (
+                        <Chip
+                          key={key}
+                          label={option.name}
+                          variant="soft"
+                          size="small"
+                          {...tagProps}
+                        />
+                      );
+                    })
                   }
                   options={tableData}
                   getOptionLabel={(option: any) => option?.name || ''}

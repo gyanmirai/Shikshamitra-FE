@@ -98,7 +98,7 @@ describe('bank account effective dates', { timeout: 30000 }, () => {
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
     unmount();
 
-    render(<BankAccountForm open onClose={vi.fn()} />);
+    render(<BankAccountForm open onClose={vi.fn()} editData={null} />);
     expect(screen.queryByText(/Effective from/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Effective to/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
@@ -126,7 +126,7 @@ describe('bank account effective dates', { timeout: 30000 }, () => {
   it('creates an account with the existing default start date and no end date', async () => {
     const user = userEvent.setup();
     const today = dayjs().format('YYYY-MM-DD');
-    render(<BankAccountForm open onClose={vi.fn()} />);
+    render(<BankAccountForm open onClose={vi.fn()} editData={null} />);
     fireEvent.change(screen.getByLabelText('Bank Name *'), { target: { value: account.bankName } });
     fireEvent.change(screen.getByLabelText('Branch Name *'), {
       target: { value: account.branchName },
