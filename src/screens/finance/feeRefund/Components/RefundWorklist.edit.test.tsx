@@ -44,7 +44,9 @@ vi.mock('src/components/customizabaleTable', () => ({
               </td>
             ))}
             <td>
-              <button type="button" onClick={getRowAction(row).onClick}>Open refund</button>
+              <button type="button" onClick={getRowAction(row).onClick}>
+                Open refund
+              </button>
             </td>
           </tr>
         ))}
@@ -120,9 +122,24 @@ describe('refund worklist editing', () => {
     expect(mocks.view).toHaveBeenCalledOnce();
   });
 
-  it('keeps the Actions column absent from Completed', () => {
+  it.each(['Completed', 'Rejected', 'Failed'])('keeps the Actions column absent from %s', (tab) => {
     render(<Worklist />);
-    fireEvent.click(screen.getByRole('tab', { name: /Completed/ }));
+    fireEvent.click(screen.getByRole('tab', { name: new RegExp(tab) }));
     expect(screen.queryByRole('columnheader', { name: 'Actions' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open refund' }));
+    expect(mocks.view).toHaveBeenCalledOnce();
+  });
+
+  it('offers Reject while Pending and removes it from Approved even with an old server hint', () => {
+    mocks.actions = ['reject', 'recordPayout'];
+    render(<Worklist />);
+    expect(screen.getByRole('button', { name: 'Reject for Synthetic student' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('tab', { name: /Approved/ }));
+    expect(
+      screen.queryByRole('button', { name: 'Reject for Synthetic student' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Record payment for Synthetic student' })
+    ).toBeEnabled();
   });
 });

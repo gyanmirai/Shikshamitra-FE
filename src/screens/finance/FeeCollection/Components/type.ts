@@ -194,6 +194,8 @@ export interface MonthWiseFeeItem {
   concessionAmount?: number;
   refundAmount?: number;
   refundDescription?: string;
+  pendingRefundAmount?: number;
+  pendingRefundDescription?: string;
   lateFeeAmount?: number;
   lateFeeExplanation?: string;
   lateFeeWaivedAmount?: number;
@@ -230,6 +232,8 @@ export interface FeeHeadWiseFeeItem {
   concessionAmount?: number;
   refundAmount?: number;
   refundDescription?: string;
+  pendingRefundAmount?: number;
+  pendingRefundDescription?: string;
   lateFeeAmount?: number;
   lateFeeExplanation?: string;
   lateFeeWaivedAmount?: number;

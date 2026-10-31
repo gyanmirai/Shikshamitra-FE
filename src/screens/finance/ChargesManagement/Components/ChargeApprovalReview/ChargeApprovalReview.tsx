@@ -1,6 +1,5 @@
 'use client';
 
-import dayjs from 'dayjs';
 import { motion } from 'framer-motion';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
@@ -9,8 +8,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Alert,
   Box,
@@ -31,6 +29,8 @@ import {
 
 import StudentChargeReviewTable from './StudentChargeReviewTable';
 import ChargeApprovalConfirmationDialog from './ChargeApprovalConfirmationDialog';
+import RequestorInfoCard from '../ChargesManage/Component/ViewChargeComponent/RequestorInfoCard';
+import ChargeViewDetailsCard from '../ChargesManage/Component/ViewChargeComponent/ChargeDetailsCard';
 
 import type { IApprovalReviewStudent, IChargeApprovalReviewProps } from './types';
 import { useChargePermissions } from '../../useChargePermissions';
@@ -213,16 +213,6 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
     ]
   );
 
-  const formattedDueDate = useMemo(
-    () => (chargeData?.dueDate ? dayjs(chargeData.dueDate).format('DD-MM-YYYY') : '-'),
-    [chargeData?.dueDate]
-  );
-
-  const formattedCreatedDate = useMemo(
-    () => (chargeData?.appliedOn ? dayjs(chargeData.appliedOn).format('DD-MM-YYYY') : '-'),
-    [chargeData?.appliedOn]
-  );
-
   if (!open) return null;
 
   if (chargeLoading) {
@@ -288,144 +278,14 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
         <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
           <Box sx={{ p: 2 }}>
             <Grid container spacing={2}>
-              {/* Charge Information Card */}
               <Grid size={{ xs: 12 }}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    transition: 'box-shadow 0.2s ease',
-                    '&:hover': { boxShadow: 4 },
-                  }}
-                >
-                  {/* Header */}
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    mb={1.5}
-                  >
-                    <Stack direction="row" alignItems="center" gap={1}>
-                      <Iconify
-                        icon="solar:document-bold-duotone"
-                        width={18}
-                        sx={{ color: 'primary.main' }}
-                      />
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        Charge Information
-                      </Typography>
-                    </Stack>
-                  </Stack>
-                  <Divider sx={{ mb: 2 }} />
-
-                  {/* Body */}
-                  <Box>
-                    <Grid container spacing={1}>
-                      {/* Charge Name */}
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <InfoItem
-                          icon={<Iconify icon="solar:bill-list-bold" />}
-                          label="Charge Name"
-                          value={chargeData?.chargeName || 'N/A'}
-                        />
-                      </Grid>
-
-                      {/* Charge Category */}
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <InfoItem
-                          icon={<Iconify icon="solar:layers-bold" />}
-                          label="Charge Category"
-                          value={chargeData?.categoryName || 'N/A'}
-                        />
-                      </Grid>
-
-                      {/* Amount */}
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <InfoItem
-                          icon={<Iconify icon="solar:wallet-money-bold" />}
-                          label="Amount"
-                          value={`₹ ${parseFloat(String(chargeData?.amount || 0)).toLocaleString()}`}
-                        />
-                      </Grid>
-
-                      {/* Due Date */}
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <InfoItem
-                          icon={<Iconify icon="solar:calendar-date-bold" />}
-                          label="Due Date"
-                          value={formattedDueDate}
-                        />
-                      </Grid>
-
-                      {/* Created Date */}
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <InfoItem
-                          icon={<Iconify icon="solar:calendar-mark-bold" />}
-                          label="Created Date"
-                          value={formattedCreatedDate}
-                        />
-                      </Grid>
-
-                      {/* Description */}
-                      <Grid size={{ xs: 12, sm: 6, md: 6 }}>
-                        <InfoItem
-                          icon={<Iconify icon="solar:notes-bold" />}
-                          label="Description"
-                          value={chargeData?.purposeDescription || 'No description provided.'}
-                        />
-                      </Grid>
-
-                      {/* Requested By Information Section */}
-                      {chargeData?.requestor && (
-                        <>
-                          <Grid size={{ xs: 12 }} sx={{ mt: 1 }}>
-                            <Divider />
-                          </Grid>
-                          <Grid size={{ xs: 12 }}>
-                            <Stack direction="row" alignItems="center" gap={1} mb={2}>
-                              <Iconify
-                                icon="solar:user-rounded-bold-duotone"
-                                width={18}
-                                sx={{ color: 'primary.main' }}
-                              />
-                              <Typography variant="subtitle2" fontWeight={700}>
-                                Requested By
-                              </Typography>
-                            </Stack>
-                          </Grid>
-                          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <InfoItem
-                              icon={<Iconify icon="solar:user-id-bold" />}
-                              label="Requestor Name"
-                              value={chargeData.requestor.requestorName || 'N/A'}
-                            />
-                          </Grid>
-                          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <InfoItem
-                              icon={<Iconify icon="solar:case-minimalistic-bold" />}
-                              label="Role"
-                              value={chargeData.requestor.requestorRole || 'N/A'}
-                            />
-                          </Grid>
-                          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <InfoItem
-                              icon={<Iconify icon="solar:calendar-bold" />}
-                              label="Requested Date"
-                              value={
-                                chargeData.requestor.requestedOn
-                                  ? dayjs(chargeData.requestor.requestedOn).format('DD-MM-YYYY')
-                                  : 'N/A'
-                              }
-                            />
-                          </Grid>
-                        </>
-                      )}
-                    </Grid>
-                  </Box>
-                </Paper>
+                <ChargeViewDetailsCard charge={chargeData} />
               </Grid>
-
+              {chargeData.requestor && (
+                <Grid size={{ xs: 12 }}>
+                  <RequestorInfoCard charge={chargeData} />
+                </Grid>
+              )}
               {/* Class & Division Information */}
               {(chargeData?.student?.standardName || chargeData?.student?.divisionName) && (
                 <Grid size={{ xs: 12 }}>

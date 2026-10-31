@@ -1,8 +1,9 @@
 import { Iconify } from 'src/components/iconify';
-import CheckCircle from '@mui/icons-material/CheckCircle';
 import React, { useId, useState, useEffect } from 'react';
 import UploadButton from 'src/components/upload-button';
 import { shikshaMitraToast } from 'src/components/toast';
+import { GlobalIcons } from 'src/utils/icons';
+import { FileThumbnail } from 'src/components/file-thumbnail';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetConcessionTypeByIdQuery } from 'src/redux/finance/concessionType';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
@@ -10,7 +11,9 @@ import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon
 import { useUploadConcessionDocumentFileMutation } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 import {
   Box,
+  Card,
   Stack,
+  Tooltip,
   IconButton,
   Typography,
   FormHelperText,
@@ -178,12 +181,22 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
             const isMissingRequired = Boolean(doc.isRequired && !submitted?.url);
             const errorId = `${helperId}-${docId}-error`;
             return (
-              <Box
+              <Card
+                component="section"
+                aria-label={doc.documentName}
+                aria-busy={uploadingDocId === docId}
+                variant="outlined"
                 key={docId}
                 sx={{
-                  py: 0.75,
-                  '& + &': { borderTop: 1 },
+                  p: 1.25,
+                  borderRadius: 1.5,
+                  boxShadow: 'none',
                   borderColor: 'divider',
+                  '& .MuiIconButton-root': {
+                    width: 32,
+                    height: 32,
+                    '@media (pointer: coarse)': { width: 44, height: 44 },
+                  },
                 }}
               >
                 <Box
@@ -214,92 +227,96 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
                       label={`${doc.documentName} requirements`}
                     />
                   </Stack>
+                  <UploadButton
+                    sx={{ gridColumn: 2, gridRow: 1, justifySelf: 'end' }}
+                    size="small"
+                    variant="outlined"
+                    accept={getFileAccept(doc)}
+                    onChange={(event) => handleFileChange(event, docId)}
+                    startIcon={
+                      isUploading && uploadingDocId === docId ? (
+                        <CircularProgress size={14} aria-label={`Uploading ${doc.documentName}`} />
+                      ) : (
+                        <Iconify icon={GlobalIcons.upload} />
+                      )
+                    }
+                    disabled={!canUpload || isUploading || Boolean(uploadingDocId)}
+                    aria-label={`${submitted?.url ? 'Replace' : 'Upload'} ${doc.documentName}`}
+                    aria-describedby={isMissingRequired ? errorId : undefined}
+                    fileInputProps={{
+                      'aria-label': `Choose ${doc.documentName} file`,
+                      'aria-required': Boolean(doc.isRequired),
+                      'aria-invalid': isMissingRequired,
+                      'aria-describedby': isMissingRequired ? errorId : undefined,
+                    }}
+                  >
+                    {uploadingDocId === docId
+                      ? 'Uploading…'
+                      : submitted?.url
+                        ? 'Replace'
+                        : 'Upload'}
+                  </UploadButton>
                   {submitted?.url ? (
-                    <Box
-                      display="flex"
+                    <Stack
+                      direction="row"
                       alignItems="center"
-                      gap={0.5}
-                      sx={{ minWidth: 0, gridColumn: 1, gridRow: 2 }}
+                      gap={1}
+                      sx={{ gridColumn: '1 / -1', minWidth: 0 }}
                     >
-                      <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
+                      <FileThumbnail
+                        file={submitted.fileName || doc.documentName}
+                        sx={{ width: 24, height: 24 }}
+                      />
                       <Typography
-                        variant="caption"
-                        color="success.main"
-                        fontWeight={600}
-                        sx={{ overflowWrap: 'anywhere' }}
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}
                       >
-                        Uploaded{submitted.fileName ? ` · ${submitted.fileName}` : ''}
+                        {submitted.fileName || 'Document attached'}
                       </Typography>
-                    </Box>
+                      <Stack direction="row" gap={0.5} sx={{ flexShrink: 0 }}>
+                        {canView && (
+                          <Tooltip title={`Preview ${doc.documentName}`}>
+                            <IconButton
+                              size="small"
+                              aria-label={`Preview ${doc.documentName}`}
+                              onClick={() =>
+                                setPreviewDoc({
+                                  url: submitted.url,
+                                  name: submitted.fileName || submitted.documentName,
+                                })
+                              }
+                            >
+                              <Iconify icon={GlobalIcons.eye} width={18} />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {canUpload && (
+                          <Tooltip title={`Remove ${doc.documentName}`}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                disabled={isUploading || Boolean(uploadingDocId)}
+                                onClick={() => handleRemove(docId)}
+                                aria-label={`Remove ${doc.documentName}`}
+                              >
+                                <Iconify icon={GlobalIcons.delete} width={18} />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )}
+                      </Stack>
+                    </Stack>
                   ) : (
                     <Typography
                       variant="caption"
                       color="text.secondary"
-                      sx={{ gridColumn: 1, gridRow: 2 }}
+                      sx={{ gridColumn: '1 / -1' }}
                     >
                       Not uploaded
                     </Typography>
                   )}
-                  <Box
-                    display="flex"
-                    gap={0.5}
-                    alignItems="center"
-                    sx={{ gridColumn: 2, gridRow: 1, whiteSpace: 'nowrap' }}
-                  >
-                    {submitted?.url && (
-                      <>
-                        {canView && (
-                          <IconButton
-                            size="small"
-                            aria-label={`Preview ${doc.documentName}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviewDoc({
-                                url: submitted.url,
-                                name: submitted.documentName,
-                              });
-                            }}
-                          >
-                            <Iconify icon="carbon:view-filled" />
-                          </IconButton>
-                        )}
-                        {canUpload && (
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleRemove(docId)}
-                            aria-label={`Remove ${doc.documentName}`}
-                          >
-                            <Iconify icon="solar:trash-bin-trash-bold" />
-                          </IconButton>
-                        )}
-                      </>
-                    )}
-                    <UploadButton
-                      size="small"
-                      variant="outlined"
-                      accept={getFileAccept(doc)}
-                      onChange={(event) => handleFileChange(event, docId)}
-                      startIcon={
-                        isUploading && uploadingDocId === docId ? (
-                          <CircularProgress size={14} />
-                        ) : (
-                          <Iconify icon="eva:cloud-upload-outline" />
-                        )
-                      }
-                      disabled={!canUpload || isUploading}
-                      aria-label={`${submitted?.url ? 'Replace' : 'Upload'} ${doc.documentName}`}
-                      aria-describedby={isMissingRequired ? errorId : undefined}
-                      fileInputProps={{
-                        'aria-label': `Choose ${doc.documentName} file`,
-                        'aria-required': Boolean(doc.isRequired),
-                        'aria-invalid': isMissingRequired,
-                        'aria-describedby': isMissingRequired ? errorId : undefined,
-                      }}
-                    >
-                      {submitted?.url ? 'Replace' : 'Upload'}
-                    </UploadButton>
-                  </Box>
                   {isMissingRequired && (
                     <FormHelperText error id={errorId} sx={{ mx: 0, gridColumn: '1 / -1' }}>
                       {doc.documentName} is required.{' '}
@@ -307,7 +324,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
                     </FormHelperText>
                   )}
                 </Box>
-              </Box>
+              </Card>
             );
           })}
           {(!documents || documents.length === 0) && (

@@ -5,7 +5,7 @@ import type {
 
 import { it, expect, describe } from 'vitest';
 
-import { variableAssignmentError } from './variableAssignmentValidation';
+import { assignmentInputError, variableAssignmentError } from './variableAssignmentValidation';
 
 const request: AssignmentRequest = {
   studentId: 'student',
@@ -21,6 +21,17 @@ const candidate = (isVariable: boolean, isOptional: boolean) =>
   }) as AssignmentCandidate;
 
 describe('student variable fee conditions', () => {
+  it('allows an explicitly selected zero fee with its reason', () => {
+    expect(
+      assignmentInputError(candidate(true, true), {
+        ...request,
+        selectedOptionalFeeHeadIds: ['head'],
+        variableFeeHeads: [
+          { feeHeadId: 'head', amount: 0, zeroAmountReason: 'Approved scholarship' },
+        ],
+      })
+    ).toBeUndefined();
+  });
   it.each([false, true])('fixed fees need no variable amount (optional=%s)', (optional) => {
     expect(variableAssignmentError(candidate(false, optional), request)).toBeUndefined();
   });

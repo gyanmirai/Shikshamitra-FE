@@ -138,6 +138,8 @@ const GENERIC_MESSAGES = new Set([
   'one or more business rules were violated',
   'one or more validation errors occurred',
   'something went wrong',
+  'an internal error occurred during your request',
+  'an internal error occurred during your request!',
   'business rule violated',
   'validation error',
 ]);

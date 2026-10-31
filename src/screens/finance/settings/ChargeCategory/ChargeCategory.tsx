@@ -1,7 +1,6 @@
 'use client';
 
-import { sanitizeFinanceName } from 'src/utils/finance-name';
-import { financeNameSchema } from 'src/utils/finance-name';
+import { financeNameSchema, sanitizeFinanceName } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 import type { IParams, IColumn } from 'src/components/customizabaleTable/types';
 
@@ -294,37 +293,37 @@ const FinanceChargeCategory = () => {
               actions={[
                 ...(canEdit && row.isActive
                   ? [
-                    {
-                      id: 'edit',
-                      label: 'Edit',
-                      icon: 'solar:pen-bold',
-                      onClick: () => handleEdit(row),
-                    },
-                  ]
+                      {
+                        id: 'edit',
+                        label: 'Edit',
+                        icon: 'solar:pen-bold',
+                        onClick: () => handleEdit(row),
+                      },
+                    ]
                   : []),
                 ...(canDelete && row.isActive
                   ? [
-                    {
-                      id: 'delete',
-                      label: 'Delete',
-                      icon: 'solar:trash-bin-trash-bold',
-                      color: 'error.main',
-                      onClick: () => handleDeleteAction(row),
-                    },
-                  ]
+                      {
+                        id: 'delete',
+                        label: 'Delete',
+                        icon: 'solar:trash-bin-trash-bold',
+                        color: 'error.main',
+                        onClick: () => handleDeleteAction(row),
+                      },
+                    ]
                   : []),
                 ...(canChangeStatus
                   ? [
-                    {
-                      id: 'status',
-                      label: !row.isActive ? 'Restore' : 'Archive',
-                      icon: !row.isActive
-                        ? 'mdi:archive-arrow-up-outline'
-                        : 'mdi:archive-outline',
-                      disabled: isStatusLoading,
-                      onClick: () => handleOpenStatusConfirm(row),
-                    },
-                  ]
+                      {
+                        id: 'status',
+                        label: !row.isActive ? 'Restore' : 'Archive',
+                        icon: !row.isActive
+                          ? 'mdi:archive-arrow-up-outline'
+                          : 'mdi:archive-outline',
+                        disabled: isStatusLoading,
+                        onClick: () => handleOpenStatusConfirm(row),
+                      },
+                    ]
                   : []),
               ]}
             />
@@ -833,13 +832,20 @@ export const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategory
                     isLoading={incomeCategoryLoading}
                     disabled={Boolean(editData?.isUsedInDownstream)}
                     onChange={(value) => formik.setFieldValue('incomeCategoryId', value)}
+                    onBlur={() => formik.setFieldTouched('incomeCategoryId', true)}
                     error={
                       formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)
                     }
                     helperText={
                       (formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
                         ? (formik.errors.incomeCategoryId as string)
-                        : undefined) || undefined
+                        : incomeCategoryOptions.some(
+                              (category: any) =>
+                                category.id === formik.values.incomeCategoryId &&
+                                category.displayName.trim().toLowerCase() === 'none'
+                            )
+                          ? 'None excludes collections from Accounts income.'
+                          : undefined) || undefined
                     }
                   />
                 </ShakingTextField>

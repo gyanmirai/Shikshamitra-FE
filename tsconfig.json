@@ -55,7 +55,9 @@
     ".artifacts/receipt-split-e2e-next/types/**/*.ts",
     ".artifacts/receipt-split-e2e-next/dev/types/**/*.ts",
     ".artifacts/finance-live-next/types/**/*.ts",
-    ".artifacts/finance-live-next/dev/types/**/*.ts"
+    ".artifacts/finance-live-next/dev/types/**/*.ts",
+    ".artifacts/finance-none-browser-next/types/**/*.ts",
+    ".artifacts/finance-none-browser-next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

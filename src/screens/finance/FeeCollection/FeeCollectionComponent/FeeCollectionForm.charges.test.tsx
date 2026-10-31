@@ -55,7 +55,18 @@ const mocks = vi.hoisted(() => ({
   downloadMutation: vi.fn(),
   previewItems: [] as any[],
   finalReviewItems: [] as any[],
+  ledgerProps: vi.fn(),
 }));
+
+vi.mock('./CollectionLedgerTable', async (importOriginal) => {
+  const original = await importOriginal<typeof import('./CollectionLedgerTable')>();
+  return {
+    default: (props: React.ComponentProps<typeof original.default>) => {
+      mocks.ledgerProps(props);
+      return <original.default {...props} />;
+    },
+  };
+});
 
 vi.mock('react-redux', () => ({
   useSelector: (selector: any) =>
@@ -427,6 +438,41 @@ describe('Collect Fees presentation and shared ledger', () => {
     mocks.data = buildForm(false);
     mocks.currentYear = { id: 'year-2026', year: 2026, name: '2026-2027' };
   });
+
+  it('preserves completed and awaiting-payout refund metadata in both ledger mappings', () => {
+    Object.assign(mocks.data.ledger[0].items[0], {
+      total: 15000,
+      paid: 3750,
+      due: 0,
+      concessionAmount: 11250,
+      refundAmount: 15000,
+      refundDescription: 'Earlier completed refund',
+      pendingRefundAmount: 3750,
+      pendingRefundDescription: 'RF-002 · School transfer',
+    });
+    render(<FeeCollectComponentForm student={student} />);
+    const data = mocks.ledgerProps.mock.lastCall?.[0].data;
+    const expected = {
+      paid: 3750,
+      concessionAmount: 11250,
+      refundAmount: 15000,
+      pendingRefundAmount: 3750,
+      pendingRefundDescription: 'RF-002 · School transfer',
+    };
+    expect(data.monthWise[0].items[0]).toMatchObject(expected);
+    expect(data.feeHeadWise[0].items[0]).toMatchObject(expected);
+    fireEvent.click(screen.getByRole('row', { name: 'Open Class 3 Tuition Fee, June 2026' }));
+    expect(
+      within(screen.getByText('Refunded to date').parentElement!).getByText(
+        formatNumber(15000, 'INR')
+      )
+    ).toBeVisible();
+    expect(
+      within(screen.getByText('Refund awaiting payout').parentElement!).getByText(
+        formatNumber(3750, 'INR')
+      )
+    ).toBeVisible();
+  }, 60000);
 
   it('explains why settled fees cannot be selected without asking for a selection', async () => {
     mocks.data = buildForm(true);

@@ -3,6 +3,24 @@ import { it, expect, describe } from 'vitest';
 import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
+  it.each([
+    'An internal error occurred during your request!',
+    'An internal error occurred during your request.',
+  ])('explains duplicate concession benefits behind the generic message: %s', (message) => {
+    expect(
+      parseApiProblemDetail({
+        status: 403,
+        data: {
+          error: {
+            code: 'Finance:Concession:010034',
+            message,
+          },
+        },
+      }).detail
+    ).toBe(
+      'This student already has an approved benefit for this concession type in this academic year. Another benefit cannot be requested or approved.'
+    );
+  });
   it.each(['problem', 'abp'])(
     'explains a salary template duplicate name in %s responses',
     (format) => {

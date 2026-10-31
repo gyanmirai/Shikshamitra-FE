@@ -326,6 +326,7 @@ export const {
   useUploadConcessionDocumentFileMutation,
   useGetStudentConcessionDetailsQuery,
   useGetConcessionApprovalContextQuery,
+  useLazyGetConcessionApprovalContextQuery,
   useApproveConcessionRequestMutation,
   usePreviewConcessionApprovalMutation,
   useRejectConcessionRequestMutation,

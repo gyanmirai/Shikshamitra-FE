@@ -122,6 +122,10 @@ export const ColHeader = ({
 
 // ─── FeeRow ────────────────────────────────────────────────────────────────────
 
+export const REFUNDED_TO_DATE_HELP =
+  'Completed payouts for this installment across all refund requests.';
+export const REFUND_AWAITING_PAYOUT_HELP = 'Payout has not been completed.';
+
 export interface FeeRowProps {
   name: string;
   subtitle?: string;
@@ -141,6 +145,8 @@ export interface FeeRowProps {
   concessionAmount?: number;
   refundAmount?: number;
   refundDescription?: string;
+  pendingRefundAmount?: number;
+  pendingRefundDescription?: string;
   lateFeeAmount?: number;
   lateFeeExplanation?: string;
   lateFeeWaivedAmount?: number;
@@ -164,6 +170,8 @@ export const FeeRow = ({
   concessionAmount,
   refundAmount,
   refundDescription,
+  pendingRefundAmount,
+  pendingRefundDescription,
   lateFeeAmount,
   lateFeeExplanation,
   lateFeeWaivedAmount,
@@ -183,7 +191,8 @@ export const FeeRow = ({
   const safeConcessionAmount = concessionAmount ?? 0;
   const safeLateFeeAmount = lateFeeAmount ?? 0;
   const safeLateFeeWaivedAmount = lateFeeWaivedAmount ?? 0;
-  const hasRefund = (refundAmount ?? 0) > 0 && !!refundDescription;
+  const hasRefund = (refundAmount ?? 0) > 0;
+  const hasPendingRefund = (pendingRefundAmount ?? 0) > 0;
 
   return (
     <Box
@@ -249,26 +258,52 @@ export const FeeRow = ({
             onApplied={onWaiverApplied}
           />
         )}
-        {hasRefund && (
+        {(hasRefund || hasPendingRefund) && (
           <Tooltip
             arrow
             placement="top"
             title={
               <Box>
                 <Typography variant="caption" fontWeight={700} display="block">
-                  Refund Info
+                  Refund details
                 </Typography>
-                <Typography variant="caption" display="block">
-                  Amount: {formatNumber(refundAmount!, 'INR')}
-                </Typography>
-                <Typography variant="caption" display="block">
-                  {refundDescription}
-                </Typography>
+                {hasRefund && (
+                  <>
+                    <Typography variant="caption" display="block">
+                      Refunded to date: {formatNumber(refundAmount!, 'INR')}
+                    </Typography>
+                    <Typography variant="caption" display="block">
+                      {REFUNDED_TO_DATE_HELP}
+                    </Typography>
+                    {refundDescription && (
+                      <Typography variant="caption" display="block">
+                        {refundDescription}
+                      </Typography>
+                    )}
+                  </>
+                )}
+                {hasPendingRefund && (
+                  <>
+                    <Typography variant="caption" display="block">
+                      Refund awaiting payout: {formatNumber(pendingRefundAmount!, 'INR')}
+                    </Typography>
+                    <Typography variant="caption" display="block">
+                      {REFUND_AWAITING_PAYOUT_HELP}
+                    </Typography>
+                    {pendingRefundDescription && (
+                      <Typography variant="caption" display="block">
+                        {pendingRefundDescription}
+                      </Typography>
+                    )}
+                  </>
+                )}
               </Box>
             }
           >
             <Box
               component="span"
+              tabIndex={0}
+              aria-label="Refund details"
               onClick={(e) => e.stopPropagation()}
               sx={{
                 display: 'inline-flex',

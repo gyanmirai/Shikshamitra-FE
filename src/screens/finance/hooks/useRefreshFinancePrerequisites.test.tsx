@@ -4,6 +4,34 @@ import { act, renderHook } from '@testing-library/react';
 import { useRefreshFinancePrerequisites } from './useRefreshFinancePrerequisites';
 
 describe('refresh after prerequisite setup', () => {
+  it.each(['change', 'cancel', 'focus'])(
+    'does not refresh when a file chooser closes through %s',
+    (completion) => {
+      const refresh = vi.fn();
+      renderHook(() => useRefreshFinancePrerequisites(refresh));
+      const input = document.createElement('input');
+      input.type = 'file';
+      document.body.appendChild(input);
+      try {
+        act(() => {
+          input.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          window.dispatchEvent(new Event('blur'));
+          if (completion !== 'focus') input.dispatchEvent(new Event(completion, { bubbles: true }));
+          window.dispatchEvent(new Event('focus'));
+          window.dispatchEvent(new Event('focus'));
+        });
+        expect(refresh).not.toHaveBeenCalled();
+        act(() => {
+          window.dispatchEvent(new Event('blur'));
+          window.dispatchEvent(new Event('focus'));
+        });
+        expect(refresh).toHaveBeenCalledOnce();
+      } finally {
+        input.remove();
+      }
+    }
+  );
+
   it('does not refresh when a read-only dialog restores focus within the same page', () => {
     const refresh = vi.fn();
     renderHook(() => useRefreshFinancePrerequisites(refresh));

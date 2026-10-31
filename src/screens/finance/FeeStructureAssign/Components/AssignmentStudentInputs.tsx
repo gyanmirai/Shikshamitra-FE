@@ -43,6 +43,7 @@ export default function AssignmentStudentInputs({
   showErrors = false,
   flat = false,
   allowTransportSource = true,
+  lockOptionalSelection = false,
 }: {
   candidate: AssignmentCandidate;
   request: AssignmentRequest;
@@ -54,6 +55,7 @@ export default function AssignmentStudentInputs({
   flat?: boolean;
   // Verified transport records belong to one student and cannot be shared in bulk.
   allowTransportSource?: boolean;
+  lockOptionalSelection?: boolean;
 }) {
   const [touchedAmounts, setTouchedAmounts] = useState<string[]>([]);
   const [expandedHeads, setExpandedHeads] = useState<string[]>(() =>
@@ -99,6 +101,12 @@ export default function AssignmentStudentInputs({
             feeHeadId: head.feeHeadId,
             source: 'AcademicYear' as const,
           };
+          const admissionPeriod =
+            head.servicePeriod?.source === 'Registration'
+              ? head.servicePeriod
+              : period.source === 'Registration'
+                ? period
+                : undefined;
           const variable = request.variableFeeHeads?.find((h) => h.feeHeadId === head.feeHeadId);
           const dateErrors = servicePeriodErrors(period, yearBounds);
           const dateError = (key: 'start' | 'end' | 'reason') =>
@@ -244,7 +252,7 @@ export default function AssignmentStudentInputs({
                       control={
                         <Checkbox
                           checked={included}
-                          disabled={!head.isOptional || disabled}
+                          disabled={!head.isOptional || disabled || lockOptionalSelection}
                           onChange={(_, checked) =>
                             onChange({
                               ...request,
@@ -254,7 +262,10 @@ export default function AssignmentStudentInputs({
                                     (id) => id !== head.feeHeadId
                                   ),
                               servicePeriods: checked
-                                ? request.servicePeriods
+                                ? [
+                                    ...request.servicePeriods,
+                                    ...(admissionPeriod ? [admissionPeriod] : []),
+                                  ]
                                 : request.servicePeriods.filter(
                                     (p) => p.feeHeadId !== head.feeHeadId
                                   ),
@@ -370,14 +381,27 @@ export default function AssignmentStudentInputs({
                           valueKey="value"
 
                           options={[
-                            {
-                              value: 'AcademicYear',
-                              label: 'Academic year',
-                              description: yearBounds
-                                ? `${fDate(yearBounds.start)} – ${fDate(yearBounds.end)}`
-                                : 'Academic year dates are unavailable.',
-                            },
-                            ...(allowTransportSource && head.supportsTransportSource && !head.isVariable
+                            ...(admissionPeriod
+                              ? [
+                                  {
+                                    value: 'Registration',
+                                    label: 'From admission',
+                                    description:
+                                      'Use the verified joining date and admission proration rule.',
+                                  },
+                                ]
+                              : [
+                                  {
+                                    value: 'AcademicYear',
+                                    label: 'Academic year',
+                                    description: yearBounds
+                                      ? `${fDate(yearBounds.start)} – ${fDate(yearBounds.end)}`
+                                      : 'Academic year dates are unavailable.',
+                                  },
+                                ]),
+                            ...(allowTransportSource &&
+                            head.supportsTransportSource &&
+                            !head.isVariable
                               ? [
                                   {
                                     value: 'TransportService',
@@ -399,10 +423,14 @@ export default function AssignmentStudentInputs({
                               : []),
                           ]}
                           onChange={(value) =>
-                            updatePeriod({
-                              feeHeadId: head.feeHeadId,
-                              source: value as AssignmentServicePeriod['source'],
-                            })
+                            updatePeriod(
+                              value === 'Registration' && admissionPeriod
+                                ? admissionPeriod
+                                : {
+                                    feeHeadId: head.feeHeadId,
+                                    source: value as AssignmentServicePeriod['source'],
+                                  }
+                            )
                           }
                         />
                       ) : flat ? (
@@ -415,10 +443,17 @@ export default function AssignmentStudentInputs({
                               ? 'Custom dates'
                               : period.source === 'TransportService'
                                 ? 'Transport service'
-                                : 'Academic year'}
+                                : period.source === 'Registration'
+                                  ? 'From admission'
+                                  : 'Academic year'}
                           </Typography>
                         </Box>
                       ) : null}
+                      {period.source === 'Registration' && (
+                        <Typography variant="body2" color="text.secondary">
+                          {fDate(period.startDate)} – {fDate(period.endDate)}
+                        </Typography>
+                      )}
                       {period.source === 'TransportService' && (
                         <>
                           <CustomSelect

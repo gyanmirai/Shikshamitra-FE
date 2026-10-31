@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
-import type { IParams } from 'src/components/customizabaleTable/types';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { ConcessionApplication } from 'src/redux/finance/ConcessionManagement/types';
 
 import dayjs from 'dayjs';
@@ -21,6 +21,7 @@ import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useConcessionApprovalPreflight } from 'src/screens/finance/hooks/useConcessionApprovalPreflight';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
@@ -141,6 +142,8 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
   const canCancel = hasGrantedPermission(permissions, actions.cancel);
   const [selectedConcession, setSelectedConcession] = useState<ConcessionApplication | null>(null);
   const [approvalRequest, setApprovalRequest] = useState<ConcessionApplication | null>(null);
+  const { checkApprovalEligibility, isCheckingApproval, checkingRequestId } =
+    useConcessionApprovalPreflight();
   const [approvalPreview, setApprovalPreview] = useState<{
     total: number;
     requestConcurrencyStamp: string;
@@ -455,259 +458,270 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             </Alert>
           ) : undefined
         }
-        columns={[
-          {
-            id: 'studentIdentity',
-            label: 'Student (GR No.)',
-            filterType: 'string',
-            isFilter: true,
-            align: 'left',
-            sticky: true,
-            stickyPosition: 'left',
-            minWidth: 200,
-            render: (value, row) => (
-              <Typography variant="caption" fontSize="13px">
-                {value || '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'rollNo',
-            label: 'Roll No.',
-            align: 'left',
-            width: 140,
-            minWidth: 140,
-            maxWidth: 120,
-            filterType: 'string',
-            isFilter: true,
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value ?? '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'classDivision',
-            label: 'Class/Division',
-            filterType: 'string',
-            isFilter: true,
-            align: 'left',
-            minWidth: 150,
-            render: (value, row) => (
-              <Typography variant="caption" fontSize="13px">
-                {value || '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'concessionTypeName',
-            label: 'Concession Type',
-            filterType: 'string',
-            isFilter: true,
-            align: 'left',
-            width: 160,
-            minWidth: 140,
-            maxWidth: 200,
-          },
-          {
-            id: 'concessionAmount',
-            label: 'Amount',
-            filterType: 'number',
-            isFilter: true,
-            width: 130,
-            minWidth: 110,
-            maxWidth: 160,
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value == null ? '-' : formatNumber(value, 'INR')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'createdAt',
-            label: 'Requested On',
-            filterType: 'date',
-            isFilter: true,
-            align: 'left',
-            width: 180,
-            minWidth: 180,
-            maxWidth: 160,
-            render: (value) =>
-              value ? (
+        columns={(
+          [
+            {
+              id: 'studentIdentity',
+              label: 'Student (GR No.)',
+              filterType: 'string',
+              isFilter: true,
+              align: 'left',
+              sticky: true,
+              stickyPosition: 'left',
+              minWidth: 200,
+              render: (value, row) => (
                 <Typography variant="caption" fontSize="13px">
-                  {dayjs(value).format('DD-MM-YYYY')}
+                  {value || '-'}
                 </Typography>
-              ) : (
-                '-'
               ),
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            filterType: 'enum',
-            enumOptions: concessionStatusOptions(),
-            isFilter: true,
-            isSort: false,
-            sticky: true,
-            stickyPosition: 'right',
-            minWidth: 140,
-            width: 140,
-            render: (value) => (
-              <Label color={concessionStatusColor(value)}>{concessionStatusLabel(value)}</Label>
-            ),
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            align: 'left',
-            width: 150,
-            minWidth: 140,
-            isSort: false,
-            isFilter: false,
-            excludeFromExport: true,
-            sticky: true,
-            stickyPosition: 'right',
-            render: (value, row) => {
-              const isDraft = row.status === ConcessionStatusType.Draft;
-              const isPending = row.status === ConcessionStatusType.Pending;
-              const isOwnRequest = Boolean(
-                currentUserId &&
-                (currentUserId.toLowerCase() === row.requesterId?.toLowerCase() ||
-                  currentUserId.toLowerCase() === row.submittedById?.toLowerCase())
-              );
-              const canDecide = canDecideConcession(
-                currentUserId,
-                row.requesterId,
-                row.submittedById,
-                isAdministrator
-              );
-              const decisionTooltip =
-                !currentUserId || !row.requesterId
-                  ? 'Decision identity is unavailable'
-                  : 'You cannot approve or reject your own request';
-              const serverAllows = (action: string) =>
-                !row.availableActions?.length || row.availableActions.includes(action);
-              const canCancelRow =
-                canCancel &&
-                serverAllows('cancel') &&
-                (row.status === ConcessionStatusType.Draft ||
-                  row.status === ConcessionStatusType.Pending);
-              const canReplaceRow =
-                canAdd &&
-                serverAllows('create-replacement') &&
-                (row.status === ConcessionStatusType.Rejected ||
-                  row.status === ConcessionStatusType.Cancelled);
-              return (
-                <AdaptiveThreeDotsActions
-                  directActionLimit={3}
-                  placement="right-top"
-                  moreLabel={`More actions for ${row.studentIdentity}`}
-                  sx={{ justifyContent: 'flex-start' }}
-                  actions={[
-                    ...(isPending &&
-                    canApprove &&
-                    (row.availableActions?.includes('approve') || isOwnRequest)
-                      ? [
-                          {
-                            id: 'approve',
-                            label: `Approve ${row.studentIdentity}`,
-                            icon: 'solar:check-circle-bold',
-                            color: 'success.main',
-                            disabled:
-                              !canDecide || row.availableActions?.includes('approve') === false,
-                            tooltip: !canDecide
-                              ? decisionTooltip
-                              : row.availableActions?.includes('approve') === false
-                                ? 'Approval is unavailable for this request. Refresh to check its current state.'
-                                : undefined,
-                            onClick: () => {
-                              setApprovalPreview(null);
-                              setApprovalRequest(row as ConcessionApplication);
-                            },
-                          },
-                        ]
-                      : []),
-                    ...(isPending &&
-                    canReject &&
-                    (row.availableActions?.includes('reject') || isOwnRequest)
-                      ? [
-                          {
-                            id: 'reject',
-                            label: `Reject ${row.studentIdentity}`,
-                            icon: 'solar:close-circle-bold',
-                            color: 'error.main',
-                            disabled:
-                              !canDecide || row.availableActions?.includes('reject') === false,
-                            tooltip: !canDecide
-                              ? decisionTooltip
-                              : row.availableActions?.includes('reject') === false
-                                ? 'Rejection is unavailable for this request. Refresh to check its current state.'
-                                : undefined,
-                            onClick: () => onReject(row as IStudentInfo),
-                          },
-                        ]
-                      : []),
-                    ...(isDraft && canEdit && serverAllows('edit')
-                      ? [
-                          {
-                            id: 'edit',
-                            label: `Edit ${row.studentIdentity}`,
-                            icon: GlobalIcons.edit,
-                            onClick: () => onEditConcession?.(row as IStudentInfo),
-                          },
-                        ]
-                      : []),
-                    ...(isDraft && canDelete && serverAllows('delete')
-                      ? [
-                          {
-                            id: 'delete',
-                            label: `Delete ${row.studentIdentity}`,
-                            icon: GlobalIcons.delete,
-                            color: 'error.main',
-                            onClick: () => {
-                              setSelectedConcession(row as ConcessionApplication);
-                              deleteCommandKey.current = window.crypto.randomUUID();
-                              removeConcessionDialog.onTrue();
-                            },
-                          },
-                        ]
-                      : []),
-                    ...(canCancelRow
-                      ? [
-                          {
-                            id: 'cancel',
-                            label: `Cancel request for ${row.studentIdentity}`,
-                            icon: 'solar:close-circle-bold',
-                            onClick: () => {
-                              setSelectedConcession(row as ConcessionApplication);
-                              cancelConcessionDialog.onTrue();
-                            },
-                          },
-                        ]
-                      : []),
-                    ...(canReplaceRow
-                      ? [
-                          {
-                            id: 'replace',
-                            label: `Create replacement for ${row.studentIdentity}`,
-                            icon: 'solar:copy-bold',
-                            onClick: () =>
-                              onRequestConcession?.({
-                                ...(row as unknown as IStudentInfo),
-                                id: undefined,
-                                concessionRequestId: undefined,
-                                studentConcessionTypeRequestId: undefined,
-                                sourceRequestId: row.id,
-                              }),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              );
             },
-          },
-        ]}
+            {
+              id: 'rollNo',
+              label: 'Roll No.',
+              align: 'left',
+              width: 140,
+              minWidth: 140,
+              maxWidth: 120,
+              filterType: 'string',
+              isFilter: true,
+              render: (value) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value ?? '-'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'classDivision',
+              label: 'Class/Division',
+              filterType: 'string',
+              isFilter: true,
+              align: 'left',
+              minWidth: 150,
+              render: (value, row) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value || '-'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'concessionTypeName',
+              label: 'Concession Type',
+              filterType: 'string',
+              isFilter: true,
+              align: 'left',
+              width: 160,
+              minWidth: 140,
+              maxWidth: 200,
+            },
+            {
+              id: 'concessionAmount',
+              label: 'Amount',
+              filterType: 'number',
+              isFilter: true,
+              width: 130,
+              minWidth: 110,
+              maxWidth: 160,
+              render: (value) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value == null ? '-' : formatNumber(value, 'INR')}
+                </Typography>
+              ),
+            },
+            {
+              id: 'createdAt',
+              label: 'Requested On',
+              filterType: 'date',
+              isFilter: true,
+              align: 'left',
+              width: 180,
+              minWidth: 180,
+              maxWidth: 160,
+              render: (value) =>
+                value ? (
+                  <Typography variant="caption" fontSize="13px">
+                    {dayjs(value).format('DD-MM-YYYY')}
+                  </Typography>
+                ) : (
+                  '-'
+                ),
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              filterType: 'enum',
+              enumOptions: concessionStatusOptions(),
+              isFilter: true,
+              isSort: false,
+              sticky: true,
+              stickyPosition: 'right',
+              minWidth: 140,
+              width: 140,
+              render: (value) => (
+                <Label color={concessionStatusColor(value)}>{concessionStatusLabel(value)}</Label>
+              ),
+            },
+            {
+              id: 'actions',
+              label: 'Actions',
+              align: 'left',
+              width: 150,
+              minWidth: 140,
+              isSort: false,
+              isFilter: false,
+              excludeFromExport: true,
+              sticky: true,
+              stickyPosition: 'right',
+              render: (value, row) => {
+                const isDraft = row.status === ConcessionStatusType.Draft;
+                const isPending = row.status === ConcessionStatusType.Pending;
+                const isOwnRequest = Boolean(
+                  currentUserId &&
+                  (currentUserId.toLowerCase() === row.requesterId?.toLowerCase() ||
+                    currentUserId.toLowerCase() === row.submittedById?.toLowerCase())
+                );
+                const canDecide = canDecideConcession(
+                  currentUserId,
+                  row.requesterId,
+                  row.submittedById,
+                  isAdministrator
+                );
+                const decisionTooltip =
+                  !currentUserId || !row.requesterId
+                    ? 'Decision identity is unavailable'
+                    : 'You cannot approve or reject your own request';
+                const serverAllows = (action: string) =>
+                  !row.availableActions?.length || row.availableActions.includes(action);
+                const canCancelRow =
+                  canCancel &&
+                  serverAllows('cancel') &&
+                  (row.status === ConcessionStatusType.Draft ||
+                    row.status === ConcessionStatusType.Pending);
+                const canReplaceRow =
+                  canAdd &&
+                  serverAllows('create-replacement') &&
+                  (row.status === ConcessionStatusType.Rejected ||
+                    row.status === ConcessionStatusType.Cancelled);
+                return (
+                  <AdaptiveThreeDotsActions
+                    directActionLimit={3}
+                    placement="right-top"
+                    moreLabel={`More actions for ${row.studentIdentity}`}
+                    sx={{ justifyContent: 'flex-start' }}
+                    actions={[
+                      ...(isPending &&
+                      canApprove &&
+                      (row.availableActions?.includes('approve') || isOwnRequest)
+                        ? [
+                            {
+                              id: 'approve',
+                              label: `Approve ${row.studentIdentity}`,
+                              icon: 'solar:check-circle-bold',
+                              color: 'success.main',
+                              disabled:
+                                isCheckingApproval ||
+                                !canDecide ||
+                                row.availableActions?.includes('approve') === false,
+                              loading: checkingRequestId === row.id,
+                              tooltip: !canDecide
+                                ? decisionTooltip
+                                : row.availableActions?.includes('approve') === false
+                                  ? 'Approval is unavailable for this request. Refresh to check its current state.'
+                                  : undefined,
+                              onClick: async () => {
+                                if (
+                                  !canDecide ||
+                                  row.availableActions?.includes('approve') === false
+                                )
+                                  return;
+                                if (!(await checkApprovalEligibility(row.id))) return;
+                                setApprovalPreview(null);
+                                setApprovalRequest(row as ConcessionApplication);
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(isPending &&
+                      canReject &&
+                      (row.availableActions?.includes('reject') || isOwnRequest)
+                        ? [
+                            {
+                              id: 'reject',
+                              label: `Reject ${row.studentIdentity}`,
+                              icon: 'solar:close-circle-bold',
+                              color: 'error.main',
+                              disabled:
+                                !canDecide || row.availableActions?.includes('reject') === false,
+                              tooltip: !canDecide
+                                ? decisionTooltip
+                                : row.availableActions?.includes('reject') === false
+                                  ? 'Rejection is unavailable for this request. Refresh to check its current state.'
+                                  : undefined,
+                              onClick: () => onReject(row as IStudentInfo),
+                            },
+                          ]
+                        : []),
+                      ...(isDraft && canEdit && serverAllows('edit')
+                        ? [
+                            {
+                              id: 'edit',
+                              label: `Edit ${row.studentIdentity}`,
+                              icon: GlobalIcons.edit,
+                              onClick: () => onEditConcession?.(row as IStudentInfo),
+                            },
+                          ]
+                        : []),
+                      ...(isDraft && canDelete && serverAllows('delete')
+                        ? [
+                            {
+                              id: 'delete',
+                              label: `Delete ${row.studentIdentity}`,
+                              icon: GlobalIcons.delete,
+                              color: 'error.main',
+                              onClick: () => {
+                                setSelectedConcession(row as ConcessionApplication);
+                                deleteCommandKey.current = window.crypto.randomUUID();
+                                removeConcessionDialog.onTrue();
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(canCancelRow
+                        ? [
+                            {
+                              id: 'cancel',
+                              label: `Cancel request for ${row.studentIdentity}`,
+                              icon: 'solar:close-circle-bold',
+                              onClick: () => {
+                                setSelectedConcession(row as ConcessionApplication);
+                                cancelConcessionDialog.onTrue();
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(canReplaceRow
+                        ? [
+                            {
+                              id: 'replace',
+                              label: `Create replacement for ${row.studentIdentity}`,
+                              icon: 'solar:copy-bold',
+                              onClick: () =>
+                                onRequestConcession?.({
+                                  ...(row as unknown as IStudentInfo),
+                                  id: undefined,
+                                  concessionRequestId: undefined,
+                                  studentConcessionTypeRequestId: undefined,
+                                  sourceRequestId: row.id,
+                                }),
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
+                );
+              },
+            },
+          ] satisfies IColumn[]
+        ).filter((column) => column.id !== 'actions' || tabs.value === 'pending')}
         data={tableData}
         noDataText={
           <>

@@ -18,7 +18,8 @@ The response keeps `paidLateFees` independent from ordinary `paidCharges`.
 Choose **Settled balances**, then open Collect Fee. With all fees and charges settled,
 the dialog shows “No outstanding fees or charges to collect. Items with no outstanding
 balance cannot be selected.” as informational feedback. Fee/charge checkboxes and Collect
-remain disabled, without the selection validation error. Switching back to the default
+remain disabled, without the selection validation error. Both group and table-header
+checkboxes stay checked to match the settled rows. Switching back to the default
 scenario retains normal selection of pending fees and late fees.
 
 If the Windows dev dependency optimizer stalls, build and preview the same fixture instead

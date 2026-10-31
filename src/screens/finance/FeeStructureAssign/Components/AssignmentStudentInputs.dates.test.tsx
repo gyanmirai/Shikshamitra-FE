@@ -96,6 +96,38 @@ const openDates = () => {
 };
 
 describe('shared assignment date pickers', () => {
+  it('shows verified admission dates without allowing an academic-year bypass', () => {
+    const period = {
+      feeHeadId: 'tuition',
+      source: 'Registration',
+      sourceReferenceId: 'application',
+      startDate: '2026-08-20T00:00:00Z',
+      endDate: '2027-05-14T00:00:00Z',
+    } as any;
+    render(
+      <AssignmentStudentInputs
+        candidate={{ ...candidate, heads: [{ ...candidate.heads[0], servicePeriod: period }] }}
+        request={{
+          studentId: 'student',
+          academicYearId: 'year',
+          standardFeeStructureId: 'structure',
+          selectedOptionalFeeHeadIds: [],
+          feeHeadDetails: [],
+          servicePeriods: [period],
+        }}
+        disabled={false}
+        canOverrideDates={false}
+        onChange={vi.fn()}
+        yearBounds={assignmentYearBounds(year, 'year')}
+        flat
+      />
+    );
+    expect(screen.getByText('From admission')).toBeInTheDocument();
+    expect(screen.getByText(/20 Aug 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/14 May 2027/)).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Academic year' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Start date')).not.toBeInTheDocument();
+  });
   it('keeps individual transport sources out of the common bulk editor', () => {
     const view = render(<Harness changed={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Expand Tuition' }));

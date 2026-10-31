@@ -1,4 +1,7 @@
 import React from 'react';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { defaultSettings } from 'src/components/settings/config-settings';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
@@ -12,6 +15,8 @@ vi.mock('src/components/scrollbar', () => ({
   Scrollbar: ({ children }: any) => <div>{children}</div>,
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+vi.mock('src/components/customizabaleTable/table-export', () => ({ exportTable: vi.fn() }));
+const theme = createTheme(defaultSettings);
 
 const student = {
   id: 1,
@@ -59,13 +64,15 @@ function setup(availableActions?: string[]) {
   const onApprove = vi.fn();
   const onReject = vi.fn();
   render(
-    <RefundRemarksForm
-      student={{ ...student, _availableActions: availableActions }}
-      open={{ value: true } as any}
-      onClose={onClose}
-      onApprove={onApprove}
-      onReject={onReject}
-    />
+    <ThemeProvider theme={theme}>
+      <RefundRemarksForm
+        student={{ ...student, _availableActions: availableActions }}
+        open={{ value: true } as any}
+        onClose={onClose}
+        onApprove={onApprove}
+        onReject={onReject}
+      />
+    </ThemeProvider>
   );
   return { onClose, onApprove, onReject };
 }
@@ -80,6 +87,74 @@ beforeEach(() => {
   });
 });
 describe('Refund detail drawer', () => {
+  it('shows only this approved request installment and hides Reject despite an old action hint', () => {
+    query.mockReturnValue({
+      currentData: {
+        ...detail,
+        status: 2,
+        approvedAmount: 3750,
+        processedAmount: 0,
+        totalAmount: 3750,
+        calculatedAmount: 3750,
+        lines: [{ amount: 3750, approvedAmount: 3750 }],
+        settlements: [],
+        availableActions: ['reject', 'recordPayout'],
+        feeHeads: [
+          {
+            feeHeadId: 'tuition',
+            feeHeadName: 'General Tuition Fee',
+            totalPaid: 25000,
+            totalRefunded: 20000,
+            items: [
+              {
+                installmentId: 'tuition-july',
+                month: 'July',
+                total: 10000,
+                paid: 12500,
+                refundAmount: 0,
+                status: 2,
+              },
+            ],
+          },
+          {
+            feeHeadId: 'school',
+            feeHeadName: 'General School Fees',
+            totalPaid: 37500,
+            totalRefunded: 30000,
+            items: [
+              {
+                installmentId: 'school-july',
+                month: 'July',
+                total: 15000,
+                paid: 18750,
+                refundAmount: 0,
+                status: 2,
+              },
+              {
+                installmentId: 'school-december',
+                month: 'December',
+                total: 15000,
+                paid: 18750,
+                refundAmount: 3750,
+                status: 2,
+              },
+            ],
+          },
+        ],
+      },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+    });
+    setup();
+    expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument();
+    expect(screen.queryByText('General Tuition Fee')).not.toBeInTheDocument();
+    expect(screen.queryByText('July')).not.toBeInTheDocument();
+    expect(screen.getByText('December')).toBeVisible();
+    expect(screen.queryByText(/50,000/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Total Refunded/)).not.toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'General School Fees refunds table' })).toBeVisible();
+  });
   it('shows the named drawer, saved details, timeline, notes and settlements', () => {
     setup();
     expect(screen.getByRole('dialog', { name: 'View Refund Request' })).toBeVisible();
@@ -136,7 +211,7 @@ describe('Refund detail drawer', () => {
     });
     setup(['approve', 'reject']);
     expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Reject' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Could not load refund details');
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(retry).toHaveBeenCalledOnce();

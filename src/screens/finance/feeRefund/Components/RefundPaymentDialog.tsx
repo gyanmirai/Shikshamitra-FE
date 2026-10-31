@@ -286,7 +286,13 @@ export default function RefundPaymentDialog({
                                 ? 'Loading expense categories…'
                                 : expenseCategories.length === 0
                                   ? 'No expense categories are available.'
-                                  : undefined)
+                                  : expenseCategories.some(
+                                        (category) =>
+                                          category.id === formik.values.expenseCategoryId &&
+                                          category.label.trim().toLowerCase() === 'none'
+                                      )
+                                    ? 'None excludes this refund from Accounts expenses.'
+                                    : undefined)
                             }
                           >
                             {expenseCategories.map((category) => (
