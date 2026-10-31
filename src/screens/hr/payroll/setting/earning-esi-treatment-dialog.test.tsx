@@ -12,10 +12,11 @@ const mocks = vi.hoisted(() => ({
   treatmentError: false,
   stamp: 'reviewed',
   treatmentQuery: vi.fn(),
+  success: vi.fn(),
 }));
 vi.mock('react-redux', () => ({ useSelector: () => [] }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => mocks.allowed }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.success } }));
 vi.mock('src/components/customDialog', () => ({
   default: ({ title, children }: any) => (
     <div role="dialog" aria-label={title}>
@@ -149,6 +150,7 @@ describe('ESIC treatment at the earning component', () => {
       )
     );
     expect(mocks.close).toHaveBeenCalledOnce();
+    expect(mocks.success).toHaveBeenCalledWith({ message: 'ESIC treatment saved for Allowance.' });
   });
   it('lets HR review earnings that are not rows in the master component list', async () => {
     render(<EarningEsiTreatmentDialog onClose={mocks.close} />);

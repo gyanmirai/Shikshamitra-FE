@@ -137,7 +137,7 @@ function TreatmentForm({
     setError('');
     try {
       await save({ ...payload, idempotencyKey: request.current.key }).unwrap();
-      shikshaMitraToast.success({ message: 'ESIC treatment saved.' });
+      shikshaMitraToast.success({ message: `ESIC treatment saved for ${current.componentName}.` });
       onSaved?.();
       onClose();
     } catch (cause) {

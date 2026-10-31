@@ -68,6 +68,10 @@ import { test, expect } from '@playwright/test';
       await page.getByRole('option', { name: 'Included in ESIC wages', exact: true }).click();
       await dialog.getByRole('button', { name: 'Save treatment', exact: true }).click();
       await expect(dialog).toHaveCount(0);
+      await page
+        .getByRole('region', { name: 'Notifications alt+T' })
+        .getByRole('button', { name: 'Close', exact: true })
+        .click();
     };
     await page.getByRole('button', { name: 'Review ESIC treatment', exact: true }).click();
     await classify();
