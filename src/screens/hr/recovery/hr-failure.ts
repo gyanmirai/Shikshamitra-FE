@@ -18,6 +18,7 @@ export type HrFailure = {
   guidance: string;
   details?: string;
   previewAction?: 'esiTreatment';
+  unclassifiedEarnings?: { componentId: string; name: string }[];
   fields: { name: string; message: string }[];
   setup?: HrSetup;
 };
@@ -229,7 +230,12 @@ export function normalizeHrFailure(error: unknown): HrFailure {
     'The server did not provide a specific reason for rejecting this request.';
   return {
     ...(preview
-      ? { kind: 'salaryPreview' as const, details: preview.details, previewAction: preview.action }
+      ? {
+          kind: 'salaryPreview' as const,
+          details: preview.details,
+          previewAction: preview.action,
+          unclassifiedEarnings: preview.unclassifiedEarnings,
+        }
       : {}),
     title:
       Number(status) === 409

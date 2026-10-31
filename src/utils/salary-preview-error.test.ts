@@ -5,6 +5,59 @@ import { parseApiProblemDetail } from './api-problem-details';
 import { normalizeHrFailure } from '../screens/hr/recovery/hr-failure';
 
 describe('ESIC salary-preview recovery', () => {
+  it('names HRA and its month after Basic has been classified, without inventing a treatment', () => {
+    const data = {
+      issues: ['ESI_WAGE_CLASSIFICATION_REQUIRED'],
+      effectiveMonth: '2026-10',
+      unclassifiedEarnings: [{ componentId: 'hra', name: 'HRA' }],
+    };
+    expect(salaryPreviewError('HR:Payroll:SalaryTemplateSampleBlocked', data)).toMatchObject({
+      message: 'ESIC treatment needed: HRA (Oct 2026).',
+      unclassifiedEarnings: [{ componentId: 'hra', name: 'HRA' }],
+      action: 'esiTreatment',
+    });
+    expect(salaryPreviewError('HR:Unknown', data)).toBeUndefined();
+  });
+  it('keeps multiple missing earnings concise and deduplicates their identities', () => {
+    const result = salaryPreviewError('HR:Payroll:SalaryTemplateSampleBlocked', {
+      issues: ['ESI_WAGE_CLASSIFICATION_REQUIRED'],
+      effectiveMonth: '2026-11',
+      unclassifiedEarnings: [
+        { componentId: 'basic', name: 'Basic' },
+        { componentId: 'hra', name: 'HRA' },
+        { componentId: 'hra', name: 'HRA' },
+      ],
+    });
+    expect(result?.message).toBe('ESIC treatment needed: Basic and HRA (Nov 2026).');
+    expect(result?.unclassifiedEarnings).toHaveLength(2);
+  });
+  it.each([
+    'Bearer synthetic-value',
+    'https://example.invalid/private',
+    'HRA\ninternal',
+    'x'.repeat(101),
+  ])('falls back safely for unusable earning names: %s', (name) => {
+    const result = salaryPreviewError('HR:Payroll:SalaryTemplateSampleBlocked', {
+      issues: ['ESI_WAGE_CLASSIFICATION_REQUIRED'],
+      effectiveMonth: '2026-99',
+      unclassifiedEarnings: [{ componentId: 'hra', name }],
+    });
+    expect(result?.message).toBe('ESIC treatment is missing for this preview month.');
+    expect(result?.unclassifiedEarnings).toEqual([]);
+  });
+  it('does not invoke metadata accessors or use malformed component identifiers', () => {
+    const accessor = Object.defineProperty({}, 'name', {
+      get() {
+        throw new Error('Must not execute');
+      },
+    });
+    expect(
+      salaryPreviewError('HR:Payroll:SalaryTemplateSampleBlocked', {
+        issues: ['ESI_WAGE_CLASSIFICATION_REQUIRED'],
+        unclassifiedEarnings: [accessor, { componentId: '../outside', name: 'HRA' }],
+      })?.unclassifiedEarnings
+    ).toEqual([]);
+  });
   it.each(['problem', 'abp', 'axios'])(
     'maps classification evidence through %s responses',
     (shape) => {

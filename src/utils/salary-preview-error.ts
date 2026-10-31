@@ -1,4 +1,7 @@
+import { fDate } from './format-time';
 import { formatPayrollCurrency } from './payroll-currency';
+
+export type UnclassifiedPreviewEarning = { componentId: string; name: string };
 
 export type SalaryPreviewRecovery = {
   message: string;
@@ -6,6 +9,7 @@ export type SalaryPreviewRecovery = {
   guidance?: string;
   details?: string;
   action?: 'esiTreatment';
+  unclassifiedEarnings?: UnclassifiedPreviewEarning[];
 };
 
 type DecimalEvidence = { units: bigint; scale: number };
@@ -53,6 +57,29 @@ const ownValue = (data: Record<string, unknown> | null | undefined, key: string)
   data && typeof data === 'object' && !Array.isArray(data)
     ? Object.getOwnPropertyDescriptor(data, key)?.value
     : undefined;
+
+const unclassifiedEarnings = (value: unknown): UnclassifiedPreviewEarning[] => {
+  if (!Array.isArray(value) || value.length > 100) return [];
+  const result: UnclassifiedPreviewEarning[] = [];
+  value.forEach((item) => {
+    const componentId = ownValue(item, 'componentId');
+    const name = ownValue(item, 'name');
+    if (
+      typeof componentId !== 'string' ||
+      !/^[\w-]{1,100}$/.test(componentId) ||
+      typeof name !== 'string' ||
+      !name.trim() ||
+      name.length > 100 ||
+      /[\p{Cc}\u202a-\u202e\u2066-\u2069]|bearer\s|access[_ -]?token|session[_ -]?cookie|password\s*[:=]|https?:\/\//iu.test(
+        name
+      )
+    )
+      return;
+    if (!result.some((earning) => earning.componentId === componentId))
+      result.push({ componentId, name: name.trim() });
+  });
+  return result;
+};
 
 const amount = (value: unknown): Amount | null => {
   if (typeof value !== 'number' && typeof value !== 'string') return null;
@@ -124,14 +151,29 @@ export function salaryPreviewError(
       issues.every((issue) =>
         ['ESI_WAGE_CLASSIFICATION_REQUIRED', 'ESI_RATE_OVERRIDE'].includes(issue)
       )
-    )
+    ) {
+      const earnings = unclassifiedEarnings(ownValue(data, 'unclassifiedEarnings'));
+      const month = ownValue(data, 'effectiveMonth');
+      const label =
+        typeof month === 'string' && /^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(month)
+          ? fDate(`${month}-01`, 'MMM YYYY')
+          : 'this preview month';
+      const names = earnings
+        .slice(0, 2)
+        .map(({ name }) => (name.length > 30 ? `${Array.from(name).slice(0, 29).join('')}…` : name))
+        .join(' and ');
       return {
-        message: 'ESIC treatment is missing for this preview month.',
-        guidance:
-          'Classify the earnings for this month, then preview again. Later changes do not cover earlier months.',
+        message: earnings.length
+          ? `ESIC treatment needed: ${names}${earnings.length > 2 ? ` + ${earnings.length - 2} more` : ''} (${label}).`
+          : 'ESIC treatment is missing for this preview month.',
+        guidance: earnings.length
+          ? 'Classify each listed earning for this month, then refresh preview.'
+          : 'Classify the earnings for this month, then preview again. Later changes do not cover earlier months.',
         fields: [],
         action: 'esiTreatment',
+        unclassifiedEarnings: earnings,
       };
+    }
     return undefined;
   }
   if (typeof code !== 'string' || !Object.hasOwn(messages, code)) return undefined;

@@ -12,10 +12,11 @@ const mocks = vi.hoisted(() => ({
   treatmentError: false,
   stamp: 'reviewed',
   treatmentQuery: vi.fn(),
+  success: vi.fn(),
 }));
 vi.mock('react-redux', () => ({ useSelector: () => [] }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => mocks.allowed }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.success } }));
 vi.mock('src/components/customDialog', () => ({
   default: ({ title, children }: any) => (
     <div role="dialog" aria-label={title}>
@@ -81,6 +82,21 @@ describe('ESIC treatment at the earning component', () => {
     mocks.save.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
   afterEach(cleanup);
+  it('preselects the unresolved earning while retaining the existing treatment and month controls', () => {
+    render(
+      <EarningEsiTreatmentDialog
+        initialMonth="2026-10"
+        initialComponentId="earning-1"
+        onClose={mocks.close}
+      />
+    );
+    expect(screen.getByRole('combobox', { name: 'Earning' })).toHaveTextContent('Allowance');
+    expect(screen.getByRole('combobox', { name: 'ESIC wage treatment' })).toHaveTextContent(
+      'Needs review'
+    );
+    expect(screen.getByRole('button', { name: 'Save treatment' })).toBeDisabled();
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
   it.each(['2026-10', '2026-11'])(
     'uses the salary preview month %s rather than the suggested month',
     async (initialMonth) => {
@@ -134,6 +150,7 @@ describe('ESIC treatment at the earning component', () => {
       )
     );
     expect(mocks.close).toHaveBeenCalledOnce();
+    expect(mocks.success).toHaveBeenCalledWith({ message: 'ESIC treatment saved for Allowance.' });
   });
   it('lets HR review earnings that are not rows in the master component list', async () => {
     render(<EarningEsiTreatmentDialog onClose={mocks.close} />);

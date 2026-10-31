@@ -908,6 +908,13 @@ function SalaryTemplateWorkflow({
       {reviewingEsiTreatment && canReviewEsiTreatment && (
         <EarningEsiTreatmentDialog
           initialMonth={effectiveMonth}
+          initialComponentId={
+            previewRecovery?.unclassifiedEarnings?.find((earning) =>
+              formik.values.rules.some(
+                (rule) => rule.lineKind === 'EARNING' && rule.componentId === earning.componentId
+              )
+            )?.componentId
+          }
           onClose={() => setReviewingEsiTreatment(false)}
           onSaved={() => {
             requestSequence.current += 1;
