@@ -237,11 +237,11 @@ const fixture: Plugin = {
           expiresAt: new Date(Date.now() + 300000).toISOString(),
           isSample: true,
           calculation: {
-            grossSalary: 50000,
-            totalDeductions: 1000,
-            netSalary: 49000,
-            employerContributionTotal: 0,
-            employerCost: 50000,
+            grossSalary: classificationBlock ? 10000 : 50000,
+            totalDeductions: classificationBlock ? 75 : 1000,
+            netSalary: classificationBlock ? 9925 : 49000,
+            employerContributionTotal: classificationBlock ? 325 : 0,
+            employerCost: classificationBlock ? 10325 : 50000,
             targetResult: { difference: 0, isExact: true },
             employeeStateInsurance: {
               managementMode: 'OUTSIDE_PLATFORM',

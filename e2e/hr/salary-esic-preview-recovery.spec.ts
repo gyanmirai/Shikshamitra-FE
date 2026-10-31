@@ -26,9 +26,10 @@ import { test, expect } from '@playwright/test';
       .getByRole('combobox', { name: 'Payroll purpose for Earning 1', exact: true })
       .click();
     await page.getByRole('option', { name: 'Basic', exact: true }).click();
-    await page
-      .getByRole('textbox', { name: 'Monthly cost to school (CTC)', exact: true })
-      .fill('10000');
+    await page.getByRole('textbox', { name: 'Earning 1 amount', exact: true }).fill('10000');
+    await page.getByRole('combobox', { name: /^Default salary basis/ }).click();
+    await page.getByRole('option', { name: 'Monthly salary', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Monthly salary', exact: true }).fill('10000');
     await page.getByRole('button', { name: 'Preview salary', exact: true }).click();
     await expect(page.locator('#salary-preview-error')).toContainText(
       'ESIC treatment is missing for this preview month.'
