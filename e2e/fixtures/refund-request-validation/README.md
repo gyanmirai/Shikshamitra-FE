@@ -21,5 +21,13 @@ This validates client behavior with deterministic data; it does not claim live p
 backend authorization or payout integration coverage.
 
 **View synthetic refund request** opens the production read-only drawer. Its synthetic completed
-refund includes a ₹10,829 fee-head amount and every policy payment method, covering informational
-refund chips, metadata grid alignment, full-width payment-method wrapping and contained table scrolling.
+refund includes a ₹10,829 fee-head amount and every policy payment method, covering neutral
+refund amounts, metadata grid alignment, full-width payment-method wrapping and contained table scrolling.
+
+Append `?view=approved` to open a synthetic approved ₹3,750 request directly.
+Its response deliberately includes old cumulative ₹50,000 fee-head totals, zero-refund installments,
+and a stale Reject action hint.
+The drawer must show only the December school-fee refund, a ₹3,750 refund amount, and Close without Reject.
+The actual backend request projection is verified separately by `RefundRequestDetailProjection_Tests`.
+
+Use `?view=worklist` to inspect all five refund tabs with synthetic rows. Completed, Rejected and Failed omit Actions; Pending and Approved retain it. This fixture performs no backend writes.

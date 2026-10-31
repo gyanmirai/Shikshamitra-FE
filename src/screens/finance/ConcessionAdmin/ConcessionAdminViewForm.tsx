@@ -13,6 +13,7 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { EmptyContent } from 'src/components/empty-content';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Cancel, CheckCircle } from '@mui/icons-material';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -21,6 +22,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useConcessionApprovalPreflight } from 'src/screens/finance/hooks/useConcessionApprovalPreflight';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
@@ -515,6 +517,8 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
     financePermissions.fees.concessionActions.uploadDocument
   );
   const [activeTab, setActiveTab] = useState('pending');
+  const { checkApprovalEligibility, isCheckingApproval, checkingRequestId } =
+    useConcessionApprovalPreflight();
   const docDialog = useBoolean();
   const deleteDialog = useBoolean();
   const rejectDialog = useBoolean();
@@ -561,10 +565,11 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
     groupedStatuses[activeTab]?.includes(item.status)
   );
 
-  const handleApproveClick = (item: IConcessionRequestItem) => {
+  const handleApproveClick = async (item: IConcessionRequestItem) => {
     if (!canDecideConcession(currentUserId, item.requesterId, item.submittedById, isAdministrator))
       return;
-    setApprovalView({ item, mode: 'Approve' });
+    const requestId = item.studentConcessionTypeRequestId || item.id || '';
+    if (await checkApprovalEligibility(requestId)) setApprovalView({ item, mode: 'Approve' });
   };
 
   const handleRejectClick = (item: IConcessionRequestItem) => {
@@ -748,23 +753,16 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
             ))}
           </Grid>
         ) : filteredItems.length === 0 ? (
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-            py={8}
-            gap={1}
-          >
-            <Iconify
-              icon="solar:inbox-line-bold-duotone"
-              width={48}
-              sx={{ color: 'text.disabled' }}
-            />
-            <Typography color="text.disabled" variant="body2">
-              No concession applications found
-            </Typography>
-          </Box>
+          <EmptyContent
+            title="No concession applications found"
+            description={
+              allItems.length > 0
+                ? `No ${activeTab} requests for this student. Choose another status tab to view their requests.`
+                : 'This student has no concession requests yet.'
+            }
+            slotProps={{ img: { maxWidth: { xs: 88, sm: 192 } } }}
+            sx={{ py: { xs: 4, sm: 6 }, height: 'auto' }}
+          />
         ) : (
           <Grid container spacing={1.5} alignItems="flex-start" pb={0.5}>
             {filteredItems.map((item) => (
@@ -777,6 +775,10 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
                   item={item}
                   onEdit={(request) => onEdit?.(request)}
                   onApprove={handleApproveClick}
+                  approvalChecking={isCheckingApproval}
+                  approvalLoading={
+                    checkingRequestId === (item.studentConcessionTypeRequestId || item.id)
+                  }
                   onReject={handleRejectClick}
                   onOpenDocs={handleOpenDocs}
                   onDelete={handleDelete}

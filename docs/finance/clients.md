@@ -3,12 +3,23 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-30
+updated_on: 2026-10-31
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Finance frontend clients
+
+## Admission assignment context
+
+`src/redux/finance/studentFeeAssignment.ts` exposes the typed `assignmentContexts` read query
+(`POST /student-fee-structure/contexts`) for a student-ID batch and academic year. It supplies
+authoritative assignment state, confirmed admission selections, source dates, policy versions and
+prepared evidence before the wizard mounts. Context refreshes when the drawer opens and after an
+already-assigned conflict; it subscribes to Admission, dues, policy and structure tags. Assignment
+commits invalidate the shared Admission/dues tags. Bulk eligibility is fixed for the opened batch so partial-success refreshes
+do not discard results or falsely complete failed students. Source date and optional-selection merges
+are handled by `assignmentAdmissionContext.ts`; monetary calculations remain on the backend.
 
 ## Inline feedback
 
@@ -105,27 +116,27 @@ Active Fee Structure editor, typed client and browser checks: [workspace impleme
 
 Use this table to find the first integration file.
 
-| Surface                 | Client source                                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Shared Finance API base | `src/redux/finance/financeModuleApi.ts`                                                                                       |
-| Charges                 | `src/redux/finance/ChargeManagement/chargeApi.ts`                                                                             |
-| Charge mappers          | `src/redux/finance/ChargeManagement/chargeMappers.ts`                                                                         |
-| Student charge grouping | Charge line endpoint in `src/redux/finance/ChargeManagement/chargeApi.ts`; `studentChargeDataApi.ts` is obsolete/comment-only |
-| Concessions             | `src/redux/finance/ConcessionManagement/**`                                                                                   |
-| Adjustments             | `src/redux/finance/adjustments/adjustmentApi.ts`                                                                              |
-| Audit Trail             | `src/redux/finance/audit/financeAuditApi.ts`                                                                                  |
-| Reconciliation          | `src/redux/finance/reconciliation.ts`                                                                                         |
-| Accounts Activity       | `src/redux/finance/accountsActivityApi.ts`                                                                                     |
-| Receipt Book            | `src/redux/finance/receiptBookApi.ts`                                                                                         |
-| Fee collection          | `src/redux/feeCollection/**`                                                                                                  |
+| Surface                       | Client source                                                                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Shared Finance API base       | `src/redux/finance/financeModuleApi.ts`                                                                                       |
+| Charges                       | `src/redux/finance/ChargeManagement/chargeApi.ts`                                                                             |
+| Charge mappers                | `src/redux/finance/ChargeManagement/chargeMappers.ts`                                                                         |
+| Student charge grouping       | Charge line endpoint in `src/redux/finance/ChargeManagement/chargeApi.ts`; `studentChargeDataApi.ts` is obsolete/comment-only |
+| Concessions                   | `src/redux/finance/ConcessionManagement/**`                                                                                   |
+| Adjustments                   | `src/redux/finance/adjustments/adjustmentApi.ts`                                                                              |
+| Audit Trail                   | `src/redux/finance/audit/financeAuditApi.ts`                                                                                  |
+| Reconciliation                | `src/redux/finance/reconciliation.ts`                                                                                         |
+| Accounts Activity             | `src/redux/finance/accountsActivityApi.ts`                                                                                    |
+| Receipt Book                  | `src/redux/finance/receiptBookApi.ts`                                                                                         |
+| Fee collection                | `src/redux/feeCollection/**`                                                                                                  |
 | Direct charge/late-fee waiver | `src/redux/feeCollection/feeCollection.ts`                                                                                    |
-| Invoice and receipt     | `src/redux/invoiceAndReceipt/**`                                                                                              |
-| Fee structure           | `src/redux/finance/financeFeeStructure.tsx`                                                                                   |
-| Fee categories          | `src/redux/feeCategory/feeCategoryApi.ts`                                                                                     |
-| Payment terms           | `src/redux/finance/paymentTerm.tsx`                                                                                           |
-| Collection policies     | `src/redux/finance/collectionPolicy.ts`                                                                                       |
-| Concession Types        | `src/redux/finance/concessionType.ts`                                                                                         |
-| Categories and settings | `src/redux/finance/*Category*`, `src/redux/feeCategory/**`, and `src/redux/feeHeadManage/**`                                  |
+| Invoice and receipt           | `src/redux/invoiceAndReceipt/**`                                                                                              |
+| Fee structure                 | `src/redux/finance/financeFeeStructure.tsx`                                                                                   |
+| Fee categories                | `src/redux/feeCategory/feeCategoryApi.ts`                                                                                     |
+| Payment terms                 | `src/redux/finance/paymentTerm.tsx`                                                                                           |
+| Collection policies           | `src/redux/finance/collectionPolicy.ts`                                                                                       |
+| Concession Types              | `src/redux/finance/concessionType.ts`                                                                                         |
+| Categories and settings       | `src/redux/finance/*Category*`, `src/redux/feeCategory/**`, and `src/redux/feeHeadManage/**`                                  |
 
 Fee-head module options are defined by the numeric `FeeHeadModule` enum in `src/redux/feeHeadModule/feeHeadModuleApi.ts`. Fee-category and fee-head clients send the selected number, or `null` when no module is selected, so create and edit forms use the same value type as backend responses. Both Fee Head entry surfaces load active Income Categories for the selected academic year and send the required `incomeCategoryId`. Lists and details show the Income Category; used Fee Heads keep this selector locked. Account Head selectors are retired.
 
@@ -143,6 +154,8 @@ Invoice creation is controlled once for the complete payment-term schedule. The 
 The Payment Terms workspace selects an Education Board at the top and sends its `boardId` when querying one paged master-record list with `includeArchived: true` and no fixed status. Its Status column presents one user-facing lifecycle value only: `Draft`, `Active`, or `Archived`; version lifecycle fields remain internal to version history and assignment checks. Draft terms are activated from the row actions through `POST /finance/payment-terms/{paymentTermId}/versions/{versionId}/publish`, and the Status column has no toggle. Archived terms remain in the same table; restoring preserves the underlying version state, so their status becomes Draft or Active. Details come from `GET /finance/payment-terms/{paymentTermId}`; the audit-style history table lazily queries `GET /finance/payment-terms/{paymentTermId}/versions` when its drawer tab opens. The Default chip is shown in the Status column. Only an Active term can be selected as default, and create/update requests that select a new default atomically clear the previous default for the same board. Other boards retain their own defaults. Draft and Archived terms cannot retain the flag; there is no standalone set-default endpoint.
 
 The Concession Type settings client includes inactive records for administration and history, while the request form receives active types only for new requests. The row action menu loads audit-backed history from `GET /concession-types/{id}/versions`. Delete is shown only for inactive, unused records. Its document contract uses `maxFileSizeBytes`, `acceptedFormats`, and `isRequired`. New document rows use local defaults of 5 MB and PDF/JPG/JPEG/PNG, so opening the form does not make a defaults request. Supporting files use the concession-scoped multipart upload endpoint in `ConcessionManagement/concessionManagementApi.ts`, which returns an opaque uploader-owned staged URL. The UI renders the shared `UploadButton` and `DocumentPreviewDialog`; saved evidence preview uses the authenticated request-scoped download route and is gated by `ViewDocument`.
+
+Concession evidence retains the scoped `UploadButton` workflow because each document has server-defined limits and a staged/authenticated preview contract; the generic uploader has a fixed 5 MB limit and different URL normalization. Compact outlined document cards reuse `FileThumbnail` with the filename only, so thumbnails do not fetch protected evidence. Native file-chooser returns do not refresh fee eligibility. Actual returns from another setup tab/window still refresh prerequisites. Document-only edits do not invalidate the financial preview; financial inputs and eligibility changes do.
 
 `ConcessionManagement/concessionManagementApi.ts` is the single concession-request client. It owns typed context, calculation preview, draft, submit, detail, evidence, list, approval context/preview, approve, reject, withdraw, delete-draft, reversal preview, and reversal endpoints. Context responses may require an explicit fee-assignment selection before active concession policies and types become available. The form selects one active policy and sends its exact version on preview/draft/create/update; the policy is not selected in Fee Structure. Submit and approve send the latest server fingerprint; existing-request commands send the request stamp, approval and reversal lines send due-row stamps, and mutations retain one idempotency key for retries of the same logical action. Detail and list contracts include server-derived available actions, while detail/student views include timeline entries. The client invalidates concession request, posting, and account views after balance-changing actions. The retired duplicate `concessionRequestApi.ts` client must not be restored.
 
@@ -185,6 +198,13 @@ Backend Finance behavior is canonical in [Finance backend APIs](../../../Shiksha
 Confirm request and response behavior there before changing a client shape.
 
 ## Cache and mapper rules
+
+The collection ledger preserves `refundAmount` / `refundDescription` as completed-payout
+history and maps optional `pendingRefundAmount` / `pendingRefundDescription` separately
+through both month and fee-head views. It displays the server's retained `paid` value without
+adding or subtracting either refund figure. Refund creation, approval, rejection, cancellation,
+payout failure, legacy processing and reversal refresh subscribed collection forms and fee
+details so awaiting-payout context does not remain stale.
 
 Keep these rules when changing Finance clients.
 

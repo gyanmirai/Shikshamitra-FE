@@ -3,6 +3,7 @@ import type {
   AssignmentPolicy,
   AssignmentRequest,
   AssignmentPreview,
+  AssignmentContext,
   AssignmentCandidate,
 } from 'src/redux/finance/studentFeeAssignment';
 
@@ -142,6 +143,66 @@ if (new URLSearchParams(window.location.search).has('variableFees')) {
   });
 }
 const saved = new Map<string, AssignmentCommit>();
+// Opt-in browser scenarios exercise production UI states without financial writes.
+const admissionScenario = new URLSearchParams(window.location.search).get('admission');
+const commitAttempts = new Map<string, number>();
+function assignmentContext(studentId: string): AssignmentContext {
+  const assigned = saved.get(studentId);
+  const admission = Boolean(admissionScenario);
+  const joiningDate = studentId === 'student-two' ? '2026-08-16' : '2026-07-15';
+  const context: AssignmentContext = {
+    studentId,
+    academicYearId: 'year',
+    status: assigned ? 'Assigned' : admission ? 'Selected' : 'Unassigned',
+    source: admission ? 'Admission' : 'Finance',
+    assignmentId: assigned?.assignmentId,
+    applicationId: admission ? `application-${studentId}` : null,
+    structureId: admission ? candidate.id : null,
+    structureRevision: admission ? candidate.revisionNumber : null,
+    joiningDate: admission ? joiningDate : null,
+    chargeStartDate: admission ? joiningDate : null,
+    chargeEndDate: admission ? '2027-03-31' : null,
+    prorationPolicy: admission ? { ...policyOptions[4], source: 'AcademicYearDefault' } : null,
+    admissionFeeHeadIds: admission ? ['tuition', 'transport'] : [],
+    selectedOptionalFeeHeadIds: admission && studentId === 'student-two' ? ['transport'] : [],
+    variableFeeHeads: [],
+  };
+  if (!assigned && ['attention', 'missing-date'].includes(admissionScenario ?? '')) {
+    context.status = 'NeedsAttention';
+    context.blocker =
+      admissionScenario === 'missing-date'
+        ? 'Save the actual joining date in Registration before assigning fees.'
+        : 'The admission selection does not match the student academic context.';
+  }
+  if (!assigned && admissionScenario === 'prepared') {
+    context.status = 'Prepared';
+    context.financeFeeAccountId = `account-${studentId}`;
+    const evidence = preview({
+      studentId,
+      academicYearId: 'year',
+      standardFeeStructureId: candidate.id,
+      selectedOptionalFeeHeadIds: [],
+      servicePeriods: [
+        {
+          feeHeadId: 'tuition',
+          source: 'Registration',
+          sourceReferenceId: context.applicationId!,
+          startDate: joiningDate,
+          endDate: '2027-03-31',
+        },
+      ],
+      feeHeadDetails: [],
+    });
+    evidence.lines = evidence.lines.map((line, index) => ({
+      ...line,
+      dueFeeId: `prepared-${studentId}-${index}`,
+      paidAmount: index === 0 ? 2000 : 0,
+      outstandingAmount: line.proratedAmount - (index === 0 ? 2000 : 0),
+    }));
+    context.preparedAssignment = evidence;
+  }
+  return context;
+}
 function preview(input: AssignmentRequest): AssignmentPreview {
   const heads = candidate.heads.map((head) => {
     const included = !head.isOptional || input.selectedOptionalFeeHeadIds.includes(head.feeHeadId);
@@ -202,6 +263,13 @@ function preview(input: AssignmentRequest): AssignmentPreview {
     );
   return {
     studentId: input.studentId,
+    ...(admissionScenario && {
+      assignmentSource: 'Admission' as const,
+      applicationId: `application-${input.studentId}`,
+      registrationJoiningDate: input.studentId === 'student-two' ? '2026-08-16' : '2026-07-15',
+      chargeStartDate: input.studentId === 'student-two' ? '2026-08-16' : '2026-07-15',
+      chargeEndDate: '2027-03-31',
+    }),
     academicYearId: 'year',
     structureId: candidate.id,
     structureName: candidate.name,
@@ -239,7 +307,10 @@ function commit(input: AssignmentRequest): AssignmentCommit {
   const result: AssignmentCommit = {
     assignmentId: `assignment-${input.studentId}`,
     outcome: 'Assigned',
-    assignment: preview(input),
+    assignment:
+      admissionScenario === 'prepared'
+        ? assignmentContext(input.studentId).preparedAssignment!
+        : preview(input),
   };
   saved.set(input.studentId, result);
   return result;
@@ -264,6 +335,13 @@ export const api = createApi({
     ...Object.values(classType),
   ],
   baseQuery: async (args: { url: string; body?: any; params?: any }) => {
+    if (args.url.endsWith('/contexts')) {
+      if (admissionScenario === 'context-error')
+        return {
+          error: { status: 503, data: { detail: 'Synthetic context service unavailable.' } },
+        };
+      return { data: args.body.studentIds.map(assignmentContext) };
+    }
     if (args.url.endsWith('/policy-options')) return { data: policyOptions };
     if (args.url.endsWith('/policies')) {
       const id = args.url.split('/').at(-2)!;
@@ -342,7 +420,7 @@ export const api = createApi({
           type: string;
           value: any;
         }[];
-        for (const column of new Set(filters.map((filter) => filter.column))) {
+        [...new Set(filters.map((filter) => filter.column))].forEach((column) => {
           items = items.filter((row) =>
             filters
               .filter((filter) => filter.column === column)
@@ -372,11 +450,11 @@ export const api = createApi({
                 }
               })
           );
-        }
+        });
         const sort = params.sortBy ?? 'studentName';
         items.sort((a, b) => {
-          const left = valueFor(a, sort),
-            right = valueFor(b, sort);
+          const left = valueFor(a, sort);
+          const right = valueFor(b, sort);
           const comparison =
             left == null
               ? -1
@@ -418,6 +496,8 @@ export const api = createApi({
               stageName: 'Primary',
               isActive: true,
               isFeeStructureAssigned: saved.has('student-one'),
+              assignmentState: assignmentContext('student-one').status,
+              assignmentSource: assignmentContext('student-one').source,
             },
             {
               enrollmentId: 'two',
@@ -433,6 +513,8 @@ export const api = createApi({
               stageName: 'Primary',
               isActive: true,
               isFeeStructureAssigned: saved.has('student-two'),
+              assignmentState: assignmentContext('student-two').status,
+              assignmentSource: assignmentContext('student-two').source,
             },
           ],
         },
@@ -459,22 +541,48 @@ export const api = createApi({
           })),
         },
       };
-    if (args.url.endsWith('/preview')) return { data: preview(args.body) };
-    if (args.url.endsWith('/assign-bulk'))
+    if (args.url.endsWith('/preview')) {
+      if (admissionScenario === 'race' && !saved.has(args.body.studentId)) {
+        commit(args.body);
+        return { error: { status: 409, data: { code: 'Finance:Assignment:AlreadyAssigned' } } };
+      }
+      return {
+        data:
+          admissionScenario === 'prepared'
+            ? assignmentContext(args.body.studentId).preparedAssignment
+            : preview(args.body),
+      };
+    }
+    if (args.url.endsWith('/assign-bulk')) {
+      const results = args.body.items.map((input: AssignmentRequest) => {
+        const attempt = commitAttempts.get(input.studentId) ?? 0;
+        commitAttempts.set(input.studentId, attempt + 1);
+        if (admissionScenario === 'partial' && input.studentId === 'student-two' && attempt === 0)
+          return {
+            studentId: input.studentId,
+            outcome: 'Failed',
+            errorCode: 'Finance:Assignment:StalePreview',
+            errorMessage: 'Synthetic stale evidence: refresh and retry this student.',
+          };
+        const result = commit(input);
+        return { studentId: input.studentId, outcome: result.outcome, result };
+      });
       return {
         data: {
-          successCount: args.body.items.length,
-          alreadyAssignedCount: 0,
-          failedCount: 0,
+          successCount: results.filter((result) => result.outcome === 'Assigned').length,
+          alreadyAssignedCount: results.filter((result) => result.outcome === 'AlreadyAssigned')
+            .length,
+          failedCount: results.filter((result) => result.outcome === 'Failed').length,
           skippedCount: 0,
-          results: args.body.items.map((input: AssignmentRequest) => ({
-            studentId: input.studentId,
-            outcome: 'Assigned',
-            result: commit(input),
-          })),
+          results,
         },
       };
-    if (args.url.endsWith('/assign')) return { data: commit(args.body) };
+    }
+    if (args.url.endsWith('/assign')) {
+      if (admissionScenario === 'stale')
+        return { error: { status: 409, data: { code: 'Finance:Assignment:StalePreview' } } };
+      return { data: commit(args.body) };
+    }
     return { data: { assignment: saved.get('student-one')?.assignment, warnings: [] } };
   },
   endpoints: () => ({}),

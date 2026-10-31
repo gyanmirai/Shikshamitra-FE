@@ -42,6 +42,35 @@ function Documents() {
 }
 
 describe('concession supporting documents', () => {
+  it('keeps upload progress and locks inside the document card until the file is saved', async () => {
+    let finishUpload!: (result: { url: string }) => void;
+    state.upload.mockReturnValue({
+      unwrap: () =>
+        new Promise<{ url: string }>((resolve) => {
+          finishUpload = resolve;
+        }),
+    });
+    render(<Documents />);
+    fireEvent.change(screen.getByLabelText('Choose Income proof file'), {
+      target: { files: [new File(['proof'], 'income-proof.pdf', { type: 'application/pdf' })] },
+    });
+    expect(screen.getByRole('region', { name: 'Income proof' })).toHaveAttribute(
+      'aria-busy',
+      'true'
+    );
+    expect(screen.getByRole('button', { name: 'Upload Income proof' })).toBeDisabled();
+    expect(screen.getByText('Uploading…')).toBeVisible();
+    await act(async () => {
+      finishUpload({ url: '/files/income-proof.pdf' });
+    });
+    expect(screen.getByText('income-proof.pdf')).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Income proof' })).toHaveAttribute(
+      'aria-busy',
+      'false'
+    );
+    expect(screen.getByRole('button', { name: 'Replace Income proof' })).toBeEnabled();
+  });
+
   it('makes document requirements available from a keyboard-focusable info icon', async () => {
     render(<Documents />);
     const info = screen.getByRole('button', { name: 'Income proof requirements' });
@@ -66,7 +95,8 @@ describe('concession supporting documents', () => {
     fireEvent.change(screen.getByLabelText('Choose Income proof file'), {
       target: { files: [new File(['proof'], 'income-proof.pdf', { type: 'application/pdf' })] },
     });
-    await waitFor(() => expect(screen.getByText('Uploaded · income-proof.pdf')).toBeVisible());
+    await waitFor(() => expect(screen.getByText('income-proof.pdf')).toBeVisible());
+    expect(screen.queryByText(/Uploaded ·/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Income proof is required/)).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Replace Income proof' })).toBeEnabled();

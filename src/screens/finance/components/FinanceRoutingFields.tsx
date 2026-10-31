@@ -43,7 +43,7 @@ export default function FinanceRoutingFields({
   );
   const { isFetching, isError } = query;
   const data = query.currentData ?? query.data;
-  const expense = operation === 'refund' || operation === 'refund-policy';
+  const expense = ['refund', 'refund-policy', 'expense-entry', 'cash-expense'].includes(operation);
   const requiresCategory =
     categoryRequired ??
     (operation === 'refund-policy'
@@ -60,18 +60,14 @@ export default function FinanceRoutingFields({
     },
     Boolean(academicYearId) && !disabled && !query.isUninitialized
   );
-  const categoryRows =
-    operation === 'refund' || operation === 'refund-policy'
-      ? data?.expenseCategories
-      : data?.incomeCategories;
-  const categories =
-    operation === 'refund-policy'
-      ? [...(categoryRows ?? [])].sort(
-          (a, b) =>
-            Number(b.label.trim().toLowerCase() === 'none') -
-            Number(a.label.trim().toLowerCase() === 'none')
-        )
-      : categoryRows;
+  const categoryRows = expense ? data?.expenseCategories : data?.incomeCategories;
+  const categories = categoryRows
+    ?.slice()
+    .sort(
+      (a, b) =>
+        Number(b.label.trim().toLowerCase() === 'none') -
+        Number(a.label.trim().toLowerCase() === 'none')
+    );
   const missingCategory = isFinancePrerequisiteMissing({
     ...query,
     options: categories,
@@ -91,7 +87,7 @@ export default function FinanceRoutingFields({
     const savedSelection = { id: formik.values[name], label: 'Saved selection (unavailable)' };
     const fieldOptions = !unavailable
       ? (options ?? [])
-      : operation === 'refund-policy' && name === categoryField
+      : name === categoryField
         ? [...(options ?? []), savedSelection]
         : [savedSelection, ...(options ?? [])];
     return (
@@ -108,7 +104,7 @@ export default function FinanceRoutingFields({
         isSearch
         isLoading={isFetching}
         disabledValues={unavailable ? [formik.values[name]] : []}
-        disabled={disabled || isError}
+        disabled={disabled || isError || isFetching}
         onChange={(value) => {
           formik.setFieldValue(name, value);
           formik.setFieldTouched(name, true, false);
@@ -116,7 +112,16 @@ export default function FinanceRoutingFields({
         onBlur={formik.handleBlur}
         error={Boolean(formik.touched[name] && formik.errors[name])}
         helperText={
-          formik.touched[name] && formik.errors[name] ? String(formik.errors[name]) : undefined
+          formik.touched[name] && formik.errors[name]
+            ? String(formik.errors[name])
+            : name === categoryField &&
+                categories?.some(
+                  (option) =>
+                    option.id === formik.values[name] &&
+                    option.label.trim().toLowerCase() === 'none'
+                )
+              ? 'None excludes this amount from Accounts income and expenses.'
+              : undefined
         }
         noOptionsMessage={`No active ${label.toLowerCase()} options in this academic year.`}
       />

@@ -11,6 +11,7 @@ const state = vi.hoisted(() => ({
   refetch: vi.fn(),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('src/components/customizabaleTable', () => ({ default: () => null }));
 vi.mock('src/utils/icons', () => ({ GlobalIcons: {} }));
 vi.mock('src/components/form-section-card', () => ({
   FormSectionCard: ({ children }: any) => <section>{children}</section>,

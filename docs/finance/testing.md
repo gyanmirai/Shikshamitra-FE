@@ -3,12 +3,30 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-30
+updated_on: 2026-10-31
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Finance frontend changes
+
+## Admission assignment handoff
+
+Run the production-component browser fixture with
+`node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin/vite.js --config e2e/fixtures/fee-assignment/vite.config.mts`.
+On localhost:4179, `?admission=selected`, `prepared`, `missing-date`, `attention`, `stale`, `race`,
+`context-error` and `partial` exercise the corresponding states; add `&variableFees=1` to selected
+for amount/zero-reason checks. Select a class before bulk selection. Responses are synthetic and do
+not establish backend calculations or persistence. Verify an optional-only structure cannot preview
+until one fee is selected, while an explicitly included zero amount with a reason remains valid.
+
+Run the tests in `src/screens/finance/FeeStructureAssign/Components`, `npm run ts`, and touched-file
+ESLint. Cover stale unassigned rows resolving to View, admission structure/date defaults, prepared
+handoff review before commit, distinct student dates and optional selections in bulk, partially
+successful batches after context invalidation, and already-assigned conflict recovery. Browser smoke:
+open an admission-assigned student and verify View without an assignment wizard; inspect From
+admission dates and pinned proration on an unassigned/prepared student. Backend integration tests own
+calculation parity, due/payment identity, authorization/scope and duplicate prevention.
 
 ## Full pending fee balance
 
@@ -149,6 +167,14 @@ when context clears. In the browser, reload Reconciliation and switch payment ta
 there is no empty academic-year request or invalid-value toast.
 
 `ConcessionItemCard.test.tsx` covers decisions directly from saved Pending cards, independent reviewers, positive approval amounts, required documents and server action/grant checks. Browser checks retain icon-only card controls with Leave Center decision glyphs and no leading card-header icon.
+
+`ConcessionAdminViewForm.approval.test.tsx` and `StudentConcessionTable.test.tsx` cover approval
+entry: fresh context before navigation, DTO benefit blockers and duplicate-benefit HTTP errors
+shown as readable toasts, no approval surface on denial, repeated-click protection, retry after
+context failure and the existing maker-checker restriction. Browser smoke checks should verify
+the toast while the pending card stays visible; no financial approval is needed for that check.
+The error-parser regression also covers generic ABP internal-error text carrying a known
+duplicate-benefit code, so the toast keeps the actionable concession reason.
 
 Minimal concession request forms: run `ConcessionFeeHeadSelection.test.tsx`,
 `ConcessionSteps/ValueEntryStep.test.tsx`, `ConcessionDocumentList.test.tsx` and
@@ -319,6 +345,18 @@ Retain loading, unavailable, error/Retry and current status/amount treatments.
 
 ### Concessions and Collections tables
 
+Approval review uses a compact request summary and one embedded fee-breakdown table.
+Check that Back stays at the upper left with a back arrow, group requested totals remain
+visible, and installment amounts stay read-only. At narrow widths the table scrolls inside
+its section; approval notes expand within their field and the review/confirmation footer stays reachable.
+
+For concession document regressions, run `hooks/useRefreshFinancePrerequisites.test.tsx`,
+`Concession/Components/ConcessionDocumentList.test.tsx`, and
+`Concession/Components/ConcessionRequestForm.test.tsx` under `src/screens/finance/`.
+Check choosing/replacing/cancelling a file without reloading fees, real setup-tab returns,
+preserved financial previews after document-only edits, neutral filename cards, and the shared
+concession empty state. Retain upload validation, preview/remove permissions, and narrow layouts.
+
 Concession view regressions: run `ConcessionAdmin/ConcessionItemCard.test.tsx` and
 `ConcessionAdmin/StucentConcessionCard.test.tsx`. Verify alphanumeric GR numbers, one amount
 when requested and approved totals match, separate totals when they differ, and explicit
@@ -420,19 +458,29 @@ appear under All months, select a month, and return to All months.
 
 Add or update tests when a change affects these areas.
 
-| Change                                    | Expected coverage                                                                                                                                                                           |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Charge request payload                    | Client or mapper test                                                                                                                                                                       |
-| Optimistic cache update                   | Client cache test                                                                                                                                                                           |
-| Approval, rejection, or reversal behavior | Preview/confirm screen or client mutation test                                                                                                                                              |
-| Concession decisions from Pending list    | Different checker with exact grant sees direct actions; requester cannot decide; approval preview and confirmation, reason-required rejection, backend denial, and list/tab count refresh   |
+| Change                                    | Expected coverage                                                                                                                                                                                                                                                                                                                                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Charge request payload                    | Client or mapper test                                                                                                                                                                                                                                                                                                                                                                            |
+| Optimistic cache update                   | Client cache test                                                                                                                                                                                                                                                                                                                                                                                |
+| Approval, rejection, or reversal behavior | Preview/confirm screen or client mutation test                                                                                                                                                                                                                                                                                                                                                   |
+| Concession decisions from Pending list    | Different checker with exact grant sees direct actions; requester cannot decide; approval preview and confirmation, reason-required rejection, backend denial, and list/tab count refresh                                                                                                                                                                                                        |
 | Direct charge and late-fee waivers        | `FeeWaiverToggle.test.tsx` and `CollectionLedgerTable.test.tsx`: exact ApplyWaiver permission, positive eligible balances, named source, reason-only validation, non-cash confirmation, busy locks, dirty cancellation, error retention/idempotent retry, charge deselection, and retained principal after a late-fee waiver. `feeCollection.charges.test.ts` covers subscribed balance refresh. |
-| Audit Trail mapping                       | Mapper test                                                                                                                                                                                 |
-| Route-level behavior                      | Playwright test before release sign-off                                                                                                                                                     |
+| Audit Trail mapping                       | Mapper test                                                                                                                                                                                                                                                                                                                                                                                      |
+| Route-level behavior                      | Playwright test before release sign-off                                                                                                                                                                                                                                                                                                                                                          |
 
 Charge release evidence must cover the selected academic year in every query/cache key, exact action permissions plus server `availableActions`, explicit AllInScope versus selected-student audience, preview/stale/idempotent command behavior, server paging, collection refresh, and absence of placeholder correction actions. The complete matrix is in [Charge Management frontend flow](./references/charge-management-frontend-flow.md).
 
 ## Collections additional charges
+
+Refund display coverage lives in `CollectionLedgerTable.test.tsx`,
+`FeeCollectionForm.charges.test.tsx` and `FeeLedgerShared.refunds.test.tsx`. Verify 15,000
+completed payouts and 3,750 awaiting payout appear separately while retained Paid stays
+3,750 and Concession stays 11,250. Check all three table layouts, both mapped groupings,
+legacy tooltips, missing reasons and zero/absent pending values. The RTK subscription suite
+`src/redux/feeCollection/feeCollection.refunds.test.ts` verifies collection refresh after
+refund creation, approval, rejection, cancellation, payout failure, legacy processing and
+reversal. Finish with the real collection detail in the in-app browser; these component and
+cache tests do not establish backend payout correctness.
 
 For the additional-charge regression, verify server charge totals in the grid, fresh fee-plus-charge **Overall Outstanding**, empty late-fee allocations on fee-only collection, and unpaid charges remaining selectable after the parent installment is paid.
 The cache tests cover subscribed grid, collection ledger, and details refresh after payment and waiver.
@@ -552,7 +600,6 @@ a signed-in API-backed smoke test in the target academic year before deployment 
 Backend suites independently cover current/archived copy names, default-source cloning,
 repeated clone-code uniqueness, normalized names, and Status ordering before pagination.
 Existing historical duplicate records are preserved; no reconciliation migration is included.
-
 
 ## Finance list and request regressions
 
@@ -692,12 +739,14 @@ This is frontend contract evidence; validate persisted tenant results separately
 The collection academic-filter test store must include initialized Finance collection View permission so its requests exercise filters rather than the permission guard.
 Keep the real API hooks and the out-of-order response assertions.
 
-
 Audit Trail search/reset regression: `src/screens/finance/AuditTrail/hooks/useFinanceAuditTrail.search.test.tsx` mounts the actual filter, active chips and query hook. It covers the single 400 ms query debounce, Reset/clear during a pending keyword, same-keyword re-entry, initial deep-link filters, independent filters, year scope and pagination reset. On this loaded Windows host the nine cases passed with the existing Vite preload, one worker and an explicit 30 second test timeout; retain the startup/time-limit failures separately from assertion results.
 
 `FinanceReconciliation.headers.integration.test.tsx` mounts the actual parent, method tables, shared filter menu, RTK clients and read-only transport. All six numeric tab IDs must send the amount criterion, find the final candidate before pagination, and restore the full count on Clear. Both unsupported legacy methods must offer zero column-filter buttons. The eight cases passed with a bounded 120 second case budget on the loaded Windows host; retain the earlier timeout-only run separately. `AdjustmentTable.query.test.tsx` covers server paging, search, criteria, context/page reset, atomic clear, text roll identifiers and disabled unsupported page-only sorting. Positive backend evidence remains separate from synthetic UI evidence.
 
 ## Refund editing regressions
+
+`RefundRemarksForm.test.tsx`, `RefundFeeHeadViewTable.test.tsx` and `RefundWorklist.edit.test.tsx` cover approved Reject removal, request-only installment rows, exclusion of cumulative historical totals, and accordion behavior.
+The synthetic refund harness's `?view=approved` mode supplies a ₹3,750 request alongside old ₹50,000 history and a stale Reject hint for in-app browser checks.
 
 Run `RefundWorklist.edit.test.tsx`, `RefundForm.test.tsx`, `RefundGeneralInfoCard.test.tsx`, `refundEditValidation.test.ts` and `RefundSelection.test.tsx` under `src/screens/finance/feeRefund` with the existing Vitest Windows preload and one worker.
 These cover the server-gated Edit action, hidden Completed actions, disabled student selectors, preservation of saved partial amounts, same-request Pending updates without resubmission, masked beneficiary validation and receipt selection.
@@ -707,3 +756,5 @@ Use synthetic data; persisted workflow and concurrency tests belong to the backe
 Charge detail amount regressions render the actual detail component and shared table, exercise Collected/Waived/Outstanding numeric criteria against formatted fractional currency values, and verify filtered counts plus Clear restoration. Run the focused ViewChargeForm filter suite after changing these columns; browser acceptance remains separate from fixture results.
 
 `src/screens/finance/components/FinanceDetailQuantitativeFilters.test.tsx` mounts Cash Details, Adjustment View and the collection outcome panel with their real shared tables. It verifies raw fractional amount comparisons and real date-section entry, filtered row counts and Clear restoration using read-only query fixtures/static outcome props. It does not submit a payment.
+
+Collection group checkbox regressions in `CollectionLedgerTable.test.tsx` cover fully paid fee groups in all three layouts, settled charge groups, and mixed paid/unpaid selection, including partial states and bulk deselection. The late-fee browser fixture's Settled balances scenario must show both parent checkboxes checked and disabled; the default pending scenario must retain normal bulk selection without including settled items.

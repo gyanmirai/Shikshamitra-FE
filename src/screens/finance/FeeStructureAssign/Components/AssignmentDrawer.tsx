@@ -2,9 +2,9 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { useState, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Box, Button, Drawer, Divider } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -31,14 +31,36 @@ export default function AssignmentDrawer({
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [busy, setBusy] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
-  const viewing = students.length === 1 && students[0].isFeeStructureAssigned;
+  const selectionKey = `${academicYearId}-${students[0]?.studentId}`;
+  const [resolved, setResolved] = useState<{
+    key: string;
+    status: IFeeStructureData['assignmentState'];
+  }>();
+  const resolveContext = useCallback(
+    (status: NonNullable<IFeeStructureData['assignmentState']>) => {
+      setResolved((previous) =>
+        previous?.key === selectionKey && previous.status === status
+          ? previous
+          : { key: selectionKey, status }
+      );
+    },
+    [selectionKey]
+  );
+  const status = resolved?.key === selectionKey ? resolved.status : students[0]?.assignmentState;
+  const viewing =
+    students.length === 1 && (students[0].isFeeStructureAssigned || status === 'Assigned');
+  const prepared = students.length === 1 && status === 'Prepared';
   const taskTitle = viewing
     ? editAssignedPolicies
       ? 'Edit Fee Assignment'
       : 'View Fee Assignment'
-    : students.length > 1
-      ? 'Bulk Assign Fee Structure'
-      : 'Assign Fee Structure';
+    : prepared
+      ? 'Review Prepared Fees'
+      : status === 'NeedsAttention'
+        ? 'Review Fee Assignment'
+        : students.length > 1
+          ? 'Bulk Assign Fee Structure'
+          : 'Assign Fee Structure';
   const title =
     students.length === 1 && students[0].studentName
       ? `${taskTitle} for ${students[0].studentName}`
@@ -95,6 +117,7 @@ export default function AssignmentDrawer({
               editAssignedPolicies={editAssignedPolicies}
               onClose={requestClose}
               onBusyChange={setBusy}
+              onContextResolved={resolveContext}
             />
           )}
         </Box>

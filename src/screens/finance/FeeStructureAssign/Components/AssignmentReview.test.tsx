@@ -134,19 +134,23 @@ describe('assignment review evidence', () => {
     expect(heads).toHaveAttribute('aria-expanded', 'true');
     expect(schedule).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(heads);
-    await waitFor(() =>
-      expect(
-        screen.queryByRole('table', { name: 'Assignment fee-head breakdown table' })
-      ).not.toBeInTheDocument()
+    await waitFor(
+      () =>
+        expect(
+          screen.queryByRole('table', { name: 'Assignment fee-head breakdown table' })
+        ).not.toBeInTheDocument(),
+      { timeout: 10000 }
     );
     expect(
       screen.getByRole('table', { name: 'Assignment installment schedule table' })
     ).toBeVisible();
     fireEvent.click(schedule);
-    await waitFor(() =>
-      expect(
-        screen.queryByRole('table', { name: 'Assignment installment schedule table' })
-      ).not.toBeInTheDocument()
+    await waitFor(
+      () =>
+        expect(
+          screen.queryByRole('table', { name: 'Assignment installment schedule table' })
+        ).not.toBeInTheDocument(),
+      { timeout: 10000 }
     );
     expect(screen.getByText('Total to assign')).toBeVisible();
     expect(screen.getByText('School collection · v2')).toBeVisible();

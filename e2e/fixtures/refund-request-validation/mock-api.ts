@@ -72,6 +72,42 @@ export const refundDetail = {
     },
   ],
 };
+if (
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).get('view') === 'approved'
+) {
+  Object.assign(refundDetail, {
+    status: 2,
+    totalAmount: 3750,
+    calculatedAmount: 3750,
+    approvedAmount: 3750,
+    processedAmount: 0,
+    reversedAmount: 0,
+    totalRefundedAmount: 50000,
+    refundMethod: 'Cash',
+    availableActions: ['reject', 'recordPayout'],
+    lines: [{ amount: 3750, calculatedAmount: 3750, approvedAmount: 3750 }],
+    feeHeads: [
+      {
+        feeHeadId: 'tuition',
+        feeHeadName: 'General Tuition Fee',
+        totalPaid: 25000,
+        totalRefunded: 20000,
+        items: [{ month: 'July', total: 10000, paid: 12500, refundAmount: 0, status: 2 }],
+      },
+      {
+        feeHeadId: 'school',
+        feeHeadName: 'General School Fees',
+        totalPaid: 37500,
+        totalRefunded: 30000,
+        items: [
+          { month: 'July', total: 15000, paid: 18750, refundAmount: 0, status: 2 },
+          { month: 'December', total: 15000, paid: 18750, refundAmount: 3750, status: 2 },
+        ],
+      },
+    ],
+  });
+}
 const detailQuery = {
   currentData: refundDetail,
   isLoading: false,
@@ -80,6 +116,19 @@ const detailQuery = {
   refetch: () => undefined,
 };
 export const useGetFeeRefundByIdQuery = (id: string) => (id ? detailQuery : {});
+export const useGetFeeRefundsQuery = ({ status = 0 }: { status?: number }) => {
+  const result = {
+    totalCount: 1,
+    items: [
+      {
+        ...refundDetail,
+        status,
+        availableActions: ['edit', 'approve', 'reject', 'recordPayout', 'createReplacement'],
+      },
+    ],
+  };
+  return { data: result, currentData: result, isLoading: false, isFetching: false, isError: false };
+};
 const mutation = (body: any) => ({
   unwrap: async () => ({
     isAllowed: true,

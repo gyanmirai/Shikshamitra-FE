@@ -1,5 +1,10 @@
+import type { ReactElement } from 'react';
+
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { defaultSettings } from 'src/components/settings/config-settings';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render as renderComponent, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import ReadOnlyConcessionApprovalView from './ReadOnlyConcessionApprovalView';
 import { approvalContext } from '../../../../e2e/fixtures/concession-request-ui/data';
@@ -23,6 +28,9 @@ const item = {
   studentConcessionTypeRequestId: 'request',
   concessionTypeName: 'Sibling tuition concession',
 } as any;
+const theme = createTheme(defaultSettings);
+const render = (element: ReactElement) =>
+  renderComponent(<ThemeProvider theme={theme}>{element}</ThemeProvider>);
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.context = { data: approvalContext, isLoading: false, isError: false };

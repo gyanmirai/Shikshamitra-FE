@@ -28,11 +28,11 @@ import {
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
 
-import { toPeriod } from './FeeLedgerShared';
 import FeeWaiverToggle from './FeeWaiverToggle';
 import { FeeCollectionWaiverContext } from './feeCollectionContext';
 import { selectionItemKey, isLedgerItemCollectible } from './feeLedgerSelection';
 import { roundUpToRupee, safeRoundingDifference } from './preview/paymentAllocationUtils';
+import { toPeriod, REFUNDED_TO_DATE_HELP, REFUND_AWAITING_PAYOUT_HELP } from './FeeLedgerShared';
 
 import type { FeeLedgerListProps } from './FeeLedgerList';
 import type { IFeeCharge, SelectedItem, MonthWiseFeeItem } from '../Components/type';
@@ -144,10 +144,11 @@ export default function CollectionLedgerTable({
   const groupCheckbox = (candidates: LedgerRow[], label: string) => {
     const eligible = candidates.filter(collectible);
     const count = eligible.filter(isSelected).length;
+    // Settled rows render checked, so a nonempty settled group must match them.
     return (
       <Checkbox
         size="small"
-        checked={eligible.length > 0 && count === eligible.length}
+        checked={candidates.length > 0 && count === eligible.length}
         indeterminate={count > 0 && count < eligible.length}
         disabled={!eligible.length}
         inputProps={{ 'aria-label': label }}
@@ -574,9 +575,20 @@ export default function CollectionLedgerTable({
                   )}
                   {detail.refundAmount != null && (
                     <DetailField
-                      label="Refund"
+                      label="Refunded to date"
                       value={formatNumber(detail.refundAmount, 'INR')}
-                      secondary={detail.refundDescription}
+                      secondary={[REFUNDED_TO_DATE_HELP, detail.refundDescription]
+                        .filter(Boolean)
+                        .join(' ')}
+                    />
+                  )}
+                  {(detail.pendingRefundAmount ?? 0) > 0 && (
+                    <DetailField
+                      label="Refund awaiting payout"
+                      value={formatNumber(detail.pendingRefundAmount!, 'INR')}
+                      secondary={[REFUND_AWAITING_PAYOUT_HELP, detail.pendingRefundDescription]
+                        .filter(Boolean)
+                        .join(' ')}
                     />
                   )}
                   {detail.scheduledTotal != null && (

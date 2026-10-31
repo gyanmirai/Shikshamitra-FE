@@ -57,6 +57,25 @@ vi.mock('src/components/customizabaleTable', () => ({
 }));
 
 describe('Fee assignment student table', () => {
+  it('reviews prepared admission fees without offering another assignment', () => {
+    const open = vi.fn();
+    render(<FeeStructureAssignTable onAssignStructure={open} />);
+    const row = {
+      studentId: 'prepared',
+      studentName: 'Aarav',
+      isActive: true,
+      isFeeStructureAssigned: false,
+      assignmentState: 'Prepared',
+      assignmentSource: 'Admission',
+    };
+    const action = state.table.columns.find((column: any) => column.id === 'action');
+    const controls = render(action.render(undefined, row));
+    fireEvent.click(controls.getByRole('button', { name: 'Review prepared fees for Aarav' }));
+    expect(open).toHaveBeenCalledWith(row);
+    expect(
+      controls.queryByRole('button', { name: 'Assign fee structure for Aarav' })
+    ).not.toBeInTheDocument();
+  });
   beforeEach(() => {
     state.items = [];
     state.deniedPermissions = [];

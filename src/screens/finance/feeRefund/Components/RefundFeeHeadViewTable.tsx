@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+import React, { useId, useState } from 'react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Box, Stack, Typography, AccordionSummary } from '@mui/material';
+import CustomAccordion from 'src/components/custom-accordian';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { formatNumber } from 'src/utils/formate_number';
-import { Box, Chip, Divider, Collapse, ButtonBase, Typography } from '@mui/material';
-import {
-  FeeCollectionStatusType,
-  FeeCollectionStatusTypeColors,
-} from 'src/enums/fee-collection-type';
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
+import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 
 export interface IRefundMonthItem {
   month: string;
@@ -30,296 +28,161 @@ interface Props {
   data: IRefundFeeHeadItem[];
 }
 
-// ─── Column Header ─────────────────────────────────────────────────────────────
+const refundTotal = (head: IRefundFeeHeadItem) =>
+  head.items.reduce((sum, item) => sum + item.refundAmount, 0);
 
-const ColHeader = () => (
-  <Box
-    display="flex"
-    alignItems="center"
-    px={2}
-    py={1}
-    sx={{ borderBottom: '1px solid', borderColor: 'divider' }}
-  >
-    <Typography
-      variant="caption"
-      color="text.disabled"
-      fontWeight={700}
-      textTransform="uppercase"
-      sx={{ letterSpacing: '0.7px', fontSize: '10px', flex: 1 }}
-    >
-      Month
-    </Typography>
+const columns: IColumn[] = [
+  {
+    id: 'month',
+    label: 'Installment',
+    rowHeader: true,
+    minWidth: 180,
+    isFilter: false,
+    isSort: false,
+  },
+  {
+    id: 'paid',
+    label: 'Paid amount',
+    minWidth: 140,
+    align: 'right',
+    isFilter: false,
+    isSort: false,
+    valueType: 'money',
+    render: (amount) => formatNumber(amount, 'INR'),
+  },
+  {
+    id: 'refundAmount',
+    label: 'Refund amount',
+    minWidth: 140,
+    align: 'right',
+    isFilter: false,
+    isSort: false,
+    valueType: 'money',
+    render: (amount) => formatNumber(amount, 'INR'),
+  },
+];
 
-    {(['TOTAL', 'PAID', 'REFUND AMOUNT'] as const).map((col) => (
-      <Typography
-        key={col}
-        variant="caption"
-        color="text.disabled"
-        fontWeight={700}
-        textTransform="uppercase"
-        sx={{
-          letterSpacing: '0.7px',
-          fontSize: '10px',
-          width: 110,
-          textAlign: 'right',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {col}
-      </Typography>
-    ))}
-
-    <Box sx={{ width: 100, textAlign: 'center' }}>
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        fontWeight={700}
-        textTransform="uppercase"
-        sx={{ letterSpacing: '0.7px', fontSize: '10px' }}
-      >
-        STATUS
-      </Typography>
-    </Box>
-  </Box>
-);
-
-// ─── Month Row ─────────────────────────────────────────────────────────────────
-
-const MonthRow = ({ item }: { item: IRefundMonthItem }) => (
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      px: 2,
-      py: 1,
-    }}
-  >
-    <Typography variant="body2" fontWeight={500} flex={1} noWrap>
-      {item.month}
-    </Typography>
-
-    <Typography
-      variant="body2"
-      sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
-    >
-      {' '}
-      {formatNumber(item.total, 'INR')}
-    </Typography>
-
-    <Typography
-      variant="body2"
-      sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
-    >
-      {' '}
-      {formatNumber(item.paid, 'INR')}
-    </Typography>
-
-    <Typography
-      variant="body2"
-      sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
-    >
-      {' '}
-      {formatNumber(item.refundAmount, 'INR')}
-    </Typography>
-
-    <Box sx={{ width: 100, display: 'flex', justifyContent: 'center' }}>
-      <Label color={FeeCollectionStatusTypeColors[item.status]} variant="soft">
-        {FeeCollectionStatusType[item.status] ?? item.status}
-      </Label>
-    </Box>
-  </Box>
-);
-
-// ─── Fee Head Group ─────────────────────────────────────────────────────────────
-
-const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
+function FeeHeadViewGroup({ feeHead }: { feeHead: IRefundFeeHeadItem }) {
   const [open, setOpen] = useState(true);
-
+  const sectionId = useId();
   return (
     <Box
       sx={{
-        mb: 1.5,
-        borderRadius: 1.5,
-        overflow: 'hidden',
         border: 1,
         borderColor: 'divider',
+        borderRadius: 1.5,
+        overflow: 'hidden',
+        '& > .MuiAccordion-root': { m: 0, bgcolor: 'background.paper' },
+        '& .MuiAccordionDetails-root': { p: 0 },
       }}
     >
-      {/* Header */}
-      <Box
-        component={ButtonBase}
-        aria-expanded={open}
-        aria-label={`${feeHead.feeHeadName} refund details`}
-        display="flex"
-        alignItems="center"
-        gap={1}
-        px={1.5}
-        py={1}
-        sx={{
-          cursor: 'pointer',
-          userSelect: 'none',
-          bgcolor: 'background.neutral',
-          width: '100%',
-          textAlign: 'left',
-          flexWrap: 'wrap',
-          justifyContent: 'flex-start',
-        }}
-        onClick={() => setOpen((o) => !o)}
-      >
-        <Box
-          sx={{
-            color: 'text.secondary',
-            transition: 'transform 200ms ease',
-            transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
-          }}
-        >
-          <Iconify icon="eva:chevron-down-fill" width={18} />
-        </Box>
-
-        <Typography
-          variant="subtitle2"
-          fontWeight={700}
-          sx={{ flex: '1 1 160px', overflowWrap: 'anywhere' }}
-        >
-          {feeHead.feeHeadName}
-        </Typography>
-
-        <Chip
-          size="small"
-          label={`Paid : ${formatNumber(feeHead.totalPaid, 'INR')}`}
-          variant="outlined"
-          color="default"
-          sx={{ fontSize: 11 }}
-        />
-
-        {feeHead.totalRefunded > 0 && (
-          <Chip
-            size="small"
-            label={`Refunded : ${formatNumber(feeHead.totalRefunded, 'INR')}`}
-            variant="outlined"
-            color="default"
-            sx={{ fontSize: 11 }}
-          />
-        )}
-      </Box>
-
-      {/* Rows */}
-      <Collapse in={open}>
-        <Divider />
-        <Box
-          role="region"
-          aria-label={`${feeHead.feeHeadName} installments`}
-          tabIndex={0}
-          sx={{ overflowX: 'auto' }}
-        >
-          <Box sx={{ minWidth: 580 }}>
-            <ColHeader />
-
-            {feeHead.items.map((item, idx) => (
-              <React.Fragment key={item.month}>
-                <MonthRow item={item} />
-                {idx < feeHead.items.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.4 }} />}
-              </React.Fragment>
-            ))}
+      <CustomAccordion
+        title={feeHead.feeHeadName}
+        expanded={open}
+        onChange={() => setOpen((value) => !value)}
+        summary={
+          <AccordionSummary
+            id={`${sectionId}-header`}
+            aria-controls={`${sectionId}-content`}
+            aria-label={`${feeHead.feeHeadName} refund details`}
+            expandIcon={<ExpandMoreIcon fontSize="small" />}
+            sx={{ bgcolor: 'background.neutral', px: 2 }}
+          >
+            <Stack
+              direction="row"
+              spacing={2}
+              useFlexGap
+              flexWrap="wrap"
+              justifyContent="space-between"
+              sx={{ width: 1 }}
+            >
+              <Typography variant="subtitle2" color="text.primary">
+                {feeHead.feeHeadName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Refund amount: {formatNumber(refundTotal(feeHead), 'INR')}
+              </Typography>
+            </Stack>
+          </AccordionSummary>
+        }
+        content={
+          <Box
+            role="region"
+            aria-label={`${feeHead.feeHeadName} installments`}
+            hidden={!open}
+          >
+            <CustomizableTable
+              tableId={`refund-view-${feeHead.feeHeadId ?? feeHead.feeHeadName}`}
+              tableTitle={`${feeHead.feeHeadName} refunds`}
+              variant="embedded"
+              columns={columns}
+              data={feeHead.items.map((item, index) => ({ ...item, id: `${sectionId}-${index}` }))}
+              wrapperProps={{
+                sx: { '& > .MuiCard-root': { border: 0, borderRadius: 0, boxShadow: 'none' } },
+              }}
+              page={0}
+              rowsPerPage={Math.max(1, feeHead.items.length)}
+              showToolbar={false}
+              isSearch={false}
+              isFilter={false}
+              isPagination={false}
+              isShowedDense={false}
+            />
           </Box>
-        </Box>
-
-        {/* Footer summary */}
-        <Divider />
-        <Box
-          display="flex"
-          justifyContent="flex-end"
-          alignItems="center"
-          gap={1}
-          px={2}
-          py={0.75}
-          sx={{ bgcolor: 'background.neutral' }}
-          flexWrap="wrap"
-        >
-          <Typography variant="caption" color="text.secondary">
-            Total Paid :{' '}
-            <strong
-              style={{
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {formatNumber(feeHead.totalPaid, 'INR')}
-            </strong>
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Total Refunded :{' '}
-            <strong
-              style={{
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {formatNumber(feeHead.totalRefunded, 'INR')}
-            </strong>
-          </Typography>
-        </Box>
-      </Collapse>
+        }
+      />
     </Box>
   );
-};
+}
 
-// ─── Main Component ─────────────────────────────────────────────────────────────
+export default function RefundFeeHeadViewTable({ data = [] }: Props) {
+  const feeHeads = data
+    .map((head) => ({
+      ...head,
+      items: head.items.filter((item) => item.refundAmount > 0),
+    }))
+    .filter((head) => head.items.length > 0);
 
-const RefundFeeHeadViewTable: React.FC<Props> = ({ data }) => {
-  const grandTotalPaid = data.reduce((s, fh) => s + fh.totalPaid, 0);
-  const grandTotalRefunded = data.reduce((s, fh) => s + fh.totalRefunded, 0);
-
-  if (!data || data.length === 0) {
+  if (feeHeads.length === 0) {
     return (
-      <Box py={3} textAlign="center">
-        <Typography variant="body2" color="text.secondary">
-          No fee head refund data available.
-        </Typography>
-      </Box>
+      <Typography variant="body2" color="text.secondary">
+        No refund installments available.
+      </Typography>
     );
   }
 
   return (
-    <Box>
-      {/* Overall summary */}
-      <Box
-        display="flex"
-        gap={1}
-        mb={1.5}
-        p={1.5}
+    <Stack spacing={2}>
+      <Stack
+        direction="row"
+        spacing={2}
+        useFlexGap
+        flexWrap="wrap"
+        justifyContent="space-between"
         sx={{
-          borderRadius: 1.5,
-          bgcolor: 'background.neutral',
+          p: 1.5,
           border: 1,
           borderColor: 'divider',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
+          borderRadius: 1.5,
+          bgcolor: 'background.neutral',
         }}
       >
         <Typography variant="body2" color="text.secondary">
-          Fee Heads : <strong>{data.length}</strong>
+          Fee heads: {feeHeads.length}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Total Paid :{' '}
-          <strong style={{ fontVariantNumeric: 'tabular-nums' }}>
-            {formatNumber(grandTotalPaid, 'INR')}
-          </strong>
+        <Typography variant="body2" fontWeight={600}>
+          Refund amount:{' '}
+          {formatNumber(
+            feeHeads.reduce((sum, head) => sum + refundTotal(head), 0),
+            'INR'
+          )}
         </Typography>
-        <Typography variant="body2" color="text.primary" fontWeight={600}>
-          Total Refunded :{' '}
-          <strong style={{ fontVariantNumeric: 'tabular-nums' }}>
-            {formatNumber(grandTotalRefunded, 'INR')}
-          </strong>
-        </Typography>
-      </Box>
-
-      {data.map((feeHead) => (
-        <FeeHeadViewGroup key={feeHead.feeHeadId ?? feeHead.feeHeadName} feeHead={feeHead} />
+      </Stack>
+      {feeHeads.map((head) => (
+        <FeeHeadViewGroup key={head.feeHeadId ?? head.feeHeadName} feeHead={head} />
       ))}
-    </Box>
+    </Stack>
   );
-};
+}
 
-export default RefundFeeHeadViewTable;
 export type { Props as RefundFeeHeadViewTableProps };

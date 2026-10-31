@@ -765,7 +765,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                                   <>
                                                     <FormInfoIcon
                                                       label="About income categories"
-                                                      title="Income categories are configured in Accounts Settings."
+                                                      title="Income categories are configured in Accounts Settings. Select None to exclude collections from Accounts income."
                                                     />
                                                     {params.InputProps.endAdornment}
                                                   </>

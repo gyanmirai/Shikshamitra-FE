@@ -98,16 +98,15 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
   const incomeCategoryOptions = useMemo(
     () =>
       (incomeCategoryData?.items ?? [])
-        .filter(
-          (category: any) =>
-            String(category.name ?? '')
-              .trim()
-              .toLowerCase() !== 'none'
-        )
         .map((category: any) => ({
           id: category.id,
           displayName: category.name,
-        })),
+        }))
+        .sort(
+          (a: { displayName: string }, b: { displayName: string }) =>
+            Number(b.displayName.trim().toLowerCase() === 'none') -
+            Number(a.displayName.trim().toLowerCase() === 'none')
+        ),
     [incomeCategoryData]
   );
 
@@ -300,8 +299,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                       ? (formik.errors.incomeCategoryId as string)
                       : editData?.isUsedInDownstream
                         ? 'Locked because this Fee Head is already used in a locked Fee Structure.'
-                        : 'Collections are recorded under the selected Income Category.') ||
-                    undefined
+                        : 'Select None to exclude collections from Accounts income.') || undefined
                   }
                   formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                 />

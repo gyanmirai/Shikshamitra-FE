@@ -69,10 +69,16 @@ vi.mock('src/redux/finance/financeRoutingApi', () => ({
         : {
             incomeCategories: mocks.noCategories
               ? []
-              : [{ id: 'income-category', label: 'Other income' }],
+              : [
+                  { id: 'none', label: 'None' },
+                  { id: 'income-category', label: 'Other income' },
+                ],
             expenseCategories: mocks.noCategories
               ? []
-              : [{ id: 'expense-category', label: 'Supplies' }],
+              : [
+                  { id: 'none', label: 'None' },
+                  { id: 'expense-category', label: 'Supplies' },
+                ],
             bankAccounts: mocks.noBanks ? [] : [{ id: 'bank', label: 'School bank' }],
           },
     };
@@ -245,6 +251,30 @@ async function fill(direction: 'income' | 'expense' = 'income') {
   });
   await waitFor(() => expect(screen.getByLabelText('Amount')).toHaveValue('12.34'));
 }
+
+it.each(['income', 'expense'] as const)(
+  'accepts None for manual %s while explaining exclusion',
+  async (direction) => {
+    const { onClose } = setup(direction);
+    await fill(direction);
+    fireEvent.change(
+      screen.getByLabelText(direction === 'income' ? 'Income category' : 'Expense category'),
+      {
+        target: { value: 'none' },
+      }
+    );
+    expect(
+      await screen.findByText('None excludes this amount from Accounts income and expenses.')
+    ).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(mocks.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({ categoryId: 'none', amount: 12.34 }),
+      })
+    );
+  }
+);
 
 it('blocks manual entry submission without its exact Add permission', () => {
   mocks.canAdd = false;

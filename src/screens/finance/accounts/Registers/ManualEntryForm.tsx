@@ -99,11 +99,20 @@ export default function ManualEntryForm({
     try {
       await create(payload).unwrap();
       shikshaMitraToast.success({
-        message: income
-          ? payload.body.paymentMethod === PaymentMethod.CASH
-            ? 'Cash income recorded. Available for deposit in Cash Management.'
-            : 'Income added.'
-          : 'Expense paid and recorded.',
+        message: (income
+          ? options.currentData?.incomeCategories
+          : options.currentData?.expenseCategories
+        )?.some(
+          (category) =>
+            category.id === payload.body.categoryId &&
+            category.label.trim().toLowerCase() === 'none'
+        )
+          ? 'Payment recorded. None excludes it from Accounts income and expenses.'
+          : income
+            ? payload.body.paymentMethod === PaymentMethod.CASH
+              ? 'Cash income recorded. Available for deposit in Cash Management.'
+              : 'Income added.'
+            : 'Expense paid and recorded.',
       });
       onClose();
     } catch (error) {
@@ -471,6 +480,16 @@ export default function ManualEntryForm({
                             isLoading={options.isFetching}
                             disabled={fieldsBlocked || options.isError}
                             {...fieldError('categoryId')}
+                            helperText={
+                              fieldError('categoryId').helperText ||
+                              (categories?.some(
+                                (category) =>
+                                  category.id === formik.values.categoryId &&
+                                  category.label.trim().toLowerCase() === 'none'
+                              )
+                                ? 'None excludes this amount from Accounts income and expenses.'
+                                : undefined)
+                            }
                           />
                         </ShakingTextField>
                       </Grid>

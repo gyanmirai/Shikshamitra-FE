@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   close: vi.fn(),
   candidateState: {} as Record<string, unknown>,
+  contextState: {} as Record<string, unknown>,
   candidateRefetch: vi.fn(),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -125,7 +126,7 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   }),
   useAssignmentUpdatePoliciesMutation: () => [mocks.update, {}],
   assignmentError: () => 'Preview again',
-  assignmentErrorCode: () => '',
+  assignmentErrorCode: (error: any) => error?.data?.error?.code ?? '',
   useAssignmentCandidatesQuery: () => ({
     ...mocks.candidateState,
     refetch: mocks.candidateRefetch,
@@ -134,7 +135,9 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
         id: 'structure',
         name: 'Annual fees',
         revisionNumber: 1,
-        heads: [{ feeHeadId: 'tuition', feeHeadName: 'Tuition', isOptional: false }],
+        heads: mocks.candidateState.heads ?? [
+          { feeHeadId: 'tuition', feeHeadName: 'Tuition', isOptional: false },
+        ],
         policies: [
           {
             family: 'collection',
@@ -148,6 +151,7 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
     ],
   }),
   useAssignmentDetailsQuery: () => mocks.details(),
+  useAssignmentContextsQuery: () => mocks.contextState,
   useAssignmentPreviewMutation: () => [mocks.preview, {}],
   useAssignmentCommitMutation: () => [mocks.commit, {}],
   useAssignmentBulkPreviewMutation: () => [mocks.bulkPreview, {}],
@@ -178,7 +182,7 @@ function mount(
       }
     ) => state,
   });
-  return render(
+  const ui = () => (
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <AssignmentWorkflow
@@ -190,6 +194,8 @@ function mount(
       </ThemeProvider>
     </Provider>
   );
+  const rendered = render(ui());
+  return { ...rendered, refresh: () => rendered.rerender(ui()) };
 }
 async function chooseStructure() {
   fireEvent.change(screen.getByRole('combobox', { name: 'Fee structure' }), {
@@ -204,25 +210,234 @@ async function selectStructure() {
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
   await screen.findByRole('button', { name: 'Preview assignments' });
 }
+it('requires at least one fee for an optional-only structure before previewing', async () => {
+  mocks.candidateState = {
+    heads: [{ feeHeadId: 'transport', feeHeadName: 'Transport', isOptional: true }],
+  };
+  mount();
+  await selectStructure();
+  expect(screen.getByRole('button', { name: 'Preview assignments' })).toBeDisabled();
+  expect(screen.getByText('Select at least one fee before assigning.')).toBeVisible();
+  expect(mocks.preview).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Include transport for one' }));
+  expect(screen.getByRole('button', { name: 'Preview assignments' })).toBeEnabled();
+});
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.details.mockReturnValue({});
   mocks.candidateState = {};
+  mocks.contextState = { data: [] };
   mocks.preview.mockImplementation(() => ({ unwrap: async () => result() }));
   mocks.commit.mockImplementation(() => ({
     unwrap: async () => ({ assignmentId: 'assignment', outcome: 'Assigned', assignment: result() }),
   }));
 });
+
+it('opens the existing assignment when server context corrects a stale unassigned row', async () => {
+  mocks.contextState = { data: [{ studentId: 'one', status: 'Assigned', assignmentId: 'saved' }] };
+  mocks.details.mockReturnValue({ data: { assignment: result('one', 9000) } });
+  mount();
+  expect(await screen.findByText('Committed amount 9000')).toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: 'Fee structure' })).not.toBeInTheDocument();
+  expect(mocks.preview).not.toHaveBeenCalled();
+  expect(mocks.commit).not.toHaveBeenCalled();
+});
+
+it('prefills the admission selection without asking staff to choose the structure again', async () => {
+  mocks.contextState = {
+    data: [
+      {
+        studentId: 'one',
+        status: 'Selected',
+        structureId: 'structure',
+        joiningDate: '2026-08-20T00:00:00Z',
+        selectedOptionalFeeHeadIds: [],
+        admissionFeeHeadIds: ['tuition'],
+        chargeStartDate: '2026-08-20T00:00:00Z',
+        chargeEndDate: '2027-05-14T00:00:00Z',
+        applicationId: 'application',
+      },
+    ],
+  };
+  mount();
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Fee structure' })).toHaveValue('structure')
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+  await waitFor(() =>
+    expect(mocks.preview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        servicePeriods: [
+          expect.objectContaining({
+            source: 'Registration',
+            sourceReferenceId: 'application',
+            startDate: '2026-08-20T00:00:00Z',
+            endDate: '2027-05-14T00:00:00Z',
+          }),
+        ],
+      })
+    )
+  );
+});
+
+it('preserves each student’s verified admission dates in a bulk preview', async () => {
+  mocks.contextState = {
+    data: ['one', 'two'].map((studentId, index) => ({
+      studentId,
+      status: 'Selected',
+      source: 'Admission',
+      structureId: 'structure',
+      applicationId: `application-${studentId}`,
+      joiningDate: index ? '2026-09-10T00:00:00Z' : '2026-08-20T00:00:00Z',
+      chargeStartDate: index ? '2026-09-10T00:00:00Z' : '2026-08-20T00:00:00Z',
+      chargeEndDate: '2027-05-14T00:00:00Z',
+      admissionFeeHeadIds: ['tuition'],
+      selectedOptionalFeeHeadIds: [],
+    })),
+  };
+  mocks.bulkPreview.mockReturnValue({
+    unwrap: async () => ({
+      results: [
+        { studentId: 'one', preview: result('one') },
+        { studentId: 'two', preview: result('two') },
+      ],
+    }),
+  });
+  mount([
+    { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false },
+    { studentId: 'two', studentName: 'Riya', isFeeStructureAssigned: false },
+  ]);
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Fee structure' })).toHaveValue('structure')
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+  await waitFor(() => expect(mocks.bulkPreview).toHaveBeenCalled());
+  const items = mocks.bulkPreview.mock.lastCall?.[0].items;
+  expect(items[0].servicePeriods[0]).toMatchObject({
+    source: 'Registration',
+    sourceReferenceId: 'application-one',
+    startDate: '2026-08-20T00:00:00Z',
+  });
+  expect(items[1].servicePeriods[0]).toMatchObject({
+    source: 'Registration',
+    sourceReferenceId: 'application-two',
+    startDate: '2026-09-10T00:00:00Z',
+  });
+});
+
+it('completes prepared fees through preview and commit without opening a new assignment wizard', async () => {
+  mocks.contextState = {
+    data: [
+      {
+        studentId: 'one',
+        academicYearId: 'year',
+        status: 'Prepared',
+        structureId: 'structure',
+        selectedOptionalFeeHeadIds: [],
+        variableFeeHeads: [],
+        preparedAssignment: result('one', 9000),
+      },
+    ],
+    refetch: vi.fn(),
+  };
+  mount();
+  expect(screen.getByText('Committed amount 9000')).toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: 'Fee structure' })).not.toBeInTheDocument();
+  expect(mocks.commit).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Complete handoff' }));
+  await waitFor(() =>
+    expect(mocks.commit).toHaveBeenCalledWith(
+      expect.objectContaining({ studentId: 'one', previewToken: 'token-one' })
+    )
+  );
+});
+
+it('keeps failed students pending after a context refresh following partial bulk success', async () => {
+  mocks.bulkPreview.mockImplementation(({ items }) => ({
+    unwrap: async () => ({
+      results: items.map((item: any) => ({
+        studentId: item.studentId,
+        preview: result(item.studentId),
+      })),
+    }),
+  }));
+  mocks.bulkCommit.mockReturnValue({
+    unwrap: async () => ({
+      successCount: 1,
+      alreadyAssignedCount: 0,
+      skippedCount: 0,
+      failedCount: 1,
+      results: [
+        {
+          studentId: 'one',
+          outcome: 'Assigned',
+          result: { assignmentId: 'saved', outcome: 'Assigned', assignment: result('one') },
+        },
+        {
+          studentId: 'two',
+          outcome: 'Failed',
+          errorCode: 'Finance:Assignment:StalePreview',
+          errorMessage: 'Preview again',
+        },
+      ],
+    }),
+  });
+  const view = mount([
+    { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false },
+    { studentId: 'two', studentName: 'Riya', isFeeStructureAssigned: false },
+  ]);
+  await selectStructure();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Assign fees (2)' }));
+  await screen.findByRole('button', { name: 'Review remaining students' });
+  mocks.contextState = {
+    data: [
+      { studentId: 'one', status: 'Assigned' },
+      { studentId: 'two', status: 'Unassigned' },
+    ],
+  };
+  view.refresh();
+  expect(screen.getByRole('button', { name: 'Review remaining students' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+});
+
+it('refreshes context after another operator assigned the student during this review', async () => {
+  const refetch = vi.fn();
+  mocks.contextState = { data: [{ studentId: 'one', status: 'Unassigned' }], refetch };
+  mocks.preview.mockReturnValue({
+    unwrap: async () => {
+      throw Object.assign(new Error('Already assigned'), {
+        data: { error: { code: 'Finance:Assignment:AlreadyAssigned' } },
+      });
+    },
+  });
+  const view = mount();
+  await selectStructure();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+  await waitFor(() => expect(refetch).toHaveBeenCalled());
+  mocks.contextState = { data: [{ studentId: 'one', status: 'Assigned' }], refetch };
+  mocks.details.mockReturnValue({ data: { assignment: result('one', 9000) } });
+  view.refresh();
+  expect(await screen.findByText('Committed amount 9000')).toBeInTheDocument();
+  expect(mocks.commit).not.toHaveBeenCalled();
+});
 describe('assignment review and commit boundaries', () => {
-  it('shows matching-structure setup with an intact footer and refresh on focus', () => {
+  it('shows matching-structure setup with an intact footer and refresh after returning from setup', () => {
     mocks.candidateState = { currentData: [] };
     mount();
     expect(screen.getByText('Publish a fee structure first')).toBeVisible();
     expect(screen.queryByRole('combobox', { name: 'Fee structure' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-    fireEvent(window, new Event('focus'));
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    visibility.mockReturnValue('hidden');
+    fireEvent(document, new Event('visibilitychange'));
+    visibility.mockReturnValue('visible');
+    fireEvent(document, new Event('visibilitychange'));
     expect(mocks.candidateRefetch).toHaveBeenCalledOnce();
     expect(mocks.preview).not.toHaveBeenCalled();
+    visibility.mockRestore();
   });
   it.each(['isLoading', 'isFetching', 'isError', 'isUninitialized'])(
     'preserves the assignment context for %s',
@@ -852,27 +1067,28 @@ describe('assignment review and commit boundaries', () => {
     );
     expect(screen.queryByRole('button', { name: 'Preview assignments' })).not.toBeInTheDocument();
   });
-  it('retries only failed students after a partially successful bulk commit', async () => {
+  it('retries only failed students after an immutable partially successful bulk commit', async () => {
     mocks.bulkPreview.mockImplementation(({ items }) => ({
       unwrap: async () => ({
         results: items.map((i: any) => ({ studentId: i.studentId, preview: result(i.studentId) })),
       }),
     }));
     mocks.bulkCommit.mockReturnValue({
-      unwrap: async () => ({
-        successCount: 1,
-        failedCount: 1,
-        skippedCount: 0,
-        alreadyAssignedCount: 0,
-        results: [
-          {
-            studentId: 'one',
-            outcome: 'Assigned',
-            result: { assignmentId: 'a', assignment: result() },
-          },
-          { studentId: 'two', outcome: 'Failed', errorMessage: 'Preview again' },
-        ],
-      }),
+      unwrap: async () =>
+        Object.freeze({
+          successCount: 1,
+          failedCount: 1,
+          skippedCount: 0,
+          alreadyAssignedCount: 0,
+          results: [
+            {
+              studentId: 'one',
+              outcome: 'Assigned',
+              result: { assignmentId: 'a', assignment: result() },
+            },
+            { studentId: 'two', outcome: 'Failed', errorMessage: 'Preview again' },
+          ],
+        }),
     });
     mount([
       { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false },

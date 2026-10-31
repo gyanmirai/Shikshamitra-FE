@@ -374,7 +374,9 @@ export default function RefundWorklist({
                         ...(actions.includes('approve')
                           ? [action(refund, 'Approve', 'mdi:approve', onApprove)]
                           : []),
-                        ...(actions.includes('reject')
+                        ...(actions.includes('reject') &&
+                        (refund.status === FeeRefundStatusType.Pending ||
+                          refund.status === FeeRefundStatusType.UnderReview)
                           ? [action(refund, 'Reject', 'mdi:close', onReject)]
                           : []),
                         ...(actions.includes('recordPayout')
@@ -399,7 +401,14 @@ export default function RefundWorklist({
                 },
               },
             ] satisfies IColumn[]
-          ).filter((column) => status !== FeeRefundStatusType.Processed || column.id !== 'actions')}
+          ).filter(
+            (column) =>
+              ![
+                FeeRefundStatusType.Processed,
+                FeeRefundStatusType.Rejected,
+                FeeRefundStatusType.Failed,
+              ].includes(status) || column.id !== 'actions'
+          )}
           isLoading={isLoading || isFetching}
           noDataText={isError ? 'Could not load refunds. Retry the page.' : 'No refunds found.'}
           serverSide

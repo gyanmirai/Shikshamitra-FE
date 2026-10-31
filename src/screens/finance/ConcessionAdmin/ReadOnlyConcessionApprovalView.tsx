@@ -1,5 +1,7 @@
 'use client';
 
+import type { IData, IColumn } from 'src/components/customizabaleTable/types';
+
 import { useRef, useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
@@ -8,6 +10,8 @@ import { formatNumber } from 'src/utils/formate_number';
 import { concessionBenefitBlockerMessage } from 'src/utils/concession-benefit-blocker';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailField } from 'src/components/detail-view';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { concessionErrorMessage } from '../Concession/Components/concessionValueValidation';
 import { Box, Alert, Stack, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
@@ -19,6 +23,51 @@ import {
 import type { IFeeHeadApprovalViewProps } from './type';
 
 const money = (value: number) => formatNumber(value, 'INR');
+
+const breakdownColumns: IColumn[] = (
+  [
+    {
+      id: 'feeHeadName',
+      label: 'Fee head',
+      minWidth: 170,
+      rowHeader: true,
+      render: (value, row) => (
+        <>
+          <Typography variant="body2">{value}</Typography>
+          {row.groupRequestedAmount != null && (
+            <Typography variant="caption" color="text.secondary">
+              {money(row.groupRequestedAmount)} requested
+            </Typography>
+          )}
+        </>
+      ),
+    },
+    {
+      id: 'monthLabel',
+      label: 'Installment',
+      minWidth: 110,
+      render: (value, row) => (row.missingInstallment ? '—' : `${value} ${row.year}`),
+    },
+    ...[
+      { id: 'originalAmount', label: 'Original fee' },
+      { id: 'paidAmount', label: 'Paid' },
+      { id: 'outstandingAmount', label: 'Outstanding' },
+      { id: 'suggestedConcessionAmount', label: 'Concession' },
+    ].map(({ id, label }): IColumn => ({
+      id,
+      label,
+      align: 'right',
+      minWidth: 100,
+      render: (value, row) => (row.missingInstallment ? '—' : money(value)),
+    })),
+  ] satisfies IColumn[]
+).map((column) => ({
+  ...column,
+  isFilter: false,
+  isSort: false,
+  headerSx: { px: 1.25, py: 0.75 },
+  cellSx: { px: 1.25, py: 0.75, fontVariantNumeric: 'tabular-nums' },
+}));
 
 export default function ReadOnlyConcessionApprovalView({
   selectedItem,
@@ -43,6 +92,26 @@ export default function ReadOnlyConcessionApprovalView({
   const commandKey = useRef('');
   const changed = (context?.feeHeadGroups ?? []).some((group) => group.hasChangedSinceSubmission);
   const benefitBlocker = context?.benefitBlocker;
+  const breakdownRows = (context?.feeHeadGroups ?? []).flatMap<IData>((group) => {
+    const lines = group.dueFeeLines.filter((line) => line.suggestedConcessionAmount > 0);
+    // Keep the saved group total visible when changed live balances leave no
+    // eligible installment; unavailable current amounts use neutral placeholders.
+    if (!lines.length)
+      return [
+        {
+          id: `${group.feeHeadId}-unavailable`,
+          feeHeadName: group.feeHeadName,
+          groupRequestedAmount: group.requestedConcessionAmount,
+          missingInstallment: true,
+        },
+      ];
+    return lines.map((line, index) => ({
+      ...line,
+      id: `${group.feeHeadId}-${line.dueFeeId}`,
+      feeHeadName: group.feeHeadName,
+      groupRequestedAmount: index === 0 ? group.requestedConcessionAmount : null,
+    }));
+  });
   useEffect(() => {
     if (benefitBlocker) setPreviewTotal(null);
   }, [benefitBlocker]);
@@ -97,28 +166,30 @@ export default function ReadOnlyConcessionApprovalView({
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
       <Stack
         direction="row"
-        justifyContent="space-between"
         alignItems="center"
-        sx={{ p: 1.5, borderBottom: 1, borderColor: 'divider' }}
+        gap={1}
+        sx={{ px: 1.25, py: 0.75, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Typography variant="subtitle1" component="h2" fontWeight={700}>
-          Approve concession
-        </Typography>
         <Button
           size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.back} />}
           onClick={onBack}
           disabled={isApproving}
         >
           Back
         </Button>
+        <Typography variant="subtitle1" component="h2">
+          Approve Concession
+        </Typography>
       </Stack>
       <Box
         sx={{
           flex: 1,
           minHeight: 0,
           overflowY: 'auto',
-          p: { xs: 1.5, sm: 2 },
+          p: 1.25,
           '& .MuiCard-root': { boxShadow: 'none' },
         }}
       >
@@ -141,27 +212,28 @@ export default function ReadOnlyConcessionApprovalView({
           </Alert>
         )}
         {context && (
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             <FormSectionCard
               title={selectedItem.concessionTypeName || 'Concession request'}
               icon="mdi:tag-outline"
-              contentSpacing={1.5}
-            >
-              <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-                {context.concessionPolicyName} · version {context.concessionPolicyVersion}
-              </Typography>
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                justifyContent="space-between"
-                gap={0.5}
-                sx={{ p: 1.5, bgcolor: 'background.neutral', borderRadius: 1 }}
-              >
-                <Typography variant="body2">Requested concession</Typography>
-                <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                  {money(context.totalRequestedConcessionAmount)}
-                </Typography>
-              </Stack>
-            </FormSectionCard>
+              description={`${context.concessionPolicyName} · version ${context.concessionPolicyVersion}`}
+              descriptionTooltip="The saved concession type, policy version and total requested amount."
+              iconSize={16}
+              iconContainerSize={28}
+              contentSpacing={0.75}
+              actionFullWidthOnMobile
+              action={
+                <DetailField
+                  layout="inline"
+                  label="Requested concession"
+                  value={money(context.totalRequestedConcessionAmount)}
+                />
+              }
+              sx={{
+                p: { xs: 1.25, sm: 1.25 },
+                '& .MuiTypography-root': { overflowWrap: 'anywhere' },
+              }}
+            />
             {changed && (
               <Alert severity="error">
                 The live fee balance or policy calculation has changed since submission. Refresh or
@@ -178,67 +250,34 @@ export default function ReadOnlyConcessionApprovalView({
                 create its linked refund requests manually.
               </Alert>
             )}
-            {context.feeHeadGroups.map((group) => (
-              <FormSectionCard
-                key={group.feeHeadId}
-                title={group.feeHeadName}
-                icon="mdi:format-list-bulleted"
-                action={
-                  <Typography variant="body2" fontWeight={600}>
-                    {money(group.requestedConcessionAmount)} requested
-                  </Typography>
-                }
-                contentSpacing={1}
-              >
-                {group.dueFeeLines
-                  .filter((line) => line.suggestedConcessionAmount > 0)
-                  .map((line) => (
-                    <Box
-                      key={line.dueFeeId}
-                      sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                          xs: 'repeat(2, minmax(0, 1fr))',
-                          sm: 'minmax(0, 1fr) repeat(4, minmax(70px, 0.6fr))',
-                        },
-                        gap: 1,
-                        py: 1,
-                        '& + &': { borderTop: 1, borderColor: 'divider' },
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Installment
-                        </Typography>
-                        <Typography variant="body2" fontWeight={600}>
-                          {line.monthLabel} {line.year}
-                        </Typography>
-                      </Box>
-                      {[
-                        { label: 'Original fee', amount: line.originalAmount },
-                        { label: 'Paid', amount: line.paidAmount },
-                        { label: 'Outstanding', amount: line.outstandingAmount },
-                        { label: 'Concession', amount: line.suggestedConcessionAmount },
-                      ].map((metric) => (
-                        <Box
-                          key={metric.label}
-                          sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
-                        >
-                          <Typography variant="caption" color="text.secondary">
-                            {metric.label}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight={metric.label === 'Concession' ? 600 : 400}
-                          >
-                            {money(metric.amount)}
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  ))}
-              </FormSectionCard>
-            ))}
+            <FormSectionCard
+              title="Fee Breakdown"
+              icon={GlobalIcons.notebook}
+              descriptionTooltip="Saved installment amounts grouped by fee head. Review the original, paid, outstanding and concession amounts before approval."
+              iconSize={16}
+              iconContainerSize={28}
+              contentSpacing={0.75}
+              sx={{ p: { xs: 1.25, sm: 1.25 } }}
+            >
+              <CustomizableTable
+                tableId={`concession-approval-breakdown-${requestId}`}
+                tableTitle="Concession fee breakdown"
+                variant="embedded"
+                columns={breakdownColumns}
+                data={breakdownRows}
+                showToolbar={false}
+                showColumns={false}
+                showExport={false}
+                showFullScreen={false}
+                isSearch={false}
+                isFilter={false}
+                isPagination={false}
+                isShowedDense={false}
+                noDataText="No requested installments to review."
+                wrapperProps={{ sx: { flex: '0 0 auto', minWidth: 0 } }}
+                tableContainerProps={{ sx: { height: 'auto' } }}
+              />
+            </FormSectionCard>
 
             <TextField
               size="small"
@@ -246,7 +285,8 @@ export default function ReadOnlyConcessionApprovalView({
               disabled={isApproving}
               label="Approval note (optional)"
               multiline
-              minRows={2}
+              minRows={1}
+              maxRows={3}
               value={message}
               onChange={(event) => {
                 setMessage(event.target.value);
@@ -260,7 +300,7 @@ export default function ReadOnlyConcessionApprovalView({
         <Stack
           direction="row"
           justifyContent="flex-end"
-          sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}
+          sx={{ px: 1.25, py: 1, borderTop: 1, borderColor: 'divider' }}
         >
           <LoadingButton
             startIcon={
