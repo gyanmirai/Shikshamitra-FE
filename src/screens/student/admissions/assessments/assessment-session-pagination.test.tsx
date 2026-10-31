@@ -10,7 +10,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { renderWithProviders } from 'src/test/test-utils';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
-import { AssessmentManageSessionsDrawer } from './assessment-manage-sessions-drawer';
+import { AssessmentSessionsPanel } from './assessment-sessions-panel';
 import { AssessmentSessionBookingPreview } from './assessment-session-booking-preview';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -72,8 +72,8 @@ function PaginationHarness({
       onRetry={vi.fn()}
     />
   ) : (
-    <AssessmentManageSessionsDrawer
-      open
+    <AssessmentSessionsPanel
+      search=""
       sessions={[
         {
           id: 'session',
@@ -87,6 +87,18 @@ function PaginationHarness({
           bookedCount: 0,
           isCancelled: false,
           concurrencyStamp: 'session-version',
+          scopeDetails: [
+            {
+              className: 'Class 1',
+              admissionOfferingId: 'offering',
+              offeringName: 'Primary',
+              workflowStageDefinitionId: 'stage',
+              stageName: 'Exam',
+              workflowDefinitionId: 'workflow',
+              workflowVersion: 1,
+              schedulingEnabled: true,
+            },
+          ],
         },
       ]}
       totalCount={75}
@@ -94,10 +106,8 @@ function PaginationHarness({
       pageSize={pageSize}
       isLoading={false}
       canManage={false}
-      onClose={vi.fn()}
       onSelect={vi.fn()}
       onEdit={vi.fn()}
-      onBook={vi.fn()}
       onCancel={vi.fn()}
       onPage={changePage}
       onSearch={vi.fn()}
@@ -110,6 +120,16 @@ const renderSurface = (element: ReactElement) =>
   renderWithProviders(
     <ThemeProvider theme={createTheme(defaultSettings)}>{element}</ThemeProvider>
   );
+
+it('shows session classes and room as scan-friendly columns', () => {
+  renderSurface(<PaginationHarness surface="manage" onPage={vi.fn()} />);
+  expect(screen.getByRole('columnheader', { name: 'Classes' })).toBeVisible();
+  expect(screen.getByRole('columnheader', { name: 'Room' })).toBeVisible();
+  expect(screen.getByRole('table', { name: 'Assessment sessions table' })).toBeVisible();
+  expect(screen.getByText('Class 1')).toBeVisible();
+  expect(screen.getByText('Exam room')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Export' })).toBeVisible();
+});
 
 it.each(['preview', 'manage'] as const)(
   '%s uses the real shared table to move through consecutive pages without skipping records',

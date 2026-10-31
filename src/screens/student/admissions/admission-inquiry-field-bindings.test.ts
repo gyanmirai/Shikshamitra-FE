@@ -115,6 +115,73 @@ describe('configured Inquiry bindings', () => {
 });
 
 describe('Inquiry publication minimum information', () => {
+  it.each(['Father.Name', 'Mother.Mobile'])(
+    'keeps optional %s separate from the complete generic primary slots',
+    (binding) => {
+      expect(
+        getInquiryFormConfigurationIssues(form([...generic(), field(binding), selector()]))
+      ).toEqual([]);
+    }
+  );
+
+  it('rejects a custom alias that could shadow a valid explicit identity mapping', () => {
+    const legacy = field('CUSTOM_ANSWER', { code: 'APPLICANT_FIRST_NAME', bindingType: 1 });
+    expect(getInquiryFormConfigurationIssues(form([legacy, ...generic()]))).not.toEqual([]);
+  });
+
+  it('keeps legacy aliases readable but requires an explicit system mapping for publication', () => {
+    const legacy = field('FIELD_1', {
+      code: 'APPLICANT_FIRST_NAME',
+      bindingType: 1,
+      label: 'Full Name',
+    });
+    expect(canonicalInquiryBinding(legacy)).toBe('Applicant.FirstName');
+    expect(getInquiryFormConfigurationIssues(form([legacy, ...generic().slice(1)]))).toContain(
+      'Add a required Student name field before publishing.'
+    );
+  });
+
+  it.each([
+    ['Applicant.FirstName', 'Student name'],
+    ['Guardian.FirstName', 'Parent / Guardian name'],
+    ['Guardian.Mobile', 'Parent / Guardian mobile'],
+  ])(
+    'does not count a custom question with system-looking key %s as a published identity mapping',
+    (binding, label) => {
+      const fields = generic().map((item) =>
+        item.bindingKey === binding ? { ...item, bindingType: 1 as const } : item
+      );
+      expect(getInquiryFormConfigurationIssues(form(fields))).toContain(
+        `Add a required ${label} field before publishing.`
+      );
+      expect(getInquiryFormConfigurationIssues({ ...form(fields), purpose: 1 })).toEqual([]);
+    }
+  );
+
+  it.each([
+    ['Applicant.FirstName', 'Student name'],
+    ['Guardian.FirstName', 'Parent / Guardian name'],
+    ['Guardian.Mobile', 'Parent / Guardian mobile'],
+  ])('does not publish an identity field %s with the wrong input type', (binding, label) => {
+    const fields = generic().map((item) =>
+      item.bindingKey === binding ? { ...item, fieldType: 2 as const } : item
+    );
+    expect(getInquiryFormConfigurationIssues(form(fields))).toContain(
+      `Add a required ${label} field before publishing.`
+    );
+  });
+
+  it('accepts FIELD_1 when its explicit mapping and type are correct, regardless of label', () => {
+    expect(
+      getInquiryFormConfigurationIssues(
+        form([
+          field('Applicant.Name', { code: 'FIELD_1', label: 'Full Name' }),
+          ...generic().slice(1),
+        ])
+      )
+    ).toEqual([]);
+  });
+
   it.each(['Applicant.FirstName', 'Applicant.MiddleName', 'Applicant.LastName'])(
     'rejects a full name together with optional separate name field %s',
     (binding) => {
@@ -184,7 +251,7 @@ describe('Inquiry publication minimum information', () => {
   it('requires a valid configured selector for two parents and checks both contact paths', () => {
     const fields = [...father(), field('Mother.Name'), field('Mother.Mobile')];
     expect(getInquiryFormConfigurationIssues(form(fields))).toContain(
-      'Add a required Primary parent selector when both Father and Mother contacts are configured.'
+      'Add a required Primary contact selector when both Father and Mother contacts are configured.'
     );
     expect(getInquiryFormConfigurationIssues(form([...fields, selector()]))).toEqual([]);
     expect(
@@ -198,7 +265,7 @@ describe('Inquiry publication minimum information', () => {
 
   it('rejects a selector choice without a matching contact path', () => {
     expect(getInquiryFormConfigurationIssues(form([...father(), selector()]))).toContain(
-      'Configure a required Primary parent selector with Father and Mother choices before publishing.'
+      'Configure a required Primary contact selector with Father, Mother and Guardian choices before publishing.'
     );
   });
 

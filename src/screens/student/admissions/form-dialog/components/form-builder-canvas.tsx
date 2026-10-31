@@ -8,10 +8,12 @@ import { Box, Card, Stack, Button, Typography } from '@mui/material';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 import { FormBuilderStep } from '../form-builder-step';
-import { FormBuilderSection } from '../form-builder-section';
 import { getAdmissionFormStepGroups } from '../form-step-groups';
 import { FormBuilderStepHeader } from './form-builder-step-header';
+import { EffectiveFormBuilderSection } from './inherited-form-sections';
 import { AdmissionFormStepNavigation } from '../../components/admission-form-step-navigation';
+
+import type { BuilderNavigationRequest } from '../types/builder-navigation';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
@@ -24,6 +26,8 @@ type Props = {
   onNewStepReady: (stepId: string | null) => void;
   footer?: ReactNode;
   beforeSections?: ReactNode;
+  effectiveForm?: CreateUpdateAdmissionForm;
+  navigationRequest?: BuilderNavigationRequest;
 };
 
 export function FormBuilderCanvas({
@@ -37,9 +41,11 @@ export function FormBuilderCanvas({
   onNewStepReady,
   footer,
   beforeSections,
+  effectiveForm = formik.values,
+  navigationRequest,
 }: Props) {
-  const isStepper = formik.values.layoutType === 1;
-  const steps = getAdmissionFormStepGroups(formik.values.sections);
+  const isStepper = effectiveForm.layoutType === 1;
+  const steps = getAdmissionFormStepGroups(effectiveForm.sections);
   const activeStepIndex = Math.max(
     0,
     steps.findIndex((step) => step.sections.some(({ section }) => section.id === selectedSectionId))
@@ -47,6 +53,18 @@ export function FormBuilderCanvas({
   const activeStep = steps[activeStepIndex];
   const selectSection = (sectionId: string) => onSelect(sectionId, null);
   const selectField = (sectionId: string, fieldId: string) => onSelect(sectionId, fieldId);
+  const renderSection = (sectionIndex: number) => (
+    <EffectiveFormBuilderSection
+      key={effectiveForm.sections[sectionIndex].id}
+      formik={formik}
+      effectiveForm={effectiveForm}
+      sectionIndex={sectionIndex}
+      selectedSectionId={selectedSectionId}
+      selectedFieldId={selectedFieldId}
+      onSelect={onSelect}
+      navigationRequest={navigationRequest}
+    />
+  );
   return (
     <Stack
       direction={{ xs: 'column', md: 'row' }}
@@ -94,16 +112,34 @@ export function FormBuilderCanvas({
                   activeStep={activeStepIndex}
                   onStepChange={(index) => selectSection(steps[index].sections[0].section.id)}
                   disabled={formik.isSubmitting}
-                  renderStepLabel={(index) => (
-                    <FormBuilderStepHeader
-                      formik={formik}
-                      step={steps[index]}
-                      selected={index === activeStepIndex}
-                      onSelect={() => selectSection(steps[index].sections[0].section.id)}
-                      newlyAdded={steps[index].id === newStepId}
-                      onNewStepReady={onNewStepReady}
-                    />
-                  )}
+                  renderStepLabel={(index) => {
+                    const effectiveStep = steps[index];
+                    const editableSections = effectiveStep.sections.flatMap(({ section }) => {
+                      const sectionIndex = formik.values.sections.findIndex(
+                        (base) => base.id === section.id
+                      );
+                      return sectionIndex >= 0 ? [{ section, sectionIndex }] : [];
+                    });
+                    const sourceOwned =
+                      editableSections.length !== effectiveStep.sections.length ||
+                      formik.values.layoutType === 0;
+                    return (
+                      <FormBuilderStepHeader
+                        formik={formik}
+                        step={
+                          sourceOwned
+                            ? effectiveStep
+                            : { ...effectiveStep, sections: editableSections }
+                        }
+                        readOnly={sourceOwned}
+                        navigationRequest={navigationRequest}
+                        selected={index === activeStepIndex}
+                        onSelect={() => selectSection(steps[index].sections[0].section.id)}
+                        newlyAdded={steps[index].id === newStepId}
+                        onNewStepReady={onNewStepReady}
+                      />
+                    );
+                  }}
                 />
               </Box>
             </Scrollbar>
@@ -134,7 +170,7 @@ export function FormBuilderCanvas({
         >
           <Stack spacing={1} sx={{ pb: 0.5, pl: 0.25, pr: footer ? 2 : 0.25 }}>
             {beforeSections}
-            {!formik.values.sections.length && (
+            {!effectiveForm.sections.length && (
               <Typography variant="body2" color="text.secondary">
                 This draft has no sections. Add a section to start building the form.
               </Typography>
@@ -149,24 +185,15 @@ export function FormBuilderCanvas({
                   selectedFieldId={selectedFieldId}
                   onSelectSection={selectSection}
                   onSelectField={selectField}
+                  renderSection={renderSection}
                 />
               ))
             ) : (
               <SortableContext
-                items={formik.values.sections.map((section) => `section:${section.id}`)}
+                items={effectiveForm.sections.map((section) => `section:${section.id}`)}
                 strategy={verticalListSortingStrategy}
               >
-                {formik.values.sections.map((section, sectionIndex) => (
-                  <FormBuilderSection
-                    key={section.id}
-                    formik={formik}
-                    sectionIndex={sectionIndex}
-                    selectedSectionId={selectedSectionId}
-                    selectedFieldId={selectedFieldId}
-                    onSelectSection={selectSection}
-                    onSelectField={(id) => selectField(section.id, id)}
-                  />
-                ))}
+                {effectiveForm.sections.map((_, sectionIndex) => renderSection(sectionIndex))}
               </SortableContext>
             )}
           </Stack>

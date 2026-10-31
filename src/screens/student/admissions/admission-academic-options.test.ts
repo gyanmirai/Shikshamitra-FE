@@ -1,7 +1,55 @@
-import { describe, expect, it } from 'vitest';
-import { academicOptionsJson } from './admission-academic-options';
+import { it, expect, describe } from 'vitest';
+
+import {
+  academicOptionsJson,
+  hasBoardClassOptions,
+  readBoardClassOptions,
+} from './admission-academic-options';
 
 describe('saved academic template compatibility', () => {
+  it('adds the Board filter only to standalone class choices, preserving explicit academic cascades', () => {
+    expect(
+      hasBoardClassOptions({
+        code: 'CLASS_INTERESTED',
+        fieldType: 6,
+        optionsJson: '{"source":"Standards"}',
+      })
+    ).toBe(true);
+    expect(
+      hasBoardClassOptions({
+        code: 'CLASS',
+        fieldType: 6,
+        optionsJson: '{"source":"StandardsByMedium","parentField":"MEDIUM"}',
+      })
+    ).toBe(false);
+    expect(
+      hasBoardClassOptions({
+        code: 'DIVISION',
+        fieldType: 6,
+        optionsJson: '{"source":"DivisionsByStandard","parentField":"CLASS"}',
+      })
+    ).toBe(false);
+    expect(
+      hasBoardClassOptions({
+        code: 'CLASS_INTERESTED',
+        fieldType: 7,
+        optionsJson: '{"source":"Standards"}',
+      })
+    ).toBe(false);
+    const resolved = JSON.stringify([
+      { value: 'class-6', label: 'Class 6', boardId: 'cbse', boardLabel: 'CBSE' },
+    ]);
+    expect(
+      hasBoardClassOptions({ code: 'CUSTOM_CLASS', fieldType: 6, optionsJson: resolved })
+    ).toBe(true);
+    expect(readBoardClassOptions(resolved)[0]).toMatchObject({
+      value: 'class-6',
+      boardId: 'cbse',
+      isActive: true,
+    });
+    expect(readBoardClassOptions('[{"value":"legacy","label":"Class 6"}]')).toEqual([]);
+    expect(readBoardClassOptions('not-json')).toEqual([]);
+  });
   it.each([
     ['CLASS_INTERESTED', { source: 'Standards' }],
     ['CLASS_APPLYING_FOR', { source: 'Standards' }],

@@ -6,10 +6,12 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Stack, ButtonBase, IconButton } from '@mui/material';
 
+import { hasLockedInquiryFields } from '../inquiry-default-fields';
 import { FormBuilderUnitActions } from './form-builder-unit-actions';
 import { FormBuilderUnitSettings } from './form-builder-unit-settings';
 
 import type { AdmissionFormStepGroup } from '../form-step-groups';
+import type { BuilderNavigationRequest } from '../types/builder-navigation';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
@@ -18,6 +20,8 @@ type Props = {
   onSelect: () => void;
   newlyAdded: boolean;
   onNewStepReady: (stepId: string | null) => void;
+  readOnly?: boolean;
+  navigationRequest?: BuilderNavigationRequest;
 };
 
 export function FormBuilderStepHeader({
@@ -27,8 +31,16 @@ export function FormBuilderStepHeader({
   onSelect,
   newlyAdded,
   onNewStepReady,
+  readOnly = false,
+  navigationRequest,
 }: Props) {
   const settings = useBoolean(newlyAdded);
+  const deleteDisabled = hasLockedInquiryFields(
+    formik.values.purpose,
+    formik.values.sections.filter((section) =>
+      step.sections.some((item) => item.section.id === section.id)
+    )
+  );
   const { onTrue: openSettings } = settings;
   const headingRef = useRef<HTMLButtonElement>(null);
   const path = `sections[${step.sections[0].sectionIndex}].stepName`;
@@ -38,7 +50,7 @@ export function FormBuilderStepHeader({
       ? 'Step heading is required'
       : meta.error
     : undefined;
-  const editing = settings.value || Boolean(nameError);
+  const editing = !readOnly && (settings.value || Boolean(nameError));
   const wasEditing = useRef(editing);
   useEffect(() => {
     if (wasEditing.current && !editing) headingRef.current?.focus();
@@ -50,6 +62,20 @@ export function FormBuilderStepHeader({
       onNewStepReady(null);
     }
   }, [newlyAdded, onNewStepReady, openSettings]);
+  useEffect(() => {
+    const target = navigationRequest?.target;
+    if (!target || target.kind !== 'step' || target.stepId !== step.id) return undefined;
+    const editHeading = !readOnly && target.settingPath?.endsWith('.stepName');
+    if (editHeading) openSettings();
+    const frame = requestAnimationFrame(() => {
+      const element = editHeading
+        ? document.getElementById(`step-heading-${step.id}`)
+        : headingRef.current;
+      element?.scrollIntoView?.({ block: 'nearest' });
+      element?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [navigationRequest, step.id, readOnly, openSettings]);
   const finishEditing = () => {
     formik.setFieldTouched(path, true);
     if (!step.name.trim()) return;
@@ -111,7 +137,7 @@ export function FormBuilderStepHeader({
           </Box>
         </ButtonBase>
       )}
-      {editing ? (
+      {readOnly ? null : editing ? (
         <IconButton
           size="small"
           aria-label="Finish editing step heading"
@@ -125,16 +151,18 @@ export function FormBuilderStepHeader({
           name={step.name}
           unit="step"
           disabled={formik.isSubmitting}
+          deleteDisabled={deleteDisabled}
           onEdit={() => {
             onSelect();
             settings.onTrue();
           }}
-          onDelete={() =>
+          onDelete={() => {
+            if (deleteDisabled) return;
             formik.setFieldValue(
               'sections',
               formik.values.sections.filter((section) => (section.stepId ?? section.id) !== step.id)
-            )
-          }
+            );
+          }}
         />
       )}
     </Stack>

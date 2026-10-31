@@ -23,13 +23,9 @@ import {
 
 import StudentPendingTasks from './student-pending-tasks';
 import StudentSetupDivisionEditor from './student-setup-division-editor';
+import { hasAssignedDivision, type StudentSetupView } from './student-setup-view';
 import { getStudentPendingTasks, getStudentSetupSummary } from './student-setup-summary';
 import { studentSetupSortFields, studentSetupStatusOptions } from './student-setup-worklist-config';
-import {
-  hasAssignedDivision,
-  type StudentSetupView,
-  type StudentSetupTaskScope,
-} from './student-setup-view';
 import {
   accountStatusMeta,
   onboardingStageMeta,
@@ -42,13 +38,11 @@ export default function StudentSetupTable({
   isError,
   onRetry,
   view,
-  taskScope,
   tableId,
   tableTitle,
   noDataText,
   noDataDescription,
   onClearWorklistFilters,
-  onViewAllStudents,
   onOpen,
   onOpenTask,
   selectedStudentIds,
@@ -84,13 +78,11 @@ export default function StudentSetupTable({
   isError: boolean;
   onRetry: () => void;
   view: StudentSetupView;
-  taskScope: StudentSetupTaskScope;
   tableId: string;
   tableTitle: string;
   noDataText: string;
   noDataDescription?: string;
   onClearWorklistFilters?: () => void;
-  onViewAllStudents?: () => void;
   onOpen: (studentId: string) => void;
   onOpenTask: (studentId: string, view: StudentSetupView) => void;
   selectedStudentIds: string[];
@@ -730,8 +722,8 @@ export default function StudentSetupTable({
     };
 
     const filterableColumns = new Set(['studentName', 'statusLabel']);
-    if (taskScope === 'all') filterableColumns.add('rollNumberTask');
-    if (placementOptions.length > 0 && (view !== 'division' || taskScope === 'all')) {
+    filterableColumns.add('rollNumberTask');
+    if (placementOptions.length > 0) {
       filterableColumns.add('placement');
       filterableColumns.add('divisionTask');
     }
@@ -749,9 +741,7 @@ export default function StudentSetupTable({
             ['admissionRoute', 'identifiers', 'accounts'].includes(column.id)) ||
           (assignmentView && ['statusLabel'].includes(column.id)) ||
           (view === 'division' && column.id === 'rollNumberTask'),
-        isSort:
-          column.id in studentSetupSortFields &&
-          (taskScope === 'all' || (column.id !== 'rollNumberTask' && column.id !== 'divisionTask')),
+        isSort: column.id in studentSetupSortFields,
         isFilter: filterableColumns.has(column.id),
       }));
   }, [
@@ -774,7 +764,6 @@ export default function StudentSetupTable({
     onManualChange,
     onManualBlur,
     assignmentBusy,
-    taskScope,
     view,
     assignmentView,
   ]);
@@ -823,11 +812,6 @@ export default function StudentSetupTable({
               onClick={onClearWorklistFilters}
             >
               Clear filters
-            </Button>
-          )}
-          {onViewAllStudents && (
-            <Button size="small" variant="outlined" onClick={onViewAllStudents}>
-              View all students
             </Button>
           )}
         </Stack>

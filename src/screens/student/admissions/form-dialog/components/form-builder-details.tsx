@@ -1,8 +1,8 @@
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useEffect, useState } from 'react';
 import { isEqual } from 'src/utils/helper';
+import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -14,13 +14,21 @@ import { FormBuilderDetailFields } from './form-builder-detail-fields';
 import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
 import { getSystemAdmissionFormTemplate } from '../admission-form-template-catalog';
 import { FormTemplateChooser, type AdmissionFormStarter } from './form-template-chooser';
+import {
+  changeNewFormPurpose,
+  hasOnlyInquiryDefaults,
+  withoutInquiryDefaults,
+} from '../inquiry-default-fields';
 
 type Props = { formik: FormikProps<CreateUpdateAdmissionForm>; editing: boolean };
 
 export function FormBuilderDetails({ formik, editing }: Props) {
   const purpose = formik.values.purpose ?? 0;
   const [selectedStarter, setSelectedStarter] = useState<AdmissionFormStarter | null>(() =>
-    formik.values.sections.every((section) => section.fields.length === 0) ? 'blank' : null
+    formik.values.sections.every((section) => section.fields.length === 0) ||
+    hasOnlyInquiryDefaults(formik.values)
+      ? 'blank'
+      : null
   );
   const [pendingStarter, setPendingStarter] = useState<{
     label: string;
@@ -53,8 +61,8 @@ export function FormBuilderDetails({ formik, editing }: Props) {
     const values = createStarter(starter);
     const label = starter === 'blank' ? 'Blank form' : values.name;
     const hasDraftChanges = !isEqual(
-      { ...formik.values, purpose: formik.initialValues.purpose },
-      formik.initialValues
+      { ...withoutInquiryDefaults(formik.values), purpose: formik.initialValues.purpose },
+      withoutInquiryDefaults(formik.initialValues)
     );
     if (hasDraftChanges) setPendingStarter({ label, values, starter });
     else applyStarter(values, starter);
@@ -78,7 +86,14 @@ export function FormBuilderDetails({ formik, editing }: Props) {
             ]}
             value={purpose}
             disabled={editing}
-            onChange={(value) => formik.setFieldValue('purpose', Number(value))}
+            onChange={(value) =>
+              formik.setValues(
+                changeNewFormPurpose(
+                  formik.values,
+                  Number(value) as CreateUpdateAdmissionForm['purpose']
+                )
+              )
+            }
             onBlur={() => formik.setFieldTouched('purpose', true)}
             error={purposeError}
             helperText={purposeError ? formik.errors.purpose : undefined}

@@ -12,15 +12,21 @@ audience: humans-and-agents
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
 
+## House Management client
+
+`src/redux/student/house-management/house-management-api.ts` injects the typed Houses, Students and Divisions queries plus house CRUD, assignment preview/commit and independent leader commands into the shared API. Types live beside the client. Responses use the existing Records Result-envelope adapter. Successful writes invalidate the `studentType.student` tag with ID `HOUSE-MANAGEMENT`; preview is read-only and failed writes retain cached state. House CRUD also shares the specific `studentGroupType.studentGroup` tag with ID `HOUSE-CATALOGUE` with legacy House Settings, so changes in either workspace refresh subscribed catalogue views and managed roster labels. Membership and leader commands do not refresh the legacy catalogue. Commands retain current concurrency stamps and assignment preview tokens. Server pages are bounded to 100 rows; selections can span pages within the 500-enrollment command limit. Backend contracts and scope rules are owned by the [Student API](../../../Shikshamitra-BE/docs/modules/student/api.md#house-management).
+
+House and eligible-leader lookups use the shared `PaginatedSearchSelect`, backed by the owning RTK lazy queries. The picker adapts one-based pages to 25-row server offsets, debounces searches for 400 ms, and reloads empty-query choices when medium or leader scope changes. Stable house/enrollment IDs identify options; leader labels include the GR number only when present in the permitted response.
+
 ## Resume admission client
 
 `admission-applications-api.ts` provides the scoped `getAdmissionJourneyResumePreview` query and `resumeAdmissionApplicationJourney` mutation. The command sends reason, preview stamp, closure ID and a stable request key. Successful changes invalidate Admissions application, applicant, inquiry, offering, task/exam and dashboard tags; failed requests do not invalidate Finance money data. `application-resume-journey.tsx` retains the command key on retry, parses the actual server blocker and refreshes eligibility without discarding the reason. See the [backend contract](../../../Shikshamitra-BE/docs/modules/student/api.md#admission-journey-preparation-and-closure).
 
 ## Parent and optional-guardian contact clients
 
-Inquiry and Direct Registration requests add optional `familyContacts` while retaining the original parent/sibling proof fields. Inquiry reads add `mainSchoolContact` for communication preview; the contact helper keeps missing destination fields empty instead of borrowing from another person.
+Inquiry and Direct Registration requests add optional `familyContacts` while retaining the original parent/sibling proof fields. Inquiry reads add `primaryContactRelationship`, `guardianResponsibilityConfirmed` and `mainSchoolContact`. Staff capture/edit and Direct Registration send `guardianResponsibilityConfirmed` only after the shared confirmation; public capture never sends trusted confirmation. `parentRelationship` remains Father/Mother-only for sibling proof even when the configured `Inquiry.ParentRelationship` question offers Guardian. The contact helper keeps missing/hidden destination fields empty rather than borrowing another person's contact.
 
-Profile contact editing reuses Records family snapshot/change endpoints, complete retained payloads, expected snapshot, stable request key and existing cache invalidation. Family data adds `mainContactRelationship` and `guardianRelationship`.
+Profile contact editing reuses Records family snapshot/change endpoints, complete retained payloads, expected snapshot, stable request key and existing cache invalidation. Family data adds `mainContactRelationship`, `guardianRelationship` and an affirmative-only optional `guardianResponsibilityConfirmed`. The latter survives the retained approval payload and is contact-policy metadata, not an account-access grant or identity change.
 
 Credentials recipients add `isMainContact` and `relationshipLabel`; `hasLinkedAccount` describes the exact saved recipient. Adult send bodies add `confirmRecipientAccess`. Activation can carry `guardianAccessSelection` separately from `siblingParentSelection`; a persisted case choice is reported through `parentSibling.guardianAccessSelected`, without establishing sibling proof.
 
@@ -69,7 +75,9 @@ Workflow advance accepts `deferFeeCollection: true` with the required trimmed `r
 
 ## Subject-wise Assessment clients
 
-`assessment-student-booking-drawer.tsx` and `use-assessment-student-booking.ts` own student-first session selection and Create & Book. `admission-assessment-planning-api.ts` sends optional `stageInstanceIds` to preview; selected rows retain their exact application/stage identity and use fresh server stamps. Confirmation reuses the existing atomic endpoint and cache tags. Uncertain responses replay the exact durable command; no confirmed payment or admission transition is performed by booking.
+Successful roster refreshes reconcile selected students by both application and stage identity before opening booking/bulk actions. Refreshed capabilities replace old selected snapshots; disappeared, inactive or unconfigured rows leave selection. Loading, failed and paused reads retain the selection until current evidence is available.
+
+`assessment-sessions-panel.tsx` owns the Session worklist and `assessment-session-setup-drawer.tsx` creates/edits sessions without assigning students. `assessment-student-booking-drawer.tsx` and `use-assessment-student-booking.ts` own Student selection and existing-session booking only. Student is first/default; Session/Student URL state controls active-panel reads, with independent search/paging. Required Board/Medium gate list reads; linked scope/session hierarchy restores atomically without clearing link identity. Known booked selections show existing details and skip booking-preview/confirmation reads until eligible students remain. Both Export controls retain loaded-page semantics. Pipeline retains its separate Add Slot/Create & Book flow. `admission-assessment-planning-api.ts` sends optional `stageInstanceIds` to preview; selected rows retain their exact application/stage identity and use fresh server stamps. Confirmation reuses the existing atomic endpoint and cache tags. Uncertain responses replay the exact durable command; no confirmed payment or admission transition is performed by booking.
 
 `admission-assessment-catalog-api.ts` reads `/student/enrollment/admissions/workflows/assessment-catalog` only when the stage uses subject-wise marks.
 The existing Workflow View guard owns catalog access; the returned year/Board/Medium/classes and subject suggestions do not require an Academic menu grant.
@@ -201,8 +209,8 @@ New Inquiry keeps the academic-year `capture-catalogue` subscription for period/
 
 ### Admission form list
 
-`admission-forms.tsx` keeps Inquiry/Registration in the existing URL-backed tabs. Purpose stays
-visible as read-only context. `form-list/form-column-filters.ts` serializes Form name, Version
+`admission-forms.tsx` keeps Inquiry/Registration in one list with a Form type column. The new-form
+wizard selects the type before starter templates. `form-list/form-column-filters.ts` serializes Form name, Version
 and Sections criteria into the existing list request's `columnFilters`; Status retains its scalar
 parameter and replaces the previous status choice. The server filters before count/paging.
 Search/filter changes reset the page. One unified request lists Inquiry and Registration forms;
@@ -211,6 +219,8 @@ The list uses `currentData` to avoid rows from another query scope, retains safe
 refreshing or after a refresh failure, and prevents a failed first request from showing a
 successful empty state. Existing utilities, row actions, permissions and form-builder commands
 remain in their current components. See the [backend form contract](../../../Shikshamitra-BE/docs/modules/student/api.md#application-form-runtime).
+
+`form-dialog/inquiry-default-fields.ts` materializes three required System controls for new Inquiry blank/starter forms. Reserved generated codes identify builder-owned controls across the existing save/read DTOs; no API property or runtime `readOnly` change is involved. Field settings, delete/reorder handlers and parent section/step delete actions protect those defaults. Generated controls carry Gujarati/Hindi copy, rehydrated when editing a generated definition so later language additions remain usable. Authored legacy fields are not retroactively relabelled, locked or injected on read.
 
 ### Admissions list consistency
 
@@ -505,6 +515,14 @@ See [backend email contracts](../../../Shikshamitra-BE/docs/modules/student/api.
 
 ## Inquiry inheritance clients
 
-`admission-forms-api.ts` owns paged `GET forms/{id}/inheritance/sources` (`skipCount` / `maxResultCount`, 25 per request) and read-only `POST forms/inheritance/preview`. Source usage summaries require the existing Form usage grant; preview requires Form management. The builder accumulates authorized pages and offers Load more connected forms. Preview carries the current Registration draft and selected exact Inquiry version without saving either. Existing form create/update/version/publish operations retain the versioned inheritance policy.
+`admission-forms-api.ts` owns paged `GET forms/{id}/inheritance/sources` (`skipCount` / `maxResultCount`, 25 per request) and read-only `POST forms/inheritance/preview`. Source usage summaries require the existing Form usage grant; preview requires Form management. The builder accumulates authorized pages and offers **Load more Inquiry versions**. Its single source picker merges exact saved, retained and paged published versions by ID; without View permission it shows only saved IDs without cached catalogue metadata. Preview carries the current Registration draft and selected exact Inquiry version without saving either. Successful preview responses retain the matching base-section IDs so pending previews cannot restore deleted base sections. Existing form create/update/version/publish operations retain the versioned inheritance policy.
 
 `form-dialog/hooks/use-form-inheritance.tsx` debounces draft compatibility previews, ignores stale responses and keeps effective sections separate from base Formik sections. Legacy forms do not request inheritance data. `admission-applications-api.ts` receives the frozen effective definition and safe Inquiry context; runtime fields use server provenance instead of inferring labels from field codes. Common API/UI components are reused unchanged.
+
+The Inquiry source picker mounts its remote search only after the inheritance controller initializes. New Registration forms therefore load published Inquiry choices without requiring search text; initialization displays a disabled loading field rather than an empty list or a temporary permission warning. Saved-source permissions, search, pagination and retry remain governed by the existing picker.
+
+Inquiry-first composition retains the matching Registration field ID while placing its effective inherited control in the source section. The builder reconciles by retained ID, canonical identity and source-specific confirmed mappings so hidden base duplicates are not restored during a pending preview. Originally authored empty Registration sections remain available for adding questions; sections emptied only by duplicate suppression are omitted. Field settings show effective requiredness without allowing source definition or placement edits. New standard starter questions use canonical Student bindings; saved form bindings are not rewritten on read.
+
+Effective inherited sections carry optional fieldsPerRow from the source Inquiry. Builder, live preview, Review and Application runtime honor that section value with the form grid as fallback. Combined layoutType comes from server composition; supported languages are merged in derived previews. Current Registration fields, grid edits and newly added steps stay local while compatibility refreshes. Add step switches a single-page draft using one Formik values update. No common UI components or create/update payload contracts changed.
+
+Builder selection keeps inherited source version, section code and field code as a fallback when unsaved inheritance recomposition returns new derived IDs. Existing section/field IDs remain the primary selection. A fallback never transfers a selection to a different Inquiry version, and authored base IDs and source definitions are not rewritten.

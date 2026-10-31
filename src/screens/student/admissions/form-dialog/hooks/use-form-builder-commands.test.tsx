@@ -1,5 +1,8 @@
 import type { FormikProps } from 'formik';
-import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  AdmissionFormField,
+  CreateUpdateAdmissionForm,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import { Formik } from 'formik';
 import { it, vi, expect, describe } from 'vitest';
@@ -8,6 +11,7 @@ import { render, screen } from '@testing-library/react';
 
 import { getAdmissionFormStepGroups } from '../form-step-groups';
 import { useFormBuilderCommands } from './use-form-builder-commands';
+import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
 import { getSystemAdmissionFormTemplate } from '../admission-form-template-catalog';
 
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
@@ -21,19 +25,69 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
 function Commands({
   formik,
   selectedSectionId,
+  inheritedFields = [],
+  onSelectInherited,
 }: {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   selectedSectionId: string | null;
+  inheritedFields?: AdmissionFormField[];
+  onSelectInherited?: (field: AdmissionFormField) => void;
 }) {
-  const commands = useFormBuilderCommands(formik, selectedSectionId, () => undefined);
+  const commands = useFormBuilderCommands(
+    formik,
+    selectedSectionId,
+    () => undefined,
+    inheritedFields,
+    onSelectInherited
+  );
   const steps = getAdmissionFormStepGroups(formik.values.sections);
   return (
     <>
       <button type="button" onClick={() => commands.addField(0)}>
         Add custom field
       </button>
+      <button
+        type="button"
+        onClick={() =>
+          commands.addField(0, undefined, {
+            label: 'Interested Class',
+            fieldType: 0,
+            description: '',
+            icon: '',
+            validation: {},
+          })
+        }
+      >
+        Add class interest
+      </button>
       <button type="button" onClick={() => commands.addField(5, 'Applicant.DateOfBirth')}>
         Add birth date
+      </button>
+      <button type="button" onClick={() => commands.addField(0, 'Applicant.FirstName')}>
+        Add separate name
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          commands.addGroupSection('Student profile', [
+            ...['FirstName', 'MiddleName', 'LastName'].map((suffix) => ({
+              key: `Applicant.${suffix}`,
+              displayName: suffix,
+              description: '',
+              fieldType: 0 as const,
+              readOnly: false,
+            })),
+            {
+              key: 'Applicant.DateOfBirth',
+              displayName: 'Date of birth',
+              description: '',
+              fieldType: 5,
+              readOnly: false,
+            },
+          ])
+        }
+      >
+        Add names pack
       </button>
       <button type="button" onClick={commands.addSection}>
         Add section
@@ -55,7 +109,7 @@ function Commands({
       >
         Add address pack
       </button>
-      <button type="button" onClick={() => commands.addCanvasUnit(steps[0]?.id)}>
+      <button type="button" onClick={() => commands.addStep(steps[0]?.id)}>
         Add next step
       </button>
       <button
@@ -97,6 +151,7 @@ function Commands({
       <output data-testid="fields">
         {JSON.stringify(formik.values.sections.flatMap((section) => section.fields))}
       </output>
+      <output data-testid="draft">{JSON.stringify(formik.values)}</output>
     </>
   );
 }
@@ -114,6 +169,135 @@ function renderCommands(empty = false) {
 }
 
 describe('useFormBuilderCommands', () => {
+  it('reuses the starter class question instead of adding the custom alias', async () => {
+    const form = getSystemAdmissionFormTemplate('admission-inquiry');
+    render(
+      <Formik initialValues={form} onSubmit={() => undefined}>
+        {(formik) => <Commands formik={formik} selectedSectionId={form.sections[0].id} />}
+      </Formik>
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Add class interest' }));
+    const fields = JSON.parse(screen.getByTestId('fields').textContent!);
+    expect(
+      fields.filter((field: AdmissionFormField) =>
+        /Class interested in|Interested Class/.test(field.label)
+      )
+    ).toHaveLength(1);
+  });
+
+  it('does not add a class-interest alias already supplied by Inquiry', async () => {
+    const form = getBlankAdmissionFormInitialValues(1);
+    const source = getSystemAdmissionFormTemplate('admission-inquiry').sections[0].fields.find(
+      (field) => field.code === 'CLASS_INTERESTED'
+    )!;
+    const onSelectInherited = vi.fn();
+    render(
+      <Formik initialValues={form} onSubmit={() => undefined}>
+        {(formik) => (
+          <Commands
+            formik={formik}
+            selectedSectionId={form.sections[0].id}
+            inheritedFields={[source]}
+            onSelectInherited={onSelectInherited}
+          />
+        )}
+      </Formik>
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Add class interest' }));
+    expect(JSON.parse(screen.getByTestId('fields').textContent!)).toHaveLength(0);
+    expect(onSelectInherited).toHaveBeenCalledWith(source);
+  });
+  it('does not add an Inquiry question twice through individual and whole-pack actions', async () => {
+    const initialValues = getBlankAdmissionFormInitialValues(1);
+    const field: AdmissionFormField = {
+      ...getSystemAdmissionFormTemplate('admission-application').sections[0].fields[3],
+      inheritedFrom: {
+        inquiryFormDefinitionId: 'inquiry',
+        sourceFieldCode: 'DOB',
+        fieldIdentity: 'system:APPLICANT.DATEOFBIRTH',
+      },
+    };
+    const selectInherited = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <Formik initialValues={initialValues} onSubmit={() => undefined}>
+        {(formik) => (
+          <Commands
+            formik={formik}
+            selectedSectionId={initialValues.sections[0].id}
+            inheritedFields={[field]}
+            onSelectInherited={selectInherited}
+          />
+        )}
+      </Formik>
+    );
+    await user.click(screen.getByRole('button', { name: 'Add birth date' }));
+    expect(selectInherited).toHaveBeenCalledWith(field);
+    expect(JSON.parse(screen.getByTestId('fields').textContent!)).toEqual([]);
+    await user.click(screen.getByRole('button', { name: 'Add names pack' }));
+    const fields = JSON.parse(screen.getByTestId('fields').textContent!) as AdmissionFormField[];
+    expect(fields.map((item) => item.bindingKey)).toEqual([
+      'Applicant.FirstName',
+      'Applicant.MiddleName',
+      'Applicant.LastName',
+    ]);
+    expect(fields.some((item) => item.bindingKey === 'Applicant.DateOfBirth')).toBe(false);
+  });
+
+  it('converts a single-page Registration to steps without losing its existing sections or fields', async () => {
+    const initialValues = getBlankAdmissionFormInitialValues(1);
+    initialValues.layoutType = 0;
+    initialValues.sections.push({
+      ...initialValues.sections[0],
+      id: 'second',
+      code: 'SECOND',
+      name: 'More details',
+    });
+    const user = userEvent.setup();
+    render(
+      <Formik initialValues={initialValues} onSubmit={() => undefined}>
+        {(formik) => <Commands formik={formik} selectedSectionId={initialValues.sections[0].id} />}
+      </Formik>
+    );
+    await user.click(screen.getByRole('button', { name: 'Add next step' }));
+    const saved = JSON.parse(screen.getByTestId('draft').textContent!) as CreateUpdateAdmissionForm;
+    expect(saved.layoutType).toBe(1);
+    expect(saved.sections).toHaveLength(3);
+    expect(getAdmissionFormStepGroups(saved.sections)).toHaveLength(2);
+    initialValues.sections.forEach((section, index) => {
+      const { stepId, stepCode, stepName, stepDisplayOrder, ...content } = section;
+      expect(saved.sections[index]).toMatchObject(content);
+      expect(saved.sections[index].stepId).toBe(saved.sections[0].stepId);
+    });
+    expect(saved.sections[2].stepId).not.toBe(saved.sections[0].stepId);
+  });
+  it('keeps the generated Student name when adding individual or packed profile fields', async () => {
+    const user = userEvent.setup();
+    const initialValues = getBlankAdmissionFormInitialValues(0);
+    render(
+      <Formik initialValues={initialValues} onSubmit={() => undefined}>
+        {(formik) => <Commands formik={formik} selectedSectionId={initialValues.sections[0].id} />}
+      </Formik>
+    );
+    await user.click(screen.getByRole('button', { name: 'Add separate name' }));
+    expect(JSON.parse(screen.getByTestId('fields').textContent!)).toHaveLength(4);
+    await user.click(screen.getByRole('button', { name: 'Add names pack' }));
+    const fields = JSON.parse(screen.getByTestId('fields').textContent!) as {
+      bindingKey: string;
+    }[];
+    expect(fields).toHaveLength(5);
+    expect(
+      fields.filter((field) =>
+        ['Applicant.FirstName', 'Applicant.MiddleName', 'Applicant.LastName'].includes(
+          field.bindingKey
+        )
+      )
+    ).toEqual([]);
+    expect(fields.some((field) => field.bindingKey === 'Applicant.DateOfBirth')).toBe(true);
+    expect(
+      fields.filter((field) => field.bindingKey === 'Inquiry.ParentRelationship')
+    ).toHaveLength(1);
+  });
   it('fills the selected empty section with a pack and preserves its saved rules and identity', async () => {
     const user = userEvent.setup();
     const template = getSystemAdmissionFormTemplate('admission-application');

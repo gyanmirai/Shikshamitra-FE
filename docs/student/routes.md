@@ -12,6 +12,12 @@ audience: humans-and-agents
 
 TL;DR: use this page to map the implemented Admissions and Onboarding routes to their screens and visible Student menu entries.
 
+## House Management
+
+Student Records → House Management is registered after Student List in `src/constants/student-menu.ts`. Its route is `/student/records/houses`, sourced from `studentPaths.records.houseManagement`. The page requires `Students.Records.HouseManagement.View`; controls use `manageHouseManagement` (`Add`, displayed as Add/Update) and `deleteHouseManagement` (`Delete`). Existing Student and Student Records visibility flags apply, with no feature-specific visibility flag or role-name exception. Legacy Student Records House Settings remains separate.
+
+The route page and permission layout live under `src/app/(auth-route)/student/records/houses/`; the screen is `src/screens/student/house-management/index.tsx`. URL state uses `tab=houses|students|divisions`, `board`, `medium`, `class`, `division`, `house`, `assignment=unassigned`, `search`, `sort`, zero-based `page` and `pageSize`. `houseName` is a display label only. Academic year comes from the shared Student academic scope. Profile links require the separate Student List View grant.
+
 ## Public app-login email verification
 
 `/account/confirm-portal-email` is an owner-token entry, not a staff navigation item.

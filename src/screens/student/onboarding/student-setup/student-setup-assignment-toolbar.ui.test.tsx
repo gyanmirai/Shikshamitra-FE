@@ -13,7 +13,6 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 const props = (): ComponentProps<typeof StudentSetupAssignmentToolbar> => ({
   view: 'division',
   title: 'Division',
-  scope: 'pending',
   pendingCount: 3,
   busy: false,
   automaticCount: 2,
@@ -22,7 +21,6 @@ const props = (): ComponentProps<typeof StudentSetupAssignmentToolbar> => ({
   changedCount: 0,
   needsReason: false,
   reason: '',
-  onScopeChange: vi.fn(),
   onAuto: vi.fn(),
   onManual: vi.fn(),
   onSave: vi.fn(),
@@ -44,7 +42,6 @@ it('shows a concise selection count and clears only the selection', () => {
   expect(screen.getByRole('status')).toHaveTextContent('2 selected');
   fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }));
   expect(input.onClearSelection).toHaveBeenCalledOnce();
-  expect(input.onScopeChange).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: 'Auto' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: 'Auto' }));
   expect(input.onAuto).toHaveBeenCalledOnce();
@@ -128,15 +125,15 @@ it.each(['gr-number', 'roll-number'] as const)(
   'uses the shared compact button size for every %s toolbar action',
   (view) => {
     show({ ...props(), view });
-    ['All Students', 'Auto', 'Manual'].forEach((name) => {
+    ['Auto', 'Manual'].forEach((name) => {
       expect(screen.getByRole('button', { name })).toHaveClass('MuiButton-sizeSmall');
     });
   }
 );
 
-it('locks selection, scope and editing actions while saving', () => {
+it('locks selection and editing actions while saving', () => {
   show({ ...props(), manualEditing: true, busy: true, selectedCount: 2, changedCount: 2 });
-  ['All Students', 'Clear selection', 'Save (2)', 'Cancel Editing'].forEach((name) => {
+  ['Clear selection', 'Save (2)', 'Cancel Editing'].forEach((name) => {
     expect(screen.getByRole('button', { name })).toBeDisabled();
   });
 });

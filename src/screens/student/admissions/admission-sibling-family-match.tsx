@@ -11,6 +11,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -21,6 +22,7 @@ type Props = {
   children: string;
   busy: boolean;
   disabled?: boolean;
+  disabledReason?: string;
   mobileDiffers?: boolean;
   enteredMobile?: string;
   layout?: 'stacked' | 'inquiry';
@@ -36,6 +38,7 @@ export function AdmissionSiblingFamilyMatch({
   children,
   busy,
   disabled = false,
+  disabledReason,
   mobileDiffers = false,
   enteredMobile,
   layout = 'stacked',
@@ -71,6 +74,19 @@ export function AdmissionSiblingFamilyMatch({
     (formik.touched.parent || formik.submitCount > 0) && formik.errors.parent
   );
   const inquiryLayout = layout === 'inquiry';
+  const addSiblingAction = (
+    <Button
+      type="button"
+      size="small"
+      variant={inquiryLayout ? 'contained' : 'outlined'}
+      color="inherit"
+      disabled={locked || disabled || !eligibleParents.length}
+      startIcon={<Iconify icon={GlobalIcons.addIcon} width={18} />}
+      onClick={() => formik.submitForm()}
+    >
+      Add sibling
+    </Button>
+  );
 
   return (
     <Stack spacing={inquiryLayout ? 2 : 1} sx={{ minWidth: 0 }}>
@@ -163,17 +179,15 @@ export function AdmissionSiblingFamilyMatch({
         flexWrap="wrap"
       >
         {secondaryAction}
-        <Button
-          type="button"
-          size="small"
-          variant={inquiryLayout ? 'contained' : 'outlined'}
-          color="inherit"
-          disabled={locked || disabled || !eligibleParents.length}
-          startIcon={<Iconify icon={GlobalIcons.addIcon} width={18} />}
-          onClick={() => formik.submitForm()}
-        >
-          Add sibling
-        </Button>
+        {disabledReason ? (
+          <CustomTooltip title={disabledReason} describeChild>
+            <Box component="span" tabIndex={0} sx={{ display: 'inline-flex' }}>
+              {addSiblingAction}
+            </Box>
+          </CustomTooltip>
+        ) : (
+          addSiblingAction
+        )}
       </Stack>
       <ConfirmDialog
         open={confirmation.value && Boolean(selected)}

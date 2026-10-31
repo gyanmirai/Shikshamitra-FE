@@ -12,14 +12,15 @@ import type {
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { RouterLink } from 'src/routes/components';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Box, Stack, Button, Typography } from '@mui/material';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Tab, Paper, Stack, Button, Typography } from '@mui/material';
 import {
   usePreviewAssessmentSessionMutation,
   useConfirmAssessmentSessionMutation,
@@ -31,17 +32,17 @@ import {
 } from 'src/redux/student/admissions/admission-assessment-planning-api';
 
 import { AdmissionQueryError } from './admission-query-error';
+import { AdmissionAcademicFilters } from './admission-academic-filters';
 import { AssessmentBatchDialog } from './assessments/assessment-batch-dialog';
 import { AssessmentActionDialog } from './assessments/assessment-action-dialog';
+import { AssessmentSessionsPanel } from './assessments/assessment-sessions-panel';
 import { AssessmentApplicantTable } from './assessments/assessment-applicant-table';
 import { AssessmentContinueDialog } from './assessments/assessment-continue-dialog';
-import { studentBookingReason } from './assessments/assessment-student-booking-model';
 import { AssessmentApplicantDrawer } from './assessments/assessment-workbench-drawers';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import { useAssessmentWorkspaceData } from './assessments/use-assessment-workspace-data';
 import { AssessmentWorkspaceControls } from './assessments/assessment-workspace-controls';
 import { AssessmentSessionSetupDrawer } from './assessments/assessment-session-setup-drawer';
-import { AssessmentManageSessionsDrawer } from './assessments/assessment-manage-sessions-drawer';
 import { AssessmentStudentBookingDrawer } from './assessments/assessment-student-booking-drawer';
 import {
   useAssessmentPermissions,
@@ -68,7 +69,6 @@ export default function AdmissionAssessmentsScreen() {
     rows: AssessmentRosterItem[];
     scopes: AssessmentScope[];
   } | null>(null);
-  const [preferredSession, setPreferredSession] = useState<AssessmentSession | null>(null);
   const workbench = useAssessmentWorkspaceData(permissions.view, !!batch);
   const { academic, scopes, state, applicants, updateWorkbench } = workbench;
   const openStudentBooking = (rows: AssessmentRosterItem[]) =>
@@ -96,10 +96,7 @@ export default function AdmissionAssessmentsScreen() {
   const hasSafeRows = Boolean(applicants.currentData?.items.length);
   const listError = scopes.isError || applicants.isError;
   const retryList = scopes.isError ? scopes.refetch : applicants.refetch;
-  const manage = useBoolean(state.manageSessions);
-  const [managePage, setManagePage] = useState(0);
-  const [manageSize, setManageSize] = useState(25);
-  const [manageSearch, setManageSearch] = useState('');
+  const sessionPanel = state.tab === 'sessions';
   const [details, setDetails] = useState<AssessmentRosterItem | null>(null);
   const [action, setAction] = useState<{
     row: AssessmentRosterItem;
@@ -107,17 +104,14 @@ export default function AdmissionAssessmentsScreen() {
   } | null>(null);
   const [editing, setEditing] = useState<{
     session: AssessmentSession | null;
-    mode: 'create' | 'edit' | 'book';
+    mode: 'create' | 'edit';
   } | null>(null);
   const [selection, setSelection] = useState<AssessmentRosterItem[]>([]);
   const selectedIds = new Set(selection.map((row) => row.stageInstanceId));
-  const academicContextKey = JSON.stringify(workbench.context);
-  useEffect(() => {
-    setManagePage(0);
-  }, [academicContextKey]);
   const contextKey = JSON.stringify([
     workbench.context,
     workbench.scopeKey,
+    state.tab,
     state.sessionId,
     state.status,
     state.search,
@@ -128,39 +122,65 @@ export default function AdmissionAssessmentsScreen() {
   useEffect(() => {
     setSelection([]);
   }, [contextKey]);
+  useEffect(() => {
+    if (applicants.isFetching || applicants.isError || !applicants.currentData) return;
+    const currentRows = applicants.currentData.items;
+    setSelection((current) => {
+      const next = current.flatMap((selected) => {
+        const fresh = currentRows.find(
+          (row) =>
+            row.stageInstanceId === selected.stageInstanceId &&
+            row.applicationId === selected.applicationId
+        );
+        return fresh?.isActive && fresh.assessment.policy ? [fresh] : [];
+      });
+      return next.length === current.length && next.every((row, index) => row === current[index])
+        ? current
+        : next;
+    });
+  }, [applicants.currentData, applicants.isFetching, applicants.isError]);
   const resources = useGetAssessmentSessionResourcesQuery(undefined, {
-    skip:
-      !editing ||
-      !permissions.view ||
-      !(editing.mode === 'book' ? permissions.book : permissions.manageSessions),
+    skip: !editing || !permissions.view || !permissions.manageSessions,
   });
   const managedSessions = useGetAssessmentSessionWorkbenchQuery(
     {
       ...workbench.context,
-      skipCount: managePage * manageSize,
-      maxResultCount: manageSize,
-      search: manageSearch || undefined,
+      skipCount: state.sessionPage * state.sessionSize,
+      maxResultCount: state.sessionSize,
+      search: state.sessionSearch || undefined,
       includeCancelled: true,
     },
     {
-      skip: !manage.value || !permissions.view || !academic.academicYearId,
+      skip:
+        !sessionPanel ||
+        !permissions.view ||
+        !academic.academicYearId ||
+        !academic.boardId ||
+        !academic.mediumId,
       refetchOnMountOrArgChange: true,
     }
   );
   useEffect(() => {
-    if (managedSessions.isFetching || managedSessions.isError || !managedSessions.currentData)
+    if (
+      !sessionPanel ||
+      managedSessions.isFetching ||
+      managedSessions.isError ||
+      !managedSessions.currentData
+    )
       return;
     const lastPage = Math.max(
       0,
-      Math.ceil(managedSessions.currentData.totalCount / manageSize) - 1
+      Math.ceil(managedSessions.currentData.totalCount / state.sessionSize) - 1
     );
-    if (managePage > lastPage) setManagePage(lastPage);
+    if (state.sessionPage > lastPage) updateWorkbench({ assessmentSessionPage: lastPage }, true);
   }, [
+    sessionPanel,
     managedSessions.currentData,
     managedSessions.isFetching,
     managedSessions.isError,
-    managePage,
-    manageSize,
+    state.sessionPage,
+    state.sessionSize,
+    updateWorkbench,
   ]);
   const [preview] = usePreviewAssessmentSessionMutation();
   const [confirm] = useConfirmAssessmentSessionMutation();
@@ -168,44 +188,32 @@ export default function AdmissionAssessmentsScreen() {
   const [cancel] = useCancelSharedAssessmentSessionMutation();
   const [searchInterviewers] = useLazyGetAssessmentInterviewersQuery();
   const confirmationKey = useRef<{ payload: string; key: string } | null>(null);
-  const openSetup = (session: AssessmentSession | null, mode: 'create' | 'edit' | 'book') => {
+  const openSetup = (session: AssessmentSession | null, mode: 'create' | 'edit') => {
     confirmationKey.current = null;
     setEditing({ session, mode });
-    manage.onFalse();
   };
-  const sessionIdForBooking = editing?.mode === 'book' ? editing.session?.id : undefined;
   const submitSession = async (
     session: AssessmentSharedSessionInput,
     previewFingerprint: string,
     bookings: AssessmentSelectedBooking[]
   ) => {
+    if (!permissions.view || !permissions.manageSessions)
+      throw new Error('You do not have permission to create sessions.');
+    if (bookings.length)
+      throw new Error('Create the session first, then book students from Student.');
     const body = {
       session,
-      sessionId: sessionIdForBooking,
-      sessionConcurrencyStamp:
-        editing?.mode === 'book' ? editing.session?.concurrencyStamp : undefined,
       previewFingerprint,
-      bookings: bookings.map(
-        ({ applicationId, stageInstanceId, concurrencyStamp, slotStartsAt }) => ({
-          applicationId,
-          stageInstanceId,
-          concurrencyStamp,
-          slotStartsAt,
-        })
-      ),
+      bookings: [],
     };
     const payload = JSON.stringify(body);
     if (confirmationKey.current?.payload !== payload)
       confirmationKey.current = { payload, key: crypto.randomUUID() };
     const result = await confirm({ ...body, idempotencyKey: confirmationKey.current.key }).unwrap();
     shikshaMitraToast.success({
-      message:
-        (result.bookedCount
-          ? `${result.bookedCount} applicants booked`
-          : editing?.mode === 'book'
-            ? 'No applicants booked'
-            : 'Assessment session created') +
-        (result.session.roomReservationStatus === 2 ? '. Room approval is pending' : ''),
+      message: `Assessment session created${
+        result.session.roomReservationStatus === 2 ? '. Room approval is pending' : ''
+      }`,
     });
   };
   const onSelection = (rows: AssessmentRosterItem[], checked: boolean) =>
@@ -276,26 +284,6 @@ export default function AdmissionAssessmentsScreen() {
           moreLink: {},
           breadcrumbs: {},
         }}
-        action={
-          <Stack
-            direction="row"
-            spacing={1}
-            useFlexGap
-            flexWrap="wrap"
-            alignItems="center"
-            justifyContent="flex-end"
-          >
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:calendar-outline" />}
-              disabled={!permissions.view || !academic.academicYearId}
-              onClick={manage.onTrue}
-            >
-              Sessions
-            </Button>
-          </Stack>
-        }
       />
       {!permissions.view ? (
         <StudentFeedback notificationKey="STU-0023" presentation="inline" severity="info">
@@ -303,166 +291,323 @@ export default function AdmissionAssessmentsScreen() {
         </StudentFeedback>
       ) : (
         <>
-          <AssessmentWorkspaceControls data={workbench} />
-          {listError && hasSafeRows && <AdmissionQueryError onRetry={retryList} />}
-          {!!selection.length && (
-            <Stack
-              direction="row"
-              alignItems="center"
-              flexWrap="wrap"
-              spacing={1}
-              sx={{ px: 1, flexShrink: 0 }}
-            >
-              <Typography variant="body2">{selection.length} selected</Typography>
-              {permissions.book && (
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="inherit"
-                  disabled={
-                    !selection.some((row) => !studentBookingReason(row)) ||
-                    scopes.isFetching ||
-                    scopes.isError
-                  }
-                  onClick={() => openStudentBooking(selection)}
-                >
-                  Book Session ({selection.length})
-                </Button>
-              )}
-              {permissions.attendance && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  disabled={!batchRows('attendance').length}
-                  onClick={() => setBatch({ action: 'attendance', rows: batchRows('attendance') })}
-                >
-                  Record attendance ({batchRows('attendance').length})
-                </Button>
-              )}
-              {permissions.results && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  disabled={!batchRows('result').length}
-                  onClick={() => setBatch({ action: 'result', rows: batchRows('result') })}
-                >
-                  Record results ({batchRows('result').length})
-                </Button>
-              )}
-              {canAdvance && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  disabled={!batchRows('continue').length}
-                  onClick={() => setBatch({ action: 'continue', rows: batchRows('continue') })}
-                >
-                  Continue ({batchRows('continue').length})
-                </Button>
-              )}
-              <Button size="small" onClick={() => setSelection([])}>
-                Clear selection
-              </Button>
-            </Stack>
-          )}
-          <Box
+          <Paper
+            variant="outlined"
             sx={{
-              flex: 1,
-              minHeight: { xs: 400, sm: 0 },
-              minWidth: 0,
-              overflow: 'hidden',
               display: 'flex',
-              flexDirection: 'column',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              flexShrink: 0,
+              minWidth: 0,
             }}
           >
-            <AssessmentApplicantTable
-              items={
-                !workbench.invalidSession && !workbench.invalidScope
-                  ? (applicants.currentData?.items ?? [])
-                  : []
-              }
-              selectedSessionId={state.sessionId}
-              selectedIds={selectedIds}
-              onSelectionChange={
-                permissions.book || permissions.attendance || permissions.results || canAdvance
-                  ? onSelection
-                  : undefined
-              }
-              canAdvance={canAdvance}
-              onAction={(row, nextAction) => {
-                if (nextAction === 'book' && row.assessment.policy?.schedulingEnabled)
-                  openStudentBooking([row]);
-                else setAction({ row, action: nextAction });
-              }}
-              onDetails={setDetails}
-              isLoading={
-                scopes.isLoading ||
-                (scopes.isFetching && !scopes.currentData) ||
-                (workbench.sessionLookupUnavailable && !workbench.invalidSession) ||
-                (applicants.isFetching && !applicants.currentData)
-              }
-              errorContent={
-                listError && !hasSafeRows ? <AdmissionQueryError onRetry={retryList} /> : undefined
-              }
-              isRefreshing={applicants.isFetching && !!applicants.currentData}
-              filters={tableFilters}
-              onServerFilter={(next) =>
-                updateWorkbench({
-                  assessmentFilters: serializeAssessmentColumnFilters(next),
-                  assessmentStatus: next.findLast((item) => item.column === 'assessmentProgress')
-                    ?.value,
-                  assessmentPage: 0,
-                })
-              }
-              onClearCriteria={() =>
-                updateWorkbench({
-                  assessmentSearch: undefined,
-                  assessmentStatus: undefined,
-                  assessmentFilters: undefined,
-                  assessmentPage: 0,
-                })
-              }
-              page={state.page}
-              rowsPerPage={state.size}
-              defaultRowsPerPage={25}
-              rowsPerPageOptions={[10, 25, 100]}
-              totalCount={applicants.currentData?.totalCount ?? 0}
-              searchTerm={state.search}
-              sorts={[{ column: state.sort, direction: state.direction }]}
-              onServerSearch={workbench.updateSearch}
-              onServerPagination={(page, size) =>
-                updateWorkbench({ assessmentPage: Math.max(0, page - 1), assessmentSize: size })
-              }
-              onServerSort={(_, sorts) =>
-                updateWorkbench({
-                  assessmentSort: sorts[0]?.column ?? 'enteredAt',
-                  assessmentDirection: sorts[0]?.direction ?? 'desc',
-                  assessmentPage: 0,
-                })
-              }
-              noDataText={
-                <Stack component="span" alignItems="center" spacing={1}>
-                  <Typography component="span" variant="inherit" color="text.secondary">
-                    {!academic.academicYearId
-                      ? 'Choose an academic year to view assessments.'
-                      : workbench.invalidSession
-                        ? 'Clear the unavailable session filter to view applicants.'
-                        : workbench.invalidScope
-                          ? 'Clear the unavailable offering filter to view applicants.'
-                          : !workbench.visibleScopes.length
-                            ? 'No assessment stages are configured for this academic context.'
-                            : filtered
-                              ? 'No applicants match these filters.'
-                              : 'No applicants have reached an assessment stage yet.'}
-                  </Typography>
-                  {!!filtered && (
-                    <Button size="small" variant="outlined" onClick={clearFilters}>
-                      Clear filters
+            <CustomTabs
+              value={state.tab}
+              aria-label="Assessment workspace"
+              sx={{ minWidth: 0 }}
+              slotProps={{ flexContainer: { gap: 1 } }}
+            >
+              <Tab
+                component={RouterLink}
+                href={workbench.href({ assessmentTab: 'students', assessmentManage: undefined })}
+                value="applicants"
+                label="Student"
+                icon={<Iconify icon="mdi:account-group-outline" width={20} />}
+                iconPosition="start"
+                id="assessment-student-tab"
+                aria-controls="assessment-student-panel"
+              />
+              <Tab
+                component={RouterLink}
+                href={workbench.href({ assessmentTab: 'sessions', assessmentManage: undefined })}
+                value="sessions"
+                label="Session"
+                icon={<Iconify icon="mdi:calendar-outline" width={20} />}
+                iconPosition="start"
+                id="assessment-session-tab"
+                aria-controls="assessment-session-panel"
+              />
+            </CustomTabs>
+            <Stack direction="row" spacing={1} sx={{ ml: 'auto', p: 1 }}>
+              {sessionPanel
+                ? permissions.manageSessions && (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="inherit"
+                      startIcon={<Iconify icon="mdi:plus" />}
+                      disabled={
+                        !academic.academicYearId ||
+                        !academic.boardId ||
+                        !academic.mediumId ||
+                        scopes.isFetching ||
+                        scopes.isError ||
+                        !(scopes.currentData ?? []).some(
+                          (scope) =>
+                            scope.academicYearId === academic.academicYearId &&
+                            scope.schedulingEnabled
+                        )
+                      }
+                      onClick={() => openSetup(null, 'create')}
+                    >
+                      Create session
+                    </Button>
+                  )
+                : permissions.book && (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="inherit"
+                      startIcon={<Iconify icon="mdi:calendar-check-outline" />}
+                      disabled={
+                        !selection.length ||
+                        !academic.boardId ||
+                        !academic.mediumId ||
+                        scopes.isFetching ||
+                        scopes.isError
+                      }
+                      onClick={() => openStudentBooking(selection)}
+                    >
+                      Book session ({selection.length})
                     </Button>
                   )}
+            </Stack>
+          </Paper>
+          {sessionPanel ? (
+            <Box
+              role="tabpanel"
+              id="assessment-session-panel"
+              aria-labelledby="assessment-session-tab"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                flex: 1,
+                minHeight: { xs: 400, sm: 0 },
+                minWidth: 0,
+              }}
+            >
+              <AdmissionAcademicFilters
+                boardId={academic.boardId}
+                mediumId={academic.mediumId}
+                standardId={academic.standardId}
+                onChange={academic.update}
+              />
+              {scopes.isError && <AdmissionQueryError onRetry={scopes.refetch} />}
+              <AssessmentSessionsPanel
+                sessions={managedSessions.currentData?.items ?? []}
+                totalCount={managedSessions.currentData?.totalCount ?? 0}
+                page={state.sessionPage}
+                pageSize={state.sessionSize}
+                search={state.sessionSearch}
+                isLoading={managedSessions.isFetching && !managedSessions.currentData}
+                isFetching={managedSessions.isFetching}
+                error={managedSessions.isError ? 'Unable to load assessment sessions.' : undefined}
+                canManage={permissions.view && permissions.manageSessions}
+                selectedSessionId={state.sessionId}
+                onRetry={managedSessions.refetch}
+                onSelect={(session) =>
+                  updateWorkbench({
+                    assessmentTab: 'students',
+                    assessmentSession: session.id,
+                    assessmentScope: undefined,
+                    assessmentQueue: undefined,
+                    assessmentStatus: undefined,
+                    assessmentSearch: undefined,
+                    assessmentFilters: undefined,
+                    assessmentPage: 0,
+                  })
+                }
+                onEdit={(session) => openSetup(session, 'edit')}
+                onCancel={async (session, notes) => {
+                  await cancel({
+                    id: session.id,
+                    concurrencyStamp: session.concurrencyStamp,
+                    cancelPendingBookings: true,
+                    notes,
+                  }).unwrap();
+                  shikshaMitraToast.success({ message: 'Session cancelled and room released' });
+                }}
+                onPage={(page, size) =>
+                  updateWorkbench({ assessmentSessionPage: page, assessmentSessionSize: size })
+                }
+                onSearch={(value) =>
+                  updateWorkbench(
+                    { assessmentSessionSearch: value || undefined, assessmentSessionPage: 0 },
+                    true
+                  )
+                }
+              />
+            </Box>
+          ) : (
+            <Box
+              role="tabpanel"
+              id="assessment-student-panel"
+              aria-labelledby="assessment-student-tab"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                flex: 1,
+                minHeight: { xs: 400, sm: 0 },
+                minWidth: 0,
+              }}
+            >
+              <AssessmentWorkspaceControls data={workbench} />
+
+              {listError && hasSafeRows && <AdmissionQueryError onRetry={retryList} />}
+              {!!selection.length && (
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  flexWrap="wrap"
+                  spacing={1}
+                  sx={{ px: 1, flexShrink: 0 }}
+                >
+                  <Typography variant="body2">{selection.length} selected</Typography>
+                  {permissions.attendance && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={!batchRows('attendance').length}
+                      onClick={() =>
+                        setBatch({ action: 'attendance', rows: batchRows('attendance') })
+                      }
+                    >
+                      Record attendance ({batchRows('attendance').length})
+                    </Button>
+                  )}
+                  {permissions.results && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={!batchRows('result').length}
+                      onClick={() => setBatch({ action: 'result', rows: batchRows('result') })}
+                    >
+                      Record results ({batchRows('result').length})
+                    </Button>
+                  )}
+                  {canAdvance && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={!batchRows('continue').length}
+                      onClick={() => setBatch({ action: 'continue', rows: batchRows('continue') })}
+                    >
+                      Continue ({batchRows('continue').length})
+                    </Button>
+                  )}
+                  <Button size="small" onClick={() => setSelection([])}>
+                    Clear selection
+                  </Button>
                 </Stack>
-              }
-            />
-          </Box>
+              )}
+              <Box
+                sx={{
+                  flex: 1,
+                  minHeight: { xs: 400, sm: 0 },
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <AssessmentApplicantTable
+                  items={
+                    !workbench.invalidSession && !workbench.invalidScope
+                      ? (applicants.currentData?.items ?? [])
+                      : []
+                  }
+                  selectedSessionId={state.sessionId}
+                  selectedIds={selectedIds}
+                  onSelectionChange={
+                    permissions.book || permissions.attendance || permissions.results || canAdvance
+                      ? onSelection
+                      : undefined
+                  }
+                  canAdvance={canAdvance}
+                  onAction={(row, nextAction) => {
+                    if (nextAction === 'book' && row.assessment.policy?.schedulingEnabled)
+                      openStudentBooking([row]);
+                    else setAction({ row, action: nextAction });
+                  }}
+                  onDetails={setDetails}
+                  isLoading={
+                    scopes.isLoading ||
+                    (scopes.isFetching && !scopes.currentData) ||
+                    (workbench.sessionLookupUnavailable && !workbench.invalidSession) ||
+                    (applicants.isFetching && !applicants.currentData)
+                  }
+                  errorContent={
+                    listError && !hasSafeRows ? (
+                      <AdmissionQueryError onRetry={retryList} />
+                    ) : undefined
+                  }
+                  isRefreshing={applicants.isFetching && !!applicants.currentData}
+                  filters={tableFilters}
+                  onServerFilter={(next) =>
+                    updateWorkbench({
+                      assessmentFilters: serializeAssessmentColumnFilters(next),
+                      assessmentStatus: next.findLast(
+                        (item) => item.column === 'assessmentProgress'
+                      )?.value,
+                      assessmentPage: 0,
+                    })
+                  }
+                  onClearCriteria={() =>
+                    updateWorkbench({
+                      assessmentSearch: undefined,
+                      assessmentStatus: undefined,
+                      assessmentFilters: undefined,
+                      assessmentPage: 0,
+                    })
+                  }
+                  page={state.page}
+                  rowsPerPage={state.size}
+                  defaultRowsPerPage={25}
+                  rowsPerPageOptions={[10, 25, 100]}
+                  totalCount={applicants.currentData?.totalCount ?? 0}
+                  searchTerm={state.search}
+                  sorts={[{ column: state.sort, direction: state.direction }]}
+                  onServerSearch={workbench.updateSearch}
+                  onServerPagination={(page, size) =>
+                    updateWorkbench({ assessmentPage: Math.max(0, page - 1), assessmentSize: size })
+                  }
+                  onServerSort={(_, sorts) =>
+                    updateWorkbench({
+                      assessmentSort: sorts[0]?.column ?? 'enteredAt',
+                      assessmentDirection: sorts[0]?.direction ?? 'desc',
+                      assessmentPage: 0,
+                    })
+                  }
+                  noDataText={
+                    <Stack component="span" alignItems="center" spacing={1}>
+                      <Typography component="span" variant="inherit" color="text.secondary">
+                        {!academic.academicYearId
+                          ? 'Choose an academic year to view assessments.'
+                          : workbench.invalidSession
+                            ? 'Clear the unavailable session filter to view applicants.'
+                            : workbench.invalidScope
+                              ? 'Clear the unavailable offering filter to view applicants.'
+                              : !academic.boardId || !academic.mediumId
+                                ? 'Choose a Board and Medium to view assessments.'
+                                : !workbench.visibleScopes.length
+                                  ? 'No assessment stages are configured for this academic context.'
+                                  : filtered
+                                    ? 'No applicants match these filters.'
+                                    : 'No applicants have reached an assessment stage yet.'}
+                      </Typography>
+                      {!!filtered && (
+                        <Button size="small" variant="outlined" onClick={clearFilters}>
+                          Clear filters
+                        </Button>
+                      )}
+                    </Stack>
+                  }
+                />
+              </Box>
+            </Box>
+          )}
         </>
       )}
       {details && (
@@ -504,10 +649,7 @@ export default function AdmissionAssessmentsScreen() {
           key={`${editing.mode}:${editing.session?.id ?? 'new'}`}
           open
           mode={editing.mode}
-          readOnly={
-            !permissions.view ||
-            !(editing.mode === 'book' ? permissions.book : permissions.manageSessions)
-          }
+          readOnly={!permissions.view || !permissions.manageSessions}
           scopes={(scopes.currentData ?? []).filter(
             (scope) => scope.academicYearId === academic.academicYearId && scope.schedulingEnabled
           )}
@@ -524,9 +666,6 @@ export default function AdmissionAssessmentsScreen() {
           onPreview={(session, query) =>
             preview({
               session,
-              sessionId: sessionIdForBooking,
-              sessionConcurrencyStamp:
-                editing.mode === 'book' ? editing.session?.concurrencyStamp : undefined,
               ...query,
             }).unwrap()
           }
@@ -543,76 +682,16 @@ export default function AdmissionAssessmentsScreen() {
           rows={booking.rows}
           scopes={booking.scopes}
           academicYearId={academic.academicYearId}
-          initialSession={preferredSession}
           canBook={permissions.view && permissions.book}
-          canCreate={permissions.view && permissions.manageSessions}
           onClose={() => setBooking(null)}
+          onViewBooking={(row) => {
+            if (!permissions.view) return;
+            setBooking(null);
+            setDetails(row);
+          }}
           onBooked={() => {
             setBooking(null);
             setSelection([]);
-            setPreferredSession(null);
-          }}
-        />
-      )}
-      {manage.value && (
-        <AssessmentManageSessionsDrawer
-          open
-          sessions={managedSessions.currentData?.items ?? []}
-          totalCount={managedSessions.currentData?.totalCount ?? 0}
-          page={managePage}
-          pageSize={manageSize}
-          isLoading={managedSessions.isFetching && !managedSessions.currentData}
-          isFetching={managedSessions.isFetching}
-          error={managedSessions.isError ? 'Unable to load assessment sessions.' : undefined}
-          canManage={permissions.view && permissions.manageSessions}
-          canBook={permissions.view && permissions.book}
-          selectedSessionId={state.sessionId}
-          onClose={manage.onFalse}
-          onRetry={managedSessions.refetch}
-          onSelect={(session) => {
-            updateWorkbench({
-              assessmentSession: session.id,
-              assessmentScope: undefined,
-              assessmentQueue: undefined,
-              assessmentStatus: undefined,
-              assessmentPage: 0,
-            });
-            manage.onFalse();
-          }}
-          onEdit={(session) => openSetup(session, 'edit')}
-          onBook={(session) => {
-            setPreferredSession(session);
-            setSelection([]);
-            manage.onFalse();
-            updateWorkbench({
-              assessmentSession: undefined,
-              assessmentStatus: 'pending',
-              assessmentPage: 0,
-              assessmentSearch: undefined,
-              assessmentFilters: undefined,
-              assessmentScope:
-                session.scopeDetails?.length === 1
-                  ? `${session.scopeDetails[0].admissionOfferingId}:${session.scopeDetails[0].workflowStageDefinitionId}`
-                  : undefined,
-            });
-            shikshaMitraToast.success({ message: `Select students to book into ${session.name}` });
-          }}
-          onCancel={async (session, notes) => {
-            await cancel({
-              id: session.id,
-              concurrencyStamp: session.concurrencyStamp,
-              cancelPendingBookings: true,
-              notes,
-            }).unwrap();
-            shikshaMitraToast.success({ message: 'Session cancelled and room released' });
-          }}
-          onPage={(page, size) => {
-            setManagePage(page);
-            setManageSize(size);
-          }}
-          onSearch={(value) => {
-            setManageSearch(value);
-            setManagePage(0);
           }}
         />
       )}

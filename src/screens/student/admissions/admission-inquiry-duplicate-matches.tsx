@@ -33,7 +33,7 @@ type Props = {
   applicantName?: string;
   applicantDateOfBirth?: string | null;
   admissionCycleId?: string;
-  parentRelationship?: 'father' | 'mother';
+  parentRelationship?: 'father' | 'mother' | 'guardian';
   presentation?: 'inline' | 'dialog';
   reviewKey?: number;
   busy: boolean;
@@ -214,6 +214,7 @@ export function AdmissionInquiryDuplicateMatches({
                   parents={(match.parents ?? []).filter(
                     (parent) =>
                       !parentRelationship ||
+                      parentRelationship === 'guardian' ||
                       !parent.relationship ||
                       parent.relationship === parentRelationship
                   )}
@@ -222,7 +223,12 @@ export function AdmissionInquiryDuplicateMatches({
                   enteredMobile={guardianPhone}
                   layout="inquiry"
                   secondaryAction={matches.length === 1 ? separateFamilyToggle : undefined}
-                  disabled={!canLink}
+                  disabled={!canLink || parentRelationship === 'guardian'}
+                  disabledReason={
+                    parentRelationship === 'guardian'
+                      ? 'Sibling linking requires Father or Mother as the primary contact.'
+                      : undefined
+                  }
                   mobileDiffers={match.matchByEmail === true && match.matchByMobile !== true}
                   onConfirm={(parent) => onUseExisting(match.familyId, parent)}
                 />

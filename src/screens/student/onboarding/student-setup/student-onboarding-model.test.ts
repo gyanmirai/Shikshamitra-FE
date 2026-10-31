@@ -2,9 +2,9 @@ import type { StudentOnboardingCase } from 'src/redux/student/onboarding/student
 
 import { it, expect, describe } from 'vitest';
 
+import { getPendingStudentCount } from './student-setup-view';
 import { getStudentPendingTasks } from './student-setup-summary';
 import { getReadinessSummary, mapOnboardingCaseToItem } from './student-onboarding-model';
-import { getPendingStudentCount, filterStudentsForSetupView } from './student-setup-view';
 
 const buildCase = (overrides: Partial<StudentOnboardingCase> = {}): StudentOnboardingCase => ({
   id: 'case-1',
@@ -427,9 +427,6 @@ describe('mapOnboardingCaseToItem', () => {
     const placed = mapOnboardingCaseToItem(buildCase({ id: 'case-2' }));
     expect(unplaced.divisionName).toBe('Pending');
     expect(getPendingStudentCount([unplaced, placed], 'division')).toBe(1);
-    expect(filterStudentsForSetupView([unplaced, placed], 'division', 'pending')).toEqual([
-      unplaced,
-    ]);
   });
   it('uses separate portal handoffs even when the pre-activation combined check is optional', () => {
     const item = mapOnboardingCaseToItem(

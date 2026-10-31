@@ -23,13 +23,22 @@ export function readAssessmentWorkbench(params: URLSearchParams) {
   const size = Number(params.get('assessmentSize'));
   const page = Number(params.get('assessmentPage'));
   const sort = params.get('assessmentSort') ?? 'enteredAt';
+  const tab = params.get('assessmentTab');
+  const sessionPage = Number(params.get('assessmentSessionPage'));
+  const sessionSize = Number(params.get('assessmentSessionSize'));
   return {
     status: ['pending', 'ongoing', 'complete'].includes(status ?? '')
       ? (status as AssessmentProgress)
       : ('all' as const),
     manageSessions:
       params.get('assessmentManage') === '1' || params.get('assessmentTab') === 'sessions',
-    tab: params.get('assessmentTab') === 'applicants' ? 'applicants' : 'sessions',
+    tab:
+      tab === 'sessions' || (!tab && params.get('assessmentManage') === '1')
+        ? 'sessions'
+        : 'applicants',
+    sessionPage: Number.isSafeInteger(sessionPage) && sessionPage >= 0 ? sessionPage : 0,
+    sessionSize: [10, 25, 50, 100].includes(sessionSize) ? sessionSize : 25,
+    sessionSearch: (params.get('assessmentSessionSearch') ?? '').slice(0, 128),
     queue: assessmentQueues.some((item) => item.value === queue)
       ? (queue as AssessmentQueue | 'all')
       : 'all',

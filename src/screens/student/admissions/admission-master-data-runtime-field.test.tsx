@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import { AdmissionMasterDataRuntimeField } from './admission-master-data-runtime-field';
 
@@ -55,6 +55,100 @@ const props = () => ({
 });
 
 describe('Institute Setup runtime choices', () => {
+  it('loads current configured classes for a class-interest question and saves the selected record ID', () => {
+    mocks.result = {
+      currentData: [
+        {
+          value: 'configured-class-id',
+          label: 'Preparatory (Gujarati / Primary)',
+          isActive: true,
+          boardId: 'gseb',
+          boardLabel: 'GSEB',
+        },
+      ],
+      isFetching: false,
+      isError: false,
+    };
+    const input = props();
+    render(
+      <AdmissionMasterDataRuntimeField
+        {...input}
+        formValues={{}}
+        field={{
+          ...input.field,
+          code: 'CLASS_INTERESTED',
+          label: 'Class interested in',
+          optionsJson: '{"source":"Standards"}',
+        }}
+      />
+    );
+    expect(mocks.query).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceKey: 'Standards', academicYearId: 'year-1' }),
+      expect.objectContaining({ skip: false, refetchOnMountOrArgChange: true })
+    );
+    expect(screen.getByRole('combobox', { name: 'Class interested in' })).toBeDisabled();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Board' }), {
+      target: { value: 'gseb' },
+    });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Class interested in' }), {
+      target: { value: 'configured-class-id' },
+    });
+    expect(input.onChange).toHaveBeenCalledWith('configured-class-id');
+  });
+  it('filters identical class names by board, clears on board change and restores the board from a saved class ID', () => {
+    mocks.result = {
+      currentData: [
+        {
+          value: 'cbse-6',
+          label: 'Class 6 (English / Secondary)',
+          isActive: true,
+          boardId: 'cbse',
+          boardLabel: 'CBSE',
+        },
+        {
+          value: 'gseb-6',
+          label: 'Class 6 (English / Secondary)',
+          isActive: true,
+          boardId: 'gseb',
+          boardLabel: 'GSEB',
+        },
+      ],
+      isFetching: false,
+      isError: false,
+    };
+    const input = {
+      ...props(),
+      field: {
+        ...props().field,
+        code: 'CLASS_INTERESTED',
+        label: 'Class interested in',
+        optionsJson: '{"source":"Standards"}',
+      },
+      formValues: {},
+      value: 'cbse-6',
+    };
+    const view = render(<AdmissionMasterDataRuntimeField {...input} />);
+    expect(screen.getByRole('combobox', { name: 'Board' })).toHaveValue('cbse');
+    expect(screen.getAllByRole('option', { name: 'Class 6 (English / Secondary)' })).toHaveLength(
+      1
+    );
+    fireEvent.change(screen.getByRole('combobox', { name: 'Board' }), {
+      target: { value: 'gseb' },
+    });
+    expect(input.onChange).toHaveBeenLastCalledWith('');
+    view.rerender(<AdmissionMasterDataRuntimeField {...input} value="" />);
+    expect(screen.getByRole('combobox', { name: 'Board' })).toHaveValue('gseb');
+    const classes = screen.getByRole('combobox', { name: 'Class interested in' });
+    expect(classes).not.toHaveTextContent('CBSE');
+    fireEvent.change(classes, { target: { value: 'gseb-6' } });
+    expect(input.onChange).toHaveBeenLastCalledWith('gseb-6');
+    view.unmount();
+    render(<AdmissionMasterDataRuntimeField {...input} value="gseb-6" disabled />);
+    expect(screen.getByRole('combobox', { name: 'Board' })).toHaveValue('gseb');
+    expect(screen.getByRole('combobox', { name: 'Board' })).toBeDisabled();
+    expect(screen.getByRole('combobox', { name: 'Class interested in' })).toHaveValue('gseb-6');
+    expect(input.onChange).toHaveBeenCalledTimes(2);
+  });
   it('keeps a frozen historical class label visible but unavailable for a new selection', () => {
     const input = props();
     render(
@@ -71,6 +165,26 @@ describe('Institute Setup runtime choices', () => {
       />
     );
     expect(screen.getByRole('option', { name: 'Previous class name' })).toBeDisabled();
+  });
+  it('keeps saved class answers through pending and failed reloads without selecting another board', () => {
+    const input = {
+      ...props(),
+      field: {
+        ...props().field,
+        code: 'CLASS_INTERESTED',
+        label: 'Class interested in',
+        optionsJson: '{"source":"Standards"}',
+      },
+      value: 'saved-class',
+    };
+    mocks.result = { currentData: undefined, isFetching: true, isError: false };
+    const view = render(<AdmissionMasterDataRuntimeField {...input} />);
+    expect(screen.getByRole('combobox', { name: 'Board' })).toBeDisabled();
+    mocks.result = { currentData: undefined, isFetching: false, isError: true };
+    view.rerender(<AdmissionMasterDataRuntimeField {...input} />);
+    expect(screen.getByRole('combobox', { name: 'Class interested in' })).toBeDisabled();
+    expect(screen.getByRole('option', { name: 'Saved value unavailable' })).toBeDisabled();
+    expect(input.onChange).not.toHaveBeenCalled();
   });
   beforeEach(() => {
     vi.clearAllMocks();

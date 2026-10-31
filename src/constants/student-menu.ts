@@ -56,6 +56,7 @@ export const studentPaths = {
   records: {
     root: '/student/profile',
     directory: '/student/records/directory',
+    houseManagement: '/student/records/houses',
     changes: '/student/records/changes',
     documents: '/student/records/documents',
     transitions: '/student/records/transitions',
@@ -129,6 +130,7 @@ export const studentPermissions = {
   records: {
     root: [
       `${defaultStudentPermissionName}Records.StudentList.View`,
+      `${defaultStudentPermissionName}Records.HouseManagement.View`,
       `${defaultStudentPermissionName}Records.StudentICard.View`,
       `${defaultStudentPermissionName}Records.Certificates.View`,
       `${defaultStudentPermissionName}Records.Reports.View`,
@@ -136,6 +138,9 @@ export const studentPermissions = {
     ],
     studentList: `${defaultStudentPermissionName}Records.StudentList.View`,
     manageStudent: `${defaultStudentPermissionName}Records.StudentList.Add`,
+    houseManagement: `${defaultStudentPermissionName}Records.HouseManagement.View`,
+    manageHouseManagement: `${defaultStudentPermissionName}Records.HouseManagement.Add`,
+    deleteHouseManagement: `${defaultStudentPermissionName}Records.HouseManagement.Delete`,
     studentICard: `${defaultStudentPermissionName}Records.StudentICard.View`,
     certificates: `${defaultStudentPermissionName}Records.Certificates.View`,
     reports: `${defaultStudentPermissionName}Records.Reports.View`,
@@ -169,6 +174,17 @@ export const studentPermissions = {
     `${defaultStudentPermissionName}Notification.AttendanceManagement.View`,
   ],
 };
+
+// Permission-editor bundle only. Navigation and workflow guards keep their exact IDs.
+// Keep aligned with the backend Student List submodule registration.
+export const studentProfilePermissionViews = [
+  studentPermissions.records.studentList,
+  studentPermissions.records.changes,
+  studentPermissions.records.transitions,
+  studentPermissions.records.overrides,
+  studentPermissions.records.guardianAccess,
+  studentPermissions.records.identityCompliance,
+];
 
 const studentModule = () => ({
   [studentPath]: [
@@ -326,33 +342,14 @@ const studentModule = () => ({
               shortcutKey: 'Alt+S+R+2',
               shortcutKeyName: 'Alt+S+R+2',
               permissionName: studentPermissions.records.studentList,
-              permissionChildren: [
-                {
-                  title: 'Student list and profiles',
-                  permissionName: studentPermissions.records.studentList,
-                },
-                {
-                  title: 'Record changes',
-                  permissionName: studentPermissions.records.changes,
-                },
-                {
-                  title: 'Student transitions',
-                  permissionName: studentPermissions.records.transitions,
-                },
-                {
-                  title: 'Historical entry',
-                  permissionName: studentPermissions.records.overrides,
-                },
-                {
-                  title: 'Parent / guardian app access',
-                  permissionName: studentPermissions.records.guardianAccess,
-                },
-                {
-                  title: 'Identity compliance',
-                  permissionName: studentPermissions.records.identityCompliance,
-                },
-              ],
               icon: menuIconView('mdi:format-list-bulleted'),
+            },
+            {
+              title: 'House Management',
+              path: studentPaths.records.houseManagement,
+              _action: 'student-house-management',
+              permissionName: studentPermissions.records.houseManagement,
+              icon: menuIconView('mdi:home-group'),
             },
             {
               title: 'Student I-Card',

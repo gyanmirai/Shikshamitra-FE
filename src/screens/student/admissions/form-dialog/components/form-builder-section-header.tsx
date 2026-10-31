@@ -32,6 +32,8 @@ type Props = {
   onNameChange: (value: string) => void;
   onNameBlur: () => void;
   onDelete: () => void;
+  readOnly?: boolean;
+  deleteDisabled?: boolean;
 };
 
 export function FormBuilderSectionHeader({
@@ -50,6 +52,8 @@ export function FormBuilderSectionHeader({
   onNameChange,
   onNameBlur,
   onDelete,
+  readOnly = false,
+  deleteDisabled = false,
 }: Props) {
   const name = section.name || `Section ${sectionIndex + 1}`;
   const confirmDelete = useBoolean();
@@ -100,8 +104,9 @@ export function FormBuilderSectionHeader({
         />
       ) : (
         <ButtonBase
+          id={`section-select-${section.id}`}
           onClick={onSelect}
-          aria-label={`Add fields to ${name}`}
+          aria-label={readOnly ? `Review ${name} section` : `Add fields to ${name}`}
           aria-pressed={selected}
           sx={{
             flex: 1,
@@ -117,6 +122,11 @@ export function FormBuilderSectionHeader({
             <Typography component="h3" variant="h6" sx={{ overflowWrap: 'anywhere' }}>
               {name}
             </Typography>
+            {readOnly && (
+              <Typography variant="caption" color="text.secondary">
+                Questions From Inquiry
+              </Typography>
+            )}
           </Box>
         </ButtonBase>
       )}
@@ -132,7 +142,7 @@ export function FormBuilderSectionHeader({
           <Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} width={20} />
         </IconButton>
       </CustomTooltip>
-      {settingsOpen ? (
+      {readOnly ? null : settingsOpen ? (
         <CustomTooltip title="Finish editing heading">
           <IconButton
             size="small"
@@ -169,9 +179,15 @@ export function FormBuilderSectionHeader({
               {
                 id: 'delete',
                 label: `Delete ${name} section`,
+                disabled: deleteDisabled,
+                tooltip: deleteDisabled
+                  ? 'This section contains required, locked Inquiry fields.'
+                  : undefined,
                 icon: GlobalIcons.delete,
                 color: 'error.main',
-                onClick: confirmDelete.onTrue,
+                onClick: () => {
+                  if (!deleteDisabled) confirmDelete.onTrue();
+                },
               },
             ]}
           />
@@ -180,7 +196,9 @@ export function FormBuilderSectionHeader({
       <FormBuilderDeleteUnit
         name={name}
         unit="section"
-        onDelete={onDelete}
+        onDelete={() => {
+          if (!deleteDisabled) onDelete();
+        }}
         open={confirmDelete.value}
         onClose={confirmDelete.onFalse}
         hideTrigger

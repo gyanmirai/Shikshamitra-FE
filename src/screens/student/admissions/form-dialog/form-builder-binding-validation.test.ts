@@ -46,6 +46,57 @@ function inquiry(fieldType: 6 | 9 = 6) {
 }
 
 describe('admission linked-field review', () => {
+  const registrationNameMessage =
+    'Use either a writable full student name or separate student name fields before publishing.';
+  const nameMetadata = [
+    'Applicant.Name',
+    'Applicant.FirstName',
+    'Applicant.MiddleName',
+    'Applicant.LastName',
+  ].map((key) => ({
+    key,
+    displayName: key,
+    description: '',
+    fieldType: 0 as const,
+    readOnly: false,
+  }));
+  const registrationNames = (splitBinding = 'Applicant.FirstName') => {
+    const form = getBlankAdmissionFormInitialValues(1);
+    form.sections[0].fields = ['Applicant.Name', splitBinding].map((bindingKey, index) => ({
+      ...newField(form.sections[0].id, index, 0),
+      code: `NAME_${index}`,
+      label: `Name ${index}`,
+      bindingType: 0 as const,
+      bindingKey,
+    }));
+    return form;
+  };
+  it.each(['Applicant.FirstName', 'Applicant.MiddleName', 'Applicant.LastName'])(
+    'rejects writable Registration full name mixed with %s',
+    (splitBinding) => {
+      const form = registrationNames(splitBinding);
+      expect(getBuilderIssues(form, { fields: nameMetadata })).toEqual([
+        expect.objectContaining({
+          message: registrationNameMessage,
+          fieldId: form.sections[0].fields[0].id,
+        }),
+      ]);
+    }
+  );
+  it('allows read-only inherited full-name context beside writable Registration split names', () => {
+    const form = registrationNames();
+    Object.assign(form.sections[0].fields[0], { readOnly: true, inheritedFrom: 'inquiry' });
+    expect(getBuilderIssues(form, { fields: nameMetadata })).toEqual([]);
+  });
+  it('does not infer a full-name binding from an independent survey label', () => {
+    const form = registrationNames();
+    Object.assign(form.sections[0].fields[0], {
+      label: 'Student full name',
+      bindingType: 1,
+      bindingKey: 'MY_SURVEY_NAME',
+    });
+    expect(getBuilderIssues(form, { fields: nameMetadata })).toEqual([]);
+  });
   it('flags the transport checkbox changed into a select before publication', () => {
     expect(getBuilderIssues(inquiry(), { fields: metadata })).toEqual([
       expect.objectContaining({

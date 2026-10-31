@@ -1,4 +1,8 @@
 import { it, expect, describe } from 'vitest';
+import studentModule, {
+  studentPermissions,
+  studentVisibilityPermissions,
+} from 'src/constants/student-menu';
 
 import { missingVisibility, buildVisibilityPrerequisites } from './visibility-prerequisites';
 
@@ -43,6 +47,17 @@ const catalogue = (inherited = false): PermissionCatalogue => ({
 });
 
 describe('visibility prerequisites', () => {
+  it('maps House Management actions through the existing Student and Records visibility flags', () => {
+    const items = Object.values(studentModule()).flatMap((sections) =>
+      sections.flatMap((section) => section.items)
+    );
+    const prerequisites = buildVisibilityPrerequisites([
+      { title: 'Student', permissionName: studentPermissions.root, submodule: items },
+    ]);
+    expect(prerequisites['Students.Records.HouseManagement']).toEqual([
+      [studentPermissions.root, studentVisibilityPermissions.records],
+    ]);
+  });
   const index = () => buildVisibilityPrerequisites(navigation);
   it('requires both module and feature visibility for an action', () => {
     expect(missingVisibility([action], index(), catalogue(), provider, {})).toEqual([

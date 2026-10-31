@@ -1,7 +1,18 @@
+import { shikshaMitraToast } from 'src/components/toast';
 import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import PublicAdmissionInquiryScreen from './index';
+
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+  },
+}));
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 
@@ -93,6 +104,7 @@ async function select(label: string, name: string) {
 
 describe('public admission availability gate', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string, options?: RequestInit) => ({
@@ -107,6 +119,159 @@ describe('public admission availability gate', () => {
     );
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('keeps public Guardian pending school confirmation and never relabels a previous parent', async () => {
+    const roleForm = {
+      ...form,
+      sections: [
+        {
+          ...form.sections[0],
+          fields: [
+            ...form.sections[0].fields,
+            {
+              code: 'ROLE',
+              bindingKey: 'Inquiry.ParentRelationship',
+              label: 'Primary contact',
+              fieldType: 6,
+              required: true,
+              displayOrder: 4,
+              optionsJson: JSON.stringify([
+                { value: 'father', label: 'Father' },
+                { value: 'mother', label: 'Mother' },
+                { value: 'guardian', label: 'Guardian' },
+              ]),
+            },
+          ],
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, options?: RequestInit) => ({
+        ok: true,
+        json: async () =>
+          options?.method === 'POST'
+            ? {}
+            : url.includes('?offeringId=')
+              ? { ...context, form: roleForm }
+              : context,
+      }))
+    );
+    render(<PublicAdmissionInquiryScreen token="public-token" />);
+    await screen.findByRole('combobox', { name: 'Board' });
+    await select('CBSE', 'Board');
+    await select('English', 'Medium');
+    await select('Class 1', 'Class');
+    await screen.findByRole('textbox', { name: 'Primary contact' });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Primary contact' }), {
+      target: { value: 'father' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Guardian name' }), {
+      target: { value: 'Raj Shah' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Mobile' }), {
+      target: { value: '9876543210' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Primary contact' }), {
+      target: { value: 'guardian' },
+    });
+    expect(screen.getByRole('textbox', { name: 'Guardian name' })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Mobile' })).toHaveValue('');
+    expect(screen.getByText(/The school will confirm this guardian/)).toBeVisible();
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1);
+    [
+      ['Student name', 'Riya Shah'],
+      ['Guardian name', 'Pooja Shah'],
+      ['Mobile', '9123456780'],
+    ].forEach(([name, value]) =>
+      fireEvent.change(screen.getByRole('textbox', { name }), { target: { value } })
+    );
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Send inquiry' }));
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ method: 'POST' })
+      )
+    );
+    const submission = vi
+      .mocked(fetch)
+      .mock.calls.find(([, options]) => options?.method === 'POST');
+    const payload = JSON.parse(String(submission?.[1]?.body));
+    expect(payload).toMatchObject({ guardianFirstName: 'Pooja Shah', guardianPhone: '9123456780' });
+    expect(payload).not.toHaveProperty('guardianResponsibilityConfirmed');
+    expect(payload).not.toHaveProperty('parentRelationship');
+    expect(payload.formValues).toContainEqual({ fieldCode: 'ROLE', valueJson: '"guardian"' });
+  });
+  it('retains an unmapped legacy Full Name answer and reports its missing connection before public POST', async () => {
+    const legacyForm = {
+      ...form,
+      sections: [
+        {
+          ...form.sections[0],
+          fields: [
+            {
+              code: 'FIELD_1',
+              bindingKey: 'FIELD_1',
+              bindingType: 1,
+              label: 'Full Name',
+              fieldType: 0,
+              required: true,
+              displayOrder: 0,
+            },
+            {
+              code: 'PHONE',
+              bindingKey: 'Father.Mobile',
+              bindingType: 0,
+              label: "Father's mobile",
+              fieldType: 4,
+              required: false,
+              displayOrder: 1,
+            },
+          ],
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, options?: RequestInit) => ({
+        ok: true,
+        json: async () =>
+          options?.method === 'POST'
+            ? {}
+            : url.includes('?offeringId=')
+              ? { ...context, form: legacyForm }
+              : context,
+      }))
+    );
+    render(<PublicAdmissionInquiryScreen token="public-token" />);
+    await screen.findByRole('combobox', { name: 'Board' });
+    await select('CBSE', 'Board');
+    await select('English', 'Medium');
+    await select('Class 1', 'Class');
+    await screen.findByRole('textbox', { name: 'Full Name' });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Full Name' }), {
+      target: { value: 'Riya Shah' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: "Father's mobile" }), {
+      target: { value: '9876543210' },
+    });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Send inquiry' }));
+    await waitFor(() =>
+      expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'missing linked fields: Student name, Parent / Guardian name'
+          ),
+        })
+      )
+    );
+    expect(fetch).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ method: 'POST' })
+    );
+    expect(screen.getByRole('textbox', { name: 'Full Name' })).toHaveValue('Riya Shah');
+  });
   it('submits existing published optional identity questions without requiring republication', async () => {
     const legacyForm = {
       ...form,

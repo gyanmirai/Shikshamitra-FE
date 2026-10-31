@@ -52,6 +52,7 @@ export type AssignAdmissionApplicationCounsellorInput = {
   reason?: string;
 };
 export type StartAdmissionDirectRegistrationInput = {
+  guardianResponsibilityConfirmed?: boolean;
   familyContacts?: AdmissionFamilyContacts;
   requestId: string;
   admissionOfferingId: string;
@@ -215,6 +216,7 @@ export type AdmissionFormField = {
   >;
 };
 export type AdmissionFormSection = {
+  fieldsPerRow?: 1 | 2 | 3 | 4 | null;
   id: string;
   code: string;
   name: string;

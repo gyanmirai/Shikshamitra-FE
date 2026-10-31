@@ -1,6 +1,5 @@
 import { it, expect, describe } from 'vitest';
 import { fullSecurityNavData } from 'src/layouts/config-nav-dashboard';
-import { getPermissionChildren } from 'src/screens/security/role/utils';
 import {
   setPermissionGrants,
   getChangedPermissionGrants,
@@ -25,6 +24,7 @@ const actions = (feature: string, names = ['View', 'Add', 'Delete']) =>
   names.map((action) => `${prefix}${feature}.${action}`);
 const catalogue = [
   ...actions('StudentList'),
+  ...actions('HouseManagement'),
   ...actions('StudentICard'),
   ...actions('Certificates'),
   ...actions('Reports'),
@@ -51,19 +51,12 @@ function submodule(title: string): PermissionNode {
   return node;
 }
 
-function studentListPermission(title: string): PermissionNode {
-  const node = (getPermissionChildren(submodule('Student List')) as PermissionNode[]).find(
-    (child) => child.title === title
-  );
-  if (!node) throw new Error(`Student List permission ${title} is missing.`);
-  return node;
-}
-
 describe('Student Records security navigation', () => {
-  it('uses the five Student Records submodules and their routes', () => {
+  it('uses the six current Student Records submodules and their routes', () => {
     const records = recordsNavigation();
     expect(records.children?.map((node) => [node.title, node.path])).toEqual([
       ['Student List', '/student/profile'],
+      ['House Management', '/student/records/houses'],
       ['Student I-Card', '/student/student-i-card'],
       ['Certificates', '/student/certificates'],
       ['Reports', '/student/reports'],
@@ -72,6 +65,7 @@ describe('Student Records security navigation', () => {
   });
 
   it.each([
+    ['House Management', 'HouseManagement'],
     ['Student I-Card', 'StudentICard'],
     ['Certificates', 'Certificates'],
     ['Reports', 'Reports'],
@@ -80,15 +74,15 @@ describe('Student Records security navigation', () => {
     expect(getNodeActionPermissionNames(submodule(title), catalogue)).toEqual(actions(feature));
   });
 
-  it('groups historical entry requests and decisions under Add/Update', () => {
-    const node = studentListPermission('Historical entry');
+  it('retains historical workflow identifiers without inventing Delete', () => {
+    const node = { permissionName: `${prefix}Overrides.View` };
     expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'View', catalogue)).toEqual(actions('Overrides', ['View']));
     expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'Add', catalogue)).toEqual(actions('Overrides', ['Add']));
     expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'Delete', catalogue)).toEqual([]);
   });
 
-  it('keeps guardian grants distinct from profile grants', () => {
-    const node = studentListPermission('Guardian portal access');
+  it('keeps guardian workflow identifiers distinct from profile guards', () => {
+    const node = { permissionName: `${prefix}GuardianAccess.View` };
     expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'View', catalogue)).toEqual(
       actions('GuardianAccess', ['View'])
     );

@@ -304,7 +304,7 @@ export function AssessmentApplicantTable({
       columns={columns}
       data={data}
       tableTitle="Assessment students"
-      exportLabel="Export current page"
+      exportLabel="Export"
       wrapperProps={{ sx: { height: 1, minWidth: 0, minHeight: 0 } }}
       tableContainerProps={{ sx: { height: 1 } }}
       isSearch

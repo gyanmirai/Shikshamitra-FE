@@ -6,10 +6,17 @@ import type {
 
 import * as Yup from 'yup';
 
+import { ensureNewInquiryDefaults, withInquiryDefaultTranslations } from './inquiry-default-fields';
 import {
   createAdmissionCustomFieldIdentity,
   ensureAdmissionCustomFieldIdentities,
 } from './form-field-identity';
+import {
+  isClassInterestQuestion,
+  duplicateClassInterestMessage,
+  classInterestConfigurationValid,
+  classInterestConfigurationMessage,
+} from '../admission-class-question';
 
 import type { AdmissionFieldPreset } from './form-field-presets';
 
@@ -93,6 +100,16 @@ export const admissionFormSchema = Yup.object({
     ),
   sections: Yup.array()
     .of(admissionFormSectionSchema)
+    .test('one-class-interest', duplicateClassInterestMessage, function (sections) {
+      const fields = (sections ?? [])
+        .flatMap((section) => section.fields ?? [])
+        .filter(isClassInterestQuestion);
+      if (fields.length > 1) return this.createError({ message: duplicateClassInterestMessage });
+      return (
+        fields.every(classInterestConfigurationValid) ||
+        this.createError({ message: classInterestConfigurationMessage })
+      );
+    })
     .test('sections-or-inheritance', 'Add at least one section', function (sections) {
       const root = this.parent as CreateUpdateAdmissionForm;
       return Boolean(
@@ -215,7 +232,7 @@ export function getAdmissionFormInitialValues(
 ): CreateUpdateAdmissionForm {
   const sectionId = editing?.sections[0]?.id ?? crypto.randomUUID();
   const stepId = editing?.sections[0]?.stepId ?? crypto.randomUUID();
-  return ensureAdmissionCustomFieldIdentities({
+  const initialValues = ensureAdmissionCustomFieldIdentities({
     name: editing?.name ?? '',
     code: editing?.code ?? '',
     description: editing?.description ?? '',
@@ -243,14 +260,15 @@ export function getAdmissionFormInitialValues(
       },
     ],
   });
+  return withInquiryDefaultTranslations(initialValues);
 }
 
 export function getBlankAdmissionFormInitialValues(
   purpose: CreateUpdateAdmissionForm['purpose'] = 1
 ): CreateUpdateAdmissionForm {
   const form = getAdmissionFormInitialValues(undefined, purpose);
-  return {
+  return ensureNewInquiryDefaults({
     ...form,
     sections: form.sections.map((section) => ({ ...section, fields: [] })),
-  };
+  });
 }

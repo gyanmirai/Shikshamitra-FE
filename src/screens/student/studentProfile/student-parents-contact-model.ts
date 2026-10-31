@@ -11,6 +11,7 @@ export type AdultContactDraft = {
 export type ParentsContactDraft = Record<ContactRelationship, AdultContactDraft> & {
   mainContactRelationship: ContactRelationship | '';
   guardianRelationship: string;
+  guardianResponsibilityConfirmed?: boolean;
   reason: string;
 };
 export const contactLabels: Record<ContactRelationship, string> = {
@@ -74,6 +75,13 @@ export function contactPayload(
     ...data,
     mainContactRelationship: values.mainContactRelationship,
   };
+  delete payload.guardianResponsibilityConfirmed;
+  if (
+    values.mainContactRelationship === 'guardian' &&
+    initial.mainContactRelationship !== 'guardian' &&
+    values.guardianResponsibilityConfirmed === true
+  )
+    payload.guardianResponsibilityConfirmed = true;
   contactRelationships.forEach((relationship) => {
     const next = values[relationship];
     if (!next.enabled) return;

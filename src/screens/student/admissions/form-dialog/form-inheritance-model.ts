@@ -5,7 +5,12 @@ import type {
   AdmissionFormSystemFieldMetadata,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { getAdmissionFormStepGroups } from './form-step-groups';
+import { isClassInterestQuestion } from '../admission-class-question';
+
 type FormSections = Pick<CreateUpdateAdmissionForm, 'sections'>;
+type ComposedForm = FormSections &
+  Partial<Pick<CreateUpdateAdmissionForm, 'layoutType' | 'supportedLanguages'>>;
 
 export function getInheritedFields(form?: FormSections | null): AdmissionFormField[] {
   return (
@@ -143,12 +148,123 @@ export function setInheritedFieldMapping(
 
 export function getInheritancePreviewValues(
   form: CreateUpdateAdmissionForm,
-  effective?: FormSections | null
+  effective?: ComposedForm | null
 ): CreateUpdateAdmissionForm {
-  return effective ? { ...form, ...effective, sections: effective.sections } : form;
+  // The composition preserves Inquiry steps and section columns. Keep live
+  // Registration grid changes, and immediately reflect a newly added base step.
+  return effective
+    ? {
+        ...form,
+        layoutType: form.layoutType === 1 ? 1 : (effective.layoutType ?? form.layoutType),
+        supportedLanguages: [
+          ...new Set([...form.supportedLanguages, ...(effective.supportedLanguages ?? [])]),
+        ],
+        sections: effective.sections,
+      }
+    : form;
+}
+
+/** Keep a pending preview's source structure without restoring an older base draft. */
+export function getInheritanceBuilderValues(
+  form: CreateUpdateAdmissionForm,
+  effective?: ComposedForm | null,
+  previewBaseSectionIds: readonly string[] = form.sections.map((section) => section.id)
+): CreateUpdateAdmissionForm {
+  if (!effective) return form;
+  const snapshotBaseIds = new Set(previewBaseSectionIds);
+  const inherited = getInheritedFields(effective);
+  const sourceSections = effective.sections
+    .filter((section) => !snapshotBaseIds.has(section.id))
+    .sort((left, right) => left.displayOrder - right.displayOrder);
+  const baseSections = [...form.sections]
+    .sort((left, right) => left.displayOrder - right.displayOrder)
+    .flatMap((base) => {
+      const section = effective.sections.find((item) => item.id === base.id);
+      const editableFields = base.fields.filter(
+        (field) =>
+          !inherited.some(
+            (source) =>
+              source.id === field.id ||
+              sameIdentity(field, source) ||
+              form.inheritance?.sources.some(
+                (policy) =>
+                  policy.inquiryFormDefinitionId ===
+                    source.inheritedFrom?.inquiryFormDefinitionId &&
+                  policy.fieldMappings.some(
+                    (mapping) =>
+                      mapping.sourceFieldCode === source.inheritedFrom?.sourceFieldCode &&
+                      mapping.registrationFieldCode === field.code
+                  )
+              )
+          )
+      );
+      const fields = (section?.fields ?? []).flatMap((field) => {
+        if (field.inheritedFrom) return [field];
+        const current = editableFields.find((item) => item.id === field.id);
+        return current ? [current] : [];
+      });
+      const displayed = new Set(fields.map((field) => field.id));
+      fields.push(...editableFields.filter((field) => !displayed.has(field.id)));
+      // Composition deliberately omits duplicate-only sections. Keep them omitted,
+      // but show a new Registration question immediately while its preview is pending.
+      if (!fields.length && snapshotBaseIds.has(base.id) && (!section || base.fields.length > 0))
+        return [];
+      return [
+        {
+          ...section,
+          ...base,
+          fields: fields.sort((left, right) => left.displayOrder - right.displayOrder),
+          stepDisplayOrder: base.stepDisplayOrder ?? section?.stepDisplayOrder,
+        },
+      ];
+    });
+  // A single-page Registration stays one group when the selected Inquiry has
+  // steps, including base sections added while a fresh composition is pending.
+  const basePage =
+    form.layoutType === 0 && effective.layoutType === 1
+      ? effective.sections.find((section) => snapshotBaseIds.has(section.id))
+      : undefined;
+  const groupedBase =
+    form.layoutType === 0 && effective.layoutType === 1
+      ? baseSections.map((section) => ({
+          ...section,
+          stepId: basePage?.stepId ?? 'registration-page',
+          stepCode: basePage?.stepCode ?? 'REGISTRATION_PAGE',
+          stepName: basePage?.stepName ?? form.name,
+          stepDisplayOrder: 0,
+          stepVisibilityRuleJson: undefined,
+        }))
+      : baseSections;
+  const sourceOrders = new Map(
+    getAdmissionFormStepGroups(sourceSections).map((step, index) => [step.id, index])
+  );
+  const baseOrders = new Map(
+    getAdmissionFormStepGroups(groupedBase).map((step, index) => [
+      step.id,
+      sourceOrders.size + index,
+    ])
+  );
+  const stepper = form.layoutType === 1 || effective.layoutType === 1;
+  const viewSections = [
+    ...sourceSections.map((section) =>
+      stepper
+        ? { ...section, stepDisplayOrder: sourceOrders.get(section.stepId ?? section.id) }
+        : section
+    ),
+    ...groupedBase.map((section) =>
+      stepper
+        ? { ...section, stepDisplayOrder: baseOrders.get(section.stepId ?? section.id) }
+        : section
+    ),
+  ].map((section, index) => ({ ...section, displayOrder: index }));
+  return getInheritancePreviewValues(form, {
+    ...effective,
+    sections: viewSections,
+  });
 }
 
 function sameIdentity(field: AdmissionFormField, inherited: AdmissionFormField) {
+  if (isClassInterestQuestion(field) && isClassInterestQuestion(inherited)) return true;
   if (
     field.bindingType === 0 &&
     inherited.bindingType === 0 &&
@@ -175,9 +291,17 @@ export function markInheritedRegistrationFields(
     sections: form.sections.map((section) => ({
       ...section,
       fields: section.fields.map((field) => {
-        const source = inherited.find((candidate) => sameIdentity(field, candidate));
+        const source = inherited.find(
+          (candidate) => candidate.id === field.id || sameIdentity(field, candidate)
+        );
         return source
-          ? { ...field, label: source.label, inheritedFrom: source.inheritedFrom }
+          ? {
+              ...field,
+              label: source.label,
+              required: source.required,
+              readOnly: source.readOnly,
+              inheritedFrom: source.inheritedFrom,
+            }
           : field;
       }),
     })),

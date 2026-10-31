@@ -43,6 +43,7 @@ it('exports exactly the displayed merged Status/Attendance, excludes Result/Acti
       onDetails={vi.fn()}
     />
   );
+  expect(capture.props!.exportLabel).toBe('Export');
   const { columns, data } = capture.props!;
   const exported = getExportableColumns(
     columns,

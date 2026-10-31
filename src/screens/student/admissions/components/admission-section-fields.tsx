@@ -3,9 +3,15 @@ import type { ReactNode } from 'react';
 import { Box, Grid, Stack } from '@mui/material';
 import { FormFieldSpacing } from 'src/components/form-section-card';
 
+import { hasBoardClassOptions } from '../admission-academic-options';
 import { parseFieldConfiguration } from '../form-dialog/form-field-presets';
 
-type Field = { code: string; fieldType: number; validationJson?: string | null };
+type Field = {
+  code: string;
+  fieldType: number;
+  validationJson?: string | null;
+  optionsJson?: string | null;
+};
 type Props<T extends Field> = {
   fields: T[];
   columns: number;
@@ -67,9 +73,10 @@ export function AdmissionSectionFields<T extends Field>({
                   key={field.code}
                   sx={{
                     minWidth: 0,
-                    gridColumn: fullWidthFieldTypes.includes(field.fieldType)
-                      ? '1 / -1'
-                      : undefined,
+                    gridColumn:
+                      fullWidthFieldTypes.includes(field.fieldType) || hasBoardClassOptions(field)
+                        ? '1 / -1'
+                        : undefined,
                   }}
                 >
                   {renderField(field)}

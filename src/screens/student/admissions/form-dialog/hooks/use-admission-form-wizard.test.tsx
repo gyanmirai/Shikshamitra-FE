@@ -79,6 +79,8 @@ describe('admission form wizard identity', () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     const onPublishNow = vi.fn();
     const values = { ...getBlankAdmissionFormInitialValues(0), name: 'Inquiry form' };
+    // A historical incomplete draft is still saveable; new Inquiry defaults are valid.
+    values.sections[0].fields = [];
     const { result } = renderHook(() =>
       useAdmissionFormWizard({ onSave, onPublishNow, onClose: vi.fn() })
     );

@@ -45,6 +45,7 @@ export type AdmissionInquiryFormValues = {
   parentRelationship?: '' | AdmissionParentRelationship;
   /** Provenance from the saved inquiry, used only while editing legacy partial forms. */
   capturedParentRelationship?: AdmissionParentRelationship;
+  guardianResponsibilityConfirmed?: boolean;
   preferredLanguageCode?: string;
   familyContacts?: AdmissionFamilyContactsFormValues;
   fields: Record<string, string>;
@@ -229,6 +230,8 @@ export const getAdmissionInquiryPrimaryContact = (
   );
   const generic =
     hasIdentityField(visible, 'Guardian.FirstName') && hasIdentityField(visible, 'Guardian.Mobile');
+  const genericPart =
+    hasIdentityField(visible, 'Guardian.FirstName') || hasIdentityField(visible, 'Guardian.Mobile');
   const lockedGeneric = visible.some(
     (field) => canonicalInquiryBinding(field) === 'Guardian.Mobile' && field.readOnly
   );
@@ -246,15 +249,36 @@ export const getAdmissionInquiryPrimaryContact = (
   const relationship = !selector && captured ? captured : configuredRelationship;
   const structuredPrefix = relationship === 'father' ? 'Father' : 'Mother';
   const structured =
-    hasIdentityField(visible, `${structuredPrefix}.Name`) &&
-    hasIdentityField(visible, `${structuredPrefix}.Mobile`);
+    (hasIdentityField(visible, `${structuredPrefix}.Name`) &&
+      hasIdentityField(visible, `${structuredPrefix}.Mobile`)) ||
+    ((!genericPart || Boolean(selected)) &&
+      (hasIdentityField(visible, `${structuredPrefix}.Name`) ||
+        hasIdentityField(visible, `${structuredPrefix}.Mobile`)));
+  const requiredGeneric = ['Guardian.FirstName', 'Guardian.Mobile'].every((binding) =>
+    visible.some((field) => canonicalInquiryBinding(field) === binding && field.required)
+  );
+  const requiredStructured = [`${structuredPrefix}.Name`, `${structuredPrefix}.Mobile`].every(
+    (binding) =>
+      visible.some((field) => canonicalInquiryBinding(field) === binding && field.required)
+  );
+  const genericPrimary = generic && (requiredGeneric || !requiredStructured);
   const prefix =
-    !lockedGeneric && relationship && (structured || legacyContact) && (selected || !generic)
+    !genericPrimary &&
+    !lockedGeneric &&
+    relationship &&
+    relationship !== 'guardian' &&
+    (structured || legacyContact) &&
+    (selected || !genericPrimary)
       ? structuredPrefix
       : 'Guardian';
-  const emailBinding = hasIdentityField(visible, `${prefix}.Email`)
-    ? `${prefix}.Email`
-    : 'Guardian.Email';
+  const emailBinding =
+    relationship &&
+    relationship !== 'guardian' &&
+    hasIdentityField(visible, `${structuredPrefix}.Email`)
+      ? `${structuredPrefix}.Email`
+      : hasIdentityField(visible, `${prefix}.Email`)
+        ? `${prefix}.Email`
+        : 'Guardian.Email';
   return {
     relationship,
     prefix,
@@ -318,11 +342,14 @@ const boundValue = (
   bindingKey: string,
   fallbackCode: string
 ) => {
-  const canonicalField = fields.find((item) =>
-    equalsIgnoreCase(canonicalInquiryBinding(item), bindingKey)
+  const canonicalField = fields.find(
+    (item) =>
+      isInquiryFieldVisible(item, values) &&
+      equalsIgnoreCase(canonicalInquiryBinding(item), bindingKey)
   );
   const fallbackField = fields.find(
     (item) =>
+      isInquiryFieldVisible(item, values) &&
       equalsIgnoreCase(item.code, fallbackCode) &&
       equalsIgnoreCase(canonicalInquiryBinding(item), bindingKey)
   );
@@ -382,7 +409,10 @@ export function buildAdmissionInquiryPayload(
   parentSelection?: AdmissionSiblingParentSelection
 ): CreateAdmissionInquiry {
   const contact = getAdmissionInquiryPrimaryContact(fields, values);
-  const configuredRelationship = getConfiguredInquiryParentRelationship(fields, values.fields);
+  const configuredRelationship = getConfiguredInquiryParentRelationship(
+    fields.filter((field) => isInquiryFieldVisible(field, values)),
+    values.fields
+  );
   if (
     parentSelection &&
     configuredRelationship &&
@@ -393,7 +423,7 @@ export function buildAdmissionInquiryPayload(
     parentSelection &&
     getAdmissionSiblingParentReviewError(
       values.familyContacts,
-      contact.relationship,
+      contact.relationship === 'guardian' ? undefined : contact.relationship,
       parentSelection.relationship
     );
   if (parentReviewError) throw new Error(parentReviewError);
@@ -451,8 +481,10 @@ export function buildAdmissionInquiryPayload(
     standardId: values.standardId,
     existingFamilyId,
     existingParentApplicantId: parentSelection?.sourceApplicantId,
-    parentRelationship: relationship,
-    ...(relationship
+    parentRelationship: relationship === 'guardian' ? undefined : relationship,
+    guardianResponsibilityConfirmed:
+      relationship === 'guardian' && values.guardianResponsibilityConfirmed === true,
+    ...(relationship && relationship !== 'guardian'
       ? {
           familyContacts: buildAdmissionFamilyContacts(
             values.familyContacts,
@@ -494,6 +526,50 @@ export function buildAdmissionInquiryPayload(
   };
 }
 
+/** Validate resolved values at submit, independently of publication/required flags. */
+export function getAdmissionInquiryIdentityErrors(
+  payload: Pick<
+    CreateAdmissionInquiry,
+    'applicantFirstName' | 'guardianFirstName' | 'guardianPhone'
+  >,
+  fields: AdmissionFormField[],
+  values: InquiryMobileContext
+) {
+  const active = fields.filter((field) => !field.readOnly && isInquiryFieldVisible(field, values));
+  const contact = getAdmissionInquiryPrimaryContact(fields, values);
+  const parentName =
+    contact.prefix === 'Guardian' || contact.legacyContact
+      ? 'Guardian.FirstName'
+      : `${contact.prefix}.Name`;
+  const entries = [
+    {
+      value: payload.applicantFirstName,
+      keys: ['Applicant.FirstName', 'Applicant.Name'],
+      label: 'Student name',
+    },
+    { value: payload.guardianFirstName, keys: [parentName], label: 'Parent / Guardian name' },
+    {
+      value: payload.guardianPhone,
+      keys: [`${contact.prefix}.Mobile`],
+      label: 'Parent / Guardian mobile',
+    },
+  ];
+  const fieldErrors: Record<string, string> = {};
+  const missingMappings: string[] = [];
+  entries.forEach(({ value, keys, label }) => {
+    if (value?.trim()) return;
+    const field = active.find((item) => keys.includes(canonicalInquiryBinding(item) ?? ''));
+    if (field) fieldErrors[field.code] = `${field.label} is required to create an inquiry.`;
+    else missingMappings.push(label);
+  });
+  return {
+    fieldErrors,
+    message: missingMappings.length
+      ? `This inquiry form is missing linked fields: ${missingMappings.join(', ')}. Update its field mappings in Admissions Settings.`
+      : '',
+  };
+}
+
 export function validateAdmissionInquiry(
   values: AdmissionInquiryFormValues,
   fields: AdmissionFormField[],
@@ -524,8 +600,12 @@ export function validateAdmissionInquiry(
     (field) => canonicalInquiryBinding(field) === 'Inquiry.ParentRelationship'
   );
   const selectedRole = selectorField ? fieldValue(values, selectorField.code) : '';
-  if (selectorField && selectedRole && !['father', 'mother'].includes(selectedRole.toLowerCase()))
-    fieldErrors[selectorField.code] = 'Select Father or Mother.';
+  if (
+    selectorField &&
+    selectedRole &&
+    !['father', 'mother', 'guardian'].includes(selectedRole.toLowerCase())
+  )
+    fieldErrors[selectorField.code] = 'Select Father, Mother or Guardian.';
   const sourceAnswer = sourceField ? fieldValue(values, sourceField.code) : '';
   const source = sourceAnswer ? Number(sourceAnswer) : values.source;
   if (sourceField && sourceAnswer && (!Number.isInteger(source) || source < 0 || source > 12))
@@ -613,6 +693,12 @@ export function buildAdmissionInquiryDuplicateInput(
   const payload = buildAdmissionInquiryPayload(values, fields, offering);
   const parentContacts = (['father', 'mother'] as const)
     .map((relationship) => {
+      if (relationship === payload.parentRelationship)
+        return {
+          relationship,
+          email: payload.guardianEmail || undefined,
+          mobile: payload.guardianPhone || undefined,
+        };
       const prefix = relationship === 'father' ? 'Father' : 'Mother';
       const email = normalizeEmail(
         boundValue(values, fields, `${prefix}.Email`, `${relationship}Email`)

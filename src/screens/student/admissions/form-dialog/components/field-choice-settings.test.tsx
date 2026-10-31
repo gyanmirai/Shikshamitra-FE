@@ -42,6 +42,30 @@ function renderFieldSettings(fieldType: 6 | 7 | 8, patch: Partial<AdmissionFormF
 }
 
 describe('Admission Form Builder choice field settings', () => {
+  it('keeps class interest on the live Institute Setup selector without manual option editing', () => {
+    renderFieldSettings(6, {
+      code: 'CLASS_INTERESTED',
+      label: 'Class interested in',
+      optionsJson: '{"source":"Standards"}',
+    });
+    expect(screen.getByRole('combobox', { name: 'Field type' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(screen.queryByRole('button', { name: 'Enter my own options' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add choice' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('choices-json')).toHaveTextContent('{"source":"Standards"}');
+  });
+  it('repairs a legacy manual class alias explicitly, without altering ordinary custom choice fields', async () => {
+    renderFieldSettings(6, {
+      code: 'FIELD_1',
+      label: 'Interested Class',
+      optionsJson: '["Class 1"]',
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Use Institute Setup classes' }));
+    expect(screen.getByTestId('choices-json')).toHaveTextContent('{"source":"Standards"}');
+    expect(screen.queryByRole('button', { name: 'Add choice' })).not.toBeInTheDocument();
+  });
   it.each([6, 7, 8] as const)(
     'lets a custom field of type %s replace the default option name',
     async (fieldType) => {

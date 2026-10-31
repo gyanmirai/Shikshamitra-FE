@@ -13,6 +13,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 
 import { FIELD_TYPES } from './form-dialog-model';
 import { FormBuilderUnitActions } from './components/form-builder-unit-actions';
+import { isLockedInquiryField, INQUIRY_FIELD_LOCK_HELP } from './inquiry-default-fields';
 
 function fieldPrompt(fieldType: number, label: string, placeholder?: string | null) {
   if (placeholder) return placeholder;
@@ -46,12 +47,13 @@ export function FormBuilderField({
   reorderEnabled = true,
 }: Props) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
+  const locked = isLockedInquiryField(formik.values.purpose, field);
   const fieldType = FIELD_TYPES.find(([, value]) => value === field.fieldType)?.[0] ?? 'Field';
   const name = field.label || `Field ${fieldIndex + 1}`;
   const compactFourColumnCard = formik.values.fieldsPerRow === 4;
   const sortable = useSortable({
     id: `field:${formik.values.sections[sectionIndex].id}:${field.id}`,
-    disabled: !reorderEnabled,
+    disabled: locked || !reorderEnabled,
   });
   return (
     <Box
@@ -82,7 +84,7 @@ export function FormBuilderField({
         alignItems="flex-start"
         sx={{ p: 0.5, position: 'relative' }}
       >
-        {reorderEnabled && (
+        {reorderEnabled && !locked && (
           <CustomTooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
             <IconButton
               size="small"
@@ -108,8 +110,10 @@ export function FormBuilderField({
           </CustomTooltip>
         )}
         <ButtonBase
-          onClick={onSelect}
-          aria-label={`Edit ${name} field`}
+          id={`field-select-${field.id}`}
+          disabled={locked}
+          onClick={locked ? undefined : onSelect}
+          aria-label={locked ? `${name} field (locked)` : `Edit ${name} field`}
           aria-pressed={selected}
           sx={{
             flex: 1,
@@ -166,20 +170,15 @@ export function FormBuilderField({
                 />
               )}
             </Stack>
-            {(field.helpText || selected) && (
+            {!locked && (field.helpText || selected) && (
               <Typography variant="caption" color={selected ? 'success.main' : 'text.secondary'}>
                 {field.helpText || `Selected · ${fieldType} field`}
-              </Typography>
-            )}
-            {field.inheritedFrom && (
-              <Typography variant="caption" color="text.secondary">
-                From Inquiry · definition locked
               </Typography>
             )}
           </Stack>
         </ButtonBase>
         <Box
-          className="admission-field-actions"
+          className={locked ? undefined : 'admission-field-actions'}
           sx={{
             width: 44,
             height: 44,
@@ -191,14 +190,26 @@ export function FormBuilderField({
             zIndex: 1,
           }}
         >
-          <FormBuilderUnitActions
-            name={name}
-            unit="field"
-            onEdit={onSelect}
-            onDelete={onDelete}
-            disabled={formik.isSubmitting}
-            deleteDisabled={Boolean(field.inheritedFrom)}
-          />
+          {locked ? (
+            <CustomTooltip title={INQUIRY_FIELD_LOCK_HELP}>
+              <IconButton
+                size="small"
+                aria-label={`Locked ${name} field`}
+                sx={{ width: 44, height: 44 }}
+              >
+                <Iconify icon="mdi:lock-outline" width={18} />
+              </IconButton>
+            </CustomTooltip>
+          ) : (
+            <FormBuilderUnitActions
+              name={name}
+              unit="field"
+              onEdit={onSelect}
+              onDelete={onDelete}
+              disabled={formik.isSubmitting}
+              deleteDisabled={Boolean(field.inheritedFrom)}
+            />
+          )}
         </Box>
       </Stack>
     </Box>
