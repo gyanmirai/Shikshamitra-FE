@@ -20,6 +20,7 @@ import { CUSTOM_FIELD_PRESETS } from '../form-field-presets';
 import { matchesStudentField } from '../student-field-configuration';
 import { findExistingStudentFieldAlias } from '../form-inheritance-model';
 import { fieldTypeIcon, CREATABLE_FIELD_TYPES } from '../form-dialog-model';
+import { classInterestOptions, isClassInterestQuestion } from '../../admission-class-question';
 import {
   appendPastedAdmissionChoices,
   serializeEditableAdmissionChoices,
@@ -43,7 +44,9 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
   const [required, setRequired] = useState(false);
   const [choices, setChoices] = useState('');
   const [confirmedDifferent, setConfirmedDifferent] = useState<string | null>(null);
-  const needsChoices = [6, 7, 8].includes(type);
+  const isClassInterest = isClassInterestQuestion({ code: '', label, bindingType: 1 });
+  const answerType = isClassInterest ? 6 : type;
+  const needsChoices = !isClassInterest && [6, 7, 8].includes(type);
   const [showTypes, setShowTypes] = useState(false);
   const formatsId = useId();
   const normalized = label.trim().toLowerCase();
@@ -129,7 +132,8 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
           size="small"
           fullWidth
           label="Answer type"
-          value={type}
+          value={answerType}
+          disabled={isClassInterest}
           onChange={(event) => setType(Number(event.target.value) as AdmissionFormFieldType)}
         >
           {CREATABLE_FIELD_TYPES.map(([name, value]) => (
@@ -138,6 +142,11 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
             </MenuItem>
           ))}
         </TextField>
+        {isClassInterest && (
+          <Typography variant="caption" color="text.secondary">
+            Classes come from Institute Setup. An existing class-interest question will be reused.
+          </Typography>
+        )}
         {needsChoices && (
           <TextField
             fullWidth
@@ -164,16 +173,18 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
           startIcon={<Iconify icon="mdi:plus" />}
           disabled={!normalized || needsIdentityReview || (needsChoices && !choices.trim())}
           onClick={() => {
-            onAddField(type, undefined, {
+            onAddField(answerType, undefined, {
               label: label.trim(),
               description: '',
-              icon: fieldTypeIcon(type),
-              fieldType: type,
+              icon: fieldTypeIcon(answerType),
+              fieldType: answerType,
               validation: {},
               required,
-              optionsJson: needsChoices
-                ? serializeEditableAdmissionChoices(appendPastedAdmissionChoices([], choices))
-                : undefined,
+              optionsJson: isClassInterest
+                ? classInterestOptions
+                : needsChoices
+                  ? serializeEditableAdmissionChoices(appendPastedAdmissionChoices([], choices))
+                  : undefined,
             });
             setLabel('');
             setChoices('');

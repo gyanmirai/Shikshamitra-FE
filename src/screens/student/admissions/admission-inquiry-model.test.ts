@@ -15,6 +15,7 @@ import {
   readAdmissionInquiryFormValues,
   type AdmissionInquiryFormValues,
   preserveCompatibleInquiryAnswers,
+  getAdmissionInquiryIdentityErrors,
   getAdmissionInquiryVisibleSections,
   getAdmissionInquiryAcademicOptions,
   buildAdmissionInquiryDuplicateInput,
@@ -81,6 +82,105 @@ const offering = {
 } as AdmissionOfferingListItem;
 
 describe('admission inquiry model', () => {
+  it.each(['Father', 'Mother'] as const)(
+    'preserves a partial explicitly bound %s mobile without inventing a parent name',
+    (role) => {
+      const configured = [field('CHILD', 'Applicant.Name'), field('PHONE', `${role}.Mobile`, 4)];
+      const draft = { ...values, fields: { CHILD: 'Riya Shah', PHONE: '9876543210' } };
+      const payload = buildAdmissionInquiryPayload(draft, configured, offering);
+      expect(payload).toMatchObject({
+        applicantName: 'Riya Shah',
+        guardianPhone: '9876543210',
+        guardianFirstName: '',
+        parentRelationship: role.toLowerCase(),
+      });
+      expect(getAdmissionInquiryIdentityErrors(payload, configured, draft)).toEqual({
+        fieldErrors: {},
+        message:
+          'This inquiry form is missing linked fields: Parent / Guardian name. Update its field mappings in Admissions Settings.',
+      });
+    }
+  );
+
+  it('does not reinterpret an unmapped FIELD_1 labelled Full Name and explains the missing connection', () => {
+    const configured = [
+      { ...field('FIELD_1', 'FIELD_1', 0, true), bindingType: 1 as const, label: 'Full Name' },
+      field('PHONE', 'Father.Mobile', 4),
+    ];
+    const draft = { ...values, fields: { FIELD_1: 'Riya Shah', PHONE: '9876543210' } };
+    const payload = buildAdmissionInquiryPayload(draft, configured, offering);
+    expect(payload.applicantName).toBe('');
+    expect(payload.formValues).toContainEqual({ fieldCode: 'FIELD_1', valueJson: '"Riya Shah"' });
+    expect(getAdmissionInquiryIdentityErrors(payload, configured, draft).message).toBe(
+      'This inquiry form is missing linked fields: Student name, Parent / Guardian name. Update its field mappings in Admissions Settings.'
+    );
+  });
+
+  it('maps a custom-code question once it is explicitly connected to Applicant.Name', () => {
+    const configured = [
+      field('FIELD_1', 'Applicant.Name', 0, true),
+      field('DAD', 'Father.Name'),
+      field('PHONE', 'Father.Mobile', 4),
+    ];
+    const draft = {
+      ...values,
+      fields: { FIELD_1: 'Riya Shah', DAD: 'Amit Shah', PHONE: '9876543210' },
+    };
+    const payload = buildAdmissionInquiryPayload(draft, configured, offering);
+    expect(payload.applicantFirstName).toBe('Riya Shah');
+    expect(getAdmissionInquiryIdentityErrors(payload, configured, draft)).toEqual({
+      fieldErrors: {},
+      message: '',
+    });
+  });
+
+  it('attaches missing actual optional identity values to their configured fields without changing required flags', () => {
+    const configured = [
+      field('CHILD', 'Applicant.Name'),
+      field('ADULT', 'Guardian.FirstName'),
+      field('PHONE', 'Guardian.Mobile', 4),
+    ];
+    const draft = { ...values, fields: { CHILD: '', ADULT: '', PHONE: '' } };
+    expect(
+      getAdmissionInquiryIdentityErrors(
+        buildAdmissionInquiryPayload(draft, configured, offering),
+        configured,
+        draft
+      )
+    ).toEqual({
+      fieldErrors: {
+        CHILD: 'CHILD is required to create an inquiry.',
+        ADULT: 'ADULT is required to create an inquiry.',
+        PHONE: 'PHONE is required to create an inquiry.',
+      },
+      message: '',
+    });
+    expect(configured.every((item) => !item.required)).toBe(true);
+  });
+
+  it('never joins an explicitly selected partial mother contact with father name or mobile', () => {
+    const configured = [
+      field('CHILD', 'Applicant.Name'),
+      field('DAD', 'Father.Name'),
+      field('DAD_PHONE', 'Father.Mobile', 4),
+      field('MOM_PHONE', 'Mother.Mobile', 4),
+      field('PRIMARY', 'Inquiry.ParentRelationship', 6),
+    ];
+    const draft = {
+      ...values,
+      fields: {
+        CHILD: 'Riya',
+        DAD: 'Amit',
+        DAD_PHONE: '9876543210',
+        MOM_PHONE: '9876543211',
+        PRIMARY: 'mother',
+      },
+    };
+    const payload = buildAdmissionInquiryPayload(draft, configured, offering);
+    expect(payload.guardianPhone).toBe('9876543211');
+    expect(payload.guardianFirstName).toBe('');
+  });
+
   it('uses configured split names instead of a stale full-name answer and preserves both raw answers', () => {
     const configured = [
       ...fields,

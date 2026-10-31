@@ -1,7 +1,6 @@
 import type { ComponentProps } from 'react';
 
 import { it, vi, expect, describe } from 'vitest';
-import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -17,9 +16,7 @@ const theme = createTheme(defaultSettings);
 const props = (): ComponentProps<typeof StudentSetupAssignmentToolbar> => ({
   view: 'gr-number',
   title: 'GR Number',
-  scope: 'pending',
   pendingCount: 2,
-  onScopeChange: vi.fn(),
   busy: false,
   automaticCount: 2,
   manualCount: 3,
@@ -55,33 +52,22 @@ describe('Student Setup assignment toolbar', () => {
     expect(input.onSave).not.toHaveBeenCalled();
   });
 
-  it.each(['division', 'gr-number', 'roll-number', 'fees', 'credentials'] as const)(
-    'toggles %s between All and Remaining through the existing scope callback',
+  it.each(['division', 'gr-number', 'roll-number', 'credentials'] as const)(
+    'omits the removed scope toggle for %s',
     async (view) => {
-      const user = userEvent.setup();
       const input = { ...props(), view };
-      const { rerender } = render(toolbarElement(input));
+      render(toolbarElement(input));
       expect(screen.queryByRole('combobox', { name: 'Students' })).not.toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'All Students' }));
-      expect(input.onScopeChange).toHaveBeenCalledWith('all');
-      rerender(toolbarElement({ ...input, scope: 'all' }));
-      await user.click(screen.getByRole('button', { name: 'Remaining Students' }));
-      expect(input.onScopeChange).toHaveBeenLastCalledWith('pending');
-      expect(input.onScopeChange).toHaveBeenCalledTimes(2);
+      expect(screen.queryByRole('button', { name: 'All Students' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Remaining Students' })).not.toBeInTheDocument();
     }
   );
 
-  it('supports keyboard scope changes with a native button', async () => {
-    const user = userEvent.setup();
-    const input = props();
-    const { rerender } = render(toolbarElement(input));
-    screen.getByRole('button', { name: 'All Students' }).focus();
-    await user.keyboard('{Enter}');
-    expect(input.onScopeChange).toHaveBeenCalledWith('all');
-    rerender(toolbarElement({ ...input, scope: 'all' }));
-    screen.getByRole('button', { name: 'Remaining Students' }).focus();
-    await user.keyboard(' ');
-    expect(input.onScopeChange).toHaveBeenLastCalledWith('pending');
+  it('omits the removed student-scope filter from Fees', () => {
+    render(toolbarElement({ ...props(), view: 'fees' }));
+    expect(screen.queryByRole('button', { name: 'All Students' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remaining Students' })).not.toBeInTheDocument();
+    expect(screen.getByText('2 pending')).toBeVisible();
   });
 
   it('keeps the heading, pending count and all controls in the same scrollable region', () => {
@@ -90,7 +76,7 @@ describe('Student Setup assignment toolbar', () => {
     expect(region).toHaveAttribute('tabindex', '0');
     expect(region).toContainElement(screen.getByText('GR Number'));
     expect(region).toContainElement(screen.getByText('2 pending'));
-    ['All Students', 'Auto', 'Manual', 'Lock'].forEach((name) => {
+    ['Auto', 'Manual', 'Lock'].forEach((name) => {
       expect(region).toContainElement(screen.getByRole('button', { name }));
     });
   });
@@ -138,12 +124,9 @@ describe('Student Setup assignment toolbar', () => {
     expect(input.onReasonBlur).toHaveBeenCalledOnce();
   });
 
-  it('disables scope, actions and the reason while an assignment is saving', () => {
+  it('disables actions and the reason while an assignment is saving', () => {
     const input = { ...props(), busy: true };
     const { rerender } = render(toolbarElement(input));
-    expect(screen.getByRole('button', { name: 'All Students' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'All Students' }));
-    expect(input.onScopeChange).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Auto' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Manual' })).toBeDisabled();
     rerender(toolbarElement({ ...input, manualEditing: true, changedCount: 1, needsReason: true }));
@@ -158,7 +141,6 @@ describe('Student Setup assignment toolbar', () => {
     'keeps %s scoped without number-assignment actions',
     (view) => {
       render(toolbarElement({ ...props(), view }));
-      expect(screen.getByRole('button', { name: 'All Students' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Auto' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Manual' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Save/ })).not.toBeInTheDocument();

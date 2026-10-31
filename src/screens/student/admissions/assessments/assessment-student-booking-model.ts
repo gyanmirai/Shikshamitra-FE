@@ -8,6 +8,13 @@ import type {
   AssessmentSessionConfirmation,
 } from 'src/redux/student/admissions/admission-assessment-types';
 
+import { latestAssessmentAttempt } from './assessment-action-model';
+
+export function existingStudentBooking(row: AssessmentRosterItem) {
+  const attempt = latestAssessmentAttempt(row.assessment);
+  return !row.assessment.canBook && attempt?.sessionId ? attempt : undefined;
+}
+
 export function sessionBookingInput(session: AssessmentSession): AssessmentSharedSessionInput {
   return {
     name: session.name,
@@ -51,9 +58,14 @@ export function studentBookingReason(
   session?: AssessmentSharedSessionInput
 ) {
   if (!row.isActive || !row.assessment.policy) return 'This assessment is read-only.';
-  if (!row.assessment.canBook) return 'Booking is not available for this assessment.';
   if (!row.assessment.policy.schedulingEnabled)
     return 'This assessment does not require a session.';
+  if (!row.assessment.canBook) {
+    const booking = existingStudentBooking(row);
+    return booking
+      ? `Already booked in ${booking.sessionName || 'a session'}.`
+      : 'Booking is not available for this assessment.';
+  }
   if (!row.admissionOfferingId || !row.workflowStageDefinitionId)
     return 'Refresh this student’s assessment details.';
   if (

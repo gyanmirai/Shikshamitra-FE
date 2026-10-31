@@ -293,7 +293,7 @@ it.each(['Guardian', 'Father', 'Mother'] as const)(
   }
 );
 
-it('preserves an incomplete legacy form and shows the actual API error on attempted submission', async () => {
+it('explains missing legacy identity mappings on submit without sending an empty identity request', async () => {
   const available = offering('class-a');
   const duplicate = vi.fn();
   const create = vi.fn();
@@ -357,13 +357,117 @@ it('preserves an incomplete legacy form and shows the actual API error on attemp
   await act(async () => {
     await result.current.formik.submitForm();
   });
-  expect(duplicate).toHaveBeenCalledOnce();
-  expect(create).toHaveBeenCalledOnce();
+  expect(duplicate).not.toHaveBeenCalled();
+  expect(create).not.toHaveBeenCalled();
   expect(shikshaMitraToast.error).toHaveBeenCalledWith({
-    message: 'A parent mobile number is needed to create an inquiry.',
+    message:
+      'This inquiry form is missing linked fields: Student name, Parent / Guardian name, Parent / Guardian mobile. Update its field mappings in Admissions Settings.',
   });
   expect(result.current.formik.values.fields.NOTE).toBe('Keep this draft');
 });
+
+it.each([false, true])(
+  'retains a partial father phone and creates only with a verified saved parent: %s',
+  async (useSavedParent) => {
+    const available = offering('class-a');
+    const duplicate = vi.fn();
+    const create = vi.fn();
+    const parent = {
+      sourceApplicantId: 'saved-applicant',
+      relationship: 'father' as const,
+      firstName: 'Amit',
+      name: 'Amit',
+      mobile: '9876543210',
+    };
+    mswServer.use(
+      http.get(`${root}/capture-catalogue`, () =>
+        HttpResponse.json({ data: catalogue([available]) })
+      ),
+      http.get(`${root}/capture-context/${available.id}`, () =>
+        HttpResponse.json({
+          data: {
+            offering: available,
+            availability: { canCreateInquiry: true },
+            form: {
+              sections: [
+                {
+                  fields: [
+                    {
+                      code: 'FIELD_1',
+                      bindingKey: 'Applicant.Name',
+                      fieldType: 0,
+                      required: true,
+                      label: 'Full Name',
+                    },
+                    {
+                      code: 'PHONE',
+                      bindingKey: 'Father.Mobile',
+                      fieldType: 4,
+                      required: false,
+                      label: "Father's mobile",
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        })
+      ),
+      http.post(`${root}/duplicate-check`, async ({ request }) => {
+        duplicate(await request.json());
+        return HttpResponse.json({
+          data: useSavedParent
+            ? [{ familyId: 'saved-family', guardianPhone: parent.mobile, parents: [parent] }]
+            : [],
+        });
+      }),
+      http.post(root, async ({ request }) => {
+        create(await request.json());
+        return HttpResponse.json({ data: { id: 'created-sibling' } });
+      })
+    );
+    const { result } = renderHook(() => useAdmissionInquiryDialog(vi.fn()), { wrapper });
+    await waitFor(() => expect(result.current.periods).toHaveLength(1));
+    await selectClass(result, 'class-a');
+    await waitFor(() => expect(result.current.canCreateInquiry).toBe(true));
+    expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+    await act(async () => {
+      await result.current.formik.setFieldValue(
+        'fields',
+        { FIELD_1: 'Riya', PHONE: '9876543210' },
+        false
+      );
+    });
+    await act(async () => {
+      await result.current.formik.submitForm();
+    });
+    expect(duplicate).toHaveBeenCalledWith(
+      expect.objectContaining({ guardianPhone: '9876543210', applicantName: 'Riya' })
+    );
+    expect(create).not.toHaveBeenCalled();
+    if (useSavedParent) {
+      expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+      await act(async () => {
+        await result.current.useExistingFamily('saved-family', parent);
+      });
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          existingFamilyId: 'saved-family',
+          existingParentApplicantId: 'saved-applicant',
+          parentRelationship: 'father',
+          guardianFirstName: 'Amit',
+          guardianPhone: parent.mobile,
+        })
+      );
+      return;
+    }
+    expect(shikshaMitraToast.error).toHaveBeenCalledWith({
+      message:
+        'This inquiry form is missing linked fields: Parent / Guardian name. Update its field mappings in Admissions Settings.',
+    });
+    expect(result.current.formik.values.fields.PHONE).toBe('9876543210');
+  }
+);
 
 it('keeps capture blocked when an available offering has no loaded published form', async () => {
   const available = offering('class-a');

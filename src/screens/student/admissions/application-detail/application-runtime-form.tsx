@@ -242,7 +242,7 @@ export function ApplicationRuntimeForm({
         fields={fieldsToRender.filter((field) =>
           isAdmissionRuleVisible(field.visibilityRuleJson, rowValues)
         )}
-        columns={fieldsPerRow}
+        columns={section.fieldsPerRow ?? fieldsPerRow}
         spacing={2}
         renderField={(field) => {
           const value =

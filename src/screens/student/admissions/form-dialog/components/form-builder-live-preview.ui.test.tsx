@@ -8,6 +8,37 @@ import { renderDocumentUi } from '../../document-verification/document-ui-test-f
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
+it('allows applicants to enter the three builder-locked Inquiry defaults', async () => {
+  const user = userEvent.setup();
+  const draft = getBlankAdmissionFormInitialValues(0);
+  draft.supportedLanguages = ['en', 'gu', 'hi'];
+  const before = structuredClone(draft);
+  renderDocumentUi(<FormBuilderLivePreview form={draft} />);
+  const student = screen.getByRole('textbox', { name: /^Student name/ });
+  const parent = screen.getByRole('textbox', { name: /^Parent\/Guardian name/ });
+  const mobile = screen.getByRole('textbox', { name: /^Parent\/Guardian mobile/ });
+  expect(student).toBeEnabled();
+  expect(parent).toBeEnabled();
+  expect(mobile).toBeEnabled();
+  await user.type(student, 'QA Student');
+  await user.type(parent, 'QA Parent');
+  await user.type(mobile, '9876543210');
+  expect(student).toHaveValue('QA Student');
+  expect(parent).toHaveValue('QA Parent');
+  expect((mobile as HTMLInputElement).value.replace(/\D/g, '')).toContain('9876543210');
+  await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+  await user.click(screen.getByRole('option', { name: 'Gujarati' }));
+  expect(screen.getByRole('textbox', { name: /^વિદ્યાર્થીનું નામ/ })).toHaveValue('QA Student');
+  expect(screen.getByRole('textbox', { name: /^માતા-પિતા\/વાલીનું નામ/ })).toHaveValue('QA Parent');
+  await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+  await user.click(screen.getByRole('option', { name: 'Hindi' }));
+  expect(screen.getByRole('textbox', { name: /^विद्यार्थी का नाम/ })).toHaveValue('QA Student');
+  expect(screen.getByRole('textbox', { name: /^माता-पिता\/अभिभावक का नाम/ })).toHaveValue(
+    'QA Parent'
+  );
+  expect(draft).toEqual(before);
+});
+
 it('renders an editable preview without scenarios or validation actions and never submits its builder', async () => {
   const user = userEvent.setup();
   const draft = getBlankAdmissionFormInitialValues();

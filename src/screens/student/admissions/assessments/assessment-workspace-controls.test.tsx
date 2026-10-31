@@ -3,8 +3,13 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import { AssessmentWorkspaceControls } from './assessment-workspace-controls';
 
+const academic = vi.hoisted(() => ({ props: null as any }));
 vi.mock('../admission-academic-filters', () => ({
-  AdmissionAcademicFilters: ({ filterAction }: any) => <div>{filterAction}</div>,
+  AdmissionAcademicFilters: (props: any) => {
+    const { filterAction } = props;
+    academic.props = props;
+    return <div>{filterAction}</div>;
+  },
 }));
 vi.mock('src/components/custom-select', () => ({
   default: ({ label }: any) => <select aria-label={label} />,
@@ -26,6 +31,7 @@ it('shows exactly four progress choices using server counts and resets paging wh
     setScope: vi.fn(),
   };
   render(<AssessmentWorkspaceControls data={data} />);
+  expect(academic.props.allowAllHierarchy).not.toBe(true);
   const group = screen.getByRole('group', { name: 'Assessment status filter' });
   expect([...group.querySelectorAll('button')].map((button) => button.textContent)).toEqual([
     'All30',

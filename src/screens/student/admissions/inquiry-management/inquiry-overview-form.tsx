@@ -23,10 +23,11 @@ import {
 
 import AdmissionRuntimeField from '../admission-runtime-field';
 import { useAdmissionInquiryAge } from '../use-admission-inquiry-age';
-import { canonicalInquiryBinding } from '../admission-inquiry-field-bindings';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
+import { useInquiryPrimaryContact } from '../use-inquiry-primary-contact';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { useAdmissionFormLanguage } from '../use-admission-form-language';
+import { canonicalInquiryBinding } from '../admission-inquiry-field-bindings';
 import { useAdmissionUnsavedChanges } from '../use-admission-unsaved-changes';
 import { AdmissionSectionFields } from '../components/admission-section-fields';
 import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
@@ -34,13 +35,13 @@ import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dia
 import {
   validateAdmissionInquiry,
   getAdmissionInquiryFields,
-  getAdmissionInquiryPrimaryContact,
   getAdmissionInquirySections,
   buildAdmissionInquiryPayload,
   readAdmissionInquiryFormValues,
   type AdmissionInquiryFormValues,
   isAdmissionInquiryBirthDateField,
   preserveCompatibleInquiryAnswers,
+  getAdmissionInquiryPrimaryContact,
   getAdmissionInquiryVisibleSections,
 } from '../admission-inquiry-model';
 
@@ -89,6 +90,7 @@ export function InquiryOverviewForm({
       preferredLanguageCode: current.preferredLanguageCode || 'en',
       sendAcknowledgement: false,
       parentRelationship: current.parentRelationship ?? undefined,
+      guardianResponsibilityConfirmed: current.guardianResponsibilityConfirmed ?? false,
       capturedParentRelationship: current.parentRelationship ?? undefined,
       fields: readAdmissionInquiryFormValues(current.formValues),
     }),
@@ -111,6 +113,7 @@ export function InquiryOverviewForm({
         (offeringChanged && !runtime.currentData?.availability.canCreateInquiry)
       )
         return;
+      if (primaryContact.requestConfirmation()) return;
       setRequestError('');
       ageFeedback.notify();
       const payload = buildAdmissionInquiryPayload(values, fields, selectedOffering);
@@ -135,6 +138,7 @@ export function InquiryOverviewForm({
             sourceDetail: payload.sourceDetail,
             preferredLanguageCode: payload.preferredLanguageCode,
             formValues: payload.formValues,
+            guardianResponsibilityConfirmed: payload.guardianResponsibilityConfirmed,
             concurrencyStamp: current.concurrencyStamp,
           },
         }).unwrap();
@@ -165,6 +169,12 @@ export function InquiryOverviewForm({
     formik.values
   );
   const fields = getAdmissionInquiryFields(form, formik.values);
+  const primaryContact = useInquiryPrimaryContact({
+    formik,
+    fields,
+    contextKey: `${current.id}:${formik.values.offeringId}:${form?.id ?? ''}`,
+    busy: readOnly || updateState.isLoading || readingPhoto,
+  });
   const ageFeedback = useAdmissionInquiryAge({
     sections,
     values: formik.values.fields,
@@ -258,6 +268,7 @@ export function InquiryOverviewForm({
     fields.forEach((field) => {
       if (next[field.code] !== undefined) return;
       const identity: Record<string, string | null | undefined> = {
+        'Applicant.Name': current.applicantName,
         'Applicant.FirstName': current.applicantFirstName,
         'Applicant.LastName': current.applicantLastName,
         'Applicant.DateOfBirth': current.applicantDateOfBirth,
@@ -265,8 +276,18 @@ export function InquiryOverviewForm({
         'Guardian.LastName': current.guardianLastName,
         'Guardian.Mobile': current.normalizedPhone,
         'Guardian.Email': current.email,
+        'Inquiry.ParentRelationship':
+          current.primaryContactRelationship ?? current.parentRelationship,
       };
-      next[field.code] = identity[field.bindingKey ?? ''] ?? field.defaultValue ?? '';
+      if (current.parentRelationship === 'father' || current.parentRelationship === 'mother') {
+        const prefix = current.parentRelationship === 'father' ? 'Father' : 'Mother';
+        identity[`${prefix}.Name`] = [current.guardianFirstName, current.guardianLastName]
+          .filter(Boolean)
+          .join(' ');
+        identity[`${prefix}.Mobile`] = current.normalizedPhone;
+        identity[`${prefix}.Email`] = current.email;
+      }
+      next[field.code] = identity[canonicalInquiryBinding(field) ?? ''] ?? field.defaultValue ?? '';
     });
     const hydrated = {
       ...formik.values,
@@ -536,6 +557,7 @@ export function InquiryOverviewForm({
                             formik.setFieldTouched(`fields.${field.code}`, true);
                           }}
                           onChange={(value) => {
+                            if (primaryContact.changeField(field, value)) return;
                             formik.setFieldValue(`fields.${field.code}`, value);
                             getDependentAdmissionFieldCodes(fields, field.code).forEach((code) =>
                               formik.setFieldValue(`fields.${code}`, '')
@@ -604,6 +626,7 @@ export function InquiryOverviewForm({
           </LoadingButton>
         </Stack>
       )}
+      {!readOnly && primaryContact.confirmation}
     </Box>
   );
 }

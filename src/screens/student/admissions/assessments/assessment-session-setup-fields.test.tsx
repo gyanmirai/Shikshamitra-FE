@@ -1,5 +1,6 @@
 import type { AssessmentScope } from 'src/redux/student/admissions/admission-assessment-types';
 
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { it, vi, expect } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
@@ -27,8 +28,12 @@ vi.mock('src/components/custom-select', () => ({
 }));
 vi.mock('@mui/x-date-pickers', () => ({
   DatePicker: ({ label, disabled }: any) => <input aria-label={label} disabled={disabled} />,
-  TimePicker: ({ label, disabled }: any) => <input aria-label={label} disabled={disabled} />,
-  DateTimePicker: ({ label, disabled }: any) => <input aria-label={label} disabled={disabled} />,
+  TimePicker: ({ label, disabled, slotProps }: any) => (
+    <input aria-label={label} disabled={disabled} onBlur={slotProps.textField.onBlur} />
+  ),
+  DateTimePicker: ({ label, disabled, slotProps }: any) => (
+    <input aria-label={label} disabled={disabled} onBlur={slotProps.textField.onBlur} />
+  ),
 }));
 vi.mock('src/components/custom-numeric-format', () => ({
   default: ({ label, disabled, value }: any) => (
@@ -52,10 +57,12 @@ function Fields({
   identityLocked,
   roomOptions = [],
   pipeline = false,
+  scheduled = false,
 }: {
   identityLocked: boolean;
   roomOptions?: any[];
   pipeline?: boolean;
+  scheduled?: boolean;
 }) {
   const formik = useFormik<SessionSetupValues>({
     initialValues: {
@@ -63,21 +70,27 @@ function Fields({
       name: 'Existing session',
       offeringIds: ['offering'],
       stageIds: { offering: 'stage' },
+      ...(scheduled
+        ? { startsAt: dayjs('2035-01-15T03:00:00Z'), endsAt: dayjs('2035-01-15T04:00:00Z') }
+        : {}),
     },
     validateOnChange: false,
     onSubmit: () => {},
   });
   return (
-    <AssessmentSessionSetupFields
-      formik={formik}
-      scopes={scopes}
-      rooms={roomOptions}
-      interviewers={[]}
-      bookedCount={0}
-      disabled={false}
-      identityLocked={identityLocked}
-      pipeline={pipeline}
-    />
+    <>
+      <output data-testid="schedule-touched">{JSON.stringify(formik.touched)}</output>
+      <AssessmentSessionSetupFields
+        formik={formik}
+        scopes={scopes}
+        rooms={roomOptions}
+        interviewers={[]}
+        bookedCount={0}
+        disabled={false}
+        identityLocked={identityLocked}
+        pipeline={pipeline}
+      />
+    </>
   );
 }
 it('reuses room and schedule fields in Pipeline without editable class or stage selectors', () => {
@@ -128,5 +141,21 @@ it.each([false, true])(
     await waitFor(() => expect(input).toHaveValue('A002'));
     expect(screen.getByLabelText(pipeline ? 'Capacity' : 'Session capacity')).toHaveValue('40');
     expect(screen.getByText('Main Academic Block / Ground Floor')).toBeInTheDocument();
+  }
+);
+
+it.each([false, true])(
+  'marks the bound schedule field touched for nameless picker-section blur (separate: %s)',
+  async (pipeline) => {
+    render(<Fields identityLocked={false} pipeline={pipeline} scheduled />);
+    await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+    fireEvent.blur(screen.getByLabelText('Starts at'));
+    await waitFor(() =>
+      expect(screen.getByTestId('schedule-touched')).toHaveTextContent('"startsAt":true')
+    );
+    fireEvent.blur(screen.getByLabelText('Ends at'));
+    await waitFor(() =>
+      expect(screen.getByTestId('schedule-touched')).toHaveTextContent('"endsAt":true')
+    );
   }
 );

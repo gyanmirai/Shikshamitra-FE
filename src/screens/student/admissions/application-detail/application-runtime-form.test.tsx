@@ -100,6 +100,74 @@ it('uses the source Inquiry label for an inherited field backend validation mess
   expect(screen.getByText('DOB is required.')).toBeVisible();
 });
 
+it('allows correcting an inherited answer while keeping the original Inquiry name reference read-only', async () => {
+  const onChange = vi.fn();
+  const origin = {
+    inquiryFormDefinitionId: 'inquiry',
+    sourceFieldCode: 'SOURCE',
+    fieldIdentity: 'system:applicant.name',
+  };
+  await act(async () => {
+    renderForm({
+      onChange,
+      values: { ORIGINAL_NAME: 'Original Inquiry name', MOBILE: '9876543210', FIRST_NAME: 'Riya' },
+      form: {
+        formVersion: 1,
+        status: 0,
+        academicYearId: 'year',
+        definition: {
+          name: 'Registration',
+          layoutType: 0,
+          fieldsPerRow: 2,
+          sections: [
+            {
+              ...section('inquiry', 'Inquiry', 'inquiry', 0),
+              fields: [
+                {
+                  id: 'original-name',
+                  code: 'ORIGINAL_NAME',
+                  label: 'Original student name',
+                  fieldType: 0,
+                  required: false,
+                  readOnly: true,
+                  inheritedFrom: origin,
+                },
+                {
+                  id: 'mobile',
+                  code: 'MOBILE',
+                  label: 'Parent mobile',
+                  fieldType: 4,
+                  required: true,
+                  readOnly: false,
+                  inheritedFrom: { ...origin, fieldIdentity: 'system:guardian.mobile' },
+                },
+                {
+                  id: 'first-name',
+                  code: 'FIRST_NAME',
+                  label: 'First name',
+                  fieldType: 0,
+                  required: true,
+                  readOnly: false,
+                },
+              ],
+            },
+          ],
+        },
+      } as Props['form'],
+    });
+  });
+  expect(screen.getByRole('textbox', { name: 'Original student name' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Original student name' })).toHaveValue(
+    'Original Inquiry name'
+  );
+  expect(screen.getByRole('textbox', { name: 'First name' })).toBeEnabled();
+  const mobile = screen.getByRole('textbox', { name: 'Parent mobile' });
+  expect(mobile).toBeEnabled();
+  fireEvent.change(mobile, { target: { value: '9876543211' } });
+  expect(onChange).toHaveBeenCalledWith('MOBILE', '9876543211');
+  expect(onChange).not.toHaveBeenCalledWith('ORIGINAL_NAME', expect.anything());
+});
+
 function renderForm(overrides: Partial<Props> = {}) {
   const onValidateStep = vi.fn(() => true);
   function TestForm() {

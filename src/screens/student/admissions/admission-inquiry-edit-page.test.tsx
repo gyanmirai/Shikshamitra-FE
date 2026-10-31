@@ -251,6 +251,112 @@ const inquiry = {
 } as AdmissionInquiry;
 
 describe('Edit inquiry page', () => {
+  it('preserves an unbound legacy Full Name answer without treating its label as student identity', async () => {
+    const customName = {
+      ...originalForm.sections[0].fields[0],
+      code: 'FIELD_1',
+      bindingKey: 'FIELD_1',
+      bindingType: 1,
+      label: 'Full Name',
+    };
+    const saved = {
+      ...inquiry,
+      formDefinition: {
+        ...originalForm,
+        purpose: 0,
+        sections: [
+          {
+            ...originalForm.sections[0],
+            fields: [customName, ...originalForm.sections[0].fields.slice(3)],
+          },
+        ],
+      },
+      formValues: [
+        { fieldCode: 'FIELD_1', valueJson: '"Separate custom answer"' },
+        { fieldCode: 'notes', valueJson: '"Existing note"' },
+      ],
+    } as AdmissionInquiry;
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: saved,
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    render(<AdmissionInquiryEditPage />);
+    expect(screen.getByRole('textbox', { name: 'Full Name' })).toHaveValue(
+      'Separate custom answer'
+    );
+    expect(screen.queryByRole('textbox', { name: 'Guardian name' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Mobile number' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Family notes' }), {
+      target: { value: 'Updated legacy note' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            applicantName: inquiry.applicantName,
+            phone: inquiry.normalizedPhone,
+            formValues: [
+              { fieldCode: 'FIELD_1', valueJson: '"Separate custom answer"' },
+              { fieldCode: 'notes', valueJson: '"Updated legacy note"' },
+            ],
+          }),
+        })
+      )
+    );
+    expect(shikshaMitraToast.error).not.toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('before publishing') })
+    );
+  });
+
+  it('hydrates a missing raw full-name answer from the saved student identity without inventing a field', async () => {
+    const fullName = {
+      ...originalForm.sections[0].fields[0],
+      code: 'FIELD_1',
+      bindingKey: 'Applicant.Name',
+      label: 'Full Name',
+    };
+    const saved = {
+      ...inquiry,
+      formDefinition: {
+        ...originalForm,
+        sections: [
+          {
+            ...originalForm.sections[0],
+            fields: [fullName, ...originalForm.sections[0].fields.slice(1)],
+          },
+        ],
+      },
+      formValues: inquiry.formValues!.filter((answer) => answer.fieldCode !== 'name'),
+    } as AdmissionInquiry;
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: saved,
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    render(<AdmissionInquiryEditPage />);
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Full Name' })).toHaveValue('Riya Shah')
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'Family notes' }), {
+      target: { value: 'Updated note' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            applicantName: 'Riya Shah',
+            formValues: expect.arrayContaining([
+              { fieldCode: 'FIELD_1', valueJson: '"Riya Shah"' },
+            ]),
+          }),
+        })
+      )
+    );
+  });
+
   it('edits a saved inquiry with optional legacy identity questions without republication', async () => {
     const saved = {
       ...inquiry,

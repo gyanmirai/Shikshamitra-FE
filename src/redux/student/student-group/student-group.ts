@@ -1,6 +1,10 @@
 import { api } from 'src/redux/service';
 import { studentGroupType } from 'src/redux/tagTypes';
 
+import { houseCatalogueTag } from './house-catalogue-tags';
+
+const catalogueTags = [studentGroupType.studentGroup, houseCatalogueTag];
+
 export const studentGroupApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getAllGroup: builder.query({
@@ -8,7 +12,7 @@ export const studentGroupApi = api.injectEndpoints({
         url: `/students/records/academic-mediums/${academicMediumId}/house-settings`,
         method: 'GET',
       }),
-      providesTags: [studentGroupType.studentGroup],
+      providesTags: catalogueTags,
     }),
     addStudentGroup: builder.mutation({
       query: ({ academicMediumId, body }) => ({
@@ -19,7 +23,7 @@ export const studentGroupApi = api.injectEndpoints({
           'Content-Type': 'application/json',
         },
       }),
-      invalidatesTags: [studentGroupType.studentGroup],
+      invalidatesTags: (_result, error) => (error ? [] : catalogueTags),
     }),
     updateStudentGroup: builder.mutation({
       query: ({ body, houseSettingId }) => ({
@@ -30,14 +34,14 @@ export const studentGroupApi = api.injectEndpoints({
           'Content-Type': 'application/json',
         },
       }),
-      invalidatesTags: [studentGroupType.studentGroup],
+      invalidatesTags: (_result, error) => (error ? [] : catalogueTags),
     }),
     deleteGroup: builder.mutation({
       query: (houseSettingId) => ({
         url: `/students/records/house-settings/${houseSettingId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [studentGroupType.studentGroup],
+      invalidatesTags: (_result, error) => (error ? [] : catalogueTags),
     }),
   }),
 });

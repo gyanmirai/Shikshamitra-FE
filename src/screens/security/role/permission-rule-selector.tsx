@@ -9,6 +9,7 @@ export default function PermissionRuleSelector({
   rule,
   user,
   disabled,
+  allowDisabled = false,
   onChange,
 }: {
   id: string;
@@ -16,6 +17,7 @@ export default function PermissionRuleSelector({
   rule: PermissionOverrideState | 'mixed';
   user: boolean;
   disabled: boolean;
+  allowDisabled?: boolean;
   onChange: (state: PermissionOverrideState) => void;
 }) {
   const options: { value: PermissionOverrideState; label: string; accessibleLabel: string }[] = user
@@ -36,7 +38,8 @@ export default function PermissionRuleSelector({
       aria-label={label}
       aria-describedby={`${id}-result`}
       onChange={(_event, value) => {
-        if (value !== rule) onChange(value as PermissionOverrideState);
+        if (!disabled && !(allowDisabled && value === 'allow') && value !== rule)
+          onChange(value as PermissionOverrideState);
       }}
       sx={{
         flexWrap: 'nowrap',
@@ -55,7 +58,7 @@ export default function PermissionRuleSelector({
           key={option.value}
           value={option.value}
           label={option.label}
-          disabled={disabled}
+          disabled={disabled || (allowDisabled && option.value === 'allow')}
           control={
             <Radio
               inputProps={{

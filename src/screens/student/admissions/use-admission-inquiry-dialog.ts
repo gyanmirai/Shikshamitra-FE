@@ -24,6 +24,7 @@ import {
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { useAdmissionPhotoReads } from './use-admission-photo-reads';
+import { useInquiryPrimaryContact } from './use-inquiry-primary-contact';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
 import { getAdmissionSiblingParentReviewError } from './admission-family-contacts-model';
 import { getConfiguredInquiryParentRelationship } from './admission-inquiry-field-bindings';
@@ -38,6 +39,7 @@ import {
   canLinkAdmissionInquiryFamily,
   type AdmissionInquiryFormValues,
   preserveCompatibleInquiryAnswers,
+  getAdmissionInquiryIdentityErrors,
   getAdmissionInquiryVisibleSections,
   buildAdmissionInquiryDuplicateInput,
 } from './admission-inquiry-model';
@@ -81,7 +83,10 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     onSubmit: async (values) => {
       const offering = offeringChoices.find((item) => item.id === values.offeringId);
       if (!offering || !canCreateInquiry || readingPhoto || runtimeLoading || runtimeError) return;
+      if (primaryContact.requestConfirmation()) return;
       setRequestError(null);
+      const identity = buildAdmissionInquiryPayload(values, fields, offering);
+      if (!identity.applicantFirstName?.trim() && reportIdentityErrors(identity, values)) return;
       const key = JSON.stringify([
         offering.id,
         buildAdmissionInquiryDuplicateInput(values, fields, offering),
@@ -138,6 +143,16 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
       ? getAdmissionInquirySections(form, formik.values)
       : [];
   const fields: AdmissionFormField[] = allSections.flatMap((section) => section.fields);
+  const primaryContact = useInquiryPrimaryContact({
+    formik,
+    fields,
+    contextKey: `${formik.values.offeringId}:${form?.id ?? ''}`,
+    busy:
+      readingPhoto ||
+      createState.isLoading ||
+      duplicateState.isLoading ||
+      communicationState.isLoading,
+  });
   const sections = getAdmissionInquiryVisibleSections(allSections, formik.values);
   const policy = withStandardInquiryBehavior(runtime.currentData?.policy ?? DEFAULT_INQUIRY_POLICY);
   const workflowLoading = false;
@@ -227,21 +242,22 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
   ) {
     const offering = offeringChoices.find((item) => item.id === formik.values.offeringId);
     if (!offering || !canCreateInquiry || readingPhoto || runtimeLoading || runtimeError) return;
+    if (primaryContact.requestConfirmation()) return;
     const errors = await formik.validateForm();
     if (Object.keys(errors).length) return;
     setRequestError(null);
     try {
-      const inquiry = await create(
-        buildAdmissionInquiryPayload(
-          formik.values,
-          fields,
-          offering,
-          existingFamilyId,
-          createSeparateFamily,
-          duplicateOverrideReason,
-          parentSelection
-        )
-      ).unwrap();
+      const payload = buildAdmissionInquiryPayload(
+        formik.values,
+        fields,
+        offering,
+        existingFamilyId,
+        createSeparateFamily,
+        duplicateOverrideReason,
+        parentSelection
+      );
+      if (reportIdentityErrors(payload, formik.values)) return;
+      const inquiry = await create(payload).unwrap();
       if (formik.values.sendAcknowledgement && canAutoAcknowledge) {
         const template = getInquiryCommunicationTemplate('acknowledgement', inquiry);
         try {
@@ -275,7 +291,19 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     }
   }
 
+  function reportIdentityErrors(
+    payload: Parameters<typeof getAdmissionInquiryIdentityErrors>[0],
+    values: AdmissionInquiryFormValues
+  ) {
+    const { fieldErrors, message } = getAdmissionInquiryIdentityErrors(payload, fields, values);
+    if (Object.keys(fieldErrors).length) formik.setErrors({ fields: fieldErrors });
+    if (message) shikshaMitraToast.error({ message });
+    return Boolean(message || Object.keys(fieldErrors).length);
+  }
+
   return {
+    changePrimaryContactField: primaryContact.changeField,
+    primaryContactConfirmation: primaryContact.confirmation,
     formik,
     ageContext: !runtimeLoading && !runtimeError ? runtime.currentData : undefined,
     form,
@@ -370,11 +398,14 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
       }
       const parentReviewError = getAdmissionSiblingParentReviewError(
         formik.values.familyContacts,
-        getConfiguredInquiryParentRelationship(
-          fields,
-          formik.values.fields,
-          formik.values.parentRelationship
-        ),
+        (() => {
+          const relationship = getConfiguredInquiryParentRelationship(
+            fields,
+            formik.values.fields,
+            formik.values.parentRelationship
+          );
+          return relationship === 'guardian' ? undefined : relationship;
+        })(),
         parent.relationship
       );
       if (parentReviewError) {

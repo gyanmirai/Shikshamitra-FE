@@ -1,5 +1,8 @@
 import type { FormikProps } from 'formik';
-import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  AdmissionFormSection,
+  CreateUpdateAdmissionForm,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -13,8 +16,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomAccordion from 'src/components/custom-accordian';
 
 import { getAdmissionLanguageLabel } from './form-languages';
+import { hasLockedInquiryFields } from './inquiry-default-fields';
 import { FormBuilderSectionHeader } from './components/form-builder-section-header';
 import { FormBuilderSectionFields } from './components/form-builder-section-fields';
+
+import type { BuilderNavigationRequest } from './types/builder-navigation';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
@@ -22,6 +28,9 @@ type Props = {
   selectedSectionId: string | null;
   selectedFieldId: string | null;
   sectionReorderEnabled?: boolean;
+  displaySection?: AdmissionFormSection;
+  readOnly?: boolean;
+  navigationRequest?: BuilderNavigationRequest;
   onSelectSection: (sectionId: string) => void;
   onSelectField: (fieldId: string) => void;
 };
@@ -32,17 +41,21 @@ export function FormBuilderSection({
   selectedSectionId,
   selectedFieldId,
   sectionReorderEnabled = true,
+  displaySection,
+  readOnly = false,
+  navigationRequest,
   onSelectSection,
   onSelectField,
 }: Props) {
-  const section = formik.values.sections[sectionIndex];
+  const section = displaySection ?? formik.values.sections[sectionIndex];
   const path = `sections[${sectionIndex}]`;
   const nameMeta = formik.getFieldMeta<string>(`${path}.name`);
-  const nameError = nameMeta.touched ? nameMeta.error : undefined;
+  const nameError = !readOnly && nameMeta.touched ? nameMeta.error : undefined;
   const selected = selectedSectionId === section.id;
   const settings = useBoolean();
   const expansion = useBoolean(true);
   const { onTrue: expand } = expansion;
+  const { onTrue: openSettings } = settings;
   const settingsOpen = settings.value || Boolean(nameError);
   const expanded =
     expansion.value ||
@@ -53,13 +66,40 @@ export function FormBuilderSection({
     if (section.fields.length > previousFieldCount.current) expand();
     previousFieldCount.current = section.fields.length;
   }, [expand, section.fields.length]);
+  useEffect(() => {
+    const target = navigationRequest?.target;
+    if (!target || target.kind === 'form' || target.sectionId !== section.id) return undefined;
+    expand();
+    const editHeading =
+      target.kind === 'section' && target.settingPath?.endsWith('.name') && !readOnly;
+    if (editHeading) openSettings();
+    const frame = requestAnimationFrame(() => {
+      const element = document.getElementById(
+        target.kind === 'field'
+          ? `field-select-${target.fieldId}`
+          : editHeading
+            ? `section-heading-${section.id}`
+            : `section-select-${section.id}`
+      );
+      element?.scrollIntoView?.({ block: 'nearest' });
+      // Field issues focus their actual repair control in the settings drawer.
+      if (target.kind === 'section') element?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [navigationRequest, section.id, expand, openSettings, readOnly]);
   const contentId = `section-content-${section.id}`;
-  const sortable = useSortable({ id: `section:${section.id}`, disabled: !sectionReorderEnabled });
-  const removeSection = () =>
+  const sortable = useSortable({
+    id: `section:${section.id}`,
+    disabled: readOnly || !sectionReorderEnabled,
+  });
+  const deleteDisabled = hasLockedInquiryFields(formik.values.purpose, [section]);
+  const removeSection = () => {
+    if (deleteDisabled) return;
     formik.setFieldValue(
       'sections',
       formik.values.sections.filter((_, index) => index !== sectionIndex)
     );
+  };
 
   return (
     <Card
@@ -99,11 +139,13 @@ export function FormBuilderSection({
               settingsOpen={settingsOpen}
               expanded={expanded}
               contentId={contentId}
+              readOnly={readOnly}
+              deleteDisabled={deleteDisabled}
               onToggleExpanded={() => {
                 if (settingsOpen) settings.onFalse();
                 expansion.setValue(!expanded);
               }}
-              reorderEnabled={sectionReorderEnabled}
+              reorderEnabled={!readOnly && sectionReorderEnabled}
               sortable={sortable}
               onSelect={() => {
                 expand();
@@ -149,6 +191,7 @@ export function FormBuilderSection({
             <FormBuilderSectionFields
               formik={formik}
               sectionIndex={sectionIndex}
+              displaySection={section}
               selectedFieldId={selectedFieldId}
               onSelectField={onSelectField}
             />

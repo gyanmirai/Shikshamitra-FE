@@ -4,6 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import PermissionInlineEditor from './permission-inline-editor';
 
@@ -24,7 +25,7 @@ const action: MatrixAction = {
   hasDirect: true,
 };
 
-function renderEditor(overrides: Partial<MatrixAction>, user = false, visibility = false) {
+function renderEditor(overrides: Partial<MatrixAction>, user = false, visibility = false, disabled = false) {
   const onChange = vi.fn();
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -33,7 +34,7 @@ function renderEditor(overrides: Partial<MatrixAction>, user = false, visibility
         action={{ ...action, ...overrides }}
         user={user}
         visibility={visibility}
-        disabled={false}
+        disabled={disabled}
         onChange={onChange}
       />
     </ThemeProvider>
@@ -42,6 +43,60 @@ function renderEditor(overrides: Partial<MatrixAction>, user = false, visibility
 }
 
 describe('permission source summary', () => {
+  it('blocks new role grants for hidden features while keeping revocation available', () => {
+    const onChange = renderEditor({ visibilityMissing: ['ShikshaMitra.Module.HR'] });
+    expect(screen.getByRole('radiogroup')).toHaveAccessibleDescription(/before allowing module permissions/);
+    expect(screen.getByRole('radio', { name: 'Allow' })).toBeDisabled();
+    expect(screen.getByRole('radio', { name: 'Revoke' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('radio', { name: 'Allow' }));
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('radio', { name: 'Revoke' }));
+    expect(onChange.mock.calls).toEqual([['inherit']]);
+  });
+
+  it('permits denying and clearing a user override while hidden, skipping Allow by keyboard', async () => {
+    const keyboard = userEvent.setup();
+    const onChange = renderEditor({ visibilityMissing: ['ShikshaMitra.Module.HR'] }, true);
+    const follow = screen.getByRole('radio', { name: 'Follow role' });
+    const deny = screen.getByRole('radio', { name: 'Deny' });
+    expect(screen.getByRole('radio', { name: 'Allow' })).toBeDisabled();
+    expect(follow).toBeEnabled();
+    expect(deny).toBeEnabled();
+    fireEvent.click(follow);
+    expect(onChange.mock.calls).toEqual([['inherit']]);
+    follow.focus();
+    await keyboard.keyboard('{ArrowRight}');
+    expect(deny).toHaveFocus();
+    expect(onChange.mock.calls).toEqual([['inherit'], ['deny']]);
+  });
+
+  it.each([false, true])('retains busy and provider locks for hidden features (user: %s)', (user) => {
+    const onChange = renderEditor({ visibilityMissing: ['ShikshaMitra.Module.HR'] }, user, false, true);
+    screen.getAllByRole('radio').forEach((radio) => {
+      expect(radio).toBeDisabled();
+      fireEvent.click(radio);
+    });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])('retains catalogue restrictions for hidden features (user: %s)', (user) => {
+    const onChange = renderEditor({ visibilityMissing: ['ShikshaMitra.Module.HR'], editable: false }, user);
+    screen.getAllByRole('radio').forEach((radio) => {
+      expect(radio).toBeDisabled();
+      fireEvent.click(radio);
+    });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('keeps the visibility editor available to grant visibility itself', () => {
+    const onChange = renderEditor(
+      { rule: 'inherit', hasDirect: false, visibilityMissing: ['ShikshaMitra.Module.HR'] }, false, true
+    );
+    expect(screen.getByRole('radio', { name: 'Allow' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('radio', { name: 'Allow' }));
+    expect(onChange.mock.calls).toEqual([['allow']]);
+  });
+
   it('keeps the effective role result and direct source available without adding visible rows', async () => {
     const onChange = renderEditor({});
     const summary = 'Allowed. Direct grant. Direct grants apply to this role.';

@@ -12,13 +12,15 @@ export function useAssessmentWorkbench() {
   const href = useCallback(
     (changes: Record<string, string | number | undefined>) => {
       const next = new URLSearchParams(queryString);
+      if (!next.has('assessmentTab'))
+        next.set('assessmentTab', state.tab === 'applicants' ? 'students' : 'sessions');
       Object.entries(changes).forEach(([key, value]) => {
         if (value === undefined || value === '') next.delete(key);
         else next.set(key, String(value));
       });
       return `${pathname}?${next.toString()}`;
     },
-    [queryString, pathname]
+    [queryString, pathname, state.tab]
   );
   const update = useCallback(
     (changes: Record<string, string | number | undefined>, replace = false) => {

@@ -60,6 +60,8 @@ export type AdmissionFormField = {
   inheritedFrom?: AdmissionFormInheritedOrigin | null;
 };
 export type AdmissionFormSection = {
+  /** Source-owned columns on an effective inherited section; absent on ordinary drafts. */
+  fieldsPerRow?: 1 | 2 | 3 | 4 | null;
   id: string;
   code: string;
   name: string;
@@ -155,6 +157,8 @@ export type AdmissionFormOption = {
   label: string;
   displayOrder: number;
   isActive: boolean;
+  boardId?: string | null;
+  boardLabel?: string | null;
 };
 export type AdmissionFormOptionsQuery = {
   sourceKey: string;

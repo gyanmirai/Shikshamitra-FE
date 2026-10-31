@@ -3,12 +3,9 @@ import { it, expect, describe } from 'vitest';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 import {
   studentSetupViews,
-  getDefaultTaskScope,
   studentSetupTaskHref,
   parseStudentSetupView,
   getPendingStudentCount,
-  parseStudentSetupTaskScope,
-  filterStudentsForSetupView,
 } from './student-setup-view';
 
 describe('Student Setup task views', () => {
@@ -43,7 +40,6 @@ describe('Student Setup task views', () => {
       board: 'cbse',
       class: '1',
       division: '5-a',
-      scope: 'all',
       case: 'case-1',
     });
   });
@@ -64,42 +60,25 @@ describe('Student Setup task views', () => {
       feeStructureConfirmed: false,
       studentAccountStatus: 'pending' as const,
     };
-    expect(
-      filterStudentsForSetupView([ready, pending], 'fees', 'pending').map((item) => item.id)
-    ).toEqual(['pending']);
-    expect(
-      filterStudentsForSetupView([ready, pending], 'credentials', 'pending').map((item) => item.id)
-    ).toEqual(['pending']);
+    expect(getPendingStudentCount([ready, pending], 'fees')).toBe(1);
+    expect(getPendingStudentCount([ready, pending], 'credentials')).toBe(1);
     expect(getPendingStudentCount([{ ...ready, credentialsPending: true }], 'credentials')).toBe(1);
   });
-  it('uses readiness and safe task-scope defaults for invalid URL values', () => {
+  it('uses readiness for invalid URL values', () => {
     expect(parseStudentSetupView(null)).toBe('readiness');
     expect(parseStudentSetupView('unknown')).toBe('readiness');
     expect(parseStudentSetupView('gr-number')).toBe('gr-number');
-    expect(getDefaultTaskScope('gr-number')).toBe('pending');
-    expect(getDefaultTaskScope('division')).toBe('all');
-    expect(parseStudentSetupTaskScope('unknown', 'roll-number')).toBe('pending');
   });
 
-  it('shows only students without committed GR numbers in the pending GR view', () => {
-    const rows = filterStudentsForSetupView(studentOnboardingTestData, 'gr-number', 'pending');
-
-    expect(rows).toHaveLength(4);
-    expect(rows.every((student) => student.grNo == null)).toBe(true);
+  it('counts students without committed GR numbers without narrowing the worklist', () => {
     expect(getPendingStudentCount(studentOnboardingTestData, 'gr-number')).toBe(4);
   });
 
-  it('shows only students without roll numbers in the pending roll view', () => {
-    const rows = filterStudentsForSetupView(studentOnboardingTestData, 'roll-number', 'pending');
-
-    expect(rows.map((student) => student.studentName)).toEqual(['Aanya Sharma', 'Arjun Desai']);
+  it('counts students without roll numbers without narrowing the worklist', () => {
     expect(getPendingStudentCount(studentOnboardingTestData, 'roll-number')).toBe(2);
   });
 
   it('keeps all students available for division changes by default', () => {
-    expect(filterStudentsForSetupView(studentOnboardingTestData, 'division', 'all')).toHaveLength(
-      studentOnboardingTestData.length
-    );
     expect(getPendingStudentCount(studentOnboardingTestData, 'division')).toBe(0);
   });
 });

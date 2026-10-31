@@ -1,3 +1,5 @@
+import { studentPermissions, studentProfilePermissionViews } from 'src/constants/student-menu';
+
 import { PERMISSIONS, type PermissionType } from './utils';
 import { isFinancePermissionGroup, financePermissionActions, financeActionPermissionNames } from './finance-permission-groups';
 
@@ -69,6 +71,13 @@ const getConfiguredPermissionNames = (name: NodePermissionName, permissions: Per
   if (Array.isArray(name)) {
     return names.filter((permissionName) =>
       permissions.some((permission) => permission.name === permissionName)
+    );
+  }
+
+  if (name === studentPermissions.records.studentList || name === 'Students.Records.StudentList') {
+    const bases = new Set(studentProfilePermissionViews.map(getActionPermissionBase));
+    return permissions.map((permission) => permission.name).filter(
+      (permissionName) => bases.has(getActionPermissionBase(permissionName))
     );
   }
 

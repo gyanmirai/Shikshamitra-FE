@@ -58,6 +58,33 @@ const match: DuplicateMatch = {
   parents: [parent],
 };
 
+it('disables parent linking for an explicitly selected Guardian before any family request', async () => {
+  const useFamily = vi.fn();
+  render(
+    <AdmissionInquiryDuplicateMatches
+      matches={[match]}
+      guardianPhone="9876543210"
+      parentRelationship="guardian"
+      busy={false}
+      onUseExisting={useFamily}
+      onOpenExisting={vi.fn()}
+      onCreateSeparate={vi.fn()}
+      overrideReason=""
+      onOverrideReasonChange={vi.fn()}
+    />
+  );
+  const addSibling = screen.getByRole('button', { name: 'Add sibling' });
+  expect(addSibling).toBeDisabled();
+  fireEvent.click(addSibling);
+  expect(useFamily).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Different family?' })).toBeEnabled();
+  expect(addSibling.parentElement!).toHaveAttribute('tabindex', '0');
+  fireEvent.mouseOver(addSibling.parentElement!);
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(
+    'Sibling linking requires Father or Mother as the primary contact.'
+  );
+});
+
 it('prioritizes an existing current-cycle inquiry while retaining deliberate sibling review', () => {
   const openExisting = vi.fn();
   const useFamily = vi.fn();

@@ -39,6 +39,7 @@ type Props = {
   identityLocked?: boolean;
   bookedCount: number;
   pipeline?: boolean;
+  separateDate?: boolean;
   classSummary?: ReactNode;
 };
 
@@ -53,6 +54,7 @@ export function AssessmentSessionSetupFields({
   identityLocked = false,
   bookedCount,
   pipeline = false,
+  separateDate = pipeline,
   classSummary,
 }: Props) {
   const feedback = (key: keyof SessionSetupValues) => ({
@@ -207,49 +209,58 @@ export function AssessmentSessionSetupFields({
         descriptionTooltip="Rooms come from Institute Setup. Availability and capacity are checked again before confirmation."
       >
         <Grid container spacing={1}>
-          {pipeline && (
+          {separateDate && (
             <Grid size={12}>
-              <DatePicker
-                label="Date"
-                format={ADMISSION_DATE_FORMAT}
-                value={formik.values.startsAt}
-                disabled={disabled}
-                onChange={(date) => {
-                  const dated = setSessionScheduleDate(formik.values, date);
-                  formik.setFieldTouched('startsAt', true, false);
-                  formik.setFieldTouched('endsAt', true, false);
-                  formik.setValues(
-                    updateSessionSetupValues(
-                      dated,
-                      'startsAt',
-                      dated.startsAt,
-                      scopes,
-                      rooms,
-                      bookedCount
-                    ),
-                    true
-                  );
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    required: true,
-                    ...feedback('startsAt'),
-                  },
-                }}
-              />
+              <ShakingTextField error={feedback('startsAt').error}>
+                <DatePicker
+                  label="Date"
+                  format={ADMISSION_DATE_FORMAT}
+                  value={formik.values.startsAt}
+                  disabled={
+                    disabled ||
+                    (bookedCount > 0 && formik.values.sessionType === 'individualInterview')
+                  }
+                  onChange={(date) => {
+                    const dated = setSessionScheduleDate(formik.values, date);
+                    formik.setFieldTouched('startsAt', true, false);
+                    formik.setFieldTouched('endsAt', true, false);
+                    formik.setValues(
+                      updateSessionSetupValues(
+                        dated,
+                        'startsAt',
+                        dated.startsAt,
+                        scopes,
+                        rooms,
+                        bookedCount
+                      ),
+                      true
+                    );
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      required: true,
+                      ...feedback('startsAt'),
+                    },
+                  }}
+                />
+              </ShakingTextField>
             </Grid>
           )}
           {(['startsAt', 'endsAt'] as const).map((key) => (
             <Grid key={key} size={{ xs: 12, sm: 6 }}>
               <ShakingTextField error={feedback(key).error}>
-                {pipeline ? (
+                {separateDate ? (
                   <TimePicker
                     format="hh:mm A"
                     label={key === 'startsAt' ? 'Starts at' : 'Ends at'}
                     value={formik.values[key]}
-                    disabled={disabled || !formik.values.startsAt}
+                    disabled={
+                      disabled ||
+                      !formik.values.startsAt ||
+                      (bookedCount > 0 && formik.values.sessionType === 'individualInterview')
+                    }
                     onChange={(value) => {
                       const date = formik.values.startsAt;
                       update(
@@ -265,7 +276,7 @@ export function AssessmentSessionSetupFields({
                         fullWidth: true,
                         required: true,
                         name: key,
-                        onBlur: formik.handleBlur,
+                        onBlur: formik.handleBlur(key),
                         ...feedback(key),
                       },
                     }}
@@ -286,7 +297,7 @@ export function AssessmentSessionSetupFields({
                         fullWidth: true,
                         required: true,
                         name: key,
-                        onBlur: formik.handleBlur,
+                        onBlur: formik.handleBlur(key),
                         ...feedback(key),
                       },
                     }}

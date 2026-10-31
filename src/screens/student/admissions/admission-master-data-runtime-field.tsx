@@ -3,17 +3,19 @@
 import type { RootState } from 'src/redux/store';
 import type { AdmissionFormOption } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useSelector } from 'react-redux';
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { uuidv4 } from 'src/utils/uuidv4';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
-import type { AdmissionRuntimeFieldProps } from './admission-runtime-field';
 
-import { parseRuntimeOptionsSource } from './application-detail/application-runtime-options';
 import { academicOptionsJson } from './admission-academic-options';
+import { AdmissionBoardClassField } from './admission-board-class-field';
+import { parseRuntimeOptionsSource } from './application-detail/application-runtime-options';
+
+import type { AdmissionRuntimeFieldProps } from './admission-runtime-field';
 
 /** Reads Institute Setup records through the owning Student API; labels never become IDs. */
 export function AdmissionMasterDataRuntimeField({
@@ -52,7 +54,7 @@ export function AdmissionMasterDataRuntimeField({
     type: 'query',
     currentQueryAndMutation: useGetAdmissionFormOptionsQuery,
     params: queryScope,
-    options: { skip: !ready },
+    options: { skip: !ready, refetchOnMountOrArgChange: true },
     popupConfig: { errorMessage: 'Could not load Institute Setup options.' },
   });
   const choices: AdmissionFormOption[] =
@@ -74,6 +76,29 @@ export function AdmissionMasterDataRuntimeField({
       });
   });
   const loading = ready && (query.isFetching || query.isUninitialized);
+  if (source.source === 'Standards' && field.fieldType === 6) {
+    return (
+      <AdmissionBoardClassField
+        key={`${field.code}:${yearId}:${parentId ?? ''}`}
+        field={field}
+        value={value}
+        disabled={disabled}
+        error={error}
+        options={choices}
+        loading={loading}
+        unavailable={!ready || query.isError}
+        helperText={
+          !yearId
+            ? 'Select an academic year.'
+            : query.isError
+              ? 'Could not load Institute Setup classes.'
+              : field.helpText || undefined
+        }
+        onChange={onChange}
+        onBlur={onBlur}
+      />
+    );
+  }
   return (
     <ShakingTextField error={Boolean(error)}>
       <CustomSelect

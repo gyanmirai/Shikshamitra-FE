@@ -2,6 +2,9 @@ import type { AdmissionFormFieldType } from 'src/redux/student/admissions/admiss
 
 // Canonical bindings for newly materialized templates. Saved forms keep their original bindings.
 const bindings: Record<string, string> = {
+  STUDENT_NAME: 'Applicant.Name',
+  DATE_OF_BIRTH: 'Applicant.DateOfBirth',
+  GUARDIAN_NAME: 'Guardian.FirstName',
   AADHAAR_NO: 'Identity.AadhaarNumber',
   PAN_NO: 'Identity.PanNumber',
   APPAR_ID: 'Identity.ApaarId',

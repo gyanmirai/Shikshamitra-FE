@@ -13,6 +13,11 @@ import { parseFieldConfiguration } from './form-field-presets';
 import { FieldChoiceSettings } from './components/field-choice-settings';
 import { FIELD_TYPES, getConfigurableFieldTypes } from './form-dialog-model';
 import { FieldTranslationSettings } from './components/field-translation-settings';
+import {
+  classInterestOptions,
+  isClassInterestQuestion,
+  classInterestConfigurationValid,
+} from '../admission-class-question';
 
 import type { FieldSettingsProps } from './types/field-settings';
 
@@ -22,6 +27,8 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
   const isChoice = field.fieldType === 6 || field.fieldType === 7 || field.fieldType === 8;
   const isStatic = field.fieldType === 12;
   const isLinked = field.bindingType === 0;
+  const isClassInterest = isClassInterestQuestion(field);
+  const needsClassRepair = isClassInterest && !classInterestConfigurationValid(field);
   const catalogue = useGetAdmissionFormSystemFieldsQuery(undefined, { skip: !isLinked });
   const catalogueReady = catalogue.data !== undefined && !catalogue.isLoading && !catalogue.isError;
   const linkedField = catalogueReady
@@ -61,23 +68,45 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
               label,
               value,
             }))}
-            disabled={isLinked || field.fieldType === 10}
-            error={needsTypeRepair || Boolean(isLinked && catalogueReady && !linkedField)}
+            disabled={isLinked || isClassInterest || field.fieldType === 10}
+            error={
+              needsClassRepair ||
+              needsTypeRepair ||
+              Boolean(isLinked && catalogueReady && !linkedField)
+            }
             helperText={
-              isLinked
-                ? catalogue.isError
-                  ? 'Could not check this student field connection. Reload the form and try again.'
-                  : !catalogueReady
-                    ? 'Checking the linked student field.'
-                    : linkedField
-                      ? `Linked to ${linkedField.displayName}. This student field uses ${expectedType}. For a different answer type, add a custom field.`
-                      : 'This student field connection is unavailable. Review this field before publishing.'
-                : field.fieldType === 10
-                  ? 'File upload is not available yet. Replace this field before publishing.'
-                  : undefined
+              isClassInterest
+                ? 'Class choices come from Institute Setup.'
+                : isLinked
+                  ? catalogue.isError
+                    ? 'Could not check this student field connection. Reload the form and try again.'
+                    : !catalogueReady
+                      ? 'Checking the linked student field.'
+                      : linkedField
+                        ? `Linked to ${linkedField.displayName}. This student field uses ${expectedType}. For a different answer type, add a custom field.`
+                        : 'This student field connection is unavailable. Review this field before publishing.'
+                  : field.fieldType === 10
+                    ? 'File upload is not available yet. Replace this field before publishing.'
+                    : undefined
             }
             onChange={(value) => formik.setFieldValue(`${path}.fieldType`, Number(value))}
           />
+          {needsClassRepair && (
+            <Button
+              type="button"
+              size="small"
+              variant="outlined"
+              onClick={() =>
+                formik.setFieldValue(path, {
+                  ...field,
+                  fieldType: 6,
+                  optionsJson: classInterestOptions,
+                })
+              }
+            >
+              Use Institute Setup classes
+            </Button>
+          )}
           {needsTypeRepair && linkedField && (
             <Button
               type="button"

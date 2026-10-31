@@ -239,14 +239,56 @@ it('combines assigned role defaults while an explicit deny wins', async () => {
 it('refreshes Follow role defaults without manufacturing a user grant', async () => {
   await open();
   cleanup();
-  fixture.role.clear();
+  // Revoke action defaults while retaining the independent navigation grants.
+  actionNames.forEach((name) => fixture.role.delete(name));
   await open();
   ['View', 'Add', 'Delete'].forEach((action) => {
+    expect(editor(action).getByRole('radio', { name: 'Follow role' })).toBeChecked();
+    expect(editor(action).getByRole('radio', { name: 'Allow' })).toBeEnabled();
     expect(editor(action).getByRole('radiogroup')).toHaveAccessibleDescription(/^Denied\./);
   });
+  expect(fixture.direct.size).toBe(0);
+  expect(fixture.denies.size).toBe(0);
   expect(screen.getByRole('button', { name: 'Review changes' })).toBeDisabled();
   expect(fixture.writes).toEqual([]);
 });
+it('keeps revoked role visibility separate from denied action defaults', async () => {
+  fixture.role.clear();
+  await open();
+  ['View', 'Add', 'Delete'].forEach((action) => {
+    expect(editor(action).getByRole('radio', { name: 'Follow role' })).toBeChecked();
+    expect(editor(action).getByRole('radio', { name: 'Allow' })).toBeDisabled();
+    expect(editor(action).getByRole('radio', { name: 'Deny' })).toBeEnabled();
+    expect(editor(action).getByRole('radiogroup')).toHaveAccessibleDescription(/Enable Visibility .*Denied\./);
+  });
+  expect(screen.getByRole('button', { name: 'Review changes' })).toBeDisabled();
+  expect(fixture.direct.size).toBe(0);
+  expect(fixture.denies.size).toBe(0);
+  expect(fixture.writes).toEqual([]);
+});
+it('saves Deny and Follow role for a hidden feature without granting visibility', async () => {
+  fixture.role.clear();
+  fixture.direct.add(actionNames[1]);
+  const saved = await open();
+  expect(editor('Add').getByRole('radio', { name: 'Allow' })).toBeDisabled();
+  select('Add', 'Deny');
+  await save(saved);
+  expect(fixture.writes).toEqual([[{ name: actionNames[1], state: 'deny' }]]);
+  expect(fixture.direct.size).toBe(0);
+  expect(fixture.denies.has(actionNames[1])).toBe(true);
+  // A successful save closes the owning dialog; reopen with the persisted catalogue.
+  cleanup();
+  fixture.writes.length = 0;
+  const reopened = await open();
+  expect(editor('Add').getByRole('radio', { name: 'Deny' })).toBeChecked();
+  select('Add', 'Follow role');
+  await save(reopened);
+  expect(fixture.writes).toEqual([[{ name: actionNames[1], state: 'inherit' }]]);
+  expect(fixture.direct.size).toBe(0);
+  expect(fixture.denies.size).toBe(0);
+  expect(fixture.role.size).toBe(0);
+  expect(editor('Add').getByRole('radio', { name: 'Allow' })).toBeDisabled();
+}, 120000);
 it('reviews dependency changes, returns to editing, and discards without a write', async () => {
   await open();
   select('View', 'Deny');

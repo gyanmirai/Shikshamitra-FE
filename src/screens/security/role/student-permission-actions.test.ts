@@ -34,6 +34,7 @@ const features = [
   'Admissions.Reviews',
   'Admissions.Seats',
   'Records.StudentList',
+  'Records.HouseManagement',
   'Records.StudentICard',
   'Records.Certificates',
   'Records.Reports',

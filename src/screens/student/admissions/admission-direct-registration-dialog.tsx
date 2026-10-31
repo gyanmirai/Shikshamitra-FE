@@ -49,6 +49,7 @@ import {
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { AdmissionFamilyContacts } from './admission-family-contacts';
+import { GuardianResponsibilityConfirmation } from './use-inquiry-primary-contact';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
 import { AdmissionSiblingFamilyMatch } from './admission-sibling-family-match';
 import {
@@ -75,6 +76,7 @@ type FormValues = {
   guardianMobile: string;
   guardianEmail: string;
   guardianRelationship: 0 | 1 | 2 | 3;
+  guardianResponsibilityConfirmed: boolean;
   parentRelationship: '' | 'father' | 'mother';
   familyContacts: AdmissionFamilyContactsFormValues;
   existingFamilyId: string;
@@ -98,6 +100,7 @@ const initialValues: FormValues = {
   guardianMobile: '',
   guardianEmail: '',
   guardianRelationship: 0,
+  guardianResponsibilityConfirmed: false,
   parentRelationship: '',
   familyContacts: initialAdmissionFamilyContacts,
   existingFamilyId: '',
@@ -154,6 +157,9 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
   const [familyMatches, setFamilyMatches] = useState<AdmissionDirectFamilyMatch[] | null>(null);
   const [familyLookupKey, setFamilyLookupKey] = useState('');
   const [requestError, setRequestError] = useState('');
+  const [pendingGuardian, setPendingGuardian] = useState<AdmissionFamilyContactsFormValues | null>(
+    null
+  );
   const identityRef = useRef('');
   const fieldsRef = useRef<HTMLDivElement>(null);
   const requestErrorRef = useRef<HTMLDivElement>(null);
@@ -175,6 +181,17 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         selectedOffering.admissionCycleId !== values.admissionCycle?.id
       )
         return;
+      const mainGuardian =
+        values.parentRelationship &&
+        buildAdmissionFamilyContacts(values.familyContacts, values.parentRelationship)
+          .mainContactRelationship === 'guardian';
+      if (
+        (mainGuardian || values.guardianRelationship !== 0) &&
+        !values.guardianResponsibilityConfirmed
+      ) {
+        setPendingGuardian(values.familyContacts);
+        return;
+      }
       const lookupKey = `${values.offeringId}:${values.guardianMobile}:${normalizeEmail(values.guardianEmail)}`;
       if (familyLookupKey !== lookupKey) {
         setRequestError(
@@ -217,6 +234,10 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
           guardianMobile: values.guardianMobile,
           guardianEmail: normalizeEmail(values.guardianEmail) || null,
           guardianRelationship: values.guardianRelationship,
+          guardianResponsibilityConfirmed: Boolean(
+            (mainGuardian || values.guardianRelationship !== 0) &&
+            values.guardianResponsibilityConfirmed
+          ),
         }).unwrap();
         if (!application.id)
           throw new Error('Registration response did not include an application.');
@@ -328,6 +349,9 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
     formik.setValues((values) => ({
       ...values,
       ...changes,
+      ...((field === 'offeringId' || field === 'parentRelationship') && {
+        guardianResponsibilityConfirmed: false,
+      }),
       [field]: value,
       ...(field === 'offeringId' && { counsellorId: '' }),
       existingFamilyId: '',
@@ -336,6 +360,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
       separateFamilyReason: '',
     }));
     setFamilyMatches(null);
+    setPendingGuardian(null);
     setFamilyLookupKey('');
     setRequestError('');
     identityRef.current = '';
@@ -775,6 +800,9 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                           existingFamilyId: family.familyId,
                           existingParentApplicantId: parent.sourceApplicantId,
                           parentRelationship: parent.relationship,
+                          guardianResponsibilityConfirmed:
+                            values.parentRelationship === parent.relationship &&
+                            values.guardianResponsibilityConfirmed,
                           guardianFirstName: parent.firstName,
                           guardianLastName: parent.lastName || '',
                           guardianEmail: nextEmail,
@@ -821,7 +849,24 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                   touched={formik.touched.familyContacts}
                   submitted={formik.submitCount > 0}
                   disabled={busy}
-                  onChange={(value) => formik.setFieldValue('familyContacts', value)}
+                  onChange={(value) => {
+                    const mainGuardian =
+                      value.mainContactRelationship === 'guardian' && value.addGuardian;
+                    if (
+                      mainGuardian &&
+                      formik.values.familyContacts.mainContactRelationship !== 'guardian'
+                    ) {
+                      setPendingGuardian(value);
+                      return;
+                    }
+                    formik.setValues((current) => ({
+                      ...current,
+                      familyContacts: value,
+                      guardianResponsibilityConfirmed: Boolean(
+                        mainGuardian && current.guardianResponsibilityConfirmed
+                      ),
+                    }));
+                  }}
                   onBlur={(name) => formik.setFieldTouched(`familyContacts.${name}`, true)}
                 />
                 {requestError && (
@@ -867,6 +912,20 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
           </LoadingButton>
         </Stack>
       </Drawer>
+      <GuardianResponsibilityConfirmation
+        open={Boolean(pendingGuardian)}
+        busy={busy}
+        onClose={() => setPendingGuardian(null)}
+        onConfirm={() => {
+          if (!pendingGuardian) return;
+          formik.setValues((current) => ({
+            ...current,
+            familyContacts: pendingGuardian,
+            guardianResponsibilityConfirmed: true,
+          }));
+          setPendingGuardian(null);
+        }}
+      />
       <ConfirmDialog
         open={discard.value}
         onClose={discard.onFalse}

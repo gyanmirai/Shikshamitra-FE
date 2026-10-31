@@ -7,18 +7,16 @@ import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Stack, Paper, Button, Tooltip, Skeleton, TextField, Typography } from '@mui/material';
 
-import type { StudentSetupView, StudentSetupTaskScope } from './student-setup-view';
+import type { StudentSetupView } from './student-setup-view';
 
 export default function StudentSetupAssignmentToolbar({
   view,
   title,
-  scope,
   pendingCount,
   pendingLoading = false,
   selectedCount = 0,
   onClearSelection,
   automaticDisabledReason,
-  onScopeChange,
   busy,
   unavailable = false,
   automaticCount,
@@ -39,13 +37,11 @@ export default function StudentSetupAssignmentToolbar({
 }: {
   view: Exclude<StudentSetupView, 'readiness'>;
   title: string;
-  scope: StudentSetupTaskScope;
   pendingCount?: number;
   pendingLoading?: boolean;
   selectedCount?: number;
   onClearSelection?: () => void;
   automaticDisabledReason?: string;
-  onScopeChange: (scope: StudentSetupTaskScope) => void;
   busy: boolean;
   unavailable?: boolean;
   automaticCount: number;
@@ -97,15 +93,6 @@ export default function StudentSetupAssignmentToolbar({
               spacing={1}
               sx={{ flexShrink: 0, '& .MuiButton-root': { whiteSpace: 'nowrap', flexShrink: 0 } }}
             >
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:account-switch-outline" width={18} />}
-                onClick={() => onScopeChange(scope === 'all' ? 'pending' : 'all')}
-                disabled={busy}
-              >
-                {scope === 'all' ? 'Remaining Students' : 'All Students'}
-              </Button>
               {assignments &&
                 (manualEditing ? (
                   <>

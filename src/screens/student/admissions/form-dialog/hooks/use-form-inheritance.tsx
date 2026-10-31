@@ -42,12 +42,15 @@ type ContextValue = {
   selectSource: (id: string | null) => void;
   source?: AdmissionForm;
   preview?: AdmissionFormInheritancePreview;
+  previewBaseSectionIds?: readonly string[];
   loading: boolean;
   failed: boolean;
   sourceLoading: boolean;
   sourceFailed: boolean;
+  initializingSources: boolean;
   canViewSources: boolean;
   connectionsLoading: boolean;
+  connectionsFailed: boolean;
   hasMoreConnections: boolean;
   loadMoreConnections: () => void;
   connected: {
@@ -108,8 +111,10 @@ export function FormInheritanceProvider({
       failed: false,
       sourceLoading: false,
       sourceFailed: false,
+      initializingSources: enabled && active,
       canViewSources: false,
       connectionsLoading: false,
+      connectionsFailed: false,
       hasMoreConnections: false,
       loadMoreConnections: () => undefined,
       connected: [],
@@ -120,7 +125,7 @@ export function FormInheritanceProvider({
       selectedField: null,
       selectField: () => undefined,
     }),
-    [formik, editingId, enabled]
+    [formik, editingId, enabled, active]
   );
   return (
     <InheritanceContext.Provider value={enabled && active ? (activeValue ?? value) : value}>
@@ -149,6 +154,7 @@ const EnabledInheritanceController = memo(
       formik.values.inheritance?.sources[0]?.inquiryFormDefinitionId ?? null
     );
     const [preview, setPreview] = useState<AdmissionFormInheritancePreview>();
+    const [previewBaseSectionIds, setPreviewBaseSectionIds] = useState<readonly string[]>();
     const [previewKey, setPreviewKey] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [failed, setFailed] = useState(false);
@@ -201,6 +207,7 @@ const EnabledInheritanceController = memo(
     const hasMoreConnections =
       canViewSources && connectedItems.length < connectionResult.totalCount;
     const refetchConnected = connected.refetch;
+    const refetchSource = source.refetch;
     const sequence = useRef(0);
     const valuesKey = JSON.stringify(formik.values);
     const approved = Boolean(
@@ -242,6 +249,7 @@ const EnabledInheritanceController = memo(
             if (ticket === sequence.current) {
               setPreview(result);
               setPreviewKey(valuesKey);
+              setPreviewBaseSectionIds(draft.sections.map((section) => section.id));
             }
           })
           .catch((error) => {
@@ -294,12 +302,16 @@ const EnabledInheritanceController = memo(
         },
         source: canViewSources ? source.currentData : undefined,
         preview: preview?.inquiryFormDefinitionId === sourceId ? preview : undefined,
+        previewBaseSectionIds:
+          preview?.inquiryFormDefinitionId === sourceId ? previewBaseSectionIds : undefined,
         loading: loading || Boolean(sourceId && !failed && previewKey !== valuesKey),
         failed,
         sourceLoading: canViewSources && source.isLoading,
         sourceFailed: canViewSources && source.isError,
+        initializingSources: false,
         canViewSources,
         connectionsLoading: Boolean(canViewSources && connected.isFetching),
+        connectionsFailed: Boolean(canViewSources && connected.isError),
         hasMoreConnections,
         loadMoreConnections: () => {
           if (!hasMoreConnections || loadingConnections.current || connected.isFetching) return;
@@ -326,6 +338,7 @@ const EnabledInheritanceController = memo(
         },
         refresh: () => {
           setRevision((counter) => counter + 1);
+          if (sourceId && canViewSources) refetchSource();
           if (editingId && canViewSources) {
             if (connectionsPage === 0) refetchConnected();
             else setConnectionsPage(0);
@@ -342,6 +355,7 @@ const EnabledInheritanceController = memo(
         source.isLoading,
         source.isError,
         preview,
+        previewBaseSectionIds,
         loading,
         failed,
         previewKey,
@@ -353,6 +367,7 @@ const EnabledInheritanceController = memo(
         hasMoreConnections,
         connectionsPage,
         refetchConnected,
+        refetchSource,
         fetchSources,
         approved,
         selectedField,

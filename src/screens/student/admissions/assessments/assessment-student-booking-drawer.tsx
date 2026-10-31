@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { LoadingButton } from 'src/components/loading-button';
@@ -22,27 +23,25 @@ import {
 
 import { AdmissionDialogTitle } from '../admission-dialog-title';
 import { formatAssessmentSchedule } from './assessment-date-time';
-import { studentBookingReason } from './assessment-student-booking-model';
 import { useAssessmentStudentBooking } from './use-assessment-student-booking';
-import { AssessmentSessionSetupFields } from './assessment-session-setup-fields';
+import { studentBookingReason, existingStudentBooking } from './assessment-student-booking-model';
 
 import type { StudentBookingProps } from './use-assessment-student-booking';
 
 export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
-  const { canBook, canCreate, scopes } = props;
+  const { canBook, onViewBooking } = props;
   const data = useAssessmentStudentBooking(props);
   const titleId = useId();
-  const locked = data.busy || (data.mode === 'create' && data.resources.isFetching);
-  const readonly = !canBook || (data.mode === 'create' && !canCreate);
+  const locked = data.busy;
+  const readonly = !canBook;
   const count = data.rows.length;
-  const noun = count === 1 ? 'Student' : 'Students';
-  const selectedClasses = [...new Set(data.rows.map((row) => row.className).filter(Boolean))];
+  const noun = count === 1 ? 'student' : 'students';
   return (
     <>
       <Drawer
         anchor="right"
         open
-        onClose={() => data.navigate('close')}
+        onClose={() => data.navigate()}
         PaperProps={{
           role: 'dialog',
           'aria-modal': true,
@@ -54,15 +53,19 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
           component="form"
           onSubmit={(event) => {
             event.preventDefault();
-            if (data.mode === 'create') data.form.handleSubmit();
-            else data.book();
+            data.book();
           }}
           sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}
         >
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2 }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ px: { xs: 2, sm: 3 }, py: 2, flexShrink: 0 }}
+          >
             <Typography id={titleId} variant="h6">
               <AdmissionDialogTitle
-                title={data.mode === 'create' ? 'Create & Book' : 'Book Session'}
+                title="Book Session"
                 helpText="Book the selected students into a session. Room availability and eligibility are checked before confirmation."
               />
             </Typography>
@@ -70,16 +73,17 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
               size="small"
               aria-label="Close student booking"
               disabled={locked}
-              onClick={() => data.navigate('close')}
+              onClick={() => data.navigate()}
             >
-              <Iconify icon="mdi:close" />
+              <Iconify icon={GlobalIcons.cancel} />
             </IconButton>
           </Stack>
           <Divider />
           <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
             <FormBusyRegion busy={locked} label="Checking and booking selected students…">
-              <Stack spacing={2} sx={{ p: 2 }}>
+              <Stack spacing={2} sx={{ p: { xs: 2, sm: 3 } }}>
                 <FormSectionCard
+                  icon={GlobalIcons.calendar}
                   title={
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <span>Selected Students</span>
@@ -93,19 +97,18 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                       const item = data.review?.items.find(
                         (entry) => entry.row.stageInstanceId === row.stageInstanceId
                       );
+                      const existingBooking = existingStudentBooking(row);
                       const reason =
                         item?.reason ||
                         studentBookingReason(
                           row,
-                          data.mode === 'book' && data.session
-                            ? (data.input ?? undefined)
-                            : undefined
+                          data.session ? (data.input ?? undefined) : undefined
                         );
                       return (
                         <Stack
                           key={row.stageInstanceId}
-                          direction="row"
-                          alignItems="center"
+                          direction={{ xs: 'column', sm: 'row' }}
+                          alignItems={{ xs: 'stretch', sm: 'center' }}
                           spacing={1}
                           sx={{ py: 1 }}
                         >
@@ -125,19 +128,39 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                               </Typography>
                             )}
                           </Box>
-                          <Label
-                            color={reason ? 'warning' : item && !reason ? 'success' : 'default'}
-                          >
-                            {reason ? 'Unavailable' : item ? 'Ready' : 'Selected'}
-                          </Label>
-                          <IconButton
-                            size="small"
-                            disabled={locked || data.retryPending}
-                            aria-label={`Remove ${row.applicantName}`}
-                            onClick={() => data.remove(row.stageInstanceId)}
-                          >
-                            <Iconify icon="mdi:close" width={16} />
-                          </IconButton>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Label
+                              color={reason ? 'warning' : item && !reason ? 'success' : 'default'}
+                            >
+                              {existingBooking
+                                ? 'Already booked'
+                                : reason
+                                  ? 'Unavailable'
+                                  : item
+                                    ? 'Ready'
+                                    : 'Selected'}
+                            </Label>
+                            {existingBooking && onViewBooking && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="inherit"
+                                disabled={locked || data.retryPending}
+                                aria-label={`View booking for ${row.applicantName}`}
+                                onClick={() => onViewBooking(row)}
+                              >
+                                View booking
+                              </Button>
+                            )}
+                            <IconButton
+                              size="small"
+                              disabled={locked || data.retryPending}
+                              aria-label={`Remove ${row.applicantName}`}
+                              onClick={() => data.remove(row.stageInstanceId)}
+                            >
+                              <Iconify icon="mdi:close" width={16} />
+                            </IconButton>
+                          </Stack>
                         </Stack>
                       );
                     })}
@@ -162,23 +185,11 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                     {data.error}
                   </StudentFeedback>
                 )}
-                {data.mode === 'book' ? (
+                {data.hasBookableStudents && (
                   <FormSectionCard
                     title="Available Sessions"
+                    icon={GlobalIcons.calendar}
                     descriptionTooltip="Choose a session for the selected students."
-                    action={
-                      canCreate ? (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<Iconify icon="mdi:plus" />}
-                          disabled={locked || readonly || data.retryPending || data.createBlocked}
-                          onClick={data.beginCreate}
-                        >
-                          Create Session
-                        </Button>
-                      ) : undefined
-                    }
                   >
                     <TextField
                       size="small"
@@ -208,50 +219,74 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                       </StudentFeedback>
                     ) : (
                       <Stack spacing={1} role="radiogroup" aria-label="Available sessions">
-                        {data.available.map((session) => (
-                          <Box
-                            key={session.id}
-                            component="label"
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1,
-                              p: 1,
-                              border: 1,
-                              borderRadius: 1,
-                              borderColor:
-                                data.session?.id === session.id ? 'primary.main' : 'divider',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <Radio
-                              name="assessment-session"
-                              size="small"
-                              checked={data.session?.id === session.id}
-                              disabled={locked || readonly || data.retryPending}
-                              value={session.id}
-                              onChange={() => data.chooseSession(session)}
-                              inputProps={{ 'aria-label': session.name }}
-                            />
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography variant="subtitle2">{session.name}</Typography>
-                              <Typography variant="caption" display="block" color="text.secondary">
-                                {formatAssessmentSchedule(session.startsAt, session.endsAt)?.date} ·{' '}
-                                {formatAssessmentSchedule(session.startsAt, session.endsAt)?.time}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {session.location}
-                              </Typography>
+                        {data.available.map((session) => {
+                          const reason = data.sessionReason(session);
+                          return (
+                            <Box
+                              key={session.id}
+                              component="label"
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                p: 1,
+                                border: 1,
+                                borderRadius: 1,
+                                borderColor:
+                                  data.session?.id === session.id ? 'primary.main' : 'divider',
+                                cursor: reason ? 'default' : 'pointer',
+                              }}
+                            >
+                              <Radio
+                                name="assessment-session"
+                                size="small"
+                                checked={data.session?.id === session.id}
+                                disabled={locked || readonly || data.retryPending || !!reason}
+                                value={session.id}
+                                onChange={() => data.chooseSession(session)}
+                                inputProps={{
+                                  'aria-label': session.name,
+                                  'aria-describedby': reason
+                                    ? `${titleId}-${session.id}-reason`
+                                    : undefined,
+                                }}
+                              />
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography variant="subtitle2">{session.name}</Typography>
+                                <Typography
+                                  variant="caption"
+                                  display="block"
+                                  color="text.secondary"
+                                >
+                                  {formatAssessmentSchedule(session.startsAt, session.endsAt)?.date}{' '}
+                                  ·{' '}
+                                  {formatAssessmentSchedule(session.startsAt, session.endsAt)?.time}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {session.location}
+                                </Typography>
+                              </Box>
+                              {reason ? (
+                                <Typography
+                                  id={`${titleId}-${session.id}-reason`}
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {reason}
+                                </Typography>
+                              ) : (
+                                <Label>
+                                  {Math.max(0, session.capacity - session.bookedCount)} seats /
+                                  slots
+                                </Label>
+                              )}
                             </Box>
-                            <Label>
-                              {Math.max(0, session.capacity - session.bookedCount)} seats / slots
-                            </Label>
-                          </Box>
-                        ))}
+                          );
+                        })}
                         {!data.available.length && (
                           <Typography variant="body2" color="text.secondary">
-                            No available sessions on this page. Create a session or check another
-                            page.
+                            No available sessions on this page. Check another page or ask a session
+                            manager to create one.
                           </Typography>
                         )}
                       </Stack>
@@ -260,7 +295,7 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                       <Stack direction="row" justifyContent="flex-end" spacing={1}>
                         <Button
                           size="small"
-                          disabled={locked || data.page === 0}
+                          disabled={locked || data.retryPending || data.page === 0}
                           onClick={() => data.setPage(data.page - 1)}
                         >
                           Previous
@@ -268,7 +303,9 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                         <Button
                           size="small"
                           disabled={
-                            locked || (data.page + 1) * 25 >= data.sessions.currentData!.totalCount
+                            locked ||
+                            data.retryPending ||
+                            (data.page + 1) * 25 >= data.sessions.currentData!.totalCount
                           }
                           onClick={() => data.setPage(data.page + 1)}
                         >
@@ -277,48 +314,6 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                       </Stack>
                     )}
                   </FormSectionCard>
-                ) : data.resources.isError ? (
-                  <StudentFeedback
-                    notificationKey="STU-0264"
-                    presentation="persistent"
-                    severity="error"
-                    action={
-                      <Button size="small" onClick={data.resources.refetch}>
-                        Retry
-                      </Button>
-                    }
-                  >
-                    Unable to load Institute rooms.
-                  </StudentFeedback>
-                ) : (
-                  <AssessmentSessionSetupFields
-                    pipeline
-                    formik={data.form}
-                    scopes={scopes.filter((scope) =>
-                      data.rows.some(
-                        (row) =>
-                          row.admissionOfferingId === scope.admissionOfferingId &&
-                          row.workflowStageDefinitionId === scope.workflowStageDefinitionId
-                      )
-                    )}
-                    rooms={data.rooms}
-                    interviewers={data.resources.currentData?.interviewers ?? []}
-                    onSearchInterviewers={data.searchInterviewers}
-                    disabled={locked || readonly || data.retryPending}
-                    bookedCount={0}
-                    classSummary={
-                      <Stack spacing={0.5}>
-                        <Typography variant="caption" color="text.secondary">
-                          Class
-                        </Typography>
-                        <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
-                          {selectedClasses.map((name) => (
-                            <Label key={name}>{name}</Label>
-                          ))}
-                        </Stack>
-                      </Stack>
-                    }
-                  />
                 )}
                 {data.preview?.requiresRoomApproval && (
                   <StudentFeedback
@@ -357,30 +352,33 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
             </FormBusyRegion>
           </Scrollbar>
           <Divider />
-          <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ p: 2 }}>
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            alignItems="center"
+            spacing={1}
+            sx={{ px: { xs: 2, sm: 3 }, py: 1.75, flexShrink: 0 }}
+          >
             <Button
               size="small"
               variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
               disabled={locked}
-              onClick={() => data.navigate(data.mode === 'create' ? 'back' : 'close')}
+              onClick={data.navigate}
             >
-              {data.mode === 'create' ? 'Back' : 'Cancel'}
+              Cancel
             </Button>
             <LoadingButton
               size="small"
               variant="contained"
               color="inherit"
               type="submit"
+              startIcon={<Iconify icon={GlobalIcons.calendar} width={18} />}
               loading={locked}
-              disabled={
-                locked ||
-                readonly ||
-                (data.mode === 'book'
-                  ? !data.review?.canConfirm && !data.retryPending
-                  : data.createBlocked || data.resources.isError || !data.resources.currentData)
-              }
+              disabled={locked || readonly || (!data.review?.canConfirm && !data.retryPending)}
             >
-              {data.mode === 'create' ? `Create & Book ${count} ${noun}` : `Book ${count} ${noun}`}
+              {`Book ${count} ${noun}`}
             </LoadingButton>
           </Stack>
         </Box>
@@ -391,11 +389,17 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
         content={
           data.retryPending
             ? 'The last booking response was not received. Retry checks the same request safely before you close.'
-            : 'Your session entries and booking selection have not been submitted.'
+            : 'Your booking selection has not been submitted.'
         }
-        onClose={() => data.setDiscard(null)}
+        onClose={() => data.setDiscard(false)}
         action={
-          <Button size="small" variant="contained" color="error" onClick={data.discardChanges}>
+          <Button
+            size="small"
+            variant="contained"
+            color="error"
+            startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+            onClick={data.discardChanges}
+          >
             Discard
           </Button>
         }

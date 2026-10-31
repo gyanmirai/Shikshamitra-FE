@@ -92,7 +92,8 @@ export default function PermissionInlineEditor({
             label={`${feature} ${action.label} permission`}
             rule={rule}
             user={user}
-            disabled={disabled || !action.editable || hidden}
+            disabled={disabled || !action.editable}
+            allowDisabled={hidden}
             onChange={onChange}
           />
         </Box>

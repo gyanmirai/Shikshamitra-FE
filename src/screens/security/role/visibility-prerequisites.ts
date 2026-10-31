@@ -10,7 +10,7 @@ import type {
 
 export type VisibilityPrerequisites = Record<string, string[][]>;
 export const visibilityPrerequisiteWarning =
-  "Enable Visibility access for this feature in 'Set Visibility' before configuring module permissions.";
+  "Enable Visibility access for this feature in 'Set Visibility' before allowing module permissions.";
 
 export function buildVisibilityPrerequisites(
   navigation: NavigationPermission[]

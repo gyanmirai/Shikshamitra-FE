@@ -10,6 +10,7 @@ import {
 } from './admission-academic-filters';
 
 const mocks = vi.hoisted(() => ({
+  pathname: '/student/admissions/pipeline',
   query: 'board=board-1&medium=medium-1&class=class-1&search=ada',
   replace: vi.fn(),
   hierarchyPending: false,
@@ -24,7 +25,7 @@ vi.mock('react-redux', () => ({
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
-  usePathname: () => '/student/admissions/pipeline',
+  usePathname: () => mocks.pathname,
   useSearchParams: () => new URLSearchParams(mocks.query),
 }));
 
@@ -62,6 +63,7 @@ vi.mock('src/redux/class/classApi', () => ({
 describe('admission academic filters', () => {
   beforeEach(() => {
     mocks.replace.mockClear();
+    mocks.pathname = '/student/admissions/pipeline';
     mocks.hierarchyPending = false;
     mocks.hierarchyError = false;
     mocks.hierarchyEmpty = false;
@@ -76,6 +78,18 @@ describe('admission academic filters', () => {
 
     expect(mocks.replace).toHaveBeenCalledWith(
       '/student/admissions/pipeline?board=board-2&search=ada',
+      { scroll: false }
+    );
+  });
+
+  it('resets both panel pages while preserving the selected assessment tab on academic changes', () => {
+    mocks.pathname = '/student/admissions/assessments';
+    mocks.query =
+      'assessmentTab=sessions&board=board-1&medium=medium-1&assessmentSessionPage=3&assessmentPage=2&assessmentSession=session-1';
+    const { result } = renderHook(() => useAdmissionAcademicFilters());
+    act(() => result.current.update('medium', 'medium-2'));
+    expect(mocks.replace).toHaveBeenCalledWith(
+      '/student/admissions/assessments?assessmentTab=sessions&board=board-1&medium=medium-2',
       { scroll: false }
     );
   });

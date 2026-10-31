@@ -224,11 +224,23 @@ describe('Special direct-registration entry', () => {
     fireEvent.change(screen.getByLabelText('Main school contact'), {
       target: { value: 'guardian' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
+    const confirmation = screen.getByRole('dialog', { name: 'Confirm Guardian Responsibility' });
+    expect(screen.getByLabelText('Main school contact')).toHaveValue('mother');
+    fireEvent.click(within(confirmation).getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByLabelText('Main school contact')).toHaveValue('mother');
+    expect(screen.getByLabelText(/Guardian full name/)).toHaveValue('Pooja Shah');
+    expect(state.start).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText('Main school contact'), {
+      target: { value: 'guardian' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm guardian' }));
+    expect(state.start).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole('button', { name: 'Start registration' }));
     await waitFor(() => expect(state.start).toHaveBeenCalledOnce());
     expect(state.start).toHaveBeenCalledWith(
       expect.objectContaining({
         parentRelationship: 'mother',
+        guardianResponsibilityConfirmed: true,
         guardianFirstName: 'Aarti',
         guardianMobile: '9876543210',
         familyContacts: {
@@ -252,7 +264,8 @@ describe('Special direct-registration entry', () => {
     fireEvent.change(screen.getByLabelText('Main school contact'), {
       target: { value: 'guardian' },
     });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other guardian' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm guardian' }));
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Add other guardian' }));
     expect(screen.getByLabelText('Main school contact')).toHaveValue('mother');
     expect(screen.queryByLabelText(/Guardian full name/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));

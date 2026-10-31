@@ -6,7 +6,7 @@ import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { useAssessmentWorkspaceData } from './use-assessment-workspace-data';
 
 const mocks = vi.hoisted(() => ({
-  academic: { academicYearId: 'year-1', boardId: '', mediumId: '', standardId: '' },
+  academic: { academicYearId: 'year-1', boardId: 'board-1', mediumId: 'medium-1', standardId: '' },
   scopeKey: '',
   setScope: vi.fn(),
   scopes: vi.fn(),
@@ -78,8 +78,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   Object.assign(mocks.academic, {
     academicYearId: 'year-1',
-    boardId: '',
-    mediumId: '',
+    boardId: 'board-1',
+    mediumId: 'medium-1',
     standardId: '',
   });
   mocks.scopeKey = '';
@@ -104,6 +104,47 @@ beforeEach(() => {
 });
 
 describe('single assessment workspace data scope', () => {
+  it('restores an authorized scope link without clearing its identity', () => {
+    Object.assign(mocks.academic, { boardId: '', mediumId: '' });
+    mocks.scopeKey = 'second:definition-second';
+    const { result } = renderHook(() => useAssessmentWorkspaceData(true));
+    result.current.academic.update('board', 'board-1');
+    expect(mocks.update).toHaveBeenCalledExactlyOnceWith(
+      { board: 'board-2', medium: 'medium-2' },
+      true
+    );
+    expect(mocks.applicants.mock.lastCall?.[1]).toMatchObject({ skip: true });
+  });
+
+  it.each([true, false])(
+    'restores session hierarchy with detailed scope metadata: %s',
+    (detailed) => {
+      Object.assign(mocks.academic, { boardId: '', mediumId: '' });
+      mocks.state.sessionId = 'chosen-session';
+      mocks.selectedSession.mockReturnValue({
+        currentData: {
+          ...session('chosen-session', 'second'),
+          ...(detailed ? {} : { scopeDetails: [] }),
+        },
+      });
+      const { result } = renderHook(() => useAssessmentWorkspaceData(true));
+      expect(mocks.selectedSession.mock.lastCall?.[1]).toMatchObject({ skip: false });
+      result.current.academic.update('board', 'board-1');
+      expect(mocks.update).toHaveBeenCalledExactlyOnceWith(
+        { board: 'board-2', medium: 'medium-2' },
+        true
+      );
+      expect(mocks.applicants.mock.lastCall?.[1]).toMatchObject({ skip: true });
+    }
+  );
+
+  it('waits for a linked session instead of clearing it during default selection', () => {
+    Object.assign(mocks.academic, { boardId: '', mediumId: '' });
+    mocks.state.sessionId = 'chosen-session';
+    const { result } = renderHook(() => useAssessmentWorkspaceData(true));
+    result.current.academic.update('board', 'board-1');
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
   it('unsubscribes workspace reads during a bulk sheet and resumes them on close', () => {
     const { rerender } = renderHook(({ paused }) => useAssessmentWorkspaceData(true, paused), {
       initialProps: { paused: true },
@@ -117,26 +158,18 @@ describe('single assessment workspace data scope', () => {
     expect(mocks.applicants.mock.lastCall?.[1]).toMatchObject({ refetchOnMountOrArgChange: true });
   });
 
-  it('loads all allowed offerings in the year without mandatory Offering, Stage, Board or Medium selections', () => {
-    const { result } = renderHook(() => useAssessmentWorkspaceData(true));
-    expect(result.current.visibleScopes.map((item) => item.admissionOfferingId)).toEqual([
-      'first',
-      'second',
-      'third',
-    ]);
-    expect(result.current.ready).toBe(true);
-    expect(mocks.applicants.mock.lastCall?.[0]).toMatchObject({
-      academicYearId: 'year-1',
-      admissionOfferingId: undefined,
-      workflowStageDefinitionId: undefined,
-      boardId: undefined,
-      mediumId: undefined,
-    });
-    expect(mocks.applicants.mock.lastCall?.[1]).toMatchObject({ skip: false });
-    expect(mocks.sessions.mock.lastCall?.[1]).toMatchObject({ skip: false });
-  });
+  it.each(['boardId', 'mediumId'] as const)(
+    'waits for the required %s before reading students or sessions',
+    (key) => {
+      mocks.academic[key] = '';
+      const { result } = renderHook(() => useAssessmentWorkspaceData(true));
+      expect(result.current.ready).toBe(false);
+      expect(mocks.applicants.mock.lastCall?.[1]).toMatchObject({ skip: true });
+      expect(mocks.sessions.mock.lastCall?.[1]).toMatchObject({ skip: true });
+    }
+  );
 
-  it('keeps Board and Medium optional while applying the selected hierarchy consistently', () => {
+  it('requires single Board and Medium while applying the selected hierarchy consistently', () => {
     Object.assign(mocks.academic, {
       boardId: 'board-1',
       mediumId: 'medium-1',
@@ -157,7 +190,11 @@ describe('single assessment workspace data scope', () => {
   });
 
   it('sends a single selected class through the single-class contract', () => {
-    mocks.academic.standardId = 'class-2';
+    Object.assign(mocks.academic, {
+      boardId: 'board-2',
+      mediumId: 'medium-2',
+      standardId: 'class-2',
+    });
     const { result } = renderHook(() => useAssessmentWorkspaceData(true));
     expect(result.current.visibleScopes.map((item) => item.admissionOfferingId)).toEqual([
       'second',
@@ -169,6 +206,7 @@ describe('single assessment workspace data scope', () => {
   });
 
   it('preserves a legacy Offering/Stage scope link as an optional filter in the single workspace', () => {
+    Object.assign(mocks.academic, { boardId: 'board-2', mediumId: 'medium-2' });
     mocks.scopeKey = 'second:definition-second';
     mocks.state.tab = 'sessions';
     const { result } = renderHook(() => useAssessmentWorkspaceData(true));
@@ -178,7 +216,8 @@ describe('single assessment workspace data scope', () => {
       admissionOfferingId: 'second',
       workflowStageDefinitionId: 'definition-second',
     });
-    expect(mocks.applicants.mock.lastCall?.[1]).toMatchObject({ skip: false });
+    expect(mocks.applicants.mock.lastCall?.[1]).toMatchObject({ skip: true });
+    expect(mocks.sessions.mock.lastCall?.[1]).toMatchObject({ skip: true });
     expect(mocks.update).not.toHaveBeenCalled();
   });
 
@@ -214,6 +253,7 @@ describe('single assessment workspace data scope', () => {
   );
 
   it('rejects a selected session that does not contain the explicitly filtered assessment scope', () => {
+    Object.assign(mocks.academic, { boardId: 'board-2', mediumId: 'medium-2' });
     mocks.scopeKey = 'second:definition-second';
     mocks.state.sessionId = 'chosen-session';
     mocks.selectedSession.mockReturnValue({ currentData: session(), isError: false });
