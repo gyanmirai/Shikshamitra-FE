@@ -17,6 +17,7 @@ export type HrFailure = {
   message: string;
   guidance: string;
   details?: string;
+  previewAction?: 'esiTreatment';
   fields: { name: string; message: string }[];
   setup?: HrSetup;
 };
@@ -40,6 +41,11 @@ export function safeHrText(value: unknown): string | undefined {
 }
 
 const known: Record<string, { message: string; setup?: HrSetup }> = {
+  'HR:Payroll:SalaryTemplateSampleBlocked': {
+    message:
+      'ESIC setup blocks this salary preview. Review statutory settings, then preview again.',
+    setup: 'statutory',
+  },
   'HR:Payroll:PfEnrollmentBlocked': {
     message:
       'PF enrollment prevents salary saving. Review previous PF membership, the enrollment decision and any required consent reference.',
@@ -196,9 +202,16 @@ export function normalizeHrFailure(error: unknown): HrFailure {
   const mapped = typeof code === 'string' ? known[code] : undefined;
   const preview = salaryPreviewError(code, body.data ?? business.data);
   if (preview) {
-    const labels: Record<string, string> = { 'monthly Amount': 'Monthly amount', rules: 'Earning rules',
-      deductions: 'Deduction rules', 'pf Rule Id': 'PF rule', 'effective Month': 'Preview month' };
-    fields.forEach((field) => { field.name = labels[field.name] ?? field.name; });
+    const labels: Record<string, string> = {
+      'monthly Amount': 'Monthly amount',
+      rules: 'Earning rules',
+      deductions: 'Deduction rules',
+      'pf Rule Id': 'PF rule',
+      'effective Month': 'Preview month',
+    };
+    fields.forEach((field) => {
+      field.name = labels[field.name] ?? field.name;
+    });
   }
   const message =
     preview?.message ??
@@ -215,14 +228,22 @@ export function normalizeHrFailure(error: unknown): HrFailure {
     mapped?.message ??
     'The server did not provide a specific reason for rejecting this request.';
   return {
-    ...(preview ? { kind: 'salaryPreview' as const, details: preview.details } : {}),
-    title: Number(status) === 409 ? 'Review the Latest Record' : preview ? 'Review Salary Preview' : 'Action Could Not Be Completed',
+    ...(preview
+      ? { kind: 'salaryPreview' as const, details: preview.details, previewAction: preview.action }
+      : {}),
+    title:
+      Number(status) === 409
+        ? 'Review the Latest Record'
+        : preview
+          ? 'Review Salary Preview'
+          : 'Action Could Not Be Completed',
     message,
     fields,
     setup: mapped?.setup ?? (preview ? 'templates' : undefined),
     guidance:
       Number(status) === 409
         ? 'The request conflicts with the current saved state. Keep your entries, review the latest record, and try again when the conflict is resolved.'
-        : preview?.guidance ?? 'Your entries are still in the form. Review the fields or setup below, then submit again. The server will validate the request again.',
+        : (preview?.guidance ??
+          'Your entries are still in the form. Review the fields or setup below, then submit again. The server will validate the request again.'),
   };
 }

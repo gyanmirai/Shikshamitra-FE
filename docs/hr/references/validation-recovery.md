@@ -3,7 +3,7 @@ module: hr
 domain: reference
 content_type: Reference
 status: active
-updated_on: 2026-10-26
+updated_on: 2026-10-31
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -58,6 +58,10 @@ Return means returning to the original tab. Back/Forward in setup does not navig
 | Other query failures, HTTP-200 per-row/job errors, direct non-RTK requests and self-service outside `/hr/` | Existing owning-region error handling retained; outside mutation interception | Explicitly unverified; do not claim every possible HR failure is newly covered. |
 
 ## Verification and integration
+
+Salary Template preview handles `SalaryTemplateSampleBlocked` inline when its issue evidence identifies missing ESIC wage classification. One concise alert opens the existing ESIC treatment dialog for the selected preview month, subject to Statutory Schemes View; the dialog retains its existing edit permissions and school-wide scope check. Cancelling or saving treatment preserves the mounted salary draft. A treatment save clears the old preview and requires an explicit new server preview before template saving. Later-month classifications do not repair earlier-month previews. Missing access gives an HR-administrator action; unknown or mixed blockers retain global recovery rather than guessing a classification fix. Drafts are never persisted for this recovery.
+
+Regression coverage: `salary-preview-error.test.ts`, `salary-preview-recovery.integration.test.ts`, `salary-template-editor.test.tsx`, `earning-esi-treatment-dialog.test.tsx`, and `e2e/hr/salary-esic-preview-recovery.spec.ts`. Run the browser regression with `npx playwright test --config e2e/hr/salary-components.config.ts salary-esic-preview-recovery.spec.ts`; its APIs and earnings are synthetic and it does not validate live statutory calculations.
 
 See [testing](../testing.md#validation-recovery-checks) for commands and the isolated synthetic fixture. It uses production recovery components and real RTK mutation actions, with no authentication/backend writes. It proves shared behavior, not every authenticated route.
 

@@ -5,6 +5,7 @@ export type SalaryPreviewRecovery = {
   fields: string[];
   guidance?: string;
   details?: string;
+  action?: 'esiTreatment';
 };
 
 type DecimalEvidence = { units: bigint; scale: number };
@@ -113,6 +114,26 @@ export function salaryPreviewError(
   code: unknown,
   data?: Record<string, unknown> | null
 ): SalaryPreviewRecovery | undefined {
+  if (code === 'HR:Payroll:SalaryTemplateSampleBlocked') {
+    const issues = ownValue(data, 'issues');
+    // Only evidence for this specific blocker owns inline recovery. Unknown/mixed blockers
+    // retain global recovery rather than suggesting an unrelated classification change.
+    if (
+      Array.isArray(issues) &&
+      issues.includes('ESI_WAGE_CLASSIFICATION_REQUIRED') &&
+      issues.every((issue) =>
+        ['ESI_WAGE_CLASSIFICATION_REQUIRED', 'ESI_RATE_OVERRIDE'].includes(issue)
+      )
+    )
+      return {
+        message: 'ESIC treatment is missing for this preview month.',
+        guidance:
+          'Classify the earnings for this month, then preview again. Later changes do not cover earlier months.',
+        fields: [],
+        action: 'esiTreatment',
+      };
+    return undefined;
+  }
   if (typeof code !== 'string' || !Object.hasOwn(messages, code)) return undefined;
   const result = messages[code];
   if (code === 'HR:Payroll:SalaryTemplateAllocationMismatch') {

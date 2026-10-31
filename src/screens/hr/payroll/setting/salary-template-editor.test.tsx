@@ -47,6 +47,7 @@ const mocks = vi.hoisted(() => ({
   createTemplate: vi.fn(),
   calculate: vi.fn(),
   calculating: false,
+  statutoryView: true,
   refetch: vi.fn(),
   loading: false,
   catalogLoading: false,
@@ -102,6 +103,25 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('./earning-esi-treatment-dialog', () => ({
+  EarningEsiTreatmentDialog: ({ initialMonth, onSaved, onClose }: any) => (
+    <div role="dialog" aria-label="ESIC wage treatment">
+      <span>Correction month: {initialMonth}</span>
+      <button type="button" onClick={onClose}>
+        Cancel correction
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          onSaved();
+          onClose();
+        }}
+      >
+        Save correction
+      </button>
+    </div>
+  ),
+}));
 vi.mock('src/routes/components', () => ({
   RouterLink: ({ children, ...props }: React.ComponentProps<'a'>) => <a {...props}>{children}</a>,
 }));
@@ -118,9 +138,10 @@ vi.mock('src/utils/permissions', () => ({
   hasGrantedPermission: (_permissions: unknown, permission: string | string[]) =>
     (Array.isArray(permission) ? permission : [permission]).every(
       (name) =>
-        name.endsWith('.HR') ||
-        ['HR', 'HR.PayrollManagement'].includes(name) ||
-        [...mocks.permissions].some((action) => name.endsWith(`.${action}`))
+        (mocks.statutoryView || !name.endsWith('.StatutorySchemes.View')) &&
+        (name.endsWith('.HR') ||
+          ['HR', 'HR.PayrollManagement'].includes(name) ||
+          [...mocks.permissions].some((action) => name.endsWith(`.${action}`)))
     ),
   hasNavigationPermission: () => true,
 }));
@@ -444,6 +465,7 @@ describe('SalaryTemplateEditor', () => {
     vi.clearAllMocks();
     mocks.template = structuredClone(originalTemplate);
     mocks.permissions = new Set(['View', 'Add', 'Edit']);
+    mocks.statutoryView = true;
     mocks.loading = false;
     mocks.catalogLoading = false;
     mocks.calculating = false;
@@ -496,6 +518,82 @@ describe('SalaryTemplateEditor', () => {
   });
 
   afterEach(cleanup);
+
+  it('retains salary entries across cancelled and repeated treatment corrections, then requires a fresh preview', async () => {
+    const user = userEvent.setup();
+    const success = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    mocks.calculate.mockReturnValueOnce({
+      unwrap: () =>
+        Promise.reject(
+          Object.assign(new Error('Synthetic classification blocker'), {
+            status: 400,
+            data: {
+              errorCode: 'HR:Payroll:SalaryTemplateSampleBlocked',
+              data: {
+                issues: ['ESI_WAGE_CLASSIFICATION_REQUIRED'],
+                message: 'Resolve the statutory blockers before calculating this sample.',
+              },
+            },
+          })
+        ),
+    });
+    renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Retained October draft' },
+    });
+    const expectedMonth = new Date().toISOString().slice(0, 7);
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    expect(
+      await screen.findByText('ESIC treatment is missing for this preview month.')
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+    const cancelCorrection = async () => {
+      await user.click(screen.getByRole('button', { name: 'Review ESIC treatment' }));
+      expect(screen.getByText(`Correction month: ${expectedMonth}`)).toBeVisible();
+      await user.click(screen.getByRole('button', { name: 'Cancel correction' }));
+      expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue(
+        'Retained October draft'
+      );
+    };
+    await cancelCorrection();
+    await cancelCorrection();
+    await user.click(screen.getByRole('button', { name: 'Review ESIC treatment' }));
+    await user.click(screen.getByRole('button', { name: 'Save correction' }));
+    expect(screen.getByText('Preview needs refresh')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+    expect(mocks.calculate).toHaveBeenCalledOnce();
+    expect(mocks.updateTemplate).not.toHaveBeenCalled();
+    mocks.calculate.mockReturnValue({ unwrap: () => Promise.resolve(success) });
+    await user.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled());
+    expect(screen.queryByRole('button', { name: 'Review ESIC treatment' })).toBeNull();
+    expect(mocks.calculate.mock.calls[1][0]).toEqual(mocks.calculate.mock.calls[0][0]);
+  });
+
+  it('explains missing statutory access without exposing a correction dialog', async () => {
+    mocks.statutoryView = false;
+    mocks.calculate.mockReturnValue({
+      unwrap: () =>
+        Promise.reject(
+          Object.assign(new Error('Synthetic classification blocker'), {
+            status: 400,
+            data: {
+              errorCode: 'HR:Payroll:SalaryTemplateSampleBlocked',
+              data: { issues: ['ESI_WAGE_CLASSIFICATION_REQUIRED'] },
+            },
+          })
+        ),
+    });
+    const user = userEvent.setup();
+    renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" />);
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    expect(
+      await screen.findByText('Ask your HR administrator to review ESIC treatment for this month.')
+    ).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Review ESIC treatment' })).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
 
   it('explains and repairs the fresh-tenant Basic-purpose gate without changing the entered salary', async () => {
     const user = userEvent.setup();

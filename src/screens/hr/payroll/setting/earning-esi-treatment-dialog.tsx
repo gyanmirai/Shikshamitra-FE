@@ -38,12 +38,19 @@ export const esiTreatmentLabels: Record<EsiComponentTreatment['treatment'], stri
   InKind: 'Benefit in kind',
 };
 
-type Props = { component?: { id: string; name: string }; onClose: () => void };
+type Props = {
+  component?: { id: string; name: string };
+  initialMonth?: string;
+  onSaved?: () => void;
+  onClose: () => void;
+};
 
-export function EarningEsiTreatmentDialog({ component, onClose }: Props) {
+export function EarningEsiTreatmentDialog({ component, initialMonth, onSaved, onClose }: Props) {
   const query = useGetEsiConfigurationQuery();
   if (query.data?.current)
-    return <TreatmentForm {...{ component, onClose }} settings={query.data} />;
+    return (
+      <TreatmentForm {...{ component, initialMonth, onSaved, onClose }} settings={query.data} />
+    );
   return (
     <CustomDialog
       open
@@ -67,16 +74,23 @@ export function EarningEsiTreatmentDialog({ component, onClose }: Props) {
 
 function TreatmentForm({
   component,
+  initialMonth,
+  onSaved,
   onClose,
   settings,
 }: Props & { settings: EsiConfigurationSettings }) {
   // Keep the reviewed version while edits or a background refetch are in progress.
   const [reviewedSettings] = useState(settings);
-  const [month, setMonth] = useState(settings.suggestedEffectiveMonth);
+  const [month, setMonth] = useState(
+    initialMonth && /^\d{4}-(0[1-9]|1[0-2])$/.test(initialMonth)
+      ? initialMonth
+      : settings.suggestedEffectiveMonth
+  );
   const [componentId, setComponentId] = useState(component?.id ?? '');
   const [treatment, setTreatment] = useState<EsiComponentTreatment['treatment'] | null>(null);
   const [error, setError] = useState('');
   const request = useRef<{ signature: string; key: string } | null>(null);
+  const saving = useRef(false);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const actions = hrPermissions.payroll.settings.statutorySchemeActions;
   const canEdit =
@@ -90,8 +104,18 @@ function TreatmentForm({
   const [save, state] = useSaveEsiConfigurationMutation();
   const dirty = treatment !== null && treatment !== current?.treatment;
   const submit = async () => {
-    if (!canEdit || !current || !dirty || !validMonth || state.isLoading || query.isFetching)
+    if (
+      !canEdit ||
+      !current ||
+      !dirty ||
+      !validMonth ||
+      saving.current ||
+      state.isLoading ||
+      query.isFetching ||
+      query.isError
+    )
       return;
+    saving.current = true;
     const payload = configurationPayload(
       configurationValues({ ...reviewedSettings, suggestedEffectiveMonth: month })
     );
@@ -103,6 +127,7 @@ function TreatmentForm({
     try {
       await save({ ...payload, idempotencyKey: request.current.key }).unwrap();
       shikshaMitraToast.success({ message: 'ESIC treatment saved.' });
+      onSaved?.();
       onClose();
     } catch (cause) {
       setError(
@@ -110,6 +135,8 @@ function TreatmentForm({
           ? 'ESIC settings changed. Close and reopen this dialog to review the latest version.'
           : 'ESIC treatment could not be saved. Your changes are preserved. Try again.'
       );
+    } finally {
+      saving.current = false;
     }
   };
   return (
