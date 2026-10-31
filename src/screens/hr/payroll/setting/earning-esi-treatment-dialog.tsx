@@ -41,15 +41,25 @@ export const esiTreatmentLabels: Record<EsiComponentTreatment['treatment'], stri
 type Props = {
   component?: { id: string; name: string };
   initialMonth?: string;
+  initialComponentId?: string;
   onSaved?: () => void;
   onClose: () => void;
 };
 
-export function EarningEsiTreatmentDialog({ component, initialMonth, onSaved, onClose }: Props) {
+export function EarningEsiTreatmentDialog({
+  component,
+  initialMonth,
+  initialComponentId,
+  onSaved,
+  onClose,
+}: Props) {
   const query = useGetEsiConfigurationQuery();
   if (query.data?.current)
     return (
-      <TreatmentForm {...{ component, initialMonth, onSaved, onClose }} settings={query.data} />
+      <TreatmentForm
+        {...{ component, initialMonth, initialComponentId, onSaved, onClose }}
+        settings={query.data}
+      />
     );
   return (
     <CustomDialog
@@ -75,6 +85,7 @@ export function EarningEsiTreatmentDialog({ component, initialMonth, onSaved, on
 function TreatmentForm({
   component,
   initialMonth,
+  initialComponentId,
   onSaved,
   onClose,
   settings,
@@ -86,7 +97,7 @@ function TreatmentForm({
       ? initialMonth
       : settings.suggestedEffectiveMonth
   );
-  const [componentId, setComponentId] = useState(component?.id ?? '');
+  const [componentId, setComponentId] = useState(component?.id ?? initialComponentId ?? '');
   const [treatment, setTreatment] = useState<EsiComponentTreatment['treatment'] | null>(null);
   const [error, setError] = useState('');
   const request = useRef<{ signature: string; key: string } | null>(null);

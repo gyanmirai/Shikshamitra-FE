@@ -135,6 +135,7 @@ export type SalaryTemplateEsiPreview = {
   ruleId?: string | null;
   ruleVersion?: number | null;
   issueCodes: string[];
+  unclassifiedEarnings?: { componentId: string; name: string }[];
 };
 
 export type PfEnrollment = {

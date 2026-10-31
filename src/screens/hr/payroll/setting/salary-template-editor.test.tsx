@@ -104,9 +104,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('./earning-esi-treatment-dialog', () => ({
-  EarningEsiTreatmentDialog: ({ initialMonth, onSaved, onClose }: any) => (
+  EarningEsiTreatmentDialog: ({ initialMonth, initialComponentId, onSaved, onClose }: any) => (
     <div role="dialog" aria-label="ESIC wage treatment">
       <span>Correction month: {initialMonth}</span>
+      <span>Correction earning: {initialComponentId ?? 'unselected'}</span>
       <button type="button" onClick={onClose}>
         Cancel correction
       </button>
@@ -518,6 +519,41 @@ describe('SalaryTemplateEditor', () => {
   });
 
   afterEach(cleanup);
+
+  it.each(['earning-2', 'outside-template'])(
+    'uses named blocker metadata and preselects only a current earning: %s',
+    async (componentId) => {
+      const user = userEvent.setup();
+      mocks.calculate.mockReturnValue({
+        unwrap: () =>
+          Promise.reject(
+            Object.assign(new Error('Synthetic missing HRA'), {
+              status: 400,
+              data: {
+                errorCode: 'HR:Payroll:SalaryTemplateSampleBlocked',
+                data: {
+                  issues: ['ESI_WAGE_CLASSIFICATION_REQUIRED'],
+                  effectiveMonth: '2026-10',
+                  unclassifiedEarnings: [{ componentId, name: 'HRA' }],
+                },
+              },
+            })
+          ),
+      });
+      renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" />);
+      await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+      expect(await screen.findByText('ESIC treatment needed: HRA (Oct 2026).')).toBeVisible();
+      await user.click(screen.getByRole('button', { name: 'Review ESIC treatment' }));
+      expect(
+        screen.getByText(
+          `Correction earning: ${componentId === 'earning-2' ? componentId : 'unselected'}`
+        )
+      ).toBeVisible();
+      await user.click(screen.getByRole('button', { name: 'Cancel correction' }));
+      expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+      expect(mocks.updateTemplate).not.toHaveBeenCalled();
+    }
+  );
 
   it('retains salary entries across cancelled and repeated treatment corrections, then requires a fresh preview', async () => {
     const user = userEvent.setup();

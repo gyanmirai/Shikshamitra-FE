@@ -81,6 +81,21 @@ describe('ESIC treatment at the earning component', () => {
     mocks.save.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
   afterEach(cleanup);
+  it('preselects the unresolved earning while retaining the existing treatment and month controls', () => {
+    render(
+      <EarningEsiTreatmentDialog
+        initialMonth="2026-10"
+        initialComponentId="earning-1"
+        onClose={mocks.close}
+      />
+    );
+    expect(screen.getByRole('combobox', { name: 'Earning' })).toHaveTextContent('Allowance');
+    expect(screen.getByRole('combobox', { name: 'ESIC wage treatment' })).toHaveTextContent(
+      'Needs review'
+    );
+    expect(screen.getByRole('button', { name: 'Save treatment' })).toBeDisabled();
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
   it.each(['2026-10', '2026-11'])(
     'uses the salary preview month %s rather than the suggested month',
     async (initialMonth) => {

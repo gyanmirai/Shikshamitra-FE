@@ -12,6 +12,21 @@ let updates: any[] = [];
 let classificationBlock = false;
 let treatmentSaves: any[] = [];
 let previewRequests: any[] = [];
+let seededTreatments: any[] = [];
+const treatmentFor = (componentId: string, month: string) =>
+  [...seededTreatments, ...treatmentSaves]
+    .flatMap((save, order) =>
+      (save.treatments ?? []).map((item: any) => ({
+        ...item,
+        effectiveMonth: save.effectiveMonth,
+        order,
+      }))
+    )
+    .filter((item) => item.componentId === componentId && item.effectiveMonth <= month)
+    .sort(
+      (left, right) =>
+        right.effectiveMonth.localeCompare(left.effectiveMonth) || right.order - left.order
+    )[0]?.treatment ?? 'Unclassified';
 const year = {
   id: 'synthetic-year',
   name: '2026-27',
@@ -53,12 +68,13 @@ const fixture: Plugin = {
         classificationBlock = false;
         treatmentSaves = [];
         previewRequests = [];
+        seededTreatments = [];
         return send({ ok: true });
       }
       if (path === '/fixture/seed') {
         earnings = Array.from({ length: body.earnings || 0 }, (_, index) => ({
           id: `earning-${index + 1}`,
-          earningComponentName: `Earning ${index + 1}`,
+          earningComponentName: body.earningNames?.[index] ?? `Earning ${index + 1}`,
           earningType: 'Fixed',
           calculationType: 'Amount',
           amount: 100,
@@ -74,6 +90,7 @@ const fixture: Plugin = {
           visibleInPayslip: true,
           isActive: true,
         }));
+        seededTreatments = body.treatments ?? [];
         return send({ ok: true });
       }
       if (path === '/fixture/control') {
@@ -103,11 +120,7 @@ const fixture: Plugin = {
           earnings.map((earning) => ({
             componentId: earning.id,
             componentName: earning.earningComponentName,
-            treatment: treatmentSaves.some(
-              (save) => save.effectiveMonth <= url.searchParams.get('effectiveOn')!.slice(0, 7)
-            )
-              ? 'Included'
-              : 'Unclassified',
+            treatment: treatmentFor(earning.id, url.searchParams.get('effectiveOn')!.slice(0, 7)),
           }))
         );
       if (path === '/api/hr/setup-readiness')
@@ -217,16 +230,28 @@ const fixture: Plugin = {
       }
       if (path === '/api/payroll/salary-templates/preview') {
         previewRequests.push(body);
-        if (
-          classificationBlock &&
-          !treatmentSaves.some((save) => save.effectiveMonth <= body.effectiveMonth.slice(0, 7))
-        )
+        const month = body.effectiveMonth.slice(0, 7);
+        const missing = (body.rules ?? [])
+          .filter(
+            (rule: any) =>
+              rule.lineKind === 'EARNING' &&
+              treatmentFor(rule.componentId, month) === 'Unclassified'
+          )
+          .map((rule: any) => ({
+            componentId: rule.componentId,
+            name:
+              earnings.find((earning) => earning.id === rule.componentId)?.earningComponentName ??
+              rule.code,
+          }));
+        if (classificationBlock && missing.length)
           return send(
             {
               errorCode: 'HR:Payroll:SalaryTemplateSampleBlocked',
               detail: 'One or more business rules were violated.',
               data: {
                 issues: ['ESI_WAGE_CLASSIFICATION_REQUIRED'],
+                effectiveMonth: month,
+                unclassifiedEarnings: missing,
                 message: 'Resolve the statutory blockers before calculating this sample.',
               },
             },
