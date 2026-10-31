@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import PayrollSettings from 'src/screens/hr/payroll/setting/payroll-settings';
 
 export default function PayrollSettingRootPage() {
-  redirect('/hr/payroll/setting/earning-component');
+  return <PayrollSettings />;
 }

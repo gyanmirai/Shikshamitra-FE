@@ -76,6 +76,7 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
+import SalaryBasisChoice from '../setting/salary-basis-choice';
 import { EsiPolicyFields } from '../setting/esi-policy-fields';
 import { getLocalMonthKey } from './salary-structure-builder-utils';
 import { formatPayrollMonth } from '../setting/esi-statutory-utils';
@@ -97,6 +98,7 @@ type Props = {
   dateOfJoining?: string | null;
   employeeIsActive?: boolean;
   actionContainer?: HTMLElement | null;
+  guided?: boolean;
   initialMonth?: string;
   onEffectiveMonthChange?: (month: string) => void;
   onEditorStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
@@ -117,6 +119,7 @@ export function SalaryStructureBuilder({
   dateOfJoining,
   employeeIsActive = false,
   actionContainer,
+  guided = false,
   initialMonth,
   onEffectiveMonthChange,
   onEditorStateChange,
@@ -230,6 +233,13 @@ export function SalaryStructureBuilder({
   const [historyRefreshing, setHistoryRefreshing] = useState(false);
   const [historyReloadError, setHistoryReloadError] = useState('');
   const [operation, setOperation] = useState<'calculate' | 'save' | null>(null);
+  const [setupStep, setSetupStep] = useState(0);
+  const [customizationExpanded, setCustomizationExpanded] = useState(false);
+  const [focusRequest, setFocusRequest] = useState<{
+    section: 'salary' | 'statutory' | 'preview';
+    selector?: string;
+  } | null>(null);
+  const guidedSetup = guided && !onboarding;
   const [amountTouched, setAmountTouched] = useState(false);
   const [reasonTouched, setReasonTouched] = useState(false);
   const reasonInput = useRef<HTMLInputElement>(null);
@@ -244,8 +254,25 @@ export function SalaryStructureBuilder({
   const operationKeyRef = useRef('');
   const operationSignatureRef = useRef('');
   const salaryTemplateLabelId = useId();
-  const salaryBasisLabelId = useId();
   const pfRuleLabelId = useId();
+  useEffect(() => {
+    if (!focusRequest) return;
+    const group =
+      focusRequest.section === 'salary'
+        ? salaryFields.current
+        : focusRequest.section === 'statutory'
+          ? statutoryFields.current
+          : (previewSection.current ?? previewButton.current);
+    const target =
+      (focusRequest.selector === '[name="customizationReason"]'
+        ? reasonInput.current
+        : focusRequest.selector
+          ? group?.querySelector<HTMLElement>(focusRequest.selector)
+          : null) ?? group;
+    target?.scrollIntoView?.({ block: 'center' });
+    target?.focus();
+    setFocusRequest(null);
+  }, [focusRequest]);
 
   const templates = templateData?.items || [];
   const templateLookupReady = Boolean(templateData) && !templatesError && !templatesFetching;
@@ -379,7 +406,13 @@ export function SalaryStructureBuilder({
     monthlyAmount,
     pfEnrollment,
     pfApplicable,
-    pfChoice,
+    pfChoice: statutoryDraft
+      ? statutoryDraft.pfChoice == null
+        ? null
+        : statutoryDraft.pfChoice
+          ? 'OPT_IN'
+          : 'OPT_OUT'
+      : pfChoice,
     pfRuleId,
     esiMode,
     esiPolicyId,
@@ -596,7 +629,9 @@ export function SalaryStructureBuilder({
       return;
     if (customizing && overrides.length > 0 && !customizationReason.trim()) {
       setReasonTouched(true);
-      reasonInput.current?.focus();
+      if (guidedSetup) setSetupStep(0);
+      setCustomizationExpanded(true);
+      setFocusRequest({ section: 'salary', selector: '[name="customizationReason"]' });
       return;
     }
     operationPending.current = true;
@@ -643,6 +678,7 @@ export function SalaryStructureBuilder({
       setSavedStatutoryProfile(result.savedStatutoryProfile);
       setBaseline(savedSignatureValue);
       setSavedSignature(savedSignatureValue);
+      setCalculatedSignature(savedSignatureValue);
       if (refetchRevisions) await refetchRevisions();
       shikshaMitraToast.success({
         message: result.isScheduled
@@ -963,6 +999,7 @@ export function SalaryStructureBuilder({
   else if (!selectedVersion) footerStatus = 'Choose a salary template';
   else if (templateChangeRequired) footerStatus = 'Review the template version change';
   else if (amountInvalid) footerStatus = 'Enter an amount greater than zero';
+  else if (monthlyAmount > 100000000) footerStatus = 'Monthly amount must not exceed 100,000,000';
   else if (!/^\d{4}-\d{2}$/.test(effectiveMonth)) footerStatus = 'Choose an effective month';
   else if (pfChoiceMissing)
     footerStatus =
@@ -990,10 +1027,13 @@ export function SalaryStructureBuilder({
     footerStatus = calculatedSignature ? 'Preview needs refresh' : 'Preview required';
 
   const focusSection = (section: 'salary' | 'statutory', selector?: string) => {
-    const group = section === 'salary' ? salaryFields.current : statutoryFields.current;
-    const target = (selector ? group?.querySelector<HTMLElement>(selector) : null) ?? group;
-    target?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
-    target?.focus();
+    if (guidedSetup) setSetupStep(section === 'salary' ? 0 : 1);
+    if (selector === '[name="customizationReason"]') setCustomizationExpanded(true);
+    setFocusRequest({ section, selector });
+  };
+  const showPreview = () => {
+    if (guidedSetup) setSetupStep(2);
+    setFocusRequest({ section: 'preview' });
   };
   const reviewStatutory =
     pfChoiceMissing || (pfApplicable && !pfRuleId) || esiInvalid || statutoryBlocked;
@@ -1137,10 +1177,10 @@ export function SalaryStructureBuilder({
             size="small"
             color="inherit"
             onClick={() => {
-              if (reasonInvalid && calculationCurrent) reasonInput.current?.focus();
+              if (reasonInvalid && calculationCurrent)
+                focusSection('salary', '[name="customizationReason"]');
               else if (needsPreview) {
-                previewButton.current?.scrollIntoView?.({ block: 'center' });
-                previewButton.current?.focus();
+                showPreview();
               } else
                 focusSection(
                   reviewStatutory ? 'statutory' : 'salary',
@@ -1159,7 +1199,51 @@ export function SalaryStructureBuilder({
         )}
       </Typography>
 
-      {!onboarding && (
+      {guidedSetup && (
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={
+            actionContainer
+              ? {
+                  gridColumn: { xs: setupStep === 2 ? 1 : 2, sm: 4 },
+                  gridRow: { xs: 2, sm: 1 },
+                  justifySelf: 'end',
+                }
+              : undefined
+          }
+        >
+          {setupStep > 0 && (
+            <Button
+              size="small"
+              disabled={busy}
+              onClick={() => {
+                setSetupStep((current) => current - 1);
+                setFocusRequest({ section: setupStep === 2 ? 'statutory' : 'salary' });
+              }}
+            >
+              Back
+            </Button>
+          )}
+          {setupStep < 2 && (
+            <Button
+              size="small"
+              variant="contained"
+              disabled={
+                busy ||
+                (setupStep === 0 ? !salaryDetailsReady : !salaryDetailsReady || reviewStatutory)
+              }
+              onClick={() => {
+                setSetupStep((current) => current + 1);
+                setFocusRequest({ section: setupStep === 0 ? 'statutory' : 'preview' });
+              }}
+            >
+              Next
+            </Button>
+          )}
+        </Stack>
+      )}
+      {!onboarding && (!guidedSetup || setupStep === 2) && (
         <Button
           size="small"
           variant="contained"
@@ -1168,7 +1252,7 @@ export function SalaryStructureBuilder({
           loading={operation === 'save'}
           sx={
             actionContainer
-              ? { gridColumn: { xs: 2, sm: 4 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
+              ? { gridColumn: { xs: 2, sm: 5 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
               : undefined
           }
           disabled={
@@ -1201,6 +1285,36 @@ export function SalaryStructureBuilder({
         alignItems: 'start',
       }}
     >
+      {guidedSetup && (
+        <Box component="nav" aria-label="Salary setup stages" sx={{ minWidth: 0, p: 2 }}>
+          <CustomStepper
+            ariaLabel="Salary setup progress"
+            steps={['Salary Details', 'Statutory Setup', 'Review & Save']}
+            activeStep={setupStep}
+            disabled={busy}
+            stepStates={[
+              salaryDetailsReady ? 'completed' : 'pending',
+              salaryDetailsReady && !reviewStatutory ? 'completed' : 'pending',
+              calculationCurrent && !statutoryBlocked && !targetBlocked ? 'completed' : 'pending',
+            ]}
+            onStepClick={(index) => {
+              if (index > 0 && !salaryDetailsReady) {
+                setAmountTouched(true);
+                focusSection('salary', amountInvalid ? '[name="monthlyAmount"]' : undefined);
+                return;
+              }
+              if (index === 2 && reviewStatutory) {
+                focusSection('statutory');
+                return;
+              }
+              setSetupStep(index);
+              setFocusRequest({
+                section: index === 0 ? 'salary' : index === 1 ? 'statutory' : 'preview',
+              });
+            }}
+          />
+        </Box>
+      )}
       {onboarding && (
         <Box component="nav" aria-label="Salary setup sections" sx={{ minWidth: 0 }}>
           <CustomStepper
@@ -1292,9 +1406,9 @@ export function SalaryStructureBuilder({
         </Box>
         <FormSectionCard
           icon="solar:wallet-money-bold"
-          title="Salary details"
+          title="Salary Details"
           descriptionTooltip="Preview a full month before saving. Attendance and monthly adjustments are applied in Run Payroll."
-          sx={{ border: 0 }}
+          sx={{ display: guidedSetup && setupStep !== 0 ? 'none' : undefined }}
           contentSpacing={3}
         >
           {!selectedVersion && (
@@ -1304,7 +1418,9 @@ export function SalaryStructureBuilder({
             </Alert>
           )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <HrSetupLink setup="templates" disabled={busy} />
+            {(!guidedSetup || !selectedVersion || templateChangeRequired) && (
+              <HrSetupLink setup="templates" disabled={busy} />
+            )}
             <HrSetupRefresh refresh={refreshSetup} disabled={busy} />
           </Stack>
           {templateChangeRequired && (
@@ -1350,6 +1466,27 @@ export function SalaryStructureBuilder({
                   ))}
                 </Select>
               </FormControl>
+              {selectedTemplate?.description && (
+                <Typography variant="caption" color="text.secondary">
+                  {selectedTemplate.description}
+                </Typography>
+              )}
+              {selectedVersion?.versionNumber && (
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Template version {selectedVersion.versionNumber}. This staff salary keeps its own
+                  agreed amount and effective month.
+                </Typography>
+              )}
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <SalaryBasisChoice
+                value={salaryBasis}
+                disabled={!canManage || busy}
+                onChange={(value) => {
+                  setSalaryBasis(value);
+                  setCalculation(null);
+                }}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
@@ -1399,75 +1536,13 @@ export function SalaryStructureBuilder({
                 slotProps={{ htmlInput: { inputMode: 'decimal' } }}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth size="small" disabled={!canManage || busy}>
-                <InputLabel id={salaryBasisLabelId}>Amount basis</InputLabel>
-                <Select
-                  labelId={salaryBasisLabelId}
-                  label="Amount basis"
-                  value={salaryBasis}
-                  onChange={(event) => {
-                    setSalaryBasis(event.target.value as SalaryBasis);
-                    setCalculation(null);
-                  }}
-                >
-                  <MenuItem value="EMPLOYER_COST">Monthly cost to school (CTC)</MenuItem>
-                  <MenuItem value="GROSS">Monthly salary</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
           </Grid>
-          <Box
-            sx={{
-              display: 'flex',
-              gap: 2,
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              mt: 2,
-            }}
-          >
-            <Box sx={{ flex: '1 1 260px' }}>
-              <Typography variant="subtitle2">Salary preview</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Full-month estimate before attendance, unpaid leave, and monthly adjustments. Actual
-                payable salary is calculated in Run Payroll.
-              </Typography>
-            </Box>
-            <Button
-              size="small"
-              variant="outlined"
-              color="inherit"
-              startIcon={<Iconify icon="solar:eye-bold" />}
-              onClick={calculateSalary}
-              ref={previewButton}
-              data-salary-preview-button
-              loading={operation === 'calculate'}
-              loadingPosition="start"
-              disabled={
-                !templateLookupReady ||
-                !canManage ||
-                busy ||
-                !selectedVersion ||
-                templateChangeRequired ||
-                !Number.isFinite(monthlyAmount) ||
-                monthlyAmount <= 0 ||
-                !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
-                (pfApplicable && !pfRuleId) ||
-                pfChoiceMissing ||
-                esiInvalid ||
-                pfConfigurationInvalid ||
-                esiConfigurationInvalid
-              }
-            >
-              {calculatedSignature ? 'Refresh preview' : 'Preview salary'}
-            </Button>{' '}
-          </Box>
         </FormSectionCard>
         <FormSectionCard
           icon="solar:shield-check-bold"
-          title="Statutory deductions"
-          sx={{ border: 0 }}
+          title="Statutory Setup"
+          descriptionTooltip="School settings supply calculation rules. Template defaults and staff declarations determine applicability. Employee deductions and employer contributions are shown separately in the preview."
+          sx={{ display: guidedSetup && setupStep !== 1 ? 'none' : undefined }}
         >
           <Box
             ref={statutoryFields}
@@ -1536,14 +1611,23 @@ export function SalaryStructureBuilder({
             </Box>
           </Box>
           <Typography variant="caption" color="text.secondary">
-            Professional tax is applied automatically using the effective salary slab.
+            School settings own contribution rules. The template supplies defaults; staff
+            declarations record applicability and exceptions. Professional tax is applied
+            automatically using the effective salary slab.
           </Typography>
         </FormSectionCard>
 
         <Accordion
           disableGutters
           elevation={0}
-          sx={{ border: 1, borderColor: 'divider', '&:before': { display: 'none' } }}
+          expanded={customizationExpanded}
+          onChange={(_, expanded) => setCustomizationExpanded(expanded)}
+          sx={{
+            display: guidedSetup && setupStep !== 0 ? 'none' : undefined,
+            border: 1,
+            borderColor: 'divider',
+            '&:before': { display: 'none' },
+          }}
         >
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle1">Staff-specific customization</Typography>
@@ -1729,53 +1813,130 @@ export function SalaryStructureBuilder({
             )}
           </Alert>
         )}
-        {calculatedSignature && !calculationCurrent && (
-          <HrNotice severity="info">Your changes need a new preview.</HrNotice>
-        )}
-        {calculation ? (
+        <FormSectionCard
+          title="Salary Preview"
+          icon="solar:eye-bold"
+          descriptionTooltip="Review a full-month salary from the backend before saving an effective staff salary revision."
+          sx={{ display: guidedSetup && setupStep !== 2 ? 'none' : undefined }}
+        >
+          {guidedSetup && (
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              <Chip size="small" variant="outlined" label={selectedTemplate?.name} />
+              <Chip size="small" variant="outlined" label={formatPayrollMonth(effectiveMonth)} />
+              <Chip
+                size="small"
+                variant="outlined"
+                label={`${
+                  salaryBasis === 'GROSS' ? 'Monthly salary' : 'Monthly cost to school (CTC)'
+                } ${formatPayrollCurrency(monthlyAmount)}`}
+              />
+            </Stack>
+          )}
           <Box
-            ref={previewSection}
-            data-salary-preview
-            tabIndex={-1}
-            aria-label="Salary preview"
-            display="grid"
-            gap={2}
-            aria-live="polite"
+            sx={{
+              display: 'flex',
+              gap: 2,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mt: 2,
+            }}
           >
-            {calculation.targetResult.isExplainedByEnrollment && (
-              <Alert severity="warning">
-                Statutory contribution changes explain a CTC difference of{' '}
-                {formatPayrollCurrency(calculation.targetResult.difference)}. Saved gross salary is
-                unchanged.
-              </Alert>
-            )}
-            <Typography variant="subtitle1">
-              Salary preview · {formatPayrollMonth(effectiveMonth)}
-            </Typography>
-            <SalaryTotals
-              gross={calculation.grossSalary}
-              deductions={statutoryBlocked ? null : calculation.totalDeductions}
-              net={statutoryBlocked ? null : calculation.netSalary}
-              employerCost={statutoryBlocked ? null : calculation.employerCost}
-            />
-            <Typography variant="body2" color="text.secondary">
-              Full-month estimate before attendance, unpaid leave, and monthly adjustments. Actual
-              payable salary is calculated in Run Payroll.
-            </Typography>
-            <StatutorySummary schemes={calculation.statutorySummary || []} />
-            {statutoryBlocked && (
-              <Alert severity="warning">
-                This preview is incomplete. Resolve the statutory setup before saving salary.
-              </Alert>
-            )}
-            <SalaryBreakdown
-              earnings={calculation.earnings}
-              deductions={calculation.deductions}
-              employerContributions={calculation.employerContributions}
-            />
+            <Box sx={{ flex: '1 1 260px' }}>
+              {!guidedSetup && <Typography variant="subtitle2">Salary preview</Typography>}
+              <Typography variant="body2" color="text.secondary">
+                Full-month estimate before attendance, unpaid leave, and monthly adjustments. Actual
+                payable salary is calculated in Run Payroll.
+              </Typography>
+            </Box>
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="solar:eye-bold" />}
+              onClick={calculateSalary}
+              ref={previewButton}
+              data-salary-preview-button
+              loading={operation === 'calculate'}
+              loadingPosition="start"
+              disabled={
+                !templateLookupReady ||
+                !canManage ||
+                busy ||
+                !selectedVersion ||
+                templateChangeRequired ||
+                !Number.isFinite(monthlyAmount) ||
+                monthlyAmount <= 0 ||
+                !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
+                (pfApplicable && !pfRuleId) ||
+                pfChoiceMissing ||
+                esiInvalid ||
+                pfConfigurationInvalid ||
+                esiConfigurationInvalid
+              }
+            >
+              {calculatedSignature ? 'Refresh preview' : 'Preview salary'}
+            </Button>{' '}
           </Box>
-        ) : null}
 
+          {calculatedSignature && !calculationCurrent && (
+            <HrNotice severity="info">Your changes need a new preview.</HrNotice>
+          )}
+          {calculation ? (
+            <Box
+              ref={previewSection}
+              data-salary-preview
+              tabIndex={-1}
+              aria-label="Salary preview"
+              display="grid"
+              gap={2}
+              aria-live="polite"
+            >
+              {calculation.targetResult.isExplainedByEnrollment && (
+                <Alert severity="warning">
+                  Statutory contribution changes explain a CTC difference of{' '}
+                  {formatPayrollCurrency(calculation.targetResult.difference)}. Saved gross salary
+                  is unchanged.
+                </Alert>
+              )}
+              {!guidedSetup && (
+                <Typography variant="subtitle1">
+                  Salary preview · {formatPayrollMonth(effectiveMonth)}
+                </Typography>
+              )}
+              <SalaryTotals
+                gross={calculation.grossSalary}
+                deductions={statutoryBlocked ? null : calculation.totalDeductions}
+                net={statutoryBlocked ? null : calculation.netSalary}
+                employerCost={statutoryBlocked ? null : calculation.employerCost}
+              />
+              {!guidedSetup && (
+                <Typography variant="body2" color="text.secondary">
+                  Full-month estimate before attendance, unpaid leave, and monthly adjustments.
+                  Actual payable salary is calculated in Run Payroll.
+                </Typography>
+              )}
+              <StatutorySummary schemes={calculation.statutorySummary || []} />
+              {statutoryBlocked && (
+                <Alert severity="warning">
+                  This preview is incomplete. Resolve the statutory setup before saving salary.
+                </Alert>
+              )}
+              <SalaryBreakdown
+                earnings={calculation.earnings}
+                deductions={calculation.deductions}
+                employerContributions={calculation.employerContributions}
+              />
+            </Box>
+          ) : null}
+
+          {guidedSetup && (
+            <HrNotice severity="info">
+              Saving creates an effective salary revision for this staff member. It does not run
+              monthly payroll or change the shared template.
+            </HrNotice>
+          )}
+        </FormSectionCard>
         {readiness?.canActivate && canActivate && !employeeIsActive && !activationCompleted ? (
           <Alert
             severity="success"

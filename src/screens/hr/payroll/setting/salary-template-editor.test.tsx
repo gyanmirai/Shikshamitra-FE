@@ -5,7 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, cleanup, waitFor, fireEvent } from '@testing-library/react';
 import {
   HrSetupTaskContext,
   HrSetupEditorContext,
@@ -652,11 +652,10 @@ describe('SalaryTemplateEditor', () => {
     const user = userEvent.setup();
     renderEditor(<SalaryTemplateEditor mode="create" />);
     expect(screen.queryByRole('combobox', { name: /Protection policy/ })).toBeNull();
-    const basis = screen.getByRole('combobox', { name: /Default salary basis/ });
-    expect(basis).toHaveTextContent('Monthly cost to school (CTC)');
-    await user.click(basis);
-    expect(screen.getAllByRole('option')).toHaveLength(2);
-    await user.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    const basis = screen.getByRole('radiogroup', { name: 'Default salary basis' });
+    expect(within(basis).getByRole('radio', { name: /^Monthly cost to school/ })).toBeChecked();
+    expect(within(basis).getAllByRole('radio')).toHaveLength(2);
+    await user.click(screen.getByRole('radio', { name: /^Monthly salary/ }));
     expect(screen.getByRole('textbox', { name: 'Monthly salary' })).toBeVisible();
   });
 

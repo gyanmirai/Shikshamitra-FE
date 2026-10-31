@@ -39,7 +39,7 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ action }: any) => (
     <>
-      <h1>Payroll Structure</h1>
+      <h1>Staff Salaries</h1>
       {action}
     </>
   ),
@@ -112,7 +112,7 @@ beforeEach(() => {
 });
 it('keeps a stable loading state and reads URL-selected staff and month', () => {
   render(<EmployeeSalaryStructureScreen />);
-  expect(screen.getByRole('heading', { name: 'Payroll Structure' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Staff Salaries' })).toBeVisible();
   expect(screen.getByRole('status', { name: 'Loading salary details' })).toBeVisible();
   expect(screen.getByRole('status', { name: 'Loading salary details' })).toHaveAttribute(
     'aria-busy',

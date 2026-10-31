@@ -12,8 +12,8 @@ import { LoadingButton } from 'src/components/loading-button';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Chip, Grid, Alert, Button, Typography } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { Box, Chip, Grid, Alert, Button, MenuItem, TextField, Typography } from '@mui/material';
 
 import { SalaryTotals } from '../structure/salary-summary-view';
 import { formatRuleLabel } from './salary-template-editor-utils';
@@ -21,7 +21,6 @@ import { SectionCard } from '../../employee/employee-form-fields/InformationFiel
 
 type Props = {
   salaryBasis: SalaryBasis;
-  setSalaryBasis: (value: SalaryBasis) => void;
   readOnly: boolean;
   previewCurrent: boolean;
   hasPreviewed: boolean;
@@ -44,7 +43,6 @@ type Props = {
 };
 export default function SalaryTemplateReview({
   salaryBasis,
-  setSalaryBasis,
   readOnly,
   previewCurrent,
   hasPreviewed,
@@ -104,19 +102,12 @@ export default function SalaryTemplateReview({
             payable salary is calculated in Run Payroll.
           </Typography>
           <Grid container spacing={1} alignItems="flex-start">
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <TextField
-                select
-                size="small"
-                fullWidth
-                label="Default salary basis"
-                value={salaryBasis}
-                disabled={busy || readOnly}
-                onChange={(event) => setSalaryBasis(event.target.value as SalaryBasis)}
-              >
-                <MenuItem value="EMPLOYER_COST">Monthly cost to school (CTC)</MenuItem>
-                <MenuItem value="GROSS">Monthly salary</MenuItem>
-              </TextField>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="body2" color="text.secondary">
+                Sample basis:{' '}
+                {salaryBasis === 'GROSS' ? 'Monthly salary' : 'Monthly cost to school (CTC)'}. This
+                tests the template; each staff member has their own agreed amount.
+              </Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <ShakingTextField>

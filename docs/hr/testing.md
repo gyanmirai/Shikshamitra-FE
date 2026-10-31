@@ -968,3 +968,10 @@ The column follow-up passed independent full TypeScript, scoped ESLint, an isola
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/employee-onboarding src/hooks/use-unsaved-navigation.test.tsx src/components/nav-section/vertical/nav-list.test.tsx src/components/custom-stepper src/screens/hr/payroll/structure --pool=forks --maxWorkers=1 --testTimeout=30000` on Windows. Page tests cover direct loads, exact access grants, loading/403/404/503/ineligible states, wrong IDs, canceled/late reads, actor/tenant changes and draft-safe retry. The real wizard integration covers full-card text/subtitle/padding/control selection, keyboard/disabled multi-selection, staff/salary drafts across steps, dirty Keep Editing/Discard, required preview gates, saving locks, duplicate prevention, server failure and late unmounted completion.
 
 The existing authenticated onboarding and synthetic salary browser adapters target the new page shell. Their type checks do not certify a browser run. Authenticated responsive/light/dark/keyboard visuals, native browser traversal/refresh/close handling, actual template new-tab return and live finalization remain separate acceptance checks; prior denied browser routes must not be retried via alternate ports or transports. No backend or live-account changes are needed for the component suites.
+
+## Guided salary setup
+
+Run `npx playwright test --config e2e/hr/salary-setup.config.ts` for the production salary page with loopback-only synthetic hooks.
+The journey verifies stage validation, retained drafts, preview invalidation, failed-save retry, confirmed-save metadata, mobile containment and the persistent footer.
+Screenshots stay under `.artifacts/salary-setup-browser`; these checks do not certify backend calculations or deployed persistence.
+Use `SalaryStructureBuilder.test.tsx`, `salary-editor-screen.test.tsx`, `salary-template-editor.test.tsx`, `payroll-settings.test.tsx` and `permissions.test.ts` for focused component and navigation coverage.

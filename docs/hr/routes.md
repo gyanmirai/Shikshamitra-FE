@@ -28,8 +28,8 @@ The route map is frontend integration truth, not backend product truth:
 | Run payroll               | `/hr/payroll/run-payroll`                                                                               | `HR.PayrollManagement.RunPayroll` plus lock, audit, and adjustment actions |
 | Payslip & statement settings | `/hr/payroll/setting/payslip-statement-settings` | Payroll Settings visibility plus `HR.PayrollManagement.GenerateSalarySlip.View`; editing uses `.Add` and server HR-wide scope. |
 | Payslips                  | `/hr/payroll/payslip-generation`                                                                        | `HR.PayrollManagement.GenerateSalarySlip`                                  |
-| Payroll compensation      | `/hr/payroll/structure/{employeeId}/edit`                                            | `HR.PayrollManagement.PayrollStructure` plus Compensation View or Manage   |
-| Payroll settings          | `/hr/payroll/setting/*`                                                                                 | `HR.PayrollManagement.Settings.*`                                          |
+| Staff salaries      | `/hr/payroll/structure/{employeeId}/edit`                                            | `HR.PayrollManagement.PayrollStructure` plus Compensation View or Manage   |
+| Payroll settings          | `/hr/payroll/setting`, `/hr/payroll/setting/*`                                                                                 | `HR.PayrollManagement.Settings.*`                                          |
 | Salary templates          | `/hr/payroll/setting/salary-templates`, `/hr/payroll/setting/salary-templates/new`, `/hr/payroll/setting/salary-templates/{templateId}` | `HR.PayrollManagement.Settings.SalaryTemplates.*`                          |
 | Professional tax          | `/hr/payroll/setting/professional-tax`                                                                  | `HR.PayrollManagement.Settings.ProfessionalTax.*`                          |
 | Statutory schemes         | `/hr/payroll/setting/statutory-schemes`                                                                 | `HR.PayrollManagement.Settings.StatutorySchemes.*`                         |
@@ -60,7 +60,7 @@ unsaved forms; never expose record IDs, raw route segments, or duplicate destina
 | Onboarding application | Staff Onboarding → Candidate application |
 | Payroll | Payroll Management (`/hr/payroll`) → Current page |
 | Salary template editor | Payroll Management → Salary Templates → Create / View / Edit |
-| Salary editor | Payroll Management → Payroll Structure (staff query retained) → Edit Salary |
+| Salary editor | Payroll Management → Staff Salaries (staff query retained) → Set Up Salary |
 | Attendance | Attendance Management (`/hr/attendance-dashboard`) → Current page |
 | Leave detail / balance / approvals | Leave Center (`/hr/leave-center`) → Current page |
 | Report templates and designer | Reports → Report templates → Create / Edit template |
@@ -68,7 +68,7 @@ unsaved forms; never expose record IDs, raw route segments, or duplicate destina
 | Performance setup | Performance Management → Settings → Setup & Readiness |
 | Performance root / overview | Performance Management as current-page text |
 
-Sidebar-only Settings and Policies & Rules groups have no landing screen, so they are omitted.
+Payroll Settings has a task landing page; sidebar-only Policies & Rules has no landing screen.
 Self-service Dashboard / My Leave breadcrumbs keep their existing non-HR behavior.
 Staff Directory uses exact active-path matching so onboarding does not select both entries.
 Staff Onboarding appears before Staff Directory; routes, grants, and shortcuts are unchanged.

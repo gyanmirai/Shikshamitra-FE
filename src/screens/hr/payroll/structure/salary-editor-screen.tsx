@@ -60,14 +60,14 @@ export default function SalaryEditorScreen({ employeeId }: { employeeId: string 
       }}
     >
       <CustomBreadcrumbs
-        heading="Edit Salary"
+        heading="Set Up Staff Salary"
         headingComponent="h1"
         layout="inline"
-        description="Set recurring salary and when it takes effect."
+        description="Choose salary details, confirm statutory treatment, then preview and save."
         links={[
           { name: 'Payroll Management', href: hrPaths.payroll.root },
-          { name: 'Payroll Structure', href: salaryStructureHref(employeeId) },
-          { name: 'Edit Salary' },
+          { name: 'Staff Salaries', href: salaryStructureHref(employeeId) },
+          { name: 'Set Up Salary' },
         ]}
         sx={{ flexShrink: 0 }}
       />
@@ -183,6 +183,7 @@ function SalaryEditorWorkspace({
         ) : (
           <Box display="grid" gap={2}>
             <SalaryStructureBuilder
+              guided
               formik={formik}
               initialMonth={initialMonth}
               onEffectiveMonthChange={setEffectiveMonth}
@@ -210,7 +211,10 @@ function SalaryEditorWorkspace({
         data-testid="salary-editor-footer"
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr) auto', sm: 'auto minmax(0, 1fr) auto auto' },
+          gridTemplateColumns: {
+            xs: 'minmax(0, 1fr) auto',
+            sm: 'auto minmax(0, 1fr) auto auto auto',
+          },
           alignItems: 'center',
           flexShrink: 0,
           gap: 1,
@@ -226,7 +230,7 @@ function SalaryEditorWorkspace({
           color="inherit"
           sx={{ gridColumn: 1, gridRow: 1, justifySelf: 'start' }}
         >
-          Back
+          Cancel
         </Button>
         <Box ref={setActionContainer} sx={{ display: 'contents' }} />
       </Card>

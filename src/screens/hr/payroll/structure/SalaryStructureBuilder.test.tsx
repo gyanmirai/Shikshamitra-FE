@@ -293,6 +293,41 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     mocks.updateEnrollment.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });
   });
 
+  it('guides setup without losing salary drafts and requires a current preview before saving', async () => {
+    const user = userEvent.setup();
+    renderBuilder({ guided: true, initialMonth: '2026-11' });
+    expect(
+      screen.queryByText(/Ask your HR administrator to review this setup/)
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '18000');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('heading', { name: 'Statutory Setup' })).toBeVisible();
+    expect(screen.queryByLabelText('Monthly cost to school (CTC)')).not.toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled());
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 18,000');
+    await user.clear(screen.getByLabelText('Monthly cost to school (CTC)'));
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '19000');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    expect(mocks.saveSalary).not.toHaveBeenCalled();
+  });
+
+  it('does not allow forward stage navigation to bypass missing salary details', async () => {
+    const user = userEvent.setup();
+    renderBuilder({ guided: true });
+    await user.click(screen.getByRole('button', { name: 'Review & Save' }));
+    expect(screen.getByRole('heading', { name: 'Salary Details' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Save salary' })).not.toBeInTheDocument();
+    expect(mocks.calculate).not.toHaveBeenCalled();
+  });
+
   it('requires both off reasons and a fresh preview, while allowing off-mode salary without registration numbers', async () => {
     const user = userEvent.setup();
     const onSalaryChange = vi.fn();
@@ -595,8 +630,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       </ThemeProvider>
     );
     await waitFor(() => expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11'));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Amount basis' }));
-    fireEvent.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Monthly salary/ }));
     fireEvent.change(screen.getByLabelText('Monthly salary'), { target: { value: '50000' } });
     await waitFor(() =>
       expect(screen.getByRole('radio', { name: 'Opt in to PF' })).toBeInTheDocument()
@@ -714,8 +748,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
   it('offers explicit, accessible PF opt-in and opt-out choices above the gross ceiling', async () => {
     const user = userEvent.setup();
     renderBuilder();
-    await user.click(screen.getByRole('combobox', { name: 'Amount basis' }));
-    await user.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    await user.click(screen.getByRole('radio', { name: /^Monthly salary/ }));
     await user.type(screen.getByLabelText('Monthly salary'), '30000');
     const choices = screen.getByRole('radiogroup', { name: 'PF enrollment' });
     expect(choices).toHaveAccessibleDescription(
@@ -751,8 +784,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
   it.each(['24999', '25000'])('requires PF automatically at gross salary %s', async (amount) => {
     const user = userEvent.setup();
     renderBuilder();
-    await user.click(screen.getByRole('combobox', { name: 'Amount basis' }));
-    await user.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    await user.click(screen.getByRole('radio', { name: /^Monthly salary/ }));
     await user.type(screen.getByLabelText('Monthly salary'), amount);
     expect(screen.getByText('Required by default up to ₹25,000 gross salary.')).toBeVisible();
     expect(screen.queryByRole('radio', { name: 'Opt out of PF' })).not.toBeInTheDocument();
@@ -771,8 +803,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
   it('requires an explicit choice when salary increases from mandatory to optional', async () => {
     const user = userEvent.setup();
     renderBuilder();
-    await user.click(screen.getByRole('combobox', { name: 'Amount basis' }));
-    await user.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    await user.click(screen.getByRole('radio', { name: /^Monthly salary/ }));
     const amount = screen.getByLabelText('Monthly salary');
     await user.type(amount, '25000');
     await user.clear(amount);
