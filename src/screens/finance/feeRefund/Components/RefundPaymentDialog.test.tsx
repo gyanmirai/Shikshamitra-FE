@@ -102,6 +102,18 @@ it('requires expense routing for cash and submits without a handover or verifica
   });
 });
 
+it('accepts stored None as valid expense routing without removing required bank validation', async () => {
+  const { onSubmit } = setup({ _defaultExpenseCategoryId: 'none' }, undefined, {
+    expenseCategories: [{ id: 'none', label: 'None' }],
+  });
+  expect(screen.getByText('None excludes this refund from Accounts expenses.')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+  expect(onSubmit).toHaveBeenCalledWith(
+    expect.objectContaining({ expenseCategoryId: 'none', bankAccountId: 'bank-1' })
+  );
+});
+
 it('requires a bank reference for a new non-cash payment', async () => {
   const { onSubmit } = setup({
     _refundMethod: 'BankTransfer',

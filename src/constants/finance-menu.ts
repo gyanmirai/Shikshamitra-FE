@@ -488,7 +488,7 @@ const financeModule = {
               icon: menuIconView('mdi:cash-check'),
             },
             {
-              title: 'Verify pending receipts',
+              title: 'Reconciliation',
               path: financePaths.accounts.reconciliation,
               _action: 'reconciliation',
               shortcutKey: 'Alt+F+3+1',

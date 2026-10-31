@@ -1,7 +1,7 @@
 import React from 'react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { financePermissions } from 'src/constants/finance-menu';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 
 import StudentConcessionTable from './StudentConcessionTable';
@@ -15,7 +15,10 @@ const state = vi.hoisted(() => ({
   draft: false,
   confirmWithUndo: vi.fn(),
   onViewConcession: vi.fn(),
+  approvalCheck: vi.fn(),
+  toastError: vi.fn(),
 }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: { error: state.toastError } }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('react-redux', () => ({
   useSelector: (select: any) =>
@@ -66,6 +69,9 @@ vi.mock('src/redux/finance/ConcessionManagement/concessionManagementApi', () => 
   useCancelConcessionRequestMutation: vi.fn(),
   useDeleteConcessionApplicationMutation: vi.fn(),
   useGetConcessionApprovalContextQuery: () => ({}),
+  useLazyGetConcessionApprovalContextQuery: () => [
+    (...args: unknown[]) => ({ unwrap: () => state.approvalCheck(...args) }),
+  ],
   useApproveConcessionRequestMutation: () => [vi.fn(), {}],
   usePreviewConcessionApprovalMutation: () => [vi.fn(), {}],
 }));
@@ -160,7 +166,7 @@ vi.mock('src/components/customizabaleTable', () => ({
             {rowAction.label}
           </button>
         )}
-        {props.columns.find((column: any) => column.id === 'actions').render(null, row)}
+        {props.columns.find((column: any) => column.id === 'actions')?.render(null, row)}
         {props.errorContent}
       </>
     );
@@ -185,6 +191,8 @@ describe('Concessions table query and actions', () => {
     state.draft = false;
     state.confirmWithUndo.mockClear();
     state.onViewConcession.mockClear();
+    state.approvalCheck.mockReset().mockResolvedValue({});
+    state.toastError.mockClear();
   });
   it('passes server paging, filters and sort together and resets to the first page', () => {
     setup();
@@ -285,6 +293,43 @@ describe('Concessions table query and actions', () => {
     setup();
     expect(screen.getByRole('button', { name: 'Approve Asha Patel (1001)' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Reject Asha Patel (1001)' })).toBeEnabled();
+  });
+  it('shows an existing-benefit toast without opening the approval dialog', async () => {
+    state.approvalCheck.mockResolvedValue({
+      benefitBlocker: { code: 'Finance:Concession:010034', message: 'Finance:Concession:010034' },
+    });
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Approve Asha Patel (1001)' }));
+    await waitFor(() =>
+      expect(state.toastError).toHaveBeenCalledWith({
+        message: expect.stringContaining('already has an approved benefit'),
+      })
+    );
+    expect(
+      screen.queryByRole('dialog', { name: 'Approve concession request?' })
+    ).not.toBeInTheDocument();
+  });
+  it('opens approval only after a fresh successful eligibility check', async () => {
+    let allow!: (context: object) => void;
+    state.approvalCheck.mockReturnValue(
+      new Promise((resolve) => {
+        allow = resolve;
+      })
+    );
+    setup();
+    const approve = screen.getByRole('button', { name: 'Approve Asha Patel (1001)' });
+    fireEvent.click(approve);
+    expect(
+      screen.queryByRole('dialog', { name: 'Approve concession request?' })
+    ).not.toBeInTheDocument();
+    expect(approve).toBeDisabled();
+    fireEvent.click(approve);
+    expect(state.approvalCheck).toHaveBeenCalledTimes(1);
+    expect(state.approvalCheck).toHaveBeenCalledWith('request', false);
+    allow({});
+    expect(
+      await screen.findByRole('dialog', { name: 'Approve concession request?' })
+    ).toBeVisible();
   });
   it('shows a query failure as an error with retry', () => {
     state.error = true;

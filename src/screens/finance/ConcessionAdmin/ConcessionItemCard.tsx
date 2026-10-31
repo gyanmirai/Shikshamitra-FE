@@ -30,6 +30,8 @@ interface IConcessionCardProps {
   item: IConcessionRequestItem;
   onEdit: (item: IConcessionRequestItem) => void;
   onApprove: (item: IConcessionRequestItem) => void;
+  approvalChecking?: boolean;
+  approvalLoading?: boolean;
   onReject: (item: IConcessionRequestItem) => void;
   onOpenDocs: (item: IConcessionRequestItem) => void;
   onDelete: (item: IConcessionRequestItem) => void;
@@ -39,6 +41,8 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   item,
   onEdit,
   onApprove,
+  approvalChecking = false,
+  approvalLoading = false,
   onReject,
   onOpenDocs,
   onDelete,
@@ -91,6 +95,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   // Approve should be disabled if any required document is not uploaded
   const hasRequestedAmount = (item.totalRequestedAmount ?? item.totalAmount) > 0;
   const approveDisabled =
+    approvalChecking ||
     !serverAllows('approve') ||
     !allMandatoryDocsUploaded ||
     !decisionAllowed ||
@@ -120,6 +125,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
       icon: GlobalIcons.approveDecision,
       color: 'success.main',
       disabled: approveDisabled,
+      loading: approvalLoading,
       tooltip:
         !decisionAllowed || !serverAllows('approve')
           ? decisionUnavailableReason

@@ -19,6 +19,9 @@ export interface IFeeStructureData {
   status?: string;
   name?: string;
   isFeeStructureAssigned?: boolean;
+  isActive?: boolean;
+  assignmentState?: 'Unassigned' | 'Selected' | 'Prepared' | 'Assigned' | 'NeedsAttention';
+  assignmentSource?: 'Admission' | 'Finance';
 }
 
 export interface IFeeStructureTableProps {

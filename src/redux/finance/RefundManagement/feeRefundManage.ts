@@ -286,6 +286,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
         financeModuleType.expenseDetails,
         financeModuleType.incomeTracking,
       ],
@@ -323,6 +324,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
         financeModuleType.expenseDetails,
         financeModuleType.incomeTracking,
       ],
@@ -334,7 +336,11 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body: { notes },
       }),
-      invalidatesTags: [financeModuleType.feeRefund],
+      invalidatesTags: [
+        financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
+      ],
     }),
 
     cancelFeeRefund: builder.mutation<FeeRefundRequestDto, { id: string; notes?: string }>({
@@ -343,7 +349,11 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body: { notes },
       }),
-      invalidatesTags: [financeModuleType.feeRefund],
+      invalidatesTags: [
+        financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
+      ],
     }),
 
     processFeeRefund: builder.mutation<
@@ -354,6 +364,8 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [
         financeModuleType.charges,
         financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
         financeModuleType.accountPosting,
       ],
     }),
@@ -370,6 +382,8 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [
         financeModuleType.charges,
         financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
         financeModuleType.accountPosting,
       ],
     }),
@@ -451,6 +465,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         financeModuleType.charges,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
         financeModuleType.expenseDetails,
         financeModuleType.incomeTracking,
       ],

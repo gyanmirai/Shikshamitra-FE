@@ -323,7 +323,7 @@ const FinanceReconciliation = () => {
         ]}
       />
       <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, mb: 1 }}>
-        <Box display="flex" justifyContent="space-between" sx={{ flexDirection: { xs: 'column', lg: 'row' }, minWidth: 0 }}>
+        <Box display="flex" gap={2} justifyContent="space-between" sx={{ flexDirection: { xs: 'column', lg: 'row' }, minWidth: 0 }}>
           <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
             <CustomSelect
               label="Month"

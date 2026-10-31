@@ -231,14 +231,6 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
                   />
                   <DetailField label="Board" value={displayStudent.board} />
                   <DetailField label="Medium" value={displayStudent.medium} />
-                  <DetailField
-                    label="Total paid fees"
-                    value={formatNumber(displayStudent.totalPaidFees, 'INR')}
-                  />
-                  <DetailField
-                    label="Total pending fees"
-                    value={formatNumber(displayStudent.totalPendingFees, 'INR')}
-                  />
                 </DetailGrid>
               </DetailSection>
 
@@ -324,11 +316,11 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
                 <DetailSection
                   title="Fee Head-Wise Refund Details"
                   icon={GlobalIcons.documentIcon}
-                  helpText="Paid and refunded amounts by fee head and installment."
+                  helpText="Only fee heads and installments included in this refund request, with their recorded refund amounts."
                 >
                   <RefundFeeHeadViewTable
                     data={dto.feeHeads.map((fh): IRefundFeeHeadItem => ({
-                      feeHeadId: fh.feeHeadId ?? 'paid-charges',
+                      feeHeadId: fh.feeHeadId,
                       feeHeadName: fh.feeHeadName,
                       totalPaid: fh.totalPaid,
                       totalRefunded: fh.totalRefunded,
@@ -424,18 +416,20 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
         >
           Close
         </Button>
-        {availableActions.includes('reject') && (
-          <Button
-            variant="soft"
-            color="error"
-            onClick={onReject}
-            size="small"
-            disabled={loading || isError}
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          >
-            Reject
-          </Button>
-        )}
+        {availableActions.includes('reject') &&
+          (status === FeeRefundStatusType.Pending ||
+            status === FeeRefundStatusType.UnderReview) && (
+            <Button
+              variant="soft"
+              color="error"
+              onClick={onReject}
+              size="small"
+              disabled={loading || isError}
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Reject
+            </Button>
+          )}
         {availableActions.includes('approve') && (
           <Button
             variant="soft"

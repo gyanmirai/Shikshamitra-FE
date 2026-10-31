@@ -2,29 +2,13 @@
 
 import type { DialogProps } from '@mui/material';
 
-import { Close } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { InfoItem } from 'src/components/info-item';
-import { Scrollbar } from 'src/components/scrollbar';
-import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Stack, Button, Typography, DialogActions, CircularProgress } from '@mui/material';
+import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
-import {
-  Box,
-  Card,
-  Grid,
-  Button,
-  Dialog,
-  Divider,
-  Typography,
-  IconButton,
-  DialogTitle,
-  DialogActions,
-  DialogContent,
-  CircularProgress,
-} from '@mui/material';
 
 interface ReconciliationReceiptData {
   id: string;
@@ -57,8 +41,6 @@ interface ReconciliationReceiptDialogProps extends Omit<DialogProps, 'open' | 'o
   onOpenInNewTab?: () => void;
 }
 
-// Helper component for receipt info row
-
 const ReconciliationReceiptDialog = ({
   open,
   onClose,
@@ -69,215 +51,126 @@ const ReconciliationReceiptDialog = ({
   onOpenInNewTab,
   ...props
 }: ReconciliationReceiptDialogProps) => {
-  const theme = useTheme();
-
   if (!open) return null;
 
+  const pdfActionsDisabled = !receiptData || isLoading || !receiptBlobUrl;
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth {...props}>
-      <DialogTitle>
-        <Box display="flex" justifyContent="space-between" alignItems="center" gap={1}>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Typography variant="h6" fontWeight={700}>
-              Receipt Details
-            </Typography>
-            <CustomTooltip title="View or download the receipt for this payment record.">
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
+    <CustomDialog
+      open={open}
+      handleClose={onClose}
+      title="Receipt Details"
+      titleInfo="View or download the receipt for this payment record."
+      maxWidth="md"
+      hasForm={false}
+      guardUnsavedChanges={false}
+      {...props}
+    >
+      <DialogScrollContent>
+        {!receiptData ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress aria-label="Loading receipt details" />
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton
-              aria-label="close"
-              onClick={() => onClose()}
-              sx={{
-                transition: 'all 0.2s',
-                '&:hover': {
-                  backgroundColor: theme.palette.action.hover,
-                  transform: 'scale(1.1)',
-                },
-              }}
+        ) : (
+          <Stack spacing={2}>
+            <DetailSection
+              title="Receipt Information"
+              icon={GlobalIcons.receiptIcon}
+              helpText="The receipt number, date and student details recorded for this payment."
             >
-              <Close sx={{ fontSize: 20 }} />
-            </IconButton>
-          </Box>
-        </Box>
-      </DialogTitle>
-      <Divider />
-      <Scrollbar sx={{ maxHeight: 'calc(100dvh - 260px)' }}>
-        <DialogContent sx={{ p: 2 }}>
-          {!receiptData ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {/* Receipt Information Card */}
-              <Card sx={{ p: 3, boxShadow: 'var(--shadows-10)', borderRadius: 2 }}>
-                <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
-                  Receipt Information
-                </Typography>
-                <Grid container spacing={3}>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:receipt" />}
-                      label="Receipt Number"
-                      value={receiptData.finalReceiptNumber || receiptData.receiptNumber}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:calendar" />}
-                      label="Receipt Date"
-                      value={receiptData.receiptDate}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:account" />}
-                      label="Student Name"
-                      value={receiptData.studentName}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:identifier" />}
-                      label="GR Number"
-                      value={String(receiptData.grNumber)}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:numeric" />}
-                      label="Roll Number"
-                      value={String(receiptData.rollNumber)}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:book" />}
-                      label="Class"
-                      value={receiptData.class}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:group" />}
-                      label="Division"
-                      value={receiptData.division}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:school" />}
-                      label="Board"
-                      value={receiptData.board}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:language" />}
-                      label="Medium"
-                      value={receiptData.medium}
-                    />
-                  </Grid>
-                </Grid>
-              </Card>
+              <DetailGrid>
+                <DetailField
+                  label="Receipt number"
+                  value={receiptData.finalReceiptNumber || receiptData.receiptNumber}
+                />
+                <DetailField label="Receipt date" value={receiptData.receiptDate} />
+                <DetailField label="Student name" value={receiptData.studentName} />
+                <DetailField label="GR number" value={String(receiptData.grNumber)} />
+                <DetailField label="Roll number" value={String(receiptData.rollNumber)} />
+                <DetailField label="Class" value={receiptData.class} />
+                <DetailField label="Division" value={receiptData.division} />
+                <DetailField label="Board" value={receiptData.board} />
+                <DetailField label="Medium" value={receiptData.medium} />
+              </DetailGrid>
+            </DetailSection>
 
-              {/* Payment Details Card */}
-              <Card sx={{ p: 3, boxShadow: 'var(--shadows-10)', borderRadius: 2 }}>
-                <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
-                  Payment Details
-                </Typography>
-                <Grid container spacing={3}>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:credit-card" />}
-                      label="Payment Method"
-                      value={receiptData.paymentMethodLabel}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:cash" />}
-                      label="Amount"
-                      value={formatNumber(receiptData.amount, 'INR')}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoItem
-                      icon={<Iconify icon="mdi:check-circle" />}
-                      label="Status"
-                      value={receiptData.statusLabel}
-                    />
-                  </Grid>
-                </Grid>
-              </Card>
+            <DetailSection
+              title="Payment Details"
+              icon={GlobalIcons.paymentSummary}
+              helpText="The recorded payment method, receipt amount in INR and verification status."
+            >
+              <DetailGrid>
+                <DetailField label="Payment method" value={receiptData.paymentMethodLabel} />
+                <DetailField label="Amount" value={formatNumber(receiptData.amount, 'INR')} />
+                <DetailField label="Status" value={receiptData.statusLabel} />
+              </DetailGrid>
+            </DetailSection>
 
-              {/* Remarks (if any) */}
-              {receiptData.remarks && (
-                <Card sx={{ p: 2, bgcolor: alpha(theme.palette.warning.main, 0.08) }}>
-                  <Typography variant="subtitle2" fontWeight={700} mb={1}>
-                    Remarks
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {receiptData.remarks}
-                  </Typography>
-                </Card>
+            {receiptData.remarks && (
+              <DetailSection
+                title="Remarks"
+                icon={GlobalIcons.notebook}
+                helpText="Remarks recorded for this payment verification."
+              >
+                <Typography
+                  variant="body2"
+                  sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
+                >
+                  {receiptData.remarks}
+                </Typography>
+              </DetailSection>
+            )}
+
+            <DetailSection
+              title="Receipt PDF"
+              icon={GlobalIcons.pdf}
+              helpText="Preview the receipt document. Use the footer actions to open or download it."
+            >
+              {isLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                  <CircularProgress size={40} aria-label="Loading receipt PDF" />
+                </Box>
+              ) : receiptBlobUrl ? (
+                <PdfPreview url={receiptBlobUrl} title="Receipt" showPageText={false} />
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                  PDF preview not available
+                </Typography>
               )}
+            </DetailSection>
+          </Stack>
+        )}
+      </DialogScrollContent>
 
-              {/* Receipt PDF Preview */}
-              <Card sx={{ p: 2 }}>
-                <Typography variant="subtitle2" fontWeight={700} mb={1}>
-                  Receipt PDF
-                </Typography>
-                {isLoading ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                    <CircularProgress size={40} />
-                  </Box>
-                ) : receiptBlobUrl ? (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <PdfPreview url={receiptBlobUrl} title="Receipt" />
-                    <Box display="flex" gap={1}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<Iconify icon="mdi:open-in-new" />}
-                        onClick={onOpenInNewTab}
-                      >
-                        Open in New Tab
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<Iconify icon="mdi:download" />}
-                        onClick={onDownload}
-                      >
-                        Download
-                      </Button>
-                    </Box>
-                  </Box>
-                ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                    PDF preview not available
-                  </Typography>
-                )}
-              </Card>
-            </Box>
-          )}
-        </DialogContent>
-      </Scrollbar>
-
-      <DialogActions sx={{ borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.45)}` }}>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)', flexWrap: 'wrap', rowGap: 1 }}>
+        <Button
+          variant="outlined"
+          size="small"
+          disabled={pdfActionsDisabled || !onOpenInNewTab}
+          startIcon={<Iconify icon="mdi:open-in-new" width={18} />}
+          onClick={onOpenInNewTab}
+        >
+          Open in new tab
+        </Button>
+        <Button
+          variant="outlined"
+          size="small"
+          disabled={pdfActionsDisabled || !onDownload}
+          startIcon={<Iconify icon={GlobalIcons.download} width={18} />}
+          onClick={onDownload}
+        >
+          Download
+        </Button>
         <Button
           variant="outlined"
           size="small"
           onClick={onClose}
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
         >
-          Cancel
+          Close
         </Button>
       </DialogActions>
-    </Dialog>
+    </CustomDialog>
   );
 };
 

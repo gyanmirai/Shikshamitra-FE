@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-30
+updated_on: 2026-10-31
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,6 +16,24 @@ The backend [security standard](https://github.com/gyanmirai/Shikshamitra-BE/blo
 Existing backend operations that share one permission identifier remain one capability until a separately approved domain change.
 
 # Trace Finance frontend workflows
+
+## Admission fee handoff and assignment
+
+The assignment list distinguishes pending Finance selection, prepared admission fees, assigned fees
+and issues needing review. Assigned rows open View; prepared rows open their saved review and an
+authorized Complete handoff action. Both are excluded from new bulk assignment.
+
+`AssignmentWorkflow` queries current student/year contexts before mounting the form, including when
+the row's assigned flag is stale. It prefills confirmed admission selections once without replacing
+edits on background refresh. Fees & dates shows verified From admission periods and policy versions;
+one-time/full-charge treatment and authorized custom/service sources remain available as configured.
+Bulk requests retain each student's own joining date, source reference and confirmed optional selections. Different confirmed
+structures require separate groups. Review displays saved proration evidence and current balances.
+
+Preparation completion previews and commits through the existing client, then refreshes context and
+assignment/Admission/dues cache tags. It does not run another new-assignment wizard. The
+[backend workflow](../../../Shikshamitra-BE/docs/modules/finance/workflows.md#admission-to-finance-assignment)
+owns source verification, calculations, uniqueness and history preservation.
 
 ## Loading create and edit forms
 
@@ -58,9 +76,10 @@ the table owns record scrolling while its header, controls and footer remain usa
 
 ## Required fee setup selections and names
 
-Only Fee Category's fee-head Income Category dropdown and Refund Policy's Expense Category
-dropdown offer None, always first. Their routing APIs return its persisted category ID; general
-category lists and other routing lookups exclude it. None stays selected after blur and passes
+All live Finance Income and Expense Category dropdowns offer None first, using its persisted
+category ID from the owning routing lookup. General category administration lists exclude it.
+None excludes the corresponding amount from Accounts income/expense rows and totals while
+retaining source/payment evidence. None stays selected after blur and passes
 required validation. An unselected field remains required. The frontend does not invent an empty-ID None.
 
 Payment Terms trim names before validation, generated-code derivation and submission. Duplicate
@@ -70,6 +89,13 @@ response stays attached to the name field while the user makes whitespace/case-o
 a genuinely different name clears that conflict without losing the installment schedule.
 
 ## Refund request form presentation
+
+Refund detail drawers show only installments carrying a refund in the selected request, grouped under their fee heads.
+Shared accordions and embedded tables display Installment, Paid amount and Refund amount; paid values come from the selected installment response, and the summary uses the request refund amounts.
+Student-wide paid/refunded totals and due-collection statuses are excluded from this breakdown.
+Reject is offered only before approval, including when an older response still contains an approved Reject action hint.
+The refund worklist omits the Actions column on Completed, Rejected and Failed tabs; row opening still provides the refund detail view.
+The [backend request-detail contract](../../../Shikshamitra-BE/docs/modules/finance/references/fee-refund-payout-workflow.md#edit-a-pending-request) owns the saved amount semantics.
 
 Pending refund rows expose Edit only when the server returns the `edit` action.
 Editing opens the existing request form with its saved allocations, partial amounts, beneficiary details and reason.
@@ -199,6 +225,12 @@ no leading decorative icon. Saved requests in the Pending bucket can be decided 
 submission action when the server permits it. Decisions still require server eligibility,
 independent-checker identity and the existing mandatory-document approval checks.
 Final requests do not offer Approve or Reject.
+
+Approve checks a fresh server approval context before opening the student approval screen or
+the management-table confirmation. A benefit blocker or context error keeps the current view
+open and shows the shared readable error toast. Approve controls are disabled during this check;
+only the selected request shows progress. Successful checks populate the existing context cache
+for the review screen. Preview, confirmation and backend eligibility enforcement still run.
 
 View Concession shows six student facts in one row at desktop container widths: student name,
 GR number, roll number, class, division, and combined Board / Medium. Board and medium names
@@ -360,6 +392,11 @@ Fee-line status and overdue classification come from the backend; see the
 [Finance product rules](../../../Shikshamitra-BE/docs/modules/finance/product.md).
 
 ## Fee Collection selection and receiving bank
+
+Fee details label completed installment payouts **Refunded to date**, across all refund
+requests. A positive pending amount appears separately as **Refund awaiting payout**, with
+the server's refund reference/reason when available. Zero or absent pending values omit that
+field. Pending payout context does not change Paid, Concession or outstanding amounts.
 
 Collection Policy's **Automatic Payment Priority** section selects **Installment first (earliest due)**
 or **Fee head first (A–Z)**. The latter clears each head's earliest dues before the next head.
@@ -870,3 +907,7 @@ Its legacy first-100 list remains a separate limitation; the route is absent fro
 Audit Trail uses one authoritative search value for the field and keyword chip. Typing updates those controls immediately and waits 400 ms at the API query boundary. Reset and explicit clears commit the cleared/default query immediately and cancel pending search callbacks. Reset preserves initial student/correlation/deep-link filter defaults; re-entering a prior keyword performs a new filtered query.
 
 Direct Finance routes: Fee Head and Receipt Book remain implemented behind their existing exact View guards although their menu children are commented out. Their header criteria use server results before count/page. The direct Adjustments list controls server paging, global text and header criteria instead of loading the first 100 rows for local filtering. Student GR and roll identifiers remain searchable as text; the existing wire status mapping and financial actions remain intact.
+
+## Collection group checkboxes
+
+A fully settled fee or charge group shows checked, disabled group and table-header checkboxes, matching its checked, disabled rows. Groups with collectible balances continue to derive selected and partial states from the collectible rows only. Bulk selection never adds settled items to the payment allocation.

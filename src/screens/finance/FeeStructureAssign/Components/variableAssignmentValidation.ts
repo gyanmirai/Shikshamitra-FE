@@ -5,6 +5,26 @@ import type {
 
 import { amountError } from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
 
+export function assignmentFeeSelectionError(
+  candidate: AssignmentCandidate,
+  request: AssignmentRequest
+): string | undefined {
+  return candidate.heads.some(
+    (head) => !head.isOptional || request.selectedOptionalFeeHeadIds.includes(head.feeHeadId)
+  )
+    ? undefined
+    : 'Select at least one fee before assigning.';
+}
+
+export function assignmentInputError(
+  candidate: AssignmentCandidate,
+  request: AssignmentRequest
+): string | undefined {
+  return (
+    assignmentFeeSelectionError(candidate, request) || variableAssignmentError(candidate, request)
+  );
+}
+
 export function variableAssignmentError(
   candidate: AssignmentCandidate,
   request: AssignmentRequest

@@ -9,7 +9,7 @@ import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { ReconciliationStatusType } from 'src/enums/reconciliation-status-type';
-import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup, waitFor, fireEvent, within } from '@testing-library/react';
 
 import FinanceReconciliation from './index';
 import WalletTable from './Component/WalletTable';
@@ -82,4 +82,19 @@ it.each([['OnlineGateway', 7, OnlineGatewayTable], ['Wallet', 8, WalletTable]] a
   await screen.findByText('1–10 of 76');
   expect(screen.queryAllByRole('button', { name: /^Filter / })).toHaveLength(0);
   expect(listRequests().at(-1)?.params.filters).toBeUndefined();
+}, 120000);
+
+it.each([["Cheque", 1], ["Demand Draft", 2], ["Bank Transfer", 3], ["Credit Card", 4], ["Debit Card", 5], ["UPI", 6]] as const)("%s clears empty-result search through the real table", async (label, method) => {
+ show(<FinanceReconciliation />);
+ fireEvent.change(screen.getByLabelText("Month"), { target: { value: "2026-10" } });
+ fireEvent.click(screen.getByRole("tab", { name: new RegExp(`^${label}`) }));
+ await waitFor(() => expect(listRequests().at(-1)?.params.paymentMethod).toBe(method));
+ await screen.findByText("1–10 of 76");
+ fireEvent.change(screen.getByRole("textbox", { name: "Search table" }), { target: { value: "zz-no-match" } });
+ await screen.findByText(/No results found for/);
+ const table = screen.getByRole("table", { name: "Table View table" });
+ fireEvent.click(within(table).getByRole("button", { name: "Clear search", exact: true }));
+ await waitFor(() => expect(screen.getByRole("textbox", { name: "Search table" })).toHaveValue(""));
+ await waitFor(() => expect(listRequests().at(-1)?.params.search).toBeUndefined());
+ await screen.findByText("1–10 of 76");
 }, 120000);

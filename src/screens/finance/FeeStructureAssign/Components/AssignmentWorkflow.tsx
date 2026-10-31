@@ -1,31 +1,33 @@
 'use client';
 
-import { AssignmentFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
-
 import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type { TooltipProps } from '@mui/material/Tooltip';
 import type {
   AssignmentRequest,
+  AssignmentContext,
+  AssignmentCandidate,
   AssignmentBulkResult,
   AssignmentBulkPreview,
 } from 'src/redux/finance/studentFeeAssignment';
 
 import * as Yup from 'yup';
 import { Label } from 'src/components/label';
+import { fDate } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
+import { DetailField } from 'src/components/detail-view';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailField } from 'src/components/detail-view';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { AssignmentFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
 import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
 import { isFinancePrerequisiteMissing } from 'src/screens/finance/components/financePrerequisites';
 import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
@@ -46,6 +48,7 @@ import {
   assignmentError,
   assignmentErrorCode,
   useAssignmentDetailsQuery,
+  useAssignmentContextsQuery,
   useAssignmentCommitMutation,
   useAssignmentCandidatesQuery,
   useAssignmentPreviewMutation,
@@ -57,9 +60,15 @@ import AssignmentReview from './AssignmentReview';
 import AssignmentPolicies from './AssignmentPolicies';
 import AssignedPolicyEditor from './AssignedPolicyEditor';
 import AssignmentStudentInputs from './AssignmentStudentInputs';
-import { variableAssignmentError } from './variableAssignmentValidation';
+import PreparedAssignmentHandoff from './PreparedAssignmentHandoff';
 import { assignmentCurrencyTotals } from './assignmentReviewPresentation';
 import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
+import { assignmentInputError, assignmentFeeSelectionError } from './variableAssignmentValidation';
+import {
+  mergeAssignmentInputs,
+  admissionServicePeriods,
+  admissionAssignmentRequest,
+} from './assignmentAdmissionContext';
 
 import type { IFeeStructureData } from './type';
 
@@ -129,20 +138,197 @@ function AssignmentAmountValidity({
   return null;
 }
 
-export default function AssignmentWorkflow({
-  students,
-  academicYearId,
-  academicYearName,
-  editAssignedPolicies = false,
-  onClose,
-  onBusyChange,
-}: {
+type AssignmentWorkflowProps = {
   students: Student[];
   academicYearId: string;
   academicYearName?: string;
   editAssignedPolicies?: boolean;
   onClose: () => void;
   onBusyChange?: (busy: boolean) => void;
+  onContextResolved?: (status: AssignmentContext['status']) => void;
+};
+
+export default function AssignmentWorkflow({
+  students: selectedStudents,
+  academicYearId,
+  onContextResolved,
+  onBusyChange,
+  ...editorProps
+}: AssignmentWorkflowProps) {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canAssign = hasGrantedPermission(
+    permissions,
+    `${financePermissions.fees.structureAssign}.Add`
+  );
+  const contextQuery = useAssignmentContextsQuery(
+    {
+      academicYearId,
+      studentIds: selectedStudents.map((student) => student.studentId),
+    },
+    { skip: !academicYearId || selectedStudents.length === 0, refetchOnMountOrArgChange: true }
+  );
+  const contexts =
+    contextQuery.currentData ?? (contextQuery.isFetching ? undefined : contextQuery.data);
+  const initialBatchContexts = useRef<AssignmentContext[] | undefined>(undefined);
+  if (
+    selectedStudents.length > 1 &&
+    contexts &&
+    !contextQuery.isFetching &&
+    !initialBatchContexts.current
+  )
+    initialBatchContexts.current = contexts;
+  const single =
+    selectedStudents.length === 1
+      ? contexts?.find((item) => item.studentId === selectedStudents[0].studentId)
+      : undefined;
+  useEffect(() => {
+    if (single?.status) onContextResolved?.(single.status);
+  }, [single?.status, onContextResolved]);
+  if (
+    ((contextQuery.isLoading || contextQuery.isFetching) && !contexts) ||
+    (selectedStudents.length > 1 && contextQuery.isFetching && !initialBatchContexts.current)
+  )
+    return (
+      <Box sx={{ p: 2 }} role="status" aria-label="Loading assignment context">
+        <AssignmentFormSkeleton />
+      </Box>
+    );
+  if (contextQuery.isError)
+    return (
+      <Alert
+        severity="error"
+        sx={{ m: 2 }}
+        action={<Button onClick={() => contextQuery.refetch()}>Retry</Button>}
+      >
+        Assignment status could not be verified. Refresh before assigning fees.
+      </Alert>
+    );
+  if (single?.status === 'Prepared')
+    return (
+      <PreparedAssignmentHandoff
+        context={single}
+        canAssign={canAssign && selectedStudents[0]?.isActive !== false}
+        onSaved={() => contextQuery.refetch()}
+        onBusyChange={onBusyChange}
+      />
+    );
+  if (single?.status === 'NeedsAttention')
+    return (
+      <Alert
+        severity="warning"
+        sx={{ m: 2 }}
+        action={<Button onClick={() => contextQuery.refetch()}>Refresh</Button>}
+      >
+        {single.blocker || 'Review this student’s admission facts before assigning fees.'}
+      </Alert>
+    );
+  const excluded =
+    selectedStudents.length > 1
+      ? selectedStudents.filter((student) =>
+          initialBatchContexts.current?.some(
+            (item) =>
+              item.studentId === student.studentId &&
+              ['Assigned', 'Prepared', 'NeedsAttention'].includes(item.status)
+          )
+        )
+      : [];
+  const students =
+    selectedStudents.length === 1 && single?.status === 'Assigned'
+      ? [{ ...selectedStudents[0], isFeeStructureAssigned: true }]
+      : selectedStudents.filter((student) => !excluded.includes(student));
+  const confirmedStructures = students.flatMap((student) => {
+    const context = contexts?.find((item) => item.studentId === student.studentId);
+    return context?.structureId ? [context.structureId] : [];
+  });
+  if (new Set(confirmedStructures).size > 1)
+    return (
+      <Alert severity="info" sx={{ m: 2 }}>
+        These students have different confirmed admission structures. Review them individually or
+        select students with the same structure.
+      </Alert>
+    );
+  return (
+    <Stack sx={{ flex: 1, minHeight: 0 }}>
+      {excluded.length > 0 && (
+        <Alert severity="info" sx={{ m: 2 }}>
+          {excluded.length} student(s) already have an assignment, prepared fees, or an issue
+          requiring individual review. They are excluded from this batch.
+        </Alert>
+      )}
+      {students.length > 0 ? (
+        <AssignmentEditor
+          {...editorProps}
+          academicYearId={academicYearId}
+          onBusyChange={onBusyChange}
+          students={students}
+          contexts={contexts ?? []}
+          onAssignedConflict={() => contextQuery.refetch()}
+        />
+      ) : (
+        <Alert severity="info" sx={{ m: 2 }}>
+          No students in this selection need a new fee assignment.
+        </Alert>
+      )}
+    </Stack>
+  );
+}
+
+function AdmissionDefaults({
+  formik,
+  contexts,
+  students,
+  candidates,
+  academicYearId,
+}: {
+  formik: FormikProps<AssignmentValues>;
+  contexts: AssignmentContext[];
+  students: Student[];
+  candidates?: AssignmentCandidate[];
+  academicYearId: string;
+}) {
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (initialized.current || formik.values.structureId || !candidates?.length) return;
+    const selected = students
+      .map(
+        (student) =>
+          contexts.find((context) => context.studentId === student.studentId)?.structureId
+      )
+      .filter(Boolean);
+    if (!selected[0] || !selected.every((id) => id === selected[0])) return;
+    const candidate = candidates.find((item) => item.id === selected[0]);
+    if (!candidate) return;
+    initialized.current = true;
+    formik.setValues(
+      {
+        structureId: candidate.id,
+        requests: students.map((student) =>
+          admissionAssignmentRequest(
+            student.studentId,
+            academicYearId,
+            candidate,
+            contexts.find((context) => context.studentId === student.studentId)
+          )
+        ),
+      },
+      false
+    );
+  }, [academicYearId, candidates, contexts, formik, students]);
+  return null;
+}
+
+function AssignmentEditor({
+  students,
+  academicYearId,
+  academicYearName,
+  editAssignedPolicies = false,
+  onClose,
+  onBusyChange,
+  contexts,
+  onAssignedConflict,
+}: Omit<AssignmentWorkflowProps, 'onContextResolved'> & {
+  contexts: AssignmentContext[];
+  onAssignedConflict: () => void;
 }) {
   const { permissions } = useSelector((state: RootState) => state.auth);
   const currentYear = useSelector((state: RootState) => state.globalState?.currentYear);
@@ -221,7 +407,11 @@ export default function AssignmentWorkflow({
     },
     []
   );
-  const committedIds = new Set(outcomes?.results.filter((r) => r.result).map((r) => r.studentId));
+  const committedIds = new Set(
+    outcomes?.results
+      .filter((r) => r.result || r.outcome === 'AlreadyAssigned')
+      .map((r) => r.studentId)
+  );
   const complete = committedIds.size === students.length;
   const selectedPreviewItems =
     preview?.results.filter((r) => r.preview && !committedIds.has(r.studentId)) ?? [];
@@ -290,7 +480,7 @@ export default function AssignmentWorkflow({
       candidate &&
       items.find(
         (request) =>
-          variableAssignmentError(candidate, request) ||
+          assignmentInputError(candidate, request) ||
           assignmentServiceDateError(candidate, request, yearBounds)
       );
     if (invalidRequest && candidate) {
@@ -301,7 +491,7 @@ export default function AssignmentWorkflow({
         'Student';
       setError(
         `${studentName}: ${
-          variableAssignmentError(candidate, invalidRequest) ||
+          assignmentInputError(candidate, invalidRequest) ||
           assignmentServiceDateError(candidate, invalidRequest, yearBounds)
         }`
       );
@@ -309,7 +499,7 @@ export default function AssignmentWorkflow({
       return;
     }
     try {
-      const result =
+      const result: AssignmentBulkPreview =
         students.length === 1
           ? {
               results: [
@@ -318,6 +508,31 @@ export default function AssignmentWorkflow({
             }
           : await previewBulk({ items }).unwrap();
       if (ticket === generation.current) {
+        const alreadyAssigned = result.results.filter((item) =>
+          item.errorCode?.endsWith('AlreadyAssigned')
+        );
+        if (alreadyAssigned.length) {
+          onAssignedConflict();
+          setOutcomes((previous) => {
+            const existing = previous?.results ?? [];
+            const knownIds = new Set(existing.map((item) => item.studentId));
+            const additions = alreadyAssigned
+              .filter((item) => !knownIds.has(item.studentId))
+              .map((item) => ({
+                studentId: item.studentId,
+                outcome: 'AlreadyAssigned',
+                errorMessage: 'Already assigned. View the saved assignment in Finance.',
+              }));
+            return {
+              successCount: previous?.successCount ?? 0,
+              alreadyAssignedCount: (previous?.alreadyAssignedCount ?? 0) + additions.length,
+              skippedCount: previous?.skippedCount ?? 0,
+              failedCount: previous?.failedCount ?? 0,
+              results: [...existing, ...additions],
+            };
+          });
+          if (alreadyAssigned.length === result.results.length) setShowResults(true);
+        }
         reviewedValues.current = JSON.stringify(values);
         setStructureValidated(true);
         setPreview(result);
@@ -325,6 +540,7 @@ export default function AssignmentWorkflow({
         setActiveStep(2);
       }
     } catch (e) {
+      if (assignmentErrorCode(e).endsWith('AlreadyAssigned')) onAssignedConflict();
       if (ticket === generation.current) setError(assignmentError(e));
     }
   };
@@ -349,7 +565,7 @@ export default function AssignmentWorkflow({
     }));
     if (!items.length) return;
     try {
-      const result: AssignmentBulkResult =
+      const response: AssignmentBulkResult =
         students.length === 1
           ? await (async () => {
               const single = await commitOne(items[0]).unwrap();
@@ -364,6 +580,20 @@ export default function AssignmentWorkflow({
               };
             })()
           : await commitBulk({ items }).unwrap();
+      if (response.results.some((item) => item.errorCode?.endsWith('AlreadyAssigned')))
+        onAssignedConflict();
+      const result: AssignmentBulkResult = {
+        ...response,
+        results: response.results.map((item) =>
+          item.errorCode?.endsWith('AlreadyAssigned')
+            ? {
+                ...item,
+                outcome: 'AlreadyAssigned',
+                errorMessage: 'Already assigned. View the saved assignment in Finance.',
+              }
+            : item
+        ),
+      };
       setOutcomes((previous) => {
         // One canonical result per student. Preserve committed results across retries,
         // including a response containing an older failure for the same student.
@@ -376,7 +606,7 @@ export default function AssignmentWorkflow({
           ])
         );
         previous?.results
-          .filter((item) => item.result)
+          .filter((item) => item.result || item.outcome === 'AlreadyAssigned')
           .forEach((item) => {
             if (!byStudent.get(item.studentId)?.result) byStudent.set(item.studentId, item);
           });
@@ -384,10 +614,12 @@ export default function AssignmentWorkflow({
         return {
           results,
           successCount: results.filter((item) => item.result?.outcome === 'Assigned').length,
-          alreadyAssignedCount: results.filter((item) => item.result?.outcome === 'AlreadyAssigned')
-            .length,
+          alreadyAssignedCount: results.filter((item) => item.outcome === 'AlreadyAssigned').length,
           skippedCount: results.filter((item) => !item.result && item.outcome === 'Skipped').length,
-          failedCount: results.filter((item) => !item.result && item.outcome !== 'Skipped').length,
+          failedCount: results.filter(
+            (item) =>
+              !item.result && item.outcome !== 'Skipped' && item.outcome !== 'AlreadyAssigned'
+          ).length,
         };
       });
       setPreview(undefined);
@@ -395,6 +627,7 @@ export default function AssignmentWorkflow({
       setShowResults(true);
       setActiveStep(2);
     } catch (e) {
+      if (assignmentErrorCode(e).endsWith('AlreadyAssigned')) onAssignedConflict();
       const status = (e as { status?: number | string })?.status;
       const unconfirmed =
         !assignmentErrorCode(e) &&
@@ -656,7 +889,7 @@ export default function AssignmentWorkflow({
                 .filter((r) => !committedIds.has(r.studentId))
                 .find(
                   (r) =>
-                    variableAssignmentError(candidate, r) ||
+                    assignmentInputError(candidate, r) ||
                     assignmentServiceDateError(candidate, r, yearBounds)
                 );
               if (invalidRequest) {
@@ -666,7 +899,7 @@ export default function AssignmentWorkflow({
                   (item) => item.studentId === invalidRequest.studentId
                 );
                 setError(
-                  `${student?.studentName ?? 'Student'}: ${variableAssignmentError(candidate, invalidRequest) || assignmentServiceDateError(candidate, invalidRequest, yearBounds)}`
+                  `${student?.studentName ?? 'Student'}: ${assignmentInputError(candidate, invalidRequest) || assignmentServiceDateError(candidate, invalidRequest, yearBounds)}`
                 );
                 return;
               }
@@ -752,13 +985,20 @@ export default function AssignmentWorkflow({
               <AssignmentDirtyState
                 dirty={values.requests.some((r) => !committedIds.has(r.studentId))}
               />
+              <AdmissionDefaults
+                formik={formik}
+                contexts={contexts}
+                students={students}
+                candidates={candidates.data}
+                academicYearId={academicYearId}
+              />
               {activeStep === 1 && (
                 <AssignmentAmountValidity
                   invalid={
                     !candidate ||
                     values.requests
                       .filter((request) => !committedIds.has(request.studentId))
-                      .some((request) => Boolean(variableAssignmentError(candidate, request)))
+                      .some((request) => Boolean(assignmentInputError(candidate, request)))
                   }
                   onChange={setInvalidAmounts}
                 />
@@ -798,7 +1038,15 @@ export default function AssignmentWorkflow({
                     size="small"
                     value={values.structureId}
                     isLoading={candidates.isLoading}
-                    disabled={busy || committedIds.size > 0}
+                    disabled={
+                      busy ||
+                      committedIds.size > 0 ||
+                      contexts.some(
+                        (sourceContext) =>
+                          sourceContext.structureId &&
+                          students.some((student) => student.studentId === sourceContext.studentId)
+                      )
+                    }
                     error={!!formik.touched.structureId && !!formik.errors.structureId}
                     helperText={formik.touched.structureId ? formik.errors.structureId : undefined}
                     onBlur={formik.handleBlur}
@@ -808,6 +1056,9 @@ export default function AssignmentWorkflow({
                     }))}
                     noOptionsMessage="No published structure for this student and year"
                     onChange={(value) => {
+                      const selectedCandidate = candidates.data?.find(
+                        (item) => item.id === String(value)
+                      );
                       invalidate();
                       setReachedStep(0);
                       setStructureValidated(false);
@@ -815,15 +1066,16 @@ export default function AssignmentWorkflow({
                       setOutcomes(undefined);
                       formik.setValues({
                         structureId: String(value),
-                        requests: students.map((s) => ({
-                          studentId: s.studentId,
-                          academicYearId,
-                          standardFeeStructureId: String(value),
-                          selectedOptionalFeeHeadIds: [],
-                          servicePeriods: [],
-                          feeHeadDetails: [],
-                          variableFeeHeads: [],
-                        })),
+                        requests: selectedCandidate
+                          ? students.map((s) =>
+                              admissionAssignmentRequest(
+                                s.studentId,
+                                academicYearId,
+                                selectedCandidate,
+                                contexts.find((item) => item.studentId === s.studentId)
+                              )
+                            )
+                          : [],
                       });
                     }}
                   />
@@ -860,6 +1112,27 @@ export default function AssignmentWorkflow({
                     : (students.find((item) => item.studentId === selectedStudentId) ??
                       students[0]);
                   const request = values.requests.find((r) => r.studentId === student.studentId);
+                  const admissionContext = contexts.find(
+                    (item) => item.studentId === student.studentId
+                  );
+                  const admissionPeriods = candidate
+                    ? admissionServicePeriods(
+                        candidate,
+                        admissionContext,
+                        candidate.heads
+                          .filter((head) => head.isOptional)
+                          .map((head) => head.feeHeadId)
+                      )
+                    : [];
+                  const studentCandidate = candidate && {
+                    ...candidate,
+                    heads: candidate.heads.map((head) => ({
+                      ...head,
+                      servicePeriod:
+                        admissionPeriods.find((period) => period.feeHeadId === head.feeHeadId) ??
+                        head.servicePeriod,
+                    })),
+                  };
                   const studentPreview = preview?.results.find(
                     (r) => r.studentId === student.studentId
                   );
@@ -875,10 +1148,20 @@ export default function AssignmentWorkflow({
                       'requests',
                       values.requests.map((r) => {
                         if (committedIds.has(r.studentId)) return r;
-                        if (!isBulk) return r.studentId === next.studentId ? next : r;
+                        if (!isBulk)
+                          return r.studentId === next.studentId && candidate
+                            ? mergeAssignmentInputs(next, r, candidate, admissionContext)
+                            : r;
                         // The bulk editor owns one configuration. Keep each student's identity
                         // and saved result separate while applying changes to all remaining requests.
-                        return { ...next, studentId: r.studentId, previewToken: undefined };
+                        return candidate
+                          ? mergeAssignmentInputs(
+                              next,
+                              r,
+                              candidate,
+                              contexts.find((item) => item.studentId === r.studentId)
+                            )
+                          : r;
                       })
                     );
                   };
@@ -1001,7 +1284,7 @@ export default function AssignmentWorkflow({
                                   !saved?.result &&
                                   candidate &&
                                   input &&
-                                  (variableAssignmentError(candidate, input) ||
+                                  (assignmentInputError(candidate, input) ||
                                     assignmentServiceDateError(candidate, input, yearBounds));
                                 const needsAttention =
                                   !saved?.result &&
@@ -1111,7 +1394,9 @@ export default function AssignmentWorkflow({
                         <Stack spacing={2} sx={{ minWidth: 0, pr: isBulk ? 1 : 0 }}>
                           {configuringBulk ? (
                             <Typography variant="body2" color="text.secondary">
-                              The same policies, fees and dates apply to all{' '}
+                              {contexts.some((source) => source.source === 'Admission')
+                                ? 'Each student keeps their admission dates and confirmed fee choices. Other settings apply to all '
+                                : 'The same policies, fees and dates apply to all '}
                               {committedIds.size ? 'remaining' : 'selected'} students.
                             </Typography>
                           ) : (
@@ -1145,6 +1430,36 @@ export default function AssignmentWorkflow({
                             <AssignmentReview data={outcome.result.assignment} committed />
                           ) : (
                             <>
+                              {activeStep < 2 && admissionContext?.source === 'Admission' && (
+                                <Box
+                                  sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: {
+                                      xs: '1fr',
+                                      sm: 'repeat(2, minmax(0, 1fr))',
+                                    },
+                                    gap: 1.5,
+                                  }}
+                                >
+                                  <DetailField
+                                    label="Joining date"
+                                    value={
+                                      admissionContext.joiningDate
+                                        ? fDate(admissionContext.joiningDate)
+                                        : 'Not recorded'
+                                    }
+                                  />
+                                  <DetailField label="Date source" value="Admission" />
+                                  <DetailField
+                                    label="Proration policy"
+                                    value={
+                                      admissionContext.prorationPolicy
+                                        ? `${admissionContext.prorationPolicy.name} · v${admissionContext.prorationPolicy.version}`
+                                        : 'No applicable policy; full scheduled charge'
+                                    }
+                                  />
+                                </Box>
+                              )}
                               {activeStep === 0 && candidate && request && (
                                 <AssignmentPolicies
                                   key={request.studentId}
@@ -1167,9 +1482,18 @@ export default function AssignmentWorkflow({
                                   icon="mdi:format-list-checks"
                                   descriptionTooltip="Review the fees and service dates included in this assignment."
                                 >
+                                  {assignmentFeeSelectionError(candidate, request) && (
+                                    <Alert severity="info" sx={{ mb: 2 }}>
+                                      {admissionContext?.source === 'Admission' &&
+                                      admissionContext.structureId
+                                        ? 'Select at least one fee in Admission, then refresh this assignment.'
+                                        : assignmentFeeSelectionError(candidate, request)}
+                                    </Alert>
+                                  )}
                                   <AssignmentStudentInputs
                                     key={student.studentId}
-                                    candidate={candidate}
+                                    candidate={studentCandidate ?? candidate}
+                                    lockOptionalSelection={Boolean(admissionContext?.structureId)}
                                     request={request}
                                     onChange={updateRequest}
                                     canOverrideDates={canOverrideDates}
@@ -1182,12 +1506,22 @@ export default function AssignmentWorkflow({
                                 </FormSectionCard>
                               )}
                               {outcome?.errorMessage && !studentPreview?.preview && (
-                                <Alert severity="error">
+                                <Alert
+                                  severity={
+                                    outcome.outcome === 'AlreadyAssigned' ? 'info' : 'error'
+                                  }
+                                >
                                   {student.studentName || 'Student'}: {outcome.errorMessage}
                                 </Alert>
                               )}
                               {studentPreview?.errorMessage && (
-                                <Alert severity="error">
+                                <Alert
+                                  severity={
+                                    studentPreview.errorCode?.endsWith('AlreadyAssigned')
+                                      ? 'info'
+                                      : 'error'
+                                  }
+                                >
                                   {student.studentName || 'Student'}: {studentPreview.errorMessage}
                                 </Alert>
                               )}

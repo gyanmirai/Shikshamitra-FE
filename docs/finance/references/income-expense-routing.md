@@ -3,7 +3,7 @@ module: finance
 domain: accounts
 content_type: Reference
 status: active
-updated_on: 2026-10-14
+updated_on: 2026-10-31
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -37,14 +37,16 @@ Selecting Cash hides the school bank selector for fees and charges, clears a pre
 
 ## Validation and rollout
 
-Each tenant/academic year has persisted Income and Expense categories named None. Only the
-Income Category dropdown in Fee Category's fee-head form and the Expense Category dropdown in
-Refund Policy offer None, always first, through their `fee-head` and `refund-policy` routing lookups.
-General category lists and other routing lookups exclude it. Selecting None is valid, while leaving
-a required category unselected is invalid. Stored None records remain protected from modification.
-Both dropdowns pin None first in the frontend even if the lookup response arrives in another order.
-The standalone Fee Head editor filters None out of its shared fee-head lookup. Refund Policy
-keeps an unavailable saved category visible and disabled after the live choices, so None stays first.
+Each tenant/academic year has persisted Income and Expense categories named None. Every live
+Finance category selector offers that stored option first: Fee Category, standalone Fee Head,
+Charge Category, collection/refund policies, manual income/expenses and refund payment recording.
+General category administration lists exclude it. Selecting None is valid, while leaving a
+required category unselected is invalid. Stored None records remain protected from modification.
+The shared routing fields and Fee Head editors pin None first. Unavailable saved categories remain
+visible and disabled after live choices. Failed lookups remain distinct from empty setup states.
+Selected None guidance explains the Accounts exclusion, and manual-entry success feedback does
+not claim an income/expense was added when None was selected. Account rows, totals and details
+follow the [backend exclusion contract](../../../../Shikshamitra-BE/docs/modules/finance/references/income-expense-routing.md#accounting-integrity).
 Deploy/apply `AddNoneTransactionCategories` for existing years before using the updated selectors.
 New academic years initialize the two defaults automatically. No frontend placeholder is appended.
 

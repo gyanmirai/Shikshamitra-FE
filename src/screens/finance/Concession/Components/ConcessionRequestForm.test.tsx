@@ -99,7 +99,18 @@ vi.mock('src/redux/student', () => ({ useGetStudentsByScopeQuery: () => ({ curre
 vi.mock('src/redux/class/classApi', () => ({
   useLazyGetClassByMediumQuery: () => [state.getClasses, {}],
 }));
-vi.mock('./ConcessionDocumentList', () => ({ default: () => null }));
+vi.mock('./ConcessionDocumentList', () => ({
+  default: ({ onSave }: any) => (
+    <button
+      type="button"
+      onClick={() =>
+        onSave([{ documentId: 'proof', url: '/staged/proof', fileName: 'proof.pdf', status: 1 }])
+      }
+    >
+      Upload proof
+    </button>
+  ),
+}));
 vi.mock('./ConcessionPolicyFields', () => ({
   default: ({ typeHelperText, policies, types, policyVersionId, typeId, onPolicyChange }: any) => (
     <>
@@ -122,13 +133,14 @@ vi.mock('./ConcessionPolicyFields', () => ({
 }));
 vi.mock('./ConcessionSteps/ValueEntryStep', () => ({ default: () => null }));
 vi.mock('./ConcessionRequestWorkspace', () => ({
-  default: ({ selectedIds, onToggle, valueFields, policyFields }: any) => (
+  default: ({ selectedIds, onToggle, valueFields, policyFields, documents }: any) => (
     <>
       {policyFields}
       <button type="button" onClick={() => onToggle('small')}>
         Selected fees: {selectedIds.join(',')}
       </button>
       {valueFields}
+      {documents}
     </>
   ),
 }));
@@ -230,6 +242,21 @@ const renderForm = () =>
   render(<ConcessionRequestForm {...formProps} editData={{ id: 'request' } as any} />);
 
 describe('concession request update concurrency', () => {
+  it('keeps the financial preview when only supporting documents change', async () => {
+    renderForm();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeEnabled()
+    );
+    const previews = state.previewRequest.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Upload proof' }));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    });
+    expect(state.contextRefetch).not.toHaveBeenCalled();
+    expect(state.previewRequest).toHaveBeenCalledTimes(previews);
+    expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeEnabled();
+  });
+
   it('keeps selected policy and type visible while policy eligibility reloads, then uses the new response', async () => {
     state.context.concessionPolicies.push({
       ...state.context.concessionPolicies[0],

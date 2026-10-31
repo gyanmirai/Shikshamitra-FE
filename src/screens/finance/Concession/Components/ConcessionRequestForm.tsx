@@ -212,7 +212,9 @@ const validationSchema = Yup.object({
   concessionTypeId: Yup.string().required('Concession type is required'),
 });
 
-const buildFeeHeadConcessions = (values: FormValues) => {
+const buildFeeHeadConcessions = (
+  values: Pick<FormValues, 'concessionTypeId' | 'selectedFeeHeads' | 'valueEntries'>
+) => {
   const typeId = values.concessionTypeId;
   return (values.selectedFeeHeads[typeId] || []).map((feeHeadId) => {
     const entry = values.valueEntries[typeId]?.[feeHeadId] || { basedOn: 0, amount: 0 };
@@ -220,7 +222,10 @@ const buildFeeHeadConcessions = (values: FormValues) => {
   });
 };
 
-const buildDueFeeConcessions = (values: FormValues, context?: ConcessionRequestContext) => {
+const buildDueFeeConcessions = (
+  values: Pick<FormValues, 'concessionTypeId' | 'selectedFeeHeads' | 'dueFeeEntries'>,
+  context?: ConcessionRequestContext
+) => {
   const selectedHeads = new Set(values.selectedFeeHeads[values.concessionTypeId] || []);
   return (context?.eligibleDueFees || [])
     .filter(
@@ -733,13 +738,40 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       concessionPolicyVersionId: values.concessionPolicyVersionId,
       concessionTypeId: values.concessionTypeId,
       feeHeadConcessions:
-        selectedPolicy?.valueSource === 'PolicyFixed' ? buildFeeHeadConcessions(values) : [],
+        selectedPolicy?.valueSource === 'PolicyFixed'
+          ? buildFeeHeadConcessions({
+              concessionTypeId: values.concessionTypeId,
+              selectedFeeHeads: values.selectedFeeHeads,
+              valueEntries: values.valueEntries,
+            })
+          : [],
       dueFeeConcessions:
         selectedPolicy?.valueSource === 'RequestEnteredWithinLimits'
-          ? buildDueFeeConcessions(values, requestContext)
+          ? buildDueFeeConcessions(
+              {
+                concessionTypeId: values.concessionTypeId,
+                selectedFeeHeads: values.selectedFeeHeads,
+                dueFeeEntries: values.dueFeeEntries,
+              },
+              requestContext
+            )
           : [],
     }),
-    [currentYear?.id, requestContext, selectedPolicy?.valueSource, values]
+    // Evidence changes only affect document validation; they do not change the
+    // financial preview. Eligibility and financial input changes still rerun it.
+    [
+      currentYear?.id,
+      requestContext,
+      selectedPolicy?.valueSource,
+      values.concessionRequestId,
+      values.studentId,
+      values.concessionPolicyId,
+      values.concessionPolicyVersionId,
+      values.concessionTypeId,
+      values.selectedFeeHeads,
+      values.valueEntries,
+      values.dueFeeEntries,
+    ]
   );
 
   const hasInvalidInstallmentValues =

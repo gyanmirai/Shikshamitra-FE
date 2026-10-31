@@ -4,6 +4,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import FinanceRoutingFields from './FinanceRoutingFields';
 
 const routing = vi.hoisted(() => ({
+  incomeCategories: [
+    { id: 'income', label: 'AAA income' },
+    { id: 'none', label: 'None' },
+  ],
   expenseCategories: [
     { id: 'expense', label: 'AAA expense' },
     { id: 'none', label: 'None' },
@@ -11,7 +15,11 @@ const routing = vi.hoisted(() => ({
 }));
 vi.mock('src/redux/finance/financeRoutingApi', () => ({
   useGetFinanceRoutingOptionsQuery: () => ({
-    data: { expenseCategories: routing.expenseCategories, incomeCategories: [], bankAccounts: [] },
+    data: {
+      expenseCategories: routing.expenseCategories,
+      incomeCategories: routing.incomeCategories,
+      bankAccounts: [],
+    },
     isFetching: false,
     isError: false,
   }),
@@ -67,5 +75,40 @@ describe('Refund policy category options', () => {
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Expense Category' }));
     expect(await screen.findAllByRole('option')).toHaveLength(1);
     expect(screen.queryByRole('option', { name: 'None' })).toBeNull();
+  });
+
+  it.each([
+    'income-entry',
+    'collection',
+    'fee-head',
+    'charge-category',
+    'collection-policy',
+    'refund',
+    'expense-entry',
+    'cash-expense',
+  ] as const)('pins None first and preserves category errors for %s', async (operation) => {
+    const formik = {
+      values: { categoryId: '' },
+      touched: { categoryId: true },
+      errors: { categoryId: 'Category is required' },
+      setFieldValue: vi.fn(),
+      setFieldTouched: vi.fn(),
+      handleBlur: vi.fn(),
+    };
+    render(
+      <FinanceRoutingFields
+        formik={formik as never}
+        academicYearId="year"
+        operation={operation}
+        categoryField="categoryId"
+        categoryLabel="Category"
+      />
+    );
+    expect(screen.getByText('Category is required')).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Category' }));
+    const choices = await screen.findAllByRole('option');
+    expect(choices[0]).toHaveTextContent('None');
+    fireEvent.click(choices[0]);
+    expect(formik.setFieldValue).toHaveBeenCalledWith('categoryId', 'none');
   });
 });

@@ -8,6 +8,7 @@ export const GlobalIcons = {
   floors: 'solar:layers-linear',
   moveUp: 'eva:arrow-upward-fill',
   moveDown: 'eva:arrow-downward-fill',
+  back: 'eva:arrow-back-fill',
   family: 'mdi:account-group-outline',
   retrunIcon: 'famicons:return-down-back-outline',
   info: 'lucide:info',

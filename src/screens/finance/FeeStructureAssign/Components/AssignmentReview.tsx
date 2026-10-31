@@ -76,6 +76,15 @@ export default function AssignmentReview({
           label="Fee Structure"
           value={`${data.structureName} · ${data.revisionNumber ? `r${data.revisionNumber}` : 'Historical'}`}
         />
+        {data.registrationJoiningDate && (
+          <DetailField label="Joining date" value={fDate(data.registrationJoiningDate)} />
+        )}
+        {data.assignmentSource === 'Admission' && (
+          <DetailField label="Assignment source" value="Admission" />
+        )}
+        {data.reductionTotal > 0 && (
+          <DetailField label="Proration reduction" value={money(data.reductionTotal)} />
+        )}
         <Box sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
           <DetailField
             label={committed ? 'Assigned amount' : 'Total to assign'}
@@ -121,7 +130,7 @@ export default function AssignmentReview({
             <DetailSection
               icon="mdi:shield-check-outline"
               title="Applicable Policies"
-              helpText="Refund and collection policies saved for this student, including their pinned versions."
+              helpText="Policies saved for this student, including the admission proration version used for the recorded calculation."
             >
               <Box
                 sx={{
@@ -143,6 +152,15 @@ export default function AssignmentReview({
                     />
                   );
                 })}
+                {data.policies
+                  .filter((policy) => policy.family === 'proration')
+                  .map((policy) => (
+                    <DetailField
+                      key={policy.versionId}
+                      label="Proration policy"
+                      value={`${policy.name} · v${policy.version}`}
+                    />
+                  ))}
               </Box>
             </DetailSection>
           </Box>

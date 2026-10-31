@@ -9,6 +9,7 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { financePermissions } from 'src/constants/finance-menu';
 import RefundForm from 'src/screens/finance/feeRefund/NewRefundForm/RefundForm';
 import RefundRemarksForm from 'src/screens/finance/feeRefund/Components/RefundRemarksForm';
+import RefundWorklist from 'src/screens/finance/feeRefund/Components/RefundWorklist';
 import 'simplebar-react/dist/simplebar.min.css';
 
 const store = configureStore({
@@ -24,8 +25,10 @@ const store = configureStore({
 });
 
 function Fixture() {
+  const requestView = new URLSearchParams(window.location.search).get('view') === 'approved';
+  const worklistView = new URLSearchParams(window.location.search).get('view') === 'worklist';
   const [saved, setSaved] = React.useState(false);
-  const [viewRefund, setViewRefund] = React.useState(false);
+  const [viewRefund, setViewRefund] = React.useState(requestView);
   return (
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -36,21 +39,56 @@ function Fixture() {
             writes.
           </Alert>
           <Typography variant="h5" sx={{ p: 2 }}>
-            Add Refund Request
+            {worklistView
+              ? 'Fee refunds'
+              : requestView
+                ? 'Refund Request Details'
+                : 'Add Refund Request'}
           </Typography>
           <Button onClick={() => setViewRefund(true)}>View synthetic refund request</Button>
           {saved && (
             <Alert severity="success">Synthetic refund request submitted and approved.</Alert>
           )}
-          <Box sx={{ flex: 1, minHeight: 0 }}>
-            <RefundForm
-              defaultBoardId="board"
-              defaultMediumId="medium"
-              defaultStandardId="class"
-              defaultDivisionId="division"
-              onCancel={(_, submitted) => setSaved(submitted)}
+          {worklistView && (
+            <RefundWorklist
+              filters={
+                {
+                  isReady: true,
+                  boards: [],
+                  mediums: [],
+                  classOptions: [],
+                  divisionOptions: [],
+                  selectedBoard: '',
+                  selectedMedium: '',
+                  selectedStandardId: '',
+                  selectedDivisionId: '',
+                  filterPayload: {},
+                  setSelectedBoard: () => undefined,
+                  setSelectedMedium: () => undefined,
+                  setSelectedStandardId: () => undefined,
+                  setSelectedDivisionId: () => undefined,
+                } as any
+              }
+              onView={() => setViewRefund(true)}
+              onEdit={() => undefined}
+              onApprove={() => undefined}
+              onReject={() => undefined}
+              onRecord={() => undefined}
+              onReplace={() => undefined}
+              onReturn={() => undefined}
             />
-          </Box>
+          )}
+          {!requestView && !worklistView && (
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <RefundForm
+                defaultBoardId="board"
+                defaultMediumId="medium"
+                defaultStandardId="class"
+                defaultDivisionId="division"
+                onCancel={(_, submitted) => setSaved(submitted)}
+              />
+            </Box>
+          )}
           <RefundRemarksForm
             open={{ value: viewRefund } as any}
             onClose={() => setViewRefund(false)}

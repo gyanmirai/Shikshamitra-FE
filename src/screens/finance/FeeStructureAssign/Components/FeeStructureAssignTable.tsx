@@ -95,7 +95,12 @@ export default function FeeStructureAssignTable({
     if (!query.currentData) return;
     const eligibleIds = new Set(
       query.currentData.items
-        .filter((student) => student.isActive && !student.isFeeStructureAssigned)
+        .filter(
+          (student) =>
+            student.isActive &&
+            !student.isFeeStructureAssigned &&
+            !['Prepared', 'NeedsAttention', 'Assigned'].includes(student.assignmentState ?? '')
+        )
         .map((student) => student.studentId)
     );
     setSelected((previous) => {
@@ -107,7 +112,12 @@ export default function FeeStructureAssignTable({
     ...student,
     id: student.enrollmentId,
   }));
-  const eligible = rows.filter((r) => r.isActive && !r.isFeeStructureAssigned);
+  const eligible = rows.filter(
+    (r) =>
+      r.isActive &&
+      !r.isFeeStructureAssigned &&
+      !['Prepared', 'NeedsAttention', 'Assigned'].includes(r.assignmentState ?? '')
+  );
   // Always derive the action payload from the latest enrollment state. A refresh
   // can mark a previously selected student assigned before effect cleanup runs.
   const selectedEligible = eligible.filter((row) =>
@@ -277,14 +287,20 @@ export default function FeeStructureAssignTable({
                           !standardId ||
                           query.isFetching ||
                           !row.isActive ||
-                          row.isFeeStructureAssigned
+                          row.isFeeStructureAssigned ||
+                          ['Prepared', 'NeedsAttention', 'Assigned'].includes(
+                            row.assignmentState ?? ''
+                          )
                         }
                         onChange={(_, checked) => {
                           if (
                             !standardId ||
                             query.isFetching ||
                             !row.isActive ||
-                            row.isFeeStructureAssigned
+                            row.isFeeStructureAssigned ||
+                            ['Prepared', 'NeedsAttention', 'Assigned'].includes(
+                              row.assignmentState ?? ''
+                            )
                           )
                             return;
                           setSelected((previous) =>
@@ -408,11 +424,32 @@ export default function FeeStructureAssignTable({
               { label: 'Assigned', value: 0 },
               { label: 'Unassigned', value: 1 },
             ],
-            render: (value: unknown) => (
-              <Label color={value ? 'success' : 'default'}>
-                {value ? 'Assigned' : 'Unassigned'}
-              </Label>
-            ),
+            render: (value: unknown, rawRow: IData) => {
+              const row = rawRow as IFeeStructureData;
+              const state = row.assignmentState;
+              return (
+                <Stack spacing={0.5} alignItems="flex-start">
+                  <Label
+                    color={value ? 'success' : state === 'NeedsAttention' ? 'warning' : 'default'}
+                  >
+                    {value
+                      ? 'Assigned'
+                      : state === 'Prepared'
+                        ? 'Prepared in admission'
+                        : state === 'NeedsAttention'
+                          ? 'Needs attention'
+                          : state === 'Selected'
+                            ? 'Pending finance'
+                            : 'Unassigned'}
+                  </Label>
+                  {Boolean(value) && row.assignmentSource === 'Admission' && (
+                    <Typography variant="caption" color="text.secondary">
+                      From admission
+                    </Typography>
+                  )}
+                </Stack>
+              );
+            },
           },
           {
             id: 'action',
@@ -428,6 +465,23 @@ export default function FeeStructureAssignTable({
             stickyPosition: 'right',
             render: (_value: unknown, rawRow: IData) => {
               const row = rawRow as IFeeStructureData & { isActive?: boolean };
+              if (['Prepared', 'NeedsAttention'].includes(row.assignmentState ?? '') && canView)
+                return (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    disabled={query.isFetching}
+                    aria-label={
+                      row.assignmentState === 'Prepared'
+                        ? `Review prepared fees for ${row.studentName}`
+                        : `Review fee assignment issue for ${row.studentName}`
+                    }
+                    onClick={() => onAssignStructure(row)}
+                  >
+                    {row.assignmentState === 'Prepared' ? 'Review prepared fees' : 'Review issue'}
+                  </Button>
+                );
               if (!row.isFeeStructureAssigned && canAssign)
                 return (
                   <Button

@@ -3,7 +3,7 @@ import { financeModuleType, financePolicyType, studentAdmissionType } from 'src/
 
 export interface AssignmentServicePeriod {
   feeHeadId: string;
-  source: 'AcademicYear' | 'TransportService' | 'ManualOverride';
+  source: 'AcademicYear' | 'Registration' | 'TransportService' | 'ManualOverride';
   sourceReferenceId?: string;
   startDate?: string;
   endDate?: string;
@@ -48,6 +48,11 @@ export interface AssignmentLine {
 }
 
 export interface AssignmentPreview {
+  registrationJoiningDate?: string | null;
+  chargeStartDate?: string;
+  chargeEndDate?: string;
+  assignmentSource?: 'Admission' | 'Finance';
+  applicationId?: string | null;
   policyOverrideReason?: string;
   originalPolicies?: AssignmentPolicy[];
   calculationVersion?: string;
@@ -125,6 +130,8 @@ export interface AssignmentCandidate {
 }
 
 export interface AssignmentStudent {
+  assignmentState?: AssignmentContext['status'];
+  assignmentSource?: 'Admission' | 'Finance';
   studentId: string;
   enrollmentId: string;
   standardId?: string;
@@ -140,6 +147,28 @@ export interface AssignmentStudent {
   divisionName?: string;
   isActive: boolean;
   isFeeStructureAssigned: boolean;
+}
+
+export interface AssignmentContext {
+  studentId: string;
+  academicYearId: string;
+  status: 'Unassigned' | 'Selected' | 'Prepared' | 'Assigned' | 'NeedsAttention';
+  source: 'Admission' | 'Finance';
+  assignmentId?: string | null;
+  applicationId?: string | null;
+  financeFeeAccountId?: string | null;
+  structureId?: string | null;
+  structureRevision?: number | null;
+  joiningDate?: string | null;
+  chargeStartDate?: string | null;
+  chargeEndDate?: string | null;
+  prorationPolicy?: AssignmentPolicy | null;
+  admissionFeeHeadIds: string[];
+  selectedOptionalFeeHeadIds: string[];
+  variableFeeHeads: NonNullable<AssignmentRequest['variableFeeHeads']>;
+  preparedAssignment?: AssignmentPreview | null;
+  blocker?: string | null;
+  errorCode?: string | null;
 }
 
 export interface AssignmentBulkPreview {
@@ -195,7 +224,11 @@ export function assignmentError(error: unknown): string {
   if (code.endsWith('InvalidInput'))
     return 'Review fee-head selections, amounts, service dates and required override reasons.';
   if (code.endsWith('SourceUnavailable'))
-    return 'The service source could not be verified. Review the service period.';
+    return 'The admission or service facts could not be verified. Review the saved preparation and dates.';
+  if (code.endsWith('JoiningDateRequired'))
+    return 'Confirm the actual joining date in Admission before preparing these fees.';
+  if (code.endsWith('JoiningDateInvalid'))
+    return 'Review the admission joining date for the selected academic year.';
   if (code.endsWith('ConfigurationInvalid'))
     return 'Check published payment terms and policy versions for every included fee head.';
   return 'The request could not be completed. Check your access and configuration, then retry.';
@@ -209,6 +242,13 @@ const tags = [
 const assignmentMutationTags = [...tags, financeModuleType.feeHead, financeModuleType.feeCategory];
 export const studentFeeAssignmentApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    assignmentContexts: builder.query<
+      AssignmentContext[],
+      { academicYearId: string; studentIds: string[] }
+    >({
+      query: (body) => ({ url: '/student-fee-structure/contexts', method: 'POST', body }),
+      providesTags: [...tags, financePolicyType.prorationPolicy, financeModuleType.feeStructure],
+    }),
     assignmentPolicyOptions: builder.query<
       AssignmentPolicy[],
       { studentId: string; academicYearId: string }
@@ -303,6 +343,7 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
 });
 
 export const {
+  useAssignmentContextsQuery,
   useAssignmentPolicyOptionsQuery,
   useAssignmentUpdatePoliciesMutation,
   useAssignmentStudentsQuery,

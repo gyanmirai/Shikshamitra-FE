@@ -139,6 +139,9 @@ export interface FeeLedgerLine {
   concessionAmount?: number;
   refundAmount?: number;
   refundDescription?: string;
+  /** Approved or processing refund amount awaiting payout; separate from completed refunds and paid fee. */
+  pendingRefundAmount?: number;
+  pendingRefundDescription?: string;
   /** Computed via LateFeeCalculationService, net of any applied waiver. Zero when no policy resolves, the student is exempt, or the line isn't overdue. */
   lateFeeAmount?: number;
   /** One-line breakdown, e.g. "₹20/day × 15 days late = ₹300". Empty when lateFeeAmount is 0. */
