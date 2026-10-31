@@ -539,11 +539,14 @@ Dirty navigation is confirmed, navigation and duplicate actions are blocked whil
 
 ## Recurring salary editor
 
-Payroll Structure and Staff Directory share the recurring Edit Salary sub-page.
+Staff Salaries and Staff Directory share the Set Up Staff Salary page.
 The staff payroll salary link and return link use client-side navigation to preserve the application shell.
 Hovering or focusing the salary link preloads the editor's independent reads through RTK Query, reusing data fetched within the last 30 seconds.
 Salary deep links start reads from the employee ID immediately; employee details still gate form initialization, and failed staff reads offer a retry.
-The footer owns Preview salary and Save salary; saving keeps the page open, refreshes history, and clears the draft baseline.
+The standalone editor guides Salary Details, Statutory Setup, and Review & Save while keeping salary and statutory drafts mounted across stage changes.
+Forward navigation validates the preceding requirements; correction links reveal the owning stage before focusing it.
+Preview salary belongs to the review stage, and the persistent footer offers stage navigation and Save salary.
+Saving requires a current server preview, keeps the page open, refreshes history, and clears the draft baseline.
 Footer feedback explains calculation readiness, active operations, and completed saves without changing action permissions or enabled states.
 The compact employee header includes ESIC access, and the quoted monthly amount uses the shared currency input without rounding its numeric request value.
 Invalid amounts show inline errors after blur; saving with a missing customization reason focuses the reason field and preserves the draft.
@@ -565,7 +568,7 @@ See the [backend calculation release and PF remediation workflow](https://github
 Payroll Structure and Staff Directory open the dedicated Edit Salary page for the selected staff member.
 Staff-profile and staff-edit links return to their original payroll context through a validated same-origin `returnTo` URL.
 Existing `/hr/payroll/structure?employeeId={employeeId}&setup=salary` bookmarks redirect to the page with history replacement, including the previous `from=staff-profile` or `from=staff-edit` context.
-The editor keeps Preview salary and Save salary in its persistent footer and preserves current compensation behavior.
+The editor keeps stage navigation and Save salary in its persistent footer, with Preview salary in Review & Save.
 ESIC details open in the existing drawer over the page, with an independent enrollment draft guard.
 Closing the drawer preserves salary inputs, and saving enrollment invalidates the salary preview through the existing callback.
 One-time adjustments remain in monthly payroll.
@@ -754,3 +757,10 @@ List and application-detail Finalize actions open `/hr/employee/onboarding/{appl
 Application/session changes abort the old read, clear its in-memory editor and reject responses for another ID. A temporary same-application read failure preserves edits and locks finalization until retry succeeds. Denied/deleted records hide cached protected content. Step navigation keeps the authoritative Formik, work-assignment, statutory and salary drafts mounted. Academic cards retain one native full-surface checkbox label; unchecked hover is neutral and focus has a separate outline.
 
 Finalization uses the existing atomic endpoint and payload, role/assignment/academic/salary gates and inactive-staff result. Confirmed success is terminal in the current editor and returns to the sanitized onboarding destination using replacement navigation; existing RTK tags invalidate application/staff readers. Late results from an unmounted editor cannot navigate a newer context. Errors retain the draft for explicit retry. Closing a page does not prove an already submitted server operation was rolled back; reopening must read its current application status before another action.
+
+## Payroll settings tasks
+
+Payroll Settings opens `/hr/payroll/setting` with permission-filtered tasks for Salary Templates, Statutory Settings, Component Library, and Payslip & Statement Settings.
+The component library links to the existing earning and deduction screens; statutory settings links to the existing PF, ESIC, and Professional Tax destinations.
+Template editing stays on one continuous page, with the default Monthly salary or Monthly cost to school (CTC) choice in Basic Information.
+The sample preview identifies its basis and does not assign an amount to staff.
