@@ -69,7 +69,7 @@ describe('Payment receipt issuance', () => {
     expect(props.onSavePending).not.toHaveBeenCalled();
   });
 
-  it('issues an official cash receipt immediately', () => {
+  it('issues a cash receipt immediately', () => {
     const props = buildProps('Cash');
     render(wrap(props));
     fireEvent.click(screen.getByRole('button', { name: 'Collect & issue receipt' }));
@@ -123,6 +123,40 @@ describe('Payment receipt issuance', () => {
     expect(within(rows[0]).getByText(/^₹\s*800$/)).toBeVisible();
     expect(within(rows[1]).getByText('Activity charge')).toBeVisible();
     expect(within(rows[1]).getByText(/^₹\s*200$/)).toBeVisible();
+  });
+
+  it('keeps principal and its late-fee charge distinct when both use the due-fee ID', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      const props = {
+        ...buildProps('Cash'),
+        chargesData: [
+          {
+            chargeId: 'shared-due',
+            sourceId: 'shared-due',
+            sourceType: 'LateFee' as const,
+            chargeName: 'Late fee',
+            amount: 100,
+          },
+        ],
+      };
+      props.formValues.selectedItems = [
+        { dueFeeId: 'shared-due', feeHeadId: 'tuition', period: '2026-10', dueAmount: 900 },
+      ];
+      props.formValues.charges = ['shared-due'];
+      render(wrap(props));
+      const rows = within(screen.getByRole('list', { name: 'Payment breakdown' })).getAllByRole(
+        'listitem'
+      );
+      expect(rows).toHaveLength(2);
+      expect(within(rows[0]).getByText('Tuition Fee')).toBeVisible();
+      expect(within(rows[1]).getByText('Late fee')).toBeVisible();
+      expect(
+        consoleError.mock.calls.filter((call) => String(call[0]).includes('same key'))
+      ).toEqual([]);
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 
   it('locks the cash action and close control during collection', () => {

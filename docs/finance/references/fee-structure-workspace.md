@@ -3,7 +3,7 @@ module: finance
 domain: fee-structure
 content_type: Reference
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -15,6 +15,10 @@ The active screen at `/finance/settings/create-fee-structure` uses one class wor
 ## Fee heads and collection
 
 Every fee head uses a published payment frequency. The Add/Edit Fee Head dialog always shows and validates that field; there is no admission collection switch or collection-exclusion label. Optional heads remain selectable during student assignment, and variable heads receive their amount there.
+
+The searchable Fee head dropdown groups eligible heads under non-selectable Fee Category headings.
+Search matches either category or head names; duplicate head names include their category in the
+option and selected value. Already added heads remain excluded when adding another line.
 
 The client omits the retired field from candidates and create/PATCH payloads, including when reading an older server response. All assigned heads generate obligations and appear in Fee Collection under the normal backend rules. The summary shows the attached payment frequency and supports opening its schedule. Review counts fixed, optional and variable heads.
 
@@ -41,6 +45,22 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 10. Published cards offer **Create revision**. Their saved publication review remains readable even after master settings change.
 
 ## Common components and interaction rules
+
+The structure navigator places Search structures above Copy Structure and Add Structure,
+in that order. Rows use neutral theme backgrounds and borders, display their position
+in the full class list, and keep the existing Delete Draft action and status at the right.
+Those controls are rendered once in their row; the editor retains its existing discard
+and revision actions. On narrow screens, the same list and row actions appear in the
+Structures drawer. Editors remain mounted while selecting or filtering structures.
+
+The Fee Structure editor opts into the existing `CustomStepperWithFormik` vertical mode.
+Its narrow-screen header also stacks vertically through workspace-scoped styling; other
+stepper consumers are unchanged. Formik ownership, navigation checks, save/publish handlers,
+permissions and footer actions are unchanged.
+
+Section card titles use the shared `subtitle1` typography (16 px, semibold 600) across
+Finance forms and read-only views, matching **General Information** and **Fee Heads**
+in the first step. Review sections inherit that style without a heavier weight override.
 
 | Surface                                                      | Component/pattern                                                                                                                                   |
 | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -83,6 +103,13 @@ Display validation messages from both ABP `error.data.Errors` and the host's Pro
 Authorized drafts open ready to edit, with direct Edit and Delete actions on each fee-head row and no structure-level Edit button. Saving or discarding changes keeps the draft editable. Published structures and view-only users have no fee-head write actions. Deleting a fee head changes the local draft after confirmation; **Save draft** persists the removal.
 
 Policy selectors are editable only in an authorized draft. Selecting a policy updates the local candidate; **Save draft** persists its policy ID and version ID. Publish sends only the saved structure ID and concurrency stamp. Keep Publish disabled until changes are saved and a fresh review is ready, show the required next step, and recheck those conditions when confirming publication.
+
+Collection and Refund choice dialogs highlight the exact attached version and show its disabled
+**Selected** action with a Currently applied accessible label. Other policies show **Select**;
+changing the choice updates this state when the dialog is reopened. `FeeStructurePoliciesStep.test.tsx`
+checks both families with the production table and dialog; `feeStructureFields.test.tsx` covers
+group headings, category/name search and duplicate head labels.
+Published and view-only fee-head tables omit the Actions column when no write action is available.
 
 The active path uses `FeeStructureWorkspaceCard.tsx`, `FeeStructureHeadsStep.tsx`, `FeeStructureHeadDialog.tsx`, `FeeStructurePoliciesStep.tsx`, `FeeStructureReviewStep.tsx`, `useFeeStructureWorkspaceForm.ts`, and `StructureScheduleDialog.tsx`. Older `IndependentFeeStructureCard`, `FeePoliciesTab`, schedule drawer and ViewDetails prototypes remain inactive source; they are not the current management flow. The old status/unlock path is no longer exposed by the active screen.
 
@@ -225,7 +252,7 @@ The earlier workspace checks covered full-screen geometry, class navigation, rev
 
 The workspace header includes the metadata's board and medium alongside its name and academic year. Edit draft uses the shared icon action with an accessible label and tooltip. Add structure is contained in both desktop and mobile navigation, with a separate gap before Search structures. The Fee Heads heading and summary table share a compact one-unit gap.
 
-The class tabs use flat, unfilled labels with a thin underline and bold text for the selected class, following the supplied Fee Structure reference. Theme colors adapt to light and dark modes; narrow rows retain horizontal scrolling. This workspace-specific treatment uses the shared `CustomTabs` slots without changing other screens. Add structure is above the structure list on
+The class tabs use rounded outlined pills with a softly filled selected class, following the supplied rounded-pill reference. Theme colors adapt to light and dark modes; pills wrap onto additional rows when needed. This workspace-specific treatment uses the shared `CustomTabs` slots without changing other screens. Add structure is above the structure list on
 desktop and beside the Structures selector on smaller screens. The fee-head summary shows
 Fee head name, Annual amount, Payment frequency and Actions. View, Edit and Delete use the shared
 action component with three direct icons, matching the requested ledger actions and the current Finance action configuration. Delete requires confirmation. Add and Edit use

@@ -1,5 +1,7 @@
 'use client';
 
+import PaymentTermFormSkeleton from './PaymentTermFormSkeleton';
+
 import { useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
@@ -60,6 +62,7 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
     refreshPrerequisites,
     isSubmitting,
     isLoadingDetail,
+    isLoadingOptions,
     handleSubmit,
     addInstallment,
     removeInstallment,
@@ -69,7 +72,8 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
     ? (formik.values.currentVersionNumber ?? 1) +
       (formik.values.currentVersionStatus === 'Draft' ? 0 : 1)
     : 1;
-  const busy = isSubmitting || isLoadingDetail;
+  const fetching = (isLoadingDetail || isLoadingOptions) && !isSubmitting;
+  const busy = isSubmitting || fetching;
   const requestClose = () => {
     if (busy || discardDialog.value || confirmationImpact) return;
     if (formik.dirty) {
@@ -132,30 +136,36 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
                 disabled={busy}
                 sx={{ border: 0, m: 0, minWidth: 0, p: { xs: 2, sm: 3 } }}
               >
-                <Stack spacing={2} sx={{ minWidth: 0 }}>
-                  <GeneralInfoSection formik={formik} boards={boards} />
-                  {formik.values.isDefaultTerm && impactError && (
-                    <Alert severity="error">
-                      Unable to load default impact. Retry before saving.
-                    </Alert>
-                  )}
-                  {calendarMissing ? (
-                    <FinancePrerequisiteState
-                      requirements={[{ key: boards.length ? 'board-calendar' : 'board-setup' }]}
-                      onRefresh={refreshPrerequisites}
-                    />
-                  ) : (
-                    <InstallmentSection
-                      formik={formik}
-                      board={boards.find((board) => board.id === formik.values.boardId)}
-                      onAdd={addInstallment}
-                      onRemove={removeInstallment}
-                    />
-                  )}
-                </Stack>
+                {fetching ? (
+                  <PaymentTermFormSkeleton
+                    installmentCount={formik.values.installments?.length || 3}
+                  />
+                ) : (
+                  <Stack spacing={2} sx={{ minWidth: 0 }}>
+                    <GeneralInfoSection formik={formik} boards={boards} />
+                    {formik.values.isDefaultTerm && impactError && (
+                      <Alert severity="error">
+                        Unable to load default impact. Retry before saving.
+                      </Alert>
+                    )}
+                    {calendarMissing ? (
+                      <FinancePrerequisiteState
+                        requirements={[{ key: boards.length ? 'board-calendar' : 'board-setup' }]}
+                        onRefresh={refreshPrerequisites}
+                      />
+                    ) : (
+                      <InstallmentSection
+                        formik={formik}
+                        board={boards.find((board) => board.id === formik.values.boardId)}
+                        onAdd={addInstallment}
+                        onRemove={removeInstallment}
+                      />
+                    )}
+                  </Stack>
+                )}
               </Box>
             </Scrollbar>
-            {busy && (
+            {isSubmitting && (
               <Stack
                 role="status"
                 alignItems="center"
@@ -169,9 +179,7 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
                 }}
               >
                 <CircularProgress size={28} />
-                <Typography variant="body2">
-                  {isSubmitting ? 'Saving payment term…' : 'Loading payment term…'}
-                </Typography>
+                <Typography variant="body2">Saving payment term…</Typography>
               </Stack>
             )}
           </Box>
@@ -222,10 +230,7 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
               disableClose={isSubmitting}
               title={
                 <Stack component="span" direction="row" spacing={1} alignItems="center">
-                  <Iconify
-                    icon={GlobalIcons.alertIcon}
-                    sx={{ color: 'warning.main', flexShrink: 0 }}
-                  />
+                  <Iconify icon="mdi:alert-outline" sx={{ color: 'warning.main', flexShrink: 0 }} />
                   <span>Replace Default Payment Term?</span>
                 </Stack>
               }

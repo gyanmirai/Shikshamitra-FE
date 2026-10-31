@@ -191,6 +191,7 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
       {
         id: 'amount',
         label: 'Applied Amount',
+        filterType: 'number',
         align: 'left',
         render: (v: number) => (
           <Typography variant="body2" fontWeight={700} color="success.main">

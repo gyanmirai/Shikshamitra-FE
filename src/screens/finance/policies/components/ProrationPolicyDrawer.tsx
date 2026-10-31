@@ -1,5 +1,7 @@
 'use client';
 
+import PolicyFormSkeleton from './PolicyFormSkeleton';
+
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
@@ -162,7 +164,7 @@ function ProrationPolicyDrawerSession({
           <Box
             component="fieldset"
             disabled={busy}
-            inert={busy}
+            inert={isSaving || formik.isSubmitting}
             sx={{ display: 'flex', flex: 1, minWidth: 0, minHeight: 0, border: 0, p: 0, m: 0 }}
           >
             {/* Scrollable Form */}
@@ -176,7 +178,13 @@ function ProrationPolicyDrawerSession({
                   flex: isPrerequisiteBlocked ? 1 : undefined,
                 }}
               >
-                {isPrerequisiteBlocked ? (
+                {isLoading && !isSaving && !formik.isSubmitting ? (
+                  <PolicyFormSkeleton
+                    policy="proration"
+                    activeEdit={activeEdit}
+                    rowCount={formik.values.feeHeadRules.length || 3}
+                  />
+                ) : isPrerequisiteBlocked ? (
                   <FinancePrerequisiteState
                     requirements={prerequisites}
                     onRefresh={refreshPrerequisites}
@@ -208,7 +216,7 @@ function ProrationPolicyDrawerSession({
               </Stack>
             </Scrollbar>
           </Box>
-          {busy && (
+          {(isSaving || formik.isSubmitting) && (
             <Stack
               role="status"
               aria-live="polite"
@@ -223,9 +231,7 @@ function ProrationPolicyDrawerSession({
               }}
             >
               <CircularProgress size={28} />
-              <Typography variant="body2">
-                {isLoading ? 'Loading policy settings…' : 'Saving policy…'}
-              </Typography>
+              <Typography variant="body2">Saving policy…</Typography>
             </Stack>
           )}
         </Box>

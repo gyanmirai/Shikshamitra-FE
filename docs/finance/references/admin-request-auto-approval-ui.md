@@ -20,7 +20,9 @@ The [backend contract](../../../../Shikshamitra-BE/docs/modules/finance/referenc
 | Charge | `src/screens/finance/ChargesManagement/Components/UpdateChargeForm/UpdateChargeForm.tsx` | Require a valid charge category before submission. After validation and student-audience resolution, show charge name/category, amount **per student**, resolved student count and total, due date, and approved-line outcome. Keep the existing all-scope audience confirmation as an earlier step; never stack dialogs. |
 | Concession | `src/screens/finance/Concession/Components/ConcessionRequestForm.tsx` | After validation and fresh preview, show student, academic year, type, total concession, affected dues, and whether the pinned policy creates linked refund requests. State that the concession will affect dues immediately. |
 
-Use the shared `ConfirmDialog` with a compact list of actual values, `Keep editing` and `Create and approve` (or `Submit and approve` for a draft). The message must say: **“This request will be approved automatically when you confirm.”** For refunds add: **“Approval does not send the payout; payout is recorded separately.”** For concessions with paid amounts, explain that any linked refund request follows its own approval workflow. Do not describe a charge's per-student amount as the batch total.
+Use the shared `ConfirmDialog` with a compact list of actual values, `Keep editing` and `Create and approve` (or `Submit and approve` for a draft). Charge creation uses `CustomDialog` and `DialogScrollContent`, as requested, with responsive labeled rows for charge name, category, academic year, student count, amount per student, due date and batch total. Its close and Keep editing actions preserve the parent draft without triggering a second unsaved-changes prompt. The message must say: **“This request will be approved automatically when you confirm.”** For refunds add: **“Approval does not send the payout; payout is recorded separately.”** For concessions with paid amounts, explain that any linked refund request follows its own approval workflow. Do not describe a charge's per-student amount as the batch total.
+
+The Cancel Charge dialog identifies the charge, category and amount per student, explains that only approved, uncollected lines can be cancelled, and highlights the reconciliation/refund alternatives for collected charges. It retains the required cancellation reason (at least 10 trimmed characters), server eligibility and concurrency checks. **Keep charge** dismisses the dialog; **Cancel charge** performs the existing cancellation command.
 
 Only a create/submit action opens this dialog. Draft save and ordinary edit keep their current interactions. Non-admins see the existing submission flow and copy. On an admin response show the returned `Approved` status, move the row into the correct list tab, and invalidate the same RTK Query tags that explicit approval invalidates. Do not optimistically display Approved before the server responds.
 
@@ -36,7 +38,7 @@ Charge creation sends the charge category, amount, due date, and audience. The b
 
 ## UX/accessibility checks
 
-- ConfirmDialog opens with a clear title and readable amount, currency, student and request details. Focus and keyboard actions are accessible; backdrop dismissal is disabled during the decision.
+- The review dialog opens with a clear title and readable amount, currency, student and request details. Focus and keyboard actions are accessible; backdrop dismissal is disabled during the decision.
 - The admin-only dialog never appears for ordinary roles, including users who hold `Approve` but are not configured administrators.
 - All-scope charge audience changes after first review force a new count and total review.
 - Refund approval wording never implies payment has been made.

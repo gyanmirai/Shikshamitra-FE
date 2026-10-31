@@ -1,11 +1,73 @@
+import type { ReactNode } from 'react';
+
 import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 import ConcessionPolicyFields from './ConcessionPolicyFields';
+import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 import { policy } from '../../../../../e2e/fixtures/concession-request-ui/data';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
+function RequestRefreshBoundary({
+  children,
+  onRefresh,
+}: {
+  children: ReactNode;
+  onRefresh: () => void;
+}) {
+  useRefreshFinancePrerequisites(onRefresh);
+  return children;
+}
+
 describe('concession policy field consistency', () => {
+  it('opens the selected policy rules from inside the dropdown without changing the request', async () => {
+    const onPolicyChange = vi.fn();
+    const refreshEligibility = vi.fn();
+    const store = configureStore({
+      reducer: { confirmPopup: () => ({ isChanges: true }) },
+    });
+    const user = userEvent.setup();
+    render(
+      <Provider store={store}>
+        <RequestRefreshBoundary onRefresh={refreshEligibility}>
+          <ConcessionPolicyFields
+            policies={policies.map((item) => ({ ...item, applyOn: 'AllOutstanding' }))}
+            types={[]}
+            policyVersionId="version-2"
+            typeId=""
+            onPolicyChange={onPolicyChange}
+            onTypeChange={vi.fn()}
+            onPolicyBlur={vi.fn()}
+            onTypeBlur={vi.fn()}
+          />
+        </RequestRefreshBoundary>
+      </Provider>
+    );
+    const view = screen.getByRole('button', { name: 'View selected concession policy' });
+    await user.click(view);
+    expect(screen.getByRole('dialog', { name: 'Concession Policy' })).toBeVisible();
+    expect(screen.getByText('Sibling policy')).toBeVisible();
+    expect(screen.getByText('v2')).toBeVisible();
+    expect(screen.getByText('25%')).toBeVisible();
+    expect(screen.getByText('All unpaid installments')).toBeVisible();
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(onPolicyChange).not.toHaveBeenCalled();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(store.getState().confirmPopup.isChanges).toBe(true);
+    expect(view).toHaveFocus();
+    act(() => window.dispatchEvent(new Event('focus')));
+    expect(refreshEligibility).not.toHaveBeenCalled();
+    act(() => {
+      window.dispatchEvent(new Event('blur'));
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(refreshEligibility).toHaveBeenCalledOnce();
+  });
   it('shows a readable selected-type helper when the API returns only its pending code', () => {
     render(
       <ConcessionPolicyFields

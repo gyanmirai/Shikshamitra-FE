@@ -1,7 +1,10 @@
 'use client';
 
+import type { RefObject } from 'react';
+import type { TabProps } from '@mui/material';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { ReconciliationVerificationStatus } from 'src/types/finance/reconciliation';
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
@@ -10,9 +13,9 @@ import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useCallback } from 'react';
 import { useNewSearchParam } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { ReconciliationStatusType } from 'src/enums/reconciliation-status-type';
@@ -66,10 +69,86 @@ const reconciliationTabConfig = [
   },
 ];
 
+function ReconciliationSummaryTab({
+  methodLabel,
+  stats,
+  color,
+  boundaryRef,
+  ...tabProps
+}: TabProps & {
+  methodLabel: string;
+  stats: { pending: number; approved: number; rejected: number };
+  color: LabelColor;
+  boundaryRef: RefObject<HTMLDivElement | null>;
+}) {
+  const processed = stats.approved + stats.rejected;
+  const total = stats.pending + processed;
+
+  return (
+    <CustomTooltip
+      describeChild
+      arrow
+      placement="right-start"
+      slotProps={{
+        popper: () => ({
+          modifiers: [
+            {
+              name: 'flip',
+              options: {
+                boundary: boundaryRef.current ?? undefined,
+                padding: 8,
+                fallbackPlacements: ['left-start'],
+              },
+            },
+            {
+              name: 'preventOverflow',
+              options: { boundary: boundaryRef.current ?? undefined, padding: 8, altAxis: true, tether: false },
+            },
+          ],
+        }),
+      }}
+      title={
+        <Box sx={{ minWidth: 160, p: 0.5, typography: 'caption' }}>
+          <Box sx={{ fontWeight: 'fontWeightSemiBold', mb: 0.5 }}>{methodLabel} status</Box>
+          {([
+            ['Pending', stats.pending],
+            ['Approved', stats.approved],
+            ['Rejected', stats.rejected],
+            ['Total', total],
+          ] as const).map(([label, count]) => (
+            <Box
+              key={label}
+              sx={{
+                display: 'flex', justifyContent: 'space-between', gap: 2,
+                ...(label === 'Total' && { borderTop: 1, borderColor: 'divider', mt: 0.5, pt: 0.5 }),
+              }}
+            >
+              <span>{label}</span><strong>{count}</strong>
+            </Box>
+          ))}
+        </Box>
+      }
+    >
+      <Tab
+        {...tabProps}
+        sx={{ fontSize: '12px' }}
+        label={
+          <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+            {methodLabel}
+            <Label color={color}>{processed}/{total}</Label>
+          </Box>
+        }
+      />
+    </CustomTooltip>
+  );
+}
+
 const FinanceReconciliation = () => {
+  const workspaceRef = useRef<HTMLDivElement>(null);
   // Tab state
   const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
   const [activeTab, setActiveTab] = useState(ReconciliationStatusType.Cheque);
+  const [verificationStatus, setVerificationStatus] = useState('All');
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const academicStartDate = currentYear?.startDate;
   const academicEndDate = currentYear?.endDate;
@@ -225,15 +304,16 @@ const FinanceReconciliation = () => {
       month: date ? date.month() + 1 : dayjs().month() + 1,
       year: date ? date.year() : dayjs().year(),
       paymentMethod: activeTab,
+      status: verificationStatus === 'All' ? undefined : Number(verificationStatus) as ReconciliationVerificationStatus,
     }),
-    [date, activeTab, currentYear?.id]
+    [date, activeTab, currentYear?.id, verificationStatus]
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box ref={workspaceRef} sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
       {discardConfirmation}
       <CustomBreadcrumbs
-        description="Cash receipts are official immediately. Approve non-cash provisional receipts after checking payment evidence to issue linked official receipts. Bank statement matching is a separate Accounts process."
+        description="Cash receipts are issued immediately. Approve non-cash provisional receipts after checking payment evidence to issue linked receipts. Bank statement matching is a separate Accounts process."
         heading="Reconciliation"
 
         links={[
@@ -243,8 +323,8 @@ const FinanceReconciliation = () => {
         ]}
       />
       <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, mb: 1 }}>
-        <Box display="flex" justifyContent="space-between">
-          <Box display="flex" gap={2} alignItems="center">
+        <Box display="flex" justifyContent="space-between" sx={{ flexDirection: { xs: 'column', lg: 'row' }, minWidth: 0 }}>
+          <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
             <CustomSelect
               label="Month"
               value={monthOptions.length ? monthKey : ''}
@@ -255,57 +335,44 @@ const FinanceReconciliation = () => {
               }
               formControlProps={{ sx: { width: 240 } }}
             />
+            <CustomSelect
+              label="Verification status"
+              value={verificationStatus}
+              options={[
+                { label: 'All statuses', value: 'All' },
+                { label: 'Pending', value: '1' },
+                { label: 'Approved', value: '2' },
+                { label: 'Rejected', value: '3' },
+              ]}
+              onChange={(value) => setVerificationStatus(String(value))}
+              formControlProps={{ sx: { width: 180 } }}
+            />
           </Box>
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
             sx={{
-              '& .MuiTabs-flexContainer': { gap: 2, justifyContent: 'end' },
+              '& .MuiTabs-flexContainer': { gap: 2 },
               flexGrow: 1,
+              minWidth: 0,
             }}
           >
             {TABS.map((tab) => (
-              <Tab
+              <ReconciliationSummaryTab
                 key={tab.value}
-                sx={{ fontSize: '12px' }}
-                label={
-                  <CustomTooltip
-                    title={
-                      <Box sx={{ fontSize: '12px', lineHeight: 1.8 }}>
-                        <Box>
-                          ✅ Approved: <strong>{tab.stats.approved}</strong>
-                        </Box>
-                        <Box>
-                          ❌ Rejected: <strong>{tab.stats.rejected}</strong>
-                        </Box>
-                        <Box>
-                          ⏳ Pending: <strong>{tab.stats.pending}</strong>
-                        </Box>
-                        <Box
-                          sx={{ borderTop: '1px solid rgba(255,255,255,0.3)', mt: 0.5, pt: 0.5 }}
-                        >
-                          📊 Total: <strong>{tab.total}</strong>
-                        </Box>
-                      </Box>
-                    }
-                    arrow
-                    placement="top"
-                  >
-                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                      {tab.label}
-                      <Label color={tab.color}>
-                        {tab.processed}/{tab.total}
-                      </Label>
-                    </Box>
-                  </CustomTooltip>
-                }
+                methodLabel={tab.label}
+                stats={tab.stats}
+                color={tab.color}
+                boundaryRef={workspaceRef}
                 value={tab.value}
               />
             ))}
           </Tabs>
         </Box>
       </Card>
-      <Box sx={{ height: '100%', flex: 1, overflow: 'hidden' }}>
+      <Box sx={{ minHeight: 0, flex: 1, overflow: 'hidden' }}>
         {currentActiveComponent?.component && (
           <currentActiveComponent.component
             key={activeTab}

@@ -8,6 +8,13 @@ node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin
 
 Open `http://127.0.0.1:5177/` in the Codex in-app browser.
 
+For receipt grouping, choose **Separate receipt grouping** or **Combined receipt grouping**
+before opening Collect Fee. Select the principal fee (20,000) and the late-fee charge
+(60,600), then collect the synthetic cash payment (80,600). Separate shows fee and charge
+PDFs for 20,000 and 60,600; Combined shows one PDF for 80,600. These deliberately simple
+PDFs verify the frontend receipt workflow and are not server-generated receipt evidence.
+The response keeps `paidLateFees` independent from ordinary `paidCharges`.
+
 Choose **Settled balances**, then open Collect Fee. With all fees and charges settled,
 the dialog shows “No outstanding fees or charges to collect. Items with no outstanding
 balance cannot be selected.” as informational feedback. Fee/charge checkboxes and Collect

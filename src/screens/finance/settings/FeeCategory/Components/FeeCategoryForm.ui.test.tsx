@@ -1,13 +1,22 @@
 import type { ReactNode } from 'react';
 
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import FeeCategoryForm from './FeeCategoryForm';
 
 const routing = vi.hoisted(() => ({
-  result: { data: { items: [{ id: 'income-aaa', name: 'AAA Income' }, { id: 'income-1', name: 'School Fee Income [ABC123]' }, { id: 'income-none', name: 'None' }] },
-    isLoading: false, isFetching: false },
+  result: {
+    data: {
+      items: [
+        { id: 'income-aaa', name: 'AAA Income' },
+        { id: 'income-1', name: 'School Fee Income [ABC123]' },
+        { id: 'income-none', name: 'None' },
+      ],
+    },
+    isLoading: false,
+    isFetching: false,
+  },
 }));
 
 vi.mock('src/screens/finance/hooks/useFinancePermissions', () => ({
@@ -49,7 +58,9 @@ vi.mock('src/screens/hr/policies/components/HRPolicySharedUI', () => ({
 vi.mock('src/components/shaking-text-field', () => ({
   default: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock('src/screens/finance/components/FinancePrerequisiteState', () => ({ default: () => <div>Income setup required</div> }));
+vi.mock('src/screens/finance/components/FinancePrerequisiteState', () => ({
+  default: () => <div>Income setup required</div>,
+}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
 vi.mock('src/screens/finance/settings/components/DownstreamUsageWarning', () => ({
@@ -61,8 +72,34 @@ const renderForm = () =>
 
 describe('Fee category editor', () => {
   beforeEach(() => {
-    routing.result = { data: { items: [{ id: 'income-aaa', name: 'AAA Income' }, { id: 'income-1', name: 'School Fee Income [ABC123]' }, { id: 'income-none', name: 'None' }] },
-      isLoading: false, isFetching: false };
+    routing.result = {
+      data: {
+        items: [
+          { id: 'income-aaa', name: 'AAA Income' },
+          { id: 'income-1', name: 'School Fee Income [ABC123]' },
+          { id: 'income-none', name: 'None' },
+        ],
+      },
+      isLoading: false,
+      isFetching: false,
+    };
+  });
+
+  it('filters special characters from entered names and preserves description punctuation', async () => {
+    renderForm();
+    const categoryName = screen.getByRole('textbox', { name: 'Category name *' });
+    const feeHeadName = screen.getByRole('textbox', { name: 'Fee head name *' });
+
+    fireEvent.change(categoryName, { target: { value: '#$%school fees 8' } });
+    fireEvent.change(feeHeadName, { target: { value: 'bus @service_% 2' } });
+    await waitFor(() => expect(categoryName).toHaveValue('School Fees 8'));
+    expect(feeHeadName).toHaveValue('Bus Service 2');
+
+    fireEvent.change(feeHeadName, { target: { value: 'Bus Service 2#' } });
+    expect(feeHeadName).toHaveValue('Bus Service 2');
+    const descriptions = screen.getAllByRole('textbox', { name: 'Description (optional)' });
+    fireEvent.change(descriptions[0], { target: { value: 'Fees (2026): 50% concession.' } });
+    expect(descriptions[0]).toHaveValue('Fees (2026): 50% concession.');
   });
 
   it('replaces new head fields only after current-scope income setup is resolved empty', () => {
@@ -75,7 +112,21 @@ describe('Fee category editor', () => {
   });
   it('preserves a saved historical income mapping while editing the category', () => {
     Object.assign(routing.result, { currentData: { items: [] } });
-    render(<FeeCategoryForm open={{ value: true } as never} onClose={vi.fn()} editData={{ id: 'category', name: 'Historic', feeHeads: [{ id: 'head', name: 'Tuition', incomeCategoryId: 'old', isConcessionApplied: false }] } as never} />);
+    render(
+      <FeeCategoryForm
+        open={{ value: true } as never}
+        onClose={vi.fn()}
+        editData={
+          {
+            id: 'category',
+            name: 'Historic',
+            feeHeads: [
+              { id: 'head', name: 'Tuition', incomeCategoryId: 'old', isConcessionApplied: false },
+            ],
+          } as never
+        }
+      />
+    );
     expect(screen.queryByText('Income setup required')).toBeNull();
     expect(screen.getByRole('textbox', { name: 'Fee head name *' })).toHaveValue('Tuition');
   });
@@ -96,7 +147,10 @@ describe('Fee category editor', () => {
     expect(screen.queryByText('Income Category is required')).toBeNull();
 
     fireEvent.mouseDown(incomeCategory);
-    expect(await screen.findByRole('option', { name: 'None' })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('option', { name: 'None' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
     fireEvent.click(await screen.findByRole('option', { name: /School Fee Income/ }));
     await waitFor(() => expect(screen.queryByText('Income Category is required')).toBeNull());
   });
@@ -104,14 +158,18 @@ describe('Fee category editor', () => {
   it('shows loading and does not invent a None record when the API returns no categories', async () => {
     routing.result = { data: { items: [] }, isLoading: true, isFetching: true };
     const view = renderForm();
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Income Category *' }));
-    expect(await screen.findByText('Loading…')).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Loading income categories' })).toBeVisible();
+    expect(screen.queryByRole('combobox', { name: 'Income Category *' })).toBeNull();
+    expect(screen.queryByText('No income categories found')).toBeNull();
     expect(screen.queryByRole('option')).toBeNull();
     routing.result = { data: { items: [] }, isLoading: false, isFetching: false };
-    view.rerender(<FeeCategoryForm open={{ value: true } as never} onClose={vi.fn()} editData={null} />);
+    view.rerender(
+      <FeeCategoryForm open={{ value: true } as never} onClose={vi.fn()} editData={null} />
+    );
+    const incomeCategory = await screen.findByRole('combobox', { name: 'Income Category *' });
+    fireEvent.mouseDown(incomeCategory);
     expect(await screen.findByText('No income categories found')).toBeVisible();
     expect(screen.queryByRole('option', { name: 'None' })).toBeNull();
-    const incomeCategory = screen.getByRole('combobox', { name: 'Income Category *' });
     fireEvent.keyDown(incomeCategory, { key: 'Escape' });
     fireEvent.blur(incomeCategory);
     expect(await screen.findByText('Income Category is required')).toBeVisible();
@@ -159,8 +217,9 @@ describe('Fee category editor', () => {
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.queryByRole('region', { name: 'Usage of FH3' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'View usage' })).toBeNull();
-    expect(screen.getAllByRole('combobox', { name: 'Income Category *' })[0])
-      .toHaveValue('School Fee Income');
+    expect(screen.getAllByRole('combobox', { name: 'Income Category *' })[0]).toHaveValue(
+      'School Fee Income'
+    );
   });
 
   it('groups category fields and keeps both descriptions visible', () => {
@@ -188,12 +247,14 @@ describe('Fee category editor', () => {
     expect(screen.getByRole('button', { name: 'Remove Bus Service' })).toBeDisabled();
     expect(screen.getAllByRole('textbox', { name: 'Description (optional)' })).toHaveLength(2);
     expect(screen.queryByRole('button', { name: 'Add description' })).toBeNull();
-    expect(screen.getByRole('region', { name: 'Fee head 1: Bus Service' })).toHaveTextContent('01');
+    expect(screen.getByLabelText('Fee head 1')).toHaveTextContent('1');
   });
 
   it('focuses the first invalid field after submission', async () => {
     renderForm();
-    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    });
 
     await waitFor(() =>
       expect(screen.getByRole('textbox', { name: 'Category name *' })).toHaveFocus()

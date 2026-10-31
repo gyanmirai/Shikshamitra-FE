@@ -3,12 +3,41 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-29
+updated_on: 2026-10-30
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Finance frontend changes
+
+## Full pending fee balance
+
+Run `FeeCollection/Components/PendingFeeBalance.test.tsx` and `FeeCollectionTable.test.tsx`
+under `src/screens/finance`, plus `npm run ts`. In the collection browser fixture, choose
+**Pending balance regression**. Verify ₹43,000 total, ₹13,224 paid and ₹29,776 pending,
+then open the row to check Fee Details. In Collect Fees, select the ₹3,306 current and
+₹26,470 future installments independently: total outstanding remains ₹29,776 while
+the collection selection changes. Check light/dark themes, phone width and Settled balances.
+The fixture uses actual UI components with synthetic API responses; backend integration
+tests own balance calculations and policy enforcement.
+
+## Form-fetch skeletons
+
+Run `policies/components/ProrationPolicyDrawer.loading.test.tsx` and
+`settings/PaymentTerm/Components/PaymentTermForm.close.test.tsx` under `src/screens/finance`.
+They cover fetch placeholders, loaded fields, prerequisite precedence and keeping fields visible
+during submission. Also run the affected category, concession, assignment and installment-template
+component tests, followed by `npm run ts`, touched-file ESLint and `git diff --check`.
+
+Serve `e2e/fixtures/proration-policy/vite.config.mts` and open `/?skeletonFetch=1` in the
+Codex in-app browser. The synthetic fee-head request waits 30 seconds after opening the create
+drawer, allowing inspection of the general-information grid, preset controls and fee-head rows.
+Check the loaded transition, narrow-screen stacking and saving without a fetch skeleton. The
+delay exists only in the fixture and never changes production API timing.
+
+## Name validation
+
+Run `src/utils/finance-name.test.ts`, `src/screens/finance/finance-name-validation.test.ts`, and `src/screens/finance/finance-payment-name-validation.test.ts` with Vitest. These cover supported Unicode names, punctuation/symbol rejection, required/optional payment names, and preservation of identifiers and description formats. Concession Type and Charge Category component tests cover filtering, descriptions, blur errors and invalid edit data; Fee Structure copy tests cover valid generated names. In the in-app browser, verify typing and pasting punctuation into the affected name fields and confirm descriptions and codes keep their own formats.
 
 ## Form prerequisite UI
 
@@ -165,6 +194,10 @@ date ordering, same-day ranges, optional end dates, and UTC payload boundaries.
 Browser checks cover Add/Edit, keyboard entry, disabled earlier end dates, inline
 errors, and responsive picker display.
 
+Charge Category initial loading: run `ChargeCategory.loading.test.tsx` for missing/empty year
+hydration, immediate loading with a selected year, and clearing/switching the year without
+sending an empty-year request.
+
 Charge Category deletion: run `ChargeCategory.deletion.test.tsx`, `ChargeCategory.test.tsx`,
 and `src/redux/finance/chargeCategory.test.ts`. Browser checks cover the in-use dependency
 warning and Review charges link, unused-category confirmation/cancel, failed preflight/retry,
@@ -286,6 +319,12 @@ Retain loading, unavailable, error/Retry and current status/amount treatments.
 
 ### Concessions and Collections tables
 
+Concession view regressions: run `ConcessionAdmin/ConcessionItemCard.test.tsx` and
+`ConcessionAdmin/StucentConcessionCard.test.tsx`. Verify alphanumeric GR numbers, one amount
+when requested and approved totals match, separate totals when they differ, and explicit
+reversed/net approved totals. In the in-app browser, check natural card heights with zero,
+one and several documents, balanced status-tab padding, and narrow-screen wrapping.
+
 Run `npm run test -- src/screens/finance/Concession/Components/StudentConcessionTable.test.tsx src/screens/finance/FeeCollection/Components/FeeCollectionTable.query.test.tsx` for query-state, status, paging and maker/checker controls.
 Retain the existing Collections status, balance and academic-filter regression tests under `src/screens/finance/FeeCollection/Components/FeeCollectionTable*.test.tsx`.
 In the Codex in-app browser, inspect both routes with their context filters, open text/numeric/date/status filter menus, combine filters, clear them, change concession tabs, and check fullscreen and sticky right columns.
@@ -387,7 +426,7 @@ Add or update tests when a change affects these areas.
 | Optimistic cache update                   | Client cache test                                                                                                                                                                           |
 | Approval, rejection, or reversal behavior | Preview/confirm screen or client mutation test                                                                                                                                              |
 | Concession decisions from Pending list    | Different checker with exact grant sees direct actions; requester cannot decide; approval preview and confirmation, reason-required rejection, backend denial, and list/tab count refresh   |
-| Late-fee waiver queue and decisions       | Type check, exact permission visibility, Pending/Applied/Rejected tabs, reason-required rejection, maker-checker API denial, student-scope isolation, and collection refresh after approval |
+| Direct charge and late-fee waivers        | `FeeWaiverToggle.test.tsx` and `CollectionLedgerTable.test.tsx`: exact ApplyWaiver permission, positive eligible balances, named source, reason-only validation, non-cash confirmation, busy locks, dirty cancellation, error retention/idempotent retry, charge deselection, and retained principal after a late-fee waiver. `feeCollection.charges.test.ts` covers subscribed balance refresh. |
 | Audit Trail mapping                       | Mapper test                                                                                                                                                                                 |
 | Route-level behavior                      | Playwright test before release sign-off                                                                                                                                                     |
 
@@ -589,6 +628,26 @@ After the final category-routing and required-reference changes, the three affec
 
 ## Collection receipt grouping
 
+Run `collectionReceiptAmounts.test.ts` and `fee-collection-receipt-fixture.test.ts` for
+principal/late-fee separation, ordinary charges, late-fee-only collections, Combined
+totals, and legacy fee-only response compatibility. `FeeCollectionForm.context.test.tsx`
+checks the resulting receipt data through the actual collection form. The late-fee browser
+fixture's **Separate receipt grouping** and **Combined receipt grouping** scenarios use
+20,000 principal plus 60,600 late fees and expose one or two synthetic PDFs accordingly.
+Receipt IDs and canonical document amounts from the collection response remain authoritative;
+the UI never invents a second receipt for a historical collection. Without canonical amount
+fields, legacy Separate responses retain late fees on their fee receipt even when an ordinary
+charge receipt also exists. Cover the 80,600 fee / 400 charge legacy case alongside the new
+20,000 fee / 61,000 charge case.
+
+`FinalPaymentReviewDialog.test.tsx` also covers a principal fee and its late-fee charge sharing
+the same due-fee ID: both allocation rows remain visible without duplicate React keys.
+
+The shared `pdfjs-webpack.test.ts` bundles the PDF library and worker through Next's development
+Webpack eval modules and executes their bootstrap. It protects the minified ESM entry points from
+the unminified distribution's namespace collision; finish by rendering both actual receipt PDFs
+in the in-app browser. Valid downloaded PDF bytes alone do not establish preview correctness.
+
 Run the focused `useCollectionPolicyForm`, `CollectionPolicyDrawer`, `FeeCollectionForm.charges` and `FeeCollectionOutcomePanel` Vitest suites after changing receipt configuration or collection preview. The policy tests cover both choices, historical defaults, payloads and invalid submissions. The outcome test covers one versus two verification entries. Use the existing `e2e/fixtures/collection-policy` harness for the final in-app browser smoke: select each receipt option, inspect its accessible info, check discard/reopen, and verify the fixed footer and narrow-screen layout. Backend persistence and reversal evidence belongs to [Finance backend testing](../../../Shikshamitra-BE/docs/modules/finance/testing.md).
 
 ## Receipt lifecycle checks
@@ -607,7 +666,7 @@ PDF generation and missing-blob recovery are covered by the backend HTTP regress
 
 Run the focused FinalPaymentReviewDialog.test.tsx and paymentReceiptSummary.test.ts tests, npm run ts, and npm run docs:check.
 
-Browser acceptance: collect cash fees and charges → Official Receipt in Receipts; Reconciliation shows six non-cash tabs with Cheque selected by default, and saved Cash-tab links fall back to Cheque. Record each non-cash method → Provisional Receipt; approve → linked Official Receipt; reject → rejected history without an official document. Check fee-only, charge-only, combined, PDF download filename, payment method, long student names and narrow screens. Old cashier confirmation flags must never finalize a new non-cash payment. Mixed non-cash instruments must fail validation. Backend behavior and test suites: [Receipt lifecycle](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md).
+Browser acceptance: collect cash fees and charges → Receipt in Receipts; Reconciliation shows six non-cash tabs with Cheque selected by default, and saved Cash-tab links fall back to Cheque. Record each non-cash method → Provisional Receipt; approve → linked Receipt; reject → rejected history without an official document. Check fee-only, charge-only, combined, PDF download filename, payment method, long student names and narrow screens. Old cashier confirmation flags must never finalize a new non-cash payment. Mixed non-cash instruments must fail validation. Backend behavior and test suites: [Receipt lifecycle](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md).
 
 ### Local verification evidence (23 October 2026)
 
@@ -622,3 +681,29 @@ The final preview implementation reuses `src/components/preview-document/pdf-pre
 In-app browser visual acceptance passed for canvas-rendered provisional pages in collection outcomes and receipt detail, and the linked official page in reconciliation. Zoom/fit width was checked on the provisional viewer; one-page navigation is disabled at its bounds. Both API-exported pages were rendered independently and inspected for clipping, alignment, payment method, exact INR totals and the official predecessor reference.
 
 The final full Next.js production build after the shared viewer change exited successfully: compilation, all seven static pages, route traces and standalone server output completed. Isolated build files are retained in the wrapper workspace `tmp/receipt-next-production-build`; generated receipt-validation TypeScript config paths were removed afterward. Validation logs and PDF/browser evidence are retained under the wrapper `tmp/` and `output/` folders.
+
+## Table search and filter queries
+
+Run the receipt list search regression, reconciliation query/state/status regressions, and adjustment filter regressions after changing table query wiring.
+The synthetic [table-search fixture](../../e2e/fixtures/finance-table-search/README.md) mounts the production Receipts and Reconciliation components with results beyond the first API page.
+Check matching and unmatched search, clear/reset, next page, page size, month/type/status intersections, scope changes, all six payment tabs, and table utilities in the Codex in-app browser.
+This is frontend contract evidence; validate persisted tenant results separately in the signed-in local application.
+
+The collection academic-filter test store must include initialized Finance collection View permission so its requests exercise filters rather than the permission guard.
+Keep the real API hooks and the out-of-order response assertions.
+
+
+Audit Trail search/reset regression: `src/screens/finance/AuditTrail/hooks/useFinanceAuditTrail.search.test.tsx` mounts the actual filter, active chips and query hook. It covers the single 400 ms query debounce, Reset/clear during a pending keyword, same-keyword re-entry, initial deep-link filters, independent filters, year scope and pagination reset. On this loaded Windows host the nine cases passed with the existing Vite preload, one worker and an explicit 30 second test timeout; retain the startup/time-limit failures separately from assertion results.
+
+`FinanceReconciliation.headers.integration.test.tsx` mounts the actual parent, method tables, shared filter menu, RTK clients and read-only transport. All six numeric tab IDs must send the amount criterion, find the final candidate before pagination, and restore the full count on Clear. Both unsupported legacy methods must offer zero column-filter buttons. The eight cases passed with a bounded 120 second case budget on the loaded Windows host; retain the earlier timeout-only run separately. `AdjustmentTable.query.test.tsx` covers server paging, search, criteria, context/page reset, atomic clear, text roll identifiers and disabled unsupported page-only sorting. Positive backend evidence remains separate from synthetic UI evidence.
+
+## Refund editing regressions
+
+Run `RefundWorklist.edit.test.tsx`, `RefundForm.test.tsx`, `RefundGeneralInfoCard.test.tsx`, `refundEditValidation.test.ts` and `RefundSelection.test.tsx` under `src/screens/finance/feeRefund` with the existing Vitest Windows preload and one worker.
+These cover the server-gated Edit action, hidden Completed actions, disabled student selectors, preservation of saved partial amounts, same-request Pending updates without resubmission, masked beneficiary validation and receipt selection.
+Browser acceptance must open a Pending row through Edit, verify all five Student Information selectors are disabled, save changed amounts/reason and reopen the same request.
+Use synthetic data; persisted workflow and concurrency tests belong to the backend suite.
+
+Charge detail amount regressions render the actual detail component and shared table, exercise Collected/Waived/Outstanding numeric criteria against formatted fractional currency values, and verify filtered counts plus Clear restoration. Run the focused ViewChargeForm filter suite after changing these columns; browser acceptance remains separate from fixture results.
+
+`src/screens/finance/components/FinanceDetailQuantitativeFilters.test.tsx` mounts Cash Details, Adjustment View and the collection outcome panel with their real shared tables. It verifies raw fractional amount comparisons and real date-section entry, filtered row counts and Clear restoration using read-only query fixtures/static outcome props. It does not submit a payment.

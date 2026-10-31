@@ -17,7 +17,12 @@ export default function FeeStructureAssign() {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [students, setStudents] = useState<IFeeStructureData[]>([]);
-  const close = () => setStudents([]);
+  const [editAssignedPolicies, setEditAssignedPolicies] = useState(false);
+  const openAssignment = (selected: IFeeStructureData[], edit = false) => {
+    setEditAssignedPolicies(edit);
+    setStudents(selected);
+  };
+  const close = () => openAssignment([]);
   return (
     <Box
       sx={{
@@ -39,13 +44,15 @@ export default function FeeStructureAssign() {
         ]}
       />
       <FeeStructureAssignTable
-        onAssignStructure={(student) => setStudents([student])}
-        onBulkAssign={(selected) => setStudents(selected)}
+        onAssignStructure={(student) => openAssignment([student])}
+        onEdit={(student) => openAssignment([student], true)}
+        onBulkAssign={(selected) => openAssignment(selected)}
       />
       <AssignmentDrawer
         students={students}
         academicYearId={currentYear?.id ?? ''}
         academicYearName={currentYear?.name}
+        editAssignedPolicies={editAssignedPolicies}
         onClose={close}
       />
     </Box>

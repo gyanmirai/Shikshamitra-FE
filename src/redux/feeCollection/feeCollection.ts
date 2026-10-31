@@ -342,6 +342,9 @@ export interface FinanceAuditSummary {
 
 export interface CollectFeeOutput {
   receiptGrouping?: 'Separate' | 'Combined';
+  /** Canonical totals of the issued documents, including idempotent replay of older receipts. */
+  feeReceiptAmount?: number | null;
+  chargeReceiptAmount?: number | null;
   id: string;
   receiptNumber: string;
   feeReceiptNumber?: string;

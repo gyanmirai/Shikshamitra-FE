@@ -1,9 +1,6 @@
-import { CONFIG } from 'src/config-global';
-import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { SvgColor } from 'src/components/svg-color';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { EmptyContent } from 'src/components/empty-content';
@@ -96,6 +93,19 @@ export default function ClassAccordionPanel({
   const [listOpen, setListOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [names, setNames] = useState<Record<string, string>>({});
+  const [actionContainers, setActionContainers] = useState<Record<string, HTMLDivElement | null>>(
+    {}
+  );
+  const actionRefs = useRef(new Map<string, (element: HTMLDivElement | null) => void>());
+  const actionRef = (key: string) => {
+    if (!actionRefs.current.has(key))
+      actionRefs.current.set(key, (element) => {
+        setActionContainers((previous) =>
+          previous[key] === element ? previous : { ...previous, [key]: element }
+        );
+      });
+    return actionRefs.current.get(key)!;
+  };
   const desktop = useResponsive('up', 'lg');
   const [dirtyKeys, setDirtyKeys] = useState<Set<string>>(new Set());
   const [savedCards, setSavedCards] = useState<
@@ -196,37 +206,7 @@ export default function ClassAccordionPanel({
           </IconButton>
         )}
       </Stack>
-      {canAdd && (
-        <Stack direction="row" spacing={1} sx={{ px: 1.5, pb: 2 }}>
-          <Button
-            size="small"
-            variant="contained"
-            color="inherit"
-            fullWidth
-            aria-label="Add Structure"
-            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-            onClick={addNew}
-            disabled={busy}
-          >
-            Add Structure
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            fullWidth
-            aria-label="Copy Structure"
-            startIcon={<Iconify icon={GlobalIcons.copy} />}
-            onClick={() => {
-              setListOpen(false);
-              copyDialog.onTrue();
-            }}
-            disabled={busy}
-          >
-            Copy Structure
-          </Button>
-        </Stack>
-      )}
-      <Box sx={{ px: 1.5, pb: 1.5, borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ px: 1.5, pb: 1.5 }}>
         <TextField
           fullWidth
           size="small"
@@ -243,6 +223,36 @@ export default function ClassAccordionPanel({
           }}
         />
       </Box>
+      {canAdd && (
+        <Stack direction="row" spacing={1} sx={{ px: 1.5, pb: 2 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            fullWidth
+            aria-label="Copy Structure"
+            startIcon={<Iconify icon={GlobalIcons.copy} />}
+            onClick={() => {
+              setListOpen(false);
+              copyDialog.onTrue();
+            }}
+            disabled={busy}
+          >
+            Copy Structure
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            color="inherit"
+            fullWidth
+            aria-label="Add Structure"
+            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+            onClick={addNew}
+            disabled={busy}
+          >
+            Add Structure
+          </Button>
+        </Stack>
+      )}
       <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
         <List aria-label="Fee structures" sx={{ p: 1.5, minWidth: 0 }}>
           {cards
@@ -255,67 +265,77 @@ export default function ClassAccordionPanel({
               const name = (names[key] ?? card.name) || 'New fee structure';
               const selected = key === activeKey;
               return (
-                <ListItemButton
+                <Box
+                  component="li"
                   key={key}
-                  selected={selected}
-                  disabled={busy}
-                  aria-current={selected ? 'true' : undefined}
-                  onClick={() => {
-                    setSelectedKey(key);
-                    setListOpen(false);
-                  }}
-                  sx={(theme) => ({
-                    borderRadius: 2,
-                    minHeight: 56,
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
                     minWidth: 0,
-                    display: 'grid',
-                    gridTemplateColumns: '24px minmax(0, 1fr)',
-                    columnGap: 1,
-                    p: 1.25,
                     mb: 1,
-                    bgcolor: 'background.paper',
-                    border: '1px solid',
-                    borderColor: selected ? 'primary.main' : 'transparent',
-                    transition: theme.transitions.create(['background-color', 'border-color'], {
-                      duration: theme.transitions.duration.shorter,
-                    }),
-                    '&.Mui-selected': {
-                      bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.12),
-                    },
-                    '&:hover': {
-                      bgcolor: 'action.hover',
-                    },
-                    '&.Mui-selected:hover': {
-                      bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
-                    },
-                    '&.Mui-focusVisible': {
-                      outline: '2px solid',
-                      outlineColor: 'primary.main',
-                      outlineOffset: 2,
-                    },
-                    '@media (prefers-reduced-motion: reduce)': {
-                      transition: 'none',
-                    },
-                  })}
+                    border: 1,
+                    borderColor: selected ? 'text.secondary' : 'divider',
+                    bgcolor: selected ? 'action.selected' : 'background.paper',
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                  }}
                 >
-                  <SvgColor
-                    src={`${CONFIG.site.basePath}/assets/icons/navbar/ic-file.svg`}
-                    width={24}
-                    aria-hidden="true"
-                    sx={{ color: selected ? 'primary.main' : 'text.secondary', flexShrink: 0 }}
-                  />
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      minWidth: 0,
-                      overflowWrap: 'anywhere',
-                      color: selected ? 'primary.main' : 'text.primary',
-                      fontWeight: selected ? 700 : 500,
+                  <ListItemButton
+                    selected={selected}
+                    disabled={busy}
+                    aria-current={selected ? 'true' : undefined}
+                    onClick={() => {
+                      setSelectedKey(key);
+                      setListOpen(false);
                     }}
+                    sx={(theme) => ({
+                      borderRadius: 2,
+                      minHeight: 56,
+                      minWidth: 0,
+                      flex: 1,
+                      display: 'grid',
+                      gridTemplateColumns: '24px minmax(0, 1fr)',
+                      columnGap: 1,
+                      p: 1.25,
+                      transition: theme.transitions.create(['background-color', 'border-color'], {
+                        duration: theme.transitions.duration.shorter,
+                      }),
+                      '&.Mui-selected': {
+                        bgcolor: 'transparent',
+                      },
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                      '&.Mui-selected:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                      '&.Mui-focusVisible': {
+                        outline: '2px solid',
+                        outlineColor: 'text.secondary',
+                        outlineOffset: -2,
+                      },
+                      '@media (prefers-reduced-motion: reduce)': {
+                        transition: 'none',
+                      },
+                    })}
                   >
-                    {name}
-                  </Typography>
-                </ListItemButton>
+                    <Typography variant="caption" color="text.secondary" aria-hidden="true">
+                      {cards.findIndex((item) => item.key === key) + 1}.
+                    </Typography>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        minWidth: 0,
+                        overflowWrap: 'anywhere',
+                        color: 'text.primary',
+                        fontWeight: selected ? 600 : 500,
+                      }}
+                    >
+                      {name}
+                    </Typography>
+                  </ListItemButton>
+                  <Box ref={actionRef(key)} sx={{ flexShrink: 0, pr: 1 }} />
+                </Box>
               );
             })}
         </List>
@@ -390,6 +410,15 @@ export default function ClassAccordionPanel({
             <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
               <Button
                 size="small"
+                variant="outlined"
+                startIcon={<Iconify icon={GlobalIcons.copy} />}
+                disabled={busy}
+                onClick={copyDialog.onTrue}
+              >
+                Copy Structure
+              </Button>
+              <Button
+                size="small"
                 variant="contained"
                 color="inherit"
                 sx={{ flexShrink: 0 }}
@@ -398,15 +427,6 @@ export default function ClassAccordionPanel({
                 onClick={addNew}
               >
                 Add Structure
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon={GlobalIcons.copy} />}
-                disabled={busy}
-                onClick={copyDialog.onTrue}
-              >
-                Copy Structure
               </Button>
             </Stack>
           )}
@@ -465,6 +485,8 @@ export default function ClassAccordionPanel({
             >
               <FeeStructureWorkspaceCard
                 initialData={card}
+                actionsContainer={actionContainers[key]}
+                actionsInList
                 index={index}
                 viewOnly={viewOnly}
                 onNameChange={(name) =>

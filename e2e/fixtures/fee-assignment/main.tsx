@@ -77,6 +77,11 @@ function Fixture() {
   const [students, setStudents] = React.useState<IFeeStructureData[]>(
     bulkSidebar ? bulkStudents : []
   );
+  const [editAssignedPolicies, setEditAssignedPolicies] = React.useState(false);
+  const openAssignment = (selected: IFeeStructureData[], edit = false) => {
+    setEditAssignedPolicies(edit);
+    setStudents(selected);
+  };
   const { setMode } = useColorScheme();
   return (
     <Stack sx={{ height: '100vh', p: { xs: 1, md: 2 }, bgcolor: 'background.neutral' }} spacing={1}>
@@ -91,14 +96,16 @@ function Fixture() {
       <Typography variant="h5">Assign fee structure · 2026–27</Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
         <FeeStructureAssignTable
-          onAssignStructure={(student) => setStudents([student])}
-          onBulkAssign={setStudents}
+          onAssignStructure={(student) => openAssignment([student])}
+          onEdit={(student) => openAssignment([student], true)}
+          onBulkAssign={(selected) => openAssignment(selected)}
         />
         <AssignmentDrawer
           students={students}
           academicYearId="year"
           academicYearName="2026–27"
-          onClose={() => setStudents([])}
+          editAssignedPolicies={editAssignedPolicies}
+          onClose={() => openAssignment([])}
         />
       </Box>
     </Stack>

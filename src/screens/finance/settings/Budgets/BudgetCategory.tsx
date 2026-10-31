@@ -1,5 +1,7 @@
 'use client';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
+import { financeNameSchema } from 'src/utils/finance-name';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useState } from 'react';
@@ -260,7 +262,9 @@ const BudgetCategoryDialog = ({ open, onClose, editData, onSave }: BudgetCategor
 
   // Form validation schema using Yup
   const validationSchema = Yup.object().shape({
-    categoryName: Yup.string().required('Budget Category Name is required'),
+    categoryName: financeNameSchema('Budget Category Name').required(
+      'Budget Category Name is required'
+    ),
     code: Yup.string().optional(),
     description: Yup.string().optional(),
   });
@@ -339,7 +343,7 @@ const BudgetCategoryDialog = ({ open, onClose, editData, onSave }: BudgetCategor
                   fullWidth
                   label="Budget Category Name *"
                   onChange={(e: any) => {
-                    const withoutNumbers = e.target.value.replace(/[0-9]/g, '');
+                    const withoutNumbers = sanitizeFinanceName(e.target.value);
                     const newName = withoutNumbers
                       .split(' ')
                       .map(
@@ -348,6 +352,7 @@ const BudgetCategoryDialog = ({ open, onClose, editData, onSave }: BudgetCategor
                       .join(' ');
                     formik.setFieldValue('categoryName', newName);
                   }}
+                  onBlur={formik.handleBlur}
                   error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
                   helperText={
                     (formik.touched.categoryName && typeof formik.errors.categoryName === 'string'

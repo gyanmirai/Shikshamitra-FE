@@ -222,7 +222,7 @@ export const refundPaymentMethodsConfig: IPaymentMethodsConfig = {
       label: 'IFSC Code',
       type: 'uppercase',
       required: true,
-      pattern: '/^[A-Z]{4}0[A-Z0-9]{6}$/',
+      pattern: '^[A-Z]{4}0[A-Z0-9]{6}$',
       patternMessage: 'Enter a valid IFSC code. Example: SBIN0001234',
       maxLength: 11,
     },

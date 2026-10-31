@@ -1,5 +1,7 @@
 'use client';
 
+import { AssignmentFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
+
 import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
@@ -21,7 +23,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailField } from 'src/components/detail-view';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
@@ -35,7 +37,6 @@ import {
   Button,
   Tooltip,
   ListItem,
-  Skeleton,
   TextField,
   Pagination,
   Typography,
@@ -132,12 +133,14 @@ export default function AssignmentWorkflow({
   students,
   academicYearId,
   academicYearName,
+  editAssignedPolicies = false,
   onClose,
   onBusyChange,
 }: {
   students: Student[];
   academicYearId: string;
   academicYearName?: string;
+  editAssignedPolicies?: boolean;
   onClose: () => void;
   onBusyChange?: (busy: boolean) => void;
 }) {
@@ -157,7 +160,9 @@ export default function AssignmentWorkflow({
     `${financePermissions.fees.structureAssign}.OverridePolicies`
   );
   const dispatch = useDispatch();
-  const [editingPolicies, setEditingPolicies] = useState(false);
+  const [editingPolicies, setEditingPolicies] = useState(
+    editAssignedPolicies && canOverridePolicies
+  );
   const setPolicyDirty = useCallback((dirty: boolean) => dispatch(setIsChanges(dirty)), [dispatch]);
   const viewing = students.length === 1 && !!students[0].isFeeStructureAssigned;
   const candidates = useAssignmentCandidatesQuery(
@@ -408,6 +413,60 @@ export default function AssignmentWorkflow({
     requests: Yup.array().min(1, 'Select students to assign.'),
   });
 
+  const studentDetails = viewing ? (
+    <FormSectionCard
+      title="Student Details"
+      icon="mdi:account-school-outline"
+      descriptionTooltip="Student identity and enrollment context for the selected academic year."
+    >
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
+          gap: 2,
+        }}
+      >
+        <DetailField label="Student name" value={students[0].studentName} />
+        <DetailField
+          label="Academic year"
+          value={
+            academicYearName || (currentYear?.id === academicYearId ? currentYear?.name : undefined)
+          }
+        />
+        <DetailField label="GR number" value={students[0].grNumber} />
+        <DetailField label="Roll number" value={students[0].rollNumber} />
+        <DetailField label="Class / division" value={students[0].standardDivision} />
+        <DetailField label="Board" value={students[0].boardName} />
+        <DetailField label="Medium" value={students[0].mediumName} />
+        <DetailField label="Academic stage" value={students[0].stageName} />
+      </Box>
+    </FormSectionCard>
+  ) : null;
+
+  if (
+    viewing &&
+    editingPolicies &&
+    canOverridePolicies &&
+    !assigned.isFetching &&
+    !assigned.isError &&
+    assigned.data?.assignment
+  ) {
+    return (
+      <AssignedPolicyEditor
+        data={assigned.data}
+        onCancel={onClose}
+        onSaved={() => {
+          setEditingPolicies(false);
+          assigned.refetch();
+        }}
+        onBusyChange={onBusyChange}
+        onDirtyChange={setPolicyDirty}
+      >
+        {studentDetails}
+      </AssignedPolicyEditor>
+    );
+  }
+
   if (viewing || !canAssign)
     return (
       <Stack sx={{ flex: 1, minHeight: 0 }}>
@@ -417,37 +476,10 @@ export default function AssignmentWorkflow({
         >
           {viewing ? (
             <>
-              <DetailSection
-                title="Student Details"
-                icon="mdi:account-school-outline"
-                helpText="Student identity and enrollment context for the selected academic year."
-              >
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
-                    gap: 2,
-                  }}
-                >
-                  <DetailField label="Student name" value={students[0].studentName} />
-                  <DetailField
-                    label="Academic year"
-                    value={
-                      academicYearName ||
-                      (currentYear?.id === academicYearId ? currentYear?.name : undefined)
-                    }
-                  />
-                  <DetailField label="GR number" value={students[0].grNumber} />
-                  <DetailField label="Roll number" value={students[0].rollNumber} />
-                  <DetailField label="Class / division" value={students[0].standardDivision} />
-                  <DetailField label="Board" value={students[0].boardName} />
-                  <DetailField label="Medium" value={students[0].mediumName} />
-                  <DetailField label="Academic stage" value={students[0].stageName} />
-                </Box>
-              </DetailSection>
-              {assigned.isFetching && (
+              {studentDetails}
+              {assigned.isFetching && !busy && (
                 <Box role="status" aria-label="Loading fee assignment">
-                  <Skeleton height={180} />
+                  <AssignmentFormSkeleton />
                 </Box>
               )}
               {assigned.isError && (
@@ -477,49 +509,10 @@ export default function AssignmentWorkflow({
                   year.
                 </Alert>
               )}
-              {!assigned.isFetching &&
-                !assigned.isError &&
-                assigned.data &&
-                canOverridePolicies &&
-                (editingPolicies ? (
-                  <AssignedPolicyEditor
-                    data={assigned.data}
-                    onCancel={() => setEditingPolicies(false)}
-                    onSaved={() => {
-                      setEditingPolicies(false);
-                      assigned.refetch();
-                    }}
-                    onBusyChange={onBusyChange}
-                    onDirtyChange={setPolicyDirty}
-                  />
-                ) : (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Iconify icon="mdi:pencil-outline" />}
-                    onClick={() => setEditingPolicies(true)}
-                  >
-                    Edit assigned policies
-                  </Button>
-                ))}
             </>
           ) : (
             <Box>Your current access allows viewing assignments only.</Box>
           )}
-        </Stack>
-        <Stack
-          direction="row"
-          justifyContent="flex-end"
-          sx={{ p: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
-        >
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:close" />}
-            onClick={onClose}
-          >
-            Close
-          </Button>
         </Stack>
       </Stack>
     );
@@ -778,7 +771,11 @@ export default function AssignmentWorkflow({
               )}
 
               {activeStep === 0 && (
-                <DetailSection title="Fee structure" icon="mdi:file-document-outline">
+                <FormSectionCard
+                  title="Fee Structure"
+                  icon="mdi:file-document-outline"
+                  descriptionTooltip="Choose the published fee structure to assign for this academic year."
+                >
                   {candidates.isError && (
                     <Alert
                       severity="error"
@@ -853,7 +850,7 @@ export default function AssignmentWorkflow({
                       </Typography>
                     </Stack>
                   )}
-                </DetailSection>
+                </FormSectionCard>
               )}
               {(activeStep > 0 || Boolean(candidate)) &&
                 (() => {
@@ -1165,7 +1162,11 @@ export default function AssignmentWorkflow({
                                 />
                               )}
                               {activeStep === 1 && candidate && request && (
-                                <DetailSection title="Fees & dates" icon="mdi:format-list-checks">
+                                <FormSectionCard
+                                  title="Fees & Dates"
+                                  icon="mdi:format-list-checks"
+                                  descriptionTooltip="Review the fees and service dates included in this assignment."
+                                >
                                   <AssignmentStudentInputs
                                     key={student.studentId}
                                     candidate={candidate}
@@ -1178,7 +1179,7 @@ export default function AssignmentWorkflow({
                                     showErrors={showInputErrors}
                                     flat
                                   />
-                                </DetailSection>
+                                </FormSectionCard>
                               )}
                               {outcome?.errorMessage && !studentPreview?.preview && (
                                 <Alert severity="error">

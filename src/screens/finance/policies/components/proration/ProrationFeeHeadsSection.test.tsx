@@ -34,7 +34,7 @@ const rule = (overrides: Partial<IProrationFeeHeadRule> = {}): IProrationFeeHead
   configuration: { monthlyRule: 'ChargeNextMonth', cutOffDay: 15, roundOff: 'NearestRupee' },
   applyOnEarlyWithdrawal: true,
   earlyWithdrawalRuleType: 'DailyProration',
-  earlyWithdrawalConfiguration: { calculationBasis: 'CalendarDays', minimumChargeDays: 3 },
+  earlyWithdrawalConfiguration: { calculationBasis: 'CalendarDays' },
   ...overrides,
 });
 function Harness({
@@ -209,16 +209,14 @@ describe('proration fee-head interactions', () => {
       expect.objectContaining({
         feeHeadId: 'tuition',
         ruleType: 'Daily',
-        minimumChargeDays: 0,
+
         earlyWithdrawalRuleType: 'Daily',
-        earlyWithdrawalMinimumChargeDays: 3,
       }),
       expect.objectContaining({
         feeHeadId: 'hostel',
         ruleType: 'Daily',
-        minimumChargeDays: 0,
+
         earlyWithdrawalRuleType: 'Daily',
-        earlyWithdrawalMinimumChargeDays: 3,
       }),
     ]);
   });
@@ -295,7 +293,7 @@ describe('proration fee-head interactions', () => {
       fireEvent.click(admission().getByRole('switch'));
     });
     expect(admission().queryByRole('spinbutton')).not.toBeInTheDocument();
-    expect(withdrawal().getByRole('spinbutton')).toHaveValue(3);
+    expect(withdrawal().queryByRole('spinbutton')).not.toBeInTheDocument();
     await act(async () => {
       fireEvent.click(admission().getByRole('switch'));
     });
@@ -307,7 +305,7 @@ describe('proration fee-head interactions', () => {
     await act(async () => {
       fireEvent.click(withdrawal().getByRole('switch'));
     });
-    expect(withdrawal().getByRole('spinbutton')).toHaveValue(3);
+    expect(withdrawal().queryByRole('spinbutton')).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: /Rounding/ })).not.toBeInTheDocument();
   });
 
@@ -322,8 +320,12 @@ describe('proration fee-head interactions', () => {
       expect(screen.queryByRole('option', { name: 'No proration' })).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('option', { name: 'Daily proration' }));
     });
-    await waitFor(() => expect(admission().getByRole('spinbutton')).toHaveValue(0));
-    expect(withdrawal().getByRole('spinbutton')).toHaveValue(3);
+    await waitFor(() =>
+      expect(admission().getByRole('combobox', { name: /Calculation basis/ })).toHaveTextContent(
+        'Calendar days'
+      )
+    );
+    expect(withdrawal().queryByRole('spinbutton')).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: /Rounding/ })).not.toBeInTheDocument();
   });
 
@@ -527,7 +529,7 @@ describe('proration fee-head interactions', () => {
         /No proration|Daily proration|Monthly proration/
       )
     );
-    expect(withdrawal().getByRole('spinbutton')).toHaveValue(3);
+    expect(withdrawal().queryByRole('spinbutton')).not.toBeInTheDocument();
   });
 
   it('reveals all event errors on submit, expands the row, and focuses the first field', async () => {
@@ -537,8 +539,7 @@ describe('proration fee-head interactions', () => {
           rule({
             configuration: { monthlyRule: 'ChargeNextMonth', cutOffDay: 32 },
             earlyWithdrawalConfiguration: {
-              calculationBasis: 'CalendarDays',
-              minimumChargeDays: -1,
+              calculationBasis: undefined,
             },
           }),
         ]}
@@ -556,9 +557,7 @@ describe('proration fee-head interactions', () => {
     expect(
       admission().getByText('Monthly cut-off day must be a whole number from 1 to 31')
     ).toBeInTheDocument();
-    expect(
-      withdrawal().getByText('Minimum charge days must be a whole number from 0 to 366')
-    ).toBeInTheDocument();
+    expect(withdrawal().getByText('Calculation basis is required')).toBeInTheDocument();
     await waitFor(() => expect(admission().getByRole('spinbutton')).toHaveFocus());
     expect(screen.getByText('Pending: Enabled event settings')).toBeInTheDocument();
   });

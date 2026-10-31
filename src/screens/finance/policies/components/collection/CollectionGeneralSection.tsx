@@ -1,5 +1,6 @@
 'use client';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { capitalizeWords } from 'src/utils/input-format';
@@ -39,7 +40,10 @@ export default function CollectionGeneralSection({
               name="policyName"
               value={formik.values.policyName}
               onChange={(event) => {
-                formik.setFieldValue('policyName', capitalizeWords(event.target.value));
+                formik.setFieldValue(
+                  'policyName',
+                  capitalizeWords(sanitizeFinanceName(event.target.value))
+                );
               }}
               onBlur={formik.handleBlur}
               error={formik.touched.policyName && Boolean(formik.errors.policyName)}

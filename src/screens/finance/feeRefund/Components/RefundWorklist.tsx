@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IParams } from 'src/components/customizabaleTable/types';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { FeeRefundRequestDto } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import { useSelector } from 'react-redux';
@@ -13,11 +13,11 @@ import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import FinanceListActionRow from 'src/screens/finance/components/FinanceListActionRow';
 import { useGetFeeRefundsQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
-import FinanceListActionRow from 'src/screens/finance/components/FinanceListActionRow';
 
 import { serializeRefundWorklistFilters } from './refundWorklistFilters';
 
@@ -48,6 +48,7 @@ type WorklistProps = {
   primaryAction?: React.ReactNode;
   filters: ReturnType<typeof useFinanceAcademicFilters>;
   onView: (row: IStudentFeeData) => void;
+  onEdit: (row: IStudentFeeData) => void;
   onApprove: (row: IStudentFeeData) => void;
   onReject: (row: IStudentFeeData) => void;
   onRecord: (row: IStudentFeeData) => void;
@@ -97,6 +98,7 @@ export default function RefundWorklist({
   primaryAction,
   filters,
   onView,
+  onEdit,
   onApprove,
   onReject,
   onRecord,
@@ -250,142 +252,154 @@ export default function RefundWorklist({
           tableId="fee-refunds"
           tableTitle="Fee refunds"
           data={rows}
-          columns={[
-            {
-              id: 'name',
-              label: 'Student (GR No.)',
-              minWidth: 180,
-              sticky: true,
-              stickyPosition: 'left',
-              filterType: 'string',
-              isFilter: true,
-              isSort: false,
-              render: (value, row) => (
-                <Typography variant="body2">
-                  {value}
-                  {row.grNo && (
-                    <Box component="span" sx={{ display: 'block' }}>
-                      ({row.grNo})
+          columns={(
+            [
+              {
+                id: 'name',
+                label: 'Student (GR No.)',
+                minWidth: 180,
+                sticky: true,
+                stickyPosition: 'left',
+                filterType: 'string',
+                isFilter: true,
+                isSort: false,
+                render: (value, row) => (
+                  <Typography variant="body2">
+                    {value}
+                    {row.grNo && (
+                      <Box component="span" sx={{ display: 'block' }}>
+                        ({row.grNo})
+                      </Box>
+                    )}
+                  </Typography>
+                ),
+              },
+              {
+                id: '_voucherNumber',
+                label: 'Refund no.',
+                minWidth: 135,
+                filterType: 'string',
+                isFilter: true,
+                isSort: false,
+              },
+              {
+                id: 'classDivision',
+                label: 'Class / Division',
+                minWidth: 150,
+                filterType: 'string',
+                isFilter: true,
+                isSort: false,
+              },
+              {
+                id: '_receiptNumber',
+                label: 'Original receipt',
+                minWidth: 150,
+                filterType: 'string',
+                isFilter: true,
+                isSort: false,
+              },
+              {
+                id: 'refundAmount',
+                label: 'Amount',
+                minWidth: 125,
+                filterType: 'formattedNumber',
+                isFilter: true,
+                isSort: false,
+                render: (value) => (value == null ? '—' : `₹${fNumber(value)}`),
+              },
+              {
+                id: 'refundMethod',
+                label: 'Method',
+                minWidth: 130,
+                filterType: 'string',
+                isFilter: true,
+                isSort: false,
+              },
+              {
+                id: 'requestDate',
+                label: 'Requested',
+                minWidth: 115,
+                filterType: 'date',
+                isFilter: true,
+                isSort: false,
+                render: (value) => (value ? fDate(value, 'DD-MM-YYYY') : '—'),
+              },
+              {
+                id: 'status',
+                label: 'Status',
+                minWidth: 125,
+                sticky: true,
+                stickyPosition: 'right',
+                filterType: 'enum',
+                isFilter: true,
+                isSort: false,
+                enumOptions: STATUSES.map(({ value, label }) => ({ value, label })),
+                render: (value, row) => {
+                  const entry = STATUSES.find((item) => item.value === value);
+                  return (
+                    <Box>
+                      <Label
+                        color={row._workflowVersion === 0 ? 'default' : (entry?.color ?? 'default')}
+                      >
+                        {row._workflowVersion === 0
+                          ? (historicalLabels[Number(value)] ?? 'Historical')
+                          : (entry?.label ?? 'Historical')}
+                      </Label>
                     </Box>
-                  )}
-                </Typography>
-              ),
-            },
-            {
-              id: '_voucherNumber',
-              label: 'Refund no.',
-              minWidth: 135,
-              filterType: 'string',
-              isFilter: true,
-              isSort: false,
-            },
-            {
-              id: 'classDivision',
-              label: 'Class / Division',
-              minWidth: 150,
-              filterType: 'string',
-              isFilter: true,
-              isSort: false,
-            },
-            {
-              id: '_receiptNumber',
-              label: 'Original receipt',
-              minWidth: 150,
-              filterType: 'string',
-              isFilter: true,
-              isSort: false,
-            },
-            {
-              id: 'refundAmount',
-              label: 'Amount',
-              minWidth: 125,
-              filterType: 'formattedNumber',
-              isFilter: true,
-              isSort: false,
-              render: (value) => (value == null ? '—' : `₹${fNumber(value)}`),
-            },
-            {
-              id: 'refundMethod',
-              label: 'Method',
-              minWidth: 130,
-              filterType: 'string',
-              isFilter: true,
-              isSort: false,
-            },
-            {
-              id: 'requestDate',
-              label: 'Requested',
-              minWidth: 115,
-              filterType: 'date',
-              isFilter: true,
-              isSort: false,
-              render: (value) => (value ? fDate(value, 'DD-MM-YYYY') : '—'),
-            },
-            {
-              id: 'status',
-              label: 'Status',
-              minWidth: 125,
-              sticky: true,
-              stickyPosition: 'right',
-              filterType: 'enum',
-              isFilter: true,
-              isSort: false,
-              enumOptions: STATUSES.map(({ value, label }) => ({ value, label })),
-              render: (value, row) => {
-                const entry = STATUSES.find((item) => item.value === value);
-                return (
-                  <Box>
-                    <Label
-                      color={row._workflowVersion === 0 ? 'default' : (entry?.color ?? 'default')}
-                    >
-                      {row._workflowVersion === 0
-                        ? (historicalLabels[Number(value)] ?? 'Historical')
-                        : (entry?.label ?? 'Historical')}
-                    </Label>
-                  </Box>
-                );
+                  );
+                },
               },
-            },
-            {
-              align: 'left',
-              id: 'actions',
-              label: 'Actions',
-              sticky: true,
-              stickyPosition: 'right',
-              isFilter: false,
-              isSort: false,
-              excludeFromExport: true,
-              minWidth: 150,
-              render: (_, row) => {
-                const actions: string[] = row._availableActions ?? [];
-                const refund = row as IStudentFeeData;
-                return (
-                  <AdaptiveThreeDotsActions
-                    directActionLimit={3}
-                    moreLabel={`More refund actions for ${row.name}`}
-                    placement="right-top"
-                    actions={[
-                      ...(actions.includes('approve')
-                        ? [action(refund, 'Approve', 'mdi:approve', onApprove)]
-                        : []),
-                      ...(actions.includes('reject')
-                        ? [action(refund, 'Reject', 'mdi:close', onReject)]
-                        : []),
-                      ...(actions.includes('recordPayout')
-                        ? [action(refund, 'Record payment', 'mdi:bank-transfer-out', onRecord)]
-                        : []),
-                      ...(actions.includes('createReplacement')
-                        ? [action(refund, 'Create linked request', 'mdi:content-copy', onReplace)]
-                        : []),
-                      ...(actions.includes('returnPayout')
-                        ? [action(refund, 'Record returned payment', 'mdi:undo-variant', onReturn)]
-                        : []),
-                    ]}
-                  />
-                );
+              {
+                align: 'left',
+                id: 'actions',
+                label: 'Actions',
+                sticky: true,
+                stickyPosition: 'right',
+                isFilter: false,
+                isSort: false,
+                excludeFromExport: true,
+                minWidth: 150,
+                render: (_, row) => {
+                  const actions: string[] = row._availableActions ?? [];
+                  const refund = row as IStudentFeeData;
+                  return (
+                    <AdaptiveThreeDotsActions
+                      directActionLimit={3}
+                      moreLabel={`More refund actions for ${row.name}`}
+                      placement="right-top"
+                      actions={[
+                        ...(actions.includes('edit')
+                          ? [action(refund, 'Edit', 'solar:pen-bold', onEdit)]
+                          : []),
+                        ...(actions.includes('approve')
+                          ? [action(refund, 'Approve', 'mdi:approve', onApprove)]
+                          : []),
+                        ...(actions.includes('reject')
+                          ? [action(refund, 'Reject', 'mdi:close', onReject)]
+                          : []),
+                        ...(actions.includes('recordPayout')
+                          ? [action(refund, 'Record payment', 'mdi:bank-transfer-out', onRecord)]
+                          : []),
+                        ...(actions.includes('createReplacement')
+                          ? [action(refund, 'Create linked request', 'mdi:content-copy', onReplace)]
+                          : []),
+                        ...(actions.includes('returnPayout')
+                          ? [
+                              action(
+                                refund,
+                                'Record returned payment',
+                                'mdi:undo-variant',
+                                onReturn
+                              ),
+                            ]
+                          : []),
+                      ]}
+                    />
+                  );
+                },
               },
-            },
-          ]}
+            ] satisfies IColumn[]
+          ).filter((column) => status !== FeeRefundStatusType.Processed || column.id !== 'actions')}
           isLoading={isLoading || isFetching}
           noDataText={isError ? 'Could not load refunds. Retry the page.' : 'No refunds found.'}
           serverSide

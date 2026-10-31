@@ -10,6 +10,7 @@ import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { sanitizeFinanceName, isFinancePaymentNameField } from 'src/utils/finance-name';
 import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 import {
   Box,
@@ -22,6 +23,7 @@ import {
   Typography,
   RadioGroup,
   FormControl,
+  FormHelperText,
   FormControlLabel,
 } from '@mui/material';
 
@@ -40,9 +42,11 @@ import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 export default function FeeRefundDetailsForm({
   formik,
   allowedPayoutMethods,
+  lockedReceiptId,
 }: {
   formik: RefundFormik;
   allowedPayoutMethods?: string[];
+  lockedReceiptId?: string;
 }): React.ReactElement {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [hasPaymentRecords, setHasPaymentRecords] = useState(false);
@@ -88,13 +92,14 @@ export default function FeeRefundDetailsForm({
       setFieldValue('refundType', 'full', false);
     }
   }, [eligibility, eligibilityFetching, eligibilityError, formik.values.refundType, setFieldValue]);
-  if (formik.values.studentId && eligibilityFetching) return <RefundDetailsSkeleton />;
+  if (formik.values.studentId && eligibilityFetching && !formik.isSubmitting)
+    return <RefundDetailsSkeleton />;
 
   return (
-    <Box display="flex" flexDirection="column" gap={1} mt={0}>
+    <Box display="flex" flexDirection="column" gap={2} mt={0}>
       <FormSectionCard
         descriptionTooltip="Select paid fee months from one receipt. Full refund uses the available policy limit; partial refund lets you enter an amount when the linked policy permits it. The server checks deductions and limits on submission."
-        title="Refund details"
+        title="Refund Details"
         icon="solar:bill-list-bold-duotone"
       >
         {formik.values.studentId && canConfigureRefund && (
@@ -118,6 +123,9 @@ export default function FeeRefundDetailsForm({
                 disabled={eligibility != null && !eligibility.allowPartialRefund}
               />
             </RadioGroup>
+            {eligibility && !eligibility.allowPartialRefund && (
+              <FormHelperText>The linked refund policy allows full refunds only.</FormHelperText>
+            )}
           </FormControl>
         )}
 
@@ -135,6 +143,7 @@ export default function FeeRefundDetailsForm({
 
         {/* ── Fee Head-wise Refund Accordion Table ── */}
         <FeeHeadRefundTable
+          lockedReceiptId={lockedReceiptId}
           compact
           formik={formik}
           showError={formik.submitCount > 0 && typeof formik.errors.feeHeadRefunds === 'string'}
@@ -151,10 +160,10 @@ export default function FeeRefundDetailsForm({
       {formik.values.studentId && hasPaymentRecords && canConfigureRefund && (
         <FormSectionCard
           descriptionTooltip="Choose a payment method allowed by the refund policy linked to the student's fee structure and enter the recipient details. Payment is recorded separately after approval."
-          title="Refund payment details"
+          title="Refund Payment Details"
           icon="solar:wallet-bold-duotone"
         >
-          <Grid container spacing={1}>
+          <Grid container spacing={2}>
             {/* Refund Method */}
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
@@ -305,7 +314,9 @@ export default function FeeRefundDetailsForm({
                               let newValue = e.target.value;
 
                               // Handle text-only fields (letters and spaces only)
-                              if (field.type === 'text') {
+                              if (isFinancePaymentNameField(field.name)) {
+                                newValue = sanitizeFinanceName(newValue);
+                              } else if (field.type === 'text') {
                                 newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
                               }
 

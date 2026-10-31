@@ -19,11 +19,13 @@ export default function AssignmentDrawer({
   students,
   academicYearId,
   academicYearName,
+  editAssignedPolicies = false,
   onClose,
 }: {
   students: IFeeStructureData[];
   academicYearId: string;
   academicYearName?: string;
+  editAssignedPolicies?: boolean;
   onClose: () => void;
 }) {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -31,7 +33,9 @@ export default function AssignmentDrawer({
   const [confirmClose, setConfirmClose] = useState(false);
   const viewing = students.length === 1 && students[0].isFeeStructureAssigned;
   const taskTitle = viewing
-    ? 'View Fee Assignment'
+    ? editAssignedPolicies
+      ? 'Edit Fee Assignment'
+      : 'View Fee Assignment'
     : students.length > 1
       ? 'Bulk Assign Fee Structure'
       : 'Assign Fee Structure';
@@ -84,10 +88,11 @@ export default function AssignmentDrawer({
           )}
           {students.length > 0 && academicYearId && (
             <AssignmentWorkflow
-              key={`${academicYearId}-${students.map((s) => s.studentId).join(',')}`}
+              key={`${academicYearId}-${students.map((s) => s.studentId).join(',')}-${editAssignedPolicies}`}
               students={students}
               academicYearId={academicYearId}
               academicYearName={academicYearName}
+              editAssignedPolicies={editAssignedPolicies}
               onClose={requestClose}
               onBusyChange={setBusy}
             />
@@ -97,9 +102,13 @@ export default function AssignmentDrawer({
       <ConfirmDialog
         open={confirmClose}
         onClose={() => setConfirmClose(false)}
-        title="Discard unassigned changes?"
+        title={editAssignedPolicies ? 'Discard policy changes?' : 'Discard unassigned changes?'}
         icon="warning"
-        content="Your unassigned changes will be discarded. Committed assignments will be preserved."
+        content={
+          editAssignedPolicies
+            ? 'Your unsaved policy selections and reason will be discarded.'
+            : 'Your unassigned changes will be discarded. Committed assignments will be preserved.'
+        }
         action={
           <Button
             variant="contained"

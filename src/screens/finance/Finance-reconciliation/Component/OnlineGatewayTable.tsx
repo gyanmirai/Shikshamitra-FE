@@ -24,11 +24,12 @@ import {
 
 import { ApproveRejectForm } from './DemandDraftTable';
 import ReconciliationReceiptDialog from './ReconciliationReceiptDialog';
+import { useReconciliationTableQuery } from './useReconciliationTableQuery';
 
 const OnlineGatewayTable = ({
   queryParams,
 }: {
-  queryParams?: { academicYearId: string; month: number; year: number; paymentMethod: string };
+  queryParams?: { academicYearId: string; month: number; year: number; paymentMethod: string | number };
 }) => {
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [isClearCheck, setIsClearCheck] = useState(false);
@@ -45,10 +46,11 @@ const OnlineGatewayTable = ({
     (perm: any) => perm.name === financePermissions.accounts.reconciliationAdd && perm.isGranted
   );
 
-  const { data: listResponse, isLoading } = useQueryAndMutation({
+  const { params: listParams, tableProps } = useReconciliationTableQuery(queryParams);
+  const { data: listResponse, isLoading, isFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReconciliationListQuery,
-    params: queryParams,
+    params: listParams,
     options: { skip: !queryParams?.academicYearId },
   });
 
@@ -316,10 +318,12 @@ const OnlineGatewayTable = ({
   return (
     <>
       <CustomizableTable
+        {...tableProps}
+        totalCount={listResponse?.totalCount ?? 0}
         tableId="online-gateway-table"
         columns={columns}
         data={data}
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         noDataText={<>No Online Payment Gateway Data Found</>}
       />
       <CustomDialog

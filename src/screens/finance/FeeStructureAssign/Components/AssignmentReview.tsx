@@ -9,8 +9,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DetailField, DetailSection } from 'src/components/detail-view';
-import { Box, Link, Stack, Button, Collapse, Typography } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Link, Stack, Collapse, IconButton, Typography } from '@mui/material';
 import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 import { selectableAssignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 
@@ -42,17 +42,16 @@ export default function AssignmentReview({
   const headsRegion = `${regionId}-heads`;
   const scheduleRegion = `${regionId}-schedule`;
   const expansionAction = (label: string, id: string, expanded: ReturnType<typeof useBoolean>) => (
-    <Button
+    <IconButton
       size="small"
       color="inherit"
       aria-label={`${expanded.value ? 'Collapse' : 'Expand'} ${label}`}
       aria-expanded={expanded.value}
       aria-controls={id}
-      startIcon={<Iconify icon={expanded.value ? 'mdi:chevron-up' : 'mdi:chevron-down'} />}
       onClick={expanded.onToggle}
     >
-      {expanded.value ? 'Collapse' : 'Expand'}
-    </Button>
+      <Iconify icon={expanded.value ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+    </IconButton>
   );
   const installments = groupAssignmentInstallments(data.lines);
   const legacy = data.calculationVersion === 'LegacyUnknown';
@@ -122,12 +121,15 @@ export default function AssignmentReview({
             <DetailSection
               icon="mdi:shield-check-outline"
               title="Applicable Policies"
-              helpText="Refund and collection policies saved for this student, including their pinned versions and original selections where policies have changed."
+              helpText="Refund and collection policies saved for this student, including their pinned versions."
             >
               <Box
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: 'minmax(0, 1fr)',
+                  '@container (min-width: 440px)': {
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  },
                   gap: 1.5,
                 }}
               >
@@ -141,28 +143,6 @@ export default function AssignmentReview({
                     />
                   );
                 })}
-                {committed &&
-                  data.originalPolicies &&
-                  data.originalPolicies.some(
-                    (original) =>
-                      selectableAssignmentPolicyFamilies.some(
-                        (family) => family === original.family
-                      ) &&
-                      !data.policies.some((current) => current.versionId === original.versionId)
-                  ) && (
-                    <DetailField
-                      fullWidth
-                      label="Policies when assigned"
-                      value={data.originalPolicies
-                        .filter((policy) =>
-                          selectableAssignmentPolicyFamilies.some(
-                            (family) => family === policy.family
-                          )
-                        )
-                        .map((policy) => `${policy.family}: ${policy.name} · v${policy.version}`)
-                        .join('; ')}
-                    />
-                  )}
               </Box>
             </DetailSection>
           </Box>

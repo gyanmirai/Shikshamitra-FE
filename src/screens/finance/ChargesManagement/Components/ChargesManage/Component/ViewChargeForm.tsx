@@ -52,18 +52,21 @@ const ChargeDetailsCard: React.FC<Props> = ({
         id: 'collectedAmount',
         label: 'Collected',
         align: 'left',
+        filterType: 'number',
         render: (value) => formatNumber(value, 'INR'),
       },
       {
         id: 'waivedAmount',
         label: 'Waived',
         align: 'left',
+        filterType: 'number',
         render: (value) => formatNumber(value, 'INR'),
       },
       {
         id: 'outstandingAmount',
         label: 'Outstanding',
         align: 'left',
+        filterType: 'number',
         render: (value) => formatNumber(value, 'INR'),
       },
       {

@@ -55,6 +55,19 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 
 describe('useCollectionPolicyForm submission validation', () => {
+  it('rejects a loaded policy name with special characters before saving', async () => {
+    const { result } = renderHook(() => useCollectionPolicyForm({
+      open: true, onClose: vi.fn(), academicYearId: 'year',
+      editData: { id: 'policy', policyName: 'Old@Policy', status: 'Draft' } as never,
+    }));
+    expect(result.current.checks.nameValid).toBe(false);
+    await act(async () => { await result.current.handleCustomSubmit('Draft'); });
+    expect(result.current.formik.errors.policyName).toBe(
+      'Collection Policy Name can only contain letters, numbers, and spaces'
+    );
+    expect(mocks.updatePolicy).not.toHaveBeenCalled();
+  });
+
   it.each(['Combined', 'Separate'] as const)(
     'saves and restores the %s receipt option',
     async (receiptGrouping) => {

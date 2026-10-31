@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   detail: {} as any,
   eligibility: vi.fn(),
   mutation: vi.fn(),
+  update: vi.fn(),
+  submit: vi.fn(),
   preview: vi.fn(),
   createEligibility: {} as any,
   session: null as any,
@@ -31,7 +33,9 @@ vi.mock('../../components/FinancePrerequisiteState', () => ({
   ),
 }));
 vi.mock('src/components/scrollbar', () => ({ Scrollbar: ({ children }: any) => children }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { error: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: { error: vi.fn(), success: vi.fn(), warning: vi.fn() },
+}));
 vi.mock('src/components/customDialog', () => ({
   default: ({ open, title, children }: any) =>
     open ? (
@@ -55,15 +59,19 @@ vi.mock('src/redux/finance/RefundManagement/feeRefundManage', () => ({
   useLazyGetRefundEligibilityQuery: () => [mocks.eligibility, {}],
   useGetRefundEligibilityQuery: () => mocks.createEligibility,
   useCreateFeeRefundMutation: () => [mocks.mutation, {}],
-  useUpdateFeeRefundMutation: () => [mocks.mutation, {}],
-  useSubmitFeeRefundMutation: () => [mocks.mutation, {}],
+  useUpdateFeeRefundMutation: () => [mocks.update, {}],
+  useSubmitFeeRefundMutation: () => [mocks.submit, {}],
   usePreviewFeeRefundMutation: () => [mocks.preview, {}],
 }));
 vi.mock('./RefundGeneralInfoCard', () => ({
-  default: ({ formik }: any) => (
+  default: ({ formik, disabled }: any) => (
     <div>
       <span>Student form ready</span>
-      <button type="button" onClick={() => formik.setFieldValue('studentId', 'student')}>
+      <button
+        disabled={disabled}
+        type="button"
+        onClick={() => formik.setFieldValue('studentId', 'student')}
+      >
         Choose student
       </button>
     </div>
@@ -72,6 +80,7 @@ vi.mock('./RefundGeneralInfoCard', () => ({
 vi.mock('./FeeRefundDetailForm', () => ({
   default: ({ formik }: any) => (
     <div>
+      <span aria-label="Refund mode">{formik.values.refundType}</span>
       Loaded allocations: {formik.values.feeHeadRefunds.flatMap((head: any) => head.months).length}
       {[false, true].map((complete) => (
         <button
@@ -157,7 +166,81 @@ describe('refund edit loading', () => {
     mocks.session = null;
     mocks.permissions = [];
     mocks.createEligibility = {};
+    mocks.update.mockReturnValue({
+      unwrap: async () => ({ status: 0, concurrencyStamp: 'saved-stamp' }),
+    });
+    mocks.submit.mockReturnValue({ unwrap: async () => ({ status: 0 }) });
   });
+
+  it('locks the student card and preserves a saved partial amount when editing a Pending refund', async () => {
+    mocks.detail = {
+      currentData: {
+        ...detail,
+        status: 0,
+        availableActions: ['edit'],
+        boardId: 'board',
+        educationMediumId: 'medium',
+        standardId: 'class',
+        divisionId: 'division',
+        refundMethod: 'Cash',
+        reason: 'Original reason',
+        paymentDetails: { receivedBy: 'Parent' },
+        concurrencyStamp: 'original-stamp',
+      },
+      isLoading: false,
+      isFetching: false,
+    };
+    render(<RefundForm isEdit editRefundId="refund" />);
+    await waitFor(() => expect(screen.getByText('Loaded allocations: 1')).toBeVisible());
+    expect(screen.getByRole('button', { name: 'Choose student' })).toBeDisabled();
+    expect(screen.getByLabelText('Refund mode')).toHaveTextContent('partial');
+  });
+
+  it.each([false, true])(
+    'updates a Pending refund without creating or resubmitting it (administrator: %s)',
+    async (administrator) => {
+      mocks.session = { profile: { role: [administrator ? 'admin' : 'staff'] } };
+      mocks.detail = {
+        currentData: {
+          ...detail,
+          status: 0,
+          availableActions: ['edit'],
+          boardId: 'board',
+          educationMediumId: 'medium',
+          standardId: 'class',
+          divisionId: 'division',
+          refundMethod: 'Cash',
+          reason: 'Original reason',
+          paymentDetails: { receivedBy: 'Parent' },
+          concurrencyStamp: 'original-stamp',
+        },
+        isLoading: false,
+        isFetching: false,
+      };
+      mocks.preview.mockReturnValue({
+        unwrap: async () => ({ isAllowed: true, maximumAllowedAmount: 700 }),
+      });
+      const close = vi.fn();
+      render(<RefundForm isEdit editRefundId="refund" onCancel={close} />);
+      await waitFor(() => expect(screen.getByText('Loaded allocations: 1')).toBeVisible());
+      fireEvent.click(screen.getByRole('button', { name: 'Complete selected amounts' }));
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+      fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+      await waitFor(() => expect(close).toHaveBeenCalledWith(null, true));
+      expect(mocks.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'refund',
+          body: expect.objectContaining({
+            studentId: 'student',
+            concurrencyStamp: 'original-stamp',
+          }),
+        })
+      );
+      expect(mocks.submit).not.toHaveBeenCalled();
+      expect(mocks.mutation).not.toHaveBeenCalled();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    }
+  );
 
   it('does not reuse a submission prerequisite from a different academic year', async () => {
     mocks.detail = { isLoading: false, isFetching: false };
@@ -170,9 +253,11 @@ describe('refund edit loading', () => {
     };
     mocks.preview.mockReturnValue({
       unwrap: () =>
-        Promise.reject(Object.assign(new Error('Missing refund policy.'), {
-          data: { errorCode: 'Finance:FeeRefund:010010', detail: 'Missing refund policy.' },
-        })),
+        Promise.reject(
+          Object.assign(new Error('Missing refund policy.'), {
+            data: { errorCode: 'Finance:FeeRefund:010010', detail: 'Missing refund policy.' },
+          })
+        ),
     });
     const view = render(<RefundForm />);
     fireEvent.click(screen.getByRole('button', { name: 'Complete selected amounts' }));
@@ -211,8 +296,8 @@ describe('refund edit loading', () => {
     });
     const view = render(<RefundForm isEdit editRefundId="refund" />);
     expect(screen.getByRole('status', { name: 'Loading refund request' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Student information' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Refund payment details' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Student Information' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Refund Payment Details' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     mocks.detail = { ...mocks.detail, currentData: detail, isLoading: false, isFetching: false };
     view.rerender(<RefundForm isEdit editRefundId="refund" />);

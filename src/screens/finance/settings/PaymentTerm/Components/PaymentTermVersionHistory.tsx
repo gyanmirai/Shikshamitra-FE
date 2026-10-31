@@ -9,9 +9,9 @@ import type {
 import { useMemo, useState } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Alert, Stack, Button } from '@mui/material';
-import CustomAccordion from 'src/components/custom-accordian';
 import VersionSidebar from 'src/screens/finance/policies/components/version/VersionSidebar';
 import VersionDiffTable from 'src/screens/finance/policies/components/version/VersionDiffTable';
+import VersionHistorySection from 'src/screens/finance/policies/components/version/VersionHistorySection';
 
 import { paymentTermVersionPresentation } from './paymentTermVersionPresentation';
 
@@ -50,7 +50,7 @@ export default function PaymentTermVersionHistory({
         minHeight: 0,
         overflow: 'hidden',
         p: 2,
-        gap: 2,
+        gap: 1,
       }}
     >
       <Box
@@ -71,7 +71,7 @@ export default function PaymentTermVersionHistory({
         />
       </Box>
       <Scrollbar sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
-        <Stack spacing={2} sx={{ pr: { xs: 0.5, sm: 1 }, pb: 1, minWidth: 0 }}>
+        <Stack spacing={1} sx={{ pr: { xs: 0.5, sm: 1 }, pb: 1, minWidth: 0 }}>
           {auditError && (
             <Alert
               severity="error"
@@ -90,13 +90,15 @@ export default function PaymentTermVersionHistory({
               selected snapshot.
             </Alert>
           )}
-          {selected && <VersionDiffTable selectedVersion={selected} />}
-          <CustomAccordion
+          {selected && <VersionDiffTable selectedVersion={selected} collapsibleChanges />}
+          <VersionHistorySection
             title="Saved version details"
+            helpText="The selected version's saved settings, effective dates, and installment schedule."
             expanded={showSnapshot}
             onChange={() => setShowSnapshot((value) => !value)}
-            content={showSnapshot ? <Stack spacing={2}>{children}</Stack> : null}
-          />
+          >
+            <Stack spacing={1}>{children}</Stack>
+          </VersionHistorySection>
         </Stack>
       </Scrollbar>
     </Box>

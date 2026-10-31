@@ -1,5 +1,8 @@
 import type { ConcessionBenefitBlocker } from 'src/redux/finance/ConcessionManagement/types';
-import { context, detail, preview } from './data';
+
+import { useState, useEffect } from 'react';
+
+import { detail, context, preview } from './data';
 
 export const scenarios = [
   'valid',
@@ -18,6 +21,7 @@ export const scenarios = [
   'other-year',
   'other-type',
   'policy-bypass',
+  'policy-refresh',
   'approval-duplicate',
   'approval-self',
   'reject-duplicate',
@@ -34,8 +38,9 @@ export const isNewFormScenario = (value: Scenario) =>
     'other-year',
     'other-type',
     'policy-bypass',
+    'policy-refresh',
   ].includes(value);
-export let scenario: Scenario = 'valid';
+let scenario: Scenario = 'valid';
 export const commands: { action: string; body: unknown }[] = [];
 const contextCache = new Map<string, any>();
 const approvalCache = new Map<string, any>();
@@ -177,23 +182,27 @@ export const useCreateConcessionRequestMutation = () => [createRequest, { isLoad
 export const useCreateConcessionDraftMutation = () => [createDraft, { isLoading: false }];
 export const usePreviewConcessionRequestMutation = () => [previewRequest, { isLoading: false }];
 export const useGetConcessionRequestContextQuery = (params: any) => {
-  const key = `${scenario}:${params.requestId || ''}`;
+  const key = `${scenario}:${params.requestId || ''}:${params.concessionPolicyVersionId || ''}:${params.concessionTypeId || ''}`;
+  const [resolvedKey, setResolvedKey] = useState(key);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setResolvedKey(key), 2500);
+    return () => window.clearTimeout(timer);
+  }, [key]);
   if (!contextCache.has(key))
     contextCache.set(key, {
       data: {
         ...context,
-        concessionPolicies:
-          scenario === 'policy-bypass'
-            ? [
-                context.concessionPolicies[0],
-                {
-                  ...context.concessionPolicies[0],
-                  concessionPolicyId: 'alternative-policy',
-                  concessionPolicyVersionId: 'alternative-version',
-                  policyName: 'Alternative fixed concession',
-                },
-              ]
-            : context.concessionPolicies,
+        concessionPolicies: ['policy-bypass', 'policy-refresh'].includes(scenario)
+          ? [
+              context.concessionPolicies[0],
+              {
+                ...context.concessionPolicies[0],
+                concessionPolicyId: 'alternative-policy',
+                concessionPolicyVersionId: 'alternative-version',
+                policyName: 'Alternative fixed concession',
+              },
+            ]
+          : context.concessionPolicies,
         concessionTypes: [
           { ...context.concessionTypes[0], benefitBlocker: getBlocker(params.requestId, 'type') },
           {
@@ -208,7 +217,13 @@ export const useGetConcessionRequestContextQuery = (params: any) => {
       isFetching: false,
       refetch: () => undefined,
     });
-  return contextCache.get(key);
+  const result = contextCache.get(key);
+  const pending = scenario === 'policy-refresh' && key !== resolvedKey;
+  return {
+    ...result,
+    currentData: pending ? undefined : result.data,
+    isFetching: pending,
+  };
 };
 
 export const useGetConcessionApprovalContextQuery = (requestId: string) => {

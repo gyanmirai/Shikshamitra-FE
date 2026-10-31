@@ -651,9 +651,9 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
               scrollButtons="auto"
               onChange={(_e, v) => setActiveTab(v)}
               sx={{
-                minHeight: 36,
-                '& .MuiTabs-flexContainer': { gap: 1.5 },
-                '& .MuiTab-root': { minHeight: 36, py: 0.5 },
+                minHeight: 44,
+                '& .MuiTabs-flexContainer': { gap: 2 },
+                '& .MuiTab-root': { minHeight: 44, py: 1 },
                 '@media (pointer: coarse)': {
                   minHeight: 44,
                   '& .MuiTab-root': { minHeight: 44 },
@@ -766,7 +766,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
             </Typography>
           </Box>
         ) : (
-          <Grid container spacing={1.5} pb={0.5}>
+          <Grid container spacing={1.5} alignItems="flex-start" pb={0.5}>
             {filteredItems.map((item) => (
               <Grid
                 key={item.studentConcessionTypeRequestId}

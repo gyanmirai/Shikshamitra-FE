@@ -14,6 +14,9 @@ vi.mock('src/components/customizabaleTable', () => ({
   default: ({ data }: any) => <div data-testid="preview">{JSON.stringify(data)}</div>,
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('src/utils/icons', () => ({
+  GlobalIcons: { calendar: 'test:calendar', refresh: 'test:refresh', cancel: 'test:cancel' },
+}));
 vi.mock('@mui/x-date-pickers', () => ({
   DatePicker: ({ label, value, onChange }: any) => (
     <input

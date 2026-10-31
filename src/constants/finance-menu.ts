@@ -84,6 +84,9 @@ export const financePermissions = {
   fees: {
     root: `${defaultModulePermissionName}${defaultFinancePermissionName}Fees`,
     collections: `${defaultFinancePermissionName}Fees.FeeCollections`,
+    collectionActions: {
+      applyWaiver: `${defaultFinancePermissionName}Fees.FeeCollections.ApplyWaiver`,
+    },
     charges: `${defaultFinancePermissionName}Fees.Charges`,
     chargeActions: {
       view: `${defaultFinancePermissionName}Fees.Charges.View`,

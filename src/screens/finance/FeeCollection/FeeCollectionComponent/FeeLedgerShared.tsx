@@ -235,6 +235,7 @@ export const FeeRow = ({
           <FeeWaiverToggle
             sourceType={waiverSourceType ?? 'Charge'}
             sourceId={chargeId}
+            sourceName={name}
             remainingAmount={due}
             onApplied={onWaiverApplied}
           />
@@ -243,6 +244,7 @@ export const FeeRow = ({
           <FeeWaiverToggle
             sourceType="LateFee"
             sourceId={dueFeeId}
+            sourceName={name}
             remainingAmount={safeLateFeeAmount}
             onApplied={onWaiverApplied}
           />

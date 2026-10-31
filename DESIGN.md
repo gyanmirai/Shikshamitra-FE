@@ -1548,7 +1548,9 @@ from `src/components/detail-view`. `DetailSection` reuses the shared
 `FormSectionCard`/`FormSectionHeader` with a compact neutral icon and `subtitle1`
 heading. Fields use uppercase caption labels and `body2` values, matching Finance
 policy views. Use `fullWidth` for long notes and descriptions. The grid adapts to
-the section width: one column below 440px, two from 440px and three from 680px.
+the section width. For compact summary rows, `DetailField layout="inline"` keeps
+the same label/value typography and aligns the value to the right. The grid uses
+one column below 440px, two from 440px and three from 680px.
 Related tables occupy the full section width and retain their own horizontal
 scrolling. Do not copy these section or field styles into individual views.
 

@@ -3,11 +3,16 @@ import type {
   ConcessionPolicyOption,
 } from 'src/redux/finance/ConcessionManagement/types';
 
-import { useId } from 'react';
-import { Stack } from '@mui/material';
+import { useId, useState } from 'react';
+import { Stack, IconButton, InputAdornment } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { concessionBenefitBlockerMessage } from 'src/utils/concession-benefit-blocker';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+
+import ConcessionRequestPolicyDialog from './ConcessionRequestPolicyDialog';
 
 type Props = {
   policies: ConcessionPolicyOption[];
@@ -43,6 +48,10 @@ export default function ConcessionPolicyFields({
   typeDisabled = false,
 }: Props) {
   const fieldId = useId();
+  const [viewPolicy, setViewPolicy] = useState(false);
+  const selectedPolicy = policies.find(
+    (policy) => policy.concessionPolicyVersionId === policyVersionId
+  );
   const policyHelperId = `${fieldId}-policy-help`;
   const typeHelperId = `${fieldId}-type-help`;
   const selectedTypeBlocker = types.find((type) => type.id === typeId)?.benefitBlocker;
@@ -50,7 +59,7 @@ export default function ConcessionPolicyFields({
   return (
     <Stack
       sx={{
-        gap: 2,
+        gap: 1.5,
         '& > *': { minWidth: 0 },
       }}
     >
@@ -72,6 +81,28 @@ export default function ConcessionPolicyFields({
             label: `${policy.policyName} (${policy.policyCode}, v${policy.version})`,
           }))}
           value={policyVersionId}
+          endAdornment={
+            selectedPolicy ? (
+              <InputAdornment position="end" sx={{ mr: 2.5 }}>
+                <CustomTooltip title="View selected concession policy" placement="right">
+                  <IconButton
+                    size="small"
+                    aria-label="View selected concession policy"
+                    disabled={policyDisabled}
+                    onMouseDown={(event) => event.stopPropagation()}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setViewPolicy(true);
+                    }}
+                    sx={{ color: 'text.secondary' }}
+                  >
+                    <Iconify icon={GlobalIcons.eye} width={18} />
+                  </IconButton>
+                </CustomTooltip>
+              </InputAdornment>
+            ) : undefined
+          }
+          sx={selectedPolicy ? { '& .MuiSelect-select': { pr: 8 } } : undefined}
           onChange={(id) =>
             onPolicyChange(policies.find((policy) => policy.concessionPolicyVersionId === id))
           }
@@ -116,6 +147,12 @@ export default function ConcessionPolicyFields({
           noOptionsMessage="No concession types are available for this student."
         />
       </ShakingTextField>
+      {viewPolicy && selectedPolicy && (
+        <ConcessionRequestPolicyDialog
+          policy={selectedPolicy}
+          onClose={() => setViewPolicy(false)}
+        />
+      )}
     </Stack>
   );
 }

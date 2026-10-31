@@ -2,26 +2,28 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { IParams } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-import React, { useMemo, useCallback } from 'react';
 import { financePermissions } from 'src/constants/finance-menu';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetAdjustmentApplicationsQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 
+import FinanceListActionRow from '../../components/FinanceListActionRow';
 import { useFinancePermissions } from '../../hooks/useFinancePermissions';
+import { serializeFinanceTableFilters } from '../../components/financeTableQuery';
 import { mapAdjustmentApplicationItem } from '../utils/mapAdjustmentApplication';
 import { useFinanceAcademicFilters } from '../../hooks/useFinanceAcademicFilters';
+import { AdjustmentTabEnum, AdjustmentStatusEnum } from '../enums/adjustment.enum';
 import FinanceClassDivisionFilter from '../../components/FinanceClassDivisionFilter';
-import { AdjustmentStatusEnum, type AdjustmentTabEnum } from '../enums/adjustment.enum';
 import FinanceAcademicContextFilter from '../../components/FinanceAcademicContextFilter';
-import FinanceListActionRow from '../../components/FinanceListActionRow';
 import {
   ADJUSTMENT_TABS,
   ADJUSTMENT_STATUS_COLORS,
@@ -67,6 +69,20 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   } = filters;
 
   const tabs = useTabs(activeTab);
+  const scope = JSON.stringify([currentYear?.id, filterPayload, tabs.value]);
+  const [tableQuery, setTableQuery] = useState({
+    scope,
+    page: 0,
+    pageSize: 10,
+    search: '',
+    filters: [] as IParams['filters'],
+  });
+  const page = tableQuery.scope === scope ? tableQuery.page : 0;
+  useEffect(() => {
+    setTableQuery((previous) =>
+      previous.scope === scope ? previous : { ...previous, scope, page: 0 }
+    );
+  }, [scope]);
 
   const listParams = useMemo(() => {
     if (!isReady || !filterPayload || !currentYear?.id) return null;
@@ -77,18 +93,20 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
       academicYearId: currentYear.id,
       standardId: filterPayload.standardId,
       divisionId: filterPayload.divisionId,
-      page: 1,
-      pageSize: 100,
+      page: page + 1,
+      pageSize: tableQuery.pageSize,
+      filter: tableQuery.search || undefined,
+      filters: serializeFinanceTableFilters(tableQuery.filters),
     };
 
-    if (tabs.value === AdjustmentStatusEnum.Pending) {
+    if (tabs.value === AdjustmentTabEnum.Pending) {
       return { ...base, status: 0 };
     }
-    if (tabs.value === AdjustmentStatusEnum.Rejected) {
+    if (tabs.value === AdjustmentTabEnum.Rejected) {
       return { ...base, status: 1 };
     }
     return { ...base, completedOnly: true };
-  }, [currentYear?.id, filterPayload, isReady, tabs.value]);
+  }, [currentYear?.id, filterPayload, isReady, tabs.value, page, tableQuery.pageSize, tableQuery.search, tableQuery.filters]);
 
   const {
     data: applicationsData,
@@ -208,12 +226,37 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             : undefined
         }
         tableId="adjustment-table"
+        tableTitle="Fee adjustments"
+        serverSidePagination
+        serverSideSearch
+        serverSideFilter
+        page={page}
+        rowsPerPage={tableQuery.pageSize}
+        searchTerm={tableQuery.search}
+        filters={tableQuery.filters}
+        totalCount={applicationsData?.totalCount ?? 0}
+        maxServerRowsPerPage={100}
+        exportLabel="Export current page"
+        exportScope="loaded"
+        onServerPagination={(nextPage, pageSize) =>
+          setTableQuery((previous) => ({ ...previous, scope, page: nextPage - 1, pageSize }))
+        }
+        onServerSearch={(search) =>
+          setTableQuery((previous) => ({ ...previous, scope, page: 0, search }))
+        }
+        onServerFilter={(nextFilters) =>
+          setTableQuery((previous) => ({ ...previous, scope, page: 0, filters: nextFilters }))
+        }
+        onClearCriteria={() =>
+          setTableQuery((previous) => ({ ...previous, scope, page: 0, search: '', filters: [] }))
+        }
         isLoading={isLoading || isFetching}
         noDataText={<>No adjustment records found.</>}
         columns={[
           {
             stickyPosition: 'left',
             id: 'studentName',
+            isSort: false,
             label: 'Name(Gr No.)',
             align: 'left',
             width: 150,
@@ -222,12 +265,13 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             sticky: true,
             render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
-                {value || '-'} {row.grNumber && `(${row.grNumber})`}
+                {value || '-'} {row.studentGrNo && `(${row.studentGrNo})`}
               </Typography>
             ),
           },
           {
             id: 'className',
+            isSort: false,
             label: 'Class/Div',
             align: 'left',
             width: 130,
@@ -240,16 +284,18 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
           },
           {
             id: 'rollNumber',
+            isSort: false,
             label: 'Roll No.',
             align: 'left',
             isFilter: true,
-            filterType: 'number' as any,
+            filterType: 'string',
             width: 100,
             minWidth: 100,
             maxWidth: 130,
           },
           {
             id: 'adjustmentAmount',
+            isSort: false,
             label: 'Adj. Amount',
             align: 'left',
             isFilter: true,
@@ -261,6 +307,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
           },
           {
             id: 'requestedBy',
+            isSort: false,
             label: 'Requested By',
             align: 'left',
             width: 140,
@@ -269,6 +316,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
           },
           {
             id: 'createdAt',
+            isSort: false,
             label: 'Requested Date',
             align: 'left',
             isFilter: true,
@@ -285,9 +333,11 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
           {
             stickyPosition: 'right',
             id: 'status',
+            isSort: false,
             label: 'Status',
             align: 'left',
             isFilter: true,
+            filterType: 'string',
             width: 110,
             minWidth: 90,
             maxWidth: 140,

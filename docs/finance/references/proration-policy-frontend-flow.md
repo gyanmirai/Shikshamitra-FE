@@ -3,7 +3,7 @@ module: finance
 domain: proration-policy-frontend-flow
 content_type: Reference
 status: implemented
-updated_on: 2026-10-28
+updated_on: 2026-10-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -46,7 +46,7 @@ Collapsed rows show the fee category and both event summaries, distinguishing Of
 Expanded rows place each switch before its model and conditional fields in matching sections; these stack on narrow screens.
 Rounding appears once below both events. Admission presets (All daily, All monthly, Reset admission) preserve withdrawal settings and one-time heads.
 Both model dropdowns offer No Proration, Daily Proration, and Monthly Proration. Full month charge is available only in the monthly Cut-off behavior dropdown.
-Daily exposes Calendar Days and minimum charge days; rounding is shared by the head and preserves all four backend modes, including Nearest Rupee.
+Daily exposes Calendar Days; rounding is shared by the head and preserves all four backend modes, including Nearest Rupee.
 Admission monthly exposes Charge Next Month and Half Month Rule with a 1–31 cutoff, plus Full month charge.
 Withdrawal monthly exposes Waive Exit Month and Half Month Rule with its own cutoff, plus Full month charge; helper text explains on/before versus after the cutoff and exclusion of later months.
 Selecting Full month charge keeps Monthly proration selected and displays Full month charge in Cut-off behavior without a cutoff day. It preserves the other event and shared rounding. Save and reopen use the existing FullMonthCharge API rule, displayed as monthly proration in the editor; switching back to another cutoff behavior restores a default cutoff day.

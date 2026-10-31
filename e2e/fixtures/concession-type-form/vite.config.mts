@@ -10,12 +10,13 @@ export default defineConfig({
   publicDir: `${repo}/public`,
   resolve: {
     alias: [
+      { find: /^@mui\/icons-material$/, replacement: `${here}/../accounts-register/icon-barrel.ts` },
       { find: /^src\/redux\/finance\/concessionType$/, replacement: `${here}/mock-api.ts` },
       { find: /^src\/redux\/customQueryAndMutation$/, replacement: `${here}/mock-query.ts` },
       { find: 'src', replacement: `${repo}/src` },
     ],
   },
-  define: { 'process.env': '{}' },
+  define: { 'process.env': '{"BUILD_STATIC_EXPORT":"false"}' },
   esbuild: { jsx: 'automatic' },
   server: { host: '127.0.0.1', port: 4196, strictPort: true, fs: { allow: [repo] } },
 });

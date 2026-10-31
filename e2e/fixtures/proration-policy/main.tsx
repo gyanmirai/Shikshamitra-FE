@@ -83,7 +83,7 @@ function Fixture() {
           applyOnAdmission: false,
           applyOnEarlyWithdrawal: true,
           earlyWithdrawalRuleType: 'DailyProration',
-          earlyWithdrawalConfiguration: { calculationBasis: 'CalendarDays', minimumChargeDays: 0 },
+          earlyWithdrawalConfiguration: { calculationBasis: 'CalendarDays' },
         },
         {
           feeHeadId: 'admission',
@@ -196,7 +196,9 @@ function CloneFixture() {
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', p: 2, gap: 1 }}>
       <Alert severity="info">Clone verification · synthetic policies · no backend writes</Alert>
-      <Box sx={{ flex: 1, minHeight: 0 }}><ProrationPolicyWorkspace /></Box>
+      <Box sx={{ flex: 1, minHeight: 0 }}>
+        <ProrationPolicyWorkspace />
+      </Box>
       <Snackbar />
     </Box>
   );

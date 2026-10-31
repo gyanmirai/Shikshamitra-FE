@@ -26,6 +26,7 @@ export interface FeeRefundLineDto {
 
 export interface FeeRefundRequestDto {
   id: string;
+  concurrencyStamp?: string;
   studentId: string;
   academicYearId: string;
   boardId: string;
@@ -239,7 +240,7 @@ export interface UpdateFeeRefundStatusInput {
 
 export interface UpdateFeeRefundInput {
   id: string;
-  body: IFeeRefundApiPayload;
+  body: IFeeRefundApiPayload & { concurrencyStamp?: string };
 }
 
 type FeeRefundCreationPayload = IFeeRefundApiPayload & { idempotencyKey: string };

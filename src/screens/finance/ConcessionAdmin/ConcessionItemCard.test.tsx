@@ -98,6 +98,64 @@ function show(
 beforeEach(() => vi.clearAllMocks());
 
 describe('individual concession request card', () => {
+  it('shows an unchanged approved amount once', () => {
+    show({
+      ...item,
+      status: ConcessionStatusType.Approved,
+      totalRequestedAmount: 108,
+      totalApprovedAmount: 108,
+      netApprovedAmount: 108,
+    });
+    const amounts = screen.getByRole('region', { name: 'Concession amounts' });
+    expect(within(amounts).getByText('Approved amount')).toBeInTheDocument();
+    expect(within(amounts).queryByText('Requested amount')).not.toBeInTheDocument();
+    expect(within(amounts).getAllByText(/108/)).toHaveLength(1);
+  });
+
+  it('distinguishes requested and approved amounts when they differ', () => {
+    show({
+      ...item,
+      status: ConcessionStatusType.Approved,
+      totalApprovedAmount: 108,
+      netApprovedAmount: 108,
+    });
+    const amounts = screen.getByRole('region', { name: 'Concession amounts' });
+    expect(within(amounts).getByText('Requested amount')).toBeInTheDocument();
+    expect(within(amounts).getByText('Approved amount')).toBeInTheDocument();
+    expect(within(amounts).getAllByText(/108/)).toHaveLength(1);
+    expect(within(amounts).getAllByText(/275/)).toHaveLength(1);
+  });
+
+  it.each([
+    ConcessionStatusType.Draft,
+    ConcessionStatusType.Pending,
+    ConcessionStatusType.Rejected,
+    ConcessionStatusType.Cancelled,
+  ])('shows only the requested amount for status %s', (status) => {
+    show({ ...item, status });
+    const amounts = screen.getByRole('region', { name: 'Concession amounts' });
+    expect(within(amounts).getByText('Requested amount')).toBeInTheDocument();
+    expect(within(amounts).queryByText('Approved amount')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [ConcessionStatusType.PartiallyReversed, 75, 200],
+    [ConcessionStatusType.Reversed, 275, 0],
+  ])('keeps reversal and net amounts explicit for status %s', (status, reversed, net) => {
+    show({
+      ...item,
+      status,
+      totalApprovedAmount: 275,
+      totalReversedAmount: reversed,
+      netApprovedAmount: net,
+    });
+    const amounts = screen.getByRole('region', { name: 'Concession amounts' });
+    expect(within(amounts).queryByText('Requested amount')).not.toBeInTheDocument();
+    expect(within(amounts).getByText('Approved amount')).toBeInTheDocument();
+    expect(within(amounts).getByText('Reversed amount')).toBeInTheDocument();
+    expect(within(amounts).getByText('Net approved amount')).toBeInTheDocument();
+  });
+
   it.each(['admin', 'super-admin'])(
     'allows %s to decide their own request with action grants and server eligibility',
     (role) => {

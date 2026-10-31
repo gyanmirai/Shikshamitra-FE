@@ -121,7 +121,7 @@ function SortableRow({
             color="text.secondary"
             sx={{ display: 'block' }}
           >
-            Remaining {formatNumber(row.remainingAmount, 'INR')}
+            {formatNumber(row.remainingAmount, 'INR')}
           </Typography>
         )}
       </Typography>

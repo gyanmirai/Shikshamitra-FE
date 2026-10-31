@@ -1,5 +1,6 @@
 'use client';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 /**
  * ConcessionGeneralSection — Card 1
  * Policy Name, Description, Status (Draft / Active), Active Impact Warning, Change Reason
@@ -68,7 +69,11 @@ export default function ConcessionGeneralSection({
               name="policyName"
               placeholder="e.g. Sibling tuition assistance"
               value={formik.values.policyName}
-              onChange={onNameChange || formik.handleChange}
+              onChange={
+                onNameChange ||
+                ((event) =>
+                  formik.setFieldValue('policyName', sanitizeFinanceName(event.target.value)))
+              }
               onBlur={formik.handleBlur}
               error={formik.touched.policyName && Boolean(formik.errors.policyName)}
               helperText={

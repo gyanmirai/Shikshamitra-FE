@@ -1,5 +1,5 @@
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type {
   FeeReceiptListItem,
   GetFeeReceiptListParams,
@@ -15,6 +15,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
   FeeReceiptKind,
@@ -73,6 +74,8 @@ const ReceiptManagement = () => {
 
   const [selectedMonth, setSelectedMonth] = useState('All');
   const [selectedKind, setSelectedKind] = useState<string>('All');
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<IParams['filters']>([]);
 
   React.useEffect(() => {
     setSelectedMonth('All');
@@ -137,10 +140,12 @@ const ReceiptManagement = () => {
         selectedKind && selectedKind !== 'All'
           ? (Number(selectedKind) as FeeReceiptKind)
           : undefined,
+      search: search || undefined,
+      filters: serializeFinanceTableFilters(filters),
       skipCount,
       maxResultCount,
     };
-  }, [currentYear?.id, isReady, filterPayload, selectedMonth, selectedKind, skipCount, maxResultCount]);
+  }, [currentYear?.id, isReady, filterPayload, selectedMonth, selectedKind, search, filters, skipCount, maxResultCount]);
 
   const {
     data,
@@ -163,6 +168,8 @@ const ReceiptManagement = () => {
       {
         stickyPosition: 'left',
         id: 'receiptNumber',
+        isFilter: true,
+        filterType: 'string',
         label: 'Receipt No.',
         align: 'left',
         width: 140,
@@ -173,6 +180,8 @@ const ReceiptManagement = () => {
       {
         stickyPosition: 'left',
         id: 'studentName',
+        isFilter: true,
+        filterType: 'string',
         label: 'Name(Gr No.)',
         align: 'left',
         width: 150,
@@ -183,6 +192,8 @@ const ReceiptManagement = () => {
       },
       {
         id: 'receiptKind',
+        isFilter: true,
+        filterType: 'string',
         label: 'Receipt Type',
         align: 'left',
         width: 140,
@@ -192,20 +203,26 @@ const ReceiptManagement = () => {
       },
       {
         id: 'paymentMethodLabel',
+        isFilter: true,
+        filterType: 'string',
         label: 'Payment Method',
         minWidth: 140,
         render: (value) => value || 'Not recorded',
       },
       {
         id: 'verificationStatus',
+        isFilter: true,
+        filterType: 'string',
         label: 'Verification',
         minWidth: 140,
         render: (value, row) => row.linkedFinalReceiptNumber
-          ? `Official: ${row.linkedFinalReceiptNumber}`
+          ? `Receipt: ${row.linkedFinalReceiptNumber}`
           : FEE_RECEIPT_VERIFICATION_LABELS[value as FeeReceiptVerificationStatus] || 'Not required',
       },
       {
         id: 'rollNo',
+        isFilter: true,
+        filterType: 'string',
         label: 'Roll No.',
         align: 'left',
         width: 96,
@@ -311,17 +328,34 @@ const ReceiptManagement = () => {
           },
         })}
         tableId="fee-receipts"
+        tableTitle="Receipts"
+        exportLabel="Export current page"
         columns={columns}
         data={tableData}
         isLoading={isReceiptListLoading || isReceiptListFetching}
-        serverSide
+        serverSidePagination
+        serverSideSearch
+        serverSideFilter
+        filters={filters}
+        onServerFilter={(value) => {
+          setFilters(value);
+          resetPagination();
+        }}
+        searchTerm={search}
+        rowsPerPage={maxResultCount}
+        defaultRowsPerPage={DEFAULT_PAGE_SIZE}
+        searchFieldProps={{ placeholder: 'Receipt number, student name or GR number' }}
+        onServerSearch={(value) => {
+          setSearch(value);
+          resetPagination();
+        }}
         page={Math.floor(skipCount / maxResultCount)}
         onServerPagination={(page: number, rowsPerPage: number) => {
-          setSkipCount(page * rowsPerPage);
+          setSkipCount((page - 1) * rowsPerPage);
           setMaxResultCount(rowsPerPage);
         }}
         totalCount={totalCount}
-        maxServerRowsPerPage={maxResultCount}
+        maxServerRowsPerPage={100}
         noDataText={
           !isReady ? (
             <>Select a Board and Medium to view receipts</>

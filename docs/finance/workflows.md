@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-29
+updated_on: 2026-10-30
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,6 +16,22 @@ The backend [security standard](https://github.com/gyanmirai/Shikshamitra-BE/blo
 Existing backend operations that share one permission identifier remain one capability until a separately approved domain change.
 
 # Trace Finance frontend workflows
+
+## Loading create and edit forms
+
+Use field-shaped skeletons while fetching form records or dependent options. Finance's
+`components/FinanceFormSkeleton.tsx` provides responsive field, switch, section and row
+placeholders; the owning form chooses the layout. Proration preserves its general-information
+grid, presets and collapsed fee-head rows. Payment terms preserve their information grid and
+installment rows. Category, charge, account-entry, fee-structure and assignment forms have
+their own layouts. Shared `CustomSelect` already skeletons its loading control; native student
+and income-category autocompletes use `FinanceFieldSkeleton`.
+
+Keep titles and footers mounted. Show skeletons before evaluating a completed-empty or missing
+prerequisite result, and retain existing error/retry handling. Scope changes must not display
+the previous record's fields. When only dependent options or schedule dates are loading, keep
+the other controls and their entered values in place. Skeletons are for fetching only: saving,
+submission and preview mutations keep the existing fields, interaction locks and action progress.
 
 ## Review a bank account's activity
 
@@ -53,6 +69,24 @@ Create, edit and revision requests retain the trimmed display name. A server dup
 response stays attached to the name field while the user makes whitespace/case-only changes;
 a genuinely different name clears that conflict without losing the installment schedule.
 
+## Refund request form presentation
+
+Pending refund rows expose Edit only when the server returns the `edit` action.
+Editing opens the existing request form with its saved allocations, partial amounts, beneficiary details and reason.
+Board, Medium, Class, Division and Student stay disabled in Student Information, and allocation selection stays on the original receipt.
+Saving updates the same request and keeps it Pending, including for administrators; it does not submit again or approve the request.
+A changed or approved request must be reopened before editing can continue.
+The [backend edit contract](../../../Shikshamitra-BE/docs/modules/finance/references/fee-refund-payout-workflow.md#edit-a-pending-request) owns authorization, recalculation and concurrency checks.
+
+The refund request page uses shared `FormSectionCard` groups with field and section spacing `2`.
+Fee-head installments use embedded `CustomizableTable` instances inside separate shared
+`CustomAccordion` sections, with neutral headers, borders and selection. Expansion is independent
+of selection and preserves entered amounts; invalid installments reopen their section on submission.
+Radio buttons and checkboxes inherit the configured project theme. All installments remain visible
+without pagination, with no colored left stripe.
+The existing one-receipt selection, decimal amounts, per-line caps, bulk Apply and refund-policy
+validation remain owned by the refund workflow. The fixed footer keeps Cancel and Submit reachable.
+
 ## Copy policies, refund details and Demand Draft dates
 
 Copy Fee Structure checks linked policies before enabling submission. Each supported policy
@@ -72,6 +106,13 @@ configured.** when both are absent.
 Demand Draft reconciliation displays **DD Issue Date** and **Payment Date** independently.
 Missing issue dates remain unavailable. See the [backend date contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#demand-draft-collection-dates)
 for persisted values and historical limitations.
+
+Credit/debit card reconciliation displays the stored holder and masks the final four digits as
+`•••• 0123`. Missing historical evidence remains unavailable; see the
+[backend card evidence contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#card-collection-evidence).
+Payment-method tab summaries open beside the focused or hovered tab within the visible workspace,
+with consistent Pending, Approved, Rejected and Total counts. The badge shows processed/total,
+where processed is Approved plus Rejected.
 
 ## Table row actions
 
@@ -145,6 +186,12 @@ academic scope and server calculations remain in their owning workflows. Missing
 student facts show an unavailable marker rather than sample student data.
 
 ## Concession request presentation
+
+Changing a policy or concession type refreshes eligibility. Keep the selected labels, fee count
+and document requirements visible for the same student, academic year, request and assignment
+while the eligible installments reload. Save, Submit and preview require the current successful
+eligibility response; retained display data cannot authorize them. An eligibility error keeps
+the selections visible with the existing retry action. A scope change discards the retained display.
 
 Pending cards keep icon-only Approve and Reject controls for their respective permission holders,
 using the green approval badge and red close-circle icons from Leave Center. The card header has
@@ -226,6 +273,9 @@ Payment Terms display usage across all versions with a class, Fee Structure, Fee
 The Fee Category table applies category name and description text filters, fee-head-count numeric filters, status options, and single-column sorting on the server before pagination. Active and Archived categories appear together by default; the Status column can optionally filter either state. Clicking a category row, or pressing Enter or Space on a focused row, opens its detail view; View is not an Actions-column item. The fee-head drawer loads the full category detail, so its search, filters, and sorting cover every mapped head even if the parent table page changes. Its status switch sits in the Actions column and is disabled while the category is archived.
 Export retrieves every page matching the current query and visible column order; cancellation or incomplete results do not produce a partial file.
 Category details keep one income-category value per fee head, labeled concession badges, wrapping text, and responsive cards inside the shared scrollable dialog.
+The category editor numbers fee heads with the same neutral circular badges as payment-term installments. Category and fee-head names accept letters, numbers, and whitespace; input filters special characters and Yup validation blocks invalid names before submission. Descriptions retain punctuation.
+
+Editable Finance names use the shared `src/utils/finance-name.ts` rule: Unicode letters and combining marks, numbers, and whitespace. This covers concession types and document requirement labels, charge categories and charges, income/expense categories and entries, budget categories/subcategories, bank/branch/account holders, receipt books, policies, fee structures, payment terms and installments, and collection/refund payment names. Typing and pasting filter punctuation and symbols; submit validation also rejects invalid loaded names. Existing length, required and uniqueness rules still apply. Copy suggestions use `copy`/`copy 2` without parentheses. Selected record IDs, codes, payment references, UPI IDs, descriptions and notes retain their separate contracts.
 
 Fee-head usage restrictions use a compact neutral message with an amber icon. “View usage”
 expands the server's student, assignment, fee-structure and payment-term counts and the existing
@@ -237,13 +287,16 @@ Charge authoring keeps academic scope and selected students in the form. Search 
 
 ## Accounts setting forms and history
 
-Income Category, Expense Category, and Bank Accounts use the shared Accounts
-version-history dialog. It shows the selected record and type, newest-first
-versions, actor and local time zone, and labeled Before/After values. Bank account
-numbers stay masked. Missing legacy audit details are identified explicitly;
-loading, no history, and request errors have separate states, with Retry on errors.
-The dialog body scrolls independently of its header and Close footer. Category
-and bank-account forms use the same section cards as Academic Subject forms.
+Income Category, Expense Category and Bank Accounts use `AccountCategoryVersionDrawer`, matching
+Policy Version History: a searchable newest-first version sidebar, selected-version
+author/date/action and a Field/Before/After table. Category tags remain hidden;
+codes and other audit values retain their category formatting. The responsive
+drawer keeps its header and Close footer fixed while the version list and changes
+scroll independently. Changes uses the shared rounded accordion and history cards have
+8 px gaps. Bank account numbers remain masked in the comparison. All three drawers identify missing
+legacy audit details and distinguish loading, no history and request errors, with
+Retry on errors. Category and bank-account forms use the same section cards as
+Academic Subject forms.
 
 | UI behavior          | Implementation                                                                                                                                                                                        |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -267,7 +320,7 @@ start-of-day/end-of-day timestamps; an empty end is sent as `null`.
 
 ## Cash Management
 
-Cash collections generate their official receipt immediately. Add Expense records the actual payment time and uses the academic year's pooled available cash automatically, without a receipt selector or cash payment reference. The form shows available cash and blocks amounts above it; the server validates and allocates the payment. The single [Cash Management workspace](./references/cash-management.md) shows academic-year collected, spent, deposited and available cash. Board, Medium, Month, search and column filters affect table records only. Deposit cash opens one bank-selection dialog for the entire available academic-year balance, with optional notes and supporting document; it records the deposit directly without manual approval or individual receipt selection. Details retain original collection, expense and deposit evidence. Existing legacy transit alone retains its authorized bank-credit confirmation. Definitive stale-state responses refresh the latest balance without replacing the draft; uncertain responses retain the exact original request for retry.
+Cash collections generate their receipt immediately. Add Expense records the actual payment time and uses the academic year's pooled available cash automatically, without a receipt selector or cash payment reference. The form shows available cash and blocks amounts above it; the server validates and allocates the payment. The single [Cash Management workspace](./references/cash-management.md) shows academic-year collected, spent, deposited and available cash. Board, Medium, Month, search and column filters affect table records only. Deposit cash opens one bank-selection dialog for the entire available academic-year balance, with optional notes and supporting document; it records the deposit directly without manual approval or individual receipt selection. Details retain original collection, expense and deposit evidence. Existing legacy transit alone retains its authorized bank-credit confirmation. Definitive stale-state responses refresh the latest balance without replacing the draft; uncertain responses retain the exact original request for retry.
 
 ## Accounts source activity
 
@@ -322,8 +375,10 @@ highlight clears the amount; manual selections still limit the collection. Group
 payment priority or the amount-only candidate set. No fee-head priority editor is introduced.
 Configured fee rows have numbered positions; table sorting and summary dragging cannot change
 the automatic allocation sequence. Charge ordering remains in its existing separate group.
-Review and collection submit every selected due ID, including unfunded rows, and the revision
-through `automaticAllocation`. A changed-policy/balance rejection refreshes the form and requires
+Amount-only Review Payment and Review Cash Payment show the funded installments highlighted
+in the ledger, including the partially funded final row; their period count uses those rows.
+Explicit selections retain their selected rows in review. Collection submits every candidate due ID,
+including unfunded rows, and the revision through `automaticAllocation`. A changed-policy/balance rejection refreshes the form and requires
 another review; an uncertain network outcome retains the original retry key.
 Policies and historical snapshots without the setting retain **Existing selection order**.
 Existing assignments continue using their pinned version until refreshed through the assignment workflow.
@@ -402,7 +457,7 @@ Both workspaces use `CustomizableTable` with a contextual title, column filters,
 Finance table headings are left aligned; numeric body cells may keep comparison alignment through `cellSx`.
 The rightmost Actions column explicitly sets `align: 'left'`, `sticky: true`, and `stickyPosition: 'right'`, with no sorting, filtering, or export data.
 Its controls align to the left inside that cell. Use `AdaptiveThreeDotsActions` with two direct actions and the remaining permitted operations in the overflow menu.
-Payment terms and the legacy fee-structure list expose Columns, current-page Export, and Fullscreen. Their current list integrations support search and paging only; per-column filter/sort controls remain unavailable until the owning endpoint/query supports them.
+Payment terms and the fee-structure list expose Columns, current-page Export, Fullscreen, and server column filters. Header criteria intersect the current context and search before the server counts and pages the results.
 The table's controlled `page` is zero-based, but `onServerPagination` reports one-based server pages. Collections and Charges pass that callback page directly to their API state; Concessions and Refunds subtract one for their zero-based state. This keeps Next and Previous from skipping records.
 Student filters include the displayed GR number; Class/Division filters match the combined value, including division.
 Money columns use raw balances for numeric comparisons and ranges, while displaying the shared INR format.
@@ -424,6 +479,12 @@ The shared Columns/Export/Fullscreen utilities remain available; table export re
 
 The current workspace creates and reviews charge batches, while Fee Collection collects approved student lines and displays charge receipts. It uses academic-year filters, exact action permissions, explicit audience modes, concurrency stamps and server pagination. Full paid-charge refund handling, audience preview/fingerprints and command idempotency remain follow-up work. Follow [Charge Management frontend flow](./references/charge-management-frontend-flow.md) for the current state, target interaction sequence and acceptance coverage.
 
+The collection ledger shows installment names in a separate **Installment** column beside
+**Due Period**. Saving a non-cash payment shows one success toast with the received amount,
+pending-verification status, and the Finance approval step in Reconciliation that confirms the
+payment and issues an official receipt. Receipt **Download** and **Done** buttons use one spacing
+unit of padding.
+
 ## Trace collection and receipt changes
 
 When the complete collection ledger has no collectible fees or charges, Collect Fees shows
@@ -434,14 +495,17 @@ fees are settled. Display filters do not determine this state.
 
 Collection Policy's **Receipt Generation** section uses the existing section card, `CustomSelect`, Formik/Yup and `ShakingTextField`. Staff choose **Single combined receipt** or **Separate fee and charge receipts**. Older policies retain separate receipts. The details drawer displays the saved choice in a corresponding section; its help explains that fees-only or charges-only payments produce one document.
 
-The collect-form response exposes `receiptGrouping` from the resolved policy version. Payment preview explains the expected receipt count using the actual allocation. The completed collection displays one combined receipt with fees, late fees and charges, or two documents with independent receipt numbers and downloads. Combined documents use `feeReceiptId` and the existing fee-receipt PDF endpoint. Reconciliation displays one row per original provisional document. Its shared decision form explains that separate fee/charge documents for one payment are verified together; mutation cache invalidation refreshes both rows.
+The collect-form response exposes `receiptGrouping` from the resolved policy version. Separate receipts put principal fees on the fee document and all additional charges, including late fees, on the charge document, with independent numbers and downloads. Combined receipts include both components in one document returned as `feeReceiptId`. Receipt previews use the returned IDs; historical fee-only responses retain their original totals. Reconciliation displays one row per original provisional document. Its shared decision form explains that separate fee/charge documents for one payment are verified together; mutation cache invalidation refreshes both rows.
 
 The backend owns policy resolution, verification, receipt amount snapshots, retry behavior and fee refund eligibility: [receipt grouping contract](../../../Shikshamitra-BE/docs/modules/finance/references/collection-policy-end-to-end.md#receipt-grouping-for-fees-and-charges).
 
 Fee collection and receipt flows span Finance and shared fee client folders.
 
 The Collections table shows **Pending Fees** as the server's total outstanding fee
-balance, including overdue fees. There is no separate Overdue Fees column in the
+balance, including future and overdue installments. Student summary and Fee Details explain
+this scope with **Includes future and overdue installments**. Principal excludes the separately
+displayed additional charges. See [staff pending balances](../../../Shikshamitra-BE/docs/modules/finance/api.md#staff-collection-pending-balances).
+There is no separate Overdue Fees column in the
 table, column selector, or table export. For example, ₹6,000 pending plus ₹6,000
 overdue appears as ₹12,000 Pending Fees; the Overdue status remains visible.
 
@@ -463,17 +527,18 @@ The Collections status column renders the API's `NoFeeAssigned` status as a neut
 
 ### Direct late-fee and charge waiver
 
-The current screen supports a late-fee request and approval lifecycle only.
-The approved target removes the Waiver tab, request queue, and approval/rejection flow.
+Fee Collection applies full-balance waivers directly through the existing waiver command.
 
 1. Collection Policy and Charge Management contain no waiver fields.
-2. Fee Collection shows a waiver toggle for each positive eligible late-fee and approved charge balance.
-3. The collector turns the required row ON and enters only a mandatory reason.
+2. Additional Charges uses the shared collection table to display original, collected, waived, and outstanding amounts. Eligible rows expose a waiver toggle; the existing detail action remains available. Explicitly ineligible and settled rows have no action.
+3. The exact `Finance.Fees.FeeCollections.ApplyWaiver` permission controls the action. The collector opens the shared `CustomDialog`, reviews the named charge and full remaining amount, and enters a mandatory reason (up to 500 characters). `FormSectionCard`, Formik/Yup, `ShakingTextField`, and `SubmitButton` provide the standard form interaction.
 4. The frontend does not accept or send a waiver amount.
-5. Confirmation makes the server waive the full live remaining balance and refreshes collection totals.
+5. `Apply waiver` makes the server waive the full live remaining balance. Existing RTK Query tags refresh collection, fee details, charges, and audit queries. A waived charge is removed from payment selection; waiving an installment's late fee preserves selected principal.
 6. There is no global setting, pending request, approver action, or `/finance/waiver-management` route.
 
-See the [approved Fee Collection waiver target](../../../Shikshamitra-BE/docs/modules/finance/references/fee-collection-waiver-end-to-end.md).
+The dialog locks fields and dismissal during submission. Dirty cancellation uses the shared `ConfirmDialog` through `useUnsavedNavigation`, preserving the parent collection draft. Errors retain the reason and request identity; an unconfirmed network/server result freezes the submitted reason and offers `Retry waiver` with the same payload and idempotency key. Closing an unconfirmed result explains that it may already have applied and that closing does not undo it; reopening the same source retains its retry identity and reason. Waivers remain non-cash reductions with no payment receipt.
+
+See the [Fee Collection waiver contract](../../../Shikshamitra-BE/docs/modules/finance/references/fee-collection-waiver-end-to-end.md).
 
 ## Trace concession and adjustment changes
 
@@ -488,7 +553,7 @@ Concession and adjustment workflows should preserve approval and audit behavior.
 ### Concession Type and evidence lifecycle
 
 1. Settings shows active and inactive types so historical configuration stays visible. The list and archived count wait for the selected academic year before sending requests, including on a direct first visit.
-2. The form collects a Concession Type Name and document definitions with mandatory/optional, maximum file size, and accepted formats. New document rows start with backend defaults. Update shows matching name, document-row, and description skeletons while details load; the dialog header and Cancel/Update footer stay visible, with Update disabled until the record is ready. Failed detail requests offer Retry.
+2. `Add Concession Type` and record edit open the same responsive drawer, with General Information and Document Requirements sections. The form collects a Concession Type Name, description, and document definitions with mandatory/optional, maximum file size, and accepted formats. New document rows start with backend defaults. Edit shows matching field skeletons while details load; the header and Cancel/Submit footer remain visible, with Submit disabled until the record is ready. Failed detail requests offer Retry. Saving locks fields and dismissal; unsaved changes use the existing guarded close path.
 3. The server is authoritative for normalized-name uniqueness. Active types cannot be deleted. After deactivation, Delete is available only while the type is unused; used types remain undeletable and lock document-definition changes.
 4. A new concession request lists active types only. Editing an existing request may resolve its inactive historical type.
 5. Before upload, the shared upload control filters extensions and checks size; the concession upload API repeats extension, MIME, signature, and size validation. The backend expires unattached staged files after 24 hours. Saved evidence opens in the shared preview dialog through an authenticated request-scoped URL only when `ViewDocument` is granted.
@@ -496,6 +561,15 @@ Concession and adjustment workflows should preserve approval and audit behavior.
 7. Version History opens from each row's action menu in the same wide, read-only layout as Payment Terms: a searchable newest-first version sidebar, selected-version author/date/action, and a Field/Before/After comparison table. Missing field-level audit data remains explicitly identified. Fixed Back to details and Close actions preserve the table context.
 
 ### Concession request and approval
+
+The policy field includes an eye action on its right edge. It opens a read-only dialog for the
+selected immutable version, with General Information, Calculation Rules and Application Scope.
+The dialog uses the request context's policy values and preserves the draft when closed.
+Request-entered percentage and amount fields appear inside their selected fee's Fee Breakdown;
+selected breakdowns start expanded and can be opened independently. Percentage inputs show the
+per-installment maximum. Fixed-amount breakdowns show the request-wide maximum, entered total,
+remaining allowance and the amount available for each installment. Filtering the displayed rows
+does not divide the policy limit: every selected fee continues to share the same request cap.
 
 The concession request form follows the charge form's shared `FormSectionCard` layout: neutral section icons, heading help tooltips, responsive two-column academic fields, a scrollable body, and a stable action footer. Student information, fee assignment (when needed), concession details, fee heads, values, preview, and documents retain their existing conditional visibility and validation.
 
@@ -619,6 +693,13 @@ comparison. Accessible info icons explain read-only history, the Latest badge,
 recorded change reasons, and Before/After values. The selected version remains
 visible when a search returns no matches, and clearing search restores the list.
 
+Collection, Concession, Refund and Proration Policy version drawers share Payment Terms'
+rounded history cards. Changes starts expanded with its field count visible in the header;
+Saved version details starts collapsed and displays the selected recorded snapshot, including
+unchanged settings. Selecting another version closes the saved-details card. Both cards keep
+their info controls independent of expansion. Concession Type history uses the same Changes
+card; its field-change-only audit response does not provide a complete saved snapshot.
+
 ### Combined Finance configuration tables
 
 Fee Category, Charge Category, Concession Type, Payment Terms, Collection Policy, Concession Policy, Refund Policy and Proration Policy show all lifecycle statuses in one table without Current/Archived tabs.
@@ -736,7 +817,7 @@ repeats normalization and uniqueness checks. Payment Term generated-code conflic
 name field, preserve entered data, and use one error notification path. Payment Term codes are
 unique within the academic year; changing Board alone does not resolve a code conflict.
 
-## Provisional and official receipt workflow
+## Receipt and provisional receipt workflow
 
 After collection succeeds, the payment draft, selected rows and allocation errors are cleared,
 and collection details are refreshed independently of PDF retrieval. Each generated receipt
@@ -746,13 +827,13 @@ with **Retry receipt**. Retry downloads the existing receipt; it never repeats c
 A summary refresh failure preserves receipt access and blocks new collection until **Refresh fees**
 succeeds. Completing the receipt dialog returns to the refreshed collection list.
 
-1. In Fee Collection, cash offers one action to collect and issue an Official Receipt. All non-cash methods offer one action to record and issue a Provisional Receipt.
-2. Receipts lists fee, charge, and combined document types using the server label. Payment method and verification/link status are visible. The Official Receipt (Charge) option is included in the receipt-type filter.
+1. In Fee Collection, cash offers one action to collect and issue a Receipt. All non-cash methods offer one action to record and issue a Provisional Receipt.
+2. Receipts lists fee, charge, and combined document types using the server label. Payment method and verification/link status are visible. The Receipt (Charge) option is included in the receipt-type filter.
 3. Open a receipt to see the recorded payment method, provisional/official cross-reference, and PDF. Download PDF uses the server-provided filename.
-4. Reconciliation shows only non-cash payment method tabs, starting with Cheque, with the existing approval/rejection workflow. Saved Cash-tab links fall back to Cheque. Cash official receipts remain available in Receipts.
+4. Reconciliation shows only non-cash payment method tabs, starting with Cheque, with the existing approval/rejection workflow. Saved Cash-tab links fall back to Cheque. Cash receipts remain available in Receipts.
 5. Approval/rejection invalidates receipt list/detail cache tags as well as reconciliation and collection data, so reopening Receipts shows the updated linkage.
 
-Backend rules and PDF contract: [Provisional and official receipts](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md). Bank-statement import and automatic matching are outside this delivery.
+Backend rules and PDF contract: [Receipts and provisional receipts](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md). Bank-statement import and automatic matching are outside this delivery.
 
 ## Missing form prerequisites
 
@@ -769,3 +850,23 @@ Finance forms share `FormPrerequisiteState` through the Finance route/permission
 | Manual Income/Expense and Cash Management | Category; non-cash bank; available cash; deposit/approval bank |
 
 Draft and optional choices retain their existing rules: all-head refund drafts, disabled late fees, cash collection without a bank, approved charge-only collection and optional structure policies remain available. Historical mappings and saved version pins remain visible. Cash command retries retain their original uncertain-outcome payload; the server remains authoritative for balances, eligibility and publication.
+
+## Receipt and reconciliation list criteria
+
+Receipts uses the API offset and page size for pagination and sends toolbar search to the receipt list endpoint.
+Month, receipt type and academic selectors combine with the search; changing criteria returns the list to its first page.
+Search supports receipt number, student name and GR number.
+
+Reconciliation sends page, page size and search for the selected academic year, month and payment method.
+The Verification status selector requests All, Pending, Approved or Rejected before pagination.
+Changing scope resets the page while retaining the typed search and page size.
+Receipts and the six active reconciliation methods send serialized header criteria to their list APIs. Criteria apply to the complete authorized parent/search result before count and pagination. Amounts use numeric operators; cheque and transaction identifiers retain text semantics. Columns, current-page Export, and Full screen remain available. The retired Cash, Online Gateway, and Wallet components retain search/paging with unsupported header menus disabled. Column sorting remains unavailable.
+Columns, current-page export and fullscreen utilities remain available.
+
+The direct-access Adjustments screen maps its Rejected tab to the backend rejected status and renders the mapped student GR number.
+Its legacy first-100 list remains a separate limitation; the route is absent from active navigation.
+
+
+Audit Trail uses one authoritative search value for the field and keyword chip. Typing updates those controls immediately and waits 400 ms at the API query boundary. Reset and explicit clears commit the cleared/default query immediately and cancel pending search callbacks. Reset preserves initial student/correlation/deep-link filter defaults; re-entering a prior keyword performs a new filtered query.
+
+Direct Finance routes: Fee Head and Receipt Book remain implemented behind their existing exact View guards although their menu children are commented out. Their header criteria use server results before count/page. The direct Adjustments list controls server paging, global text and header criteria instead of loading the first 100 rows for local filtering. Student GR and roll identifiers remain searchable as text; the existing wire status mapping and financial actions remain intact.

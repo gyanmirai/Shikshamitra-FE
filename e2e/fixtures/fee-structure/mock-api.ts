@@ -134,9 +134,31 @@ const settings = {
   startDate: '2026-04-01',
   endDate: '2027-03-31',
   heads: [
-    { id: 'tuition', name: 'Tuition Fee', isConcessionApplied: true },
-    { id: 'transport', name: 'Transport Fee', isConcessionApplied: false },
-    { id: 'admission', name: 'Admission Fee', isConcessionApplied: false },
+    { id: 'tuition', name: 'Tuition Fee', categoryName: 'Academic', isConcessionApplied: true },
+    {
+      id: 'transport',
+      name: 'Transport Fee',
+      categoryName: 'Transport',
+      isConcessionApplied: false,
+    },
+    {
+      id: 'admission',
+      name: 'Admission Fee',
+      categoryName: 'Academic',
+      isConcessionApplied: false,
+    },
+    {
+      id: 'activity-academic',
+      name: 'Activity Fee',
+      categoryName: 'Academic',
+      isConcessionApplied: false,
+    },
+    {
+      id: 'activity-transport',
+      name: 'Activity Fee',
+      categoryName: 'Transport',
+      isConcessionApplied: false,
+    },
   ],
   terms: [
     {

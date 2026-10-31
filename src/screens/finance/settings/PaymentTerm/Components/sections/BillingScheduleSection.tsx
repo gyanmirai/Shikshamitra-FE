@@ -2,7 +2,7 @@
 
 import type { FormikProps } from 'formik';
 
-import { Grid } from '@mui/material';
+import { Box } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -28,8 +28,8 @@ export function BillingScheduleSection({ formik, board }: BillingScheduleSection
   const limit = getInvoiceOffsetLimit(formik.values, board?.startDate);
 
   return (
-    <Grid container spacing={2}>
-      <Grid size={{ xs: 12, sm: isXDays ? 7 : 12 }}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, maxWidth: '100%' }}>
+      <Box sx={{ width: 300, maxWidth: '100%' }}>
         <ShakingTextField
           error={formik.touched.demandGenerationRule && Boolean(formik.errors.demandGenerationRule)}
         >
@@ -60,11 +60,11 @@ export function BillingScheduleSection({ formik, board }: BillingScheduleSection
             }
           />
         </ShakingTextField>
-      </Grid>
+      </Box>
 
       {/* Offset Days — conditional */}
       {isXDays && (
-        <Grid size={{ xs: 12, sm: 5 }}>
+        <Box sx={{ width: 200, maxWidth: '100%' }}>
           <ShakingTextField
             error={Boolean(formik.touched.demandOffsetDays && formik.errors.demandOffsetDays)}
           >
@@ -92,8 +92,8 @@ export function BillingScheduleSection({ formik, board }: BillingScheduleSection
               }
             />
           </ShakingTextField>
-        </Grid>
+        </Box>
       )}
-    </Grid>
+    </Box>
   );
 }

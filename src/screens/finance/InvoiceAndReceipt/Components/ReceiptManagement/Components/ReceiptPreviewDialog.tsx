@@ -164,7 +164,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
             <DetailSection
               title="Receipt Details"
               icon="mdi:receipt-text-outline"
-              helpText="Recorded receipt amount, payment method, and links between provisional and official documents."
+              helpText="Recorded receipt amount, payment method, and links between provisional documents and receipts."
             >
               <DetailGrid>
                 <DetailField
@@ -206,7 +206,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
                   />
                 )}
                 {receipt.linkedFinalReceiptNumber && (
-                  <DetailField label="Official receipt" value={receipt.linkedFinalReceiptNumber} />
+                  <DetailField label="Receipt" value={receipt.linkedFinalReceiptNumber} />
                 )}
                 {receipt.linkedProvisionalReceiptNumber && (
                   <DetailField

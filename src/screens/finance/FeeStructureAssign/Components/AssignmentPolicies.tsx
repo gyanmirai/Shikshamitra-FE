@@ -9,7 +9,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailField } from 'src/components/detail-view';
+import { FormSectionCard } from 'src/components/form-section-card';
 import {
   useAssignmentPolicyOptionsQuery,
   selectableAssignmentPolicyFamilies,
@@ -226,7 +227,7 @@ export default function AssignmentPolicies({
         </Box>
       )}
       {canOverride &&
-        (flat ? (
+        (flat || editing ? (
           (editing || editMode.value) && policyControls
         ) : (
           <Accordion
@@ -245,12 +246,23 @@ export default function AssignmentPolicies({
         ))}
     </Stack>
   );
-  if (!flat || editing) return policyContent;
+  if (editing)
+    return (
+      <FormSectionCard
+        title="Student Policies"
+        icon="mdi:shield-check-outline"
+        descriptionTooltip="Update this student's assigned policies and enter a reason for the change."
+      >
+        {policyContent}
+      </FormSectionCard>
+    );
+  if (!flat) return policyContent;
   const actionLabel = editMode.value ? 'Finish editing policies' : 'Edit policies';
   return (
-    <DetailSection
+    <FormSectionCard
       title="Policies"
       icon="mdi:shield-check-outline"
+      descriptionTooltip="Review the structure's policies or override them for this assignment."
       action={
         <CustomTooltip
           title={
@@ -276,6 +288,6 @@ export default function AssignmentPolicies({
       }
     >
       {policyContent}
-    </DetailSection>
+    </FormSectionCard>
   );
 }

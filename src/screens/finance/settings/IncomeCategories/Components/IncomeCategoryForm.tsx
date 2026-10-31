@@ -1,5 +1,6 @@
 'use client';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
@@ -134,7 +135,9 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                   name="name"
                   size="small"
                   value={formik.values.name}
-                  onChange={formik.handleChange}
+                  onChange={(event) =>
+                    formik.setFieldValue(event.target.name, sanitizeFinanceName(event.target.value))
+                  }
                   onBlur={formik.handleBlur}
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={

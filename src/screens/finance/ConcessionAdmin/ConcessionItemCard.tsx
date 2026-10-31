@@ -15,12 +15,14 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { FormSectionHeader } from 'src/components/form-section-card';
+import { DetailGrid, DetailField } from 'src/components/detail-view';
 import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { Box, Card, Stack, Button, Tooltip, Typography, IconButton } from '@mui/material';
 import { ConcessionStatusType, ConcessionStatusTypeColors } from 'src/enums/concession-status-type';
 
 import { canDecideConcession } from '../Concession/concessionDecisionEligibility';
+import { concessionAmountFields } from './concessionAmountFields';
 
 import type { IConcessionRequestItem } from './type';
 
@@ -178,7 +180,14 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
         component="ul"
         aria-label="Uploaded supporting documents"
         tabIndex={0}
-        sx={{ m: 0, p: 0, listStyle: 'none', height: 64, overflowY: 'auto', overflowX: 'hidden' }}
+        sx={{
+          m: 0,
+          p: 0,
+          listStyle: 'none',
+          maxHeight: 96,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+        }}
       >
         {displayDocs.length > 0 ? (
           displayDocs.map((doc) => (
@@ -240,7 +249,6 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
       variant="outlined"
       aria-label={`${item.concessionTypeName} request`}
       sx={{
-        height: '100%',
         minWidth: 0,
         display: 'flex',
         flexDirection: 'column',
@@ -276,27 +284,17 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           action={<Label color={statusColor}>{statusLabel}</Label>}
         />
       </Box>
-      <Stack spacing={1} sx={{ p: 1.5, flex: 1 }}>
-        <Box sx={{ px: 1.5, py: 1, borderRadius: 1, bgcolor: 'background.neutral' }}>
-          <Typography variant="body2" color="text.secondary">
-            Requested amount
-          </Typography>
-          <Typography
-            variant="h5"
-            component="p"
-            sx={{ mt: 0.25, fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' }}
-          >
-            {formatNumber(item.totalRequestedAmount ?? item.totalAmount, 'INR')}
-          </Typography>
-          {!isPending && (
-            <Typography variant="caption" color="text.secondary">
-              {item.totalReversedAmount > 0 ? 'Net approved' : 'Approved amount'}:{' '}
-              {formatNumber(
-                item.totalReversedAmount > 0 ? item.netApprovedAmount : item.totalApprovedAmount,
-                'INR'
-              )}
-            </Typography>
-          )}
+      <Stack spacing={1} sx={{ p: 1.5 }}>
+        <Box
+          component="section"
+          aria-label="Concession amounts"
+          sx={{ px: 1.5, py: 1, borderRadius: 1, bgcolor: 'background.neutral' }}
+        >
+          <DetailGrid desktopColumns={2}>
+            {concessionAmountFields(item).map(({ label, amount }) => (
+              <DetailField key={label} label={label} value={formatNumber(amount, 'INR')} />
+            ))}
+          </DetailGrid>
         </Box>
         <Box component="section" aria-label="Supporting documents">
           {documents}
@@ -324,30 +322,32 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           </Typography>
         )}
       </Stack>
-      <Box
-        component="footer"
-        sx={{
-          px: 1.5,
-          py: 0.5,
-          bgcolor: 'background.neutral',
-          borderTop: 1,
-          borderColor: 'divider',
-        }}
-      >
-        <ThreeDotsActions
-          showThreeDots={false}
-          directActions={cardActions}
+      {cardActions.length > 0 && (
+        <Box
+          component="footer"
           sx={{
-            justifyContent: 'flex-end',
-            flexWrap: 'wrap',
-            '& .MuiIconButton-root': {
-              width: 32,
-              height: 32,
-              '@media (pointer: coarse)': { width: 44, height: 44 },
-            },
+            px: 1.5,
+            py: 0.5,
+            bgcolor: 'background.neutral',
+            borderTop: 1,
+            borderColor: 'divider',
           }}
-        />
-      </Box>
+        >
+          <ThreeDotsActions
+            showThreeDots={false}
+            directActions={cardActions}
+            sx={{
+              justifyContent: 'flex-end',
+              flexWrap: 'wrap',
+              '& .MuiIconButton-root': {
+                width: 32,
+                height: 32,
+                '@media (pointer: coarse)': { width: 44, height: 44 },
+              },
+            }}
+          />
+        </Box>
+      )}
       <DocumentPreviewDialog
         open={!!previewDoc}
         onClose={() => setPreviewDoc(null)}

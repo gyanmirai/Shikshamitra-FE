@@ -1,5 +1,7 @@
 'use client';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
+import { financeNameSchema } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 import type { IParams, IColumn } from 'src/components/customizabaleTable/types';
 
@@ -18,6 +20,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useRef, useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -98,6 +101,7 @@ const FinanceChargeCategory = () => {
       search: queryParams.search || undefined,
       filters: serializeFinanceTableFilters(filters),
     },
+    options: { skip: !academicYearId },
   });
 
   const [deleteChargeCategory, { isLoading: isDeleting }] = useDeleteChargeCategoryMutation();
@@ -290,37 +294,37 @@ const FinanceChargeCategory = () => {
               actions={[
                 ...(canEdit && row.isActive
                   ? [
-                      {
-                        id: 'edit',
-                        label: 'Edit',
-                        icon: 'solar:pen-bold',
-                        onClick: () => handleEdit(row),
-                      },
-                    ]
+                    {
+                      id: 'edit',
+                      label: 'Edit',
+                      icon: 'solar:pen-bold',
+                      onClick: () => handleEdit(row),
+                    },
+                  ]
                   : []),
                 ...(canDelete && row.isActive
                   ? [
-                      {
-                        id: 'delete',
-                        label: 'Delete',
-                        icon: 'solar:trash-bin-trash-bold',
-                        color: 'error.main',
-                        onClick: () => handleDeleteAction(row),
-                      },
-                    ]
+                    {
+                      id: 'delete',
+                      label: 'Delete',
+                      icon: 'solar:trash-bin-trash-bold',
+                      color: 'error.main',
+                      onClick: () => handleDeleteAction(row),
+                    },
+                  ]
                   : []),
                 ...(canChangeStatus
                   ? [
-                      {
-                        id: 'status',
-                        label: !row.isActive ? 'Restore' : 'Archive',
-                        icon: !row.isActive
-                          ? 'mdi:archive-arrow-up-outline'
-                          : 'mdi:archive-outline',
-                        disabled: isStatusLoading,
-                        onClick: () => handleOpenStatusConfirm(row),
-                      },
-                    ]
+                    {
+                      id: 'status',
+                      label: !row.isActive ? 'Restore' : 'Archive',
+                      icon: !row.isActive
+                        ? 'mdi:archive-arrow-up-outline'
+                        : 'mdi:archive-outline',
+                      disabled: isStatusLoading,
+                      onClick: () => handleOpenStatusConfirm(row),
+                    },
+                  ]
                   : []),
               ]}
             />
@@ -340,7 +344,6 @@ const FinanceChargeCategory = () => {
       <CustomBreadcrumbs
         description="This screen displays all created charge Category, helping the school manage additional fees or penalties that can be applied to students"
         heading="Charge Category"
-
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/charge-management' },
@@ -356,7 +359,7 @@ const FinanceChargeCategory = () => {
               onClick={handleAdd}
               color="inherit"
             >
-              Add Charge Category
+              Charge Category
             </Button>
           ) : undefined
         }
@@ -390,6 +393,7 @@ const FinanceChargeCategory = () => {
       {/* Add/Edit Dialog */}
       <CustomDialog
         open={addDialog.value || editDialog.value}
+        maxWidth="sm"
         guardUnsavedChanges={false}
         handleClose={() => handleDialogClose()}
         title={
@@ -682,7 +686,7 @@ export const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategory
   const validationSchema = useMemo(
     () =>
       Yup.object().shape({
-        chargeName: Yup.string()
+        chargeName: financeNameSchema('Charge Category Name')
           .required('Charge Category Name is required')
           .test('unique-charge-category', 'This charge category name already exists', (value) => {
             if (!value?.trim()) return true;
@@ -773,96 +777,107 @@ export const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategory
               onRefresh={refreshPrerequisites}
             />
           ) : (
-            <Stack spacing={2} p={0}>
-              {/* Charge Category Name Field */}
-              <ShakingTextField
-                error={!!(formik.touched.chargeName && formik.errors.chargeName) || false}
-              >
-                <TextField
-                  size="small"
-                  value={formik.values.chargeName}
-                  name="chargeName"
-                  fullWidth
-                  label="Charge Category Name *"
-                  onChange={(e: any) => {
-                    const onlyLetters = e.target.value
-                      .replace(/[^a-zA-Z0-9\s]/g, '')
-                      .replace(/^\s+/g, '')
-                      .trimStart();
-                    const newName = onlyLetters
-                      .split(' ')
-                      .map(
-                        (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                      )
-                      .join(' ');
-                    formik.setFieldValue('chargeName', newName);
-                  }}
-                  error={formik.touched.chargeName && Boolean(formik.errors.chargeName)}
-                  inputProps={{ maxLength: 40 }}
-                  helperText={
-                    (formik.touched.chargeName && typeof formik.errors.chargeName === 'string'
-                      ? formik.errors.chargeName
-                      : undefined) || undefined
-                  }
-                />
-              </ShakingTextField>
+            <FormSectionCard
+              title="Charge Category Details"
+              icon={GlobalIcons.receiptIcon}
+              descriptionTooltip="Name and describe this category, choose its income category, and set whether charges require approval."
+            >
+              <Stack spacing={1.5}>
+                {/* Charge Category Name Field */}
+                <ShakingTextField
+                  error={!!(formik.touched.chargeName && formik.errors.chargeName) || false}
+                >
+                  <TextField
+                    size="small"
+                    value={formik.values.chargeName}
+                    name="chargeName"
+                    fullWidth
+                    label="Charge Category Name *"
+                    onChange={(e: any) => {
+                      const onlyLetters = sanitizeFinanceName(e.target.value)
+                        .replace(/^\s+/g, '')
+                        .trimStart();
+                      const newName = onlyLetters
+                        .split(' ')
+                        .map(
+                          (word: string) =>
+                            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                        )
+                        .join(' ');
+                      formik.setFieldValue('chargeName', newName);
+                    }}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.chargeName && Boolean(formik.errors.chargeName)}
+                    inputProps={{ maxLength: 40 }}
+                    helperText={
+                      (formik.touched.chargeName && typeof formik.errors.chargeName === 'string'
+                        ? formik.errors.chargeName
+                        : undefined) || undefined
+                    }
+                  />
+                </ShakingTextField>
 
-              {/* Income category determines the income account used when the charge is collected. */}
-              <ShakingTextField
-                error={
-                  !!(formik.touched.incomeCategoryId && formik.errors.incomeCategoryId) || false
-                }
-              >
-                <CustomSelect
-                  name="incomeCategoryId"
-                  label="Income Category *"
-                  options={incomeCategoryOptions}
-                  value={formik.values.incomeCategoryId || ''}
-                  labelKey="displayName"
-                  valueKey="id"
-                  isLoading={incomeCategoryLoading}
-                  disabled={Boolean(editData?.isUsedInDownstream)}
-                  onChange={(value) => formik.setFieldValue('incomeCategoryId', value)}
-                  error={formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)}
-                  helperText={
-                    (formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
-                      ? (formik.errors.incomeCategoryId as string)
-                      : undefined) || undefined
+                {/* Income category determines the income account used when the charge is collected. */}
+                <ShakingTextField
+                  error={
+                    !!(formik.touched.incomeCategoryId && formik.errors.incomeCategoryId) || false
                   }
-                />
-              </ShakingTextField>
+                >
+                  <CustomSelect
+                    name="incomeCategoryId"
+                    label="Income Category *"
+                    options={incomeCategoryOptions}
+                    value={formik.values.incomeCategoryId || ''}
+                    labelKey="displayName"
+                    valueKey="id"
+                    isLoading={incomeCategoryLoading}
+                    disabled={Boolean(editData?.isUsedInDownstream)}
+                    onChange={(value) => formik.setFieldValue('incomeCategoryId', value)}
+                    error={
+                      formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)
+                    }
+                    helperText={
+                      (formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
+                        ? (formik.errors.incomeCategoryId as string)
+                        : undefined) || undefined
+                    }
+                  />
+                </ShakingTextField>
 
-              <Box>
-                <FormControlLabel
-                  sx={{ m: 0 }}
-                  label="Approval Required"
-                  control={
-                    <Switch
-                      name="isApprovalRequired"
-                      checked={formik.values.isApprovalRequired}
-                      onChange={(_, checked) => formik.setFieldValue('isApprovalRequired', checked)}
-                    />
-                  }
-                />
-              </Box>
+                <Box>
+                  <FormControlLabel
+                    sx={{ m: 0 }}
+                    label="Approval Required"
+                    control={
+                      <Switch
+                        name="isApprovalRequired"
+                        checked={formik.values.isApprovalRequired}
+                        onChange={(_, checked) =>
+                          formik.setFieldValue('isApprovalRequired', checked)
+                        }
+                      />
+                    }
+                  />
+                </Box>
 
-              {/* Description Field */}
-              <ShakingTextField
-                error={!!(formik.touched.description && formik.errors.description) || false}
-              >
-                <TextField
-                  multiline
-                  rows={4}
-                  size="small"
-                  value={formik.values.description}
-                  name="description"
-                  fullWidth
-                  label="Description"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
-              </ShakingTextField>
-            </Stack>
+                {/* Description Field */}
+                <ShakingTextField
+                  error={!!(formik.touched.description && formik.errors.description) || false}
+                >
+                  <TextField
+                    multiline
+                    rows={3}
+                    size="small"
+                    value={formik.values.description}
+                    name="description"
+                    fullWidth
+                    label="Description"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
+                </ShakingTextField>
+              </Stack>
+            </FormSectionCard>
           )}
         </DialogScrollContent>
       </BackPopUpChecked>

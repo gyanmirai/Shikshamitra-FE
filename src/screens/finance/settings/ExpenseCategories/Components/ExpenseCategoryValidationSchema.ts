@@ -1,3 +1,4 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import * as Yup from 'yup';
 
 import type { IExpenseCategory } from './type';
@@ -7,7 +8,7 @@ export const expenseCategoryValidationSchema = (
   editData?: IExpenseCategory | null
 ) =>
   Yup.object().shape({
-    name: Yup.string()
+    name: financeNameSchema('Expense Category Name')
       .trim()
       .max(128, 'Expense Category Name must be at most 128 characters')
       .required('Expense Category Name is required')

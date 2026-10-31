@@ -1,5 +1,8 @@
 'use client';
 
+import { ChargeFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
+
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 import type { Division } from 'src/types/school';
 
@@ -15,8 +18,9 @@ import { Iconify } from 'src/components/iconify';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -47,6 +51,7 @@ import {
   TextField,
   Typography,
   RadioGroup,
+  DialogActions,
   FormControlLabel,
 } from '@mui/material';
 
@@ -554,10 +559,10 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                     ? 'No students are available in the selected scope.'
                     : '';
 
-  if (chargeLoading) {
+  if (chargeLoading && !isSubmitLoading && !formik.isSubmitting) {
     return (
       <Box sx={{ p: 2 }}>
-        <Skeleton variant="rectangular" height={400} />
+        <ChargeFormSkeleton />
       </Box>
     );
   }
@@ -620,7 +625,12 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                               size="small"
                               disabled={isEditMode}
                               value={values.chargeName}
-                              onChange={formik.handleChange}
+                              onChange={(event) =>
+                                formik.setFieldValue(
+                                  event.target.name,
+                                  sanitizeFinanceName(event.target.value)
+                                )
+                              }
                               onBlur={formik.handleBlur}
                               error={!!(touched.chargeName && errors.chargeName)}
                               helperText={
@@ -1026,6 +1036,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                       descriptionTooltip="Only enrolled students with a fee structure assignment can receive charges. Already charged means a pending or approved charge in this category and academic year. Search and filters change the visible list only."
                       icon="solar:user-check-rounded-bold-duotone"
                       title="Student selection"
+                      contentSpacing={1}
                     >
                       <Stack
                         direction={{ xs: 'column', sm: 'row' }}
@@ -1090,7 +1101,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                                 lg: 'repeat(3, minmax(0, 1fr))',
                               },
                               gap: 1,
-                              pt: 1.5,
+                              pt: 1,
                               '& > *': { minWidth: 0 },
                             }}
                           >
@@ -1218,7 +1229,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                           </Box>
                         </Collapse>
                       </Box>
-                      <Grid container spacing={1.5}>
+                      <Grid container spacing={1} alignItems="stretch">
                         {/* Student List */}
                         <Grid
                           size={{
@@ -1226,9 +1237,10 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             md:
                               values.selectionMode === 'selected' &&
                               values.selectedStudents.length > 0
-                                ? 8
+                                ? 6
                                 : 12,
                           }}
+                          sx={{ display: 'flex', minWidth: 0 }}
                         >
                           <StudentSelectionLayout
                             students={filteredStudents}
@@ -1267,8 +1279,9 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                         {/* Selected Students Panel */}
                         {values.selectionMode === 'selected' &&
                           values.selectedStudents.length > 0 && (
-                            <Grid size={{ xs: 12, md: 4 }}>
+                            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', minWidth: 0 }}>
                               <SelectedStudentsPanel
+                                isSticky={false}
                                 selectedStudents={values.selectedStudents}
                                 onRemove={(studentId) => {
                                   const newIds = values.studentIds.filter((id) => id !== studentId);
@@ -1431,32 +1444,100 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
             </LoadingButton>
           }
         />
-        <ConfirmDialog
+        <CustomDialog
           open={adminConfirmation !== null}
-          icon="warning"
-          title="Create and approve charge?"
-          disableBackdropClick
-          content={
-            <Stack spacing={1}>
-              <Typography>
-                {adminConfirmation?.name} · {adminConfirmation?.category} · {currentYear?.name}
+          title="Create and Approve Charge"
+          titleInfo="Review the charge and student count before creating an automatically approved request."
+          maxWidth="sm"
+          hasForm={false}
+          guardUnsavedChanges={false}
+          disableClose={formik.isSubmitting || isSubmitLoading}
+          handleClose={() => setAdminConfirmation(null)}
+          aria-describedby="create-charge-review-description"
+        >
+          <DialogScrollContent>
+            <Stack spacing={2}>
+              <Typography
+                id="create-charge-review-description"
+                variant="body2"
+                color="text.secondary"
+              >
+                Review the details before applying this charge to the selected students.
               </Typography>
-              <Typography>
-                {formatCurrency(adminConfirmation?.amount ?? 0)} per student for{' '}
-                {adminConfirmation?.count ?? 0} students.
-              </Typography>
-              <Typography>
-                Total:{' '}
-                {formatCurrency((adminConfirmation?.amount ?? 0) * (adminConfirmation?.count ?? 0))}{' '}
-                · Due {adminConfirmation?.dueDate}
-              </Typography>
-              <Typography>This request will be approved automatically when you confirm.</Typography>
+              <Box component="dl" sx={{ m: 0 }}>
+                {[
+                  ['Charge name', adminConfirmation?.name],
+                  ['Category', adminConfirmation?.category],
+                  ['Academic year', currentYear?.name],
+                  ['Students', adminConfirmation?.count],
+                  ['Amount per student', formatNumber(adminConfirmation?.amount ?? 0, 'INR')],
+                  ['Due date', adminConfirmation?.dueDate],
+                  [
+                    'Total charge amount',
+                    formatNumber(
+                      (adminConfirmation?.amount ?? 0) * (adminConfirmation?.count ?? 0),
+                      'INR'
+                    ),
+                  ],
+                ].map(([label, value]) => (
+                  <Box
+                    key={label}
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1.5fr)' },
+                      gap: { xs: 0.5, sm: 2 },
+                      py: 1,
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                    }}
+                  >
+                    <Typography component="dt" variant="body2" color="text.secondary">
+                      {label}
+                    </Typography>
+                    <Typography
+                      component="dd"
+                      variant="body2"
+                      sx={{
+                        m: 0,
+                        fontWeight: label === 'Total charge amount' ? 700 : 600,
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {value ?? '—'}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+              <Alert severity="info">
+                This request will be approved automatically when you confirm. The approved charge
+                will become available for collection. Choose Keep editing to return to the form
+                without creating the charge.
+              </Alert>
             </Stack>
-          }
-          onClose={() => setAdminConfirmation(null)}
-          cancelText="Keep editing"
-          action={
+          </DialogScrollContent>
+          <DialogActions
+            sx={{
+              p: 2,
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              flexWrap: 'wrap',
+              rowGap: 1,
+            }}
+          >
+            <Button
+              autoFocus
+              type="button"
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              disabled={formik.isSubmitting || isSubmitLoading}
+              onClick={() => setAdminConfirmation(null)}
+            >
+              Keep editing
+            </Button>
             <LoadingButton
+              size="small"
               startIcon={<Iconify icon="mdi:check-circle-outline" />}
               type="button"
               variant="contained"
@@ -1470,8 +1551,8 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
             >
               Create and approve
             </LoadingButton>
-          }
-        />
+          </DialogActions>
+        </CustomDialog>
       </form>
     </BackPopUpChecked>
   );

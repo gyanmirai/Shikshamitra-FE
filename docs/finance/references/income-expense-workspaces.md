@@ -52,7 +52,7 @@ Use Formik/Yup, NumericFormatCustom with raw string money and two-decimal valida
 Back, the register breadcrumb and Cancel use the shared discard confirmation when the form is dirty. Loading/saving locks the form and its navigation, and an overlay communicates progress.
 Manual entries collect name/payer or payee, category, amount, payment date, method, non-cash school bank, optional reference and notes.
 Cash clears the bank; non-cash requires an eligible account.
-Submit/Cancel follow the shared neutral footer; lock duplicate submissions and unsafe closure during saving; retain input on failure.
+Cancel and Submit sit at the right of the fixed neutral footer, in that order; lock duplicate submissions and unsafe closure during saving; retain input on failure.
 Successful creation invalidates the corresponding register tag and preserves list filters.
 Student payments and refunds must never be recreated using these manual forms.
 

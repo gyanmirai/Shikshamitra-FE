@@ -1,5 +1,9 @@
 'use client';
 
+import FinanceFormSkeleton, {
+  FinanceSkeletonRows,
+} from 'src/screens/finance/components/FinanceFormSkeleton';
+
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
@@ -137,15 +141,14 @@ export default function ExceptionWindowsDialog({ open, onClose }: ExceptionWindo
       <DialogScrollContent>
         <Box sx={{ p: 2.5 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Suspend late fee accruals, extend grace periods, or disable online payment collections during special events (e.g. natural disasters, banking strikes, or gateway maintenance).
+            Suspend late fee accruals, extend grace periods, or disable online payment collections
+            during special events (e.g. natural disasters, banking strikes, or gateway maintenance).
           </Typography>
 
-          {isLoading ? (
-            <Stack alignItems="center" sx={{ py: 4 }}>
-              <Typography variant="body2" color="text.secondary">
-                Loading exception windows...
-              </Typography>
-            </Stack>
+          {isLoading && !isCreating ? (
+            <FinanceFormSkeleton label="Loading exception windows">
+              <FinanceSkeletonRows columns={3} />
+            </FinanceFormSkeleton>
           ) : (
             <Stack spacing={1.25} sx={{ maxHeight: 300, overflowY: 'auto', mb: 2.5, pr: 0.5 }}>
               {(windows ?? []).length === 0 && (
@@ -198,7 +201,12 @@ export default function ExceptionWindowsDialog({ open, onClose }: ExceptionWindo
                           </Label>
                         )}
                       </Stack>
-                      <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                        sx={{ mt: 0.25 }}
+                      >
                         {startFormatted} – {endFormatted} · {w.reason}
                       </Typography>
                     </Box>

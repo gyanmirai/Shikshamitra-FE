@@ -1,5 +1,6 @@
 'use client';
 
+import { financeNameSchema } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 import type { ProrationPolicySavePayload } from 'src/redux/finance/prorationPolicy';
 
@@ -58,13 +59,11 @@ export function apiRuleToForm(rule: IProrationPolicyRule): IProrationFeeHeadRule
     model: IProrationFeeHeadRule['ruleType'],
     withdrawal = false
   ): IProrationFeeHeadRule['configuration'] => {
-    const minimum = withdrawal ? rule.earlyWithdrawalMinimumChargeDays : rule.minimumChargeDays;
     const cutoff = withdrawal ? rule.earlyWithdrawalCutoffDay : rule.cutoffDay;
     const action = withdrawal ? rule.earlyWithdrawalBeforeCutoffAction : rule.afterCutoffAction;
     if (model === 'DailyProration')
       return {
         calculationBasis: 'CalendarDays',
-        minimumChargeDays: minimum ?? 0,
         ...(!withdrawal && { roundOff: 'RoundUp' as const }),
       };
     if (model === 'MonthlyProration')
@@ -183,8 +182,6 @@ export function toProrationPolicyPayload(
         applyOnAdmission: rule.applyOnAdmission !== false,
         applyOnEarlyWithdrawal: rule.applyOnEarlyWithdrawal ?? false,
         earlyWithdrawalRuleType: toApiModel(withdrawalType),
-        earlyWithdrawalMinimumChargeDays:
-          withdrawalType === 'DailyProration' ? (withdrawal.minimumChargeDays ?? 0) : null,
         earlyWithdrawalCutoffDay:
           withdrawalType === 'MonthlyProration' ? (withdrawal.cutOffDay ?? null) : null,
         earlyWithdrawalBeforeCutoffAction:
@@ -194,8 +191,6 @@ export function toProrationPolicyPayload(
               : 'NoCharge'
             : null,
         roundingMode: 'RoundUpRupee',
-        minimumChargeDays:
-          rule.ruleType === 'DailyProration' ? (rule.configuration.minimumChargeDays ?? 0) : null,
         cutoffDay:
           rule.ruleType === 'MonthlyProration' ? (rule.configuration.cutOffDay ?? null) : null,
         afterCutoffAction:
@@ -212,7 +207,7 @@ export function toProrationPolicyPayload(
 export const buildProrationValidationSchema = (activeEdit: boolean) =>
   Yup.object({
     academicYearId: Yup.string().required('Academic year is required'),
-    policyName: Yup.string()
+    policyName: financeNameSchema('Proration Policy Name')
       .trim()
       .required('Proration Policy Name is required')
       .min(3, 'Must be at least 3 characters')
@@ -372,9 +367,11 @@ export function useProrationPolicyForm({
   });
   const {
     currentData: feeHeadsData = [],
-    isLoading: isFeeHeadsLoading,
+    isLoading: isFeeHeadsInitiallyLoading,
     isError: isFeeHeadsError,
   } = feeHeadsQuery;
+  const isFeeHeadsLoading =
+    isFeeHeadsInitiallyLoading || (feeHeadsQuery.isFetching && !feeHeadsQuery.currentData);
   const refreshPrerequisites = () => {
     if (open && resolvedAcademicYearId) feeHeadsQuery.refetch();
   };

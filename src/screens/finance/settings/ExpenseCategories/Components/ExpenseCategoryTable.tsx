@@ -11,7 +11,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
-import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
+import AccountCategoryVersionDrawer from 'src/screens/finance/settings/components/AccountCategoryVersionDrawer';
 import {
   useGetExpenseCategoryVersionsQuery,
   usePatchExpenseCategoryStatusMutation,
@@ -299,7 +299,8 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
           </LoadingButton>
         }
       />
-      <AccountSettingVersionDialog
+      <AccountCategoryVersionDrawer
+        key={historyItem?.id}
         hiddenFields={['tags']}
         open={Boolean(historyItem)}
         title={historyItem?.name || 'Expense category'}

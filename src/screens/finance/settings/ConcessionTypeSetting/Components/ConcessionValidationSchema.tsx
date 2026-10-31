@@ -1,3 +1,4 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import * as Yup from 'yup';
 
 import type { IConcessionTypeForm } from '../type';
@@ -7,7 +8,7 @@ export const concessionTypeValidationSchema = (
   editData?: IConcessionTypeForm | null
 ) =>
   Yup.object().shape({
-    name: Yup.string()
+    name: financeNameSchema('Concession Type Name')
       .trim()
       .max(100, 'Concession Type Name cannot exceed 100 characters')
       .required('Concession Type Name is required')
@@ -22,7 +23,7 @@ export const concessionTypeValidationSchema = (
     documents: Yup.array()
       .of(
         Yup.object().shape({
-          documentName: Yup.string()
+          documentName: financeNameSchema('Document Name')
             .trim()
             .max(100, 'Document Name cannot exceed 100 characters')
             .required('Document Name is required'),

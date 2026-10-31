@@ -231,7 +231,7 @@ describe('Accounts register table', () => {
       ]);
       expect(
         screen.getByRole('button', { name: state.income ? 'Add Income' : 'Add Expense' })
-      ).toHaveTextContent(state.income ? 'Add Income' : 'Add Expense');
+      ).toHaveTextContent(state.income ? 'Income' : 'Expense');
       expect(state.table.data[0]).toMatchObject({
         studentIdentity: 'Asha Patel (1001)',
         classDivision: 'Class 4 - B',

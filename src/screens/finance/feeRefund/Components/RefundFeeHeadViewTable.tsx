@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Chip, Divider, Collapse, ButtonBase, Typography } from '@mui/material';
 import {
@@ -134,7 +133,6 @@ const MonthRow = ({ item }: { item: IRefundMonthItem }) => (
 // ─── Fee Head Group ─────────────────────────────────────────────────────────────
 
 const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
-  const theme = useTheme();
   const [open, setOpen] = useState(true);
 
   return (
@@ -143,7 +141,8 @@ const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
         mb: 1.5,
         borderRadius: 1.5,
         overflow: 'hidden',
-        border: `1px solid ${theme.palette.divider}`,
+        border: 1,
+        borderColor: 'divider',
       }}
     >
       {/* Header */}
@@ -197,8 +196,8 @@ const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
           <Chip
             size="small"
             label={`Refunded : ${formatNumber(feeHead.totalRefunded, 'INR')}`}
-            variant="soft"
-            color="info"
+            variant="outlined"
+            color="default"
             sx={{ fontSize: 11 }}
           />
         )}
@@ -234,7 +233,7 @@ const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
           gap={1}
           px={2}
           py={0.75}
-          sx={{ bgcolor: alpha(theme.palette.info.main, 0.04) }}
+          sx={{ bgcolor: 'background.neutral' }}
           flexWrap="wrap"
         >
           <Typography variant="caption" color="text.secondary">
@@ -251,8 +250,6 @@ const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
             Total Refunded :{' '}
             <strong
               style={{
-                color:
-                  feeHead.totalRefunded > 0 ? theme.palette.info.main : theme.palette.text.disabled,
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
@@ -268,7 +265,6 @@ const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
 // ─── Main Component ─────────────────────────────────────────────────────────────
 
 const RefundFeeHeadViewTable: React.FC<Props> = ({ data }) => {
-  const theme = useTheme();
   const grandTotalPaid = data.reduce((s, fh) => s + fh.totalPaid, 0);
   const grandTotalRefunded = data.reduce((s, fh) => s + fh.totalRefunded, 0);
 
@@ -292,8 +288,9 @@ const RefundFeeHeadViewTable: React.FC<Props> = ({ data }) => {
         p={1.5}
         sx={{
           borderRadius: 1.5,
-          bgcolor: alpha(theme.palette.info.main, 0.06),
-          border: `1px solid ${alpha(theme.palette.info.main, 0.15)}`,
+          bgcolor: 'background.neutral',
+          border: 1,
+          borderColor: 'divider',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -309,7 +306,7 @@ const RefundFeeHeadViewTable: React.FC<Props> = ({ data }) => {
             {formatNumber(grandTotalPaid, 'INR')}
           </strong>
         </Typography>
-        <Typography variant="body2" color="info.main" fontWeight={700}>
+        <Typography variant="body2" color="text.primary" fontWeight={600}>
           Total Refunded :{' '}
           <strong style={{ fontVariantNumeric: 'tabular-nums' }}>
             {formatNumber(grandTotalRefunded, 'INR')}

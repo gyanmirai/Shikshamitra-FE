@@ -7,3 +7,4 @@ export { default as ArrowDownward } from '@mui/icons-material/ArrowDownward';
 export { default as RemoveRedEye } from '@mui/icons-material/RemoveRedEye';
 export { default as ExpandLess } from '@mui/icons-material/ExpandLess';
 export { default as ExpandMore } from '@mui/icons-material/ExpandMore';
+export { default as UnfoldMore } from '@mui/icons-material/UnfoldMore';

@@ -91,6 +91,7 @@ export default function FeeStructurePoliciesStep({
           return {
             ...policy,
             _id: policy.versionId,
+            selected: candidate[`${choosing}PolicyVersionId`] === policy.versionId,
             coverage: rows
               ? choosing === 'collection'
                 ? `Late fees on ${matches} of ${rows.length} fee heads`
@@ -321,6 +322,17 @@ export default function FeeStructurePoliciesStep({
               tableTitle={`${selectedFamily.label} choices`}
               tableId={`structure-policy-picker-${choosing}`}
               data={options}
+              rowProps={(row) => ({
+                selected: row.selected,
+                'aria-selected': row.selected,
+                sx: {
+                  '&.Mui-selected > td, &.Mui-selected:hover > td': {
+                    bgcolor: 'background.paper',
+                    backgroundImage: (theme) =>
+                      `linear-gradient(${theme.vars.palette.action.selected}, ${theme.vars.palette.action.selected})`,
+                  },
+                },
+              })}
               isLoading={catalogs[choosing].loading && !options.length}
               isSearch
               isFilter={false}
@@ -382,13 +394,15 @@ export default function FeeStructurePoliciesStep({
                       size="small"
                       variant="outlined"
                       disabled={
+                        row.selected ||
                         busy ||
                         !writable ||
                         !settings.permissions[choosing] ||
                         !settings.permissions[`${choosing}Read`]
                       }
-                      aria-label={`Select ${row.name} version ${row.versionNumber}`}
+                      aria-label={`${row.selected ? 'Currently applied:' : 'Select'} ${row.name} version ${row.versionNumber}`}
                       onClick={() => {
+                        if (row.selected) return;
                         onChange(choosing, row.versionId);
                         shikshaMitraToast.success({
                           message: `${selectedFamily.label} added to this draft.`,
@@ -396,7 +410,7 @@ export default function FeeStructurePoliciesStep({
                         setChoosing(undefined);
                       }}
                     >
-                      Select
+                      {row.selected ? 'Selected' : 'Select'}
                     </Button>
                   ),
                 },

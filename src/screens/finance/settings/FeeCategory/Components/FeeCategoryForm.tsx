@@ -1,5 +1,10 @@
 'use client';
 
+import { FinanceFieldSkeleton } from 'src/screens/finance/components/FinanceFormSkeleton';
+
+import { FeeCategoryFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
+
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { FormikErrors } from 'formik';
 import type { RootState } from 'src/redux/store';
 
@@ -40,7 +45,6 @@ import {
   Switch,
   Divider,
   Tooltip,
-  Skeleton,
   TextField,
   Typography,
   IconButton,
@@ -388,15 +392,14 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
             </IconButton>
           </Box>
           <Divider />
-          {isLoadingDetails ? (
+          {isLoadingDetails && !isSaving ? (
             <Stack
               spacing={2}
               sx={{ p: 2, flex: 1, minHeight: 0, overflow: 'hidden' }}
               role="status"
               aria-label="Loading fee category editor"
             >
-              <Skeleton variant="rounded" height={180} />
-              <Skeleton variant="rounded" height={260} />
+              <FeeCategoryFormSkeleton headCount={formik.values.feeHeads.length} />
             </Stack>
           ) : missingIncomeCategory ? (
             <FinancePrerequisiteState
@@ -445,8 +448,12 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                           size="small"
                           value={formik.values.name}
                           onChange={(event) => {
-                            formik.setFieldValue('name', capitalizeWords(event.target.value));
+                            formik.setFieldValue(
+                              'name',
+                              capitalizeWords(sanitizeFinanceName(event.target.value))
+                            );
                           }}
+                          onBlur={formik.handleBlur}
                           error={formik.touched.name && Boolean(formik.errors.name)}
                           helperText={
                             (formik.touched.name && formik.errors.name
@@ -511,13 +518,14 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                         />
                       </Stack>
                       <Button
-                        variant="outlined"
                         startIcon={<Add />}
                         onClick={handleAddFeeHead}
                         size="small"
+                        aria-label="Add Fee Head"
                         data-add-fee-head
+                        variant="contained"
                       >
-                        Add Fee Head
+                        Fee Head
                       </Button>
                     </Stack>
 
@@ -576,7 +584,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                               aria-label={`Fee head ${idx + 1}${fh.name.trim() ? `: ${fh.name.trim()}` : ''}`}
                               sx={{
                                 display: 'grid',
-                                gridTemplateColumns: '32px minmax(0, 1fr)',
+                                gridTemplateColumns: '28px minmax(0, 1fr)',
                                 columnGap: 1,
                                 alignItems: 'start',
                                 minWidth: 0,
@@ -586,19 +594,19 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                 aria-label={`Fee head ${idx + 1}`}
                                 sx={{
                                   mt: 1.5,
-                                  minWidth: 32,
-                                  height: 32,
-                                  px: 0.5,
-                                  borderRadius: 1,
-                                  bgcolor: 'primary.lighter',
-                                  color: 'primary.main',
+                                  width: 28,
+                                  height: 28,
+                                  flexShrink: 0,
+                                  borderRadius: '50%',
+                                  bgcolor: 'background.neutral',
+                                  color: 'text.secondary',
                                   display: 'grid',
                                   placeItems: 'center',
-                                  fontWeight: 700,
-                                  typography: 'subtitle2',
+                                  typography: 'caption',
+                                  fontWeight: 600,
                                 }}
                               >
-                                {String(idx + 1).padStart(2, '0')}
+                                {idx + 1}
                               </Box>
                               <Paper
                                 variant="outlined"
@@ -607,8 +615,6 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                   minWidth: 0,
                                   bgcolor: 'background.neutral',
                                   borderRadius: 2,
-                                  borderLeft: '4px solid',
-                                  borderLeftColor: 'primary.main',
                                   display: 'grid',
                                   gridTemplateColumns: 'minmax(0, 1fr) 44px',
                                   columnGap: 0.5,
@@ -642,9 +648,10 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                         onChange={(event) => {
                                           formik.setFieldValue(
                                             `feeHeads.${idx}.name`,
-                                            capitalizeWords(event.target.value)
+                                            capitalizeWords(sanitizeFinanceName(event.target.value))
                                           );
                                         }}
+                                        onBlur={formik.handleBlur}
                                         error={!!(feeHeadTouched?.name && feeHeadError?.name)}
                                         helperText={
                                           (feeHeadTouched?.name && feeHeadError?.name
@@ -666,116 +673,127 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                         )
                                       }
                                     >
-                                      <Autocomplete
-                                        size="small"
-                                        fullWidth
-                                        options={incomeCategoryOptions}
-                                        value={selectedIncomeCategory}
+                                      <FinanceFieldSkeleton
                                         loading={
-                                          isIncomeCategoryLoading || isIncomeCategoryFetching
+                                          (isIncomeCategoryLoading || isIncomeCategoryFetching) &&
+                                          !isSaving
                                         }
-                                        disabled={Boolean(fh.isUsedInDownstream)}
-                                        getOptionLabel={(option: any) => option?.name || ''}
-                                        filterOptions={createFilterOptions({
-                                          stringify: (option: any) => option.displayName,
-                                        })}
-                                        isOptionEqualToValue={(option: any, value: any) =>
-                                          option?.id === value?.id
-                                        }
-                                        onChange={(_event, value: any) => {
-                                          formik.setFieldValue(
-                                            `feeHeads.${idx}.incomeCategoryId`,
-                                            value?.id || ''
-                                          );
-                                          formik.setFieldTouched(
-                                            `feeHeads.${idx}.incomeCategoryId`,
-                                            true,
-                                            false
-                                          );
-                                        }}
-                                        onBlur={() =>
-                                          formik.setFieldTouched(
-                                            `feeHeads.${idx}.incomeCategoryId`,
-                                            true
-                                          )
-                                        }
-                                        noOptionsText="No income categories found"
-                                        renderOption={(props, option: any) => {
-                                          const { key, ...optionProps } = props;
+                                        label="Loading income categories"
+                                      >
+                                        <Autocomplete
+                                          size="small"
+                                          fullWidth
+                                          options={incomeCategoryOptions}
+                                          value={selectedIncomeCategory}
+                                          loading={
+                                            isIncomeCategoryLoading || isIncomeCategoryFetching
+                                          }
+                                          disabled={Boolean(fh.isUsedInDownstream)}
+                                          getOptionLabel={(option: any) => option?.name || ''}
+                                          filterOptions={createFilterOptions({
+                                            stringify: (option: any) => option.displayName,
+                                          })}
+                                          isOptionEqualToValue={(option: any, value: any) =>
+                                            option?.id === value?.id
+                                          }
+                                          onChange={(_event, value: any) => {
+                                            formik.setFieldValue(
+                                              `feeHeads.${idx}.incomeCategoryId`,
+                                              value?.id || ''
+                                            );
+                                            formik.setFieldTouched(
+                                              `feeHeads.${idx}.incomeCategoryId`,
+                                              true,
+                                              false
+                                            );
+                                          }}
+                                          onBlur={() =>
+                                            formik.setFieldTouched(
+                                              `feeHeads.${idx}.incomeCategoryId`,
+                                              true
+                                            )
+                                          }
+                                          noOptionsText="No income categories found"
+                                          renderOption={(props, option: any) => {
+                                            const { key, ...optionProps } = props;
 
-                                          return (
-                                            <Box
-                                              component="li"
-                                              key={key}
-                                              {...optionProps}
-                                              sx={{ minWidth: 0 }}
-                                            >
-                                              <Box sx={{ minWidth: 0 }} title={option.displayName}>
-                                                <Typography noWrap>{option.name}</Typography>
-                                                {option.code && (
-                                                  <Typography
-                                                    variant="caption"
-                                                    color="text.secondary"
-                                                    noWrap
-                                                  >
-                                                    {option.code}
-                                                  </Typography>
-                                                )}
+                                            return (
+                                              <Box
+                                                component="li"
+                                                key={key}
+                                                {...optionProps}
+                                                sx={{ minWidth: 0 }}
+                                              >
+                                                <Box
+                                                  sx={{ minWidth: 0 }}
+                                                  title={option.displayName}
+                                                >
+                                                  <Typography noWrap>{option.name}</Typography>
+                                                  {option.code && (
+                                                    <Typography
+                                                      variant="caption"
+                                                      color="text.secondary"
+                                                      noWrap
+                                                    >
+                                                      {option.code}
+                                                    </Typography>
+                                                  )}
+                                                </Box>
                                               </Box>
-                                            </Box>
-                                          );
-                                        }}
-                                        renderInput={(params) => (
-                                          <TextField
-                                            {...params}
-                                            name={`feeHeads.${idx}.incomeCategoryId`}
-                                            label="Income Category *"
-                                            error={
-                                              !!(
-                                                feeHeadTouched?.incomeCategoryId &&
+                                            );
+                                          }}
+                                          renderInput={(params) => (
+                                            <TextField
+                                              {...params}
+                                              name={`feeHeads.${idx}.incomeCategoryId`}
+                                              label="Income Category *"
+                                              error={
+                                                !!(
+                                                  feeHeadTouched?.incomeCategoryId &&
+                                                  feeHeadError?.incomeCategoryId
+                                                )
+                                              }
+                                              helperText={
+                                                (feeHeadTouched?.incomeCategoryId &&
                                                 feeHeadError?.incomeCategoryId
-                                              )
-                                            }
-                                            helperText={
-                                              (feeHeadTouched?.incomeCategoryId &&
-                                              feeHeadError?.incomeCategoryId
-                                                ? (feeHeadError.incomeCategoryId as string)
-                                                : undefined) || undefined
-                                            }
-                                            InputProps={{
-                                              ...params.InputProps,
-                                              endAdornment: (
-                                                <>
-                                                  <FormInfoIcon
-                                                    label="About income categories"
-                                                    title="Income categories are configured in Accounts Settings."
-                                                  />
-                                                  {params.InputProps.endAdornment}
-                                                </>
-                                              ),
-                                            }}
-                                            inputProps={{
-                                              ...params.inputProps,
-                                              title: selectedIncomeCategory?.displayName || '',
-                                            }}
-                                          />
-                                        )}
-                                        slotProps={{
-                                          paper: { sx: { overflowX: 'hidden' } },
-                                          listbox: { sx: { overflowX: 'hidden' } },
-                                        }}
-                                        sx={{
-                                          minWidth: 0,
-                                          '& .MuiAutocomplete-inputRoot': {
+                                                  ? (feeHeadError.incomeCategoryId as string)
+                                                  : undefined) || undefined
+                                              }
+                                              InputProps={{
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                  <>
+                                                    <FormInfoIcon
+                                                      label="About income categories"
+                                                      title="Income categories are configured in Accounts Settings."
+                                                    />
+                                                    {params.InputProps.endAdornment}
+                                                  </>
+                                                ),
+                                              }}
+                                              inputProps={{
+                                                ...params.inputProps,
+                                                title: selectedIncomeCategory?.displayName || '',
+                                              }}
+                                            />
+                                          )}
+                                          slotProps={{
+                                            paper: { sx: { overflowX: 'hidden' } },
+                                            listbox: { sx: { overflowX: 'hidden' } },
+                                          }}
+                                          sx={{
                                             minWidth: 0,
-                                            flexWrap: 'nowrap',
-                                          },
-                                          '& .MuiAutocomplete-input': {
-                                            minWidth: '0 !important',
-                                            textOverflow: 'ellipsis',
-                                          },
-                                        }}
-                                      />
+                                            '& .MuiAutocomplete-inputRoot': {
+                                              minWidth: 0,
+                                              flexWrap: 'nowrap',
+                                            },
+                                            '& .MuiAutocomplete-input': {
+                                              minWidth: '0 !important',
+                                              textOverflow: 'ellipsis',
+                                            },
+                                          }}
+                                        />
+                                      </FinanceFieldSkeleton>
                                     </ShakingTextField>
                                   </Box>
 
@@ -785,8 +803,8 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                       sx={{
                                         m: 0,
                                         width: '100%',
-                                        justifyContent: 'space-between',
                                         gap: 1,
+                                        justifyContent: 'flex-start',
                                       }}
                                       labelPlacement="start"
                                       control={

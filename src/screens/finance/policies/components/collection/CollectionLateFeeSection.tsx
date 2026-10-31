@@ -1,5 +1,7 @@
 'use client';
 
+import { FinanceFieldSkeleton } from 'src/screens/finance/components/FinanceFormSkeleton';
+
 import { getIn } from 'formik';
 import { varAlpha } from 'src/theme/styles';
 import { alpha } from '@mui/material/styles';
@@ -40,6 +42,7 @@ import { SectionCard, computeSlabIssues, CollectionInfoTip } from './CollectionC
 interface CollectionLateFeeSectionProps {
   formik: any;
   feeHeads: any[];
+  isFeeHeadsLoading?: boolean;
   addSlab: () => void;
   removeSlab: (index: number) => void;
 }
@@ -47,6 +50,7 @@ interface CollectionLateFeeSectionProps {
 export default function CollectionLateFeeSection({
   formik,
   feeHeads,
+  isFeeHeadsLoading = false,
   addSlab,
   removeSlab,
 }: CollectionLateFeeSectionProps) {
@@ -138,62 +142,67 @@ export default function CollectionLateFeeSection({
                   Boolean(formik.errors.lateFeeApplyOnFeeHeads)
                 }
               >
-                <Autocomplete
-                  multiple
-                  size="small"
-                  options={headOptions}
-                  getOptionDisabled={(option) => Boolean(option.savedOnly)}
-                  groupBy={(option) => option.feeCategoryName || 'Other'}
-                  getOptionLabel={(option) => option.name || ''}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  value={selectedHeads}
-                  onChange={(_, newValue) => {
-                    formik.setFieldValue(
-                      'lateFeeApplyOnFeeHeads',
-                      newValue.map((v) => v.id)
-                    );
-                  }}
-                  disableCloseOnSelect
-                  renderOption={(props, option, { selected }) => {
-                    const { key, ...optionProps } = props as any;
-                    return (
-                      <li key={key || option.id} {...optionProps}>
-                        <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
-                        <Typography variant="body2">{option.name}</Typography>
-                      </li>
-                    );
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      name="lateFeeApplyOnFeeHeads"
-                      label="Apply late fee on fee heads *"
-                      placeholder="Select applicable fee heads..."
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            <CollectionInfoTip
-                              label="Apply late fee on fee heads"
-                              title="Late fees are computed only on unpaid balances of the selected fee heads."
-                            />
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                      onBlur={formik.handleBlur}
-                      error={
-                        formik.touched.lateFeeApplyOnFeeHeads &&
-                        Boolean(formik.errors.lateFeeApplyOnFeeHeads)
-                      }
-                      helperText={
-                        (formik.touched.lateFeeApplyOnFeeHeads &&
-                          (formik.errors.lateFeeApplyOnFeeHeads as string)) ||
-                        undefined
-                      }
-                    />
-                  )}
-                />
+                <FinanceFieldSkeleton
+                  loading={isFeeHeadsLoading}
+                  label="Loading applicable fee heads"
+                >
+                  <Autocomplete
+                    multiple
+                    size="small"
+                    options={headOptions}
+                    getOptionDisabled={(option) => Boolean(option.savedOnly)}
+                    groupBy={(option) => option.feeCategoryName || 'Other'}
+                    getOptionLabel={(option) => option.name || ''}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    value={selectedHeads}
+                    onChange={(_, newValue) => {
+                      formik.setFieldValue(
+                        'lateFeeApplyOnFeeHeads',
+                        newValue.map((v) => v.id)
+                      );
+                    }}
+                    disableCloseOnSelect
+                    renderOption={(props, option, { selected }) => {
+                      const { key, ...optionProps } = props as any;
+                      return (
+                        <li key={key || option.id} {...optionProps}>
+                          <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
+                          <Typography variant="body2">{option.name}</Typography>
+                        </li>
+                      );
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        name="lateFeeApplyOnFeeHeads"
+                        label="Apply late fee on fee heads *"
+                        placeholder="Select applicable fee heads..."
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <>
+                              <CollectionInfoTip
+                                label="Apply late fee on fee heads"
+                                title="Late fees are computed only on unpaid balances of the selected fee heads."
+                              />
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                        onBlur={formik.handleBlur}
+                        error={
+                          formik.touched.lateFeeApplyOnFeeHeads &&
+                          Boolean(formik.errors.lateFeeApplyOnFeeHeads)
+                        }
+                        helperText={
+                          (formik.touched.lateFeeApplyOnFeeHeads &&
+                            (formik.errors.lateFeeApplyOnFeeHeads as string)) ||
+                          undefined
+                        }
+                      />
+                    )}
+                  />
+                </FinanceFieldSkeleton>
               </ShakingTextField>
             </Grid>
 

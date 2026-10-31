@@ -1,5 +1,6 @@
 'use client';
 
+import { financeNameSchema } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -95,7 +96,7 @@ const validationSchema = Yup.object().shape({
         status === 'Active' && methods?.some((x) => x !== 'Cash'),
       then: (s) => s.required('Default Paying Bank Account is required'),
     }),
-  policyName: Yup.string()
+  policyName: financeNameSchema('Refund Policy Name')
     .trim()
     .min(3, 'Must be at least 3 characters')
     .max(128, 'Cannot exceed 128 characters')
@@ -549,6 +550,7 @@ export function useRefundPolicyForm({
     const generalValid =
       !!values.policyName &&
       values.policyName.trim().length >= 3 &&
+      financeNameSchema('Refund Policy Name').isValidSync(values.policyName) &&
       !errors.policyName &&
       !errors.status;
 

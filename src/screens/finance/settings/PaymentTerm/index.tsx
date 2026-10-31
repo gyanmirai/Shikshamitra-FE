@@ -302,11 +302,10 @@ const PaymentTerm = () => {
     restoreState.isLoading;
 
   return (
-    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         description="Configure board-period installment schedules, billing dates, and versioned Draft/Active terms."
         heading="Payment Terms"
-
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/fee-collection' },
@@ -349,7 +348,7 @@ const PaymentTerm = () => {
           </Stack>
 
           <Stack direction="row" spacing={1}>
-            {canClone ? (
+            {/* {canClone ? (
               <Button
                 onClick={cloneDialog.onTrue}
                 size="small"
@@ -358,7 +357,7 @@ const PaymentTerm = () => {
               >
                 Clone Previous Year
               </Button>
-            ) : null}
+            ) : null} */}
             {canCreate ? (
               <Button
                 onClick={() => {
@@ -369,7 +368,7 @@ const PaymentTerm = () => {
                 startIcon={<Add />}
                 variant="contained"
               >
-                New Payment Term
+                Payment Term
               </Button>
             ) : null}
           </Stack>

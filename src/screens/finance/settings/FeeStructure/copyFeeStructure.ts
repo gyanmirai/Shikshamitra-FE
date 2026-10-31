@@ -4,6 +4,8 @@ import type {
   StructureCopyPolicy,
 } from 'src/redux/finance/feeStructureWorkspace';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
+
 import { structureCandidate } from './feeStructureModel';
 
 /** Preserve schedules and money; a new copy explicitly selects each master's current policy snapshot. */
@@ -37,12 +39,12 @@ export function copyStructureCandidate(
 
 export function availableCopyName(name: string, existingNames: string[]): string {
   const used = new Set(existingNames.map((item) => item.trim().toLocaleLowerCase()));
-  const base = name.trim().slice(0, 256);
+  const base = (sanitizeFinanceName(name).trim() || 'Fee Structure').slice(0, 256);
   if (!used.has(base.toLocaleLowerCase())) return base;
   let index = 1;
   let candidate: string;
   do {
-    const suffix = index === 1 ? ' (copy)' : ` (copy ${index})`;
+    const suffix = index === 1 ? ' copy' : ` copy ${index}`;
     candidate = `${base.slice(0, 256 - suffix.length)}${suffix}`;
     index += 1;
   } while (used.has(candidate.toLocaleLowerCase()));

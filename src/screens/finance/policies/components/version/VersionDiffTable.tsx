@@ -2,7 +2,11 @@
 
 import React from 'react';
 import { Label } from 'src/components/label';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailGrid, DetailField } from 'src/components/detail-view';
 import {
   Box,
   Stack,
@@ -13,10 +17,11 @@ import {
   TableBody,
   TableCell,
   Typography,
-  TableContainer,
   IconButton,
+  TableContainer,
 } from '@mui/material';
 
+import VersionHistorySection from './VersionHistorySection';
 import {
   formatVersionTimestamp,
   contextFromRefundSnapshot,
@@ -26,13 +31,14 @@ import {
 
 import type { PolicyVersion } from '../../hooks/useFinancePolicyVersion';
 import type { VersionValueContext } from './finance-policy-version-formatters';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 interface VersionDiffTableProps {
   selectedVersion: PolicyVersion;
   valueContext?: VersionValueContext;
   showSummary?: boolean;
+  collapsibleChanges?: boolean;
+  showSavedDetails?: boolean;
+  renderFieldValue?: (fieldName: string, value: unknown) => React.ReactNode;
 }
 
 const STATUS_COLORS = {
@@ -42,6 +48,58 @@ const STATUS_COLORS = {
   Inactive: 'error',
   Published: 'success',
 } as const;
+
+const SNAPSHOT_METADATA_FIELDS = new Set([
+  'id',
+  'policyid',
+  'tenantid',
+  'concurrencystamp',
+  'version',
+  'versionnumber',
+  'currentversionid',
+  'currentversionnumber',
+  'isusedindownstream',
+  'createdby',
+  'updatedby',
+  'creatorid',
+  'creatorusername',
+  'creationtime',
+  'createdat',
+  'updatedat',
+  'lastmodificationtime',
+  'lastmodifierid',
+  'feeheadnames',
+  'expensecategoryname',
+  'defaultpayingbankaccountname',
+]);
+
+function ChangesSection({
+  collapsible,
+  fieldCount,
+  children,
+}: {
+  collapsible: boolean;
+  fieldCount: number;
+  children: React.ReactNode;
+}) {
+  if (!collapsible) return <Box>{children}</Box>;
+
+  return (
+    <VersionHistorySection
+      title="Changes"
+      helpText="Before shows the previous version's recorded value. After shows the selected version's value. The first version has no previous snapshot; a dash (—) means no value was recorded."
+      helpLabel="Version changes information"
+      defaultExpanded
+      badge={
+        <Label sx={{ ml: 'auto', mr: 1 }}>
+          {fieldCount} {fieldCount === 1 ? 'field' : 'fields'}
+        </Label>
+      }
+    >
+      {children}
+    </VersionHistorySection>
+  );
+}
 
 const renderValueCell = (fieldName: string, value: unknown, valueContext?: VersionValueContext) => {
   const formatted = formatFinancePolicyVersionValue(fieldName, value, valueContext);
@@ -67,9 +125,23 @@ function VersionDiffTable({
   selectedVersion,
   valueContext,
   showSummary = true,
+  collapsibleChanges = false,
+  showSavedDetails = false,
+  renderFieldValue,
 }: VersionDiffTableProps) {
+  const snapshotFields = Object.entries(selectedVersion.snapshotAfter ?? {}).filter(
+    ([field]) =>
+      !SNAPSHOT_METADATA_FIELDS.has(field.toLowerCase()) &&
+      !(
+        field.toLowerCase() === 'academicyearname' &&
+        (selectedVersion.snapshotAfter?.AcademicYearId ||
+          selectedVersion.snapshotAfter?.academicYearId)
+      )
+  );
+  const snapshotContext = contextFromRefundSnapshot(selectedVersion.snapshotAfter, valueContext);
+
   return (
-    <Stack spacing={2}>
+    <Stack spacing={collapsibleChanges ? 1 : 2}>
       {showSummary && (
         <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
           <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
@@ -112,33 +184,39 @@ function VersionDiffTable({
           </Box>
         </Paper>
       )}
-      <Box>
-        <Stack
-          direction="row"
-          spacing={1}
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 1.5 }}
-        >
-          <Stack direction="row" spacing={0.5} alignItems="center">
-            <Typography variant="subtitle1" component="h3">
-              Changes
-            </Typography>
-            <CustomTooltip
-              placement="right"
-              arrow
-              title="Before shows the previous version's recorded value. After shows the selected version's value. The first version has no previous snapshot; a dash (—) means no value was recorded."
-            >
-              <IconButton size="small" aria-label="Version changes information">
-                <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
-              </IconButton>
-            </CustomTooltip>
+      <ChangesSection
+        key={selectedVersion.eventId}
+        collapsible={collapsibleChanges}
+        fieldCount={selectedVersion.changedFields.length}
+      >
+        {!collapsibleChanges && (
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ mb: 1.5 }}
+          >
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <Typography variant="subtitle1" component="h3">
+                Changes
+              </Typography>
+              <CustomTooltip
+                placement="right"
+                arrow
+                title="Before shows the previous version's recorded value. After shows the selected version's value. The first version has no previous snapshot; a dash (—) means no value was recorded."
+              >
+                <IconButton size="small" aria-label="Version changes information">
+                  <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+                </IconButton>
+              </CustomTooltip>
+            </Stack>
+            <Label color="default">
+              {selectedVersion.changedFields.length}{' '}
+              {selectedVersion.changedFields.length === 1 ? 'field' : 'fields'}
+            </Label>
           </Stack>
-          <Label color="default">
-            {selectedVersion.changedFields.length}{' '}
-            {selectedVersion.changedFields.length === 1 ? 'field' : 'fields'}
-          </Label>
-        </Stack>
+        )}
         {selectedVersion.changedFields.length === 0 ? (
           <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
@@ -176,14 +254,14 @@ function VersionDiffTable({
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {renderValueCell(
+                      {(renderFieldValue ?? renderValueCell)(
                         field.field,
                         field.oldValue,
                         contextFromRefundSnapshot(selectedVersion.snapshotBefore, valueContext)
                       )}
                     </TableCell>
                     <TableCell>
-                      {renderValueCell(
+                      {(renderFieldValue ?? renderValueCell)(
                         field.field,
                         field.newValue,
                         contextFromRefundSnapshot(selectedVersion.snapshotAfter, valueContext)
@@ -195,7 +273,36 @@ function VersionDiffTable({
             </Table>
           </TableContainer>
         )}
-      </Box>
+      </ChangesSection>
+      {showSavedDetails && snapshotFields.length > 0 && (
+        <VersionHistorySection
+          key={`snapshot-${selectedVersion.eventId}`}
+          title="Saved version details"
+          helpText="The selected version's recorded policy settings. These details come from its saved snapshot."
+        >
+          <FormSectionCard
+            title={`Version ${selectedVersion.versionNumber}`}
+            icon={GlobalIcons.notebook}
+            descriptionTooltip="The policy settings saved with this version, including values that did not change."
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+            sx={{ minWidth: 0, boxShadow: 'none', containerType: 'inline-size' }}
+          >
+            <DetailGrid>
+              {snapshotFields.map(([field, value]) => (
+                <DetailField
+                  key={field}
+                  label={formatFinancePolicyVersionField(field)}
+                  labelTypographyProps={{
+                    color: 'text.secondary',
+                    sx: { fontWeight: 600, textTransform: 'none', letterSpacing: 'normal' },
+                  }}
+                  value={renderValueCell(field, value, snapshotContext)}
+                />
+              ))}
+            </DetailGrid>
+          </FormSectionCard>
+        </VersionHistorySection>
+      )}
     </Stack>
   );
 }

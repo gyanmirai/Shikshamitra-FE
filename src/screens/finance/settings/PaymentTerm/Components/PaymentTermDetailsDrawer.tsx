@@ -17,7 +17,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { fDate, fDateTime } from 'src/utils/format-time';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { Box, Alert, Stack, Button, Drawer, Typography, LinearProgress } from '@mui/material';
 import FinancePolicySkeleton from 'src/screens/finance/policies/components/FinancePolicySkeleton';
 import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
@@ -430,7 +430,7 @@ export default function PaymentTermDetailsDrawer({
           </PaymentTermVersionHistory>
         ) : (
           <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <Stack spacing={2} sx={{ p: 2, minWidth: 0 }}>
+            <Stack spacing={1} sx={{ p: 2, minWidth: 0 }}>
               {data && view === 'details' ? (
                 <>
                   <DetailSection
@@ -438,7 +438,7 @@ export default function PaymentTermDetailsDrawer({
                     icon={GlobalIcons.notebook}
                     helpText="Payment-term identity, academic board and year, default selection, description, and references."
                   >
-                    <Box sx={{ ...detailGridSx, gap: 1.5 }}>
+                    <DetailGrid>
                       <DetailItem label="Payment term name" value={data.name} />
                       <DetailItem label="Payment term code" value={data.code} />
                       <DetailItem label="Academic year" value={data.academicYearName ?? '—'} />
@@ -458,11 +458,10 @@ export default function PaymentTermDetailsDrawer({
                         value={data.isUsedInFeeStructures ? 'In use' : 'Not referenced'}
                       />
                       <DetailItem
-                        fullWidth
                         label="Description"
                         value={data.description || 'No description provided.'}
                       />
-                    </Box>
+                    </DetailGrid>
                   </DetailSection>
                   {displayedVersion ? (
                     <InstallmentSchedule

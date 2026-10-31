@@ -2,8 +2,9 @@ import type { ConcessionRequestPreview } from 'src/redux/finance/ConcessionManag
 
 import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
-import { Box, Stack, Divider, Typography } from '@mui/material';
+import { Box, Stack, Divider } from '@mui/material';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailField } from 'src/components/detail-view';
 
 export default function ConcessionImpactSummary({
   preview,
@@ -31,38 +32,23 @@ export default function ConcessionImpactSummary({
           { label: 'Before concession', amount: preview?.totalEligibleBase },
           { label: 'Concession', amount: preview?.totalConcessionAmount },
         ].map(({ label, amount }) => (
-          <Stack key={label} direction="row" justifyContent="space-between" gap={1}>
-            <Typography variant="body2" color="text.secondary">
-              {label}
-            </Typography>
-            <Typography
-              variant="body2"
-              fontWeight={600}
-              sx={{ fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}
-            >
-              {amount == null
+          <DetailField
+            key={label}
+            layout="inline"
+            label={label}
+            value={
+              amount == null
                 ? '—'
-                : `${label === 'Concession' ? '−' : ''}${formatNumber(amount, 'INR')}`}
-            </Typography>
-          </Stack>
+                : `${label === 'Concession' ? '−' : ''}${formatNumber(amount, 'INR')}`
+            }
+          />
         ))}
         <Divider />
-        <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
-          <Typography variant="body2" color="text.secondary">
-            After concession
-          </Typography>
-          <Typography
-            component="p"
-            variant="h5"
-            sx={{
-              overflowWrap: 'anywhere',
-              fontVariantNumeric: 'tabular-nums',
-              textAlign: 'right',
-            }}
-          >
-            {preview ? formatNumber(preview.netPayable, 'INR') : '—'}
-          </Typography>
-        </Stack>
+        <DetailField
+          layout="inline"
+          label="After concession"
+          value={preview ? formatNumber(preview.netPayable, 'INR') : '—'}
+        />
         {(loading || !preview) && (
           <Box
             component="span"

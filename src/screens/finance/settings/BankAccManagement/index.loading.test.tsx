@@ -63,7 +63,7 @@ vi.mock('./Components/BankAccountActivityDrawer', () => ({
     </button>
   ),
 }));
-vi.mock('../components/AccountSettingVersionDialog', () => ({ default: () => null }));
+vi.mock('../components/AccountCategoryVersionDrawer', () => ({ default: () => null }));
 
 beforeEach(() => {
   transport.calls = [];

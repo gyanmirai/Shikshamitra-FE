@@ -26,11 +26,12 @@ import {
 
 import { ApproveRejectForm } from './DemandDraftTable';
 import ReconciliationReceiptDialog from './ReconciliationReceiptDialog';
+import { useReconciliationTableQuery } from './useReconciliationTableQuery';
 
 const DebitCardTable = ({
   queryParams,
 }: {
-  queryParams?: { academicYearId: string; month: number; year: number; paymentMethod: string };
+  queryParams?: { academicYearId: string; month: number; year: number; paymentMethod: string | number };
 }) => {
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [isClearCheck, setIsClearCheck] = useState(false);
@@ -46,14 +47,17 @@ const DebitCardTable = ({
     (perm: any) => perm.name === financePermissions.accounts.reconciliationAdd && perm.isGranted
   );
 
+  const { params: listParams, tableProps } = useReconciliationTableQuery(queryParams);
+
   const {
     data: listResponse,
     isLoading,
     isFetching,
+    isError,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReconciliationListQuery,
-    params: queryParams,
+    params: listParams,
     options: { skip: !queryParams?.academicYearId },
   });
 
@@ -73,7 +77,9 @@ const DebitCardTable = ({
         standardName: item.class,
         divisionName: item.division,
         cardHolderName: item.instrumentDetails?.cardHolderName,
-        last4Digits: item.instrumentDetails?.cardLast4,
+        last4Digits: item.instrumentDetails?.cardLast4
+          ? `•••• ${item.instrumentDetails.cardLast4.slice(-4)}`
+          : null,
         transactionId: item.instrumentDetails?.transactionId,
         paymentDate: item.instrumentDetails?.transactionDate || item.receiptDate,
       })),
@@ -81,7 +87,9 @@ const DebitCardTable = ({
   );
 
   useEffect(() => {
-    if (!isLoading && listResponse && (listResponse.items ?? []).length === 0) {
+    if (!isLoading && !isFetching && !isError && listResponse &&
+      (listResponse.items ?? []).length === 0 && !listParams?.search?.trim() &&
+      listParams?.status === undefined && !listParams?.filters) {
       const monthYear = queryParams
         ? dayjs(`${queryParams.year}-${String(queryParams.month).padStart(2, '0')}-01`).format(
             'MMM-YYYY'
@@ -93,7 +101,7 @@ const DebitCardTable = ({
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, listResponse]);
+  }, [isLoading, isFetching, isError, listResponse, listParams?.search, listParams?.status, listParams?.filters]);
 
   const isDialog = useBoolean(false);
 
@@ -133,6 +141,8 @@ const DebitCardTable = ({
       },
       {
         id: 'standardName',
+        isFilter: true,
+        filterType: 'string',
         label: 'Class/Div',
         align: 'left',
         width: 150,
@@ -152,7 +162,7 @@ const DebitCardTable = ({
         maxWidth: 140,
         align: 'left',
         isFilter: true,
-        filterType: 'string',
+        filterType: 'number',
         render(value) {
           return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
         },
@@ -356,6 +366,8 @@ const DebitCardTable = ({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomizableTable
+        {...tableProps}
+        totalCount={listResponse?.totalCount ?? 0}
         tableId="debit-card-table"
         isLoading={isLoading || isFetching}
         noDataText={<>No Debit Card Data Found</>}

@@ -1,6 +1,32 @@
 import { describe, it, expect } from 'vitest';
 import { feeCategoryValidationSchema } from './FeeCategoryValidation';
 
+describe('fee category and fee head name characters', () => {
+  const schema = feeCategoryValidationSchema(new Set());
+
+  it.each(['#$%SDFV', 'School @ Fees', 'Tuition-Fee', 'Bus_Fee', 'Fee 🎓'])(
+    'rejects special characters in category and fee head names: %s',
+    async (name) => {
+      await expect(schema.validateAt('name', { name })).rejects.toThrow(
+        'Category Name can only contain letters, numbers, and spaces'
+      );
+      await expect(
+        schema.validateAt('feeHeads[0].name', { feeHeads: [{ name }] })
+      ).rejects.toThrow('Fee Head Name can only contain letters, numbers, and spaces');
+    }
+  );
+
+  it.each(['Class 8 Fees', 'शिक्षा शुल्क २', 'École Fees'])(
+    'allows letters, numbers, and spaces in both names: %s',
+    async (name) => {
+      await expect(schema.validateAt('name', { name })).resolves.toBe(name);
+      await expect(
+        schema.validateAt('feeHeads[0].name', { feeHeads: [{ name }] })
+      ).resolves.toBe(name);
+    }
+  );
+});
+
 describe('fee category name uniqueness', () => {
   const current = { id: 'one', name: '8th FEE CATEGORY', isActive: true } as never;
   const archived = { id: 'two', name: 'TEST FC 2', isActive: false } as never;

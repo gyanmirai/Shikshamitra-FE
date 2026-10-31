@@ -6,22 +6,40 @@ const policies = new Map<string, IProrationPolicy>();
 const cloneScenario = new URLSearchParams(window.location.search).get('clone');
 if (cloneScenario) {
   const source = {
-    id: 'default-policy', academicYearId: 'synthetic-year', academicYearName: '2026–27',
-    policyType: 'proration', policyName: 'Mid-Session Admission & Withdrawal Proration Policy (2026-27)',
-    policyCode: 'PRO-DEFAULT', description: 'Independent admission and withdrawal rules.',
-    status: 'Active', isDefault: true, version: 3, concurrencyStamp: 'default-stamp',
-    isUsedInDownstream: false, creationTime: '2026-10-01T10:00:00Z',
+    id: 'default-policy',
+    academicYearId: 'synthetic-year',
+    academicYearName: '2026–27',
+    policyType: 'proration',
+    policyName: 'Mid-Session Admission & Withdrawal Proration Policy (2026-27)',
+    policyCode: 'PRO-DEFAULT',
+    description: 'Independent admission and withdrawal rules.',
+    status: 'Active',
+    isDefault: true,
+    version: 3,
+    concurrencyStamp: 'default-stamp',
+    isUsedInDownstream: false,
+    creationTime: '2026-10-01T10:00:00Z',
     feeHeadRules: ['tuition', 'transport', 'hostel', 'library', 'activity'].map((feeHeadId) => ({
-      feeHeadId, feeHeadName: `${feeHeadId} fee`, ruleType: 'Daily', roundingMode: 'RoundUpRupee',
-      minimumChargeDays: 7, applyOnAdmission: true, applyOnEarlyWithdrawal: true,
-      earlyWithdrawalRuleType: 'MonthlyCutoff', earlyWithdrawalCutoffDay: 19,
+      feeHeadId,
+      feeHeadName: `${feeHeadId} fee`,
+      ruleType: 'Daily',
+      roundingMode: 'RoundUpRupee',
+      applyOnAdmission: true,
+      applyOnEarlyWithdrawal: true,
+      earlyWithdrawalRuleType: 'MonthlyCutoff',
+      earlyWithdrawalCutoffDay: 19,
       earlyWithdrawalBeforeCutoffAction: 'HalfCharge',
     })),
   } as unknown as IProrationPolicy;
   policies.set(source.id!, source);
   policies.set('existing-copy', {
-    ...source, id: 'existing-copy', policyName: `${source.policyName} Copy`,
-    policyCode: 'PRO-COPY', status: 'Draft', isDefault: false, version: 1,
+    ...source,
+    id: 'existing-copy',
+    policyName: `${source.policyName} Copy`,
+    policyCode: 'PRO-COPY',
+    status: 'Draft',
+    isDefault: false,
+    version: 1,
   });
 }
 export const api = createApi({
@@ -31,24 +49,39 @@ export const api = createApi({
     const args = typeof input === 'string' ? { url: input } : input;
     if (args.url.endsWith('/clone') && args.method === 'POST') {
       const source = policies.get(args.url.split('/').at(-2));
-      if (source && cloneScenario === 'blocked') return {
-        error: { status: 400, data: { title: 'Bad Request',
-          detail: 'One or more business rules were violated.',
-          errorCode: 'Finance:ProrationPolicy:010027' } },
-      };
+      if (source && cloneScenario === 'blocked')
+        return {
+          error: {
+            status: 400,
+            data: {
+              title: 'Bad Request',
+              detail: 'One or more business rules were violated.',
+              errorCode: 'Finance:ProrationPolicy:010027',
+            },
+          },
+        };
       if (source) {
         const occupied = new Set([...policies.values()].map((policy) => policy.policyName));
         let number = 1;
         let name = `${source.policyName} Copy`;
         while (occupied.has(name)) name = `${source.policyName} Copy ${++number}`;
         const id = `cloned-policy-${policies.size}`;
-        const clone = { ...structuredClone(source), id, policyName: name, policyCode: `PRO-${id}`,
-          status: 'Draft', isDefault: false, version: 1 } as IProrationPolicy;
+        const clone = {
+          ...structuredClone(source),
+          id,
+          policyName: name,
+          policyCode: `PRO-${id}`,
+          status: 'Draft',
+          isDefault: false,
+          version: 1,
+        } as IProrationPolicy;
         policies.set(id, clone);
         return { data: clone };
       }
     }
     if (args.url === '/fee-heads/active') {
+      if (new URLSearchParams(window.location.search).has('skeletonFetch'))
+        await new Promise((resolve) => setTimeout(resolve, 30000));
       return {
         data: [
           { id: 'tuition', name: 'Tuition fee', academicYearId: 'synthetic-year' },
@@ -64,8 +97,9 @@ export const api = createApi({
       };
     }
     if (args.url === '/finance/proration-policies' && args.method !== 'POST') {
-      const items = [...policies.values()].filter((policy) => args.params?.status
-        ? policy.status === args.params.status : policy.status !== 'Archived');
+      const items = [...policies.values()].filter((policy) =>
+        args.params?.status ? policy.status === args.params.status : policy.status !== 'Archived'
+      );
       return { data: { totalCount: items.length, items } };
     }
     if (args.url === '/finance/proration-policies' || args.method === 'PUT') {

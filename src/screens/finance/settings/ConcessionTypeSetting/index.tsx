@@ -1,8 +1,7 @@
 'use client';
 
-import type { IParams } from 'src/components/customizabaleTable/types';
-
 import type { RootState } from 'src/redux/store';
+import type { IParams } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
@@ -11,26 +10,25 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import {
   concessionTypeApi,
   useGetConcessionTypesQuery,
   useDeleteConcessionTypeMutation,
 } from 'src/redux/finance/concessionType';
 
-import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
-
 import ConcessionTypeTable from './Components/ConcessionTable';
-import ConcessionTypeForm from './Components/ConcessionTypeForm';
+import ConcessionTypeDrawer from './Components/ConcessionTypeDrawer';
 import ConcessionDocumentTable from './Components/ConcessionDocuments';
 import ConcessionTypeVersionHistoryDrawer from './Components/ConcessionTypeVersionHistoryDrawer';
 
@@ -43,6 +41,7 @@ const ConcessionType = () => {
   );
   // Custom hook to manage dialog open/close state
   const addConcessionTypeDialog = useBoolean();
+  const [isFormBusy, setIsFormBusy] = useState(false);
   const deleteConcessionTypeDialog = useBoolean();
   const viewConcessionTypeDialog = useBoolean();
   const [versionHistoryTarget, setVersionHistoryTarget] = useState<IConcessionTypeForm | null>(
@@ -106,10 +105,15 @@ const ConcessionType = () => {
   /**
    * Handles closing the concession type dialog
    */
-  const { handleClose, confirmation } = useFinanceFormClose(addConcessionTypeDialog.value, () => {
-    addConcessionTypeDialog.onFalse();
-    setSelectedConcessionType(null);
-  });
+  const { handleClose, confirmation } = useFinanceFormClose(
+    addConcessionTypeDialog.value,
+    () => {
+      addConcessionTypeDialog.onFalse();
+      setSelectedConcessionType(null);
+      setIsFormBusy(false);
+    },
+    isFormBusy
+  );
 
   return (
     <Box
@@ -149,41 +153,12 @@ const ConcessionType = () => {
         }
       />
       <>
-        {/* Form card for creating/editing concession types */}
-
-        <CustomDialog
-          open={addConcessionTypeDialog.value}
-          guardUnsavedChanges={false}
-          handleClose={() => handleClose()}
-          maxWidth="lg"
-          title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">
-                {selectedConcessionType ? 'Update Concession Type' : 'Add Concession Type'}
-              </Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                sx={{ textAlign: 'justify' }}
-                title={
-                  selectedConcessionType
-                    ? 'Update existing concession details including percentage, amount and applicable fee heads'
-                    : 'Define a new fee concession and specify how it applies to selected fee heads'
-                }
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-          }
-        >
-          {addConcessionTypeDialog.value && (
-            <ConcessionTypeForm
-              open={addConcessionTypeDialog}
-              onClose={handleClose}
-              editData={selectedConcessionType}
-            />
-          )}
-        </CustomDialog>
+        <ConcessionTypeDrawer
+          open={addConcessionTypeDialog}
+          onClose={handleClose}
+          editData={selectedConcessionType}
+          onBusyChange={setIsFormBusy}
+        />
 
         <ConcessionTypeTable
           filters={filters}

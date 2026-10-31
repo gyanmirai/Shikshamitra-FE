@@ -25,11 +25,13 @@ export interface GetReconciliationListParams {
   academicYearId: string;
   month?: number;
   year?: number;
-  /** FE tab value: "Cheque" | "DemandDraft" | "BankTransfer" | "CreditCard" | "UPI" | "OnlineGateway" | "Wallet" */
-  paymentMethod?: string;
+  /** API method name or enum number; active tabs pass ReconciliationStatusType values. */
+  paymentMethod?: string | number;
   /** Optional status filter: 1=PendingVerification, 2=Verified, 3=Rejected */
   status?: ReconciliationVerificationStatus;
   search?: string;
+  /** Serialized Finance table column criteria. */
+  filters?: string;
   page?: number;
   pageSize?: number;
 }

@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   bulkCommit: vi.fn(),
   details: vi.fn(),
   update: vi.fn(),
+  close: vi.fn(),
   candidateState: {} as Record<string, unknown>,
   candidateRefetch: vi.fn(),
 }));
@@ -160,7 +161,8 @@ const result = (id = 'one', amount = 12000) => ({
 });
 function mount(
   students = [{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false }],
-  canOverride = false
+  canOverride = false,
+  editAssignedPolicies = false
 ) {
   const store = configureStore({
     reducer: (
@@ -179,7 +181,12 @@ function mount(
   return render(
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
-        <AssignmentWorkflow students={students} academicYearId="year" onClose={vi.fn()} />
+        <AssignmentWorkflow
+          students={students}
+          academicYearId="year"
+          onClose={mocks.close}
+          editAssignedPolicies={editAssignedPolicies}
+        />
       </ThemeProvider>
     </Provider>
   );
@@ -396,7 +403,7 @@ describe('assignment review and commit boundaries', () => {
     expect(screen.queryByRole('button', { name: 'Aarav' })).not.toBeInTheDocument();
     expect(screen.queryByText('Policies')).not.toBeInTheDocument();
     expect(screen.queryByText('Select fee structure')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Fees & dates' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Fees & Dates' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Include transport for one' })).toBeVisible();
   });
   it('puts policies in step one and blocks advancing without an override reason', async () => {
@@ -459,6 +466,33 @@ describe('assignment review and commit boundaries', () => {
     expect(mocks.preview).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Preview assignments' })).toBeInTheDocument();
   });
+  it('opens the assigned-policy editor directly from edit mode without saving', () => {
+    mocks.details.mockReturnValue({
+      data: { assignment: { ...result(), policies: [] }, warnings: [], concurrencyStamp: 'stamp' },
+    });
+    mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], true, true);
+    expect(screen.getByRole('combobox', { name: 'Collection policy' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save policies' })).toBeDisabled();
+    expect(mocks.update).not.toHaveBeenCalled();
+    const fields = screen.getByRole('region', { name: 'Assigned policy fields' });
+    const actions = screen.getByRole('group', { name: 'Fee assignment actions' });
+    expect(within(fields).getByRole('combobox', { name: 'Collection policy' })).toBeInTheDocument();
+    expect(within(fields).queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+    expect(within(actions).getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(within(actions).getByRole('button', { name: 'Save policies' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(mocks.close).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Committed amount 12000')).not.toBeInTheDocument();
+  });
+
+  it('ignores requested edit mode without policy override permission', () => {
+    mocks.details.mockReturnValue({ data: { assignment: result(), warnings: [] } });
+    mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], false, true);
+    expect(screen.getByText('Committed amount 12000')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save policies' })).not.toBeInTheDocument();
+  });
+
   it('saves edited policies with the assignment concurrency stamp and reason', async () => {
     const refetch = vi.fn();
     mocks.details.mockReturnValue({
@@ -481,8 +515,7 @@ describe('assignment review and commit boundaries', () => {
       refetch,
     });
     mocks.update.mockReturnValue({ unwrap: async () => ({}) });
-    mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], true);
-    fireEvent.click(screen.getByRole('button', { name: 'Edit assigned policies' }));
+    mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], true, true);
     fireEvent.change(screen.getByRole('combobox', { name: 'Collection policy' }), {
       target: { value: 'collection-version' },
     });
@@ -535,8 +568,7 @@ describe('assignment review and commit boundaries', () => {
         throw new Error('conflict');
       },
     });
-    mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], true);
-    fireEvent.click(screen.getByRole('button', { name: 'Edit assigned policies' }));
+    mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], true, true);
     fireEvent.change(screen.getByRole('combobox', { name: 'Collection policy' }), {
       target: { value: 'collection-version' },
     });
@@ -558,6 +590,16 @@ describe('assignment review and commit boundaries', () => {
     expect(
       screen.queryByRole('button', { name: 'Edit assigned policies' })
     ).not.toBeInTheDocument();
+  });
+  it('keeps the saved view free of inline edit and footer Close buttons even with override access', () => {
+    mocks.details.mockReturnValue({ data: { assignment: result(), warnings: [] } });
+    mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], true);
+    expect(screen.getByText('Committed amount 12000')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Edit assigned policies' })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save policies' })).not.toBeInTheDocument();
   });
   it('shows defaults and locks policy selectors without override access', async () => {
     mount();

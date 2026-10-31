@@ -33,7 +33,6 @@ export function DetailSection({
       icon={icon}
       iconSize={16}
       iconContainerSize={28}
-      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 700 }}
       descriptionTooltip={helpText}
       action={action}
       sx={[
@@ -85,15 +84,28 @@ export function DetailField({
   secondary,
   fullWidth = false,
   labelTypographyProps,
+  layout = 'stacked',
 }: {
   label: string;
   value?: ReactNode;
   secondary?: string;
   fullWidth?: boolean;
   labelTypographyProps?: Partial<TypographyProps>;
+  layout?: 'stacked' | 'inline';
 }) {
   return (
-    <Box sx={{ minWidth: 0, ...(fullWidth && { gridColumn: '1 / -1' }) }}>
+    <Box
+      sx={{
+        minWidth: 0,
+        ...(fullWidth && { gridColumn: '1 / -1' }),
+        ...(layout === 'inline' && {
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) auto',
+          alignItems: 'baseline',
+          columnGap: 1,
+        }),
+      }}
+    >
       <Typography
         variant="caption"
         component="div"
@@ -101,7 +113,7 @@ export function DetailField({
         {...labelTypographyProps}
         sx={[
           {
-            mb: 0.5,
+            mb: layout === 'inline' ? 0 : 0.5,
             fontWeight: 800,
             letterSpacing: '0.75px',
             lineHeight: 1.4,
@@ -118,12 +130,21 @@ export function DetailField({
         variant="body2"
         color="text.primary"
         component="div"
-        sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}
+        sx={{
+          overflowWrap: 'anywhere',
+          whiteSpace: 'pre-wrap',
+          ...(layout === 'inline' && { textAlign: 'right', fontVariantNumeric: 'tabular-nums' }),
+        }}
       >
         {value === null || value === undefined || value === '' ? '—' : value}
       </Typography>
       {secondary && (
-        <Typography variant="caption" color="text.secondary" component="div">
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          component="div"
+          sx={layout === 'inline' ? { gridColumn: '1 / -1' } : undefined}
+        >
           {secondary}
         </Typography>
       )}

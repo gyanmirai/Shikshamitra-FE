@@ -8,6 +8,8 @@ const state = vi.hoisted(() => ({
   query: {} as any,
   table: {} as any,
   items: [] as any[],
+  deniedPermissions: [] as string[],
+  isFetching: false,
   context: {
     selectedStandardId: 'all-classes',
     selectedDivisionId: 'all-divisions',
@@ -19,7 +21,10 @@ const state = vi.hoisted(() => ({
 vi.mock('react-redux', () => ({
   useSelector: () => ({ currentYear: { id: 'year' }, permissions: [] }),
 }));
-vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => true }));
+vi.mock('src/utils/permissions', () => ({
+  hasGrantedPermission: (_permissions: unknown, name: string) =>
+    !state.deniedPermissions.includes(name),
+}));
 vi.mock('src/screens/finance/hooks/useFinanceAcademicFilters', () => ({
   ALL_CLASS_OPTION: { id: 'all-classes' },
   ALL_DIVISION_OPTION: { id: 'all-divisions' },
@@ -29,11 +34,11 @@ vi.mock('src/components/custom-select', () => ({ default: () => null }));
 vi.mock('src/screens/finance/components/FinanceAcademicContextFilter', () => ({
   default: () => null,
 }));
-vi.mock('src/components/three-dots-actions', () => ({ default: () => null }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   useAssignmentStudentsQuery: (params: any) => {
     state.query = params;
-    return { currentData: { items: state.items, totalCount: 45 }, isFetching: false };
+    return { currentData: { items: state.items, totalCount: 45 }, isFetching: state.isFetching };
   },
 }));
 vi.mock('src/components/customizabaleTable', () => ({
@@ -54,11 +59,53 @@ vi.mock('src/components/customizabaleTable', () => ({
 describe('Fee assignment student table', () => {
   beforeEach(() => {
     state.items = [];
+    state.deniedPermissions = [];
+    state.isFetching = false;
     state.context = {
       ...state.context,
       selectedStandardId: 'all-classes',
       selectedDivisionId: 'all-divisions',
     };
+  });
+
+  it('opens editing for an assigned student through a separate permitted row action', () => {
+    const onEdit = vi.fn();
+    const onView = vi.fn();
+    render(<FeeStructureAssignTable onAssignStructure={onView} onEdit={onEdit} />);
+    const row = {
+      studentId: 'assigned',
+      studentName: 'Aarav',
+      isActive: true,
+      isFeeStructureAssigned: true,
+    };
+    const action = state.table.columns.find((column: any) => column.id === 'action');
+    const controls = render(action.render(undefined, row));
+    fireEvent.click(
+      controls.getByRole('button', { name: 'Edit fee structure assignment for Aarav' })
+    );
+    expect(onEdit).toHaveBeenCalledWith(row);
+    expect(onView).not.toHaveBeenCalled();
+    fireEvent.click(controls.getByRole('button', { name: 'View fee structure for Aarav' }));
+    expect(onView).toHaveBeenCalledWith(row);
+  });
+
+  it('keeps assigned rows read-only without policy override access and locks actions on refresh', () => {
+    state.deniedPermissions = ['Finance.Fees.StructureAssign.OverridePolicies'];
+    const onEdit = vi.fn();
+    const view = render(<FeeStructureAssignTable onAssignStructure={vi.fn()} onEdit={onEdit} />);
+    const row = { studentId: 'assigned', studentName: 'Aarav', isFeeStructureAssigned: true };
+    const action = () => state.table.columns.find((column: any) => column.id === 'action');
+    const controls = render(action().render(undefined, row));
+    expect(controls.queryByRole('button', { name: /Edit fee structure/ })).not.toBeInTheDocument();
+    expect(controls.getByRole('button', { name: 'View fee structure for Aarav' })).toBeEnabled();
+
+    state.deniedPermissions = [];
+    state.isFetching = true;
+    view.rerender(<FeeStructureAssignTable onAssignStructure={vi.fn()} onEdit={onEdit} />);
+    controls.rerender(action().render(undefined, row));
+    expect(controls.getByRole('button', { name: /Edit fee structure/ })).toBeDisabled();
+    expect(controls.getByRole('button', { name: /View fee structure/ })).toBeDisabled();
+    expect(onEdit).not.toHaveBeenCalled();
   });
 
   it.each(['all-classes', ''])('disables row and bulk selection for class %s', (classId) => {
@@ -243,10 +290,9 @@ describe('Fee assignment student table', () => {
       serverSideSort: true,
       serverSideSortMode: 'single',
     });
-    const action = state.table.columns.find((column: any) => column.id === 'action').render(
-      undefined,
-      { studentId: 'eligible', studentName: 'Eligible', isActive: true }
-    );
+    const action = state.table.columns
+      .find((column: any) => column.id === 'action')
+      .render(undefined, { studentId: 'eligible', studentName: 'Eligible', isActive: true });
     expect(action.props.variant).toBe('outlined');
     expect(action.props.startIcon).toBeTruthy();
   });

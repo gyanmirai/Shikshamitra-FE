@@ -1,3 +1,4 @@
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
@@ -92,8 +93,7 @@ const ExpenseFormFields = ({
                   name="name"
                   value={formik.values.name}
                   onChange={(e) => {
-                    const value = e.target.value
-                      .replace(/[^a-zA-Z\s]/g, '')
+                    const value = sanitizeFinanceName(e.target.value)
                       .split(' ')
                       .map((word) =>
                         word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
@@ -101,6 +101,7 @@ const ExpenseFormFields = ({
                       .join(' ');
                     formik.setFieldValue('name', value);
                   }}
+                  onBlur={formik.handleBlur}
                   error={!!(formik.touched.name && formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
                 />

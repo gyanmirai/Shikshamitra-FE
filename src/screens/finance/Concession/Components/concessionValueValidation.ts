@@ -38,11 +38,15 @@ export function validateConcessionInstallments(
         'Concession amount must not exceed this installment’s eligible amount.';
     }
   });
-  if (!percentage && policy.maximumFixedAmount != null && total > policy.maximumFixedAmount) {
+  const maximum = percentage
+    ? Math.min(100, policy.maximumPercentage ?? 100)
+    : policy.maximumFixedAmount;
+  if (maximum != null && Number(total.toFixed(2)) > maximum) {
     lines.forEach((line) => {
       if (Number(entries[line.dueFeeId]) > 0 && !errors[line.dueFeeId]) {
-        errors[line.dueFeeId] =
-          'The total concession exceeds the policy limit. Reduce an installment amount.';
+        errors[line.dueFeeId] = percentage
+          ? `The total concession percentage exceeds the ${maximum}% request limit. Reduce an installment percentage.`
+          : 'The total concession exceeds the policy limit. Reduce an installment amount.';
       }
     });
   }

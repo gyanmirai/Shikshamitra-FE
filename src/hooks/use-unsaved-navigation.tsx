@@ -3,6 +3,9 @@ import DeleteOutline from '@mui/icons-material/DeleteOutline';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
+
 
 type Options = {
   title?: string;
@@ -175,7 +178,7 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
             color="error"
             variant="contained"
             disabled={blockNavigation}
-            startIcon={<DeleteOutline fontSize="small" />}
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               if (blockNavigation) return;
               const proceed = pending;

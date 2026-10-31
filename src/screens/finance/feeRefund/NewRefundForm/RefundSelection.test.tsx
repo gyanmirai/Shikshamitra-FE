@@ -1,6 +1,9 @@
 import { useFormik } from 'formik';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
 import { FeeMonth } from 'src/enums/fee-collection-type';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { defaultSettings } from 'src/components/settings/config-settings';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
@@ -9,6 +12,8 @@ import { buildRefundInitialValues, buildFeeRefundApiPayload } from './initialVal
 const mocks = vi.hoisted(() => ({ eligibility: {} as any }));
 vi.mock('react-redux', () => ({ useSelector: () => ({ currentYear: { id: 'year' } }) }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+// Export is outside this inline data-entry workflow; keep the real table and row interactions.
+vi.mock('src/components/customizabaleTable/table-export', () => ({ exportTable: vi.fn() }));
 vi.mock('src/components/label', () => ({ Label: ({ children }: any) => <span>{children}</span> }));
 vi.mock('src/redux/finance/RefundManagement/feeRefundManage', () => ({
   useGetRefundEligibilityQuery: () => mocks.eligibility,
@@ -17,12 +22,16 @@ vi.mock('src/redux/finance/adjustments/adjustmentApi', () => ({
   useGetAdjustmentEligibilityQuery: () => mocks.eligibility,
 }));
 
+const tableTheme = createTheme(defaultSettings);
+
 function Request({
   mode = 'refund',
   partial = false,
+  lockedReceiptId,
 }: {
   mode?: 'refund' | 'adjustment';
   partial?: boolean;
+  lockedReceiptId?: string;
 }) {
   const formik = useFormik({
     initialValues: {
@@ -33,8 +42,8 @@ function Request({
   });
   const months = formik.values.feeHeadRefunds.flatMap((head) => head.months);
   return (
-    <>
-      <FeeHeadRefundTable compact formik={formik} mode={mode} />
+    <ThemeProvider theme={tableTheme}>
+      <FeeHeadRefundTable compact formik={formik} mode={mode} lockedReceiptId={lockedReceiptId} />
       <output aria-label="Selection total">
         {months.length} installments ·{' '}
         {months.reduce((sum, month) => sum + Number(month.amount), 0)}
@@ -42,7 +51,7 @@ function Request({
       <output aria-label="Request payload">
         {JSON.stringify(buildFeeRefundApiPayload(formik.values, 'year'))}
       </output>
-    </>
+    </ThemeProvider>
   );
 }
 
@@ -76,6 +85,59 @@ describe('refund receipt selection', () => {
         ],
       },
     };
+  });
+
+  it('keeps an edited request on its saved receipt after clearing every selection', async () => {
+    render(<Request lockedReceiptId="receipt-0" />);
+    const savedReceipt = screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' });
+    const otherReceipt = screen.getByRole('checkbox', { name: 'Select June 2026 · FIN-1' });
+    expect(otherReceipt).toBeDisabled();
+    fireEvent.click(savedReceipt);
+    await waitFor(() => expect(savedReceipt).toBeChecked());
+    fireEvent.click(savedReceipt);
+    await waitFor(() => expect(savedReceipt).not.toBeChecked());
+    expect(otherReceipt).toBeDisabled();
+  });
+
+  it('collapses a fee head independently of its selection and preserves entered amounts', async () => {
+    render(<Request partial />);
+    const table = screen.getByRole('table', { name: 'Examination fee table' });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' }));
+    const collapse = screen.getByRole('button', { name: 'Collapse Examination fee' });
+    expect(collapse).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.change(
+      screen.getByRole('textbox', { name: 'Refund amount for December 2026 · FIN-0' }),
+      {
+        target: { value: '100.25' },
+      }
+    );
+    fireEvent.click(collapse);
+    await waitFor(() => expect(table).not.toBeVisible());
+    expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 100.25');
+    fireEvent.click(screen.getByRole('button', { name: 'Expand Examination fee' }));
+    await waitFor(() => expect(table).toBeVisible());
+    expect(screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' })).toBeChecked();
+    expect(
+      screen.getByRole('textbox', { name: 'Refund amount for December 2026 · FIN-0' })
+    ).toHaveValue('₹ 100.25');
+  });
+
+  it('keeps every installment visible in the embedded table, including beyond ten rows', async () => {
+    const head = mocks.eligibility.currentData.feeHeads[0];
+    head.months = Array.from({ length: 12 }, (_, index) => ({
+      ...head.months[0],
+      month: index,
+      dueFeeId: `due-${index}`,
+      sourceAllocationId: `allocation-${index}`,
+    }));
+    mocks.eligibility.currentData.totalRefundable = 2400;
+    render(<Request />);
+    expect(screen.getByRole('table', { name: 'Examination fee table' })).toBeVisible();
+    expect(screen.getAllByLabelText(/^Select .*2026/, { selector: 'input' })).toHaveLength(12);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' }));
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 200')
+    );
   });
 
   it('keeps both receipts visible and selects only one receipt with the group checkbox', async () => {

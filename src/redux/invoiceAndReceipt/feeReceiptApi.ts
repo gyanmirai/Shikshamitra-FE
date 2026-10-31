@@ -28,8 +28,8 @@ export enum FeeReceiptScope {
 // ─── Label helpers ────────────────────────────────────────────────────────────
 
 export const FEE_RECEIPT_KIND_LABELS: Record<FeeReceiptKind, string> = {
-  [FeeReceiptKind.FinalFee]: 'Official Receipt (Fee)',
-  [FeeReceiptKind.FinalCharge]: 'Official Receipt (Charge)',
+  [FeeReceiptKind.FinalFee]: 'Receipt (Fee)',
+  [FeeReceiptKind.FinalCharge]: 'Receipt (Charge)',
   [FeeReceiptKind.ProvisionalFee]: 'Provisional Receipt (Fee)',
   [FeeReceiptKind.ProvisionalCharge]: 'Provisional Receipt (Charge)',
 };
@@ -106,6 +106,8 @@ export interface GetFeeReceiptListParams {
   month?: number;
   receiptKind?: FeeReceiptKind;
   search?: string;
+  /** Serialized Finance table column criteria. */
+  filters?: string;
   skipCount?: number;
   maxResultCount?: number;
 }

@@ -1,5 +1,10 @@
 'use client';
 
+import FinanceFormSkeleton, {
+  FinanceSkeletonRows,
+  FinanceSkeletonSection,
+} from 'src/screens/finance/components/FinanceFormSkeleton';
+
 import { useRef, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -315,8 +320,8 @@ function InstallmentTemplateDialogSession({
             </Alert>
           )}
           <FormBusyRegion
-            busy={busy}
-            label={loadingGeometry ? 'Loading schedule…' : 'Generating preview…'}
+            busy={previewState.isLoading && !loadingGeometry}
+            label="Generating preview…"
           >
             <FormSectionCard
               descriptionTooltip="Choose the installment pattern and the payment and invoice date rules for the selected board period."
@@ -510,6 +515,13 @@ function InstallmentTemplateDialogSession({
                 </Box>
               )}
             </FormSectionCard>
+            {loadingGeometry && (
+              <FinanceFormSkeleton label="Loading installment dates">
+                <FinanceSkeletonSection>
+                  <FinanceSkeletonRows columns={5} />
+                </FinanceSkeletonSection>
+              </FinanceFormSkeleton>
+            )}
             {preview && (
               <FormSectionCard
                 descriptionTooltip="Review each installment's dates and allocation before applying the schedule."
@@ -542,15 +554,15 @@ function InstallmentTemplateDialogSession({
                       render: (value) => formatDateOnly(value),
                     },
                     {
-                      id: 'dueDate',
-                      label: 'Due date',
+                      id: 'demandDate',
+                      label: 'Invoice date',
                       isSort: false,
                       isFilter: false,
                       render: (value) => formatDateOnly(value),
                     },
                     {
-                      id: 'demandDate',
-                      label: 'Invoice date',
+                      id: 'dueDate',
+                      label: 'Due date',
                       isSort: false,
                       isFilter: false,
                       render: (value) => formatDateOnly(value),

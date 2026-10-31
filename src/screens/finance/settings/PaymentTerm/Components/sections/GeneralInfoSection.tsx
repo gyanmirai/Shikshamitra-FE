@@ -1,5 +1,6 @@
 'use client';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { FormikProps } from 'formik';
 
 import { GlobalIcons } from 'src/utils/icons';
@@ -41,7 +42,8 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
   const nameError =
     (conflict &&
       normalizePaymentTermName(conflict.name) ===
-        normalizePaymentTermName(formik.values.paymentTermName) && conflict.message) ||
+        normalizePaymentTermName(formik.values.paymentTermName) &&
+      conflict.message) ||
     (formik.touched.paymentTermName && formik.errors.paymentTermName);
 
   return (
@@ -63,7 +65,9 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
               name="paymentTermName"
               placeholder="e.g. Monthly installments"
               value={formik.values.paymentTermName || ''}
-              onChange={formik.handleChange}
+              onChange={(event) =>
+                formik.setFieldValue(event.target.name, sanitizeFinanceName(event.target.value))
+              }
               onBlur={(event) => {
                 formik.setFieldValue('paymentTermName', formik.values.paymentTermName.trim());
                 formik.handleBlur(event);

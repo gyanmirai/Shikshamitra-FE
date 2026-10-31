@@ -1,5 +1,7 @@
 'use client';
 
+import { sanitizeFinanceName } from 'src/utils/finance-name';
+import { financeNameSchema } from 'src/utils/finance-name';
 /**
  * PaymentPolicyDrawer
  *
@@ -146,7 +148,7 @@ const getInitialValues = (
 // ─── Validation schema ────────────────────────────────────────────────────────
 
 const validationSchema = Yup.object({
-  policyName: Yup.string().required('Policy name is required'),
+  policyName: financeNameSchema('Policy name').required('Policy name is required'),
   academicYearId: Yup.string().required('Academic year is required'),
   effectiveTo: Yup.mixed().test(
     'date-order',
@@ -285,7 +287,9 @@ const SectionGeneral = ({
         label="Policy Name *"
         name="policyName"
         value={formik.values.policyName}
-        onChange={formik.handleChange}
+        onChange={(event) =>
+          formik.setFieldValue(event.target.name, sanitizeFinanceName(event.target.value))
+        }
         onBlur={formik.handleBlur}
         error={formik.touched.policyName && Boolean(formik.errors.policyName)}
         helperText={(formik.touched.policyName && formik.errors.policyName) || undefined}
@@ -956,7 +960,8 @@ const PaymentPolicyDrawer: React.FC<PaymentPolicyDrawerProps> = ({
   // Live validation checks
   const checks = useMemo(() => {
     const v = formik.values;
-    const nameValid = v.policyName.trim().length > 0;
+    const nameValid =
+      v.policyName.trim().length > 0 && financeNameSchema('Policy name').isValidSync(v.policyName);
     const yearValid = !!v.academicYearId;
     const partialValid =
       !v.allowPartialPayment || (v.minimumPaymentValue !== null && v.minimumPaymentValue > 0);

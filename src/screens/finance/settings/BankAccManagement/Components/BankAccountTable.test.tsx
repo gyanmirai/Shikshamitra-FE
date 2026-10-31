@@ -15,7 +15,7 @@ vi.mock('src/redux/finance/BankAccountManage/bankAccountApi', () => ({
   useGetBankAccountVersionsQuery: () => ({}),
   usePatchBankAccountStatusMutation: vi.fn(),
 }));
-vi.mock('src/screens/finance/settings/components/AccountSettingVersionDialog', () => ({
+vi.mock('src/screens/finance/settings/components/AccountCategoryVersionDrawer', () => ({
   default: () => null,
 }));
 vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));

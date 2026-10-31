@@ -1,9 +1,10 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import * as yup from 'yup';
 
 export const finaceFeeStructureValidationSchema = [
   // Step 1: Fee Structure Basic Details
   yup.object().shape({
-    name: yup.string().required('Fee Structure Name is required'),
+    name: financeNameSchema('Fee Structure Name').required('Fee Structure Name is required'),
     boardId: yup.string().required('Board is required'),
     mediumId: yup.string().required('Medium is required'),
     receiptBookId: yup.string().required('Receipt Book is required'),
@@ -25,7 +26,9 @@ export const finaceFeeStructureValidationSchema = [
             String(i + 1),
             yup.array().of(
               yup.object().shape({
-                feeStructureName: yup.string().required('Class Fee Structure Name is required'),
+                feeStructureName: financeNameSchema('Class Fee Structure Name').required(
+                  'Class Fee Structure Name is required'
+                ),
                 status: yup.string().required('Status is required'),
                 feeItems: yup
                   .array()

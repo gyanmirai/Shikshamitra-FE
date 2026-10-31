@@ -1,5 +1,11 @@
 'use client';
 
+import FinanceFormSkeleton, {
+  FinanceSkeletonRows,
+} from 'src/screens/finance/components/FinanceFormSkeleton';
+
+import { sanitizeFinanceName } from 'src/utils/finance-name';
+import { financeNameSchema } from 'src/utils/finance-name';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -38,7 +44,7 @@ dayjs.extend(isSameOrBefore);
 // ---------------------------------------------------------------------------
 const installmentSchema = Yup.array(
   Yup.object({
-    installmentName: Yup.string().trim().required('Name is required'),
+    installmentName: financeNameSchema('Installment Name').trim().required('Name is required'),
     startDate: Yup.string().nullable().required('Start date is required'),
     endDate: Yup.string()
       .nullable()
@@ -127,10 +133,13 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
   const theme = useTheme();
 
   // ── Load canonical installment schedule from Payment Term detail ─────
-  const { data: paymentTermDetail, isLoading: isMasterLoading } = useGetPaymentTermByIdQuery(
-    paymentTermId,
-    { skip: !open || !paymentTermId }
-  );
+  const {
+    currentData: paymentTermDetail,
+    isLoading: isMasterInitiallyLoading,
+    isFetching: isMasterFetching,
+  } = useGetPaymentTermByIdQuery(paymentTermId, { skip: !open || !paymentTermId });
+
+  const isMasterLoading = isMasterInitiallyLoading || (isMasterFetching && !paymentTermDetail);
 
   const masterInstallments: IInstallmentOverride[] = useMemo(() => {
     if (!paymentTermDetail) return [];
@@ -438,9 +447,9 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
                 textAlign: 'center',
               }}
             >
-              <Typography variant="body2" color="text.disabled">
-                Loading installment schedule…
-              </Typography>
+              <FinanceFormSkeleton label="Loading installment schedule">
+                <FinanceSkeletonRows columns={5} />
+              </FinanceFormSkeleton>
             </Box>
           ) : formik.values.installments.length === 0 ? (
             <Box
@@ -540,7 +549,9 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
                         label="Name *"
                         value={inst.installmentName}
                         disabled={isLocked}
-                        onChange={(e) => updateRow(idx, 'installmentName', e.target.value)}
+                        onChange={(e) =>
+                          updateRow(idx, 'installmentName', sanitizeFinanceName(e.target.value))
+                        }
                         onBlur={() =>
                           formik.setFieldTouched(`installments[${idx}].installmentName`, true)
                         }

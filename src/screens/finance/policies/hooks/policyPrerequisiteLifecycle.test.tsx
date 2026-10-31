@@ -86,6 +86,7 @@ describe('policy prerequisite lifecycle', () => {
       await result.current.formik.setFieldValue('feeHeadScope', 'AllFeeHeads');
     });
     await act(async () => {
+      window.dispatchEvent(new Event('blur'));
       window.dispatchEvent(new Event('focus'));
     });
     expect(mocks.refetchHeads).toHaveBeenCalledOnce();
@@ -130,7 +131,7 @@ describe('policy prerequisite lifecycle', () => {
           feeHeadName: 'Historical tuition',
           feeType: 'Recurring',
           ruleType: 'DailyProration',
-          configuration: { minimumChargeDays: 0 },
+          configuration: { calculationBasis: 'CalendarDays' },
           applyOnAdmission: true,
         },
       ],

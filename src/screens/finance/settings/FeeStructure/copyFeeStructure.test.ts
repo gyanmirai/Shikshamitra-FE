@@ -149,9 +149,10 @@ describe('copy fee structure payload', () => {
 
   it('retains the source name when available and suggests a unique bounded name on collisions', () => {
     expect(availableCopyName('Annual fees', [])).toBe('Annual fees');
-    expect(availableCopyName('Annual fees', [' ANNUAL FEES ', 'Annual fees (copy)'])).toBe(
-      'Annual fees (copy 2)'
+    expect(availableCopyName('Annual fees', [' ANNUAL FEES ', 'Annual fees copy'])).toBe(
+      'Annual fees copy 2'
     );
+    expect(availableCopyName('Annual fees (2026)', [])).toBe('Annual fees 2026');
     expect(availableCopyName('a'.repeat(256), ['a'.repeat(256)])).toHaveLength(256);
   });
 });

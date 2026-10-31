@@ -5,22 +5,24 @@ import type {
 
 import { Box, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
-import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { DetailField } from 'src/components/detail-view';
+import RequestEnteredInstallmentTable from './RequestEnteredInstallmentTable';
 
-import { concessionInstallmentLabel } from '../concessionInstallmentLabel';
 import { validateConcessionInstallments } from '../concessionValueValidation';
 
 export default function RequestEnteredInstallments({
   formik,
   requestContext,
   policy,
+  feeHeadId,
 }: {
   formik: any;
   requestContext?: ConcessionRequestContext;
   policy: ConcessionPolicyOption;
+  /** Restrict visible rows only; all selected fees still share the request limit. */
+  feeHeadId?: string;
 }) {
-  const { values, setFieldValue } = formik;
+  const { values } = formik;
   const selectedHeads = new Set<string>(values.selectedFeeHeads[values.concessionTypeId] || []);
   const lines = (requestContext?.eligibleDueFees || []).filter(
     (line) => selectedHeads.has(line.feeHeadId) && line.eligibleConcessionAmount > 0
@@ -33,21 +35,19 @@ export default function RequestEnteredInstallments({
     policy
   );
   const enteredTotal = lines.reduce((sum, line) => sum + Number(entries[line.dueFeeId] || 0), 0);
+  const visibleLines = feeHeadId ? lines.filter((line) => line.feeHeadId === feeHeadId) : lines;
   const percentage = policy.calculationMethod === 'Percentage';
   const maximum = percentage
     ? Math.min(100, policy.maximumPercentage ?? 100)
     : (policy.maximumFixedAmount ?? Number.POSITIVE_INFINITY);
-  const showAllowance = !percentage && Number.isFinite(maximum) && lines.length > 0;
+  const showAllowance = Number.isFinite(maximum) && lines.length > 0;
   const hasInvalidEntries = Object.keys(validationErrors).length > 0;
   const remaining = Math.max(0, Number((maximum - enteredTotal).toFixed(2)));
   const maximumReached = !hasInvalidEntries && remaining === 0;
   const money = (amount: number) => formatNumber(amount, 'INR');
-  // Respond to the editor's width, rather than the viewport: a wide screen can
-  // still have a narrow editor beside the impact panel.
-  const columns = 'minmax(0, 1.25fr) minmax(0, 0.8fr) minmax(0, 1.3fr) minmax(0, 0.9fr)';
-
+  const allowanceValue = (amount: number) => (percentage ? `${amount}%` : money(amount));
   return (
-    <Box sx={{ minWidth: 0, containerType: 'inline-size' }}>
+    <Box sx={{ minWidth: 0 }}>
       {showAllowance && (
         <Box
           role="status"
@@ -56,172 +56,40 @@ export default function RequestEnteredInstallments({
           aria-atomic="true"
           sx={{ mb: 1.5, fontVariantNumeric: 'tabular-nums' }}
         >
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 2, rowGap: 0.5 }}>
-            <Typography variant="body2">
-              Maximum concession allowed: <strong>{money(maximum)}</strong>
-            </Typography>
-            <Typography variant="body2">
-              Entered: <strong>{hasInvalidEntries ? '—' : money(enteredTotal)}</strong>
-            </Typography>
-            <Typography variant="body2">
-              Remaining: <strong>{hasInvalidEntries ? '—' : money(remaining)}</strong>
-            </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            <DetailField
+              layout="inline"
+              label="Maximum concession allowed: "
+              value={allowanceValue(maximum)}
+            />
+            <DetailField
+              layout="inline"
+              label="Entered: "
+              value={hasInvalidEntries ? '—' : allowanceValue(Number(enteredTotal.toFixed(2)))}
+            />
+            <DetailField
+              layout="inline"
+              label="Remaining: "
+              value={hasInvalidEntries ? '—' : allowanceValue(remaining)}
+            />
           </Box>
           {maximumReached && (
             <Typography variant="body2" color="warning.main" sx={{ mt: 0.5 }}>
-              Maximum concession reached. Reduce an installment amount to add more elsewhere.
+              Maximum concession reached. Reduce an installment{' '}
+              {percentage ? 'percentage' : 'amount'} to add more elsewhere.
             </Typography>
           )}
         </Box>
       )}
-      <Box
-        component="section"
-        aria-label="Installment concessions"
-        sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}
-      >
-        <Box
-          sx={{
-            display: 'none',
-            gridTemplateColumns: columns,
-            '@container (min-width: 540px)': { display: 'grid' },
-            gap: 1,
-            px: 1.25,
-            py: 0.75,
-            bgcolor: 'background.neutral',
-          }}
-        >
-          {[
-            'Installment / fee',
-            'Eligible',
-            percentage ? 'Concession %' : 'Concession amount',
-            'Reduction',
-          ].map((heading, index) => (
-            <Typography
-              key={heading}
-              variant="caption"
-              color="text.secondary"
-              sx={{ textAlign: index === 3 ? 'right' : 'left', overflowWrap: 'anywhere' }}
-            >
-              {heading}
-            </Typography>
-          ))}
-        </Box>
-        {lines.map((line) => {
-          const value = Number(entries[line.dueFeeId] || 0);
-          // Replacing this row can reuse its current allocation; every other row shares
-          // only the unspent request balance. Round the subtraction to money precision.
-          const available = percentage
-            ? maximum
-            : Math.min(
-                line.eligibleConcessionAmount,
-                Math.max(0, Number((maximum - enteredTotal + value).toFixed(2)))
-              );
-          const estimate = percentage
-            ? roundUpWithinAmount(
-                (line.eligibleConcessionAmount * value) / 100,
-                line.eligibleConcessionAmount
-              )
-            : Math.min(value, line.eligibleConcessionAmount);
-          const error =
-            validationErrors[line.dueFeeId] ||
-            (formik.touched.dueFeeEntries?.[line.dueFeeId] &&
-              formik.errors.dueFeeEntries?.[line.dueFeeId]);
-          return (
-            <Box
-              key={line.dueFeeId}
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-                '@container (min-width: 540px)': { gridTemplateColumns: columns },
-                gap: 1,
-                alignItems: 'center',
-                px: 1.25,
-                py: 1,
-                borderTop: 1,
-                borderColor: 'divider',
-              }}
-            >
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="body2">
-                  {concessionInstallmentLabel(line.installmentLabel, line.year)}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ overflowWrap: 'anywhere' }}
-                >
-                  {line.feeHeadName}
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  minWidth: 0,
-                  fontVariantNumeric: 'tabular-nums',
-                  textAlign: 'right',
-                  '@container (min-width: 540px)': { textAlign: 'left' },
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ display: 'block', '@container (min-width: 540px)': { display: 'none' } }}
-                >
-                  Eligible amount:{' '}
-                </Typography>
-                <Typography variant="body2" component="span">
-                  {money(line.eligibleConcessionAmount)}
-                </Typography>
-              </Box>
-              <NumericFormatCustom
-                fullWidth
-                size="small"
-                sx={{ minWidth: 0, '& input': { px: 1 } }}
-                name={`dueFeeEntries.${line.dueFeeId}`}
-                label={percentage ? 'Concession %' : 'Concession amount'}
-                value={entries[line.dueFeeId] ?? ''}
-                roundToWholeRupees={false}
-                decimalScale={2}
-                prefix={percentage ? '' : '₹ '}
-                suffix={percentage ? '%' : ''}
-                slotProps={{
-                  inputLabel: { shrink: true },
-                  htmlInput: {
-                    'aria-label': `${line.installmentLabel} ${line.feeHeadName} ${percentage ? 'concession percentage' : 'concession amount'}`,
-                  },
-                }}
-                isAllowed={({ floatValue }) =>
-                  floatValue === undefined || (floatValue >= 0 && floatValue <= available)
-                }
-                onValueChange={(input, source) => {
-                  if (source.source === 'event')
-                    setFieldValue('dueFeeEntries', { ...entries, [line.dueFeeId]: input.value });
-                }}
-                onBlur={formik.handleBlur}
-                error={Boolean(error)}
-                helperText={error || undefined}
-                FormHelperTextProps={{ sx: { mt: 0.5, mx: 0 } }}
-              />
-              <Box sx={{ minWidth: 0, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ display: 'block', '@container (min-width: 540px)': { display: 'none' } }}
-                >
-                  Reduction
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {error ? '—' : `−${money(estimate)}`}
-                </Typography>
-              </Box>
-            </Box>
-          );
-        })}
-        {lines.length === 0 && (
-          <Typography color="text.secondary" sx={{ p: 1.5 }}>
-            Select eligible fee heads to enter installment amounts.
-          </Typography>
-        )}
-      </Box>
+      <RequestEnteredInstallmentTable
+        formik={formik}
+        lines={visibleLines}
+        validationErrors={validationErrors}
+        percentage={percentage}
+        maximum={maximum}
+        enteredTotal={enteredTotal}
+        tableKey={feeHeadId || 'all'}
+      />
     </Box>
   );
 }

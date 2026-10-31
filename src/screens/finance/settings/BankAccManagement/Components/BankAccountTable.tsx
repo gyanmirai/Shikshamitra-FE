@@ -13,7 +13,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { Box, Chip, Link, Stack, Switch, TextField, Typography } from '@mui/material';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
-import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
+import AccountCategoryVersionDrawer from 'src/screens/finance/settings/components/AccountCategoryVersionDrawer';
 import {
   useGetBankAccountVersionsQuery,
   usePatchBankAccountStatusMutation,
@@ -412,7 +412,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
           </LoadingButton>
         }
       />
-      <AccountSettingVersionDialog
+      <AccountCategoryVersionDrawer
         open={Boolean(historyItem)}
         title={historyItem?.bankName || 'Bank account'}
         recordType="Bank account"

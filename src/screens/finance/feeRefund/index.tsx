@@ -210,6 +210,13 @@ const FeeRefund = () => {
             setIsEditMode(false);
             viewRefundRequest.onTrue();
           }}
+          onEdit={(data) => {
+            if (!data._refundRequestId || !data._availableActions?.includes('edit')) return;
+            setSelectedFeeRefund(data);
+            setReplacementRefundId(undefined);
+            setIsEditMode(true);
+            addRefundRequest.onTrue();
+          }}
           onApprove={(data) => {
             setSelectedFeeRefund(data);
             setSelectedMode('Approve');

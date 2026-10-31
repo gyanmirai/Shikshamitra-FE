@@ -86,6 +86,7 @@ export const FeeSummaryCard = ({
             icon="mdi:cash-clock"
             title="Pending Fees"
             count={formatNumber(student?.pendingFees ?? 0, 'INR')}
+            description="Includes future and overdue installments"
             color="warning.main"
             bgColor="warning.lighter"
             href="#"
@@ -133,6 +134,7 @@ export interface IStudentEnrollmentCardProps {
   icon: string;
   title: string;
   count: number | string;
+  description?: string;
   color: string;
   bgColor: string;
   href?: string;
@@ -144,6 +146,7 @@ export const FinanceCollectionCard = ({
   icon,
   title,
   count,
+  description,
   color,
   bgColor,
   href = '',
@@ -169,6 +172,11 @@ export const FinanceCollectionCard = ({
       <Box>
         <Typography variant="subtitle1">{title}</Typography>
         <Typography variant="h6">{count}</Typography>
+        {description && (
+          <Typography variant="caption" color="text.secondary">
+            {description}
+          </Typography>
+        )}
         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
           {labels.map((label, idx) => (
             <Label key={idx} color={label.color}>

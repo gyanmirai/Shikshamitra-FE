@@ -1,10 +1,14 @@
+import { financeNameSchema } from 'src/utils/finance-name';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { PaymentMethod } from 'src/enums/finance-payment-method';
 
 export const manualEntrySchema = Yup.object({
-  name: Yup.string().trim().required('Enter a transaction name.').max(200),
-  counterparty: Yup.string().trim().required('Enter the payer or payee.').max(200),
+  name: financeNameSchema('Transaction name').trim().required('Enter a transaction name.').max(200),
+  counterparty: financeNameSchema('Payer or payee name')
+    .trim()
+    .required('Enter the payer or payee.')
+    .max(200),
   categoryId: Yup.string().required('Select a category.'),
   amount: Yup.string()
     .required('Enter an amount.')

@@ -1,4 +1,6 @@
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { FormikProps } from 'formik';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { FinancePrerequisite } from 'src/screens/finance/components/FinancePrerequisiteState';
 import type {
   StructureLine,
@@ -133,7 +135,9 @@ export default function FeeStructureHeadsStep({
               fullWidth
               disabled={!writable || revision}
               value={candidate.name}
-              onChange={(event) => onChange({ ...candidate, name: event.target.value })}
+              onChange={(event) =>
+                onChange({ ...candidate, name: sanitizeFinanceName(event.target.value) })
+              }
               onBlur={() => onTouch('name')}
               inputProps={{ maxLength: 256 }}
               error={nameInvalid}
@@ -355,64 +359,68 @@ export default function FeeStructureHeadsStep({
                     </Stack>
                   ),
                 },
-                {
-                  id: 'actions',
-                  label: 'Actions',
-                  width: 128,
-                  minWidth: 128,
-                  maxWidth: 128,
-                  align: 'center',
-                  sticky: true,
-                  stickyPosition: 'right',
-                  isFilter: false,
-                  isSort: false,
-                  excludeFromExport: true,
-                  render: (_value, row) => (
-                    <AdaptiveThreeDotsActions
-                      directActionLimit={2}
-                      collapseOnOverflow={false}
-                      moreLabel={`More actions for ${row.feeHeadName}`}
-                      sx={{
-                        justifyContent: 'center',
-                        '& .MuiIconButton-root': {
-                          border: 1,
-                          borderColor: 'divider',
-                          borderRadius: 1,
-                        },
-                      }}
-                      actions={[
-                        ...(writable
-                          ? [
-                              {
-                                id: 'edit',
-                                label: `Edit ${row.feeHeadName}`,
-                                icon: GlobalIcons.edit,
-                                tooltip: 'Edit Fee Head',
-                                disabled: busy,
-                                onClick: () => {
-                                  setEditingLine(
-                                    candidate.feeHeads.find(
-                                      (line) => line.feeHeadId === row.feeHeadId
-                                    )
-                                  );
-                                  dialog.onTrue();
-                                },
+                ...(writable
+                  ? ([
+                      {
+                        id: 'actions',
+                        label: 'Actions',
+                        width: 128,
+                        minWidth: 128,
+                        maxWidth: 128,
+                        align: 'center',
+                        sticky: true,
+                        stickyPosition: 'right',
+                        isFilter: false,
+                        isSort: false,
+                        excludeFromExport: true,
+                        render: (_value, row) => (
+                          <AdaptiveThreeDotsActions
+                            directActionLimit={2}
+                            collapseOnOverflow={false}
+                            moreLabel={`More actions for ${row.feeHeadName}`}
+                            sx={{
+                              justifyContent: 'center',
+                              '& .MuiIconButton-root': {
+                                border: 1,
+                                borderColor: 'divider',
+                                borderRadius: 1,
                               },
-                              {
-                                id: 'remove',
-                                label: `Delete ${row.feeHeadName}`,
-                                icon: GlobalIcons.delete,
-                                tooltip: 'Delete Fee Head',
-                                color: 'error.main',
-                                disabled: busy,
-                                onClick: () => setRemovingLine(row as StructureLine),
-                              },
-                            ]
-                          : []),
-                      ]}
-                    />
-                  ),
-                },
+                            }}
+                            actions={[
+                              ...(writable
+                                ? [
+                                    {
+                                      id: 'edit',
+                                      label: `Edit ${row.feeHeadName}`,
+                                      icon: GlobalIcons.edit,
+                                      tooltip: 'Edit Fee Head',
+                                      disabled: busy,
+                                      onClick: () => {
+                                        setEditingLine(
+                                          candidate.feeHeads.find(
+                                            (line) => line.feeHeadId === row.feeHeadId
+                                          )
+                                        );
+                                        dialog.onTrue();
+                                      },
+                                    },
+                                    {
+                                      id: 'remove',
+                                      label: `Delete ${row.feeHeadName}`,
+                                      icon: GlobalIcons.delete,
+                                      tooltip: 'Delete Fee Head',
+                                      color: 'error.main',
+                                      disabled: busy,
+                                      onClick: () => setRemovingLine(row as StructureLine),
+                                    },
+                                  ]
+                                : []),
+                            ]}
+                          />
+                        ),
+                      },
+                    ] satisfies IColumn[])
+                  : []),
               ]}
             />
             <Stack

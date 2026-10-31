@@ -35,7 +35,7 @@ export function refundPolicyPrerequisites(
     isFinancePrerequisiteMissing({
       ...heads,
       options: heads.currentData,
-      required: values.feeHeadScope === 'SelectedFeeHeads' && !values.applicableFeeHeadIds.length,
+      required: !values.applicableFeeHeadIds.length,
     })
   )
     requirements.push({ key: 'fee-head' });

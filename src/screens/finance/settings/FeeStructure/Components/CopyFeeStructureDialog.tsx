@@ -1,3 +1,5 @@
+import { sanitizeFinanceName } from 'src/utils/finance-name';
+import { financeNameSchema } from 'src/utils/finance-name';
 import type { StructureRecord } from 'src/redux/finance/feeStructureWorkspace';
 
 import * as Yup from 'yup';
@@ -66,7 +68,7 @@ export default function CopyFeeStructureDialog({
           options.map((option) => option.value),
           'Select an available fee structure.'
         ),
-      name: Yup.string()
+      name: financeNameSchema('Structure name')
         .trim()
         .required('Enter a structure name.')
         .max(256, 'Use at most 256 characters.'),
@@ -252,7 +254,12 @@ export default function CopyFeeStructureDialog({
                       size="small"
                       disabled={busy || !formik.values.sourceId}
                       value={formik.values.name}
-                      onChange={formik.handleChange}
+                      onChange={(event) =>
+                        formik.setFieldValue(
+                          event.target.name,
+                          sanitizeFinanceName(event.target.value)
+                        )
+                      }
                       onBlur={formik.handleBlur}
                       error={nameError}
                       helperText={nameError ? formik.errors.name : undefined}
