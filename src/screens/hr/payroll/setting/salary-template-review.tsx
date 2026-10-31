@@ -38,6 +38,8 @@ type Props = {
   previewDetails?: string;
   previewValidationFields?: { name: string; message: string }[];
   previewFields: string[];
+  reviewEsiTreatment?: boolean;
+  onReviewEsiTreatment?: () => void;
   onCorrect: (field: string) => void;
   calculation?: SalaryTemplateCalculation;
   versions: SalaryTemplateVersion[];
@@ -61,6 +63,8 @@ export default function SalaryTemplateReview({
   previewDetails,
   previewValidationFields,
   previewFields,
+  reviewEsiTreatment,
+  onReviewEsiTreatment,
   onCorrect,
   calculation,
   versions,
@@ -197,6 +201,21 @@ export default function SalaryTemplateReview({
                 </Typography>
               ))}
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                {reviewEsiTreatment &&
+                  (onReviewEsiTreatment ? (
+                    <Button
+                      size="small"
+                      color="inherit"
+                      disabled={busy || calculating}
+                      onClick={onReviewEsiTreatment}
+                    >
+                      Review ESIC treatment
+                    </Button>
+                  ) : (
+                    <Typography variant="body2">
+                      Ask your HR administrator to review ESIC treatment for this month.
+                    </Typography>
+                  ))}
                 {previewFields.map((field) => (
                   <Button key={field} size="small" color="inherit" onClick={() => onCorrect(field)}>
                     {field === 'rules'

@@ -3,7 +3,11 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: ['salary-components.spec.ts', 'salary-component-recovery.spec.ts'],
+  testMatch: [
+    'salary-components.spec.ts',
+    'salary-component-recovery.spec.ts',
+    'salary-esic-preview-recovery.spec.ts',
+  ],
   workers: 1,
   timeout: 60000,
   expect: { timeout: 15000 },

@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   scope: true,
   treatmentError: false,
   stamp: 'reviewed',
+  treatmentQuery: vi.fn(),
 }));
 vi.mock('react-redux', () => ({ useSelector: () => [] }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => mocks.allowed }));
@@ -53,14 +54,17 @@ vi.mock('src/redux/hr/esi-configuration-api', () => ({
   useSaveEsiConfigurationMutation: () => [mocks.save, { isLoading: false }],
 }));
 vi.mock('src/redux/hr/statutory-scheme-api', () => ({
-  useGetEsiComponentTreatmentsQuery: () => ({
-    currentData: [
-      { componentId: 'earning-1', componentName: 'Allowance', treatment: 'Unclassified' },
-    ],
-    isFetching: false,
-    isError: mocks.treatmentError,
-    refetch: mocks.refetch,
-  }),
+  useGetEsiComponentTreatmentsQuery: (date: string) => {
+    mocks.treatmentQuery(date);
+    return {
+      currentData: [
+        { componentId: 'earning-1', componentName: 'Allowance', treatment: 'Unclassified' },
+      ],
+      isFetching: false,
+      isError: mocks.treatmentError,
+      refetch: mocks.refetch,
+    };
+  },
 }));
 const props = { component: { id: 'earning-1', name: 'Allowance' }, onClose: mocks.close };
 function changeTreatment() {
@@ -77,6 +81,36 @@ describe('ESIC treatment at the earning component', () => {
     mocks.save.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
   afterEach(cleanup);
+  it.each(['2026-10', '2026-11'])(
+    'uses the salary preview month %s rather than the suggested month',
+    async (initialMonth) => {
+      const saved = vi.fn();
+      render(<EarningEsiTreatmentDialog {...props} initialMonth={initialMonth} onSaved={saved} />);
+      expect(screen.getByLabelText('Changes effective from')).toHaveValue(initialMonth);
+      expect(mocks.treatmentQuery).toHaveBeenLastCalledWith(`${initialMonth}-01`);
+      changeTreatment();
+      fireEvent.click(screen.getByRole('button', { name: 'Save treatment' }));
+      await waitFor(() => expect(saved).toHaveBeenCalledOnce());
+      expect(mocks.save.mock.calls[0][0].effectiveMonth).toBe(initialMonth);
+    }
+  );
+  it('does not submit twice while the first treatment save is pending', async () => {
+    let finish: (value: unknown) => void = () => {};
+    mocks.save.mockReturnValue({
+      unwrap: () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    });
+    render(<EarningEsiTreatmentDialog {...props} initialMonth="2026-10" />);
+    changeTreatment();
+    const submit = screen.getByRole('button', { name: 'Save treatment' });
+    fireEvent.click(submit);
+    fireEvent.click(submit);
+    expect(mocks.save).toHaveBeenCalledOnce();
+    finish({});
+    await waitFor(() => expect(mocks.close).toHaveBeenCalledOnce());
+  });
   it('saves only the selected classification and preserves school registration and mode', async () => {
     render(<EarningEsiTreatmentDialog {...props} />);
     expect(screen.getByRole('button', { name: 'Save treatment' })).toBeDisabled();

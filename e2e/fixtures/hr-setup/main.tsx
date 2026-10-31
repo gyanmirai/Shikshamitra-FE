@@ -19,10 +19,12 @@ import { hrSetupOperatorPermissions } from 'src/constants/hr-setup';
 import { Stack, Button, Typography, CssBaseline } from '@mui/material';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
+import { hrRecoveryMiddleware } from 'src/redux/hr/hr-recovery-middleware';
 import { HrSetupSessionProvider } from 'src/screens/hr/setup/hr-setup-session';
 import { HrSetupCoordinator } from 'src/screens/hr/setup/hr-setup-coordinator';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import EarningComponent from 'src/screens/hr/payroll/setting/earning-component';
+import { HrRecoveryProvider } from 'src/screens/hr/recovery/hr-recovery-provider';
 import DeductionComponent from 'src/screens/hr/payroll/setting/deduction-component';
 import SalaryTemplateEditor from 'src/screens/hr/payroll/setting/salary-template-editor';
 
@@ -76,7 +78,8 @@ const store = configureStore({
     },
     globalState: { currentYear: context.year, currentBoard: {}, currentMedium: {} },
   },
-  middleware: (defaults) => defaults({ serializableCheck: false }).concat(api.middleware),
+  middleware: (defaults) =>
+    defaults({ serializableCheck: false }).concat(hrRecoveryMiddleware, api.middleware),
 });
 setupListeners(store.dispatch);
 
@@ -116,7 +119,13 @@ createRoot(document.getElementById('root')!).render(
     >
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <CssBaseline />
-        <Fixture />
+        {new URLSearchParams(window.location.search).get('recovery') === '1' ? (
+          <HrRecoveryProvider>
+            <Fixture />
+          </HrRecoveryProvider>
+        ) : (
+          <Fixture />
+        )}
         <Toaster />
       </LocalizationProvider>
     </ThemeProvider>

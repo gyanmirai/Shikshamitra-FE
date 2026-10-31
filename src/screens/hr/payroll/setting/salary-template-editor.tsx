@@ -45,6 +45,7 @@ import {
 import SalaryTemplateReview from './salary-template-review';
 import SalaryTemplateSkeleton from './salary-template-skeleton';
 import SalaryTemplateConfigure from './salary-template-configure';
+import { EarningEsiTreatmentDialog } from './earning-esi-treatment-dialog';
 import SalaryTemplateComponentPicker from './salary-template-component-picker';
 import { createTemplateRule, normalizeRuleOrder } from './salary-template-editor-utils';
 import {
@@ -347,6 +348,11 @@ function SalaryTemplateWorkflow({
   } | null>(null);
   const [previewError, setPreviewError] = useState('');
   const [previewRecovery, setPreviewRecovery] = useState<HrFailure | null>(null);
+  const [reviewingEsiTreatment, setReviewingEsiTreatment] = useState(false);
+  const canReviewEsiTreatment = hasGrantedPermission(
+    permissions,
+    hrPermissions.payroll.settings.statutorySchemes
+  );
   const [previewFields, setPreviewFields] = useState<string[]>([]);
   const [hasPreviewed, setHasPreviewed] = useState(false);
   const requestSequence = useRef(0);
@@ -775,6 +781,10 @@ function SalaryTemplateWorkflow({
             previewGuidance={previewRecovery?.guidance}
             previewDetails={previewRecovery?.details}
             previewValidationFields={previewRecovery?.fields}
+            reviewEsiTreatment={previewRecovery?.previewAction === 'esiTreatment'}
+            onReviewEsiTreatment={
+              canReviewEsiTreatment ? () => setReviewingEsiTreatment(true) : undefined
+            }
             previewFields={previewFields}
             onCorrect={(field) => {
               const firstRule = formik.values.rules.find(
@@ -895,6 +905,20 @@ function SalaryTemplateWorkflow({
           </Box>
         </Box>
       </Box>
+      {reviewingEsiTreatment && canReviewEsiTreatment && (
+        <EarningEsiTreatmentDialog
+          initialMonth={effectiveMonth}
+          onClose={() => setReviewingEsiTreatment(false)}
+          onSaved={() => {
+            requestSequence.current += 1;
+            setPreview(null);
+            setPreviewRecovery(null);
+            setPreviewFields([]);
+            setPreviewError('');
+            setHasPreviewed(true);
+          }}
+        />
+      )}
       {addKind && (
         <SalaryTemplateComponentPicker
           kind={addKind}

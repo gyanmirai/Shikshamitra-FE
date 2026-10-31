@@ -9,6 +9,9 @@ let templates: any[] = [];
 let failDeduction = false;
 let failCatalog = false;
 let updates: any[] = [];
+let classificationBlock = false;
+let treatmentSaves: any[] = [];
+let previewRequests: any[] = [];
 const year = {
   id: 'synthetic-year',
   name: '2026-27',
@@ -47,6 +50,9 @@ const fixture: Plugin = {
         failDeduction = false;
         failCatalog = false;
         updates = [];
+        classificationBlock = false;
+        treatmentSaves = [];
+        previewRequests = [];
         return send({ ok: true });
       }
       if (path === '/fixture/seed') {
@@ -73,9 +79,37 @@ const fixture: Plugin = {
       if (path === '/fixture/control') {
         failDeduction = Boolean(body.failDeduction);
         failCatalog = Boolean(body.failCatalog);
+        classificationBlock = Boolean(body.classificationBlock);
         return send({ ok: true });
       }
-      if (path === '/fixture/state') return send({ earnings, deductions, templates, updates });
+      if (path === '/fixture/state')
+        return send({ earnings, deductions, templates, updates, treatmentSaves, previewRequests });
+      if (path === '/api/payroll/statutory-schemes/esi/configuration') {
+        if (request.method === 'PUT') treatmentSaves.push(body);
+        return send({
+          hasSchoolWideScope: true,
+          suggestedEffectiveMonth: '2026-11',
+          history: [],
+          current: {
+            id: 'synthetic-config',
+            effectiveMonth: '1900-01',
+            enabled: true,
+            concurrencyStamp: 'synthetic-stamp',
+          },
+        });
+      }
+      if (path === '/api/payroll/statutory-schemes/esi/component-treatments')
+        return send(
+          earnings.map((earning) => ({
+            componentId: earning.id,
+            componentName: earning.earningComponentName,
+            treatment: treatmentSaves.some(
+              (save) => save.effectiveMonth <= url.searchParams.get('effectiveOn')!.slice(0, 7)
+            )
+              ? 'Included'
+              : 'Unclassified',
+          }))
+        );
       if (path === '/api/hr/setup-readiness')
         return send({
           academicYearId: year.id,
@@ -181,17 +215,33 @@ const fixture: Plugin = {
           ],
         });
       }
-      if (path === '/api/payroll/salary-templates/preview')
+      if (path === '/api/payroll/salary-templates/preview') {
+        previewRequests.push(body);
+        if (
+          classificationBlock &&
+          !treatmentSaves.some((save) => save.effectiveMonth <= body.effectiveMonth.slice(0, 7))
+        )
+          return send(
+            {
+              errorCode: 'HR:Payroll:SalaryTemplateSampleBlocked',
+              detail: 'One or more business rules were violated.',
+              data: {
+                issues: ['ESI_WAGE_CLASSIFICATION_REQUIRED'],
+                message: 'Resolve the statutory blockers before calculating this sample.',
+              },
+            },
+            400
+          );
         return send({
           previewToken: 'synthetic-preview-proof',
           expiresAt: new Date(Date.now() + 300000).toISOString(),
           isSample: true,
           calculation: {
-            grossSalary: 50000,
-            totalDeductions: 1000,
-            netSalary: 49000,
-            employerContributionTotal: 0,
-            employerCost: 50000,
+            grossSalary: classificationBlock ? 10000 : 50000,
+            totalDeductions: classificationBlock ? 75 : 1000,
+            netSalary: classificationBlock ? 9925 : 49000,
+            employerContributionTotal: classificationBlock ? 325 : 0,
+            employerCost: classificationBlock ? 10325 : 50000,
             targetResult: { difference: 0, isExact: true },
             employeeStateInsurance: {
               managementMode: 'OUTSIDE_PLATFORM',
@@ -203,6 +253,7 @@ const fixture: Plugin = {
             warnings: [],
           },
         });
+      }
       if (path === '/api/payroll/salary-templates') {
         if (request.method === 'POST') {
           const row = {
@@ -216,7 +267,27 @@ const fixture: Plugin = {
         }
         return send({ items: templates });
       }
-      if (path.includes('/esi/policies')) return send([]);
+      if (path.includes('/esi/policies'))
+        return send(
+          classificationBlock
+            ? [
+                {
+                  id: 'synthetic-policy',
+                  name: 'Synthetic ESIC',
+                  isDefault: true,
+                  isArchived: false,
+                  versions: [
+                    {
+                      version: 1,
+                      effectiveFrom: '2026-01-01',
+                      employeePercentage: 0.75,
+                      employerPercentage: 3.25,
+                    },
+                  ],
+                },
+              ]
+            : []
+        );
       return send({ items: [], totalCount: 0 });
     });
   },

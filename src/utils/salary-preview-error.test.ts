@@ -4,6 +4,52 @@ import { salaryPreviewError } from './salary-preview-error';
 import { parseApiProblemDetail } from './api-problem-details';
 import { normalizeHrFailure } from '../screens/hr/recovery/hr-failure';
 
+describe('ESIC salary-preview recovery', () => {
+  it.each(['problem', 'abp', 'axios'])(
+    'maps classification evidence through %s responses',
+    (shape) => {
+      const data = { issues: ['ESI_WAGE_CLASSIFICATION_REQUIRED'], message: 'Internal diagnostic' };
+      const body =
+        shape === 'abp'
+          ? { error: { code: 'HR:Payroll:SalaryTemplateSampleBlocked', data } }
+          : { errorCode: 'HR:Payroll:SalaryTemplateSampleBlocked', data };
+      const error = shape === 'axios' ? { response: { data: body } } : { status: 400, data: body };
+      expect(parseApiProblemDetail(error).detail).toBe(
+        'ESIC treatment is missing for this preview month.'
+      );
+      expect(normalizeHrFailure(error)).toMatchObject({
+        kind: 'salaryPreview',
+        previewAction: 'esiTreatment',
+        fields: [],
+      });
+    }
+  );
+
+  it.each([
+    undefined,
+    null,
+    {},
+    'ESI_WAGE_CLASSIFICATION_REQUIRED',
+    [],
+    ['UNKNOWN'],
+    ['ESI_WAGE_CLASSIFICATION_REQUIRED', 'UNKNOWN'],
+    ['ESI_WAGE_CLASSIFICATION_REQUIRED', 'ESI_COMPONENT_REQUIRED'],
+  ])('keeps missing, malformed and mixed blocker evidence in global recovery: %j', (issues) => {
+    expect(
+      salaryPreviewError('HR:Payroll:SalaryTemplateSampleBlocked', { issues })
+    ).toBeUndefined();
+    expect(
+      normalizeHrFailure({
+        status: 400,
+        data: {
+          errorCode: 'HR:Payroll:SalaryTemplateSampleBlocked',
+          data: { issues },
+        },
+      })
+    ).not.toHaveProperty('kind');
+  });
+});
+
 const allocationCode = 'HR:Payroll:SalaryTemplateAllocationMismatch';
 const targetCode = 'HR:Payroll:CompensationTargetNotSolvable';
 const excessCode = 'HR:Payroll:SalaryTemplateEarningsExceedGross';
