@@ -3,8 +3,6 @@ import type { StudentOnboardingItem } from './student-onboarding-model';
 export type StudentSetupView =
   'readiness' | 'gr-number' | 'roll-number' | 'division' | 'fees' | 'credentials';
 
-export type StudentSetupTaskScope = 'pending' | 'all';
-
 export const studentSetupViews: Array<{
   value: StudentSetupView;
   label: string;
@@ -53,21 +51,13 @@ export function studentSetupTaskHref(
   const params = new URLSearchParams(search);
   params.set('view', view);
   params.set('case', studentId);
+  params.delete('scope');
   if (view !== 'readiness') {
     params.delete('stage');
     params.delete('today');
   }
   return `${pathname}?${params.toString()}`;
 }
-
-export const getDefaultTaskScope = (view: StudentSetupView): StudentSetupTaskScope =>
-  view === 'division' ? 'all' : 'pending';
-
-export const parseStudentSetupTaskScope = (
-  value: string | null,
-  view: StudentSetupView
-): StudentSetupTaskScope =>
-  value === 'pending' || value === 'all' ? value : getDefaultTaskScope(view);
 
 export const getPendingStudentCount = (
   students: StudentOnboardingItem[],
@@ -90,26 +80,4 @@ export const getPendingStudentCount = (
     return students.filter((student) => !hasCompletedCredentials(student)).length;
 
   return students.length;
-};
-
-export const filterStudentsForSetupView = (
-  students: StudentOnboardingItem[],
-  view: StudentSetupView,
-  scope: StudentSetupTaskScope
-) => {
-  if (view === 'readiness' || scope === 'all') return students;
-
-  if (view === 'gr-number') {
-    return students.filter((student) => !hasAssignedGrNumber(student));
-  }
-
-  if (view === 'roll-number') {
-    return students.filter((student) => !hasAssignedRollNumber(student));
-  }
-
-  if (view === 'fees') return students.filter((student) => !hasConfirmedFees(student));
-  if (view === 'credentials')
-    return students.filter((student) => !hasCompletedCredentials(student));
-
-  return students.filter((student) => !hasAssignedDivision(student));
 };

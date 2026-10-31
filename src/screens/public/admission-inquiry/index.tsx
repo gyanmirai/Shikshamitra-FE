@@ -15,13 +15,10 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
 import AdmissionRuntimeField from 'src/screens/student/admissions/admission-runtime-field';
 import { useAdmissionPhotoReads } from 'src/screens/student/admissions/use-admission-photo-reads';
+import { canonicalInquiryBinding } from 'src/screens/student/admissions/admission-inquiry-field-bindings';
 import { isAdmissionRuleVisible } from 'src/screens/student/admissions/admission-visibility-rules';
 import { normalizeAdmissionEmailValue } from 'src/screens/student/admissions/admission-email-values';
 import { buildDynamicAdmissionYupSchema } from 'src/screens/student/admissions/admission-form-validation';
-import {
-  buildAdmissionInquiryPayload,
-  preserveCompatibleInquiryAnswers,
-} from 'src/screens/student/admissions/admission-inquiry-model';
 import {
   Box,
   Card,
@@ -34,6 +31,11 @@ import {
   CircularProgress,
   FormControlLabel,
 } from '@mui/material';
+import {
+  buildAdmissionInquiryPayload,
+  preserveCompatibleInquiryAnswers,
+  getAdmissionInquiryIdentityErrors,
+} from 'src/screens/student/admissions/admission-inquiry-model';
 
 type PublicField = {
   code: string;
@@ -460,6 +462,11 @@ function InquiryForm({
             field.fieldType !== 12 &&
             isAdmissionRuleVisible(field.visibilityRuleJson, values.fields)
         );
+      const mappedFields = visibleFields.map((field) => ({
+        ...field,
+        id: field.code,
+        bindingType: field.bindingType ?? (field.bindingKey ? 0 : 1),
+      })) as AdmissionFormField[];
       const identity = buildAdmissionInquiryPayload(
         {
           admissionCycleId: '',
@@ -472,13 +479,19 @@ function InquiryForm({
           sendAcknowledgement: false,
           fields: values.fields,
         },
-        visibleFields.map((field) => ({
-          ...field,
-          id: field.code,
-          bindingType: field.bindingType ?? (field.bindingKey ? 0 : 1),
-        })) as AdmissionFormField[],
+        mappedFields,
         { ...offering, admissionCycleId: '' } as AdmissionOfferingListItem
       );
+      const { fieldErrors, message } = getAdmissionInquiryIdentityErrors(
+        identity,
+        mappedFields,
+        values
+      );
+      if (Object.keys(fieldErrors).length || message) {
+        if (Object.keys(fieldErrors).length) formik.setErrors({ fields: fieldErrors });
+        if (message) setRequestError(message);
+        return;
+      }
       const payload = {
         admissionOfferingId: offering.id,
         boardId: offering.boardId,
@@ -536,6 +549,12 @@ function InquiryForm({
   }, [fields, formik.values.fields, onDraft]);
   const fieldErrors = formik.errors.fields as Record<string, string> | undefined;
   const touchedFields = formik.touched.fields as Record<string, boolean> | undefined;
+  const contactRoleField = fields.find(
+    (field) => canonicalInquiryBinding(field) === 'Inquiry.ParentRelationship'
+  );
+  const guardianSelected = Boolean(
+    contactRoleField && formik.values.fields[contactRoleField.code]?.toLowerCase() === 'guardian'
+  );
 
   return (
     <Box component="form" noValidate onSubmit={formik.handleSubmit}>
@@ -578,9 +597,34 @@ function InquiryForm({
                                 : undefined
                             }
                             formValues={formik.values.fields}
-                            onChange={(value) =>
-                              formik.setFieldValue(`fields.${field.code}`, value)
-                            }
+                            onChange={(value) => {
+                              const previous = formik.values.fields[field.code];
+                              const resetPrimary =
+                                canonicalInquiryBinding(field) === 'Inquiry.ParentRelationship' &&
+                                previous &&
+                                previous !== value;
+                              formik.setValues((current) => ({
+                                ...current,
+                                fields: {
+                                  ...current.fields,
+                                  ...(resetPrimary
+                                    ? Object.fromEntries(
+                                        fields
+                                          .filter((item) =>
+                                            [
+                                              'Guardian.FirstName',
+                                              'Guardian.LastName',
+                                              'Guardian.Mobile',
+                                              'Guardian.Email',
+                                            ].includes(canonicalInquiryBinding(item) ?? '')
+                                          )
+                                          .map((item) => [item.code, ''])
+                                      )
+                                    : {}),
+                                  [field.code]: value,
+                                },
+                              }));
+                            }}
                             onBlur={() => formik.setFieldTouched(`fields.${field.code}`, true)}
                           />
                         ))}
@@ -589,6 +633,12 @@ function InquiryForm({
                 ))}
             </Stack>
           </>
+        )}
+        {guardianSelected && (
+          <Typography variant="body2" color="text.secondary">
+            The school will confirm this guardian&apos;s school-contact responsibility before
+            continuing admission.
+          </Typography>
         )}
         <FormControlLabel
           control={

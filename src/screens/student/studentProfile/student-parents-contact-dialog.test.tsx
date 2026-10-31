@@ -126,6 +126,20 @@ it('allows an optional guardian to be the contact while preserving both parents 
     target: { value: 'Aunt' },
   });
   await choose(dialog, 'Other guardian — Aunt Patel');
+  const confirmation = await screen.findByRole('dialog', {
+    name: 'Confirm Guardian Responsibility',
+  });
+  expect(requests).toHaveLength(0);
+  await userEvent.click(within(confirmation).getByRole('button', { name: 'Cancel' }));
+  expect(
+    within(dialog).getByRole('combobox', { name: /Main school contact/ })
+  ).not.toHaveTextContent('Other guardian');
+  await choose(dialog, 'Other guardian — Aunt Patel');
+  await userEvent.click(
+    within(
+      await screen.findByRole('dialog', { name: 'Confirm Guardian Responsibility' })
+    ).getByRole('button', { name: 'Confirm guardian' })
+  );
   fireEvent.change(within(dialog).getByLabelText(/Reason for change/), {
     target: { value: 'Guardian handles school contact' },
   });
@@ -134,10 +148,41 @@ it('allows an optional guardian to be the contact while preserving both parents 
   expect(requests[0].payload).toEqual({
     ...family,
     mainContactRelationship: 'guardian',
+    guardianResponsibilityConfirmed: true,
     guardianRelationship: 'Aunt',
     guardianDetails: { fullName: 'Aunt Patel', email: null, contactNo: null },
   });
   expect(await screen.findByText('Parents and contact details updated.')).toBeVisible();
+});
+it('keeps an already saved Guardian contact editable without requiring new responsibility confirmation', async () => {
+  setup({
+    snapshot: {
+      ...family,
+      mainContactRelationship: 'guardian',
+      guardianDetails: { fullName: 'Saved Aunt' },
+    },
+  });
+  const requests: any[] = [];
+  mswServer.use(
+    http.post(changesPath, async ({ request }) => {
+      requests.push(await request.json());
+      return HttpResponse.json({ data: { id: 'unchanged-guardian', status: 'Applied' } });
+    })
+  );
+  renderStudentProfile(profileStudentId, permission);
+  const dialog = await open();
+  fireEvent.change(within(dialog).getByLabelText(/Other guardian name/), {
+    target: { value: 'Updated Aunt' },
+  });
+  fireEvent.change(within(dialog).getByLabelText(/Reason for change/), {
+    target: { value: 'Correct saved guardian name' },
+  });
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(requests).toHaveLength(1));
+  expect(
+    screen.queryByRole('dialog', { name: 'Confirm Guardian Responsibility' })
+  ).not.toBeInTheDocument();
+  expect(requests[0].payload.guardianResponsibilityConfirmed).not.toBe(true);
 });
 it('requires a main contact choice when a second parent is added to an automatically selected single parent', async () => {
   setup({ snapshot: { fatherDetails: family.fatherDetails, siblingStudentIds: ['sibling-1'] } });

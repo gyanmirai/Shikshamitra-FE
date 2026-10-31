@@ -14,25 +14,13 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
-import {
-  Box,
-  Stack,
-  Drawer,
-  Button,
-  Divider,
-  MenuItem,
-  TextField,
-  Typography,
-  IconButton,
-} from '@mui/material';
+import { Box, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 
 import { assessmentErrorMessage } from './assessment-utils';
-import { AdmissionDialogTitle } from '../admission-dialog-title';
 
 import type { SharedSessionView } from './assessment-session-setup-model';
 
-export type AssessmentManageSessionsDrawerProps = {
-  open: boolean;
+export type AssessmentSessionsPanelProps = {
   sessions: SharedSessionView[];
   totalCount: number;
   page: number;
@@ -42,19 +30,16 @@ export type AssessmentManageSessionsDrawerProps = {
   error?: string;
   selectedSessionId?: string;
   canManage: boolean;
-  canBook?: boolean;
-  onClose: () => void;
   onSelect: (session: SharedSessionView) => void;
   onEdit: (session: SharedSessionView) => void;
-  onBook: (session: SharedSessionView) => void;
   onCancel: (session: SharedSessionView, reason: string) => Promise<void>;
   onPage: (page: number, size: number) => void;
   onSearch: (query: string) => void;
   onRetry: () => void;
+  search: string;
 };
 
-export function AssessmentManageSessionsDrawer({
-  open,
+export function AssessmentSessionsPanel({
   sessions,
   totalCount,
   page,
@@ -64,20 +49,34 @@ export function AssessmentManageSessionsDrawer({
   error,
   selectedSessionId,
   canManage,
-  canBook = canManage,
-  onClose,
   onSelect,
   onEdit,
-  onBook,
   onCancel,
   onPage,
   onSearch,
   onRetry,
-}: AssessmentManageSessionsDrawerProps) {
+  search,
+}: AssessmentSessionsPanelProps) {
   const cancellation = useBoolean();
   const [selected, setSelected] = useState<SharedSessionView | null>(null);
   const [busy, setBusy] = useState(false);
   const [cancelError, setCancelError] = useState('');
+  const classes = (row: SharedSessionView) =>
+    [...new Set((row.scopeDetails ?? []).map((scope) => scope.className).filter(Boolean))].join(
+      ', '
+    ) || '—';
+  const status = (row: SharedSessionView) =>
+    row.isCancelled
+      ? 'Cancelled'
+      : row.roomReservationStatus === 2
+        ? 'Room approval pending'
+        : row.roomReservationStatus === 8
+          ? 'Room rejected'
+          : Date.parse(row.endsAt) <= Date.now()
+            ? 'Ended'
+            : Date.parse(row.startsAt) <= Date.now()
+              ? 'Ongoing'
+              : 'Scheduled';
   const columns: IColumn[] = [
     {
       id: 'name',
@@ -93,14 +92,22 @@ export function AssessmentManageSessionsDrawer({
               : row.sessionType === 'groupInterview'
                 ? 'Group interview'
                 : 'School exam'}{' '}
-            · {row.location}
           </Typography>
         </Stack>
       ),
     },
     {
+      id: 'classes',
+      label: 'Classes',
+      isSort: false,
+      isFilter: false,
+      render: (_, row) => classes(row as SharedSessionView),
+      exportValue: (_, row) => classes(row as SharedSessionView),
+    },
+    {
       id: 'startsAt',
       label: 'Schedule',
+      exportValue: (value, row) => `${fDateTime(value as string)} – ${fDateTime(row.endsAt)}`,
       filterType: 'dateTime',
       isSort: false,
       render: (value, row) => (
@@ -113,16 +120,24 @@ export function AssessmentManageSessionsDrawer({
       ),
     },
     {
+      id: 'location',
+      label: 'Room',
+      isSort: false,
+      isFilter: false,
+      render: (value) => value || '—',
+    },
+    {
       id: 'capacity',
-      label: 'Bookings / capacity',
+      label: 'Booked / capacity',
       filterType: 'number',
       isSort: false,
       render: (value, row) => `${row.bookedCount} / ${value}`,
+      exportValue: (value, row) => `${row.bookedCount} / ${value}`,
     },
     {
       id: 'isCancelled',
       label: 'Status',
-      sticky: true,
+      exportValue: (_, row) => status(row as SharedSessionView),
       isSort: false,
       render: (value, row) => (
         <Label
@@ -136,68 +151,46 @@ export function AssessmentManageSessionsDrawer({
                   : 'default'
           }
         >
-          {value
-            ? 'Cancelled'
-            : row.roomReservationStatus === 2
-              ? 'Room approval pending'
-              : row.roomReservationStatus === 8
-                ? 'Room rejected'
-                : Date.parse(row.endsAt) <= Date.now()
-                  ? 'Ended'
-                  : 'Scheduled'}
+          {status(row as SharedSessionView)}
         </Label>
       ),
     },
     {
       id: 'actions',
-      label: 'Actions',
+      label: 'Action',
       sticky: true,
+      stickyPosition: 'right',
+      minWidth: 180,
       isSort: false,
       isFilter: false,
       excludeFromExport: true,
       render: (_, raw) => {
         const row = raw as SharedSessionView;
         return (
-          <ThreeDotsActions
-            showViewIcon
-            viewLabel={`View applicants in ${row.name}`}
-            handleViewClick={() => onSelect(row)}
-            showEditIcon={canManage}
-            editLabel={
-              row.canManage === false
-                ? 'Editing requires access to all linked Offerings'
-                : `Edit ${row.name}`
-            }
-            disableEditIcon={
-              row.canManage === false || row.isCancelled || Date.parse(row.startsAt) <= Date.now()
-            }
-            handleEditClick={() => onEdit(row)}
-            showThreeDots={(canManage || canBook) && !row.isCancelled}
-            moreLabel={`More actions for ${row.name}`}
-            actions={({ popover }) => (
-              <>
-                <MenuItem
-                  disabled={
-                    row.canManage === false ||
-                    !canBook ||
-                    !row.roomId ||
-                    row.bookedCount >= row.capacity ||
-                    (Date.parse(row.startsAt) <= Date.now() &&
-                      (row.sessionType !== 'individualInterview' ||
-                        Date.parse(row.endsAt) <= Date.now()))
-                  }
-                  onClick={() => {
-                    popover.onClose();
-                    onBook(row);
-                  }}
-                >
-                  <Iconify icon="mdi:account-plus-outline" />
-                  {row.canManage === false
-                    ? 'Booking requires access to all linked Offerings'
-                    : row.roomId
-                      ? 'Book applicants'
-                      : 'Select an Institute room in Edit first'}
-                </MenuItem>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Button
+              size="small"
+              color="inherit"
+              variant="outlined"
+              onClick={() => onSelect(row)}
+              aria-label={`View students in ${row.name}`}
+            >
+              View
+            </Button>
+            <ThreeDotsActions
+              showEditIcon={canManage}
+              editLabel={
+                row.canManage === false
+                  ? 'Editing requires access to all linked Offerings'
+                  : `Edit ${row.name}`
+              }
+              disableEditIcon={
+                row.canManage === false || row.isCancelled || Date.parse(row.startsAt) <= Date.now()
+              }
+              handleEditClick={() => onEdit(row)}
+              showThreeDots={canManage && !row.isCancelled}
+              moreLabel={`More actions for ${row.name}`}
+              actions={({ popover }) => (
                 <MenuItem
                   disabled={
                     row.canManage === false || !canManage || Date.parse(row.startsAt) <= Date.now()
@@ -215,9 +208,9 @@ export function AssessmentManageSessionsDrawer({
                     ? 'Cancellation requires access to all linked Offerings'
                     : 'Cancel session'}
                 </MenuItem>
-              </>
-            )}
-          />
+              )}
+            />
+          </Stack>
         );
       },
     },
@@ -246,79 +239,71 @@ export function AssessmentManageSessionsDrawer({
   });
   return (
     <>
-      <Drawer
-        anchor="right"
-        open={open}
-        onClose={() => {
-          if (!busy) onClose();
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
-        PaperProps={{ sx: { width: { xs: 1, sm: 960 }, maxWidth: 1 } }}
       >
-        <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2 }}>
-            <Typography variant="h6">
-              <AdmissionDialogTitle
-                title="Manage Assessment Sessions"
-                helpText="Select a session to see its applicants. Edit future arrangements or cancel with a reason."
-              />
-            </Typography>
-            <IconButton
-              size="small"
-              aria-label="Close manage sessions"
-              disabled={busy}
-              onClick={onClose}
-            >
-              <Iconify icon="mdi:close" />
-            </IconButton>
-          </Stack>
-          <Divider />
-          <Box sx={{ p: 2, flex: 1, minHeight: 0, overflow: 'hidden' }}>
-            <CustomizableTable
-              tableId="admissions-assessment-manage-sessions"
-              data={sessions}
-              rowProps={(row) => ({ 'aria-selected': row.id === selectedSessionId })}
-              columns={columns}
-              isLoading={isLoading}
-              isSearch
-              isPagination
-              serverSidePagination
-              serverSideSearch
-              totalCount={totalCount}
-              page={page}
-              rowsPerPage={pageSize}
-              defaultRowsPerPage={25}
-              rowsPerPageOptions={[25, 50, 100]}
-              onServerPagination={(nextPage, size) => onPage(Math.max(0, nextPage - 1), size)}
-              onServerSearch={onSearch}
-              isFilter={false}
-              wrapperProps={{ sx: { height: 1 } }}
-              tableContainerProps={{ sx: { height: 1 } }}
-              noDataText="No assessment sessions match this view."
-              errorContent={
-                error ? (
-                  <StudentFeedback
-                    notificationKey="STU-0257"
-                    presentation="toast"
-                    severity="error"
-                    action={
-                      <Button size="small" onClick={onRetry}>
-                        Retry
-                      </Button>
-                    }
-                  >
-                    {error}
-                  </StudentFeedback>
-                ) : undefined
-              }
-            />
-            {isFetching && !isLoading && (
-              <Typography role="status" variant="caption" color="text.secondary">
-                Refreshing sessions…
-              </Typography>
-            )}
-          </Box>
-        </Box>
-      </Drawer>
+        <CustomizableTable
+          tableId="admissions-assessment-sessions"
+          tableTitle="Assessment sessions"
+          exportLabel="Export"
+          exportScope="loaded"
+          tableContainerProps={{ sx: { height: 1 } }}
+          data={sessions}
+          rowProps={(row) => ({ 'aria-selected': row.id === selectedSessionId })}
+          columns={columns}
+          isLoading={isLoading}
+          isRefreshing={isFetching && !isLoading}
+          isSearch
+          showColumns
+          showExport
+          showFullScreen
+          searchTerm={search}
+          searchFieldProps={{
+            placeholder: 'Search sessions...',
+            inputProps: { 'aria-label': 'Search sessions' },
+          }}
+          isPagination
+          serverSidePagination
+          serverSideSearch
+          totalCount={totalCount}
+          page={page}
+          rowsPerPage={pageSize}
+          defaultRowsPerPage={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          onServerPagination={(nextPage, size) => onPage(Math.max(0, nextPage - 1), size)}
+          onServerSearch={onSearch}
+          isFilter={false}
+          wrapperProps={{ sx: { flex: 1, minHeight: 0, minWidth: 0 } }}
+          noDataText={
+            search
+              ? 'No sessions match this search.'
+              : 'No assessment sessions in this academic context.'
+          }
+          errorContent={
+            error ? (
+              <StudentFeedback
+                notificationKey="STU-0257"
+                presentation="inline"
+                severity="error"
+                action={
+                  <Button size="small" onClick={onRetry}>
+                    Retry
+                  </Button>
+                }
+              >
+                {error}
+              </StudentFeedback>
+            ) : undefined
+          }
+        />
+      </Box>
       <ConfirmDialog
         open={cancellation.value}
         onClose={() => {

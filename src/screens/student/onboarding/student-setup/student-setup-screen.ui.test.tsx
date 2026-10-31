@@ -789,49 +789,38 @@ describe('Student Setup workspace selection wiring', () => {
     expect(screen.getByTestId('worklist')).toHaveAttribute('data-selection', 'false');
   });
 
-  it.each(['division', 'gr-number', 'roll-number', 'fees', 'credentials'])(
-    'toggles the %s URL scope, resets pagination and clears selection',
-    async (view) => {
-      setRoute(view);
-      const { rerender } = render(element);
-      fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
-      if (view === 'division')
-        fireEvent.click(screen.getByRole('button', { name: 'Select case-1' }));
-      const nextScope = view === 'division' ? 'pending' : 'all';
-      fireEvent.click(
-        screen.getByRole('button', {
-          name: nextScope === 'all' ? 'All Students' : 'Remaining Students',
-        })
-      );
-      expect(mocks.params.get('scope')).toBe(nextScope);
-      expect(screen.getByTestId('worklist')).toHaveAttribute('data-page', '1');
-      expect(screen.getByTestId('selected-students')).toBeEmptyDOMElement();
-      rerender(
-        <ThemeProvider theme={theme}>
-          <StudentSetupScreen />
-        </ThemeProvider>
-      );
-      fireEvent.click(
-        screen.getByRole('button', {
-          name: nextScope === 'all' ? 'Remaining Students' : 'All Students',
-        })
-      );
-      expect(mocks.params.get('scope')).toBe(nextScope === 'all' ? 'pending' : 'all');
-    }
-  );
+  it.each(
+    ['division', 'gr-number', 'roll-number', 'fees', 'credentials'].flatMap((view) =>
+      [null, 'pending', 'all'].map((scope) => ({ view, scope }))
+    )
+  )('does not narrow $view for legacy scope $scope', ({ view, scope }) => {
+    setRoute(view);
+    if (scope) mocks.params.set('scope', scope);
+    render(element);
+    expect(screen.queryByRole('button', { name: 'All Students' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remaining Students' })).not.toBeInTheDocument();
+    expect(mocks.query).toHaveBeenCalledWith(
+      expect.objectContaining({ pendingTask: undefined, maxResultCount: 25 }),
+      expect.anything()
+    );
+    expect(mocks.query).toHaveBeenCalledWith(
+      expect.objectContaining({ pendingTask: view, maxResultCount: 1 }),
+      expect.objectContaining({ skip: false })
+    );
+  });
 
-  it('guards a scope toggle before discarding manual edits', () => {
+  it('keeps the unsaved-edit guard when changing task tabs', () => {
     mocks.dirty = true;
     mocks.manualEditing = true;
     render(element);
-    fireEvent.click(screen.getByRole('button', { name: 'Remaining Students' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'GR Number' }));
     expect(screen.getByRole('heading', { name: 'Discard unsaved changes?' })).toBeInTheDocument();
-    expect(mocks.params.get('scope')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
     expect(mocks.cancel).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Remaining Students' }));
+    expect(mocks.params.get('view')).toBe('division');
+    fireEvent.click(screen.getByRole('tab', { name: 'GR Number' }));
     fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
-    expect(mocks.params.get('scope')).toBe('pending');
+    expect(mocks.push).toHaveBeenCalledWith(expect.stringContaining('view=gr-number'));
     expect(mocks.cancel).toHaveBeenCalledOnce();
   });
 

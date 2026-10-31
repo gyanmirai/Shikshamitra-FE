@@ -11,6 +11,26 @@ import { CREATABLE_FIELD_TYPES } from '../form-dialog-model';
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
 
 describe('Admission Form Builder custom field palette', () => {
+  it('creates the class-interest alias from Institute Setup without asking for manual choices', () => {
+    const onAddField = vi.fn();
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <CustomFieldPalette onAddField={onAddField} />
+      </ThemeProvider>
+    );
+    fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'Interested Class' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add custom field' }));
+    expect(onAddField).toHaveBeenCalledWith(
+      6,
+      undefined,
+      expect.objectContaining({
+        label: 'Interested Class',
+        fieldType: 6,
+        optionsJson: '{"source":"Standards"}',
+      })
+    );
+    expect(screen.queryByLabelText('Choices')).not.toBeInTheDocument();
+  });
   it('requires confirmation before using an included Student field alias as a different custom question', () => {
     const onAddField = vi.fn();
     render(

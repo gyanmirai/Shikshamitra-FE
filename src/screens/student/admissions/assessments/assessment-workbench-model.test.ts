@@ -84,6 +84,34 @@ describe('assessment next action follows the operational queue', () => {
 });
 
 describe('assessment workbench URL and action safety', () => {
+  it('uses Student as the default and maps both Student and legacy applicant links', () => {
+    expect(readAssessmentWorkbench(new URLSearchParams()).tab).toBe('applicants');
+    expect(readAssessmentWorkbench(new URLSearchParams('assessmentTab=students')).tab).toBe(
+      'applicants'
+    );
+    expect(readAssessmentWorkbench(new URLSearchParams('assessmentTab=applicants')).tab).toBe(
+      'applicants'
+    );
+    expect(
+      readAssessmentWorkbench(new URLSearchParams('assessmentSession=saved-session')).tab
+    ).toBe('applicants');
+  });
+  it('restores independent Session pagination/search without changing Student criteria', () => {
+    expect(
+      readAssessmentWorkbench(
+        new URLSearchParams(
+          'assessmentTab=sessions&assessmentSessionPage=2&assessmentSessionSize=50&assessmentSessionSearch=Morning&assessmentPage=4&assessmentSearch=Sam'
+        )
+      )
+    ).toMatchObject({
+      tab: 'sessions',
+      sessionPage: 2,
+      sessionSize: 50,
+      sessionSearch: 'Morning',
+      page: 4,
+      search: 'Sam',
+    });
+  });
   it('restores column criteria independently from search, status and paging', () => {
     const criteria =
       '[{"column":"className","type":"contains","value":"Grade","valueType":"string"}]';
@@ -130,7 +158,7 @@ describe('assessment workbench URL and action safety', () => {
       size: 25,
       sort: 'enteredAt',
       direction: 'desc',
-      tab: 'sessions',
+      tab: 'applicants',
     });
   });
   it('restores valid shareable filters and pagination', () => {

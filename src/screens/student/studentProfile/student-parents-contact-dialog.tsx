@@ -163,6 +163,7 @@ function ParentsContactForm({
   );
   const [stale, setStale] = useState(false);
   const [reloading, setReloading] = useState(false);
+  const [pendingGuardian, setPendingGuardian] = useState(false);
   const [submit, request] = useCreateStudentRecordChangeMutation();
   const canManage = useCanManageContacts(details);
   const router = useRouter();
@@ -236,6 +237,14 @@ function ParentsContactForm({
         loadedSnapshot.snapshot !== snapshot.snapshot
       )
         return;
+      if (
+        values.mainContactRelationship === 'guardian' &&
+        initial.mainContactRelationship !== 'guardian' &&
+        !values.guardianResponsibilityConfirmed
+      ) {
+        setPendingGuardian(true);
+        return;
+      }
       try {
         const change = await submit({
           studentId,
@@ -265,6 +274,10 @@ function ParentsContactForm({
     },
   });
   const busy = form.isSubmitting || request.isLoading || reloading;
+  useEffect(() => {
+    if (!canManage || readError || stale || loadedSnapshot.snapshot !== snapshot.snapshot)
+      setPendingGuardian(false);
+  }, [canManage, readError, stale, loadedSnapshot.snapshot, snapshot.snapshot]);
   const guard = useUnsavedNavigation(form.dirty, {
     push: router.push,
     blockNavigation: busy,
@@ -320,6 +333,7 @@ function ParentsContactForm({
     if (form.values.mainContactRelationship === relationship) setMainContactChosen(false);
     form.setValues({
       ...form.values,
+      guardianResponsibilityConfirmed: false,
       [relationship]: initial[relationship],
       guardianRelationship:
         relationship === 'guardian'
@@ -494,8 +508,16 @@ function ParentsContactForm({
                         size="small"
                         value={form.values.mainContactRelationship}
                         onChange={(value) => {
+                          if (
+                            value === 'guardian' &&
+                            initial.mainContactRelationship !== 'guardian'
+                          ) {
+                            setPendingGuardian(true);
+                            return;
+                          }
                           setMainContactChosen(true);
                           form.setFieldValue('mainContactRelationship', value);
+                          form.setFieldValue('guardianResponsibilityConfirmed', false, false);
                         }}
                         onBlur={form.handleBlur}
                         options={contactRelationships
@@ -559,6 +581,47 @@ function ParentsContactForm({
         </Box>
       </CustomDialog>
       {guard.confirmation}
+      <ConfirmDialog
+        open={pendingGuardian}
+        title="Confirm Guardian Responsibility"
+        icon="warning"
+        content="Confirm that neither parent is handling school-contact responsibility and this guardian will be the primary contact."
+        cancelText="Cancel"
+        disableBackdropClick
+        disableCancel={busy}
+        disableEscapeKeyDown={busy}
+        onClose={() => {
+          if (!busy) setPendingGuardian(false);
+        }}
+        action={
+          <Button
+            type="button"
+            size="small"
+            variant="contained"
+            disabled={busy}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            onClick={() => {
+              if (
+                busy ||
+                !canManage ||
+                readError ||
+                stale ||
+                loadedSnapshot.snapshot !== snapshot.snapshot
+              )
+                return;
+              setMainContactChosen(true);
+              form.setValues((current) => ({
+                ...current,
+                mainContactRelationship: 'guardian',
+                guardianResponsibilityConfirmed: true,
+              }));
+              setPendingGuardian(false);
+            }}
+          >
+            Confirm guardian
+          </Button>
+        }
+      />
     </>
   );
 }

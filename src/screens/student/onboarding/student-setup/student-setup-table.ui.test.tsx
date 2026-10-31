@@ -160,7 +160,6 @@ const props = (view: StudentSetupView = 'readiness'): ComponentProps<typeof Stud
   isError: false,
   onRetry: vi.fn(),
   view,
-  taskScope: 'all',
   tableId: `student-setup-${view}-test`,
   tableTitle: 'Student Setup',
   noDataText: 'No students match the selected filters.',
@@ -780,10 +779,8 @@ describe('Student Setup table task interactions', () => {
     screen.getAllByRole('checkbox').forEach((checkbox) => expect(checkbox).toBeDisabled());
   });
 
-  it('offers View all students after the remaining assignment list is empty', () => {
-    const onViewAllStudents = vi.fn();
-    render(tableElement({ ...props('gr-number'), rows: [], totalCount: 0, onViewAllStudents }));
-    fireEvent.click(screen.getByRole('button', { name: 'View all students' }));
-    expect(onViewAllStudents).toHaveBeenCalledOnce();
+  it('does not offer the removed student-scope action for an empty assignment list', () => {
+    render(tableElement({ ...props('gr-number'), rows: [], totalCount: 0 }));
+    expect(screen.queryByRole('button', { name: 'View all students' })).not.toBeInTheDocument();
   });
 });

@@ -510,6 +510,7 @@ export default function AdmissionInquiryFormPage() {
                             }
                           }}
                           onChange={(value) => {
+                            if (controller.changePrimaryContactField?.(field, value)) return;
                             if (preferredClassError?.fieldCode === field.code) {
                               lastPreferredClassToast.current = '';
                             }
@@ -609,6 +610,7 @@ export default function AdmissionInquiryFormPage() {
           </LoadingButton>
         </Stack>
       </Paper>
+      {controller.primaryContactConfirmation}
     </Box>
   );
 }

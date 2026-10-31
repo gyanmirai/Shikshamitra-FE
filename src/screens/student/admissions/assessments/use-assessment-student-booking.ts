@@ -6,7 +6,6 @@ import type {
   AssessmentSharedSessionInput,
 } from 'src/redux/student/admissions/admission-assessment-types';
 
-import { useFormik } from 'formik';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import {
@@ -14,25 +13,16 @@ import {
   useConfirmAssessmentSessionMutation,
   useLazyGetAssessmentSessionByIdQuery,
   useGetAssessmentSessionWorkbenchQuery,
-  useGetAssessmentSessionResourcesQuery,
-  useLazyGetAssessmentInterviewersQuery,
 } from 'src/redux/student/admissions/admission-assessment-planning-api';
 
 import { assessmentErrorMessage } from './assessment-utils';
 import {
-  sessionSetupSchema,
-  serializeSessionSetup,
-  sessionSetupInitialValues,
-} from './assessment-session-setup-model';
-import {
   sessionBookingInput,
-  reviewStudentBooking,
   studentBookingReason,
-  selectedStudentScopes,
+  reviewStudentBooking,
   confirmStudentBooking,
 } from './assessment-student-booking-model';
 
-import type { SessionSetupValues } from './assessment-session-setup-model';
 import type { StudentBookingRetry } from './assessment-student-booking-model';
 
 export type StudentBookingProps = {
@@ -41,14 +31,13 @@ export type StudentBookingProps = {
   academicYearId?: string;
   initialSession?: AssessmentSession | null;
   canBook: boolean;
-  canCreate: boolean;
   onClose: () => void;
   onBooked: () => void;
+  onViewBooking?: (row: AssessmentRosterItem) => void;
 };
 
 export function useAssessmentStudentBooking(props: StudentBookingProps) {
   const [rows, setRows] = useState(props.rows);
-  const [mode, setMode] = useState<'book' | 'create'>('book');
   const [session, setSession] = useState<AssessmentSession | null>(props.initialSession ?? null);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
@@ -61,12 +50,12 @@ export function useAssessmentStudentBooking(props: StudentBookingProps) {
   const [preview, setPreview] = useState<AssessmentBookingPreview | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [discard, setDiscard] = useState<'close' | 'back' | null>(null);
+  const [discard, setDiscard] = useState(false);
   const [input, setInput] = useState<AssessmentSharedSessionInput | null>(null);
   const request = useRef(0);
   const submitting = useRef(false);
   const retry = useRef<StudentBookingRetry>({});
-  const selectedScopes = selectedStudentScopes(rows, props.scopes);
+  const hasBookableStudents = rows.some((row) => !studentBookingReason(row));
   const sessions = useGetAssessmentSessionWorkbenchQuery(
     {
       academicYearId: props.academicYearId,
@@ -74,76 +63,15 @@ export function useAssessmentStudentBooking(props: StudentBookingProps) {
       skipCount: page * 25,
       maxResultCount: 25,
       search: query || undefined,
-      ...(selectedScopes.length === 1
-        ? {
-            admissionOfferingId: selectedScopes[0].admissionOfferingId,
-            workflowStageDefinitionId: selectedScopes[0].workflowStageDefinitionId,
-          }
-        : {}),
     },
-    { skip: !props.canBook || !props.academicYearId, refetchOnMountOrArgChange: true }
+    {
+      skip: !props.canBook || !props.academicYearId || !hasBookableStudents,
+      refetchOnMountOrArgChange: true,
+    }
   );
-  const resources = useGetAssessmentSessionResourcesQuery(undefined, {
-    skip: mode !== 'create' || !props.canCreate,
-  });
-  const rooms = resources.currentData?.rooms ?? [];
   const [getSession] = useLazyGetAssessmentSessionByIdQuery();
   const [getPreview] = usePreviewAssessmentSessionMutation();
   const [confirm] = useConfirmAssessmentSessionMutation();
-  const [searchInterviewers] = useLazyGetAssessmentInterviewersQuery();
-  const initial = sessionSetupInitialValues();
-  initial.offeringIds = [...new Set(selectedScopes.map((item) => item.admissionOfferingId))];
-  initial.stageIds = Object.fromEntries(
-    selectedScopes.map((item) => [item.admissionOfferingId, item.workflowStageDefinitionId])
-  );
-  initial.name = `${[...new Set(rows.map((row) => row.className).filter(Boolean))].join(' / ')} Entrance Exam`;
-  const form = useFormik<SessionSetupValues>({
-    initialValues: initial,
-    validationSchema: sessionSetupSchema(selectedScopes, rooms),
-    onSubmit: async (values) => {
-      if (
-        busy ||
-        submitting.current ||
-        !props.canCreate ||
-        !props.canBook ||
-        resources.isError ||
-        resources.isFetching
-      )
-        return;
-      const setup = {
-        ...serializeSessionSetup(values, rooms),
-        scopes: selectedScopes.map(({ admissionOfferingId, workflowStageDefinitionId }) => ({
-          admissionOfferingId,
-          workflowStageDefinitionId,
-        })),
-      };
-      // Confirmation retries after an uncertain response must replay the original durable command.
-      const replay =
-        retry.current.command &&
-        JSON.stringify(retry.current.command.session) === JSON.stringify(setup);
-      if (replay) await submit(retry.current.command!);
-      else if (
-        input &&
-        JSON.stringify(input) === JSON.stringify(setup) &&
-        review?.canConfirm &&
-        preview
-      )
-        await submit({
-          session: setup,
-          previewFingerprint: preview.previewFingerprint,
-          bookings: review.bookings,
-        });
-      else {
-        const checked = await loadPreview(setup, null);
-        if (checked?.review.canConfirm && setup.sessionType !== 'individualInterview')
-          await submit({
-            session: setup,
-            previewFingerprint: checked.preview.previewFingerprint,
-            bookings: checked.review.bookings,
-          });
-      }
-    },
-  });
   const clearReview = () => {
     request.current += 1;
     setReview(null);
@@ -186,7 +114,8 @@ export function useAssessmentStudentBooking(props: StudentBookingProps) {
     return undefined;
   }
   const chooseSession = async (chosen: AssessmentSession) => {
-    if (busy || submitting.current) return;
+    if (busy || submitting.current || retry.current.command || !props.canBook) return;
+    if (rows.some((row) => studentBookingReason(row))) return;
     clearReview();
     setSession(chosen);
     setBusy(true);
@@ -205,7 +134,7 @@ export function useAssessmentStudentBooking(props: StudentBookingProps) {
     }
   };
   async function submit(command: Parameters<typeof confirmStudentBooking>[0]) {
-    if (submitting.current || !props.canBook || (mode === 'create' && !props.canCreate)) return;
+    if (submitting.current || !props.canBook) return;
     submitting.current = true;
     setBusy(true);
     setError('');
@@ -216,7 +145,7 @@ export function useAssessmentStudentBooking(props: StudentBookingProps) {
         retry.current
       );
       shikshaMitraToast.success({
-        message: `${result.bookedCount} students booked${result.session.roomReservationStatus === 2 ? ' · Room approval pending' : ''}`,
+        message: `${result.bookedCount} ${result.bookedCount === 1 ? 'student' : 'students'} booked${result.session.roomReservationStatus === 2 ? ' · Room approval pending' : ''}`,
       });
       props.onBooked();
     } catch (failure) {
@@ -251,43 +180,16 @@ export function useAssessmentStudentBooking(props: StudentBookingProps) {
     setRows(next);
     setPage(0);
     retry.current = {};
-    const nextScopes = selectedStudentScopes(next, props.scopes);
-    form.setValues(
-      {
-        ...form.values,
-        offeringIds: [...new Set(nextScopes.map((item) => item.admissionOfferingId))],
-        stageIds: Object.fromEntries(
-          nextScopes.map((item) => [item.admissionOfferingId, item.workflowStageDefinitionId])
-        ),
-      },
-      false
-    );
     if (preview && input) setReview(reviewStudentBooking(next, input, preview));
   };
-  const navigate = (target: 'close' | 'back') => {
-    if (busy || form.isSubmitting) return;
-    if (form.dirty || retry.current.command || session) setDiscard(target);
-    else if (target === 'close') props.onClose();
-    else {
-      setMode('book');
-      clearReview();
-    }
+  const navigate = () => {
+    if (busy || submitting.current) return;
+    if (retry.current.command || session) setDiscard(true);
+    else props.onClose();
   };
   const discardChanges = () => {
-    const target = discard;
-    setDiscard(null);
-    if (target === 'close') props.onClose();
-    else {
-      form.resetForm({ values: initial });
-      setMode('book');
-      clearReview();
-    }
-  };
-  const beginCreate = () => {
-    if (busy || retry.current.command) return;
-    clearReview();
-    setMode('create');
-    setSession(null);
+    setDiscard(false);
+    props.onClose();
   };
   const initialLoad = useRef(false);
   useEffect(() => {
@@ -309,35 +211,26 @@ export function useAssessmentStudentBooking(props: StudentBookingProps) {
       item.roomId &&
       item.bookedCount < item.capacity &&
       Date.parse(item.sessionType === 'individualInterview' ? item.endsAt : item.startsAt) >
-        Date.now() &&
-      rows.some((row) => !studentBookingReason(row, sessionBookingInput(item)))
+        Date.now()
   );
-  const createBlocked =
-    !rows.length ||
-    rows.some((row) => studentBookingReason(row)) ||
-    selectedScopes.length > 20 ||
-    rows.some(
+  const sessionReason = (choice: AssessmentSession) => {
+    if (rows.some((row) => studentBookingReason(row))) return 'Remove unavailable students first.';
+    const setup = sessionBookingInput(choice);
+    const unsupported = rows.filter(
       (row) =>
-        !selectedScopes.some(
+        !setup.scopes.some(
           (scope) =>
             row.admissionOfferingId === scope.admissionOfferingId &&
             row.workflowStageDefinitionId === scope.workflowStageDefinitionId
         )
     );
-  const currentSetup =
-    form.values.startsAt?.isValid() && form.values.endsAt?.isValid()
-      ? {
-          ...serializeSessionSetup(form.values, rooms),
-          scopes: selectedScopes.map(({ admissionOfferingId, workflowStageDefinitionId }) => ({
-            admissionOfferingId,
-            workflowStageDefinitionId,
-          })),
-        }
-      : null;
-  const reviewCurrent = mode === 'book' || JSON.stringify(currentSetup) === JSON.stringify(input);
+    if (!rows.length) return 'Select students first.';
+    if (!unsupported.length) return '';
+    const classes = [...new Set(unsupported.map((row) => row.className).filter(Boolean))];
+    return classes.length ? `${classes.join(', ')} not supported.` : 'Different assessment.';
+  };
   return {
     rows,
-    mode,
     session,
     page,
     setPage,
@@ -345,30 +238,26 @@ export function useAssessmentStudentBooking(props: StudentBookingProps) {
     setSearch,
     sessions,
     available,
-    resources,
-    rooms,
-    form,
-    review: reviewCurrent ? review : null,
-    preview: reviewCurrent ? preview : null,
+    hasBookableStudents,
+    sessionReason,
+    review,
+    preview,
     input,
     error,
-    busy: busy || form.isSubmitting,
+    busy,
     discard,
     setDiscard,
     discardChanges,
     navigate,
-    createBlocked: Boolean(createBlocked),
-    beginCreate,
     chooseSession,
     book,
     remove,
     refresh: () =>
       retry.current.command
         ? submit(retry.current.command)
-        : mode === 'book' && session
+        : session
           ? chooseSession(session)
-          : form.submitForm(),
-    searchInterviewers: (value: string) => searchInterviewers(value, false).unwrap(),
+          : undefined,
     retryPending: Boolean(retry.current.command),
   };
 }

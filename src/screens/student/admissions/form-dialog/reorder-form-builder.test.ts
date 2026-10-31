@@ -3,6 +3,7 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 import { vi, it, expect, describe } from 'vitest';
 
 import { reorderFormBuilder } from './reorder-form-builder';
+import { newField, getBlankAdmissionFormInitialValues } from './form-dialog-model';
 
 function makeForm(): CreateUpdateAdmissionForm {
   return {
@@ -53,6 +54,41 @@ function move(active: string, over: string | null) {
 }
 
 describe('form builder reordering', () => {
+  it('does not move an inherited Inquiry question through a direct reorder request', () => {
+    const values = makeForm();
+    values.purpose = 1;
+    values.sections[0].fields[0].inheritedFrom = {
+      inquiryFormDefinitionId: 'inquiry',
+      sourceFieldCode: 'SOURCE_A',
+      fieldIdentity: 'custom:source-a',
+    };
+    const setFieldValue = vi.fn();
+    reorderFormBuilder(
+      { active: { id: 'field:first:a' }, over: { id: 'field:second:d' } },
+      { values, setFieldValue },
+      vi.fn()
+    );
+    expect(setFieldValue).not.toHaveBeenCalled();
+  });
+
+  it('does not move a locked Inquiry identity field through a direct reorder request', () => {
+    const values = getBlankAdmissionFormInitialValues(0);
+    const section = values.sections[0];
+    const target = newField(section.id, 3);
+    section.fields.push(target);
+    const setFieldValue = vi.fn();
+    const selectField = vi.fn();
+    reorderFormBuilder(
+      {
+        active: { id: `field:${section.id}:${section.fields[0].id}` },
+        over: { id: `field:${section.id}:${target.id}` },
+      },
+      { values, setFieldValue },
+      selectField
+    );
+    expect(setFieldValue).not.toHaveBeenCalled();
+    expect(selectField).not.toHaveBeenCalled();
+  });
   it.each([
     ['a', 'b', ['b', 'a', 'c']],
     ['a', 'c', ['b', 'c', 'a']],

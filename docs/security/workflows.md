@@ -25,6 +25,8 @@ Cancel prompts before discarding an unsaved draft.
 Search filters features without changing permissions. Overrides only shows user-specific exceptions.
 Collapsing groups only changes presentation.
 
+Student Records uses the current Student menu. Student List has one View, Add/Update and Delete row; Record changes, Student transitions, Historical entry, Parent/guardian app access and Identity compliance do not appear as extra rows. Those internal profile workflow permissions remain in the server catalogue and are included in the corresponding Student List action bundle. Opening the dialog preserves existing partial grants and user overrides; only reviewed changes are saved. Navigation and workflow guards retain their exact permission identifiers. See the [backend permission contract](../../../Shikshamitra-BE/docs/modules/student/api.md#student-action-permissions).
+
 The user approved the themed permission matrix on October 9, replacing the earlier three-panel switch layout.
 The screen uses the existing theme and shared table, dialog, scroll, and confirmation components.
 Bulk controls use the existing grouped mappings and include collapsed descendants and features hidden by search.
@@ -89,7 +91,9 @@ Unmapped and unrelated action permissions are retained without being rewritten.
 Set Module Visibility builds its modules, labels, order, and nested settings only from `src/constants/navigation.tsx` and the module menus under `src/constants/`. API-only flags do not add rows or an Additional visibility section. The API loads and saves grant selections; configured flags absent from its catalogue stay visible with disabled controls.
 Visibility edits do not mutate action permissions.
 Action assignments require effective navigation visibility for the feature and its module ancestors.
-Hidden-feature controls are disabled and explain how to enable access in Set Visibility. Grant all
+For hidden features, Allow is disabled and explains how to enable access in Set Visibility.
+Role Revoke and user Deny/Follow role remain usable, including keyboard navigation, so existing access can be removed without granting visibility.
+Provider eligibility, missing catalogues and busy-state locks still apply to all choices. Grant all
 offers an explicit confirmation to add the missing visibility flags to the same draft. Cancel leaves
 the draft unchanged; confirm still requires Review changes and save. Unavailable or provider-ineligible
 visibility flags cannot be granted through this prompt. Inherited visibility satisfies the prerequisite

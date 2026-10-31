@@ -21,6 +21,7 @@ export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false)
   const scopes = useGetAssessmentScopesQuery(undefined, { skip: !canView || pauseReads });
   const { scopeKey, setScope } = useAssessmentScope();
   const { state, href, update: updateWorkbench } = useAssessmentWorkbench();
+  const studentPanel = state.tab === 'applicants';
   const standardIds = useMemo(
     () => readAcademicFilterIds(academic.standardId),
     [academic.standardId]
@@ -49,28 +50,35 @@ export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false)
   const ready =
     canView &&
     !!academic.academicYearId &&
+    !!academic.boardId &&
+    !!academic.mediumId &&
     !scopes.isError &&
     !!scopes.currentData &&
     !invalidScope;
   const selectedSession = useGetAssessmentSessionByIdQuery(state.sessionId, {
-    skip: pauseReads || !ready || !state.sessionId,
+    skip:
+      pauseReads ||
+      !studentPanel ||
+      !canView ||
+      !academic.academicYearId ||
+      scopes.isError ||
+      !scopes.currentData ||
+      invalidScope ||
+      !state.sessionId,
     refetchOnMountOrArgChange: true,
     pollingInterval: 60000,
     skipPollingIfUnfocused: true,
   });
   const sessionScopeDetails = selectedSession.currentData?.scopeDetails;
+  const sessionLinks = sessionScopeDetails?.length
+    ? sessionScopeDetails
+    : selectedSession.currentData
+      ? [selectedSession.currentData]
+      : [];
   const selectedSessionInContext =
     !state.sessionId ||
     (!!selectedSession.currentData &&
-      (sessionScopeDetails?.length
-        ? sessionScopeDetails
-        : [
-            {
-              admissionOfferingId: selectedSession.currentData.admissionOfferingId,
-              workflowStageDefinitionId: selectedSession.currentData.workflowStageDefinitionId,
-            },
-          ]
-      ).some((link) =>
+      sessionLinks.some((link) =>
         visibleScopes.some(
           (scope) =>
             scope.admissionOfferingId === link.admissionOfferingId &&
@@ -89,7 +97,11 @@ export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false)
   };
   const sessions = useGetAssessmentSessionWorkbenchQuery(
     { ...queryScope, includeCancelled: true, skipCount: 0, maxResultCount: 50 },
-    { skip: pauseReads || !ready, pollingInterval: 60000, skipPollingIfUnfocused: true }
+    {
+      skip: pauseReads || !studentPanel || !ready,
+      pollingInterval: 60000,
+      skipPollingIfUnfocused: true,
+    }
   );
   const applicants = useGetAssessmentApplicantsQuery(
     {
@@ -105,14 +117,15 @@ export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false)
       maxResultCount: state.size,
     },
     {
-      skip: pauseReads || !ready || invalidSession || sessionLookupUnavailable,
+      skip: pauseReads || !studentPanel || !ready || invalidSession || sessionLookupUnavailable,
       refetchOnMountOrArgChange: true,
       pollingInterval: 60000,
       skipPollingIfUnfocused: true,
     }
   );
   useEffect(() => {
-    if (applicants.isFetching || applicants.isError || !applicants.currentData) return;
+    if (!studentPanel || applicants.isFetching || applicants.isError || !applicants.currentData)
+      return;
     const lastPage = Math.max(0, Math.ceil(applicants.currentData.totalCount / state.size) - 1);
     if (state.page > lastPage) updateWorkbench({ assessmentPage: lastPage }, true);
   }, [
@@ -122,16 +135,44 @@ export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false)
     applicants.isFetching,
     applicants.isError,
     updateWorkbench,
+    studentPanel,
   ]);
   const updateSearch = (value: string) => {
     if (value !== state.search)
       updateWorkbench({ assessmentSearch: value, assessmentPage: 0 }, true);
   };
+  // Shared academic defaults normally clear dependent filters. Restore a direct
+  // assessment/session link atomically instead, so its identity is never lost.
+  const updateAcademic: typeof academic.update = (key, value) => {
+    const restoring =
+      (key === 'board' && !academic.boardId) || (key === 'medium' && !academic.mediumId);
+    if (!restoring || (!scopeKey && !state.sessionId)) {
+      academic.update(key, value);
+      return;
+    }
+    if (!scopes.currentData || scopes.isError) return;
+    if (studentPanel && state.sessionId && !selectedSession.currentData && !selectedSession.isError)
+      return;
+    const linkedScope = visibleScopes.find((scope) => {
+      if (scopeKey) return assessmentScopeKey(scope) === scopeKey;
+      return sessionLinks.some(
+        (link) =>
+          link.admissionOfferingId === scope.admissionOfferingId &&
+          link.workflowStageDefinitionId === scope.workflowStageDefinitionId
+      );
+    });
+    updateWorkbench(
+      linkedScope?.boardId && linkedScope.mediumId
+        ? { board: linkedScope.boardId, medium: linkedScope.mediumId }
+        : { [key]: value },
+      true
+    );
+  };
   const sessionChoices = [...(sessions.currentData?.items ?? [])];
   if (selectedSession.currentData && !sessionChoices.some((item) => item.id === state.sessionId))
     sessionChoices.unshift(selectedSession.currentData);
   return {
-    academic,
+    academic: { ...academic, update: updateAcademic },
     scopes,
     context,
     visibleScopes,

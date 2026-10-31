@@ -106,7 +106,7 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
     return (
       <AdmissionSectionFields
         fields={visibleFields}
-        columns={fieldsPerRow}
+        columns={section.fieldsPerRow ?? fieldsPerRow}
         renderField={(field) => {
           const value =
             entryIndex === undefined

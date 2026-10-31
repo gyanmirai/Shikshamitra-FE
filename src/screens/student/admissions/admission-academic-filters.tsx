@@ -50,6 +50,7 @@ export function useAdmissionAcademicFilters() {
       next.delete('page');
       if (pathname.endsWith('/assessments')) {
         next.delete('assessmentPage');
+        next.delete('assessmentSessionPage');
         next.delete('assessmentScope');
         next.delete('assessmentSession');
       }

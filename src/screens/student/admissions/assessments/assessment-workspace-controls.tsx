@@ -36,7 +36,6 @@ export function AssessmentWorkspaceControls({
   return (
     <>
       <AdmissionAcademicFilters
-        allowAllHierarchy
         boardId={academic.boardId}
         mediumId={academic.mediumId}
         standardId={academic.standardId}

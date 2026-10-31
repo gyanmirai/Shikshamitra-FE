@@ -24,7 +24,7 @@ export function FormReviewSection({
   onChangeAnswer,
 }: Props) {
   const section = localizeAdmissionSection(formik.values.sections[sectionIndex], language);
-  const columns = formik.values.fieldsPerRow;
+  const columns = section.fieldsPerRow ?? formik.values.fieldsPerRow;
   return (
     <SectionCard
       title={section.name}

@@ -8,7 +8,9 @@ import type {
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
+import { conflictsWithInquiryDefaultName } from '../inquiry-default-fields';
 import { newField, nextFieldOrder, nextFieldDisplayOrder } from '../form-dialog-model';
+import { classInterestOptions, isClassInterestQuestion } from '../../admission-class-question';
 import { nextStepNumber, nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
 import { configureStudentField, connectStudentAddressFields } from '../student-field-configuration';
 import {
@@ -31,18 +33,34 @@ export function useFormBuilderCommands(
     refetchOnMountOrArgChange: true,
   });
   const systemFields = systemFieldsQuery.data ?? [];
-  const addCanvasUnit = (afterStepId?: string) => {
+  const addCanvasUnit = (afterStepId?: string, forceStep = false) => {
+    const convertingToSteps = forceStep && !isStepper;
+    const existingStepId = convertingToSteps ? crypto.randomUUID() : undefined;
+    const currentSections = convertingToSteps
+      ? formik.values.sections.map((section) => ({
+          ...section,
+          stepId: existingStepId,
+          stepCode: 'STEP_1',
+          stepName: 'Step 1',
+          stepDisplayOrder: 0,
+          stepVisibilityRuleJson: undefined,
+        }))
+      : formik.values.sections;
+    const currentSteps = getAdmissionFormStepGroups(currentSections);
+    const addingStep = isStepper || forceStep;
     const id = crypto.randomUUID();
-    const sectionNumber = nextSectionNumber(formik.values.sections);
-    const stepId = isStepper ? crypto.randomUUID() : undefined;
-    const afterStepIndex = isStepper ? steps.findIndex((step) => step.id === afterStepId) : -1;
+    const sectionNumber = nextSectionNumber(currentSections);
+    const stepId = addingStep ? crypto.randomUUID() : undefined;
+    const afterStepIndex = addingStep
+      ? currentSteps.findIndex((step) => step.id === afterStepId)
+      : -1;
     const stepOrder =
       afterStepIndex >= 0
         ? afterStepIndex + 1
-        : Math.max(-1, ...steps.map((step) => step.displayOrder)) + 1;
-    const sections = formik.values.sections.map((section) => {
+        : Math.max(-1, ...currentSteps.map((step) => step.displayOrder)) + 1;
+    const sections = currentSections.map((section) => {
       if (afterStepIndex < 0) return section;
-      const currentStepIndex = steps.findIndex(
+      const currentStepIndex = currentSteps.findIndex(
         (step) => step.id === (section.stepId ?? section.id)
       );
       const nextStepIndex = currentStepIndex >= stepOrder ? currentStepIndex + 1 : currentStepIndex;
@@ -58,12 +76,12 @@ export function useFormBuilderCommands(
     const newSection = {
       id,
       code: `SECTION_${sectionNumber}`,
-      name: `Section ${isStepper ? 1 : sectionNumber}`,
+      name: `Section ${addingStep ? 1 : sectionNumber}`,
       displayOrder: sections.length,
       stepId,
-      stepCode: stepId ? `STEP_${nextStepNumber(formik.values.sections)}` : undefined,
+      stepCode: stepId ? `STEP_${nextStepNumber(currentSections)}` : undefined,
       stepName: stepId
-        ? `Step ${afterStepIndex >= 0 ? stepOrder + 1 : steps.length + 1}`
+        ? `Step ${afterStepIndex >= 0 ? stepOrder + 1 : currentSteps.length + 1}`
         : undefined,
       stepDisplayOrder: stepId ? stepOrder : undefined,
       isRepeatable: false,
@@ -80,6 +98,8 @@ export function useFormBuilderCommands(
         'sections',
         sections.map((section, index) => ({ ...section, displayOrder: index }))
       );
+    } else if (convertingToSteps) {
+      formik.setValues({ ...formik.values, layoutType: 1, sections: [...sections, newSection] });
     } else {
       formik.setFieldValue('sections', [...sections, newSection]);
     }
@@ -122,6 +142,35 @@ export function useFormBuilderCommands(
     systemBinding?: string,
     preset?: AdmissionFieldPreset
   ) => {
+    const isClassInterest =
+      !systemBinding &&
+      preset &&
+      isClassInterestQuestion({ code: '', label: preset.label, bindingType: 1 });
+    if (isClassInterest) {
+      const inherited = inheritedFields.find(isClassInterestQuestion);
+      if (inherited) {
+        shikshaMitraToast.info({
+          message: 'Class interested in is already included from Inquiry.',
+        });
+        onSelectInherited?.(inherited);
+        return;
+      }
+      const existingSection = formik.values.sections.find((section) =>
+        section.fields.some(isClassInterestQuestion)
+      );
+      const existing = existingSection?.fields.find(isClassInterestQuestion);
+      if (existing && existingSection) {
+        shikshaMitraToast.info({ message: 'Class interested in is already included in the form.' });
+        onSelect(existingSection.id, existing.id);
+        return;
+      }
+    }
+    if (conflictsWithInquiryDefaultName(formik.values, systemBinding)) {
+      shikshaMitraToast.info({
+        message: 'The required Student name field already captures the student name.',
+      });
+      return;
+    }
     const inherited =
       systemBinding &&
       inheritedFields.find(
@@ -176,6 +225,19 @@ export function useFormBuilderCommands(
       preset
     );
     field.displayOrder = nextFieldDisplayOrder(formik.values.sections);
+    if (isClassInterest) {
+      field.code = 'CLASS_INTERESTED';
+      const usedCodes = new Set(
+        formik.values.sections.flatMap((item) =>
+          item.fields.map((itemField) => itemField.code.toUpperCase())
+        )
+      );
+      for (let suffix = 2; usedCodes.has(field.code); suffix += 1)
+        field.code = `CLASS_INTERESTED_${suffix}`;
+      field.bindingKey = field.code;
+      field.fieldType = 6;
+      field.optionsJson = classInterestOptions;
+    }
     if (metadata) {
       field.code = metadata.key.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase();
       field.label = metadata.displayName;
@@ -215,7 +277,9 @@ export function useFormBuilderCommands(
       ),
     ]);
     const availableFields = groupFields.filter(
-      (field) => !usedBindings.has(field.key.toLowerCase())
+      (field) =>
+        !usedBindings.has(field.key.toLowerCase()) &&
+        !conflictsWithInquiryDefaultName(formik.values, field.key)
     );
     if (!availableFields.length) {
       shikshaMitraToast.info({
@@ -303,6 +367,9 @@ export function useFormBuilderCommands(
       formik.values,
       selectedSectionId
     );
+    result.section.fields = result.section.fields.filter(
+      (field) => !conflictsWithInquiryDefaultName(formik.values, field.bindingKey)
+    );
     if (!result.section.fields.length) {
       shikshaMitraToast.error({
         message: 'Every linked student field in this section is already present in the form.',
@@ -320,10 +387,14 @@ export function useFormBuilderCommands(
 
   return {
     addCanvasUnit,
+    addStep: (afterStepId?: string) => addCanvasUnit(afterStepId, true),
     addSection,
     addField,
     addGroupSection,
     addSectionTemplate,
     systemFieldsQuery,
+    selectableSystemFields: systemFields.filter(
+      (field) => !conflictsWithInquiryDefaultName(formik.values, field.key)
+    ),
   };
 }

@@ -14,6 +14,41 @@ import {
 } from './admission-form-template-catalog';
 
 describe('admission form template catalogue', () => {
+  it('uses registry-supported gender choices in system applicant questions', () => {
+    SYSTEM_ADMISSION_FORM_TEMPLATES.forEach(({ id }) => {
+      getSystemAdmissionFormTemplate(id)
+        .sections.flatMap((section) => section.fields)
+        .filter((field) => field.bindingKey === 'Applicant.Gender')
+        .forEach((field) =>
+          expect(JSON.parse(field.optionsJson!)).toEqual([
+            { value: 'Male', label: 'Male' },
+            { value: 'Female', label: 'Female' },
+          ])
+        );
+    });
+  });
+  it('gives recommended Inquiry and Registration questions the same canonical identities', () => {
+    const inquiry = getSystemAdmissionFormTemplate('admission-inquiry');
+    const registration = getSystemAdmissionFormTemplate('admission-application');
+    const inquiryFields = inquiry.sections.flatMap((section) => section.fields);
+    const registrationFields = registration.sections.flatMap((section) => section.fields);
+    ['Applicant.DateOfBirth', 'Guardian.FirstName', 'Guardian.Mobile'].forEach((binding) => {
+      const source = inquiryFields.filter((field) => field.bindingKey === binding);
+      const target = registrationFields.filter((field) => field.bindingKey === binding);
+      expect(source, `Inquiry ${binding}`).toHaveLength(1);
+      expect(target, `Registration ${binding}`).toHaveLength(1);
+      expect(source[0].bindingType).toBe(0);
+      expect(target[0].bindingType).toBe(0);
+    });
+    expect(inquiryFields.some((field) => field.bindingKey === 'Applicant.Name')).toBe(true);
+    expect(registrationFields.some((field) => field.bindingKey === 'Applicant.FirstName')).toBe(
+      true
+    );
+    expect(registrationFields.find((field) => field.code === 'DECLARATION_NAME')?.bindingType).toBe(
+      1
+    );
+  });
+
   it.each([
     ['admission-inquiry', 'CLASS_INTERESTED', { source: 'Standards' }],
     ['admission-application', 'CLASS_APPLYING_FOR', { source: 'Standards' }],

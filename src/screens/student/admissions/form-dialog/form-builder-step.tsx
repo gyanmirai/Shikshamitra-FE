@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
@@ -15,6 +16,7 @@ type Props = {
   selectedFieldId: string | null;
   onSelectSection: (sectionId: string) => void;
   onSelectField: (sectionId: string, fieldId: string) => void;
+  renderSection?: (sectionIndex: number) => ReactNode;
 };
 
 export function FormBuilderStep({
@@ -24,6 +26,7 @@ export function FormBuilderStep({
   selectedFieldId,
   onSelectSection,
   onSelectField,
+  renderSection,
 }: Props) {
   return (
     <Stack component="section" aria-label={step.name} spacing={1} sx={{ minWidth: 0 }}>
@@ -31,17 +34,21 @@ export function FormBuilderStep({
         items={step.sections.map(({ section }) => `section:${section.id}`)}
         strategy={verticalListSortingStrategy}
       >
-        {step.sections.map(({ section, sectionIndex }) => (
-          <FormBuilderSection
-            key={section.id}
-            formik={formik}
-            sectionIndex={sectionIndex}
-            selectedSectionId={selectedSectionId}
-            selectedFieldId={selectedFieldId}
-            onSelectSection={onSelectSection}
-            onSelectField={(fieldId) => onSelectField(section.id, fieldId)}
-          />
-        ))}
+        {step.sections.map(({ section, sectionIndex }) =>
+          renderSection ? (
+            renderSection(sectionIndex)
+          ) : (
+            <FormBuilderSection
+              key={section.id}
+              formik={formik}
+              sectionIndex={sectionIndex}
+              selectedSectionId={selectedSectionId}
+              selectedFieldId={selectedFieldId}
+              onSelectSection={onSelectSection}
+              onSelectField={(fieldId) => onSelectField(section.id, fieldId)}
+            />
+          )
+        )}
       </SortableContext>
     </Stack>
   );

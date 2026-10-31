@@ -76,7 +76,9 @@ describe('FormBuilderDetails purpose-specific starters', () => {
 
       await user.click(screen.getByRole('button', { name: 'Start blank: Blank form' }));
       await user.click(screen.getByRole('button', { name: 'Replace draft' }));
-      await waitFor(() => expect(getValues().sections[0].fields).toHaveLength(0));
+      await waitFor(() =>
+        expect(getValues().sections[0].fields).toHaveLength(purpose === 0 ? 4 : 0)
+      );
       expect(getValues().name).not.toBe(templateName);
       expect(getValues().purpose).toBe(purpose);
       expect(getValues().code).toBe('');
@@ -113,7 +115,22 @@ describe('FormBuilderDetails purpose-specific starters', () => {
       await user.click(screen.getByRole('combobox', { name: /Form type/ }));
       await user.click(screen.getByRole('option', { name: type }));
 
-      expect(getValues()).toEqual({ ...previousValues, purpose: nextPurpose });
+      const expected = { ...previousValues, purpose: nextPurpose };
+      const actual = structuredClone(getValues());
+      if (nextPurpose === 0) {
+        expect(
+          actual.sections
+            .flatMap((section) => section.fields)
+            .find((field) => field.bindingKey === 'Inquiry.ParentRelationship')
+        ).toMatchObject({ required: true, label: 'Primary contact' });
+        actual.sections.forEach((section) => {
+          section.fields = section.fields.filter(
+            (field) => field.bindingKey !== 'Inquiry.ParentRelationship'
+          );
+        });
+      }
+      expect(actual).toEqual(expected);
+      const switchedValues = structuredClone(getValues());
       expect(screen.queryByRole('button', { name: starter })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: nextStarter })).toHaveAttribute(
         'aria-pressed',
@@ -128,7 +145,7 @@ describe('FormBuilderDetails purpose-specific starters', () => {
       await user.click(screen.getByRole('button', { name: nextStarter }));
       expect(screen.getByRole('button', { name: 'Replace draft' })).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Cancel' }));
-      expect(getValues()).toEqual({ ...previousValues, purpose: nextPurpose });
+      expect(getValues()).toEqual(switchedValues);
 
       await user.click(screen.getByRole('button', { name: nextStarter }));
       await user.click(screen.getByRole('button', { name: 'Replace draft' }));
@@ -162,7 +179,11 @@ describe('FormBuilderDetails purpose-specific starters', () => {
     const previousValues = structuredClone(getValues());
     await user.click(screen.getByRole('combobox', { name: /Form type/ }));
     await user.click(screen.getByRole('option', { name: 'Registration' }));
-    expect(getValues()).toEqual({ ...previousValues, purpose: 1 });
+    expect(getValues()).toEqual({
+      ...previousValues,
+      purpose: 1,
+      sections: previousValues.sections.map((section) => ({ ...section, fields: [] })),
+    });
     expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toHaveAttribute(
       'aria-pressed',
       'true'

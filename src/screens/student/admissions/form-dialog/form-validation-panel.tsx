@@ -10,12 +10,20 @@ import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 
 import { useFormBuilderIssues } from './hooks/use-form-builder-issues';
+import {
+  type BuilderIssueTarget,
+  getBuilderIssueActionLabel,
+} from './form-builder-issue-navigation';
 
 export { getBuilderIssues } from './form-builder-issues';
 
-type Props = { form: CreateUpdateAdmissionForm; onSelectField?: (fieldId: string) => void };
+type Props = {
+  form: CreateUpdateAdmissionForm;
+  onSelectField?: (fieldId: string) => void;
+  onSelectIssue?: (target: BuilderIssueTarget) => void;
+};
 
-export function FormValidationPanel({ form, onSelectField }: Props) {
+export function FormValidationPanel({ form, onSelectField, onSelectIssue }: Props) {
   const issues = useFormBuilderIssues(form);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
@@ -85,7 +93,8 @@ export function FormValidationPanel({ form, onSelectField }: Props) {
           <Divider sx={{ my: 1 }} />
           <Stack spacing={0.5} sx={{ maxHeight: 220, overflowY: 'auto' }}>
             {issues.map((issue, index) =>
-              issue.fieldId && onSelectField ? (
+              (issue.target && issue.target.kind !== 'form' && onSelectIssue) ||
+              (issue.fieldId && onSelectField) ? (
                 <Button
                   key={issue.message + index}
                   type="button"
@@ -94,13 +103,14 @@ export function FormValidationPanel({ form, onSelectField }: Props) {
                   startIcon={<Iconify icon="mdi:arrow-right" />}
                   sx={{ justifyContent: 'flex-start', textAlign: 'left' }}
                   onClick={() => {
-                    if (issue.fieldId) {
-                      onSelectField(issue.fieldId);
-                      setAnchorEl(null);
-                    }
+                    if (issue.target && onSelectIssue) onSelectIssue(issue.target);
+                    else if (issue.fieldId) onSelectField?.(issue.fieldId);
+                    setAnchorEl(null);
                   }}
                 >
-                  {issue.message}
+                  {issue.target && getBuilderIssueActionLabel(issue.target) !== 'Fix error'
+                    ? `${getBuilderIssueActionLabel(issue.target)}: ${issue.message}`
+                    : issue.message}
                 </Button>
               ) : (
                 <Typography key={issue.message + index} variant="body2">

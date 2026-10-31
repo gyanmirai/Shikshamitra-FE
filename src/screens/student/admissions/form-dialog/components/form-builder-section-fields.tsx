@@ -1,5 +1,8 @@
 import type { FormikProps } from 'formik';
-import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  AdmissionFormSection,
+  CreateUpdateAdmissionForm,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -8,10 +11,12 @@ import Typography from '@mui/material/Typography';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 
 import { FormBuilderField } from '../form-builder-field';
+import { isLockedInquiryField } from '../inquiry-default-fields';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   sectionIndex: number;
+  displaySection?: AdmissionFormSection;
   selectedFieldId: string | null;
   onSelectField: (fieldId: string) => void;
 };
@@ -19,15 +24,32 @@ type Props = {
 export function FormBuilderSectionFields({
   formik,
   sectionIndex,
+  displaySection,
   selectedFieldId,
   onSelectField,
 }: Props) {
-  const section = formik.values.sections[sectionIndex];
-  const removeField = (fieldIndex: number) =>
+  const section = displaySection ?? formik.values.sections[sectionIndex];
+  const columns = section.fieldsPerRow ?? formik.values.fieldsPerRow;
+  const displayFormik = displaySection
+    ? {
+        ...formik,
+        values: {
+          ...formik.values,
+          fieldsPerRow: columns,
+          sections: formik.values.sections.map((item, index) =>
+            index === sectionIndex ? section : item
+          ),
+        },
+      }
+    : formik;
+  const removeField = (fieldId: string) => {
+    const field = formik.values.sections[sectionIndex].fields.find((item) => item.id === fieldId);
+    if (!field || field.inheritedFrom || isLockedInquiryField(formik.values.purpose, field)) return;
     formik.setFieldValue(
       `sections[${sectionIndex}].fields`,
-      section.fields.filter((_, index) => index !== fieldIndex)
+      formik.values.sections[sectionIndex].fields.filter((item) => item.id !== fieldId)
     );
+  };
   return (
     <Stack spacing={1} sx={{ px: 2, pb: 2 }}>
       <SortableContext
@@ -40,20 +62,21 @@ export function FormBuilderSectionFields({
             gap: 1,
             gridTemplateColumns: {
               xs: 'minmax(0, 1fr)',
-              sm: `repeat(${Math.min(formik.values.fieldsPerRow, 2)}, minmax(0, 1fr))`,
-              lg: `repeat(${formik.values.fieldsPerRow}, minmax(0, 1fr))`,
+              sm: `repeat(${Math.min(columns, 2)}, minmax(0, 1fr))`,
+              lg: `repeat(${columns}, minmax(0, 1fr))`,
             },
           }}
         >
           {section.fields.map((field, fieldIndex) => (
             <FormBuilderField
               key={field.id}
-              formik={formik}
+              formik={displayFormik}
               sectionIndex={sectionIndex}
               fieldIndex={fieldIndex}
               selected={selectedFieldId === field.id}
               onSelect={() => onSelectField(field.id)}
-              onDelete={() => removeField(fieldIndex)}
+              onDelete={() => removeField(field.id)}
+              reorderEnabled={!field.inheritedFrom}
             />
           ))}
         </Box>

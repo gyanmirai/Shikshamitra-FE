@@ -5,6 +5,7 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { lockNewInquiryStarter } from './inquiry-default-fields';
 import { templateStudentBinding } from './template-student-fields';
 import { getRegistrationFormTemplate } from './registration-form-template';
 import { ensureAdmissionCustomFieldIdentities } from './form-field-identity';
@@ -200,7 +201,7 @@ const studentIdentityFields = (): FieldInput[] => [
     label: 'Gender',
     fieldType: 6,
     bindingKey: 'Applicant.Gender',
-    optionsJson: choices(['Female', 'Male', 'Other', 'Prefer not to say']),
+    optionsJson: choices(['Male', 'Female']),
   },
 ];
 
@@ -258,7 +259,7 @@ const DEFINITIONS: TemplateDefinition[] = [
     category: 'Admissions',
     icon: 'mdi:account-question-outline',
     sectionCount: 2,
-    fieldCount: 9,
+    fieldCount: 10,
     estimatedMinutes: 3,
     create: () =>
       createForm(
@@ -968,7 +969,8 @@ export const SYSTEM_ADMISSION_FORM_TEMPLATES: AdmissionFormTemplateSummary[] = D
 export function getSystemAdmissionFormTemplate(id: SystemAdmissionFormTemplateId) {
   const definition = DEFINITIONS.find((item) => item.id === id);
   if (!definition) throw new Error(`Unknown admission form template: ${id}`);
-  return ensureAdmissionCustomFieldIdentities(definition.create());
+  const form = ensureAdmissionCustomFieldIdentities(definition.create());
+  return id === 'admission-inquiry' ? lockNewInquiryStarter(form) : form;
 }
 
 export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdmissionForm {

@@ -1,6 +1,10 @@
 import { it, expect, describe } from 'vitest';
 
-import studentModule, { studentPermissions, studentVisibilityPermissions } from './student-menu';
+import studentModule, {
+  studentPaths,
+  studentPermissions,
+  studentVisibilityPermissions,
+} from './student-menu';
 
 type NestedMenuItem = {
   title: string;
@@ -12,6 +16,25 @@ type NestedMenuItem = {
 };
 
 describe('student navigation', () => {
+  it('places House Management after Student List under existing Records visibility', () => {
+    const items = Object.values(studentModule()).flatMap((sections) =>
+      sections.flatMap((group) => group.items)
+    );
+    const records = items.find((item) => item.title === 'Student Records') as NestedMenuItem;
+    const house = records.children?.find((item) => item.title === 'House Management');
+    expect(records.children?.slice(0, 2).map((item) => item.title)).toEqual([
+      'Student List',
+      'House Management',
+    ]);
+    expect(house).toMatchObject({
+      path: '/student/records/houses',
+      permissionName: 'Students.Records.HouseManagement.View',
+    });
+    expect(studentPaths.records).toHaveProperty('houseManagement', '/student/records/houses');
+    expect(records.permissionName).toContain('Students.Records.HouseManagement.View');
+    expect(records.visibilityPermissionName).toBe(studentVisibilityPermissions.records);
+    expect(house?.visibilityPermissionName).toBeUndefined();
+  });
   it('exposes four Attendance workspaces with existing URLs and permission bundles', () => {
     const items = Object.values(studentModule()).flatMap((sections) =>
       sections.flatMap((group) => group.items)
@@ -37,13 +60,14 @@ describe('student navigation', () => {
       attendance.children?.find((item) => item.title === 'Daily Attendance')?.permissionName
     ).toBe(studentPermissions.attendance.markAttendance);
   });
-  it('exposes the five Student Records submodules and their existing routes', () => {
+  it('exposes the Student Records submodules and their existing routes', () => {
     const items = Object.values(studentModule()).flatMap((sections) =>
       sections.flatMap((group) => group.items)
     );
     const records = items.find((item) => item.title === 'Student Records') as NestedMenuItem;
     expect(records.children?.map((item) => item.title)).toEqual([
       'Student List',
+      'House Management',
       'Student I-Card',
       'Certificates',
       'Reports',
@@ -52,6 +76,7 @@ describe('student navigation', () => {
     expect(records.path).toBe('/student/profile');
     expect(records.children?.map((item) => item.path)).toEqual([
       '/student/profile',
+      '/student/records/houses',
       '/student/student-i-card',
       '/student/certificates',
       '/student/reports',

@@ -69,13 +69,14 @@ function renderWorkspace(restricted = false) {
   return setStates;
 }
 
-it('disables hidden feature permissions and exposes the prerequisite guidance', async () => {
+it('disables Allow for hidden features and exposes the prerequisite guidance', async () => {
   renderWorkspace();
   const editor = screen.getByRole('group', { name: 'Employee List View editor' });
   expect(within(editor).getByRole('radio', { name: 'Allow' })).toBeDisabled();
+  expect(within(editor).getByRole('radio', { name: 'Revoke' })).toBeEnabled();
   fireEvent.mouseOver(within(editor).getByRole('radiogroup').parentElement!);
   expect(await screen.findByRole('tooltip')).toHaveTextContent(
-    "Enable Visibility access for this feature in 'Set Visibility' before configuring module permissions."
+    "Enable Visibility access for this feature in 'Set Visibility' before allowing module permissions."
   );
 });
 

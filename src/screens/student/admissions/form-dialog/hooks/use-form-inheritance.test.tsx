@@ -16,6 +16,7 @@ const requests = vi.hoisted(() => ({
   sources: vi.fn(),
   usage: vi.fn(),
   toast: vi.fn(),
+  sourceRefetch: vi.fn(),
   permissions: [{ name: 'Students.Admissions.Forms.View', isGranted: true }],
   pages: null as Record<
     number,
@@ -51,6 +52,7 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   },
   useGetAdmissionFormQuery: (id: string) => ({
     currentData: id ? { id, name: id, version: 1 } : undefined,
+    refetch: requests.sourceRefetch,
   }),
 }));
 const effective = (id: string): AdmissionFormInheritancePreview => ({
@@ -108,6 +110,12 @@ function Observe() {
       <button type="button" onClick={() => value.formik.setFieldValue('name', 'Updated')}>
         Edit draft
       </button>
+      <button type="button" onClick={() => value.formik.setFieldValue('sections', [])}>
+        Remove base section
+      </button>
+      <output data-testid="preview-base-sections">
+        {JSON.stringify(value.previewBaseSectionIds ?? [])}
+      </output>
       <output data-testid="preview">
         {value.preview?.definition.sections[0].fields[0].label ?? 'No preview'}
       </output>
@@ -115,6 +123,9 @@ function Observe() {
       <output data-testid="failed">{String(value.failed)}</output>
       <button type="button" onClick={value.loadMoreConnections}>
         Load connected page
+      </button>
+      <button type="button" onClick={value.refresh}>
+        Check again
       </button>
       <output data-testid="connections">
         {value.connected.map((source) => source.inquiryFormDefinitionId).join(',')}
@@ -185,6 +196,46 @@ beforeEach(() => {
   }));
 });
 describe('Registration source preview controller', () => {
+  it('retains the exact successful preview base IDs until the replacement preview succeeds', async () => {
+    setup();
+    const originalId = JSON.parse(screen.getByTestId('draft').textContent!).sections[0].id;
+    await waitFor(() => expect(screen.getByTestId('preview')).toHaveTextContent('Date of birth'), {
+      timeout: 3000,
+    });
+    expect(JSON.parse(screen.getByTestId('preview-base-sections').textContent!)).toEqual([
+      originalId,
+    ]);
+    let resolveNext: (preview: AdmissionFormInheritancePreview) => void = () => undefined;
+    requests.preview.mockImplementation(() => ({
+      unwrap: () =>
+        new Promise<AdmissionFormInheritancePreview>((resolve) => {
+          resolveNext = resolve;
+        }),
+    }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove base section' }));
+    await waitFor(() => expect(requests.preview).toHaveBeenCalledTimes(2), { timeout: 3000 });
+    expect(JSON.parse(screen.getByTestId('preview-base-sections').textContent!)).toEqual([
+      originalId,
+    ]);
+    resolveNext(effective('A'));
+    await waitFor(() =>
+      expect(JSON.parse(screen.getByTestId('preview-base-sections').textContent!)).toEqual([])
+    );
+  });
+  it('retries the selected Inquiry definition as well as question compatibility', async () => {
+    setup();
+    await waitFor(() => expect(requests.preview).toHaveBeenCalledOnce(), { timeout: 3000 });
+    fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+    expect(requests.sourceRefetch).toHaveBeenCalledOnce();
+    await waitFor(() => expect(requests.preview).toHaveBeenCalledTimes(2), { timeout: 3000 });
+  });
+  it('does not fetch a protected source definition when checking a saved Inquiry without View', async () => {
+    requests.permissions = [{ name: 'Students.Admissions.Forms.Add', isGranted: true }];
+    setup();
+    await waitFor(() => expect(requests.preview).toHaveBeenCalledOnce(), { timeout: 3000 });
+    fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+    expect(requests.sourceRefetch).not.toHaveBeenCalled();
+  });
   it('keeps the selected builder panel and unfinished settings mounted across inheritance toggles', async () => {
     setup(false);
     fireEvent.click(screen.getByRole('button', { name: 'Open Student fields' }));

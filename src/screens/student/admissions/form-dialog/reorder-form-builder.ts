@@ -2,6 +2,8 @@ import type { FormikProps } from 'formik';
 import type { Over, Active } from '@dnd-kit/core';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
+import { isLockedInquiryField } from './inquiry-default-fields';
+
 export function reorderFormBuilder(
   { active, over }: { active: Pick<Active, 'id'>; over: Pick<Over, 'id'> | null },
   formik: Pick<FormikProps<CreateUpdateAdmissionForm>, 'values' | 'setFieldValue'>,
@@ -34,6 +36,11 @@ export function reorderFormBuilder(
   const sourceFields = [...formik.values.sections[sourceIndex].fields];
   const fieldIndex = sourceFields.findIndex((field) => field.id === activeFieldId);
   if (fieldIndex < 0) return;
+  if (
+    sourceFields[fieldIndex].inheritedFrom ||
+    isLockedInquiryField(formik.values.purpose, sourceFields[fieldIndex])
+  )
+    return;
   // Use the original target position so a downward move lands after the target field.
   const targetFieldIndex = formik.values.sections[targetIndex].fields.findIndex(
     (field) => field.id === overFieldId

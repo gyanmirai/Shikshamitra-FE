@@ -12,13 +12,23 @@ import {
 } from './form-dialog-model';
 
 describe('admission form field codes', () => {
-  it('starts a blank form with an empty section ready for student fields', () => {
+  it('starts an Inquiry with required identity fields and the primary contact selector', () => {
     const form = getBlankAdmissionFormInitialValues(0);
 
     expect(form.purpose).toBe(0);
     expect(form.layoutType).toBe(0);
     expect(form.sections).toHaveLength(1);
-    expect(form.sections[0].fields).toEqual([]);
+    expect(form.sections[0].fields.map((field) => field.bindingKey)).toEqual([
+      'Applicant.Name',
+      'Guardian.FirstName',
+      'Guardian.Mobile',
+      'Inquiry.ParentRelationship',
+    ]);
+    expect(form.sections[0].fields.every((field) => field.required && !field.readOnly)).toBe(true);
+  });
+
+  it('keeps a blank Registration empty', () => {
+    expect(getBlankAdmissionFormInitialValues(1).sections[0].fields).toEqual([]);
   });
 
   it('generates a unique field sequence across every step', () => {

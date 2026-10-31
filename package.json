@@ -24,7 +24,7 @@
     "re:build": "yarn rm:all && yarn install && yarn build",
     "re:build-npm": "npm run rm:all && npm install && npm run build",
     "dev:ts": "yarn dev & yarn ts:watch",
-    "ts": "node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc --noEmit --incremental",
+    "ts": "node --max-old-space-size=12288 ./node_modules/typescript/bin/tsc --noEmit --incremental",
     "ts:watch": "yarn ts --watch",
     "test": "vitest run",
     "test:watch": "vitest",

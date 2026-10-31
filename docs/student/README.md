@@ -99,6 +99,10 @@ git diff --check
 Frontend docs own route, screen, client, cache, and browser behavior.
 Backend Admissions rules, contracts, permissions, errors, and data integrity remain owned by the backend source paths linked above.
 
+## House Management
+
+Student Records → House Management opens the medium-wise Houses, Students and Division Leaders workspace. See [routes](./routes.md#house-management), [client integration](./clients.md#house-management-client), [workflow](./workflows.md#house-management) and [checks](./testing.md#house-management-checks). Backend product rules and permissions remain owned by the [Student backend](../../../Shikshamitra-BE/docs/modules/student/product.md#house-management).
+
 ## Student dashboard
 
 The shared `/student/dashboard` follows academic section-card spacing, server-confirmed role priorities, permitted shortcuts and independently loaded year summaries. Use [workflows.md](./workflows.md#student-dashboard), [clients.md](./clients.md#student-dashboard-client) and [testing.md](./testing.md#student-dashboard-validation). Metric definitions remain in the [backend product rules](../../../Shikshamitra-BE/docs/modules/student/product.md#student-dashboard).

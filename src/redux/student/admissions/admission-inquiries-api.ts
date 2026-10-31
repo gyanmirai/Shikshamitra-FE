@@ -56,6 +56,8 @@ export type AdmissionInquirySource = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 
 export type AdmissionInquiryWorkQueue = 1 | 2 | 3 | 4;
 export type AdmissionInquiry = {
   parentRelationship?: AdmissionParentRelationship | null;
+  primaryContactRelationship?: 'father' | 'mother' | 'guardian' | null;
+  guardianResponsibilityConfirmed?: boolean;
   mainSchoolContact?: {
     fullName: string;
     relationship: 'father' | 'mother' | 'guardian';
@@ -179,6 +181,7 @@ export type AdmissionInquiryCommunicationResult = {
   deliveryErrorCode?: string | null;
 };
 export type CreateAdmissionInquiry = {
+  guardianResponsibilityConfirmed?: boolean;
   familyContacts?: AdmissionFamilyContacts;
   admissionCycleId: string;
   admissionOfferingId: string | null;
@@ -221,6 +224,7 @@ export type DuplicateMatch = {
   matchByMobile?: boolean;
 };
 export type UpdateAdmissionInquiry = {
+  guardianResponsibilityConfirmed?: boolean;
   applicantName: string;
   phone: string;
   email?: string | null;

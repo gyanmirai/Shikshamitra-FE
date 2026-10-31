@@ -6,59 +6,34 @@ import type {
 import dayjs from 'dayjs';
 import { vi, it, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from '@testing-library/react';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { defaultSettings } from 'src/components/settings';
+import { act, screen, waitFor, render as renderComponent } from '@testing-library/react';
 
 import { AssessmentSessionSetupDrawer } from './assessment-session-setup-drawer';
 
-const toast = vi.hoisted(() => ({ error: vi.fn(), dismiss: vi.fn() }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
+const render = (ui: React.ReactElement) =>
+  renderComponent(ui, {
+    wrapper: ({ children }) => (
+      <ThemeProvider theme={createTheme(defaultSettings)}>{children}</ThemeProvider>
+    ),
+  });
+
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: { error: vi.fn(), warning: vi.fn(), info: vi.fn(), dismiss: vi.fn() },
+}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-vi.mock('src/components/custom-stepper', async () => {
-  const { useFormik } = await import('formik');
-  return {
-    CustomStepperWithFormik: ({
-      initialValues,
-      validationSchema,
-      activeStep,
-      renderItem,
-      handleNext,
-      handleBack,
-      onCancel,
-      saveAndNextButtonProps,
-    }: any) => {
-      const formik = useFormik({ initialValues, validationSchema, onSubmit: () => {} });
-      return (
-        <>
-          <div>{renderItem({ formik })}</div>
-          <button
-            type="button"
-            disabled={saveAndNextButtonProps.disabled}
-            onClick={activeStep ? handleBack : onCancel}
-          >
-            {activeStep ? 'Back' : 'Cancel'}
-          </button>
-          <button
-            type="button"
-            disabled={saveAndNextButtonProps.disabled}
-            onClick={async () => {
-              const errors = await formik.validateForm();
-              if (!Object.keys(errors).length)
-                await handleNext(activeStep === 1, formik.values, formik, () => {});
-            }}
-          >
-            {activeStep ? 'Submit' : 'Preview booking'}
-          </button>
-        </>
-      );
-    },
-  };
-});
 vi.mock('./assessment-session-setup-fields', () => ({
-  AssessmentSessionSetupFields: ({ formik }: any) => (
+  AssessmentSessionSetupFields: ({ formik, disabled }: any) => (
     <>
-      <p>Draft name: {formik.values.name}</p>
+      <label htmlFor="session-test-name">
+        Session name
+        <input id="session-test-name" {...formik.getFieldProps('name')} disabled={disabled} />
+      </label>
       <button
         type="button"
+        disabled={disabled}
         onClick={() =>
           formik.setValues({
             ...formik.values,
@@ -67,8 +42,8 @@ vi.mock('./assessment-session-setup-fields', () => ({
             stageIds: { offering: 'stage' },
             roomId: 'room',
             capacity: 30,
-            startsAt: dayjs().add(3, 'day'),
-            endsAt: dayjs().add(3, 'day').add(1, 'hour'),
+            startsAt: dayjs('2035-01-15T03:00:00Z'),
+            endsAt: dayjs('2035-01-15T04:00:00Z'),
           })
         }
       >
@@ -77,70 +52,33 @@ vi.mock('./assessment-session-setup-fields', () => ({
     </>
   ),
 }));
-vi.mock('./assessment-session-booking-preview', () => ({
-  AssessmentSessionBookingPreview: ({
-    selected,
-    onChange,
-    preview,
-    error,
-    onRetry,
-    onSearch,
-    onPage,
-  }: any) => (
-    <>
-      <p>{selected.length} selected</p>
-      <p>{preview.items.length} preview rows</p>
-      {error && (
-        <div role="alert">
-          {error}
-          <button type="button" onClick={onRetry}>
-            Retry preview
-          </button>
-        </div>
-      )}
-      <button type="button" onClick={() => onChange([preview.items[0]])}>
-        Select one applicant
-      </button>
-      <button type="button" onClick={() => onChange([])}>
-        Clear booking selection
-      </button>
-      <button type="button" onClick={() => onSearch('Riya')}>
-        Search Riya
-      </button>
-      <button type="button" onClick={() => onPage(2, 50)}>
-        Go to page 3
-      </button>
-    </>
-  ),
-}));
-
 const scopes: AssessmentScope[] = [
   {
     admissionOfferingId: 'offering',
     workflowStageDefinitionId: 'stage',
-    offeringName: 'Class1',
+    offeringName: 'Class 1',
     stageName: 'Exam',
     workflowDefinitionId: 'workflow',
     workflowVersion: 2,
     schedulingEnabled: true,
   },
 ];
-const candidates = Array.from({ length: 30 }, (_, index) => ({
-  applicationId: `app${index}`,
-  stageInstanceId: `stage${index}`,
-  applicationNumber: `ADM${index}`,
-  applicantName: `Applicant${index}`,
+const candidate = {
+  applicationId: 'app',
+  stageInstanceId: 'app-stage',
+  applicationNumber: 'ADM1',
+  applicantName: 'Applicant',
   admissionOfferingId: 'offering',
   workflowStageDefinitionId: 'stage',
-  concurrencyStamp: `stamp${index}`,
-}));
+  concurrencyStamp: 'app-stamp',
+};
 const preview: AssessmentBookingPreview = {
-  items: candidates.slice(0, 25),
-  proposedBookings: candidates,
-  totalCount: 42,
-  eligibleCount: 42,
+  items: [candidate],
+  proposedBookings: [candidate],
+  totalCount: 1,
+  eligibleCount: 1,
   availableCount: 30,
-  remainingCount: 12,
+  remainingCount: 0,
   requiresRoomApproval: false,
   roomName: 'R1',
   buildingName: 'Main',
@@ -148,6 +86,21 @@ const preview: AssessmentBookingPreview = {
   previewFingerprint: 'fresh',
   slots: [],
   warnings: [],
+};
+const session = {
+  id: 'session',
+  admissionOfferingId: 'offering',
+  workflowStageDefinitionId: 'stage',
+  name: 'Existing exam',
+  startsAt: '2035-01-15T03:00:00.000Z',
+  endsAt: '2035-01-15T04:00:00.000Z',
+  location: 'Main / First / R1',
+  capacity: 30,
+  bookedCount: 0,
+  isCancelled: false,
+  concurrencyStamp: 'session-version',
+  roomId: 'room',
+  sessionType: 'exam' as const,
 };
 const props = () => ({
   open: true,
@@ -168,146 +121,151 @@ const props = () => ({
   onPreview: vi.fn().mockResolvedValue(preview),
   onSubmit: vi.fn().mockResolvedValue(undefined),
 });
-
-it('one-click preview selects 30 proposed applicants despite a 25-row page', async () => {
+async function fillAndSubmit() {
+  await userEvent.click(screen.getByRole('button', { name: 'Fill session details' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+}
+it('submits one session with zero bookings even when preview proposes applicants', async () => {
   const options = props();
   render(<AssessmentSessionSetupDrawer {...options} />);
-  await userEvent.click(screen.getByText('Fill session details'));
-  await userEvent.click(screen.getByRole('button', { name: 'Preview booking' }));
-  expect(await screen.findByText('30 selected')).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
-  await waitFor(() => expect(options.onSubmit).toHaveBeenCalled());
-  expect(options.onSubmit.mock.calls[0][2]).toHaveLength(30);
-  expect(options.onSubmit.mock.calls[0][1]).toBe('fresh');
+  expect(screen.queryByRole('button', { name: 'Preview booking' })).not.toBeInTheDocument();
+  await fillAndSubmit();
+  await waitFor(() => expect(options.onSubmit).toHaveBeenCalledOnce());
+  expect(options.onPreview).toHaveBeenCalledWith(
+    expect.objectContaining({
+      name: 'Entrance exam',
+      scopes: [{ admissionOfferingId: 'offering', workflowStageDefinitionId: 'stage' }],
+      startsAt: '2035-01-15T03:00:00.000Z',
+      roomId: 'room',
+      capacity: 30,
+    }),
+    { skipCount: 0, maxResultCount: 1 }
+  );
+  expect(options.onSubmit).toHaveBeenCalledWith(options.onPreview.mock.calls[0][0], 'fresh', []);
   expect(options.onClose).toHaveBeenCalledOnce();
+  expect(screen.queryByText('Applicant')).not.toBeInTheDocument();
 });
-it('keeps the applicant selection and fingerprint after a failed confirm for a safe retry', async () => {
+it('does not preview or create invalid session details', async () => {
   const options = props();
-  options.onSubmit.mockRejectedValueOnce({ data: { detail: 'Room availability changed' } });
   render(<AssessmentSessionSetupDrawer {...options} />);
-  await userEvent.click(screen.getByText('Fill session details'));
-  await userEvent.click(screen.getByRole('button', { name: 'Preview booking' }));
-  await screen.findByText('30 selected');
-  await userEvent.click(screen.getByRole('button', { name: 'Select one applicant' }));
   await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
-  expect(await screen.findByText('Room availability changed')).toBeInTheDocument();
-  expect(screen.getByText('1 selected')).toBeInTheDocument();
-  expect(options.onClose).not.toHaveBeenCalled();
-  await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
-  await waitFor(() => expect(options.onSubmit).toHaveBeenCalledTimes(2));
-  expect(options.onSubmit.mock.calls[1]).toEqual(options.onSubmit.mock.calls[0]);
-});
-it('blocks preview and announces resource failures without discarding the form', async () => {
-  const options = props();
-  const retry = vi.fn();
-  render(
-    <AssessmentSessionSetupDrawer
-      {...options}
-      resourcesError="Institute rooms could not be loaded"
-      onRetryResources={retry}
-    />
-  );
-  expect(screen.getByRole('button', { name: 'Preview booking' })).toBeDisabled();
-  expect(toast.error).toHaveBeenCalledWith(
-    expect.objectContaining({ message: 'Institute rooms could not be loaded' })
-  );
-  expect(screen.getByText('Draft name:')).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
-  expect(retry).not.toHaveBeenCalled();
   expect(options.onPreview).not.toHaveBeenCalled();
+  expect(options.onSubmit).not.toHaveBeenCalled();
+  expect(options.onClose).not.toHaveBeenCalled();
 });
-
-it.each([
-  { action: 'Search Riya', query: { skipCount: 0, maxResultCount: 25, search: 'Riya' } },
-  { action: 'Go to page 3', query: { skipCount: 100, maxResultCount: 50, search: undefined } },
-])(
-  'retries the failed $action query while masking old rows and retaining chosen applicants',
-  async ({ action, query }) => {
+it.each([500, 408, 'FETCH_ERROR'])(
+  'locks inputs and replays exact confirmation after uncertain status %s',
+  async (status) => {
     const options = props();
-    const initialPreview =
-      action === 'Go to page 3'
-        ? { ...preview, totalCount: 142, eligibleCount: 142, remainingCount: 112 }
-        : preview;
-    options.onPreview
-      .mockResolvedValueOnce(initialPreview)
-      .mockRejectedValueOnce({ data: { detail: 'Candidate lookup unavailable' } })
-      .mockResolvedValueOnce(initialPreview);
+    options.onSubmit.mockRejectedValueOnce({
+      status,
+      data: { detail: 'Response was not received' },
+    });
     render(<AssessmentSessionSetupDrawer {...options} />);
-    await userEvent.click(screen.getByText('Fill session details'));
-    await userEvent.click(screen.getByRole('button', { name: 'Preview booking' }));
-    await screen.findByText('30 selected');
-    await userEvent.click(screen.getByRole('button', { name: action }));
-    expect(await screen.findByText('Candidate lookup unavailable', { exact: false })).toBeVisible();
-    expect(screen.getByText('0 preview rows')).toBeInTheDocument();
-    expect(screen.getByText('30 selected')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
-    expect(options.onPreview.mock.calls[1][1]).toEqual(query);
-    await userEvent.click(screen.getByRole('button', { name: 'Retry preview' }));
-    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
-    expect(options.onPreview.mock.calls[2][1]).toEqual(query);
-    expect(screen.getByText('25 preview rows')).toBeInTheDocument();
-    expect(screen.getByText('30 selected')).toBeInTheDocument();
+    await fillAndSubmit();
+    expect(await screen.findByText('Response was not received')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Session name' })).toBeDisabled();
+    expect(options.onClose).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    await waitFor(() => expect(options.onSubmit).toHaveBeenCalledOnce());
-    expect(options.onSubmit.mock.calls[0][1]).toBe('fresh');
-    expect(options.onSubmit.mock.calls[0][2]).toHaveLength(30);
+    await waitFor(() => expect(options.onSubmit).toHaveBeenCalledTimes(2));
+    expect(options.onPreview).toHaveBeenCalledOnce();
+    expect(options.onSubmit.mock.calls[1]).toEqual(options.onSubmit.mock.calls[0]);
+    expect(options.onClose).toHaveBeenCalledOnce();
   }
 );
-
-it('requires at least one applicant in existing-session booking mode', async () => {
+it('allows correcting rejected input and gets a fresh fingerprint after a definitive conflict', async () => {
   const options = props();
-  const session = {
-    id: 'session',
-    admissionOfferingId: 'offering',
-    workflowStageDefinitionId: 'stage',
-    name: 'Existing exam',
-    startsAt: dayjs().add(3, 'day').toISOString(),
-    endsAt: dayjs().add(3, 'day').add(1, 'hour').toISOString(),
-    location: 'Main / First / R1',
-    capacity: 30,
-    bookedCount: 0,
-    isCancelled: false,
-    concurrencyStamp: 'session-version',
-    roomId: 'room',
-    sessionType: 'exam' as const,
-  };
-  render(<AssessmentSessionSetupDrawer {...options} session={session} mode="book" />);
-  await userEvent.click(screen.getByRole('button', { name: 'Preview booking' }));
-  await screen.findByText('30 selected');
-  await userEvent.click(screen.getByRole('button', { name: 'Clear booking selection' }));
-  expect(screen.getByText('0 selected')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
-  expect(options.onSubmit).not.toHaveBeenCalled();
-});
-
-it('still creates a new session without applicants selected', async () => {
-  const options = props();
+  options.onSubmit.mockRejectedValueOnce({
+    status: 409,
+    data: { detail: 'Room availability changed' },
+  });
+  options.onPreview
+    .mockResolvedValueOnce(preview)
+    .mockResolvedValueOnce({ ...preview, previewFingerprint: 'refreshed' });
   render(<AssessmentSessionSetupDrawer {...options} />);
-  await userEvent.click(screen.getByText('Fill session details'));
-  await userEvent.click(screen.getByRole('button', { name: 'Preview booking' }));
-  await screen.findByText('30 selected');
-  await userEvent.click(screen.getByRole('button', { name: 'Clear booking selection' }));
-  expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+  await fillAndSubmit();
+  await screen.findByText('Room availability changed');
+  const name = screen.getByRole('textbox', { name: 'Session name' });
+  expect(name).toBeEnabled();
+  await userEvent.clear(name);
+  await userEvent.type(name, 'Revised exam');
+  await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(options.onSubmit).toHaveBeenCalledTimes(2));
+  expect(options.onPreview).toHaveBeenCalledTimes(2);
+  expect(options.onSubmit).toHaveBeenLastCalledWith(
+    expect.objectContaining({ name: 'Revised exam' }),
+    'refreshed',
+    []
+  );
+});
+it('retains the form on preview failure and checks availability again on Submit', async () => {
+  const options = props();
+  options.onPreview.mockRejectedValueOnce({ data: { detail: 'Institute room is occupied' } });
+  render(<AssessmentSessionSetupDrawer {...options} />);
+  await fillAndSubmit();
+  await screen.findByText('Institute room is occupied');
+  expect(screen.getByRole('textbox', { name: 'Session name' })).toHaveValue('Entrance exam');
+  expect(screen.getByRole('textbox', { name: 'Session name' })).toBeEnabled();
+  expect(options.onSubmit).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(options.onSubmit).toHaveBeenCalledOnce());
-  expect(options.onSubmit.mock.calls[0][2]).toEqual([]);
+  expect(options.onPreview).toHaveBeenCalledTimes(2);
 });
-
-it('preserves drafts and selection while live permission loss blocks preview and submit', async () => {
+it('saves existing arrangements and version without previewing or booking students', async () => {
+  const options = props();
+  const onSave = vi.fn().mockResolvedValue(undefined);
+  render(
+    <AssessmentSessionSetupDrawer {...options} session={session} mode="edit" onSave={onSave} />
+  );
+  await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() =>
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Existing exam', concurrencyStamp: 'session-version' })
+    )
+  );
+  expect(options.onPreview).not.toHaveBeenCalled();
+  expect(options.onSubmit).not.toHaveBeenCalled();
+  expect(options.onClose).toHaveBeenCalledOnce();
+});
+it('preserves the draft while resources and live permissions block Submit', async () => {
   const options = props();
   const view = render(<AssessmentSessionSetupDrawer {...options} />);
-  await userEvent.click(screen.getByText('Fill session details'));
-  view.rerender(<AssessmentSessionSetupDrawer {...options} readOnly />);
-  expect(screen.getByText('Draft name: Entrance exam')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Preview booking' })).toBeDisabled();
-  expect(screen.getByText(/Changes require the action permission/)).toBeInTheDocument();
-  expect(options.onPreview).not.toHaveBeenCalled();
-  view.rerender(<AssessmentSessionSetupDrawer {...options} readOnly={false} />);
-  await userEvent.click(screen.getByRole('button', { name: 'Preview booking' }));
-  await screen.findByText('30 selected');
-  expect(options.onPreview.mock.calls[0][0].name).toBe('Entrance exam');
-  view.rerender(<AssessmentSessionSetupDrawer {...options} readOnly />);
-  expect(screen.getByText('30 selected')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Fill session details' }));
+  view.rerender(<AssessmentSessionSetupDrawer {...options} resourcesError="Rooms unavailable" />);
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  view.rerender(<AssessmentSessionSetupDrawer {...options} readOnly />);
+  expect(screen.getByRole('textbox', { name: 'Session name' })).toHaveValue('Entrance exam');
+  expect(screen.getByRole('textbox', { name: 'Session name' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  expect(options.onPreview).not.toHaveBeenCalled();
   expect(options.onSubmit).not.toHaveBeenCalled();
+});
+it('requires discard confirmation before closing an edited session', async () => {
+  const options = props();
+  render(<AssessmentSessionSetupDrawer {...options} />);
+  await userEvent.click(screen.getByRole('button', { name: 'Fill session details' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(options.onClose).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(options.onClose).toHaveBeenCalledOnce();
+});
+it('does not confirm when permission is revoked while availability is loading', async () => {
+  const options = props();
+  let finish!: (value: AssessmentBookingPreview) => void;
+  options.onPreview.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      })
+  );
+  const view = render(<AssessmentSessionSetupDrawer {...options} />);
+  await fillAndSubmit();
+  await waitFor(() => expect(options.onPreview).toHaveBeenCalledOnce());
+  view.rerender(<AssessmentSessionSetupDrawer {...options} readOnly />);
+  await act(async () => {
+    finish(preview);
+  });
+  expect(options.onSubmit).not.toHaveBeenCalled();
+  expect(options.onClose).not.toHaveBeenCalled();
+  expect(screen.getByRole('textbox', { name: 'Session name' })).toHaveValue('Entrance exam');
 });

@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-10-30
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -53,10 +53,18 @@ TL;DR: validate permission mappings, override persistence, review/discard, and t
 
 ## Student three-action permission contract
 
-Five editor suites pass 69 tests covering the 36-feature/106-leaf catalogue, View, Add/Update and Delete mapping, unsupported operations, collapsed subtree deduplication, provider eligibility and user Allow/Deny/Follow role behavior.
+The current backend registry groups profile workflows under Student List (32 feature groups, 109 unchanged action leaves). Run `student-record-menu-permissions.test.ts`, `student-record-permissions.test.ts` and `student-permission-actions.test.ts` to verify menu-only rows, complete bundled action coverage, unchanged navigation guards, partial grants, explicit denials and unsupported Delete operations.
 The action identifier remains `Add`; the displayed label is Add/Update.
-Seven changed editor files pass targeted ESLint and the scoped diff check.
-Authenticated localhost inspection confirmed the role matrix at desktop and 390-pixel widths, disabled unsupported Delete controls and inherited user actions without submitting any grant changes.
+The October 30 final in-app browser check uses the real permission form with a disposable synthetic catalogue. Role and user editors omit all five extra profile rows; Delete targets four existing actions, Add/Update targets six, and View revocation includes its dependent actions (16 total). Hidden features disable Allow while retaining role Revoke and user Deny/Follow role. A six-action Deny save survives close/reopen; keyboard navigation skips disabled Allow, and a six-action Follow role save survives another reopen without changing visibility. Review/discard and the existing draft flow remain intact. Light/dark checks at 390/768/1440 widths show no document-level horizontal overflow. Saves affect only the synthetic fixture, not school grants or deployed role configuration. Browser evidence is `.artifacts/student-record-menu-browser/final-user-desktop.png`.
+
+The final local Security regression run passes 253 tests across 33 suites, with full `npm run ts` and the configured Security ESLint scope passing. It includes route composition inventory, runtime Public Inquiry Links guards, actual user-row guards, hidden-feature override persistence, and structural deployment-workflow assertions. The static inventory follows rendered layout composition and rejects unused guards and sibling bypasses. The main-only deployment workflow now calls the reusable Security Regression gate before building. Earlier four Security failures and the route-inventory failure are resolved; this is local verification, not a GitHub Actions or deployment run.
+
+A later whole-checkout typecheck found seven unsupported Testing Library `exact` query options in three concurrently added Student contact tests. Removing those options preserves exact accessible-name matching for string names. The three suites pass 37 tests and their scoped lint passes; no production behavior changed in this follow-up.
+
+```sh
+node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/security/role src/utils/permissions.test.ts src/components/progress-bar/progress-bar.history.test.tsx src/components/three-dots-actions/index.test.tsx src/constants/student-record-menu-permissions.test.ts src/constants/student-record-permissions.test.ts src/constants/student-route-permissions.test.tsx src/screens/security/user/user-management-guards.test.tsx --pool=forks --maxWorkers=1 --no-file-parallelism
+npm run ts
+```
 
 ## Login and session redirect regression (2026-10-16)
 

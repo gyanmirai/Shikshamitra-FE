@@ -1,23 +1,24 @@
 'use client';
 
-import type { FormikProps } from 'formik';
 import type { AssessmentScope } from 'src/redux/student/admissions/admission-assessment-types';
 
-import { useRef, useState } from 'react';
+import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useId, useRef, useState, useEffect } from 'react';
+import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { Box, Stack, Drawer, Button, Divider, Typography, IconButton } from '@mui/material';
 
 import { assessmentErrorMessage } from './assessment-utils';
 import { AdmissionDialogTitle } from '../admission-dialog-title';
 import { AssessmentSessionSetupFields } from './assessment-session-setup-fields';
-import { AssessmentSessionBookingPreview } from './assessment-session-booking-preview';
 import {
   sessionSetupSchema,
-  assignPreviewSlots,
   serializeSessionSetup,
   sessionSetupInitialValues,
 } from './assessment-session-setup-model';
@@ -40,7 +41,7 @@ export type AssessmentSessionSetupDrawerProps = {
   onSearchInterviewers?: (query: string) => Promise<SessionStaffChoice[]>;
   interviewersLoading?: boolean;
   session?: SharedSessionView | null;
-  mode?: 'create' | 'edit' | 'book';
+  mode?: 'create' | 'edit';
   readOnly?: boolean;
   resourcesLoading?: boolean;
   resourcesError?: string;
@@ -58,12 +59,18 @@ export type AssessmentSessionSetupDrawerProps = {
   onSave?: (input: SharedSessionInput) => Promise<void>;
 };
 
+type SessionConfirmation = { input: SharedSessionInput; fingerprint: string };
+
 export function AssessmentSessionSetupDrawer(props: AssessmentSessionSetupDrawerProps) {
-  const { open, ...contentProps } = props;
-  const { session, mode } = contentProps;
+  const { open, session, mode, ...contentProps } = props;
   if (!open) return null;
   return (
-    <SessionSetupContent key={`${session?.id ?? 'create'}:${mode ?? 'create'}`} {...contentProps} />
+    <SessionSetupContent
+      key={`${session?.id ?? 'create'}:${mode ?? 'create'}`}
+      session={session}
+      mode={mode}
+      {...contentProps}
+    />
   );
 }
 
@@ -84,127 +91,118 @@ function SessionSetupContent({
   onSubmit,
   onSave,
 }: Omit<AssessmentSessionSetupDrawerProps, 'open'>) {
-  const [step, setStep] = useState(0);
+  const titleId = useId();
   const readOnly = permissionReadOnly || session?.canManage === false;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [previewError, setPreviewError] = useState('');
-  const [selectedCount, setSelectedCount] = useState(0);
   const [preview, setPreview] = useState<SessionBookingPreview | null>(null);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
-  const [search, setSearch] = useState('');
-  const formRef = useRef<FormikProps<SessionSetupValues> | null>(null);
+  const [retryPending, setRetryPending] = useState(false);
+  const pending = useRef<SessionConfirmation | null>(null);
+  const submitting = useRef(false);
+  const mayWrite = useRef(false);
+  useEffect(() => {
+    mayWrite.current = !readOnly && !resourcesError && !resourcesLoading;
+    return () => {
+      mayWrite.current = false;
+    };
+  }, [readOnly, resourcesError, resourcesLoading]);
   const discard = useBoolean();
-  const requestRef = useRef(0);
-  const attemptedQuery = useRef({ page: 0, size: 25, search: '' });
   const locked = busy || resourcesLoading;
+  const editing = Boolean(session) && mode === 'edit';
   const resolvedScopes = [
     ...scopes,
     ...(session?.scopeDetails ?? []).filter(
-      (s) =>
+      (scope) =>
         !scopes.some(
-          (x) =>
-            x.admissionOfferingId === s.admissionOfferingId &&
-            x.workflowStageDefinitionId === s.workflowStageDefinitionId
+          (item) =>
+            item.admissionOfferingId === scope.admissionOfferingId &&
+            item.workflowStageDefinitionId === scope.workflowStageDefinitionId
         )
     ),
   ];
-  const close = () => {
-    if (locked) return;
-    if (formRef.current?.dirty) discard.onTrue();
-    else onClose();
-  };
-  const refresh = async (
-    input: SharedSessionInput,
-    formik: FormikProps<SessionSetupValues>,
-    nextPage: number,
-    size: number,
-    query: string,
-    initial = false
-  ) => {
-    requestRef.current += 1;
-    const request = requestRef.current;
-    attemptedQuery.current = { page: nextPage, size, search: query };
-    setPage(nextPage);
-    setPageSize(size);
-    setSearch(query);
+
+  const submit = async (values: SessionSetupValues) => {
+    if (submitting.current || locked || readOnly || resourcesError || (editing && !onSave)) return;
+    submitting.current = true;
     setBusy(true);
     setError('');
-    setPreviewError('');
+    let confirming = false;
     try {
-      const result = await onPreview(input, {
-        skipCount: nextPage * size,
-        maxResultCount: size,
-        search: query || undefined,
-      });
-      if (request !== requestRef.current) return;
-      setPreview(result);
-      if (initial) {
-        const proposed = assignPreviewSlots(result.proposedBookings, result);
-        setSelectedCount(proposed.length);
-        await formik.setFieldValue('bookings', proposed, false);
-      } else if (preview && result.previewFingerprint !== preview.previewFingerprint) {
-        setSelectedCount(0);
-        await formik.setFieldValue('bookings', [], false);
-        setError('Availability changed. Review and select applicants again before submitting.');
-      }
-      setStep(1);
-    } catch (failure) {
-      if (request !== requestRef.current) return;
-      const message = assessmentErrorMessage(
-        failure,
-        'Unable to load booking preview. Please retry.'
-      );
-      if (initial) setError(message);
-      else setPreviewError(message);
-    } finally {
-      if (request === requestRef.current) setBusy(false);
-    }
-  };
-  const next = async (
-    last: boolean,
-    values: SessionSetupValues,
-    formik: FormikProps<SessionSetupValues>,
-    setLoading: (value: boolean) => void
-  ) => {
-    if (locked || readOnly || resourcesError) return;
-    const input = serializeSessionSetup(values, rooms, session?.concurrencyStamp);
-    setLoading(true);
-    setError('');
-    try {
-      if (session && mode === 'edit') {
-        if (!onSave) throw new Error('Session editing is unavailable');
-        setBusy(true);
-        await onSave(input);
-        onClose();
-      } else if (!last) await refresh(input, formik, 0, 25, '', true);
-      else {
-        if (!preview || previewError) return;
-        if (mode === 'book' && values.bookings.length === 0) {
-          setError('Select at least one applicant to book into this session.');
-          return;
+      if (editing) {
+        await onSave!(serializeSessionSetup(values, rooms, session?.concurrencyStamp));
+      } else {
+        let command = pending.current;
+        if (!command) {
+          const input = serializeSessionSetup(values, rooms);
+          const checked = await onPreview(input, { skipCount: 0, maxResultCount: 1 });
+          setPreview(checked);
+          if (!mayWrite.current) return;
+          command = { input, fingerprint: checked.previewFingerprint };
+          pending.current = command;
+          setRetryPending(true);
         }
-        setBusy(true);
-        await onSubmit(input, preview.previewFingerprint, values.bookings);
-        onClose();
+        confirming = true;
+        await onSubmit(command.input, command.fingerprint, []);
+        pending.current = null;
+        setRetryPending(false);
       }
+      onClose();
     } catch (failure) {
-      setError(assessmentErrorMessage(failure));
+      const status =
+        failure && typeof failure === 'object' && 'status' in failure ? failure.status : undefined;
+      if (
+        confirming &&
+        typeof status === 'number' &&
+        status >= 400 &&
+        status < 500 &&
+        status !== 408
+      ) {
+        pending.current = null;
+        setRetryPending(false);
+        setPreview(null);
+      }
+      setError(
+        assessmentErrorMessage(failure, 'Unable to save this assessment session. Please retry.')
+      );
     } finally {
+      submitting.current = false;
       setBusy(false);
-      setLoading(false);
     }
   };
+  const form = useFormik<SessionSetupValues>({
+    initialValues: sessionSetupInitialValues(session),
+    validationSchema: sessionSetupSchema(resolvedScopes, rooms, session?.bookedCount ?? 0),
+    onSubmit: submit,
+  });
+  const close = () => {
+    if (locked || form.isSubmitting) return;
+    if (form.dirty || pending.current) discard.onTrue();
+    else onClose();
+  };
+  const disabled =
+    locked || form.isSubmitting || readOnly || Boolean(resourcesError) || (editing && !onSave);
   return (
     <>
       <Drawer
         anchor="right"
         open
         onClose={close}
-        PaperProps={{ sx: { width: { xs: 1, sm: 800 }, maxWidth: 1 } }}
+        PaperProps={{
+          role: 'dialog',
+          'aria-modal': true,
+          'aria-labelledby': titleId,
+          sx: { width: { xs: 1, sm: 800 }, maxWidth: 1 },
+        }}
       >
         <Box
+          component="form"
+          noValidate
+          onSubmit={(event) => {
+            if (pending.current) {
+              event.preventDefault();
+              submit(form.values);
+            } else form.handleSubmit(event);
+          }}
           sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
           aria-busy={locked}
         >
@@ -213,18 +211,12 @@ function SessionSetupContent({
             alignItems="center"
             justifyContent="space-between"
             spacing={1}
-            sx={{ px: 2, py: 1.5 }}
+            sx={{ px: { xs: 2, sm: 3 }, py: 2, flexShrink: 0 }}
           >
-            <Typography variant="h6">
+            <Typography id={titleId} variant="h6">
               <AdmissionDialogTitle
-                title={
-                  mode === 'book'
-                    ? 'Book Assessment Applicants'
-                    : session
-                      ? 'Edit Assessment Session'
-                      : 'Create Assessment Session'
-                }
-                helpText="Configure the session, review eligible applicants, then submit. Remaining applicants stay pending."
+                title={editing ? 'Edit Session' : 'Create Session'}
+                helpText="Choose the assessment, classes, schedule and Institute room. Book students from the Student tab after creating the session."
               />
             </Typography>
             <IconButton
@@ -234,196 +226,134 @@ function SessionSetupContent({
               onClick={close}
               disabled={locked}
             >
-              <Iconify icon="mdi:close" />
+              <Iconify icon={GlobalIcons.cancel} />
             </IconButton>
           </Stack>
           <Divider />
-          <Box
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              minWidth: 0,
-              '& .MuiStepButton-root': { mx: 0, width: 1, boxSizing: 'border-box' },
-            }}
-          >
-            <CustomStepperWithFormik
-              initialValues={sessionSetupInitialValues(session)}
-              steps={
-                session && mode === 'edit'
-                  ? ['Session details']
-                  : ['Session details', 'Booking preview']
+          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+            <FormBusyRegion
+              busy={locked}
+              label={
+                resourcesLoading
+                  ? 'Loading session options…'
+                  : editing
+                    ? 'Saving session…'
+                    : 'Creating session…'
               }
-              activeStep={step}
-              validationSchema={sessionSetupSchema(
-                resolvedScopes,
-                rooms,
-                session?.bookedCount ?? 0,
-                step === 1,
-                mode === 'book' && Boolean(session)
-              )}
-              handleNext={next}
-              handleBack={() => {
-                setStep(0);
-                setPreview(null);
-                setError('');
-                setPreviewError('');
-              }}
-              onCancel={close}
-              onStepClick={(index) => {
-                if (index === 0 && !locked) {
-                  setStep(0);
-                  setPreview(null);
-                  setError('');
-                  setPreviewError('');
-                }
-              }}
-              isStepClickable={(index) => index === 0 && !locked}
-              showSaveButton={false}
-              nextButtonLabel="Preview booking"
-              finalButtonLabel="Submit"
-              saveAndNextButtonProps={{
-                sx: { minHeight: 44 },
-                disabled:
-                  locked ||
-                  readOnly ||
-                  Boolean(resourcesError) ||
-                  (Boolean(session) && mode === 'edit' && !onSave) ||
-                  (step === 1 &&
-                    (!preview ||
-                      Boolean(previewError) ||
-                      (mode === 'book' && selectedCount === 0))),
-                loading: locked,
-              }}
-              backButtonProps={{ disabled: locked, sx: { minHeight: 44 } }}
-              renderItem={({ formik: raw }) => {
-                const formik = raw as FormikProps<SessionSetupValues>;
-                formRef.current = formik;
-                return (
-                  <Stack
-                    spacing={2}
-                    sx={{ p: 2, ...(step === 1 ? { height: 1, minHeight: 0 } : {}) }}
+            >
+              <Stack spacing={2} sx={{ p: { xs: 2, sm: 3 } }}>
+                {resourcesError && (
+                  <StudentFeedback
+                    notificationKey="STU-0278"
+                    presentation="persistent"
+                    severity="error"
+                    action={
+                      onRetryResources ? (
+                        <Button size="small" disabled={locked} onClick={onRetryResources}>
+                          Retry
+                        </Button>
+                      ) : undefined
+                    }
                   >
-                    {resourcesError && (
-                      <StudentFeedback
-                        notificationKey="STU-0278"
-                        presentation="toast"
-                        severity="error"
-                        action={
-                          onRetryResources ? (
-                            <Button size="small" disabled={locked} onClick={onRetryResources}>
-                              Retry
-                            </Button>
-                          ) : undefined
-                        }
-                      >
-                        {resourcesError}
-                      </StudentFeedback>
-                    )}
-                    {readOnly && (
-                      <StudentFeedback
-                        notificationKey="STU-0279"
-                        presentation="inline"
-                        severity="info"
-                      >
-                        You can review this session. Changes require the action permission and
-                        access to every linked Offering.
-                      </StudentFeedback>
-                    )}
-                    {mode === 'book' && !session?.roomId && (
-                      <StudentFeedback
-                        notificationKey="STU-0280"
-                        presentation="persistent"
-                        severity="warning"
-                      >
-                        This session has no Institute room. Edit it and select a room before booking
-                        applicants.
-                      </StudentFeedback>
-                    )}
-                    {error && (
-                      <StudentFeedback
-                        notificationKey="STU-0281"
-                        presentation="persistent"
-                        severity="error"
-                      >
-                        {error}
-                      </StudentFeedback>
-                    )}
-                    {session && (
-                      <StudentFeedback
-                        notificationKey="STU-0282"
-                        presentation="inline"
-                        severity="info"
-                      >
-                        Assessment type, classes and assessment choices stay unchanged for an
-                        existing session.
-                        {session.bookedCount > 0 &&
-                          ` ${session.bookedCount} applicants are booked. Booked individual-interview timing is preserved.`}
-                      </StudentFeedback>
-                    )}
-                    {step === 0 ? (
-                      <AssessmentSessionSetupFields
-                        formik={formik}
-                        scopes={resolvedScopes}
-                        rooms={rooms}
-                        interviewers={interviewers}
-                        onSearchInterviewers={onSearchInterviewers}
-                        interviewersLoading={interviewersLoading}
-                        disabled={locked || readOnly || mode === 'book'}
-                        identityLocked={Boolean(session)}
-                        bookedCount={session?.bookedCount ?? 0}
-                      />
-                    ) : (
-                      preview && (
-                        <AssessmentSessionBookingPreview
-                          preview={previewError ? { ...preview, items: [] } : preview}
-                          existingSession={mode === 'book'}
-                          scopes={resolvedScopes}
-                          selected={formik.values.bookings}
-                          onChange={(items) => {
-                            const selected = assignPreviewSlots(items, preview);
-                            setSelectedCount(selected.length);
-                            formik.setFieldValue('bookings', selected);
-                          }}
-                          disabled={locked || readOnly}
-                          page={page}
-                          pageSize={pageSize}
-                          isLoading={busy}
-                          error={previewError || undefined}
-                          onPage={(p, size) =>
-                            refresh(
-                              serializeSessionSetup(formik.values, rooms),
-                              formik,
-                              p,
-                              size,
-                              search
-                            )
-                          }
-                          onSearch={(query) =>
-                            refresh(
-                              serializeSessionSetup(formik.values, rooms),
-                              formik,
-                              0,
-                              pageSize,
-                              query
-                            )
-                          }
-                          onRetry={() =>
-                            refresh(
-                              serializeSessionSetup(formik.values, rooms),
-                              formik,
-                              attemptedQuery.current.page,
-                              attemptedQuery.current.size,
-                              attemptedQuery.current.search
-                            )
-                          }
-                        />
-                      )
-                    )}
-                  </Stack>
-                );
-              }}
-            />
-          </Box>
+                    {resourcesError}
+                  </StudentFeedback>
+                )}
+                {readOnly && (
+                  <StudentFeedback notificationKey="STU-0279" presentation="inline" severity="info">
+                    You can review this session. Changes require the action permission and access to
+                    every linked Offering.
+                  </StudentFeedback>
+                )}
+                {error && (
+                  <StudentFeedback
+                    notificationKey="STU-0281"
+                    presentation="persistent"
+                    severity="error"
+                  >
+                    {error}
+                  </StudentFeedback>
+                )}
+                {retryPending && !busy && (
+                  <StudentFeedback
+                    notificationKey="STU-0281"
+                    presentation="persistent"
+                    severity="warning"
+                  >
+                    The last confirmation response was not received. Submit retries the same request
+                    safely before you change the session.
+                  </StudentFeedback>
+                )}
+                {session && (
+                  <StudentFeedback notificationKey="STU-0282" presentation="inline" severity="info">
+                    Assessment type, classes and assessment choices stay unchanged for an existing
+                    session.
+                    {session.bookedCount > 0 &&
+                      ` ${session.bookedCount} applicants are booked. Booked individual-interview timing is preserved.`}
+                  </StudentFeedback>
+                )}
+                <AssessmentSessionSetupFields
+                  formik={form}
+                  scopes={resolvedScopes}
+                  rooms={rooms}
+                  interviewers={interviewers}
+                  onSearchInterviewers={onSearchInterviewers}
+                  interviewersLoading={interviewersLoading}
+                  disabled={locked || readOnly || retryPending}
+                  identityLocked={Boolean(session)}
+                  bookedCount={session?.bookedCount ?? 0}
+                  separateDate
+                />
+                {preview?.requiresRoomApproval && (
+                  <StudentFeedback
+                    notificationKey="STU-0288"
+                    presentation="persistent"
+                    severity="warning"
+                  >
+                    Room approval is pending. Student bookings will be held until approval.
+                  </StudentFeedback>
+                )}
+                {preview?.warnings.map((warning) => (
+                  <StudentFeedback
+                    key={warning}
+                    notificationKey="STU-0288"
+                    presentation="persistent"
+                    severity="warning"
+                  >
+                    {warning}
+                  </StudentFeedback>
+                ))}
+              </Stack>
+            </FormBusyRegion>
+          </Scrollbar>
+          <Divider />
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            spacing={1}
+            sx={{ px: { xs: 2, sm: 3 }, py: 1.75, flexShrink: 0 }}
+          >
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={close}
+              disabled={locked}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              size="small"
+              variant="contained"
+              color="inherit"
+              type="submit"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              loading={locked || form.isSubmitting}
+              disabled={disabled}
+            >
+              Submit
+            </LoadingButton>
+          </Stack>
         </Box>
       </Drawer>
       <ConfirmDialog
@@ -431,7 +361,11 @@ function SessionSetupContent({
         onClose={discard.onFalse}
         title="Discard Session Changes?"
         icon="warning"
-        content="Your session details and applicant selection have not been submitted."
+        content={
+          pending.current
+            ? 'The last confirmation response was not received. Retry Submit to check the same request safely before closing.'
+            : 'Your session details have not been submitted.'
+        }
         action={
           <Button size="small" variant="contained" color="error" onClick={onClose}>
             Discard changes
