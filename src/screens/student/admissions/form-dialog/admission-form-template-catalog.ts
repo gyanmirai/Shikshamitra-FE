@@ -187,7 +187,6 @@ const studentIdentityFields = (): FieldInput[] => [
     code: 'APPLICANT_LAST_NAME',
     label: 'Last name',
     bindingKey: 'Applicant.LastName',
-    required: true,
   },
   {
     code: 'APPLICANT_DATE_OF_BIRTH',
@@ -216,7 +215,6 @@ const applicantReferenceFields = (): FieldInput[] => [
     code: 'APPLICANT_LAST_NAME',
     label: 'Student last name',
     bindingKey: 'Applicant.LastName',
-    required: true,
   },
 ];
 

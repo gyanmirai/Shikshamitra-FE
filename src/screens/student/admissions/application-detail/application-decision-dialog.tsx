@@ -5,7 +5,7 @@ import type {
   AdmissionApplicationDecisionInput,
 } from 'src/redux/student/admissions/admission-applications-api';
 
-import { Stack, TextField, Typography } from '@mui/material';
+import { Stack, TextField } from '@mui/material';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -14,11 +14,8 @@ import { ReviewDialog } from '../review/review-dialog';
 import { formatAdmissionReference } from '../admission-reference';
 import { ReviewRecoveryAlert } from '../review/review-recovery-alert';
 import { useApplicationDecisionForm } from './use-application-decision-form';
+import { ADMISSION_DECISION_ACTION_LABELS } from './application-decision-model';
 import { ApplicationDecisionDialogActions } from './application-decision-dialog-actions';
-import {
-  isDangerousAdmissionDecision,
-  ADMISSION_DECISION_ACTION_LABELS,
-} from './application-decision-model';
 
 import type { AdmissionDecisionAction } from './use-admission-application-decisions';
 
@@ -46,7 +43,6 @@ export function ApplicationDecisionDialog({
   const isBusy = busy || formik.isSubmitting || recovery.reloading;
 
   if (!action) return null;
-  const isDangerous = isDangerousAdmissionDecision(action);
   const concurrencyUnavailable = !canRecord;
 
   return (
@@ -54,6 +50,7 @@ export function ApplicationDecisionDialog({
       open={open}
       onClose={onClose}
       title={ADMISSION_DECISION_ACTION_LABELS[action]}
+      titleInfo={`This decision is recorded in the application history for ${formatAdmissionReference(current.applicationNumber)}.`}
       maxWidth="sm"
       dirty={formik.dirty}
       busy={isBusy}
@@ -77,16 +74,6 @@ export function ApplicationDecisionDialog({
               busy={isBusy}
               onReload={reload}
             />
-            <StudentFeedback
-              notificationKey="STU-0187"
-              presentation="inline"
-              severity={isDangerous ? 'warning' : 'info'}
-            >
-              <Typography variant="body2">
-                This decision is recorded in the application history for{' '}
-                {formatAdmissionReference(current.applicationNumber)}.
-              </Typography>
-            </StudentFeedback>
             {concurrencyUnavailable && (
               <StudentFeedback
                 notificationKey="STU-0188"

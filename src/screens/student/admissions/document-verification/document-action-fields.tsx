@@ -1,20 +1,17 @@
 import type { FormikProps } from 'formik';
 import type { AdmissionDocumentRequirement } from 'src/redux/student/admissions/admission-document-types';
 
-import { useId, useRef } from 'react';
+import { useId } from 'react';
+import { ValidationError } from 'yup';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomUpload from 'src/components/custom-upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
-import {
-  Stack,
-  Button,
-  TextField,
-  FormLabel,
-  Typography,
-  FormControl,
-  FormHelperText,
-} from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { Box, Stack, TextField, FormLabel, Typography, FormControl } from '@mui/material';
+
+import { documentActionSchema } from './document-action-model';
 
 import type { DocumentAction, DocumentActionValues } from './document-action-model';
 
@@ -32,10 +29,22 @@ export function DocumentActionFields({
   maxFileSizeMb: number;
 }) {
   const original = action === 'original';
-  const fileInput = useRef<HTMLInputElement>(null);
   const fileId = useId();
   const fileHelpId = `${fileId}-help`;
-  const fileError = Boolean(formik.touched.file && formik.errors.file);
+  const fileError = formik.touched.file ? formik.errors.file : undefined;
+  const fileGuidance = `${extensions.join(', ').toUpperCase()} · Maximum ${maxFileSizeMb} MB`;
+  const selectFile = (file: File | null) => {
+    formik.setFieldTouched('file', true, false);
+    if (file) {
+      try {
+        documentActionSchema(action, extensions, maxFileSizeMb).validateSyncAt('file', { file });
+      } catch (failure) {
+        if (failure instanceof ValidationError) formik.setFieldError('file', failure.message);
+        return;
+      }
+    }
+    formik.setFieldValue('file', file);
+  };
   return (
     <Stack spacing={2}>
       <Typography variant="subtitle2">{requirement.name}</Typography>
@@ -49,60 +58,62 @@ export function DocumentActionFields({
                 : ''}
             </StudentFeedback>
           )}
-          <ShakingTextField error={fileError}>
-            <FormControl fullWidth required error={fileError} disabled={formik.isSubmitting}>
-              <FormLabel htmlFor={fileId} sx={{ typography: 'body2', mb: 1 }}>
-                Document
-              </FormLabel>
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1}
-                alignItems={{ sm: 'center' }}
-              >
-                <Button
-                  type="button"
-                  size="small"
-                  variant="outlined"
-                  startIcon={<Iconify icon={GlobalIcons.upload} width={18} />}
-                  disabled={formik.isSubmitting}
-                  aria-describedby={fileHelpId}
-                  onClick={() => fileInput.current?.click()}
-                  sx={{ alignSelf: 'flex-start', flexShrink: 0 }}
-                >
-                  Upload file
-                </Button>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ overflowWrap: 'anywhere', minWidth: 0 }}
-                >
-                  {formik.values.file?.name ?? 'No file selected'}
+          <FormSectionCard
+            title="Attachments"
+            icon={GlobalIcons.documentIcon}
+            descriptionTooltip="Select one document for this requirement. It is uploaded when you submit."
+          >
+            <Stack direction="row" spacing={1} alignItems="flex-start">
+              <Iconify icon={GlobalIcons.upload} width={20} sx={{ color: 'text.secondary' }} />
+              <Box>
+                <Typography component="h3" variant="subtitle2" fontWeight={700}>
+                  Upload files
                 </Typography>
-              </Stack>
-              <input
-                ref={fileInput}
-                id={fileId}
-                hidden
-                type="file"
-                name="file"
+                <Typography id={fileHelpId} variant="caption" color="text.secondary">
+                  {fileGuidance}
+                </Typography>
+              </Box>
+            </Stack>
+            <ShakingTextField error={Boolean(fileError)}>
+              <FormControl
+                fullWidth
                 required
+                error={Boolean(fileError)}
                 disabled={formik.isSubmitting}
-                aria-describedby={fileHelpId}
-                aria-invalid={fileError}
-                accept={extensions.map((extension) => `.${extension.replace(/^\./, '')}`).join(',')}
-                onChange={(event) => {
-                  formik.setFieldTouched('file', true, false);
-                  formik.setFieldValue('file', event.target.files?.[0] ?? null);
-                }}
-                onBlur={formik.handleBlur}
-              />
-              <FormHelperText id={fileHelpId} sx={{ mx: 0 }}>
-                {fileError
-                  ? formik.errors.file
-                  : `${extensions.join(', ').toUpperCase()} · Maximum ${maxFileSizeMb} MB`}
-              </FormHelperText>
-            </FormControl>
-          </ShakingTextField>
+              >
+                <FormLabel id={fileId} component="span" sx={{ typography: 'body2', mb: 1 }}>
+                  Document
+                </FormLabel>
+                <CustomUpload<false>
+                  multiple={false}
+                  value={formik.values.file ?? undefined}
+                  onChange={(file) => {
+                    if (!file || file instanceof File) selectFile(file);
+                  }}
+                  onReject={(message) => {
+                    formik.setFieldTouched('file', true, false);
+                    formik.setFieldError('file', message);
+                  }}
+                  error={fileError}
+                  primaryText="Drop files here or browse"
+                  secondaryText="Select one file"
+                  accept={extensions
+                    .map((extension) => `.${extension.replace(/^\./, '')}`)
+                    .join(',')}
+                  maxFileSizeMb={maxFileSizeMb}
+                  disabled={formik.isSubmitting}
+                  loading={formik.isSubmitting}
+                  parentsProps={{ role: 'group', 'aria-labelledby': fileId }}
+                  dragProps={{
+                    'aria-describedby': fileHelpId,
+                    'aria-required': true,
+                    'aria-invalid': Boolean(fileError),
+                    sx: { minHeight: 144, bgcolor: 'action.hover' },
+                  }}
+                />
+              </FormControl>
+            </ShakingTextField>
+          </FormSectionCard>
         </>
       )}
       {original && (

@@ -24,13 +24,14 @@ import {
 import AdmissionRuntimeField from '../admission-runtime-field';
 import { useAdmissionInquiryAge } from '../use-admission-inquiry-age';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
-import { useInquiryPrimaryContact } from '../use-inquiry-primary-contact';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
+import { useInquiryPrimaryContact } from '../use-inquiry-primary-contact';
 import { useAdmissionFormLanguage } from '../use-admission-form-language';
 import { canonicalInquiryBinding } from '../admission-inquiry-field-bindings';
 import { useAdmissionUnsavedChanges } from '../use-admission-unsaved-changes';
 import { AdmissionSectionFields } from '../components/admission-section-fields';
 import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
+import { useAdmissionAddressSync, isAdmissionCopiedAddressField } from '../admission-address-sync';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import {
   validateAdmissionInquiry,
@@ -64,6 +65,7 @@ export function InquiryOverviewForm({
 }) {
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
   const [current, setCurrent] = useState(inquiry);
+  const [interestExpanded, setInterestExpanded] = useState(true);
   const previousForm = useRef<{
     id: string;
     fields: ReturnType<typeof getAdmissionInquiryFields>;
@@ -169,6 +171,17 @@ export function InquiryOverviewForm({
     formik.values
   );
   const fields = getAdmissionInquiryFields(form, formik.values);
+  useAdmissionAddressSync(
+    form?.sections ?? [],
+    formik.values.fields,
+    (changes) => {
+      formik.setValues((currentValues) => ({
+        ...currentValues,
+        fields: { ...currentValues.fields, ...changes },
+      }));
+    },
+    readOnly || updateState.isLoading || readingPhoto || runtime.isFetching
+  );
   const primaryContact = useInquiryPrimaryContact({
     formik,
     fields,
@@ -222,6 +235,12 @@ export function InquiryOverviewForm({
   const locked = readOnly || updateState.isLoading || readingPhoto;
   const errors = formik.errors.fields as Record<string, string> | undefined;
   const touched = formik.touched.fields as Record<string, boolean> | undefined;
+  const hasInterestErrors = ['boardId', 'mediumId', 'standardId', 'offeringId'].some((key) =>
+    Boolean(formik.errors[key as keyof typeof formik.errors])
+  );
+  useEffect(() => {
+    if (formik.submitCount && hasInterestErrors) setInterestExpanded(true);
+  }, [formik.submitCount, hasInterestErrors]);
   useAdmissionUnsavedChanges(!readOnly, formik.dirty);
   useEffect(() => {
     onDraftChange?.({ dirty: formik.dirty, busy: updateState.isLoading || readingPhoto });
@@ -354,6 +373,9 @@ export function InquiryOverviewForm({
                 title={title === 'Admission interest' ? 'Admission Interest' : title}
                 icon={GlobalIcons.admissionInterest}
                 descriptionTooltip="Select the academic context and admission offering."
+                collapsible
+                expanded={interestExpanded}
+                onExpandedChange={setInterestExpanded}
               >
                 <Box
                   sx={{
@@ -543,7 +565,15 @@ export function InquiryOverviewForm({
                           onBusyChange={(busy) => onPhotoReading(field.code, busy)}
                           field={ageFeedback.withAgeHelp(field)}
                           value={formik.values.fields[field.code] ?? ''}
-                          disabled={locked || field.readOnly}
+                          disabled={
+                            locked ||
+                            field.readOnly ||
+                            isAdmissionCopiedAddressField(
+                              field,
+                              form?.sections ?? [],
+                              formik.values.fields
+                            )
+                          }
                           error={
                             formik.submitCount > 0 || touched?.[field.code]
                               ? errors?.[field.code] &&

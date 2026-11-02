@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-11-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,6 +17,10 @@ TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query c
 `src/redux/student/house-management/house-management-api.ts` injects the typed Houses, Students and Divisions queries plus house CRUD, assignment preview/commit and independent leader commands into the shared API. Types live beside the client. Responses use the existing Records Result-envelope adapter. Successful writes invalidate the `studentType.student` tag with ID `HOUSE-MANAGEMENT`; preview is read-only and failed writes retain cached state. House CRUD also shares the specific `studentGroupType.studentGroup` tag with ID `HOUSE-CATALOGUE` with legacy House Settings, so changes in either workspace refresh subscribed catalogue views and managed roster labels. Membership and leader commands do not refresh the legacy catalogue. Commands retain current concurrency stamps and assignment preview tokens. Server pages are bounded to 100 rows; selections can span pages within the 500-enrollment command limit. Backend contracts and scope rules are owned by the [Student API](../../../Shikshamitra-BE/docs/modules/student/api.md#house-management).
 
 House and eligible-leader lookups use the shared `PaginatedSearchSelect`, backed by the owning RTK lazy queries. The picker adapts one-based pages to 25-row server offsets, debounces searches for 400 ms, and reloads empty-query choices when medium or leader scope changes. Stable house/enrollment IDs identify options; leader labels include the GR number only when present in the permitted response.
+
+## Pre-finalization form corrections
+
+`admission-applications-api.ts` exposes `correctAdmissionApplicationForm` for the audited form-correction command. The existing form query supplies `canCorrectForm` and `correctionBlockedReason`; a missing capability does not enable editing. Successful corrections invalidate the existing Admissions application and Inquiry tags, refreshing subscribed finalization previews, Applicant context, linked Inquiry contact and history. Failed writes retain cached data. The editor freezes answers and their concurrency stamp, sends changed values with a required reason, and retains the exact request key and payload after an unconfirmed response. A conflict requires reopening the latest form rather than silently replacing unsaved edits. See the [backend Student API](../../../Shikshamitra-BE/docs/modules/student/api.md) for authoritative permissions and invariants.
 
 ## Resume admission client
 
@@ -94,7 +98,20 @@ The finalized application summary reuses the application/workflow and decision-h
 
 The take-attendance client reads `/students/attendance/context` for scoped academic options, active teacher assignments, school date and Add-authorized lock capability. `/students/attendance/workspace` supplies paged active students for broad filters; `/students/attendance/students` supplies the full dated class roster and revisions once one class/division is selected. Lock/Unlock enforce the same assigned-class scope as marking, with the existing database-administrator scope exception. These Attendance-owned reads do not require a Student Records grant.
 
+The class-register request explicitly sends `IncludeCumulativeSummary: false` because this screen consumes daily facts rather than annual metric fields.
+Reports and profile summaries retain their owning reads; [backend contracts](../../../Shikshamitra-BE/docs/modules/student/api.md#student-attendance-api-families) define the compatible cumulative default and unchanged authorization.
+
 Broad paging, search and sorting run on the server. Full-class display paging/search is local to its loaded register; Save/Submit always retain the complete eligible roster. Date and academic selection plus `search`, `sort`, `page` and `pageSize` are URL-backed. Existing mark requests use `submit: false/true`; locking is a separate request. Mutations invalidate the affected register, workspace and reporting caches. Loading/error context disables marking and preserves unsaved work.
+
+The leave screen subscribes to one active `/students/attendance/leaves` page and one `/students/attendance/leaves/status-counts` result, rather than three extra rich pages for tab totals.
+Both use the selected academic scope, search and column criteria; counters exclude only the status criterion and do not send paging/sorting.
+The count subscription shares the existing leave cache tag and the list's mount/reconnect refresh policy, so accepted changes refresh both and failed changes retain current data.
+Changed scopes use `currentData`, withholding another scope's counters; missing prerequisites skip both queries and zero totals remain visible.
+
+The legacy Student photo/document upload screens use the complete scalar `/app/standard/lookup` for class/division options instead of the default ten-row Standard page.
+The lookup keeps the existing Academic scope and ordering without adding a year filter or grant; see the [backend read contract](../../../Shikshamitra-BE/docs/modules/academic/references/ui-read-performance.md).
+Both screens retain server-paged division students and their existing upload permissions. Dependent student reads wait for a selected division, and `currentData` prevents previous-division pupils from appearing during a new request.
+The selected class/division must still belong to the current lookup result; hierarchy/scope cache refreshes that remove either selection hide cached pupils and skip dependent reads without adding a year filter.
 
 ## Academic filter requests
 
@@ -187,6 +204,11 @@ Structured/custom masks and edit capability remain backend policy decisions; the
 Details uses the additive safe `formSources` projection, preserving the existing custom-request sources for other consumers. `student-registration-form-panel.tsx` reads `/students/records/{studentId}/details/form-snapshot` only when editing starts and PUTs typed source values, `clientKey`, reason and `expectedSnapshot` to `/details/form`. A successful immediate save refreshes profile and history without leaving Details. Generic Changes workflows remain separate. The original form version and source schema stay frozen during editing; protected or policy-masked fields remain read-only. The profile's Back button shares the editor's navigation guard, and the editing academic context remains frozen if the global year changes.
 
 Documents combines ordinary requirements and retained admission evidence in one `CustomizableTable`. Profile-specific adapters in `student-profile-information-api.ts` use the existing `/app/student-document` JSON contracts for required status, content and uploads; Base64 conversion uses shared file utilities. Downloads return only completion metadata to Redux, while private previews are evicted when closed. Existing Student List Add and registration-stage eligibility govern ordinary uploads; active/former records cannot upload through that owner. Retained evidence uses its separate Records-scoped download and existing read-only version/review details.
+The legacy upload client in `src/redux/student/registration/registration-api.ts` now uses the same canonical required-status and upload contracts instead of the missing Registration document routes.
+Its existing callers still supply `FormData`; the adapter reuses `studentDocumentUploadPayload` to send the selected file's name, MIME type, size and Base64 bytes as processed-file JSON.
+Required-status reads and upload responses retain raw and `data`-wrapped response compatibility, and server validation or permission errors remain failures.
+Successful uploads invalidate only that Student's `Student-Document` collection, shared with the profile, plus the existing `Student` tag for roster summaries; failed uploads and unreadable files do not invalidate caches.
+The document owner still permits ordinary uploads only during registration; enrolled, inactive and former students returned by the division lookup do not gain upload capability from this adapter.
 Records resolves dynamic choices through `/students/records/{studentId}/details/options`, bound to the recorded submission and field code. It does not require Admissions Form View access. Master choices follow the source-year hierarchy; sibling search retains the shared paginated selector. Read-only review requests selected labels only, splitting large before/after sets into batches of at most 20 IDs. Missing or restricted choices show safe labels rather than GUIDs. The source definition, snapshot and untouched typed values stay frozen for an open correction draft; transient refresh failures preserve that draft while access denial blocks submission.
 Successful direct form saves and existing create/approve/apply operations invalidate the affected profile/details, snapshot, Directory and change-history tags according to their endpoint contracts. History is a paged audit timeline with an in-profile before/after drawer; it does not render an enrollment table or redirect to Changes.
 Deployment, data freezing, approval policy, concurrency, tenant scope and custom-value persistence are owned by the [backend Student contracts](../../../Shikshamitra-BE/docs/modules/student/api.md) and [Records product rules](../../../Shikshamitra-BE/docs/modules/student/product.md#permanent-student-records-behavior).
@@ -268,6 +290,12 @@ Assignment responses update the visible row immediately, including a Roll cleare
 Activation also invalidates the Student Records directory tag so the newly activated student becomes discoverable without stale cached rows.
 
 `src/redux/student/records/student-record-documents-api.ts` owns the Student I-Card template, preview, issue, history and bulk PDF export calls. The standalone designer saves the design before requesting previews or exports. Directory printing does not save a template: successful previews use the returned `templateSnapshot` for the displayed design and sheet orientation while retaining the user's current cards-per-page choice. Issue retains a stable idempotency key for retries. `student-records-api.ts` serializes multi-select Board, Medium, Class and Division IDs as repeated directory query parameters.
+
+`student-icard-templates.tsx` captures the opener's academic year for a new design. `student-icard-builder.tsx` restores a saved selection's year, academic filters and complete student ID set once; authorized directory labels load in chunks of at most 100 IDs. Paging, search, missing labels, refetches and rejected saves do not silently drop saved IDs or overwrite the design draft. Saves serialize the current year, filters and selected IDs. A `selectionRestricted` response contains no readable cohort: the designer omits `selection` on design-only writes, disables assignment editing and deletion with a scope explanation, and shows Restricted in the list. A save response that newly restricts assignments clears cohort previews and stops the pending card command. Directory bulk printing keeps its independently captured students and oldest-template compatibility path. Backend scope, masking, transfer and validation remain authoritative; see the [Student I-Card contract](../../../Shikshamitra-BE/docs/modules/student/api.md#student-records-api-families).
+
+Card commands recheck the committed opener context after asynchronous saves and responses. A changed or closed context suppresses follow-up preview/export/issue work and stale preview updates. An accepted save still updates the local design and concurrency stamp; this client guard does not cancel or roll back a request already submitted to the server.
+
+The main `/student/student-i-card` route mounts the saved-design catalogue. Its View issued cards link retains `/student/records/documents?view=ids` under the existing I-Card View grant; that history owner's builder also captures the global opener year. Metadata-only design saves omit `selection` when both saved and current member/filter sets are empty, so an automatic header year does not add assignment authority requirements. Clearing an existing assignment still sends an explicit empty selection, and selected filters remain explicit assignment intent.
 
 `student-directory-query.ts` serializes column criteria as indexed model-binding keys (`columnFilters[0].column`, `.operator`, `.value` or `.min`/`.max`). The Student List owns these criteria in its URL and passes them through the same RTK Query request as scope, search, sort and paging. Shared table filters/chips reflect that URL state; changing or removing a criterion resets the page. The shared empty-state clear callback updates search and column criteria atomically.
 

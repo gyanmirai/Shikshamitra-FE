@@ -30,6 +30,7 @@ import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-perm
 import {
   buildDynamicAdmissionYupSchema,
   getDynamicAdmissionValidationErrors,
+  getAdmissionSubmissionValidationErrors,
 } from '../admission-form-validation';
 
 export type RuntimeAction = 'skip' | 'override' | null;
@@ -259,6 +260,10 @@ export function useApplicationDetail(
         const normalizedErrors = Object.fromEntries(
           Object.entries(clientErrors).filter(([, error]) => typeof error === 'string')
         ) as Record<string, string>;
+        Object.assign(
+          normalizedErrors,
+          getAdmissionSubmissionValidationErrors(formQuery.data.definition, currentValues)
+        );
         await formik.setTouched(
           Object.fromEntries(Object.keys(formik.values).map((fieldCode) => [fieldCode, true]))
         );

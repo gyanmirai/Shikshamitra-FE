@@ -8,6 +8,26 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import AdmissionRuntimeField from './admission-runtime-field';
 
+it('renders the saved student surname question as optional for single-name students', () => {
+  render(
+    <AdmissionRuntimeField
+      field={{
+        code: 'SURNAME',
+        label: 'Last name',
+        fieldType: 0,
+        bindingType: 0,
+        bindingKey: 'Applicant.LastName',
+        required: true,
+        readOnly: false,
+      }}
+      value=""
+      disabled={false}
+      onChange={vi.fn()}
+    />
+  );
+  expect(screen.getByRole('textbox', { name: 'Last name' })).not.toBeRequired();
+});
+
 it('keeps numeric zero options available and emits string values for configured inquiry source', async () => {
   const user = userEvent.setup();
   const onChange = vi.fn();

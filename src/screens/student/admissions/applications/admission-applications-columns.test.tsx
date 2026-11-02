@@ -10,26 +10,22 @@ const columns = buildAdmissionApplicationsColumns({
 const cell = (id: string) => columns.find((column) => column.id === id)!;
 
 describe('Applications record presentation', () => {
-  it('keeps the lifecycle label and actions visible with supported sorting only', () => {
+  it('keeps the lifecycle label visible with supported sorting and filters', () => {
     expect(cell('status')).toMatchObject({ sticky: true, stickyPosition: 'right', isSort: true });
-    expect(cell('actions')).toMatchObject({
-      sticky: true,
-      stickyPosition: 'right',
-      isSort: false,
-      isFilter: false,
-      excludeFromExport: true,
-    });
-    expect(columns.filter((column) => column.isFilter).map((column) => column.id)).toEqual(['standardName', 'decisionEnteredAt', 'lastSavedAt', 'status']);
+    expect(columns.some((column) => column.id === 'actions')).toBe(false);
+    expect(columns.filter((column) => column.isFilter).map((column) => column.id)).toEqual([
+      'standardName',
+      'lastSavedAt',
+      'status',
+    ]);
     expect(cell('applicantName').isFilter).toBe(false);
     expect(cell('contactPhone').isFilter).toBe(false);
   });
-  it('uses honest missing decision dates', () => {
+  it('uses honest missing saved dates', () => {
     expect(columns.some((column) => column.id === 'assignedCounsellorName')).toBe(false);
-    expect(getCellValueForExport({ decisionEnteredAt: null }, cell('decisionEnteredAt'))).toBe(
-      'Not recorded'
-    );
+    expect(getCellValueForExport({ lastSavedAt: null }, cell('lastSavedAt'))).toBe('—');
   });
-  it('exports the combined identity and contact information without duplicate columns', () => {
+  it('exports the combined identity and separate contact information without duplicate columns', () => {
     expect(
       getCellValueForExport(
         { id: 'a', applicantName: 'Riya Patel', applicationNumber: 'APP-2026-000001' },
@@ -41,7 +37,10 @@ describe('Applications record presentation', () => {
         { contactPhone: '9876543210', contactEmail: 'parent@example.test' },
         cell('contactPhone')
       )
-    ).toBe('9876543210 parent@example.test');
+    ).toBe('9876543210');
+    expect(
+      getCellValueForExport({ contactEmail: 'parent@example.test' }, cell('contactEmail'))
+    ).toBe('parent@example.test');
     expect(
       columns.some((column) =>
         ['applicationNumber', 'offeringCode', 'currentStageName'].includes(column.id)

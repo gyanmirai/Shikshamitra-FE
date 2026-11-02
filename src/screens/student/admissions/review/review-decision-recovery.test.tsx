@@ -57,6 +57,14 @@ it.each([true, false])(
     ]);
     await user.click(screen.getByRole('button', { name: 'Reject' }));
     const dialog = within(screen.getByRole('dialog'));
+    expect(
+      dialog.queryByText(/This decision is recorded in the application history/)
+    ).not.toBeInTheDocument();
+    await user.hover(dialog.getByRole('button', { name: 'Reject application information' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'This decision is recorded in the application history for APP-TEST.'
+    );
+    await user.unhover(dialog.getByRole('button', { name: 'Reject application information' }));
     await user.type(dialog.getByLabelText('Reason *'), 'Original decision reason.');
     await user.click(dialog.getByRole('button', { name: 'Reject application' }));
     expect(await dialog.findByText(/Unable to confirm the decision/)).toBeInTheDocument();

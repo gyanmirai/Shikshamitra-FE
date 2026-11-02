@@ -245,7 +245,9 @@ describe('document review commands', { timeout: 15000 }, () => {
     );
     const dialog = within(screen.getByRole('dialog'));
     const file = new File(['%PDF'], 'birth.pdf', { type: 'application/pdf' });
-    await userEvent.upload(dialog.getByLabelText(/^Document/), file);
+    fireEvent.change(dialog.getByRole('group', { name: 'Document' }).querySelector('input')!, {
+      target: { files: [file] },
+    });
     act(() => {
       store.dispatch(
         setPermissions([{ name: 'Students.Admissions.Documents.View', isGranted: true }])
@@ -258,7 +260,7 @@ describe('document review commands', { timeout: 15000 }, () => {
         'This action is no longer available. Refresh the checklist before continuing.'
       )
     ).toBeVisible();
-    expect((dialog.getByLabelText(/^Document/) as HTMLInputElement).files?.[0]).toBe(file);
+    expect(dialog.getByText('birth.pdf')).toBeVisible();
     expect(uploads).toBe(0);
   });
 });

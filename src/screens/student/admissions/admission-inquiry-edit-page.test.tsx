@@ -5,7 +5,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 import {
   useGetAdmissionInquiryQuery,
@@ -251,6 +251,109 @@ const inquiry = {
 } as AdmissionInquiry;
 
 describe('Edit inquiry page', () => {
+  it('synchronizes saved Inquiry addresses and retains the checkbox and copied values on reopening', async () => {
+    const addressFields = [
+      {
+        id: 'current',
+        code: 'CURRENT',
+        label: 'Current street',
+        bindingKey: 'Address.AddressLine1',
+        fieldType: 0,
+      },
+      {
+        id: 'same',
+        code: 'SAME',
+        label: 'Same address',
+        bindingKey: 'PermanentAddress.SameAsCurrent',
+        fieldType: 9,
+      },
+      {
+        id: 'permanent',
+        code: 'PERMANENT',
+        label: 'Permanent street',
+        bindingKey: 'PermanentAddress.Line1',
+        fieldType: 0,
+      },
+    ].map((field, index) => ({
+      ...field,
+      bindingType: 0,
+      required: false,
+      readOnly: false,
+      displayOrder: index + 4,
+    }));
+    const saved = {
+      ...inquiry,
+      formDefinition: {
+        ...originalForm,
+        sections: [
+          {
+            ...originalForm.sections[0],
+            fields: [...originalForm.sections[0].fields, ...addressFields],
+          },
+        ],
+      },
+      formValues: [
+        ...(inquiry.formValues ?? []),
+        { fieldCode: 'CURRENT', valueJson: '"Saved road"' },
+        { fieldCode: 'SAME', valueJson: 'true' },
+        { fieldCode: 'PERMANENT', valueJson: '"Stale road"' },
+      ],
+    } as AdmissionInquiry;
+    const readSaved = (data: AdmissionInquiry) =>
+      vi
+        .mocked(useGetAdmissionInquiryQuery)
+        .mockReturnValue({ data, isLoading: false, isError: false } as unknown as ReturnType<
+          typeof useGetAdmissionInquiryQuery
+        >);
+    readSaved(saved);
+    render(<AdmissionInquiryEditPage />);
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Permanent street' })).toHaveValue('Saved road')
+    );
+    expect(screen.getByRole('textbox', { name: 'Permanent street' })).toBeDisabled();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Current street' }), {
+      target: { value: 'Updated road' },
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Permanent street' })).toHaveValue('Updated road')
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            formValues: expect.arrayContaining([
+              { fieldCode: 'CURRENT', valueJson: '"Updated road"' },
+              { fieldCode: 'SAME', valueJson: 'true' },
+              { fieldCode: 'PERMANENT', valueJson: '"Updated road"' },
+            ]),
+          }),
+        })
+      )
+    );
+    const persisted = update.mock.calls[0][0].body.formValues;
+    cleanup();
+    readSaved({ ...saved, formValues: persisted });
+    render(<AdmissionInquiryEditPage />);
+    expect(screen.getByRole('checkbox', { name: 'Same address' })).toBeChecked();
+    expect(screen.getByRole('textbox', { name: 'Permanent street' })).toHaveValue('Updated road');
+    expect(screen.getByRole('textbox', { name: 'Permanent street' })).toBeDisabled();
+  });
+
+  it('collapses admission context without losing the saved inquiry answers', async () => {
+    render(<AdmissionInquiryEditPage />);
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Collapse Admission Interest' })
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('combobox', { name: 'Board' })).not.toBeInTheDocument()
+    );
+    expect(screen.getByRole('textbox', { name: 'Applicant name' })).toHaveValue('Riya Shah');
+    await userEvent.click(screen.getByRole('button', { name: 'Expand Admission Interest' }));
+    expect(screen.getByRole('textbox', { name: 'Family notes' })).toHaveValue('Existing note');
+    expect(update).not.toHaveBeenCalled();
+  });
+
   it('preserves an unbound legacy Full Name answer without treating its label as student identity', async () => {
     const customName = {
       ...originalForm.sections[0].fields[0],

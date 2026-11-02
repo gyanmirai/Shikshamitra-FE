@@ -111,6 +111,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
   const pathname = usePathname();
   const params = useSearchParams();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const currentYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const kind = fixedKind ?? (params.get('view') === 'ids' ? 'ids' : 'certificates');
   const pageTitle =
     fixedKind === 'ids' ? 'Student I-Card' : fixedKind ? 'Certificates' : 'Documents & IDs';
@@ -147,6 +148,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
   const [idPreview, setIdPreview] = useState<IdCard[]>([]);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [builderOpen, setBuilderOpen] = useState(false);
+  const [builderYearId, setBuilderYearId] = useState<string | undefined>();
   const [failure, setFailure] = useState<string | null>(null);
   const [decision, setDecision] = useState<{
     action: 'Reprint' | 'Void' | 'Duplicate';
@@ -458,7 +460,12 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
         action={
           canIssue ? (
             <Button
-              onClick={() => (kind === 'ids' ? setBuilderOpen(true) : setTemplatesOpen(true))}
+              onClick={() => {
+                if (kind === 'ids') {
+                  setBuilderYearId(currentYearId);
+                  setBuilderOpen(true);
+                } else setTemplatesOpen(true);
+              }}
             >
               {kind === 'ids' ? 'Create Student I-Card' : 'Configure template'}
             </Button>
@@ -820,7 +827,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
         handleClose={() => setBuilderOpen(false)}
       >
         <Box sx={{ flex: 1, minHeight: 0, p: 1, bgcolor: 'background.neutral' }}>
-          {builderOpen && <StudentICardBuilder onClose={() => setBuilderOpen(false)} />}
+          {builderOpen && <StudentICardBuilder onClose={() => setBuilderOpen(false)} academicYearId={builderYearId} contextInvalid={currentYearId !== builderYearId} />}
         </Box>
       </CustomDialog>
       <CustomDialog

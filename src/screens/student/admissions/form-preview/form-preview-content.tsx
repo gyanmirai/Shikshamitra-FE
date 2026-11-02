@@ -17,6 +17,7 @@ import { AdmissionSectionFields } from '../components/admission-section-fields';
 import { dependentAdmissionFieldValues } from '../admission-field-dependencies';
 import { getDynamicAdmissionValidationErrors } from '../admission-form-validation';
 import { AdmissionFormStepNavigation } from '../components/admission-form-step-navigation';
+import { useAdmissionAddressSync, isAdmissionCopiedAddressField } from '../admission-address-sync';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import {
   readRepeatableValues,
@@ -46,6 +47,14 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
     [form.sections, language]
   );
   const fields = localizedSections.flatMap((section) => section.fields);
+  useAdmissionAddressSync(
+    localizedSections,
+    values,
+    (changes) => {
+      formik.setValues((current) => ({ ...current, ...changes }));
+    },
+    readingPhoto
+  );
   const visibleSections = localizedSections.filter((section) =>
     isAdmissionRuleVisible(section.visibilityRuleJson, values)
   );
@@ -119,7 +128,11 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
                 optionsJson: resolvedOptions[field.code] ?? field.optionsJson,
               }}
               value={value}
-              disabled={field.readOnly || readingPhoto}
+              disabled={
+                field.readOnly ||
+                readingPhoto ||
+                isAdmissionCopiedAddressField(field, localizedSections, rowValues)
+              }
               error={
                 formik.touched[field.code] && typeof formik.errors[field.code] === 'string'
                   ? field.translations?.[language]?.validationMessage || formik.errors[field.code]

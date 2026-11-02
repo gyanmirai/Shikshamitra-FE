@@ -394,6 +394,18 @@ beforeEach(() => {
   }));
 });
 describe('Daily Attendance workspace', () => {
+  it('requests daily facts without waiting for unused cumulative annual statistics', async () => {
+    render(<TakeAttendanceScreen />);
+    await screen.findByRole('button', { name: 'Present: Aarav' });
+    expect(mocks.queryArgs).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        IncludeCumulativeSummary: false,
+        Date: '2026-09-30',
+        StandardId: 'class',
+        DivisionId: 'division',
+      })
+    );
+  });
   it('restores the requested class register when the shell academic context hydrates after reload', async () => {
     mocks.globalReady = false;
     const view = render(<TakeAttendanceScreen />);

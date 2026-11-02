@@ -26,6 +26,7 @@ Directory-default props:
 | Error | `error` is a message string; `onReject(message)` currently reports oversized files |
 | Availability/progress | `disabled`, `loading`, `isLoading`; either loading flag activates the built-in indeterminate spinner and locks file actions |
 | Picker hints | `accept` string; no public maxSize, maxFiles, allowedTypes, or per-file progress prop |
+| Policy size override | `maxFileSizeMb` optionally overrides the 5 MB default per file; use the existing owning policy, with matching form/server validation |
 | Cards/preview | `showVisibleDocumentCount` defaults 3, `showPreview` defaults true, `onPreview(file)` overrides built-in preview |
 | Layout/accessibility | `parentsProps`, `dragProps` are Box props; `hideDropzone` hides selection only, not Remove |
 
@@ -67,7 +68,7 @@ supported composition props; there is no dedicated label/helper ID prop.
 | Constraint | Current behavior / required integration |
 | --- | --- |
 | Standard document types | PNG, JPEG/JPG and PDF; internal MIME list is image/png, image/jpeg, image/jpg, application/pdf |
-| Per-file limit | `5 * 1024 * 1024` bytes, labeled 5 MB by the UI; current comparison rejects greater than this limit, so exactly the limit is accepted |
+| Per-file limit | Optional `maxFileSizeMb`, default 5, converted to `1024 * 1024` bytes per MB; reject values greater than the configured limit, accepting exactly the limit. Pass a different limit only from the owning policy and retain its form/server validation. |
 | MIME validation gap | Multiple mode filters by its internal list; single mode only checks size. Unsupported multiple-file types are currently filtered without a rejection message |
 | accept override | Changes the native picker hint only; it does not change the internal multiple-mode MIME allowlist, and drag/drop does not rely on this hint |
 | Count | No general maximum-count enforcement; showVisibleDocumentCount limits displayed cards, not accepted files |

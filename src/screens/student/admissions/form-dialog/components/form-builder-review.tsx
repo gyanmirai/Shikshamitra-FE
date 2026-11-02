@@ -14,6 +14,7 @@ import { FormInheritancePanel } from './form-inheritance-panel';
 import { getAdmissionFormStepGroups } from '../form-step-groups';
 import { useFormInheritance } from '../hooks/use-form-inheritance';
 import { AdmissionDialogTitle } from '../../admission-dialog-title';
+import { useAdmissionAddressSync } from '../../admission-address-sync';
 import { getInheritancePreviewValues } from '../form-inheritance-model';
 import { getDependentAdmissionFieldCodes } from '../../admission-field-dependencies';
 import { AdmissionFormStepNavigation } from '../../components/admission-form-step-navigation';
@@ -49,6 +50,14 @@ export function FormBuilderReview({ formik }: Props) {
     form.layoutType === 1
       ? (steps[activeStep]?.sections ?? [])
       : form.sections.map((section, sectionIndex) => ({ section, sectionIndex }));
+  useAdmissionAddressSync(
+    form.sections,
+    previewAnswers,
+    (changes) => {
+      setAnswers((current) => ({ ...current, ...changes }));
+    },
+    formik.isSubmitting
+  );
   const changeAnswer = (code: string, value: string) => {
     const dependents = getDependentAdmissionFieldCodes(
       form.sections.flatMap((section) => section.fields),

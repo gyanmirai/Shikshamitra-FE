@@ -2,7 +2,168 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 
 import { it, expect, describe } from 'vitest';
 
-import { getDynamicAdmissionValidationErrors } from './admission-form-validation';
+import {
+  getDynamicAdmissionValidationErrors,
+  getAdmissionSubmissionValidationErrors,
+} from './admission-form-validation';
+
+it('does not require an inaccessible identity answer on a hidden form step', () => {
+  const definition = {
+    sections: [
+      {
+        stepVisibilityRuleJson: '{"field":"SHOW_DETAILS","operator":"Equals","value":"yes"}',
+        fields: [
+          {
+            code: 'DOB',
+            label: 'Date of birth',
+            fieldType: 5,
+            bindingType: 0,
+            bindingKey: 'Applicant.DateOfBirth',
+            required: false,
+          },
+        ],
+      },
+    ],
+  };
+  expect(
+    getAdmissionSubmissionValidationErrors(definition, { DOB: '', SHOW_DETAILS: 'no' })
+  ).toEqual({});
+  expect(
+    getAdmissionSubmissionValidationErrors(definition, { DOB: '', SHOW_DETAILS: 'yes' })
+  ).toHaveProperty('DOB');
+});
+
+it.each([false, true])(
+  'skips hidden-step required questions, including repeatable sections: %s',
+  (isRepeatable) => {
+    const definition = {
+      sections: [
+        {
+          isRepeatable,
+          minEntries: 1,
+          stepVisibilityRuleJson: '{"field":"SHOW_DETAILS","operator":"Equals","value":"yes"}',
+          fields: [{ code: 'DETAILS', label: 'Details', fieldType: 0, required: true }],
+        },
+      ],
+    };
+    expect(
+      getDynamicAdmissionValidationErrors(definition, { DETAILS: '', SHOW_DETAILS: 'no' })
+    ).toEqual({});
+    expect(
+      getDynamicAdmissionValidationErrors(definition, { DETAILS: '', SHOW_DETAILS: 'yes' })
+    ).toHaveProperty('DETAILS');
+  }
+);
+
+it('keeps visible required row answers enforced when visibility depends on another repeated answer', () => {
+  const definition = {
+    sections: [
+      {
+        isRepeatable: true,
+        maxEntries: 2,
+        fields: [
+          {
+            code: 'DETAILS',
+            label: 'Details',
+            fieldType: 0,
+            required: true,
+            visibilityRuleJson: '{"field":"HAS_SCHOOL","operator":"Equals","value":"true"}',
+          },
+        ],
+      },
+    ],
+  };
+  expect(
+    getDynamicAdmissionValidationErrors(definition, { HAS_SCHOOL: '["true"]', DETAILS: '[""]' })
+  ).toHaveProperty('DETAILS');
+});
+
+it('requires identity questions at submission while allowing a partial draft', () => {
+  const definition = {
+    sections: [
+      {
+        fields: [
+          {
+            code: 'GENDER',
+            label: 'Gender',
+            fieldType: 6,
+            bindingType: 0,
+            bindingKey: 'Applicant.Gender',
+            required: false,
+          },
+        ],
+      },
+    ],
+  };
+  expect(getDynamicAdmissionValidationErrors(definition, { GENDER: '' })).toEqual({});
+  expect(getAdmissionSubmissionValidationErrors(definition, { GENDER: '' })).toHaveProperty(
+    'GENDER'
+  );
+});
+
+it('does not demand an uneditable inherited identity answer on the client', () => {
+  const definition = {
+    sections: [
+      {
+        fields: [
+          {
+            code: 'ORIGINAL_DOB',
+            label: 'Original birth date',
+            fieldType: 5,
+            bindingType: 0,
+            bindingKey: 'Applicant.DateOfBirth',
+            required: false,
+            readOnly: true,
+          },
+        ],
+      },
+    ],
+  };
+  expect(getAdmissionSubmissionValidationErrors(definition, {})).toEqual({});
+});
+
+it.each(['Applicant.MiddleName', 'Applicant.LastName'])(
+  'allows an empty optional student name part in historical required question %s',
+  (bindingKey) => {
+    const definition = {
+      sections: [
+        {
+          fields: [
+            {
+              code: 'NAME_PART',
+              label: 'Name part',
+              fieldType: 0,
+              bindingType: 0,
+              bindingKey,
+              required: true,
+            },
+          ],
+        },
+      ],
+    };
+    expect(getDynamicAdmissionValidationErrors(definition, { NAME_PART: '' })).toEqual({});
+  }
+);
+
+it('preserves required custom questions even when they reuse a student-name binding label', () => {
+  const definition = {
+    sections: [
+      {
+        fields: [
+          {
+            code: 'CUSTOM',
+            label: 'Last name',
+            fieldType: 0,
+            bindingType: 1,
+            bindingKey: 'Applicant.LastName',
+            required: true,
+          },
+        ],
+      },
+    ],
+  };
+  expect(getDynamicAdmissionValidationErrors(definition, { CUSTOM: '' })).toHaveProperty('CUSTOM');
+});
 
 const form = {
   id: 'form',

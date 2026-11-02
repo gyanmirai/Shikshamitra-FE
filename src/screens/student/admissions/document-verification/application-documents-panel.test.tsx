@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { screen, within, waitFor } from '@testing-library/react';
+import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 import {
   documentSummary,
   documentEvidence,
@@ -98,10 +98,9 @@ describe('applicant document checklist interactions', { timeout: 15000 }, () => 
     expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: 'Upload document' }));
     const dialog = within(screen.getByRole('dialog'));
-    await userEvent.upload(
-      dialog.getByLabelText(/^Document/),
-      new File(['%PDF-1.7'], 'birth.pdf', { type: 'application/pdf' })
-    );
+    fireEvent.change(dialog.getByRole('group', { name: 'Document' }).querySelector('input')!, {
+      target: { files: [new File(['%PDF-1.7'], 'birth.pdf', { type: 'application/pdf' })] },
+    });
     await userEvent.click(dialog.getByRole('button', { name: 'Upload document' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(uploadName).toBe('birth.pdf');

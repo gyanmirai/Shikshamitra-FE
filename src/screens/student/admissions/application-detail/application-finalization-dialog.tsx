@@ -10,6 +10,7 @@ import type {
 import { useSelector } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useRef, useState, useEffect } from 'react';
@@ -31,7 +32,9 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { ApplicationFormCorrectionDrawer } from './application-form-correction-drawer';
 import { ApplicationFinalizationReadiness } from './application-finalization-readiness';
+import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 import { ApplicationApplicantIdentityDialog } from './application-applicant-identity-dialog';
 import {
   getAdmissionApplicationStatusColor,
@@ -48,6 +51,7 @@ type Props = {
   open: boolean;
   presentation?: 'dialog' | 'inline';
   applicantId: string;
+  applicationId?: string;
   application?: Pick<
     AdmissionApplication,
     'applicantName' | 'applicationNumber' | 'offeringCode' | 'status'
@@ -57,6 +61,7 @@ type Props = {
   loading: boolean;
   hasError: boolean;
   onRetry: () => void;
+  onFormCorrected?: () => void;
   onClose: () => void;
   onSubmit: (value: SubmitValue) => Promise<boolean>;
 };
@@ -128,12 +133,14 @@ export function ApplicationFinalizationDialog({ open, ...props }: Props) {
 function OpenApplicationFinalizationDialog({
   presentation = 'dialog',
   applicantId,
+  applicationId,
   application,
   busy: externalBusy,
   preview,
   loading,
   hasError,
   onRetry,
+  onFormCorrected,
   onClose,
   onSubmit,
 }: OpenProps) {
@@ -144,8 +151,18 @@ function OpenApplicationFinalizationDialog({
   const [guardianVerified, setGuardianVerified] = useState(false);
   const [reviewedIdentity, setReviewedIdentity] = useState<string | null>(null);
   const [repairOpen, setRepairOpen] = useState(false);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const profileRules = useBoolean();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canCorrectForm =
+    Boolean(applicationId && application && [1, 4, 5, 6, 7, 8].includes(application.status)) &&
+    hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.view) &&
+    hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
+  const resetReview = () => {
+    setIdentityChoice('');
+    setGuardianVerified(false);
+    setReviewedIdentity(null);
+  };
   const canRepairIdentity =
     hasGrantedPermission(permissions, 'Students.Admissions.Applicants.View') &&
     hasGrantedPermission(permissions, 'Students.Admissions.Applicants.Add');
@@ -182,7 +199,7 @@ function OpenApplicationFinalizationDialog({
       <FinalizationSurface
         presentation={presentation}
         busy={busy}
-        hidden={repairOpen}
+        hidden={repairOpen || correctionOpen}
         onClose={onClose}
       >
         <Box
@@ -263,9 +280,29 @@ function OpenApplicationFinalizationDialog({
                 spacing={1.5}
                 sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1.5, minWidth: 0 }}
               >
-                <Typography variant="subtitle1" component="h3">
-                  Student record details
-                </Typography>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                  justifyContent="space-between"
+                  spacing={1}
+                  useFlexGap
+                >
+                  <Typography variant="subtitle1" component="h3">
+                    Student record details
+                  </Typography>
+                  {canCorrectForm && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="inherit"
+                      disabled={busy || loading || hasError}
+                      startIcon={<Iconify icon={GlobalIcons.edit} />}
+                      onClick={() => setCorrectionOpen(true)}
+                    >
+                      Edit application form
+                    </Button>
+                  )}
+                </Stack>
                 <Divider />
                 {capturedFields.length > 0 && (
                   <Stack spacing={1}>
@@ -460,6 +497,21 @@ function OpenApplicationFinalizationDialog({
           onRetry();
         }}
       />
+      {applicationId && (
+        <ApplicationFormCorrectionDrawer
+          open={correctionOpen}
+          applicationId={applicationId}
+          onClose={() => setCorrectionOpen(false)}
+          onSaved={() => {
+            resetReview();
+            (onFormCorrected ?? onRetry)();
+          }}
+          onRefresh={() => {
+            resetReview();
+            onRetry();
+          }}
+        />
+      )}
     </>
   );
 }

@@ -35,6 +35,7 @@ import { useAdmissionInquiryDialog } from './use-admission-inquiry-dialog';
 import { AdmissionSectionFields } from './components/admission-section-fields';
 import { getDependentAdmissionFieldCodes } from './admission-field-dependencies';
 import { AdmissionInquiryDuplicateMatches } from './admission-inquiry-duplicate-matches';
+import { useAdmissionAddressSync, isAdmissionCopiedAddressField } from './admission-address-sync';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from './form-dialog/form-languages';
 import {
   isAdmissionInquiryBirthDateField,
@@ -49,6 +50,14 @@ export default function AdmissionInquiryFormPage() {
     : studentPaths.enrollment.inquiries;
   const controller = useAdmissionInquiryDialog(() => router.replace(returnUrl));
   const { formik } = controller;
+  useAdmissionAddressSync(
+    controller.sections,
+    formik.values.fields,
+    (changes) => {
+      formik.setValues((current) => ({ ...current, fields: { ...current.fields, ...changes } }));
+    },
+    controller.busy
+  );
   const ageFeedback = useAdmissionInquiryAge({
     sections: controller.sections,
     values: formik.values.fields,
@@ -63,6 +72,7 @@ export default function AdmissionInquiryFormPage() {
   const lastFocusedSubmit = useRef(0);
   const lastPreferredClassToast = useRef('');
   const [dismissedCapacityOfferingId, setDismissedCapacityOfferingId] = useState('');
+  const [interestExpanded, setInterestExpanded] = useState(true);
   const handleCancel = () => {
     if (controller.busy) return;
     if (formik.dirty && !window.confirm('Discard this unfinished inquiry?')) return;
@@ -71,6 +81,16 @@ export default function AdmissionInquiryFormPage() {
   const fieldErrors = formik.errors.fields as Record<string, string> | undefined;
   const touchedFields = formik.touched.fields as Record<string, boolean> | undefined;
   const validationMessages = collectValidationMessages(formik.errors);
+  const hasInterestErrors = [
+    'admissionCycleId',
+    'boardId',
+    'mediumId',
+    'standardId',
+    'offeringId',
+  ].some((key) => Boolean(formik.errors[key as keyof typeof formik.errors]));
+  useEffect(() => {
+    if (formik.submitCount && hasInterestErrors) setInterestExpanded(true);
+  }, [formik.submitCount, hasInterestErrors]);
   const preferredClassError = getAdmissionInquiryPreferredClassError(
     formik.values,
     controller.fields,
@@ -95,12 +115,13 @@ export default function AdmissionInquiryFormPage() {
       lastFocusedSubmit.current === formik.submitCount
     )
       return;
+    if (hasInterestErrors && !interestExpanded) return;
     const invalidField = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
     if (!invalidField) return;
     lastFocusedSubmit.current = formik.submitCount;
     invalidField.focus();
     invalidField.scrollIntoView({ block: 'center' });
-  }, [formik.submitCount, validationMessages]);
+  }, [formik.submitCount, validationMessages, hasInterestErrors, interestExpanded]);
   const hierarchySelected = Boolean(
     formik.values.boardId && formik.values.mediumId && formik.values.standardId
   );
@@ -196,7 +217,12 @@ export default function AdmissionInquiryFormPage() {
                   Academic choices could not be loaded.
                 </StudentFeedback>
               )}
-              <InquiryFormSection title="Admission Interest" icon={GlobalIcons.admissionInterest}>
+              <InquiryFormSection
+                title="Admission Interest"
+                icon={GlobalIcons.admissionInterest}
+                expanded={interestExpanded}
+                onExpandedChange={setInterestExpanded}
+              >
                 <ShakingTextField
                   error={Boolean(formik.touched.admissionCycleId && formik.errors.admissionCycleId)}
                 >
@@ -490,7 +516,16 @@ export default function AdmissionInquiryFormPage() {
                           onBusyChange={(busy) => controller.onPhotoReading(field.code, busy)}
                           field={ageFeedback.withAgeHelp(field)}
                           value={formik.values.fields[field.code] ?? ''}
-                          disabled={controller.busy || controller.formLoading || field.readOnly}
+                          disabled={
+                            controller.busy ||
+                            controller.formLoading ||
+                            field.readOnly ||
+                            isAdmissionCopiedAddressField(
+                              field,
+                              controller.sections,
+                              formik.values.fields
+                            )
+                          }
                           error={
                             formik.submitCount > 0 || touchedFields?.[field.code]
                               ? fieldErrors?.[field.code] &&
@@ -619,11 +654,15 @@ function InquiryFormSection({
   title,
   icon = GlobalIcons.admissionDetails,
   description,
+  expanded,
+  onExpandedChange,
   children,
 }: {
   title: string;
   icon?: string;
   description?: string;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
   children: ReactNode;
 }) {
   return (
@@ -631,6 +670,9 @@ function InquiryFormSection({
       title={title}
       icon={icon}
       descriptionTooltip={description || `Enter the ${title.toLocaleLowerCase()} for this inquiry.`}
+      collapsible={Boolean(onExpandedChange)}
+      expanded={expanded}
+      onExpandedChange={onExpandedChange}
     >
       {description && (
         <Typography variant="body2" color="text.secondary">

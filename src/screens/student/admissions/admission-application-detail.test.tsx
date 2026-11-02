@@ -45,6 +45,34 @@ vi.mock('./application-detail/application-activity-drawer', () => ({
         )
       : null,
 }));
+vi.mock('./application-detail/application-form-correction-drawer', () => ({
+  ApplicationFormCorrectionDrawer: ({ open, applicationId, onClose, onSaved, onRefresh }: any) =>
+    open ? (
+      <div role="dialog" aria-label="Edit Application Form" data-application-id={applicationId}>
+        <button type="button" onClick={onClose}>
+          Cancel correction
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onSaved();
+            onClose();
+          }}
+        >
+          Save correction
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onRefresh();
+            onClose();
+          }}
+        >
+          Refresh correction
+        </button>
+      </div>
+    ) : null,
+}));
 
 vi.mock('src/components/custom-tooltip', () => ({ default: ({ children }: any) => children }));
 vi.mock('src/components/three-dots-actions', () => ({
@@ -95,8 +123,11 @@ vi.mock('src/components/scrollbar', () => ({
 }));
 
 vi.mock('src/components/custom-breadcrumbs', () => ({
-  CustomBreadcrumbs: ({ heading, action }: any) => (
+  CustomBreadcrumbs: ({ heading, action, isBack, onBack, backDisabled }: any) => (
     <div>
+      {isBack && (
+        <button type="button" aria-label="Back" disabled={backDisabled} onClick={onBack} />
+      )}
       <h1>{heading}</h1>
       {action}
     </div>
@@ -369,6 +400,60 @@ const loadPaymentDetail = () => {
 };
 
 describe('AdmissionApplicationDetailScreen', () => {
+  it('opens an approved record correction, locks parent navigation and refreshes the same application after saving', () => {
+    loadPaymentDetail();
+    detailState.applicationQuery.data.status = 6;
+    detailState.applicationQuery.refetch = applicationRefetch;
+    detailState.formQuery.data.canCorrectForm = true;
+    detailState.formQuery.refetch = formRefetch;
+    detailState.workflowQuery.refetch = workflowRefetch;
+    render(<AdmissionApplicationDetailScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Review Application Form' }));
+    expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Edit application form' }));
+    expect(screen.getByRole('dialog', { name: 'Edit Application Form' })).toHaveAttribute(
+      'data-application-id',
+      'application-1'
+    );
+    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Current Step' }));
+    expect(screen.getByText('Application record')).toBeInTheDocument();
+    expect(detailState.discardUnsavedAnswers).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save correction' }));
+    expect(applicationRefetch).toHaveBeenCalledOnce();
+    expect(formRefetch).toHaveBeenCalledOnce();
+    expect(workflowRefetch).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('dialog', { name: 'Edit Application Form' })).not.toBeInTheDocument();
+    expect(screen.getByText('APP-2026-000001')).toBeInTheDocument();
+    expect(detailState.applicationQuery.data.applicationNumber).toBe('APP/2026/001');
+    expect(detailState.submitApplication).not.toHaveBeenCalled();
+    expect(detailState.reopenApplication).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { status: 6, canEdit: false, capability: true },
+    { status: 6, canEdit: true, capability: false },
+    { status: 6, canEdit: true, capability: undefined },
+    { status: 11, canEdit: true, capability: true },
+    { status: 2, canEdit: true, capability: true },
+  ])(
+    'keeps the record read-only when correction is unavailable: %s',
+    ({ status, canEdit, capability }) => {
+      loadPaymentDetail();
+      detailState.applicationQuery.data.status = status;
+      detailState.canEdit = canEdit;
+      detailState.formQuery.data.canCorrectForm = capability;
+      render(<AdmissionApplicationDetailScreen />);
+      fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Review Application Form' }));
+      expect(
+        screen.queryByRole('button', { name: 'Edit application form' })
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
+    }
+  );
   it('keeps the shared body in the flex chain while a stage changes from idle to saving', () => {
     loadPaymentDetail();
     const { rerender } = render(<AdmissionApplicationDetailScreen presentation="drawer" />);
@@ -424,7 +509,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     );
     const workspace = screen.getByTestId('admission-application-workspace');
     expect(screen.getByRole('dialog', { name: 'Test applicant' })).toContainElement(workspace);
-    expect(screen.queryByRole('button', { name: 'Back to list' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'More' })).not.toBeInTheDocument();
     expect(screen.queryByTestId('counsellor-control')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Focus mode' }));
@@ -577,7 +662,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     expect(screen.getByRole('dialog', { name: 'Notes & Follow-ups' })).toBeInTheDocument();
     expect(detailState.discardUnsavedAnswers).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Start saving note' }));
-    expect(screen.getByRole('button', { name: 'Back to list' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
   });
 
@@ -621,10 +706,10 @@ describe('AdmissionApplicationDetailScreen', () => {
     const onClose = vi.fn();
     render(<AdmissionApplicationDetailScreen applicationId="application-1" onClose={onClose} />);
     fireEvent.click(screen.getByRole('button', { name: 'Start saving fee selection' }));
-    expect(screen.getByRole('button', { name: 'Back to list' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Back to list' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Back to list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -637,6 +722,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     render(<AdmissionApplicationDetailScreen />);
 
     expect(screen.getByRole('status', { name: 'Loading application details' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
   });
 
   it('retries application and workflow without refetching an unopened form', () => {
@@ -745,7 +831,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     render(<AdmissionApplicationDetailScreen />);
     fireEvent.click(screen.getByRole('button', { name: 'Enter inline result' }));
     expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Back to list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(
       screen.getByRole('dialog', { name: 'Discard Unsaved Application Changes?' })
     ).toBeInTheDocument();
@@ -872,7 +958,7 @@ describe('Applicant 360 full-page workspace', () => {
     render(<AdmissionApplicationDetailScreen applicationId="application-1" onClose={onClose} />);
     expect(screen.queryByRole('dialog', { name: 'Applicant 360' })).not.toBeInTheDocument();
     expect(screen.getByTestId('admission-application-workspace')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Back to list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(
       screen.getByRole('dialog', { name: 'Discard Unsaved Application Changes?' })
     ).toBeInTheDocument();
@@ -933,7 +1019,7 @@ describe('Applicant 360 phase navigation', () => {
       '/student/admissions/applications/application-1?returnTo=%2Fstudent%2Fadmissions%2Fapplications',
       { scroll: false }
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Back to list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(push).toHaveBeenCalledWith('/student/admissions/applications');
   });
 
@@ -944,8 +1030,19 @@ describe('Applicant 360 phase navigation', () => {
     });
     render(<AdmissionApplicationDetailScreen />);
     expect(replace).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Back to list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(push).toHaveBeenCalledWith('/student/admissions/applications?search=Test');
+  });
+
+  it('returns to the opening Assessments context through the breadcrumb back action', () => {
+    pathname = '/student/admissions/applications/application-1';
+    returnParams = new URLSearchParams({
+      returnTo: '/student/admissions/assessments?tab=students&search=Test',
+    });
+    render(<AdmissionApplicationDetailScreen />);
+    expect(screen.queryByRole('button', { name: 'Back to list' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(push).toHaveBeenCalledWith('/student/admissions/assessments?tab=students&search=Test');
   });
 
   it('keeps a predecision withdrawn case in Applications history', () => {
@@ -957,7 +1054,7 @@ describe('Applicant 360 phase navigation', () => {
     detailState.applicationQuery.data.status = 2;
     render(<AdmissionApplicationDetailScreen />);
     expect(replace).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Back to list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(push).toHaveBeenCalledWith('/student/admissions/applications?status=2');
   });
 

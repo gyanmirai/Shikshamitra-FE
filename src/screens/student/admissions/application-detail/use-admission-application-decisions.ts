@@ -103,6 +103,9 @@ export function useAdmissionApplicationDecisions(
   return {
     historyQuery,
     finalizationPreviewQuery,
+    resetFinalizationRequest: () => {
+      finalizationKey.current = null;
+    },
     runDecision,
     runFinalization,
     isBusy:

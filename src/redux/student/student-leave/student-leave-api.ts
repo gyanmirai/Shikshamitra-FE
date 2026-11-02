@@ -20,11 +20,28 @@ export type StudentLeaveListQuery = {
   maxResultCount?: number;
 };
 
+export type StudentLeaveStatusCounts = {
+  pendingCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+};
+
 export const StudentLeaveApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentLeave: builder.query({
       query: (params: StudentLeaveListQuery = {}) => ({
         url: `/students/attendance/leaves`,
+        method: 'GET',
+        params,
+      }),
+      providesTags: [studentLeaveType.studentLeave],
+    }),
+    getStudentLeaveStatusCounts: builder.query<
+      StudentLeaveStatusCounts,
+      Omit<StudentLeaveListQuery, 'status' | 'sorting' | 'skipCount' | 'maxResultCount'>
+    >({
+      query: (params) => ({
+        url: '/students/attendance/leaves/status-counts',
         method: 'GET',
         params,
       }),
@@ -97,6 +114,7 @@ export const StudentLeaveApi = api.injectEndpoints({
 
 export const {
   useGetStudentLeaveQuery,
+  useGetStudentLeaveStatusCountsQuery,
   useAddStudentLeaveMutation,
   useUpdateStudentLeaveMutation,
   useApproveStudentLeaveMutation,

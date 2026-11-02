@@ -35,6 +35,9 @@ type Props = {
   onSubmit: (reason: string) => Promise<string | null>;
 };
 
+const RETENTION_GUIDANCE =
+  'Released assessment bookings and cancelled follow-ups stay cancelled. Existing evidence and payments are retained.';
+
 /** Mounted only while open: each closure gets a fresh audited reason draft. */
 export function ApplicationResumeJourneyDialog({
   applicationNumber,
@@ -94,7 +97,7 @@ export function ApplicationResumeJourneyDialog({
           <FormSectionCard
             title="Resume Details"
             icon={GlobalIcons.admissionDetails}
-            descriptionTooltip="The resume stage is determined from the saved withdrawal history. Released bookings are not automatically restored."
+            descriptionTooltip={`The resume stage is determined from the saved withdrawal history. ${preview?.warnings.includes(RETENTION_GUIDANCE) ? RETENTION_GUIDANCE : 'Released bookings are not automatically restored.'}`}
           >
             <Stack spacing={1.5}>
               <Stack component="dl" spacing={0.5} sx={{ m: 0 }}>
@@ -143,11 +146,13 @@ export function ApplicationResumeJourneyDialog({
                   {blocker}
                 </Alert>
               ))}
-              {preview?.warnings.map((warning) => (
-                <Typography variant="body2" color="text.secondary" key={warning}>
-                  {warning}
-                </Typography>
-              ))}
+              {preview?.warnings
+                .filter((warning) => warning !== RETENTION_GUIDANCE)
+                .map((warning) => (
+                  <Typography variant="body2" color="text.secondary" key={warning}>
+                    {warning}
+                  </Typography>
+                ))}
               <ShakingTextField error={Boolean(formik.touched.reason && formik.errors.reason)}>
                 <TextField
                   name="reason"

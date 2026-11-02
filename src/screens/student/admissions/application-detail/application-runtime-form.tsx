@@ -7,9 +7,9 @@ import type {
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import CustomStepper from 'src/components/custom-stepper';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Grid, Stack, Button, Typography } from '@mui/material';
@@ -29,11 +29,16 @@ import { AdmissionSectionFields } from '../components/admission-section-fields';
 import { dependentAdmissionFieldValues } from '../admission-field-dependencies';
 import { AdmissionFormStepNavigation } from '../components/admission-form-step-navigation';
 import { academicOptionsJson, isInstituteAcademicSource } from '../admission-academic-options';
+import { useAdmissionAddressSync, isAdmissionCopiedAddressField } from '../admission-address-sync';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import {
   parseRuntimeOptionsSource,
   resolveRuntimeOptionsJson,
 } from './application-runtime-options';
+import {
+  getCorrectionSections,
+  getEffectiveCorrectionValues,
+} from './application-form-correction-visibility';
 import {
   readRepeatableValues,
   writeRepeatableValue,
@@ -62,6 +67,9 @@ type Props = {
   onReopen: () => void;
   documents?: ReactNode;
   beforeActions?: ReactNode;
+  footerActions?: ReactNode;
+  correctionMode?: boolean;
+  onPhotoReadingChange?: (reading: boolean) => void;
   sectionActions?: ReactNode;
   compact?: boolean;
   readOnly?: boolean;
@@ -89,12 +97,18 @@ export function ApplicationRuntimeForm({
   onReopen,
   documents,
   beforeActions,
+  footerActions,
+  correctionMode = false,
+  onPhotoReadingChange,
   sectionActions,
   compact = false,
   readOnly = false,
   academicMediumId,
 }: Props) {
   const fieldsPerRow = form.definition.fieldsPerRow ?? 1;
+  const formRoot = useRef<HTMLDivElement>(null);
+  const previousErrors = useRef<Record<string, string>>({});
+  const pendingErrorFocus = useRef(false);
   const [activeStep, setActiveStep] = useState(0);
   const [savingStep, setSavingStep] = useState(false);
   const [language, setLanguage] = useState(form.definition.defaultLanguage ?? 'en');
@@ -107,27 +121,115 @@ export function ApplicationRuntimeForm({
     () => form.definition.sections.map((section) => localizeAdmissionSection(section, language)),
     [form.definition.sections, language]
   );
+  const correctionSections = useMemo(
+    () => (correctionMode ? getCorrectionSections(form.definition, values, undefined, true) : []),
+    [correctionMode, form.definition, values]
+  );
+  const correctionSectionIds = useMemo(
+    () => new Set(correctionSections.map(({ section }) => section.id)),
+    [correctionSections]
+  );
   const visibleSections = useMemo(
     () =>
       localizedSections.filter((section) =>
-        isAdmissionRuleVisible(section.visibilityRuleJson, values)
+        correctionMode
+          ? correctionSectionIds.has(section.id)
+          : isAdmissionRuleVisible(section.visibilityRuleJson, values)
       ),
-    [localizedSections, values]
+    [localizedSections, values, correctionMode, correctionSectionIds]
   );
   const isStepper = form.definition.layoutType === 1;
   const visibleSteps = getAdmissionFormStepGroups(localizedSections)
-    .filter((step) => isAdmissionRuleVisible(step.visibilityRuleJson, values))
+    .filter((step) => correctionMode || isAdmissionRuleVisible(step.visibilityRuleJson, values))
     .map((step) => ({
       ...step,
       sections: step.sections.filter(({ section }) => visibleSections.includes(section)),
     }))
     .filter((step) => step.sections.length > 0);
   const safeActiveStep = Math.min(activeStep, Math.max(0, visibleSteps.length - 1));
+  const invalidCodes = new Set(
+    Object.entries(fieldErrors)
+      .filter(([, error]) => Boolean(error))
+      .map(([code]) => code.split('[')[0])
+  );
+  const firstInvalidStep = visibleSteps.findIndex((step) =>
+    step.sections.some(
+      ({ section }) =>
+        invalidCodes.has(section.code) ||
+        section.fields.some((field) => invalidCodes.has(field.code))
+    )
+  );
+  useEffect(() => {
+    const previous = previousErrors.current;
+    const keys = Object.keys(fieldErrors);
+    if (previous !== fieldErrors) {
+      previousErrors.current = fieldErrors;
+      // Fixing an error must not pull staff away from the question they are editing.
+      pendingErrorFocus.current =
+        Boolean(keys.length) &&
+        !(
+          keys.length < Object.keys(previous).length &&
+          keys.every((key) => previous[key] === fieldErrors[key])
+        );
+    }
+    if (!pendingErrorFocus.current) return undefined;
+    if (isStepper && firstInvalidStep >= 0 && safeActiveStep !== firstInvalidStep) {
+      setActiveStep(firstInvalidStep);
+      return undefined;
+    }
+    pendingErrorFocus.current = false;
+    const focusError = () => {
+      const invalid = formRoot.current?.querySelector<HTMLElement>(
+        '[aria-invalid="true"]:not([type="hidden"]):not([aria-hidden="true"]):not(:disabled):not([aria-disabled="true"])'
+      );
+      // MUI's segmented date field marks its nonfocusable group invalid.
+      const target = invalid?.matches('[role="group"]')
+        ? (invalid.querySelector<HTMLElement>('[role="spinbutton"]') ??
+          invalid.querySelector<HTMLElement>('input:not([aria-hidden="true"]), [tabindex="0"]') ??
+          invalid)
+        : invalid;
+      target?.focus();
+      target?.scrollIntoView?.({ block: 'nearest' });
+    };
+    const frame = requestAnimationFrame(focusError);
+    return () => cancelAnimationFrame(frame);
+  }, [isStepper, firstInvalidStep, safeActiveStep, fieldErrors]);
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
+  useEffect(() => {
+    onPhotoReadingChange?.(readingPhoto);
+    return () => onPhotoReadingChange?.(false);
+  }, [readingPhoto, onPhotoReadingChange]);
   const interactionLocked = saving || submitting || reopening || readingPhoto || savingStep;
   const isLastStep =
     !isStepper || visibleSteps.length === 0 || safeActiveStep === visibleSteps.length - 1;
-  const canEditForm = !readOnly && application.status === 0;
+  const canEditForm =
+    !readOnly &&
+    (application.status === 0 ||
+      (correctionMode &&
+        form.canCorrectForm === true &&
+        [1, 4, 5, 6, 7, 8].includes(application.status)));
+  useAdmissionAddressSync(
+    localizedSections,
+    values,
+    (changes) => {
+      const writable = correctionMode
+        ? getEffectiveCorrectionValues(form.definition, values, { ...values, ...changes })
+        : changes;
+      Object.entries(changes).forEach(([code, value]) => {
+        if (writable[code] === value && values[code] !== value) onChange(code, value);
+      });
+    },
+    !canEditForm || interactionLocked,
+    (field, entryIndex) =>
+      !correctionMode ||
+      correctionSections.some(({ section, rows }) =>
+        rows.some(
+          (row) =>
+            (section.isRepeatable ? row.index === entryIndex : entryIndex === undefined) &&
+            row.fields.some((item) => item.code === field.code && !item.readOnly)
+        )
+      )
+  );
   const currentSections = isStepper
     ? (visibleSteps[safeActiveStep]?.sections.map(({ section }) => section) ?? [])
     : visibleSections;
@@ -272,7 +374,12 @@ export function ApplicationRuntimeForm({
               value={value}
               academicYearId={form.academicYearId}
               academicMediumId={academicMediumId}
-              disabled={interactionLocked || readOnly || field.readOnly || application.status !== 0}
+              disabled={
+                interactionLocked ||
+                !canEditForm ||
+                field.readOnly ||
+                isAdmissionCopiedAddressField(field, localizedSections, rowValues)
+              }
               error={
                 fieldError
                   ? field.translations?.[language]?.validationMessage || inheritedError
@@ -350,15 +457,23 @@ export function ApplicationRuntimeForm({
     return (
       <Stack key={section.id} spacing={2}>
         <FormSectionHeader {...sectionHeader(section.name, actions)} />
-        {Array.from({ length: count }, (_, entryIndex) => (
-          <FormSectionCard
-            key={`${section.id}-${entryIndex}`}
-            {...sectionHeader(`${entryLabel} ${entryIndex + 1}`)}
-          >
-            {renderSectionFields(section, entryIndex)}
-            {count > Math.max(section.minEntries ?? 0, 1) &&
-              application.status === 0 &&
-              !readOnly && (
+        {Array.from({ length: count }, (_, entryIndex) => entryIndex)
+          .filter(
+            (entryIndex) =>
+              !correctionMode ||
+              correctionSections.some(
+                (context) =>
+                  context.section.id === section.id &&
+                  context.rows.some((row) => row.index === entryIndex)
+              )
+          )
+          .map((entryIndex) => (
+            <FormSectionCard
+              key={`${section.id}-${entryIndex}`}
+              {...sectionHeader(`${entryLabel} ${entryIndex + 1}`)}
+            >
+              {renderSectionFields(section, entryIndex)}
+              {count > Math.max(section.minEntries ?? 0, 1) && canEditForm && !readOnly && (
                 <Grid size={{ xs: 12 }}>
                   <Button
                     size="small"
@@ -375,9 +490,9 @@ export function ApplicationRuntimeForm({
                   </Button>
                 </Grid>
               )}
-          </FormSectionCard>
-        ))}
-        {count < maxEntries && application.status === 0 && !readOnly && (
+            </FormSectionCard>
+          ))}
+        {count < maxEntries && canEditForm && (
           <Button
             size="small"
             variant="outlined"
@@ -398,11 +513,24 @@ export function ApplicationRuntimeForm({
   };
 
   return (
-    <Box sx={{ width: 1, ...(compact && { flex: 1, display: 'flex', flexDirection: 'column' }) }}>
+    <Box
+      ref={formRoot}
+      sx={{
+        width: 1,
+        ...(compact && { flex: 1, display: 'flex', flexDirection: 'column' }),
+        ...(correctionMode && { minHeight: 0 }),
+      }}
+    >
       <Box
         sx={
           compact
-            ? { width: 1, flex: 1, display: 'flex', flexDirection: 'column' }
+            ? {
+                width: 1,
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                ...(correctionMode && { minHeight: 0 }),
+              }
             : { maxWidth: 1280, mx: 'auto' }
         }
       >
@@ -464,82 +592,87 @@ export function ApplicationRuntimeForm({
             {form.status === 1 ? 'Submitted' : form.status === 2 ? 'Reopened' : 'Draft'}
           </Typography>
         )}
-        {supportedLanguages.length > 1 && (
-          <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
-            <CustomSelect
-              size="small"
-              label="Form language"
-              disabled={interactionLocked}
-              value={language}
-              options={supportedLanguages.map((code) => ({
-                value: code,
-                label: getAdmissionLanguageLabel(code),
-              }))}
-              onChange={(value) => setLanguage(String(value))}
-              sx={{ width: { xs: 1, sm: 220 } }}
-            />
-          </Stack>
-        )}
-        <Stack
-          direction={compact ? 'column' : { xs: 'column', md: 'row' }}
-          spacing={compact ? 1.5 : 3}
-          alignItems="stretch"
+        <Box
+          component={correctionMode ? Scrollbar : 'div'}
+          sx={correctionMode ? { flex: '1 1 auto', minHeight: 0 } : { display: 'contents' }}
         >
-          {!compact && isStepper && visibleSteps.length > 0 && (
-            <Box sx={{ width: compact ? 1 : { xs: 1, md: 220 }, flexShrink: 0, minWidth: 0 }}>
-              <AdmissionFormStepNavigation
-                activeStep={safeActiveStep}
-                steps={visibleSteps.map((step) => ({ id: step.id, name: step.name }))}
+          {supportedLanguages.length > 1 && (
+            <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
+              <CustomSelect
+                size="small"
+                label="Form language"
                 disabled={interactionLocked}
-                orientation={compact ? 'horizontal' : 'responsive'}
-                compact={compact}
-                completedSteps={form.status === 1 ? visibleSteps.map((_, index) => index) : []}
-                onStepChange={(index) => {
-                  if (
-                    index <= safeActiveStep ||
-                    readOnly ||
-                    application.status !== 0 ||
-                    visibleSteps
-                      .slice(safeActiveStep, index)
-                      .every((step) =>
-                        step.sections.every(({ section }) => onValidateStep(section.id))
-                      )
-                  )
-                    setActiveStep(index);
-                }}
+                value={language}
+                options={supportedLanguages.map((code) => ({
+                  value: code,
+                  label: getAdmissionLanguageLabel(code),
+                }))}
+                onChange={(value) => setLanguage(String(value))}
+                sx={{ width: { xs: 1, sm: 220 } }}
               />
-            </Box>
+            </Stack>
           )}
-          <FormFieldSpacing
-            sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}
+          <Stack
+            direction={compact ? 'column' : { xs: 'column', md: 'row' }}
+            spacing={compact ? 1.5 : 3}
+            alignItems="stretch"
           >
-            {isStepper ? (
-              currentSections.length ? (
-                currentSections.map(renderSection)
-              ) : (
-                <Typography color="text.secondary">No visible sections are available.</Typography>
-              )
-            ) : (
-              visibleSections.map(renderSection)
+            {!compact && isStepper && visibleSteps.length > 0 && (
+              <Box sx={{ width: compact ? 1 : { xs: 1, md: 220 }, flexShrink: 0, minWidth: 0 }}>
+                <AdmissionFormStepNavigation
+                  activeStep={safeActiveStep}
+                  steps={visibleSteps.map((step) => ({ id: step.id, name: step.name }))}
+                  disabled={interactionLocked}
+                  orientation={compact ? 'horizontal' : 'responsive'}
+                  compact={compact}
+                  completedSteps={form.status === 1 ? visibleSteps.map((_, index) => index) : []}
+                  onStepChange={(index) => {
+                    if (
+                      index <= safeActiveStep ||
+                      readOnly ||
+                      !canEditForm ||
+                      visibleSteps
+                        .slice(safeActiveStep, index)
+                        .every((step) =>
+                          step.sections.every(({ section }) => onValidateStep(section.id))
+                        )
+                    )
+                      setActiveStep(index);
+                  }}
+                />
+              </Box>
             )}
-          </FormFieldSpacing>
-        </Stack>
-        {!!form.inquiryContextSections?.length && (
-          <ApplicationInquiryContext
-            sections={form.inquiryContextSections}
-            values={form.inquiryContextValues ?? []}
-            language={language}
-          />
-        )}
-        {documents && (!isStepper || safeActiveStep === visibleSteps.length - 1) && (
-          <Stack sx={{ mt: 2 }}>{documents}</Stack>
-        )}
-        {beforeActions && <Box sx={{ mt: 1.5 }}>{beforeActions}</Box>}
-        {!currentSections.length && sectionActions && (
-          <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1 }}>
-            {sectionActions}
+            <FormFieldSpacing
+              sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}
+            >
+              {isStepper ? (
+                currentSections.length ? (
+                  currentSections.map(renderSection)
+                ) : (
+                  <Typography color="text.secondary">No visible sections are available.</Typography>
+                )
+              ) : (
+                visibleSections.map(renderSection)
+              )}
+            </FormFieldSpacing>
           </Stack>
-        )}
+          {!!form.inquiryContextSections?.length && (
+            <ApplicationInquiryContext
+              sections={form.inquiryContextSections}
+              values={form.inquiryContextValues ?? []}
+              language={language}
+            />
+          )}
+          {documents && (!isStepper || safeActiveStep === visibleSteps.length - 1) && (
+            <Stack sx={{ mt: 2 }}>{documents}</Stack>
+          )}
+          {beforeActions && <Box sx={{ mt: 1.5 }}>{beforeActions}</Box>}
+          {!currentSections.length && sectionActions && (
+            <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1 }}>
+              {sectionActions}
+            </Stack>
+          )}
+        </Box>
         <Stack
           direction="row"
           spacing={{ xs: 0.5, sm: 1 }}
@@ -552,6 +685,7 @@ export function ApplicationRuntimeForm({
             pt: compact ? 1 : 2,
             borderTop: 1,
             borderColor: 'divider',
+            ...(correctionMode && { flexShrink: 0 }),
             ...(compact && {
               position: 'sticky',
               bottom: 0,
@@ -601,6 +735,7 @@ export function ApplicationRuntimeForm({
             flexWrap="wrap"
             justifyContent="flex-end"
           >
+            {footerActions}
             {showSaveDraft && canEditForm && (
               <LoadingButton
                 size="small"
@@ -631,28 +766,37 @@ export function ApplicationRuntimeForm({
               <LoadingButton
                 size="small"
                 variant="contained"
-                startIcon={<Iconify icon="mdi:send-outline" width={16} />}
+                startIcon={
+                  <Iconify
+                    icon={correctionMode ? GlobalIcons.submit : 'mdi:send-outline'}
+                    width={16}
+                  />
+                }
                 loading={submitting}
                 loadingPosition="start"
                 disabled={interactionLocked || !canSubmitForm}
                 onClick={onSubmit}
               >
-                Submit application
+                {correctionMode ? 'Save corrections' : 'Submit application'}
               </LoadingButton>
             )}
-            {!readOnly && application.status === 1 && canReopen && !managedFormStage && (
-              <LoadingButton
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:lock-open-outline" width={16} />}
-                loading={reopening}
-                loadingPosition="start"
-                disabled={interactionLocked}
-                onClick={onReopen}
-              >
-                Reopen form
-              </LoadingButton>
-            )}
+            {!correctionMode &&
+              !readOnly &&
+              application.status === 1 &&
+              canReopen &&
+              !managedFormStage && (
+                <LoadingButton
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="mdi:lock-open-outline" width={16} />}
+                  loading={reopening}
+                  loadingPosition="start"
+                  disabled={interactionLocked}
+                  onClick={onReopen}
+                >
+                  Reopen form
+                </LoadingButton>
+              )}
           </Stack>
         </Stack>
       </Box>
