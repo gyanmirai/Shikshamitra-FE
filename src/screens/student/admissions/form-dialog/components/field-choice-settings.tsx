@@ -11,16 +11,18 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
+import { academicOptionsJson, isInstituteAcademicSource } from '../../admission-academic-options';
 import {
   createAdmissionChoiceValue,
   appendPastedAdmissionChoices,
   type EditableAdmissionChoice,
   parseEditableAdmissionChoices,
   serializeEditableAdmissionChoices,
+  repairDraftAdmissionGenderChoices,
+  normalizeDraftAdmissionGenderChoices,
 } from '../field-choice-options';
 
 import type { FieldSettingsProps } from '../types/field-settings';
-import { academicOptionsJson, isInstituteAcademicSource } from '../../admission-academic-options';
 
 type OptionsSource = { source: string; parentField?: string };
 
@@ -51,9 +53,42 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
   const parsedChoices = sourceConfig
     ? { choices: [] as EditableAdmissionChoice[] }
     : parseEditableAdmissionChoices(field.optionsJson);
+  const isApplicantGender = field.bindingType === 0 && field.bindingKey === 'Applicant.Gender';
+  parsedChoices.choices = normalizeDraftAdmissionGenderChoices(field, parsedChoices.choices);
+  const nextGenderValue = ['Male', 'Female', 'Other'].find(
+    (value) => !parsedChoices.choices.some((choice) => choice.value === value)
+  );
   const updateChoices = (choices: EditableAdmissionChoice[]) =>
-    formik.setFieldValue(`${path}.optionsJson`, serializeEditableAdmissionChoices(choices));
+    formik.setValues((current) => {
+      const repaired = repairDraftAdmissionGenderChoices(current);
+      return {
+        ...repaired,
+        sections: repaired.sections.map((section, index) =>
+          index !== sectionIndex
+            ? section
+            : {
+                ...section,
+                fields: section.fields.map((item, indexOfField) =>
+                  indexOfField !== fieldIndex
+                    ? item
+                    : {
+                        ...item,
+                        optionsJson: serializeEditableAdmissionChoices(choices),
+                      }
+                ),
+              }
+        ),
+      };
+    });
   const addChoice = () => {
+    if (isApplicantGender) {
+      if (nextGenderValue)
+        updateChoices([
+          ...parsedChoices.choices,
+          { value: nextGenderValue, label: nextGenderValue },
+        ]);
+      return;
+    }
     const label = `Option ${parsedChoices.choices.length + 1}`;
     updateChoices([
       ...parsedChoices.choices,
@@ -214,17 +249,20 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:plus" />}
                 onClick={addChoice}
+                disabled={isApplicantGender && !nextGenderValue}
               >
                 Add choice
               </Button>
-              <Button
-                size="small"
-                color="inherit"
-                startIcon={<Iconify icon="mdi:content-paste" />}
-                onClick={() => setPasteOpen((value) => !value)}
-              >
-                Paste choices
-              </Button>
+              {!isApplicantGender && (
+                <Button
+                  size="small"
+                  color="inherit"
+                  startIcon={<Iconify icon="mdi:content-paste" />}
+                  onClick={() => setPasteOpen((value) => !value)}
+                >
+                  Paste choices
+                </Button>
+              )}
             </Stack>
 
             <Collapse in={pasteOpen}>

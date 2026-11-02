@@ -5,7 +5,7 @@ import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { FormBuilderProperties } from '../form-builder-properties';
@@ -42,6 +42,42 @@ function renderFieldSettings(fieldType: 6 | 7 | 8, patch: Partial<AdmissionFormF
 }
 
 describe('Admission Form Builder choice field settings', () => {
+  it('repairs the known draft Other choice before a label translation is edited', async () => {
+    renderFieldSettings(6, {
+      bindingType: 0,
+      bindingKey: 'Applicant.Gender',
+      optionsJson:
+        '[{"value":"Male","label":"Male"},{"value":"Female","label":"Female"},{"value":"OPTION_3","label":"Other"}]',
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Option 3' }), {
+      target: { value: 'अन्य' },
+    });
+    expect(JSON.parse(screen.getByTestId('choices-json').textContent!)[2]).toEqual({
+      value: 'Other',
+      label: 'अन्य',
+    });
+  });
+  it('adds canonical Other to linked gender while keeping translated labels and disabling generic paste', async () => {
+    renderFieldSettings(6, {
+      bindingType: 0,
+      bindingKey: 'Applicant.Gender',
+      optionsJson: '[{"value":"Male","label":"लड़का"},{"value":"Female","label":"लड़की"}]',
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Add choice' }));
+    expect(JSON.parse(screen.getByTestId('choices-json').textContent!)).toEqual([
+      { value: 'Male', label: 'लड़का' },
+      { value: 'Female', label: 'लड़की' },
+      { value: 'Other', label: 'Other' },
+    ]);
+    expect(screen.getByRole('button', { name: 'Add choice' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Paste choices' })).not.toBeInTheDocument();
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Option 3' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'Option 3' }), 'अन्य');
+    expect(JSON.parse(screen.getByTestId('choices-json').textContent!)[2]).toEqual({
+      value: 'Other',
+      label: 'अन्य',
+    });
+  });
   it('keeps class interest on the live Institute Setup selector without manual option editing', () => {
     renderFieldSettings(6, {
       code: 'CLASS_INTERESTED',

@@ -38,7 +38,7 @@ type Props = {
     middleName?: string | null;
     lastName?: string | null;
     dateOfBirth: string;
-    gender: 'Male' | 'Female';
+    gender: 'Male' | 'Female' | 'Other';
     guardianMobile: string;
     guardianEmail?: string | null;
   }) => Promise<boolean>;
@@ -68,7 +68,7 @@ export function AdmissionApplicantProfileDialog({
       middleName: Yup.string().trim().max(100),
       lastName: Yup.string().trim().max(100),
       dateOfBirth: Yup.string().required('Date of birth is required'),
-      gender: Yup.string().oneOf(['Male', 'Female']).required('Gender is required'),
+      gender: Yup.string().oneOf(['Male', 'Female', 'Other']).required('Gender is required'),
       guardianMobile: Yup.string()
         .matches(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number')
         .required('Guardian mobile is required'),
@@ -80,7 +80,7 @@ export function AdmissionApplicantProfileDialog({
         middleName: values.middleName.trim() || null,
         lastName: values.lastName.trim() || null,
         dateOfBirth: values.dateOfBirth,
-        gender: values.gender as 'Male' | 'Female',
+        gender: values.gender as 'Male' | 'Female' | 'Other',
         guardianMobile: values.guardianMobile,
         guardianEmail: normalizeEmail(values.guardianEmail) || null,
       });
@@ -159,6 +159,7 @@ export function AdmissionApplicantProfileDialog({
                 options={[
                   { value: 'Male', label: 'Male' },
                   { value: 'Female', label: 'Female' },
+                  { value: 'Other', label: 'Other' },
                 ]}
                 value={formik.values.gender}
                 error={Boolean(formik.touched.gender && formik.errors.gender)}

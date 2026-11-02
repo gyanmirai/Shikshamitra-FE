@@ -3,12 +3,22 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-01
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Gender and form publication recovery
+
+Run the form-dialog, save-recovery, form-list action, publish confirmation, wizard, field-choice options/settings, runtime field, direct Registration, template catalogue, registration-template, Records change and API problem-details suites. Cover canonical Other with translated labels, custom choice preservation, narrow legacy draft repair including defaults/translations/conditions, new/existing draft Save/Publish retries with the acknowledged stamp, retained Review step and values, unchanged external-conflict protection, corrected table rows and publication locks.
+
+The focused November 2 component/unit run passes 163 cases with one pre-existing failure in `api-problem-details.test.ts`: the retired form-approval reviewer message assertion. The new form-concurrency message case passes. A subsequent 45-case choice-repair, table-action and wizard run passes, including comma-separated condition values. Full TypeScript, scoped lint/format and Student docs checks pass. Backend persistence/finalization results are recorded in the [backend testing guide](../../../Shikshamitra-BE/docs/modules/student/testing.md#admission-gender-choices).
+
+After rebuilding/restarting the local API and signing in again, Codex in-app browser checks pass new Inquiry partial-publication recovery, correction and Save draft retry, reload/reopen, retained Other default/choices and three-column setting, and Publish now. A QA Inquiry copy publishes from the table. Recommended Registration retains its published Inquiry source, first-position Inquiry steps, locked source settings and Other choices after save/reload/reopen. Its invalid-choice guard blocks Review as expected, and the corrected reused form publishes from the table. A separate saved Registration draft reports `Draft saved, but not published. APPLICANT_GENDER needs valid choices.`; correcting Other and retrying Publish now in the same editor succeeds without a concurrency conflict.
+
+A full reload shows exactly four version-1 Published forms named `QA Gender Live ... 02 Nov`, retained for review. Evidence and screenshots are ignored under `.artifacts/gender-live-qa/`. Existing forms were untouched. These local form-definition checks do not certify actual applicant submission, runtime academic catalogue selection, staging or production; the preview showed the Board/Class no-options state in this local catalogue context.
 
 ## Pre-finalization form corrections
 
@@ -1033,6 +1043,10 @@ Required live cases include an off-page focused case after filtering, a new stud
 No current staging, production, actual inbox-delivery or deployment verification is claimed.
 
 ## Managed assessment checks
+
+The 2026-11-02 session-scope fix passed 348 tests across 39 assessment, academic-filter and planning-client files, full `npm run ts`, scoped ESLint and formatting. The focused red/green run reproduced four failures before the fix and passed all 26 cases afterward. New cases cover year/Board/Medium isolation, retaining other classes in the selected context, disabling Create when only another Medium has scopes, and rejecting the same Class/Offering with a different assessment stage without a misleading class-only message. Existing edit-scope preservation was source-reviewed; the page fixtures mock the setup drawer.
+
+Authenticated staging inspection was read-only. The reported Class 7 session was visible under CBSE English but did not match the scope read from the applicant's recorded session; a wrong Medium was not established as the screenshot's cause. By inspection time the original slot had ended and the applicant's attempt had been waived externally, so no booking/reload acceptance was performed against that real applicant. The local scope-choice and wording fixes are not deployed and do not rewrite existing session mappings. Genuine time, capacity, permission and exact Offering/stage guards remain in place.
 
 The current single-workspace checks include `assessment-session-setup-model.test.ts`, `assessment-session-setup-drawer.test.tsx`, `assessment-batch-model.test.ts`, `assessment-continue-command.test.ts`, `use-assessment-workspace-data.test.ts` and `admission-assessment-planning-api.test.ts`.
 They cover multi-Offering stage selection, real-room capacity limits, sequential interview slots, ISO date serialization, automatic names/manual overrides, global proposal selection across a smaller visible page, failed-confirm retention, bounded bulk actions, explicit partial recovery, fresh evidence before Continue and scoped/cache-safe planning requests.

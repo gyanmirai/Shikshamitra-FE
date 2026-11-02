@@ -26,11 +26,14 @@ import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { Label } from 'src/components/label';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import {
   Box,
   Tab,
-  Link,
+  Card,
   Chip,
+  Link,
   Alert,
   Stack,
   Button,
@@ -138,6 +141,8 @@ export default function HouseManagement() {
   const [session, setSession] = useState<{ context: string; value: Session } | null>(null);
   const [deleteError, setDeleteError] = useState('');
   const [selectedHouseFilter, setSelectedHouseFilter] = useState<House | null>(null);
+  const moreFiltersPopover = usePopover();
+  const moreFiltersCount = (houseId ? 1 : 0) + (unassignedOnly ? 1 : 0);
   const context = JSON.stringify([
     academic.currentYear?.id,
     mediumId,
@@ -218,21 +223,35 @@ export default function HouseManagement() {
         color="inherit"
         underline="hover"
         href={`${studentPaths.records.studentList}?student=${encodeURIComponent(student.studentId)}`}
-        sx={{ typography: 'body2', overflowWrap: 'anywhere' }}
+        sx={{ typography: 'body2', fontWeight: 'fontWeightSemiBold', overflowWrap: 'anywhere' }}
       >
         {student.studentName}
       </Link>
     ) : (
-      student.studentName
+      <Typography component="span" variant="body2" sx={{ fontWeight: 'fontWeightSemiBold', overflowWrap: 'anywhere' }}>
+        {student.studentName}
+      </Typography>
     );
   const leader = (record: House | HouseDivision) =>
-    record.leader ? name(record.leader) : record.canManage ? 'Vacant' : 'Not available';
+    record.leader ? (
+      name(record.leader)
+    ) : record.canManage ? (
+      <Label color="default" sx={{ typography: 'caption', height: 22 }}>
+        Vacant
+      </Label>
+    ) : (
+      <Typography component="span" variant="body2" color="text.disabled">
+        Not available
+      </Typography>
+    );
   const disabled = !ready || query.isFetching || query.isError;
   const houseColumns: IColumn[] = [
     {
       id: 'name',
       label: 'House',
       isSort: true,
+      isFilter: true,
+      filterType: 'string',
       minWidth: 180,
       render: (_, row) => (
         <Stack direction="row" spacing={1} alignItems="center">
@@ -248,26 +267,41 @@ export default function HouseManagement() {
           >
             {String(row.name).slice(0, 1)}
           </Avatar>
-          <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+          <Typography variant="body2" sx={{ fontWeight: 'fontWeightSemiBold', overflowWrap: 'anywhere' }}>
             {row.name}
           </Typography>
         </Stack>
       ),
     },
-    { id: 'memberCount', label: 'Visible students', align: 'right', minWidth: 130 },
+    {
+      id: 'memberCount',
+      label: 'Visible students',
+      align: 'right',
+      minWidth: 130,
+      isFilter: true,
+      filterType: 'number',
+      render: (value) => (
+        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+          {value ?? 0}
+        </Typography>
+      ),
+    },
     {
       id: 'leader',
       label: 'House leader',
       minWidth: 160,
+      isFilter: false,
       render: (_, row) => leader(row as House),
     },
-    { id: 'description', label: 'Description', minWidth: 200, render: (value) => value || '—' },
+    { id: 'description', label: 'Description', minWidth: 200, isFilter: true, filterType: 'string', render: (value) => value || '—' },
     {
       id: 'actions',
       label: 'Actions',
       align: 'right',
       minWidth: 125,
       excludeFromExport: true,
+      sticky: true,
+      stickyPosition: 'right',
       render: (_, data) => {
         const row = data as House;
         return (
@@ -381,18 +415,70 @@ export default function HouseManagement() {
       id: 'studentName',
       label: 'Student',
       isSort: true,
+      isFilter: true,
+      filterType: 'string',
       minWidth: 180,
-      render: (_, row) => name(row as HouseStudent),
+      render: (_, row) => (
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Avatar
+            sx={{
+              width: 32,
+              height: 32,
+              bgcolor: 'background.neutral',
+              color: 'text.secondary',
+              fontSize: 12,
+            }}
+          >
+            {String((row as HouseStudent).studentName)
+              .split(' ')
+              .filter(Boolean)
+              .map((part) => part.charAt(0))
+              .join('')
+              .slice(0, 2)
+              .toUpperCase() || '—'}
+          </Avatar>
+          {name(row as HouseStudent)}
+        </Stack>
+      ),
     },
-    { id: 'admissionNumber', label: 'GR number', minWidth: 140, render: (value) => value || '—' },
-    { id: 'standardName', label: 'Class', isSort: true, minWidth: 100 },
-    { id: 'divisionName', label: 'Division', minWidth: 100, render: (value) => value || '—' },
+    {
+      id: 'admissionNumber',
+      label: 'GR number',
+      minWidth: 140,
+      isSort: false,
+      isFilter: true,
+      filterType: 'string',
+      render: (value) => value || '—',
+    },
+    { id: 'standardName', label: 'Class', isSort: true, isFilter: true, filterType: 'string', minWidth: 100 },
+    { id: 'divisionName', label: 'Division', minWidth: 100, isSort: false, isFilter: true, filterType: 'string', render: (value) => value || '—' },
+    {
+      id: 'rollNumber',
+      label: 'Roll number',
+      minWidth: 100,
+      isFilter: true,
+      filterType: 'number',
+      render: (value) => (
+        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+          {value ?? '—'}
+        </Typography>
+      ),
+    },
     {
       id: 'houseName',
       label: 'House',
       isSort: true,
+      isFilter: true,
+      filterType: 'string',
       minWidth: 140,
-      render: (_value, row) => row.houseName || 'Unassigned',
+      render: (_value, row) =>
+        row.houseName ? (
+          <Typography variant="body2">{row.houseName}</Typography>
+        ) : (
+          <Label color="default" sx={{ typography: 'caption', height: 22 }}>
+            Unassigned
+          </Label>
+        ),
     },
     {
       id: 'leadership',
@@ -400,21 +486,34 @@ export default function HouseManagement() {
       minWidth: 180,
       render: (_, row) => (
         <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
-          {row.isHouseLeader && <Chip size="small" label="House leader" />}
-          {row.isDivisionLeader && <Chip size="small" label="Division leader" />}
+          {row.isHouseLeader && <Label color="info">House leader</Label>}
+          {row.isDivisionLeader && <Label color="warning">Division leader</Label>}
           {!row.isHouseLeader && !row.isDivisionLeader && '—'}
         </Stack>
       ),
     },
   ];
   const divisionColumns: IColumn[] = [
-    { id: 'standardName', label: 'Class', minWidth: 140 },
-    { id: 'name', label: 'Division', isSort: true, minWidth: 140 },
-    { id: 'studentCount', label: 'Visible students', align: 'right', minWidth: 130 },
+    { id: 'standardName', label: 'Class', minWidth: 140, isFilter: true, filterType: 'string' },
+    { id: 'name', label: 'Division', isSort: true, minWidth: 140, isFilter: true, filterType: 'string' },
+    {
+      id: 'studentCount',
+      label: 'Visible students',
+      align: 'right',
+      minWidth: 130,
+      isFilter: true,
+      filterType: 'number',
+      render: (value) => (
+        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+          {value ?? 0}
+        </Typography>
+      ),
+    },
     {
       id: 'leader',
       label: 'Division leader',
       minWidth: 180,
+      isFilter: false,
       render: (_, row) => leader(row as HouseDivision),
     },
     ...(canManage
@@ -424,6 +523,8 @@ export default function HouseManagement() {
             label: 'Actions',
             align: 'right',
             width: 100,
+            sticky: true,
+            stickyPosition: 'right',
             render: (_: unknown, row: HouseDivision) => (
               <AdaptiveThreeDotsActions
                 actions={[
@@ -463,7 +564,12 @@ export default function HouseManagement() {
       <CustomBreadcrumbs
         heading="House Management"
         description="Manage medium-wise houses, cross-class membership and independent leaders. Counts include only students in your academic scope; leadership outside your access is not shown."
-        links={[{ name: 'Student', href: studentPaths.dashboard }, { name: 'House Management' }]}
+        descriptionDisplay="tooltip"
+        links={[
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Student Records', href: studentPaths.records.root },
+          { name: 'House Management' },
+        ]}
         action={
           canManage && state.tab === 'houses' ? (
             <Button
@@ -479,202 +585,394 @@ export default function HouseManagement() {
           ) : undefined
         }
       />
-      <CustomTabs
-        value={state.tab}
-        variant="scrollable"
-        scrollButtons="auto"
-        guardUnsavedChanges={false}
-        aria-label="House management sections"
+      <Card
+        variant="outlined"
+        sx={{
+          borderRadius: 2,
+          mb: 1.5,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          flexShrink: 0,
+        }}
       >
-        <Tab
-          value="houses"
-          component={RouterLink}
-          href={recordsQueryUrl(pathname, currentQuery, {
-            tab: 'houses',
-            search: undefined,
-            sort: undefined,
-            page: undefined,
-          })}
-          id="house-management-tab-houses"
-          aria-controls="house-management-panel"
-          label="Houses"
-          icon={<Iconify icon={GlobalIcons.building} />}
-          iconPosition="start"
-        />
-        <Tab
-          value="students"
-          component={RouterLink}
-          href={recordsQueryUrl(pathname, currentQuery, {
-            tab: 'students',
-            search: undefined,
-            sort: undefined,
-            page: undefined,
-          })}
-          id="house-management-tab-students"
-          aria-controls="house-management-panel"
-          label="Students"
-          icon={<Iconify icon={GlobalIcons.family} />}
-          iconPosition="start"
-        />
-        <Tab
-          value="divisions"
-          component={RouterLink}
-          href={recordsQueryUrl(pathname, currentQuery, {
-            tab: 'divisions',
-            search: undefined,
-            sort: undefined,
-            page: undefined,
-          })}
-          id="house-management-tab-divisions"
-          aria-controls="house-management-panel"
-          label="Division Leaders"
-          icon={<Iconify icon={GlobalIcons.admissionStudent} />}
-          iconPosition="start"
-        />
-      </CustomTabs>
-      <Stack spacing={1} sx={{ p: 1, mb: 1, flexShrink: 0 }}>
-        <Box
+        <CustomTabs
+          value={state.tab}
+          variant="scrollable"
+          scrollButtons="auto"
+          guardUnsavedChanges={false}
+          aria-label="House management sections"
           sx={{
-            display: 'grid',
-            gap: 1,
-            gridTemplateColumns: {
-              xs: 'minmax(0, 1fr)',
-              sm: 'repeat(2, minmax(0, 1fr))',
-              lg: 'repeat(4, minmax(0, 1fr))',
-            },
+            bgcolor: 'transparent',
+            '& .MuiTabs-scroller': { px: 1, py: 0.75 },
           }}
         >
-          <CustomSelect
-            label="Board"
-            value={academic.currentBoard?.id ?? ''}
-            options={academic.boards}
-            labelKey="name"
-            valueKey="id"
-            isLoading={academic.isLoading}
-            onChange={(value) =>
-              update({
-                board: String(value),
-                medium: undefined,
-                class: undefined,
-                division: undefined,
-                house: undefined,
-                houseName: undefined,
-                page: undefined,
-              })
-            }
+          <Tab
+            value="houses"
+            component={RouterLink}
+            href={recordsQueryUrl(pathname, currentQuery, {
+              tab: 'houses',
+              search: undefined,
+              sort: undefined,
+              page: undefined,
+            })}
+            id="house-management-tab-houses"
+            aria-controls="house-management-panel"
+            label="Houses"
+            icon={<Iconify icon={GlobalIcons.building} />}
+            iconPosition="start"
           />
-          <CustomSelect
-            label="Medium"
-            value={mediumId}
-            options={academic.mediums}
-            labelKey="name"
-            valueKey="id"
-            isLoading={academic.isLoading}
-            onChange={(value) =>
-              update({
-                medium: String(value),
-                class: undefined,
-                division: undefined,
-                house: undefined,
-                houseName: undefined,
-                page: undefined,
-              })
-            }
+          <Tab
+            value="students"
+            component={RouterLink}
+            href={recordsQueryUrl(pathname, currentQuery, {
+              tab: 'students',
+              search: undefined,
+              sort: undefined,
+              page: undefined,
+            })}
+            id="house-management-tab-students"
+            aria-controls="house-management-panel"
+            label="Students"
+            icon={<Iconify icon={GlobalIcons.family} />}
+            iconPosition="start"
           />
-          {state.tab !== 'houses' && (
+          <Tab
+            value="divisions"
+            component={RouterLink}
+            href={recordsQueryUrl(pathname, currentQuery, {
+              tab: 'divisions',
+              search: undefined,
+              sort: undefined,
+              page: undefined,
+            })}
+            id="house-management-tab-divisions"
+            aria-controls="house-management-panel"
+            label="Division Leaders"
+            icon={<Iconify icon={GlobalIcons.admissionStudent} />}
+            iconPosition="start"
+          />
+        </CustomTabs>
+      </Card>
+      <Card
+        variant="outlined"
+        sx={{
+          p: 2,
+          mb: 1.5,
+          borderRadius: 2,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          flexShrink: 0,
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', lg: 'row' }}
+          spacing={1.5}
+          alignItems={{ xs: 'stretch', lg: 'center' }}
+        >
+          <Box
+            sx={{
+              display: 'grid',
+              gap: 1.5,
+              gridTemplateColumns: {
+                xs: 'minmax(0, 1fr)',
+                sm: state.tab === 'houses' ? 'repeat(2, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))',
+                lg:
+                  state.tab === 'houses'
+                    ? 'repeat(2, minmax(0, 1fr))'
+                    : state.tab === 'divisions'
+                      ? 'repeat(3, minmax(0, 1fr))'
+                      : 'repeat(4, minmax(0, 1fr))',
+              },
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
             <CustomSelect
-              label="Class"
-              value={standardId || 'all'}
-              options={[{ id: 'all', name: 'All classes' }, ...standards]}
+              label="Board"
+              value={academic.currentBoard?.id ?? ''}
+              options={academic.boards}
               labelKey="name"
               valueKey="id"
-              disabled={!ready && !standardId}
+              isLoading={academic.isLoading}
               onChange={(value) =>
                 update({
-                  class: value === 'all' ? undefined : String(value),
+                  board: String(value),
+                  medium: undefined,
+                  class: undefined,
                   division: undefined,
-                  page: undefined,
-                })
-              }
-            />
-          )}
-          {state.tab === 'students' && (
-            <CustomSelect
-              label="Division"
-              value={divisionId || 'all'}
-              options={[{ id: 'all', label: 'All divisions' }, ...divisions]}
-              labelKey="label"
-              valueKey="id"
-              disabled={!mediumId}
-              onChange={(value) =>
-                update({ division: value === 'all' ? undefined : String(value), page: undefined })
-              }
-            />
-          )}
-          {state.tab === 'students' && (
-            <HousePicker
-              key={mediumId}
-              academicMediumId={mediumId}
-              value={
-                houseId
-                  ? selectedHouseFilter?.id === houseId
-                    ? selectedHouseFilter
-                    : {
-                        id: houseId,
-                        name: params.get('houseName') || 'Selected house',
-                        color: '',
-                        memberCount: 0,
-                        leader: null,
-                        canManage: false,
-                        concurrencyStamp: '',
-                      }
-                  : null
-              }
-              onChange={(house) => {
-                setSelectedHouseFilter(house);
-                update({
-                  house: house?.id,
-                  houseName: house?.name,
-                  assignment: undefined,
-                  page: undefined,
-                });
-              }}
-              disabled={!ready || unassignedOnly}
-              label="House"
-            />
-          )}
-          {state.tab === 'students' && (
-            <CustomSelect
-              label="Assignment"
-              value={unassignedOnly ? 'unassigned' : 'all'}
-              options={[
-                { value: 'all', label: 'All students' },
-                { value: 'unassigned', label: 'Unassigned only' },
-              ]}
-              onChange={(value) =>
-                update({
-                  assignment: value === 'unassigned' ? 'unassigned' : undefined,
                   house: undefined,
                   houseName: undefined,
                   page: undefined,
                 })
               }
             />
+            <CustomSelect
+              label="Medium"
+              value={mediumId}
+              options={academic.mediums}
+              labelKey="name"
+              valueKey="id"
+              isLoading={academic.isLoading}
+              onChange={(value) =>
+                update({
+                  medium: String(value),
+                  class: undefined,
+                  division: undefined,
+                  house: undefined,
+                  houseName: undefined,
+                  page: undefined,
+                })
+              }
+            />
+            {state.tab !== 'houses' && (
+              <CustomSelect
+                label="Class"
+                value={standardId || 'all'}
+                options={[{ id: 'all', name: 'All classes' }, ...standards]}
+                labelKey="name"
+                valueKey="id"
+                disabled={!ready && !standardId}
+                onChange={(value) =>
+                  update({
+                    class: value === 'all' ? undefined : String(value),
+                    division: undefined,
+                    page: undefined,
+                  })
+                }
+              />
+            )}
+            {state.tab === 'students' && (
+              <CustomSelect
+                label="Division"
+                value={divisionId || 'all'}
+                options={[{ id: 'all', label: 'All divisions' }, ...divisions]}
+                labelKey="label"
+                valueKey="id"
+                disabled={!mediumId}
+                onChange={(value) =>
+                  update({ division: value === 'all' ? undefined : String(value), page: undefined })
+                }
+              />
+            )}
+          </Box>
+          {state.tab === 'students' && (
+            <Box sx={{ flexShrink: 0, alignSelf: { xs: 'stretch', lg: 'center' } }}>
+              <Button
+                variant="outlined"
+                color={moreFiltersCount ? 'primary' : 'inherit'}
+                size="medium"
+                onClick={moreFiltersPopover.onOpen}
+                startIcon={<Iconify icon="mdi:tune" width={18} />}
+                aria-haspopup="dialog"
+                aria-expanded={moreFiltersPopover.open}
+                aria-controls={moreFiltersPopover.open ? 'house-management-more-filters' : undefined}
+                sx={{
+                  height: 40,
+                  whiteSpace: 'nowrap',
+                  px: 1.5,
+                  borderRadius: 1,
+                  width: { xs: 1, lg: 'auto' },
+                }}
+              >
+                Filters
+                {moreFiltersCount > 0 && (
+                  <Label color="primary" variant="soft" sx={{ ml: 0.75 }}>
+                    {moreFiltersCount}
+                  </Label>
+                )}
+              </Button>
+            </Box>
           )}
-        </Box>
+        </Stack>
+        {state.tab === 'students' && (Boolean(houseId) || unassignedOnly) && (
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            alignItems="center"
+            aria-label="Applied house filters"
+            sx={{ pt: 1.5, borderTop: 1, borderColor: 'divider', mt: 1.5 }}
+          >
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'fontWeightMedium' }}>
+              Applied filters:
+            </Typography>
+            {Boolean(houseId) && (
+              <Chip
+                size="small"
+                variant="outlined"
+                color="primary"
+                label={`House: ${params.get('houseName') || selectedHouseFilter?.name || 'Selected'}`}
+                onDelete={() => {
+                  setSelectedHouseFilter(null);
+                  update({ house: undefined, houseName: undefined, page: undefined });
+                }}
+              />
+            )}
+            {unassignedOnly && (
+              <Chip
+                size="small"
+                variant="outlined"
+                color="primary"
+                label="Assignment: Unassigned only"
+                onDelete={() => update({ assignment: undefined, page: undefined })}
+              />
+            )}
+            <Button
+              size="small"
+              color="inherit"
+              onClick={() => {
+                setSelectedHouseFilter(null);
+                update({
+                  house: undefined,
+                  houseName: undefined,
+                  assignment: undefined,
+                  page: undefined,
+                });
+              }}
+            >
+              Reset more filters
+            </Button>
+          </Stack>
+        )}
         {!canManage && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
             Read-only access. House changes require Add permission.
           </Typography>
         )}
         {canManage && state.tab === 'houses' && houses.currentData && !mediumCanManage && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
             House creation and catalogue changes require access to the entire selected medium.
           </Typography>
         )}
-        {canManage && state.tab === 'students' && (
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-            <Typography variant="body2">{selected.length} selected</Typography>
+      </Card>
+      {state.tab === 'students' && (
+        <CustomPopover
+          open={moreFiltersPopover.open}
+          anchorEl={moreFiltersPopover.anchorEl}
+          onClose={moreFiltersPopover.onClose}
+          slotProps={{
+            paper: {
+              role: 'dialog',
+              id: 'house-management-more-filters',
+              'aria-labelledby': 'house-management-more-filters-title',
+              sx: {
+                p: 2.5,
+                width: 340,
+                maxWidth: 'calc(100vw - 32px)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+              },
+            },
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+            <Typography id="house-management-more-filters-title" variant="subtitle1">
+              More Filters
+            </Typography>
+            {moreFiltersCount > 0 && (
+              <Button
+                variant="text"
+                color="inherit"
+                size="small"
+                startIcon={<Iconify icon="mdi:restore" width={16} />}
+                onClick={() => {
+                  setSelectedHouseFilter(null);
+                  update({
+                    house: undefined,
+                    houseName: undefined,
+                    assignment: undefined,
+                    page: undefined,
+                  });
+                }}
+              >
+                Reset
+              </Button>
+            )}
+          </Stack>
+          <HousePicker
+            key={mediumId}
+            academicMediumId={mediumId}
+            value={
+              houseId
+                ? selectedHouseFilter?.id === houseId
+                  ? selectedHouseFilter
+                  : {
+                      id: houseId,
+                      name: params.get('houseName') || 'Selected house',
+                      color: '',
+                      memberCount: 0,
+                      leader: null,
+                      canManage: false,
+                      concurrencyStamp: '',
+                    }
+                : null
+            }
+            onChange={(house) => {
+              setSelectedHouseFilter(house);
+              update({
+                house: house?.id,
+                houseName: house?.name,
+                assignment: undefined,
+                page: undefined,
+              });
+            }}
+            disabled={!ready || unassignedOnly}
+            label="House"
+          />
+          <CustomSelect
+            label="Assignment"
+            value={unassignedOnly ? 'unassigned' : 'all'}
+            options={[
+              { value: 'all', label: 'All students' },
+              { value: 'unassigned', label: 'Unassigned only' },
+            ]}
+            onChange={(value) =>
+              update({
+                assignment: value === 'unassigned' ? 'unassigned' : undefined,
+                house: undefined,
+                houseName: undefined,
+                page: undefined,
+              })
+            }
+          />
+          <Stack direction="row" justifyContent="flex-end" sx={{ pt: 0.5 }}>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={moreFiltersPopover.onClose}
+            >
+              Done
+            </Button>
+          </Stack>
+        </CustomPopover>
+      )}
+      {canManage && state.tab === 'students' && (
+        <Card
+          variant="outlined"
+          sx={{
+            px: 2,
+            py: 1,
+            mb: 1.5,
+            borderRadius: 2,
+            borderColor: 'divider',
+            bgcolor: selected.length > 0 ? 'action.selected' : 'background.paper',
+            flexShrink: 0,
+          }}
+        >
+          <Stack
+            role="toolbar"
+            aria-label="Selected students"
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            alignItems="center"
+          >
+            <Typography variant="body2" sx={{ mr: 'auto', fontWeight: 'fontWeightMedium' }}>
+              {selected.length} selected
+            </Typography>
             <Button
               size="small"
               variant="outlined"
@@ -705,8 +1003,8 @@ export default function HouseManagement() {
               </Button>
             )}
           </Stack>
-        )}
-      </Stack>
+        </Card>
+      )}
       <Box
         role="tabpanel"
         id="house-management-panel"
@@ -753,9 +1051,25 @@ export default function HouseManagement() {
           serverSideSearch
           serverSideSort
           serverSideSortMode="single"
-          showExport={false}
-          isFilter={false}
+          showExport
+          isFilter
           isSearch
+          searchFieldProps={{
+            placeholder:
+              state.tab === 'students'
+                ? 'Search name or GR number'
+                : state.tab === 'houses'
+                  ? 'Search house name'
+                  : 'Search class or division',
+            inputProps: {
+              'aria-label':
+                state.tab === 'students'
+                  ? 'Search students'
+                  : state.tab === 'houses'
+                    ? 'Search houses'
+                    : 'Search divisions',
+            },
+          }}
           isLoading={
             academic.isLoading || query.isLoading || (query.isFetching && !query.currentData)
           }
@@ -795,12 +1109,16 @@ export default function HouseManagement() {
           rowsPerPageOptions={[10, 25, 50, 100]}
           maxServerRowsPerPage={100}
           searchTerm={state.search}
-          sorts={[
-            {
-              column: state.sorting.split(' ')[0],
-              direction: state.sorting.endsWith('desc') ? 'desc' : 'asc',
-            },
-          ]}
+          sorts={
+            state.sorting
+              ? [
+                  {
+                    column: state.sorting.split(' ')[0],
+                    direction: state.sorting.endsWith('desc') ? 'desc' : 'asc',
+                  },
+                ]
+              : []
+          }
           onClearCriteria={() =>
             update({
               search: undefined,

@@ -3,10 +3,12 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { useState } from 'react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { act, waitFor, renderHook } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent, renderHook } from '@testing-library/react';
 
 import { useFormListActions } from './use-form-list-actions';
+import { AdmissionFormPublishDialog } from '../admission-form-publish-dialog';
 
 const query = vi.hoisted(() => ({ data: null as AdmissionForm | null, isError: false }));
 const publication = vi.hoisted(() => ({ validate: vi.fn(), publish: vi.fn() }));
@@ -17,6 +19,7 @@ const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 const navigation = vi.hoisted(() => ({ push: vi.fn() }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => navigation }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 vi.mock('react-redux', () => ({
   useSelector: (selector: (state: unknown) => unknown) =>
@@ -26,6 +29,10 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => {
   const mutation = () => [vi.fn(), { isLoading: false }];
   return {
     useGetAdmissionFormQuery: () => ({ ...query, refetch: vi.fn() }),
+    useGetAdmissionFormUsageQuery: () => ({
+      data: { offeringCount: 0, applicationCount: 0 },
+      isError: false,
+    }),
     useLazyGetAdmissionFormQuery: () => [freshForm.load],
     useCloneAdmissionFormMutation: mutation,
     useCreateAdmissionFormMutation: () => [saving.create, { isLoading: false }],
@@ -49,6 +56,138 @@ describe('useFormListActions editor mode', () => {
     });
   });
 
+  it('runs table validation, opens Edit for invalid choices, then publishes a corrected row with its saved stamp', async () => {
+    const currentRow = {
+      id: 'draft',
+      name: 'Inquiry with Other',
+      version: 1,
+      status: 0,
+      concurrencyStamp: 'original',
+    } as AdmissionForm;
+    const savedRow = { ...currentRow, concurrencyStamp: 'saved-corrected' };
+    const correction: CreateUpdateAdmissionForm = {
+      name: currentRow.name,
+      concurrencyStamp: 'original',
+      purpose: 1,
+      code: 'INQUIRY',
+      layoutType: 0,
+      fieldsPerRow: 2,
+      defaultLanguage: 'en',
+      supportedLanguages: ['en'],
+      sections: [],
+    };
+    saving.update.mockReturnValue({ unwrap: async () => savedRow });
+    publication.validate
+      .mockReturnValueOnce({
+        unwrap: async () => ({
+          isValid: false,
+          errors: ['Admissions.FormInvalidOptions:APPLICANT_GENDER'],
+        }),
+      })
+      .mockReturnValue({ unwrap: async () => ({ isValid: true, errors: [] }) });
+    publication.publish.mockReturnValue({ unwrap: async () => ({ ...currentRow, status: 1 }) });
+    function TablePublication() {
+      const actions = useFormListActions();
+      const [row, setRow] = useState(currentRow);
+      return (
+        <>
+          <button type="button" onClick={() => actions.requestPublish(row)}>
+            Publish from table
+          </button>
+          <output aria-label="Editing form">{actions.editingId}</output>
+          <button
+            type="button"
+            onClick={async () => {
+              await actions.save(correction);
+              setRow(savedRow);
+            }}
+          >
+            Save correction
+          </button>
+          <AdmissionFormPublishDialog
+            form={actions.pendingPublish}
+            issues={actions.publishIssues}
+            validating={actions.validatingPublish}
+            publishing={actions.publishing}
+            onClose={actions.clearPendingPublish}
+            onEdit={actions.editPendingPublish}
+            onPublish={actions.confirmPublish}
+          />
+        </>
+      );
+    }
+    render(<TablePublication />);
+    fireEvent.click(screen.getByRole('button', { name: 'Publish from table' }));
+    await screen.findByRole('dialog', { name: 'Form needs changes' });
+    expect(screen.getByText('APPLICANT_GENDER needs valid choices.')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Publish form' })).not.toBeInTheDocument();
+    expect(publication.publish).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
+    expect(screen.getByLabelText('Editing form')).toHaveTextContent('draft');
+    fireEvent.click(await screen.findByRole('button', { name: 'Save correction' }));
+    await waitFor(() => expect(screen.getByLabelText('Editing form')).toBeEmptyDOMElement());
+    expect(saving.update).toHaveBeenCalledExactlyOnceWith({ id: 'draft', body: correction });
+    fireEvent.click(screen.getByRole('button', { name: 'Publish from table' }));
+    await screen.findByRole('dialog', { name: 'Publish Inquiry with Other?' });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Publish form' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Publish form' }));
+    await waitFor(() =>
+      expect(publication.publish).toHaveBeenCalledExactlyOnceWith({
+        id: 'draft',
+        concurrencyStamp: 'saved-corrected',
+      })
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('retains the opened revision when a newer same-ID background snapshot arrives', async () => {
+    const { result, rerender } = renderHook(() => useFormListActions());
+    act(() => result.current.edit('draft'));
+    query.data = { id: 'draft', name: 'Opened form', concurrencyStamp: 'opened' } as AdmissionForm;
+    rerender();
+    await waitFor(() => expect(result.current.editing?.concurrencyStamp).toBe('opened'));
+    query.data = { ...query.data, name: 'Changed by another user', concurrencyStamp: 'external' };
+    rerender();
+    expect(result.current.editing?.concurrencyStamp).toBe('opened');
+    expect(result.current.editing?.name).toBe('Opened form');
+  });
+
+  it('does not silently refresh or retry a genuine conflict during table publication', async () => {
+    publication.validate.mockReturnValue({ unwrap: async () => ({ isValid: true, errors: [] }) });
+    publication.publish.mockReturnValue({
+      unwrap: () =>
+        Promise.reject(
+          Object.assign(new Error('Form changed'), {
+            status: 400,
+            data: {
+              errorCode: 'Admissions.FormConcurrencyConflict',
+              detail: 'One or more business rules were violated.',
+            },
+          })
+        ),
+    });
+    const { result } = renderHook(() => useFormListActions());
+    await act(async () => {
+      await result.current.requestPublish({
+        id: 'draft',
+        concurrencyStamp: 'reviewed-version',
+      } as AdmissionForm);
+    });
+    await act(async () => {
+      expect(await result.current.confirmPublish()).toBe(false);
+    });
+    expect(publication.publish).toHaveBeenCalledExactlyOnceWith({
+      id: 'draft',
+      concurrencyStamp: 'reviewed-version',
+    });
+    expect(freshForm.load).not.toHaveBeenCalled();
+    expect(result.current.pendingPublish?.id).toBe('draft');
+    expect(toast.error).toHaveBeenCalledWith({
+      message:
+        'This form has changed since it was opened. Close and reopen it to review the latest version before trying again.',
+    });
+  });
+
   it('passes the originating Forms list context to the shared preview route', () => {
     const { result } = renderHook(() => useFormListActions());
     const origin = '/student/admissions/settings/forms?view=registration&page=2';
@@ -63,7 +202,13 @@ describe('useFormListActions editor mode', () => {
   it('checks Inquiry minimum questions before creating a draft for Publish now', async () => {
     const { result } = renderHook(() => useFormListActions());
     await act(async () => {
-      await expect(result.current.saveAndPublish({ name: 'Inquiry', purpose: 0, sections: [] } as unknown as CreateUpdateAdmissionForm)).rejects.toThrow('Add a required Student name field before publishing.');
+      await expect(
+        result.current.saveAndPublish({
+          name: 'Inquiry',
+          purpose: 0,
+          sections: [],
+        } as unknown as CreateUpdateAdmissionForm)
+      ).rejects.toThrow('Add a required Student name field before publishing.');
     });
     expect(saving.create).not.toHaveBeenCalled();
     expect(publication.publish).not.toHaveBeenCalled();

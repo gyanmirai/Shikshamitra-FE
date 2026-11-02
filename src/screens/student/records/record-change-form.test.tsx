@@ -93,6 +93,27 @@ beforeEach(() => {
 });
 
 describe('Governed record changes', () => {
+  it('preserves the final Other student gender as numeric 2 in a governed change', async () => {
+    render(
+      <RecordChangeForm
+        studentId="student-1"
+        snapshot={{
+          section: 'general',
+          snapshot: 'snapshot-1',
+          data: { firstName: 'Aanya', lastName: '', dateOfBirth: '2015-01-01', gender: 2 },
+        }}
+        onSubmitted={mocks.submitted}
+      />
+    );
+    expect(screen.getByLabelText('Gender')).toHaveValue('2');
+    expect(screen.getByRole('option', { name: 'Other' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Reason for change'), {
+      target: { value: 'Verified permanent profile correction' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit change' }));
+    await waitFor(() => expect(mocks.submit).toHaveBeenCalledOnce());
+    expect(mocks.submit.mock.calls[0][0].payload.gender).toBe(2);
+  });
   it('accepts the permanent profile of a student with a single name', async () => {
     render(
       <RecordChangeForm

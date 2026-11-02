@@ -14,6 +14,7 @@ import AdmissionAssessmentsScreen from '../admission-assessments';
 
 const mocks = vi.hoisted(() => ({
   book: false,
+  setup: null as { scopes: any[] } | null,
   select: undefined as ((rows: any[], checked: boolean) => void) | undefined,
   table: null as Pick<ICustomizableTableProps, 'filters' | 'onServerFilter'> | null,
   workbench: {
@@ -102,7 +103,12 @@ vi.mock('./assessment-applicant-table', () => ({
 }));
 vi.mock('../admission-academic-filters', () => ({ AdmissionAcademicFilters: () => null }));
 vi.mock('../admission-query-error', () => ({ AdmissionQueryError: () => null }));
-vi.mock('./assessment-session-setup-drawer', () => ({ AssessmentSessionSetupDrawer: () => null }));
+vi.mock('./assessment-session-setup-drawer', () => ({
+  AssessmentSessionSetupDrawer: (props: { scopes: any[] }) => {
+    mocks.setup = props;
+    return null;
+  },
+}));
 vi.mock('./assessment-student-booking-drawer', () => ({
   AssessmentStudentBookingDrawer: ({ rows, scopes }: any) => (
     <div data-testid="student-booking">
@@ -127,6 +133,8 @@ vi.mock('src/redux/student/admissions/admission-assessment-planning-api', () => 
 }));
 
 beforeEach(() => {
+  mocks.setup = null;
+  mocks.workbench.academic.standardId = '';
   mocks.book = false;
   mocks.workbench.scopes.currentData = [];
   mocks.workbench.state.status = 'all';
@@ -137,6 +145,41 @@ beforeEach(() => {
   mocks.workbench.applicants.isError = false;
   mocks.workbench.applicants.isFetching = false;
   mocks.workbench.applicants.currentData = undefined;
+});
+
+it('keeps session setup within the selected Board and Medium while allowing every class in it', () => {
+  mocks.book = true;
+  mocks.workbench.state.tab = 'sessions';
+  mocks.workbench.academic.standardId = 'class-7';
+  const english = {
+    academicYearId: 'year',
+    boardId: 'board-1',
+    mediumId: 'medium-1',
+    schedulingEnabled: true,
+    className: 'Class 7',
+  };
+  const scopes = [
+    { ...english, admissionOfferingId: 'english-7', standardId: 'class-7' },
+    { ...english, admissionOfferingId: 'english-8', standardId: 'class-8', className: 'Class 8' },
+    { ...english, admissionOfferingId: 'gujarati-7', mediumId: 'medium-2' },
+    { ...english, admissionOfferingId: 'other-board-7', boardId: 'board-2' },
+    { ...english, admissionOfferingId: 'old-year', academicYearId: 'year-0' },
+    { ...english, admissionOfferingId: 'not-scheduled', schedulingEnabled: false },
+  ];
+  mocks.workbench.scopes.currentData = scopes;
+  renderPage();
+  fireEvent.click(screen.getByRole('button', { name: 'Create session' }));
+  expect(mocks.setup?.scopes).toEqual(scopes.slice(0, 2));
+});
+
+it('disables session creation if only another Medium has scheduled assessments', () => {
+  mocks.book = true;
+  mocks.workbench.state.tab = 'sessions';
+  mocks.workbench.scopes.currentData = [
+    { academicYearId: 'year', boardId: 'board-1', mediumId: 'medium-2', schedulingEnabled: true },
+  ];
+  renderPage();
+  expect(screen.getByRole('button', { name: 'Create session' })).toBeDisabled();
 });
 
 it('carries selected students into existing-session booking under the Student tab', () => {

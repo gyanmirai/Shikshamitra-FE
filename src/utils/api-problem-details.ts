@@ -56,6 +56,8 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
     "This admission step is not available in the application's current status. Refresh the application, complete the required decision or submission first, then try again.",
   'Admissions.WorkflowConcurrencyConflict':
     'This workflow changed after the list was loaded. Refresh the latest version, review it, and try again.',
+  'Admissions.FormConcurrencyConflict':
+    'This form has changed since it was opened. Close and reopen it to review the latest version before trying again.',
   'Admissions.Application.EnrollmentDivisionFull':
     'The selected division has no seats available. Choose another division or assign one later.',
   'Admissions.Application.EnrollmentDivisionInvalid':

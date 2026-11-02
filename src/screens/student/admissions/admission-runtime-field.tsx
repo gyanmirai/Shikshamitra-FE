@@ -83,6 +83,7 @@ const fieldRendererRegistry: Partial<Record<number, FieldRenderer>> = {
 const GENDER_OPTIONS: ChoiceOption[] = [
   { value: 'Male', label: 'Male' },
   { value: 'Female', label: 'Female' },
+  { value: 'Other', label: 'Other' },
 ];
 
 export default function AdmissionRuntimeField(input: AdmissionRuntimeFieldProps) {
@@ -113,7 +114,7 @@ export default function AdmissionRuntimeField(input: AdmissionRuntimeFieldProps)
     ...props,
     helperId,
     options:
-      field.bindingKey === 'Applicant.Gender' || field.code === 'Gender'
+      field.bindingType === 0 && field.bindingKey === 'Applicant.Gender' && !field.optionsJson
         ? GENDER_OPTIONS
         : readOptions(field.optionsJson),
   });

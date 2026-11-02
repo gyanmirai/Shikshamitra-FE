@@ -55,7 +55,7 @@ export function BulkAdmissionOfferingActivation({ activation, disabled }: Props)
       {activation.failures.length > 0 && (
         <StudentFeedback
           notificationKey="STU-0295"
-          presentation="persistent"
+          presentation="inline"
           severity="error"
           sx={{ mb: 1, flexShrink: 0 }}
         >

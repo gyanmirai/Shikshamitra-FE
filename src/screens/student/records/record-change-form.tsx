@@ -415,6 +415,7 @@ function StructuredRecordChangeForm({
                       options={[
                         { value: GenderType.Male, label: 'Male' },
                         { value: GenderType.Female, label: 'Female' },
+                        { value: GenderType.Other, label: 'Other' },
                       ]}
                       onChange={(value) => form.setFieldValue('gender', value)}
                     />

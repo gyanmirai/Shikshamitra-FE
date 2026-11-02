@@ -200,7 +200,8 @@ const studentIdentityFields = (): FieldInput[] => [
     label: 'Gender',
     fieldType: 6,
     bindingKey: 'Applicant.Gender',
-    optionsJson: choices(['Male', 'Female']),
+    optionsJson: choices(['Male', 'Female', 'Other']),
+    required: true,
   },
 ];
 

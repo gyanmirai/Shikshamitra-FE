@@ -49,9 +49,9 @@ import {
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { AdmissionFamilyContacts } from './admission-family-contacts';
-import { GuardianResponsibilityConfirmation } from './use-inquiry-primary-contact';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
 import { AdmissionSiblingFamilyMatch } from './admission-sibling-family-match';
+import { GuardianResponsibilityConfirmation } from './use-inquiry-primary-contact';
 import {
   buildAdmissionFamilyContacts,
   admissionFamilyContactsSchema,
@@ -124,7 +124,7 @@ const schema = Yup.object({
       'Enter a valid date of birth that is not in the future.',
       (value) => !value || (dayjs(value).isValid() && !dayjs(value).isAfter(dayjs(), 'day'))
     ),
-  applicantGender: Yup.string().oneOf(['Male', 'Female']).required('Gender is required.'),
+  applicantGender: Yup.string().oneOf(['Male', 'Female', 'Other']).required('Gender is required.'),
   guardianFirstName: Yup.string().trim().required('Parent first name is required.').max(128),
   guardianLastName: Yup.string().trim().max(128),
   guardianMobile: Yup.string()
@@ -686,6 +686,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                         options={[
                           { value: 'Male', label: 'Male' },
                           { value: 'Female', label: 'Female' },
+                          { value: 'Other', label: 'Other' },
                         ]}
                       />
                     </ShakingTextField>

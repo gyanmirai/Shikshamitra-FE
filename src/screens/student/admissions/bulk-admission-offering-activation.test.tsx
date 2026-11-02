@@ -1,4 +1,4 @@
-import { vi, it, expect, describe } from 'vitest';
+import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import { BulkAdmissionOfferingActivation } from './bulk-admission-offering-activation';
@@ -6,6 +6,8 @@ import { BulkAdmissionOfferingActivation } from './bulk-admission-offering-activ
 import type { useBulkAdmissionOfferingActivation } from './use-bulk-admission-offering-activation';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+const toast = vi.hoisted(() => ({ error: vi.fn(), dismiss: vi.fn() }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 
 const state = () =>
   ({
@@ -25,6 +27,7 @@ const state = () =>
   }) as unknown as ReturnType<typeof useBulkAdmissionOfferingActivation>;
 
 describe('Bulk activation controls', () => {
+  beforeEach(() => vi.clearAllMocks());
   it('shows the selection count and an outcome-labelled action', () => {
     const activation = state();
     render(<BulkAdmissionOfferingActivation activation={activation} disabled={false} />);
@@ -72,6 +75,8 @@ describe('Bulk activation controls', () => {
       screen.getByText('Class 2 General: Publish the registration form first.', { exact: false })
     ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Activate Selected' })).toBeEnabled();
+    // The batch hook already announces the outcome; local reasons must not announce it again.
+    expect(toast.error).not.toHaveBeenCalled();
   });
   it('does not render an empty selection toolbar', () => {
     render(
