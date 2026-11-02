@@ -75,16 +75,7 @@ export function ApplicationApplicantNotesDialog({
               <Skeleton height={96} />
             </Stack>
           ) : query.isError || !data ? (
-            <StudentFeedback
-              notificationKey="STU-0180"
-              presentation="toast"
-              severity="error"
-              action={
-                <Button size="small" disabled={busy} onClick={query.refetch}>
-                  Retry
-                </Button>
-              }
-            >
+            <StudentFeedback notificationKey="STU-0180" presentation="toast" severity="error">
               Applicant notes could not be loaded. Try again.
             </StudentFeedback>
           ) : (
@@ -104,6 +95,11 @@ export function ApplicationApplicantNotesDialog({
           )}
         </DialogScrollContent>
         <DialogActions sx={{ p: 2 }}>
+          {canView && !query.isLoading && !query.isFetching && (query.isError || !data) && (
+            <Button size="small" variant="outlined" disabled={busy} onClick={query.refetch}>
+              Retry
+            </Button>
+          )}
           <Button
             size="small"
             variant="outlined"

@@ -30,6 +30,7 @@ export interface AttendanceFilter {
   StandardId: string;
   DivisionId: string;
   Date: string;
+  IncludeCumulativeSummary?: boolean;
 }
 export interface AttendancePolicySummary {
   sameDayCorrectionRequiresReason?: boolean;

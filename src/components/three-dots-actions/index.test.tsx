@@ -153,4 +153,28 @@ describe('ThreeDotsActions', () => {
     expect(screen.queryByRole('link', { name: 'View Riya Shah' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'View Riya Shah' })).toBeDisabled();
   });
+
+  it('explains a disabled Delete with the supplied scope reason without enabling the action', async () => {
+    const onDelete = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <ThreeDotsActions
+          showDeleteIcon
+          showThreeDots={false}
+          disableDeleteIcon
+          deleteLabel="Delete design"
+          deleteDisabledReason="Assignments are outside your scope."
+          handleDeleteClick={onDelete}
+        />
+      </ThemeProvider>
+    );
+    const button = screen.getByRole('button', { name: 'Delete design' });
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(onDelete).not.toHaveBeenCalled();
+    fireEvent.mouseOver(button.parentElement!);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Assignments are outside your scope.'
+    );
+  });
 });

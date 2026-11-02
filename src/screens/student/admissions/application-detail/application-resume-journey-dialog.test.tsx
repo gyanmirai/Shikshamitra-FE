@@ -30,6 +30,26 @@ const props = {
   onSubmit: vi.fn(),
 };
 
+it('keeps retention guidance in the section tooltip and actual blockers visible', async () => {
+  const guidance =
+    'Released assessment bookings and cancelled follow-ups stay cancelled. Existing evidence and payments are retained.';
+  render(
+    <ApplicationResumeJourneyDialog
+      {...props}
+      preview={{
+        ...preview,
+        canResume: false,
+        warnings: [guidance],
+        blockers: ['The original stage could not be recovered.'],
+      }}
+    />
+  );
+  expect(screen.queryByText(guidance)).not.toBeInTheDocument();
+  expect(screen.getByText('The original stage could not be recovered.')).toBeVisible();
+  await userEvent.hover(screen.getByRole('button', { name: 'Resume Details information' }));
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(guidance);
+});
+
 it('shows the unchanged reference and actual target stage and requires an audit reason', async () => {
   const submit = vi.fn();
   const user = userEvent.setup();

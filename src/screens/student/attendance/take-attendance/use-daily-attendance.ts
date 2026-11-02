@@ -130,6 +130,7 @@ export function useDailyAttendance(academicYearOverride?: AcademicYear) {
       StandardId: selection.standard,
       DivisionId: selection.division,
       Date: selection.date,
+      IncludeCumulativeSummary: false,
     },
     {
       skip: !classRegister,
@@ -318,9 +319,7 @@ export function useDailyAttendance(academicYearOverride?: AcademicYear) {
       snapshot.rosterRevision !== currentData.rosterRevision);
   const counts = useMemo(() => getAttendanceCounts(rows), [rows]);
   const canAdd = hasGrantedPermission(permissions, 'Students.Attendance.MarkAttendance.Add');
-  const canManageLock =
-    context?.canManageLock === true &&
-    canAdd;
+  const canManageLock = context?.canManageLock === true && canAdd;
   const editable =
     !!snapshot &&
     !!authoritative?.canMark &&

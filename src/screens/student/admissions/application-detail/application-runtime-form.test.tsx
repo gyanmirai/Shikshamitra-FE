@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, within, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { ApplicationRuntimeForm } from './application-runtime-form';
 
@@ -169,6 +169,7 @@ it('allows correcting an inherited answer while keeping the original Inquiry nam
 });
 
 function renderForm(overrides: Partial<Props> = {}) {
+  let currentOverrides = overrides;
   const onValidateStep = vi.fn(() => true);
   function TestForm() {
     const [values, setValues] = useState<Record<string, string>>({});
@@ -208,19 +209,181 @@ function renderForm(overrides: Partial<Props> = {}) {
         canReopen={false}
         reopening={false}
         onReopen={vi.fn()}
-        {...overrides}
+        {...currentOverrides}
       />
     );
   }
-  render(
+  const content = () => (
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <TestForm />
     </ThemeProvider>
   );
-  return { onValidateStep };
+  const rendered = render(content());
+  return {
+    onValidateStep,
+    rerenderForm: (next: Partial<Props>) => {
+      currentOverrides = { ...currentOverrides, ...next };
+      rendered.rerender(content());
+    },
+  };
 }
 
 describe('application form step navigation', () => {
+  it('allows reviewing another step after focusing a submission error', async () => {
+    const { rerenderForm } = renderForm();
+    rerenderForm({ fieldErrors: { medical: 'Health details answer is required.' } });
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Health details answer' })).toHaveFocus()
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeVisible();
+  });
+  it('shows only the correction repeat row allowed by its section rule', () => {
+    const row = section('rows', 'Rows', 'rows', 0);
+    renderForm({
+      application: { status: 6 } as Props['application'],
+      correctionMode: true,
+      values: { rows: '["hidden","visible"]', SHOW: '["no","yes"]' },
+      form: {
+        canCorrectForm: true,
+        formVersion: 1,
+        academicYearId: 'year',
+        status: 1,
+        definition: {
+          name: 'Registration',
+          layoutType: 1,
+          fieldsPerRow: 1,
+          sections: [
+            {
+              ...row,
+              isRepeatable: true,
+              minEntries: 0,
+              maxEntries: 3,
+              visibilityRuleJson: JSON.stringify({
+                field: 'SHOW',
+                operator: 'equals',
+                value: 'yes',
+              }),
+              fields: [...row.fields, { id: 'show', code: 'SHOW', label: 'Show', fieldType: 0 }],
+            },
+          ],
+        },
+      } as Props['form'],
+    });
+    expect(screen.getByRole('textbox', { name: 'Rows answer' })).toHaveValue('visible');
+    expect(screen.queryByDisplayValue('hidden')).not.toBeInTheDocument();
+  });
+  it('keeps minimum blank correction repeat rows available for entry', () => {
+    renderForm({
+      application: { status: 6 } as Props['application'],
+      correctionMode: true,
+      form: {
+        canCorrectForm: true,
+        formVersion: 1,
+        academicYearId: 'year',
+        status: 1,
+        definition: {
+          name: 'Registration',
+          layoutType: 1,
+          fieldsPerRow: 1,
+          sections: [
+            {
+              ...section('rows', 'Rows', 'rows', 0),
+              isRepeatable: true,
+              minEntries: 2,
+              maxEntries: 3,
+            },
+          ],
+        },
+      } as Props['form'],
+    });
+    expect(screen.getAllByRole('textbox', { name: 'Rows answer' })).toHaveLength(2);
+  });
+  it('reveals an earlier draft step when submission returns identity field errors', async () => {
+    const { rerenderForm } = renderForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+    await screen.findByRole('textbox', { name: 'Health details answer' });
+    rerenderForm({ fieldErrors: { basic: 'Student name is required.' } });
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeVisible();
+    expect(screen.getByText('Student name is required.')).toBeVisible();
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toHaveFocus()
+    );
+  });
+  it('reveals an earlier correction step when the server rejects one of its answers', async () => {
+    const { rerenderForm } = renderForm({
+      application: { status: 6 } as Props['application'],
+      correctionMode: true,
+      showSaveDraft: false,
+      form: {
+        canCorrectForm: true,
+        formVersion: 1,
+        academicYearId: 'year',
+        status: 1,
+        definition: {
+          name: 'Registration',
+          layoutType: 1,
+          fieldsPerRow: 2,
+          sections: [
+            section('basic', 'Basic details', 'personal', 0),
+            section('medical', 'Health details', 'medical', 1),
+          ],
+        },
+      } as Props['form'],
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('textbox', { name: 'Health details answer' })).toBeVisible();
+    rerenderForm({ fieldErrors: { basic: 'Correct the saved identity answer.' } });
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeVisible();
+    expect(screen.getByText('Correct the saved identity answer.')).toBeVisible();
+  });
+  it('allows an explicitly authorized pre-finalization correction without resubmitting the application', () => {
+    renderForm({
+      application: { status: 6 } as Props['application'],
+      form: {
+        formVersion: 1,
+        academicYearId: 'year',
+        status: 1,
+        canCorrectForm: true,
+        definition: {
+          name: 'Registration',
+          layoutType: 0,
+          fieldsPerRow: 1,
+          sections: [section('basic', 'Basic details', 'personal', 0)],
+        },
+      } as Props['form'],
+      correctionMode: true,
+      showSaveDraft: false,
+    } as Partial<Props>);
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Save corrections' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Submit application' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reopen form' })).not.toBeInTheDocument();
+  });
+  it.each([2, 3, 9, 10, 11])(
+    'cannot unlock terminal application status %s with correction mode',
+    (status) => {
+      renderForm({
+        application: { status } as Props['application'],
+        form: {
+          formVersion: 1,
+          academicYearId: 'year',
+          status: 1,
+          canCorrectForm: true,
+          definition: {
+            name: 'Registration',
+            layoutType: 0,
+            fieldsPerRow: 1,
+            sections: [section('basic', 'Basic details', 'personal', 0)],
+          },
+        } as Props['form'],
+        correctionMode: true,
+        showSaveDraft: false,
+      } as Partial<Props>);
+      expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeDisabled();
+      expect(screen.queryByRole('button', { name: 'Save corrections' })).not.toBeInTheDocument();
+    }
+  );
   it('keeps field validation beside fields without a duplicate top banner and keeps API errors visible by the footer', () => {
     renderForm({
       compact: true,

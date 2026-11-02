@@ -15,9 +15,9 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomStepper from 'src/components/custom-stepper';
-import { useRef, useMemo, useState, useEffect } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useRef, useMemo, useState, useEffect, useLayoutEffect } from 'react';
 import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 import { TemplateIdentityAsset } from 'src/screens/setting/school-identity/components/template-identity-asset';
 import {
@@ -146,7 +146,7 @@ export default function StudentICardBuilder({
   initialStudents,
   initialAcademicScope,
   lockAcademicScope = false,
-  academicYearId,
+  academicYearId: openerAcademicYearId,
   contextInvalid = false,
   onBusyChange,
 }: {
@@ -167,13 +167,23 @@ export default function StudentICardBuilder({
       .filter(
         (student, index, all) =>
           !student.maskedFields.includes('Identity') &&
-          (!academicYearId ||
+          (!openerAcademicYearId ||
             !student.academicYearId ||
-            student.academicYearId === academicYearId) &&
+            student.academicYearId === openerAcademicYearId) &&
           all.findIndex((item) => item.studentId === student.studentId) === index
       )
       .slice(0, 100)
   );
+  const [academicYearId, setAcademicYearId] = useState(
+    (!directoryMode && initialTemplate?.selection?.academicYearId) || openerAcademicYearId
+  );
+  const [selectionRestricted, setSelectionRestricted] = useState(
+    !directoryMode && initialTemplate?.selectionRestricted === true
+  );
+  const [hydrationIds, setHydrationIds] = useState<string[]>(() =>
+    directoryMode ? [] : [...(initialTemplate?.selection?.studentIds ?? [])]
+  );
+  const [hydrationPage, setHydrationPage] = useState(0);
   const [identityUploading, setIdentityUploading] = useState(false);
   const templateQuery = useGetRecordIdTemplateQuery(undefined, {
     skip: initialTemplate !== undefined,
@@ -200,37 +210,48 @@ export default function StudentICardBuilder({
           standardIds: [...initialAcademicScope.standardIds],
           divisionIds: [...initialAcademicScope.divisionIds],
         }
-      : initialSelection.length
+      : !directoryMode && initialTemplate?.selection
         ? {
-            boardIds: [],
-            mediumIds: [
-              ...new Set(
-                initialSelection.flatMap((student) =>
-                  student.academicMediumId ? [student.academicMediumId] : []
-                )
-              ),
-            ],
-            standardIds: [
-              ...new Set(
-                initialSelection.flatMap((student) =>
-                  student.standardId ? [student.standardId] : []
-                )
-              ),
-            ],
-            divisionIds: [
-              ...new Set(
-                initialSelection.flatMap((student) =>
-                  student.divisionId ? [student.divisionId] : []
-                )
-              ),
-            ],
+            boardIds: [...(initialTemplate.selection.boardIds ?? [])],
+            mediumIds: [...(initialTemplate.selection.mediumIds ?? [])],
+            standardIds: [...(initialTemplate.selection.standardIds ?? [])],
+            divisionIds: [...(initialTemplate.selection.divisionIds ?? [])],
           }
-        : emptyScope
+        : initialSelection.length
+          ? {
+              boardIds: [],
+              mediumIds: [
+                ...new Set(
+                  initialSelection.flatMap((student) =>
+                    student.academicMediumId ? [student.academicMediumId] : []
+                  )
+                ),
+              ],
+              standardIds: [
+                ...new Set(
+                  initialSelection.flatMap((student) =>
+                    student.standardId ? [student.standardId] : []
+                  )
+                ),
+              ],
+              divisionIds: [
+                ...new Set(
+                  initialSelection.flatMap((student) =>
+                    student.divisionId ? [student.divisionId] : []
+                  )
+                ),
+              ],
+            }
+          : emptyScope
   );
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
-  const [selected, setSelected] = useState<Record<string, StudentDirectoryItem>>(() =>
-    Object.fromEntries(initialSelection.map((student) => [student.studentId, student]))
+  const [selected, setSelected] = useState<Record<string, StudentDirectoryItem | undefined>>(() =>
+    Object.fromEntries(
+      directoryMode
+        ? initialSelection.map((student) => [student.studentId, student])
+        : (initialTemplate?.selection?.studentIds ?? []).map((id) => [id, undefined])
+    )
   );
   const [previews, setPreviews] = useState<IdCard[]>([]);
   const [previewStudentId, setPreviewStudentId] = useState(initialSelection[0]?.studentId ?? '');
@@ -238,6 +259,18 @@ export default function StudentICardBuilder({
   const [error, setError] = useState('');
   const [templateNameTouched, setTemplateNameTouched] = useState(false);
   const issueKey = useRef('');
+  const latestContext = useRef({ invalid: contextInvalid, generation: 0 });
+  useLayoutEffect(() => {
+    latestContext.current = {
+      invalid: contextInvalid,
+      generation: latestContext.current.generation + 1,
+    };
+    return () => {
+      latestContext.current = { invalid: true, generation: latestContext.current.generation + 1 };
+    };
+  }, [contextInvalid]);
+  const isCurrentContext = (generation: number) =>
+    !latestContext.current.invalid && latestContext.current.generation === generation;
   const busy =
     identityUploading ||
     saveState.isLoading ||
@@ -254,9 +287,72 @@ export default function StudentICardBuilder({
   }, [busy, onBusyChange]);
 
   useEffect(() => {
-    if (initialTemplate === undefined && templateQuery.currentData && !template)
-      setTemplate(normalizeTemplate(templateQuery.currentData));
-  }, [initialTemplate, template, templateQuery.currentData]);
+    if (initialTemplate === undefined && templateQuery.currentData && !template) {
+      const loaded = templateQuery.currentData;
+      setTemplate(normalizeTemplate(loaded));
+      if (!directoryMode && loaded.selectionRestricted) {
+        setSelectionRestricted(true);
+      } else if (!directoryMode && loaded.selection) {
+        setAcademicYearId(loaded.selection.academicYearId || openerAcademicYearId);
+        setScope({
+          boardIds: [...(loaded.selection.boardIds ?? [])],
+          mediumIds: [...(loaded.selection.mediumIds ?? [])],
+          standardIds: [...(loaded.selection.standardIds ?? [])],
+          divisionIds: [...(loaded.selection.divisionIds ?? [])],
+        });
+        setSelected(Object.fromEntries(loaded.selection.studentIds.map((id) => [id, undefined])));
+        setHydrationIds([...loaded.selection.studentIds]);
+        setHydrationPage(0);
+      }
+    }
+  }, [directoryMode, initialTemplate, openerAcademicYearId, template, templateQuery.currentData]);
+
+  const hydrationChunk = useMemo(
+    () => hydrationIds.slice(hydrationPage * 100, (hydrationPage + 1) * 100),
+    [hydrationIds, hydrationPage]
+  );
+  const savedStudents = useGetStudentRecordsDirectoryQuery(
+    {
+      population: 'All',
+      ...(academicYearId ? { academicYearId } : {}),
+      studentIds: hydrationChunk,
+      skipCount: 0,
+      maxResultCount: 100,
+    },
+    { skip: directoryMode || contextInvalid || selectionRestricted || !hydrationChunk.length }
+  );
+  useEffect(() => {
+    if (
+      directoryMode ||
+      contextInvalid ||
+      selectionRestricted ||
+      !hydrationChunk.length ||
+      savedStudents.isFetching ||
+      savedStudents.isError ||
+      !savedStudents.currentData
+    )
+      return;
+    setSelected((previous) => {
+      const next = { ...previous };
+      savedStudents.currentData!.items.forEach((student) => {
+        if (
+          Object.prototype.hasOwnProperty.call(next, student.studentId) &&
+          !student.maskedFields.includes('Identity')
+        )
+          next[student.studentId] = student;
+      });
+      return next;
+    });
+    setHydrationPage((current) => current + 1);
+  }, [
+    contextInvalid,
+    directoryMode,
+    hydrationChunk,
+    savedStudents.currentData,
+    savedStudents.isError,
+    savedStudents.isFetching,
+    selectionRestricted,
+  ]);
 
   const options = optionsQuery.currentData;
   const mediumOptions = useMemo(
@@ -304,10 +400,15 @@ export default function StudentICardBuilder({
       search: search.trim() || undefined,
       ...scope,
     },
-    { skip: step < 2 || contextInvalid }
+    { skip: step < 2 || contextInvalid || selectionRestricted }
   );
-  const rows = directory.currentData?.items ?? [];
-  const selectedRows = Object.values(selected);
+  const rows = selectionRestricted ? [] : (directory.currentData?.items ?? []);
+  const selectedIds = Object.keys(selected);
+  const selectedRows = Object.values(selected).filter((student): student is StudentDirectoryItem =>
+    Boolean(student)
+  );
+  const isSelected = (studentId: string) =>
+    Object.prototype.hasOwnProperty.call(selected, studentId);
   const missingPhotoCount = selectedRows.filter((row) => !row.hasPhoto).length;
   const reviewStudent =
     selectedRows.find((student) => student.studentId === previewStudentId) ?? selectedRows[0];
@@ -352,10 +453,12 @@ export default function StudentICardBuilder({
     setPreviews([]);
   };
   const changeScope = (patch: Partial<Scope>) => {
-    if (lockAcademicScope) return;
+    if (lockAcademicScope || selectionRestricted) return;
     setScope((previous) => ({ ...previous, ...patch }));
     setPage(0);
     setSelected({});
+    setHydrationIds([]);
+    setHydrationPage(0);
     setPreviews([]);
     setCompleted((current) => current.filter((value) => value < 2));
     issueKey.current = '';
@@ -402,14 +505,16 @@ export default function StudentICardBuilder({
         isSearch
         isLoading={optionsQuery.isFetching}
         onChange={(value) => changeScope(patch(asStringArray(value)))}
-        disabled={busy || optionsQuery.isError}
+        disabled={busy || optionsQuery.isError || selectionRestricted}
         formControlProps={{ sx: { width: '100%', minWidth: 0 } }}
       />
     );
   const toggleStudent = (student: StudentDirectoryItem) => {
+    if (selectionRestricted) return;
     setSelected((previous) => {
       const next = { ...previous };
-      if (next[student.studentId]) delete next[student.studentId];
+      if (Object.prototype.hasOwnProperty.call(next, student.studentId))
+        delete next[student.studentId];
       else if (Object.keys(next).length < 100) next[student.studentId] = student;
       return next;
     });
@@ -418,7 +523,8 @@ export default function StudentICardBuilder({
     issueKey.current = '';
   };
   const togglePage = () => {
-    const allSelected = rows.every((row) => selected[row.studentId]);
+    if (selectionRestricted) return;
+    const allSelected = rows.every((row) => isSelected(row.studentId));
     setSelected((previous) => {
       const next = { ...previous };
       rows.forEach((row) => {
@@ -432,7 +538,7 @@ export default function StudentICardBuilder({
     issueKey.current = '';
   };
   const save = async () => {
-    if (!template) return null;
+    if (!template || contextInvalid) return null;
     if (!templateName.trim()) {
       setTemplateNameTouched(true);
       setStep(0);
@@ -444,13 +550,47 @@ export default function StudentICardBuilder({
       return null;
     }
     try {
+      const body = { ...template };
+      delete body.selectionRestricted;
+      const persistedAssignment =
+        template.selection &&
+        [
+          template.selection.studentIds,
+          template.selection.boardIds,
+          template.selection.mediumIds,
+          template.selection.standardIds,
+          template.selection.divisionIds,
+        ].some((ids) => ids?.length);
+      const currentAssignment =
+        selectedIds.length > 0 || Object.values(scope).some((ids) => ids.length > 0);
+      if (selectionRestricted || (!currentAssignment && !persistedAssignment))
+        delete body.selection;
+      else
+        body.selection = {
+          academicYearId: academicYearId ?? null,
+          boardIds: [...scope.boardIds],
+          mediumIds: [...scope.mediumIds],
+          standardIds: [...scope.standardIds],
+          divisionIds: [...scope.divisionIds],
+          studentIds: selectedIds,
+        };
       const saved =
         initialTemplate === undefined
-          ? await saveTemplate(template).unwrap()
+          ? await saveTemplate(body).unwrap()
           : template.id
-            ? await updateTemplate({ id: template.id, body: template }).unwrap()
-            : await createTemplate(template).unwrap();
-      setTemplate(normalizeTemplate(saved, template));
+            ? await updateTemplate({ id: template.id, body }).unwrap()
+            : await createTemplate(body).unwrap();
+      setTemplate(normalizeTemplate(saved, body));
+      if (saved.selectionRestricted && !directoryMode) {
+        setSelectionRestricted(true);
+        setSelected({});
+        setHydrationIds([]);
+        setScope(emptyScope);
+        setPreviews([]);
+        setPreviewStudentId('');
+        setCompleted((current) => current.filter((value) => value < 2));
+        setStep((current) => Math.min(current, 2));
+      }
       setError('');
       shikshaMitraToast.success({ message: 'Student I-Card template saved.' });
       return saved;
@@ -460,16 +600,24 @@ export default function StudentICardBuilder({
     }
   };
   const preview = async (templateId = template?.id ?? undefined) => {
-    if (contextInvalid) return false;
-    if (!selectedRows.length) {
+    if (contextInvalid || selectionRestricted) return false;
+    const {generation} = latestContext.current;
+    if (!selectedIds.length) {
       setError('Select at least one student.');
+      return false;
+    }
+    if (selectedIds.length > 100 || selectedRows.length !== selectedIds.length) {
+      setError(
+        'Preview requires up to 100 students with available directory details. Saved selections are retained.'
+      );
       return false;
     }
     try {
       const cards = await previewCards({
-        studentIds: selectedRows.map((row) => row.studentId),
+        studentIds: selectedIds,
         templateId,
       }).unwrap();
+      if (!isCurrentContext(generation)) return false;
       setPreviews(cards);
       if (directoryMode && cards[0]?.templateSnapshot) {
         setTemplate((current) => ({
@@ -481,12 +629,14 @@ export default function StudentICardBuilder({
       setError('');
       return true;
     } catch {
-      setError('Cards could not be previewed. Check student access and try again.');
+      if (isCurrentContext(generation))
+        setError('Cards could not be previewed. Check student access and try again.');
       return false;
     }
   };
   const advance = async () => {
-    if (contextInvalid) return;
+    if (contextInvalid || (step === 2 && selectionRestricted)) return;
+    const {generation} = latestContext.current;
     if (step === 0 && !templateName.trim()) {
       setTemplateNameTouched(true);
       setError('');
@@ -500,52 +650,75 @@ export default function StudentICardBuilder({
       setError('Choose at least one card field.');
       return;
     }
-    if (step === 2 && !selectedRows.length) {
+    if (step === 2 && !selectedIds.length) {
       setError('Select at least one student.');
       return;
     }
     const saved = step === 2 ? (directoryMode ? template : await save()) : null;
+    if (!isCurrentContext(generation)) return;
     if (step === 2 && !saved) return;
+    if (step === 2 && !directoryMode && saved?.selectionRestricted) return;
     if (step === 2 && !(await preview(saved?.id ?? undefined))) return;
     if (step === 3 && !previews.length && !(await preview())) return;
+    if (!isCurrentContext(generation)) return;
     setError('');
     setCompleted((current) => (current.includes(step) ? current : [...current, step]));
     setStep((current) => Math.min(current + 1, steps.length - 1));
   };
   const exportPdf = async () => {
-    if (contextInvalid || !template || !selectedRows.length) return;
+    if (contextInvalid || selectionRestricted || !template || !selectedIds.length) return;
+    const {generation} = latestContext.current;
+    if (selectedIds.length > 100 || selectedRows.length !== selectedIds.length) {
+      setError(
+        'Export requires up to 100 students with available directory details. Saved selections are retained.'
+      );
+      return;
+    }
     const saved = directoryMode ? template : await save();
-    if (!saved) return;
+    if (!saved || (!directoryMode && saved.selectionRestricted) || !isCurrentContext(generation))
+      return;
     try {
       const pdf = await exportCards({
-        studentIds: selectedRows.map((row) => row.studentId),
+        studentIds: selectedIds,
         cardsPerPage: template.cardsPerPage,
         templateId: saved.id ?? undefined,
       }).unwrap();
+      if (!isCurrentContext(generation)) return;
       if (!pdf.size || (pdf.type && !pdf.type.includes('pdf'))) throw new Error('Invalid PDF');
       downloadRecordPdf(pdf, `Student-I-Cards-${new Date().toISOString().slice(0, 10)}.pdf`);
       shikshaMitraToast.success({ message: 'Student I-Card PDF downloaded.' });
     } catch {
-      setError('Bulk PDF could not be exported. Check student access and retry.');
+      if (isCurrentContext(generation))
+        setError('Bulk PDF could not be exported. Check student access and retry.');
     }
   };
   const issue = async () => {
-    if (contextInvalid || !selectedRows.length) return;
+    if (contextInvalid || selectionRestricted || !selectedIds.length) return;
+    const {generation} = latestContext.current;
+    if (selectedIds.length > 100 || selectedRows.length !== selectedIds.length) {
+      setError(
+        'Issuing cards requires up to 100 students with available directory details. Saved selections are retained.'
+      );
+      return;
+    }
     const saved = directoryMode ? template : await save();
-    if (!saved) return;
+    if (!saved || (!directoryMode && saved.selectionRestricted) || !isCurrentContext(generation))
+      return;
     try {
       issueKey.current ||= crypto.randomUUID();
       await issueCards({
-        studentIds: selectedRows.map((row) => row.studentId),
+        studentIds: selectedIds,
         idempotencyKey: issueKey.current,
         templateId: saved.id ?? undefined,
       }).unwrap();
+      if (!isCurrentContext(generation)) return;
       shikshaMitraToast.success({
         message: 'Student I-Cards issued. Select a student to view history.',
       });
       onClose();
     } catch {
-      setError('Cards could not be issued. You can retry without creating duplicates.');
+      if (isCurrentContext(generation))
+        setError('Cards could not be issued. You can retry without creating duplicates.');
     }
   };
 
@@ -574,9 +747,13 @@ export default function StudentICardBuilder({
         return (
           <Checkbox
             size="small"
-            aria-label={`Select ${studentName(row)}`}
-            checked={!!selected[row.studentId]}
-            disabled={busy || (!selected[row.studentId] && selectedRows.length >= 100)}
+            slotProps={{ input: { 'aria-label': `Select ${studentName(row)}` } }}
+            checked={isSelected(row.studentId)}
+            disabled={
+              busy ||
+              selectionRestricted ||
+              (!isSelected(row.studentId) && selectedIds.length >= 100)
+            }
             onChange={() => toggleStudent(row)}
           />
         );
@@ -871,6 +1048,12 @@ export default function StudentICardBuilder({
                     Academic choices could not be loaded.
                   </StudentFeedback>
                 )}
+                {selectionRestricted && (
+                  <Typography role="status" variant="body2" color="text.secondary">
+                    Student assignments are restricted in your current academic scope. You can still
+                    save design changes.
+                  </Typography>
+                )}
                 <Grid container spacing={1.5}>
                   <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                     {scopeSelect('Board', 'boardIds', options?.boards ?? [], (value) => ({
@@ -907,6 +1090,7 @@ export default function StudentICardBuilder({
                   <TextField
                     size="small"
                     label="Search students"
+                    disabled={selectionRestricted}
                     value={search}
                     onChange={(event) => {
                       setSearch(event.target.value);
@@ -914,12 +1098,16 @@ export default function StudentICardBuilder({
                     }}
                     sx={{ flex: 1 }}
                   />
-                  <Button variant="outlined" disabled={!rows.length || busy} onClick={togglePage}>
-                    {rows.length && rows.every((row) => selected[row.studentId])
+                  <Button
+                    variant="outlined"
+                    disabled={!rows.length || busy || selectionRestricted}
+                    onClick={togglePage}
+                  >
+                    {rows.length && rows.every((row) => isSelected(row.studentId))
                       ? 'Clear page'
                       : 'Select page'}
                   </Button>
-                  <Typography variant="body2">{selectedRows.length}/100 selected</Typography>
+                  <Typography variant="body2">{selectedIds.length}/100 selected</Typography>
                 </Stack>
                 {directory.isError && (
                   <StudentFeedback
@@ -1262,12 +1450,16 @@ export default function StudentICardBuilder({
         </Button>
         <Stack direction="row" spacing={1}>
           {!directoryMode && (
-            <Button variant="outlined" disabled={busy} onClick={save}>
+            <Button variant="outlined" disabled={busy || contextInvalid} onClick={save}>
               Save
             </Button>
           )}
           {step < 4 ? (
-            <Button variant="contained" disabled={busy || contextInvalid} onClick={advance}>
+            <Button
+              variant="contained"
+              disabled={busy || contextInvalid || (step === 2 && selectionRestricted)}
+              onClick={advance}
+            >
               Next
             </Button>
           ) : (

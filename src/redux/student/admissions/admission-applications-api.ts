@@ -234,7 +234,16 @@ export type AdmissionFormSection = {
   translations?: Record<string, { label?: string | null; helpText?: string | null }>;
   fields: AdmissionFormField[];
 };
+export type CorrectAdmissionApplicationFormInput = {
+  id: string;
+  concurrencyStamp: string;
+  reason: string;
+  idempotencyKey: string;
+  values: { fieldCode: string; valueJson?: string | null }[];
+};
 export type AdmissionApplicationForm = {
+  canCorrectForm?: boolean;
+  correctionBlockedReason?: string | null;
   inquiryFormDefinitionId?: string | null;
   inquiryContextSections?: AdmissionFormSection[];
   inquiryContextValues?: { fieldCode: string; valueJson?: string | null }[];
@@ -456,6 +465,22 @@ export const admissionApplicationsApi = api.injectEndpoints({
       transformResponse: (response: Result<AdmissionApplicationForm> | AdmissionApplicationForm) =>
         unwrap(response),
       providesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    correctAdmissionApplicationForm: builder.mutation<
+      AdmissionApplicationForm,
+      CorrectAdmissionApplicationFormInput
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/form/corrections`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<AdmissionApplicationForm> | AdmissionApplicationForm) =>
+        unwrap(response),
+      invalidatesTags: (result, error) =>
+        error
+          ? []
+          : [...applicationMutationTags(result, error), studentAdmissionsCrmType.admissionInquiry],
     }),
     updateAdmissionApplicationFormValues: builder.mutation<
       AdmissionApplicationForm,
@@ -708,6 +733,7 @@ export const {
   useGetAdmissionApplicationWorkflowQuery,
   useGetAdmissionApplicationFormQuery,
   useUpdateAdmissionApplicationFormValuesMutation,
+  useCorrectAdmissionApplicationFormMutation,
   useSubmitAdmissionApplicationMutation,
   useReopenAdmissionApplicationFormMutation,
   useGetAdmissionApplicationFormHistoryQuery,

@@ -40,6 +40,7 @@ export interface ThreeDotsActionsOptions {
   deleteLabel?: string;
   moreLabel?: string;
   disableDeleteIcon?: boolean;
+  deleteDisabledReason?: ReactNode;
   disableEditIcon?: boolean;
   disableViewIcon?: boolean;
   placement?:

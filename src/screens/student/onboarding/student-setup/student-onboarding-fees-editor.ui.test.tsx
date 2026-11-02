@@ -159,7 +159,7 @@ function setup(props: { disabled?: boolean; canManage?: boolean } = {}) {
 it('saves the selected fee using a fresh case stamp from the parent footer', async () => {
   const ref = setup({ disabled: true });
   fireEvent.change(screen.getByLabelText('Fee structure'), { target: { value: 'structure-1' } });
-  await waitFor(() => expect(screen.getByLabelText('Fee structure')).toHaveValue('structure-1'));
+  await waitFor(() => expect(screen.getByText('Class 1 · Revision 2')).toBeVisible());
   expect(screen.queryByRole('button', { name: 'Confirm fee structure' })).not.toBeInTheDocument();
   await act(() => ref.current!.save());
   expect(mocks.refreshCase).toHaveBeenCalledOnce();
@@ -235,13 +235,13 @@ it('retains the draft and exposes server failure to the parent', async () => {
   });
   const ref = setup();
   fireEvent.change(screen.getByLabelText('Fee structure'), { target: { value: 'structure-1' } });
-  await waitFor(() => expect(screen.getByLabelText('Fee structure')).toHaveValue('structure-1'));
+  await waitFor(() => expect(screen.getByText('Class 1 · Revision 2')).toBeVisible());
   await act(async () => {
     await expect(ref.current!.save({ allowIncomplete: true })).rejects.toMatchObject({
       data: { detail: 'Structure changed.' },
     });
   });
-  expect(screen.getByLabelText('Fee structure')).toHaveValue('structure-1');
+  expect(screen.getByText('Class 1 · Revision 2')).toBeVisible();
   expect(screen.getByText('Structure changed.', { exact: false })).toBeVisible();
   expect(mocks.state).toHaveBeenLastCalledWith(
     expect.objectContaining({ dirty: true, busy: false })
@@ -288,7 +288,7 @@ it('guards repeated parent saves while the first confirmation is running', async
   });
   const ref = setup();
   fireEvent.change(screen.getByLabelText('Fee structure'), { target: { value: 'structure-1' } });
-  await waitFor(() => expect(screen.getByLabelText('Fee structure')).toHaveValue('structure-1'));
+  await waitFor(() => expect(screen.getByText('Class 1 · Revision 2')).toBeVisible());
   let first!: Promise<void>;
   await act(async () => {
     first = ref.current!.save();
@@ -303,19 +303,17 @@ it('guards repeated parent saves while the first confirmation is running', async
   expect(mocks.confirm).toHaveBeenCalledOnce();
 });
 
-it('collapses readonly fee details and payments while keeping the optional selection visible', async () => {
+it('combines required and optional fee heads in one dropdown after the structure is chosen', async () => {
   mocks.optional = true;
   setup();
   fireEvent.change(screen.getByLabelText('Fee structure'), { target: { value: 'structure-1' } });
-  await waitFor(() => expect(screen.getByLabelText('Fee structure')).toHaveValue('structure-1'));
-  expect(screen.getByRole('button', { name: 'Fee Details' })).toHaveAttribute(
-    'aria-expanded',
-    'false'
-  );
-  expect(screen.getByText('Tuition')).not.toBeVisible();
-  expect(screen.getByLabelText('Optional fee heads')).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Fee Details' }));
-  expect(screen.getByText('Tuition')).toBeVisible();
+  await waitFor(() => expect(screen.getByText('Class 1 · Revision 2')).toBeVisible());
+  expect(screen.getAllByRole('listbox')).toHaveLength(1);
+  expect(screen.getByLabelText('Fee heads')).toHaveValue(['tuition']);
+  expect(screen.getByRole('option', { name: 'Tuition' })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'Trip' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Fee Details' })).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Optional fee heads')).not.toBeInTheDocument();
 });
 
 it('keeps the existing payment panel mounted but collapsed in compact mode', () => {

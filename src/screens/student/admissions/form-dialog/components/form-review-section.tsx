@@ -6,6 +6,7 @@ import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/Inform
 
 import { localizeAdmissionSection } from '../form-languages';
 import AdmissionRuntimeField from '../../admission-runtime-field';
+import { isAdmissionCopiedAddressField } from '../../admission-address-sync';
 import { AdmissionSectionFields } from '../../components/admission-section-fields';
 
 type Props = {
@@ -50,7 +51,11 @@ export function FormReviewSection({
               field={field}
               value={answers[field.code] ?? ''}
               formValues={answers}
-              disabled={formik.isSubmitting || field.readOnly}
+              disabled={
+                formik.isSubmitting ||
+                field.readOnly ||
+                isAdmissionCopiedAddressField(field, formik.values.sections, answers)
+              }
               onChange={(value) => onChangeAnswer(field.code, value)}
             />
           </Box>

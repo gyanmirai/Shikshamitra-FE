@@ -9,15 +9,15 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { RouterLink } from 'src/routes/components';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
-import { Alert, Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Alert, Button, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetStudentRecordsDirectoryQuery } from 'src/redux/student/records/student-records-api';
@@ -34,6 +34,7 @@ export default function StudentICardTemplates() {
   const [selected, setSelected] = useState<IdCardTemplate | null>(null);
   const [templateToDelete, setTemplateToDelete] = useState<IdCardTemplate | null>(null);
   const yearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
+  const [openerYearId, setOpenerYearId] = useState<string | undefined>();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(permissions, 'Students.Records.StudentICard.View');
   const canEdit = hasGrantedPermission(permissions, 'Students.Records.StudentICard.Add');
@@ -50,20 +51,27 @@ export default function StudentICardTemplates() {
   );
   const tableRows = (templates.currentData ?? []).map((row) => ({
     ...row,
-    assignedStudents:
-      !yearId || students.isError || !students.currentData
+    assignedStudents: row.selectionRestricted
+      ? 'Restricted'
+      : !yearId || students.isError || !students.currentData
         ? '—'
         : row.selection?.academicYearId && row.selection.academicYearId !== yearId
           ? 'Other academic year'
           : `${row.selection?.studentIds?.length ?? 0} / ${students.currentData.totalCount}`,
   }));
   const [deleteTemplate, deleting] = useDeleteRecordIdTemplateMutation();
+  const deleteRestricted = Boolean(
+    templateToDelete?.selectionRestricted ||
+    templates.currentData?.some((row) => row.id === templateToDelete?.id && row.selectionRestricted)
+  );
 
   const openCreate = () => {
+    setOpenerYearId(yearId);
     setSelected(null);
     form.onTrue();
   };
   const openEdit = (row: IdCardTemplate) => {
+    setOpenerYearId(yearId);
     setSelected(row);
     form.onTrue();
   };
@@ -79,7 +87,7 @@ export default function StudentICardTemplates() {
     if (!deleting.isLoading) setTemplateToDelete(null);
   };
   const deleteRow = async () => {
-    if (!templateToDelete?.id || deleting.isLoading) return;
+    if (!templateToDelete?.id || deleting.isLoading || !canDelete || deleteRestricted) return;
     try {
       await deleteTemplate(templateToDelete.id).unwrap();
       setTemplateToDelete(null);
@@ -128,13 +136,21 @@ export default function StudentICardTemplates() {
             showViewIcon
             showEditIcon={canEdit}
             showDeleteIcon={canDelete}
+            disableDeleteIcon={row.selectionRestricted}
+            deleteDisabledReason={
+              row.selectionRestricted
+                ? 'Student assignments are restricted in your current academic scope.'
+                : undefined
+            }
             showThreeDots={false}
             viewLabel={`View ${row.name}`}
             editLabel={`Edit ${row.name}`}
             deleteLabel={`Delete ${row.name}`}
             handleViewClick={() => openPreview(row)}
             handleEditClick={() => openEdit(row)}
-            handleDeleteClick={() => setTemplateToDelete(row)}
+            handleDeleteClick={() => {
+              if (canDelete && !row.selectionRestricted) setTemplateToDelete(row);
+            }}
           />
         );
       },
@@ -160,6 +176,8 @@ export default function StudentICardTemplates() {
             <StudentICardBuilder
               key={selected?.id ?? 'new'}
               initialTemplate={selected}
+              academicYearId={openerYearId}
+              contextInvalid={yearId !== openerYearId}
               onClose={closeForm}
             />
           </Box>
@@ -175,15 +193,27 @@ export default function StudentICardTemplates() {
               { name: 'Student I-Card' },
             ]}
             action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Add />}
-                disabled={!yearId || !canEdit}
-                onClick={openCreate}
-              >
-                Create Student I-Card
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {canView && (
+                  <Button
+                    component={RouterLink}
+                    href={`${studentPaths.records.documents}?view=ids`}
+                    variant="outlined"
+                    size="small"
+                  >
+                    View issued cards
+                  </Button>
+                )}
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<Add />}
+                  disabled={!canEdit}
+                  onClick={openCreate}
+                >
+                  Create Student I-Card
+                </Button>
+              </Box>
             }
           />
           {!canView ? (
@@ -244,6 +274,8 @@ export default function StudentICardTemplates() {
           <Typography id="student-icard-delete-description" variant="body2">
             “{templateToDelete?.name}” will be removed. Issued cards will keep their saved design.
             This cannot be undone.
+            {deleteRestricted &&
+              ' Student assignments are restricted in your current academic scope.'}
           </Typography>
         }
         aria-describedby="student-icard-delete-description"
@@ -252,7 +284,7 @@ export default function StudentICardTemplates() {
             variant="contained"
             color="error"
             loading={deleting.isLoading}
-            disabled={deleting.isLoading}
+            disabled={deleting.isLoading || !canDelete || deleteRestricted}
             onClick={deleteRow}
             startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
           >

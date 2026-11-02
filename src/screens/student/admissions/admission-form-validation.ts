@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 
 import { getAdmissionPhotoError } from './admission-profile-photo';
+import { isOptionalStudentNamePart } from './admission-student-name';
 import { isAdmissionRuleVisible } from './admission-visibility-rules';
 
 type DynamicValues = Record<string, unknown>;
@@ -9,6 +10,9 @@ type AdmissionFormValidationField = {
   label: string;
   fieldType: number;
   required: boolean;
+  bindingType?: number;
+  bindingKey?: string | null;
+  readOnly?: boolean;
   validationJson?: string | null;
   visibilityRuleJson?: string | null;
   requiredRuleJson?: string | null;
@@ -17,6 +21,7 @@ export type AdmissionFormValidationDefinition = {
   sections: {
     fields: AdmissionFormValidationField[];
     visibilityRuleJson?: string | null;
+    stepVisibilityRuleJson?: string | null;
     isRepeatable?: boolean;
     minEntries?: number;
     maxEntries?: number;
@@ -66,13 +71,18 @@ function fieldError(
   return config.messages?.[String(key)] ?? config.message ?? `${field.label} ${fallback}`;
 }
 
-function createFieldSchema(field: AdmissionFormValidationField, sectionRule?: string | null) {
+function createFieldSchema(
+  field: AdmissionFormValidationField,
+  sectionRule?: string | null,
+  stepRule?: string | null
+) {
   return Yup.mixed().test('admission-field-validation', function validate(value) {
     const parent = (this.parent ?? {}) as DynamicValues;
     const values = Object.fromEntries(
       Object.entries(parent).map(([key, current]) => [key, asText(current)])
     );
     if (
+      !isAdmissionRuleVisible(stepRule, values) ||
       !isAdmissionRuleVisible(sectionRule, values) ||
       !isAdmissionRuleVisible(field.visibilityRuleJson, values)
     )
@@ -82,7 +92,7 @@ function createFieldSchema(field: AdmissionFormValidationField, sectionRule?: st
     const requiredByRule = field.requiredRuleJson
       ? isAdmissionRuleVisible(field.requiredRuleJson, values)
       : false;
-    if ((field.required || requiredByRule) && isEmpty(value)) {
+    if (!isOptionalStudentNamePart(field) && (field.required || requiredByRule) && isEmpty(value)) {
       return this.createError({ message: fieldError(field, config, 'message', 'is required.') });
     }
     if (isEmpty(value)) return true;
@@ -175,9 +185,19 @@ function createFieldSchema(field: AdmissionFormValidationField, sectionRule?: st
 function createRepeatableFieldSchema(
   field: AdmissionFormValidationField,
   minimumEntries: number,
-  maximumEntries: number
+  maximumEntries: number,
+  sectionRule?: string | null,
+  stepRule?: string | null
 ) {
   return Yup.mixed().test('admission-repeatable-field-validation', function validate(value) {
+    const values = Object.fromEntries(
+      Object.entries((this.parent ?? {}) as DynamicValues).map(([key, current]) => [
+        key,
+        asText(current),
+      ])
+    );
+    if (!isAdmissionRuleVisible(stepRule, values) || !isAdmissionRuleVisible(sectionRule, values))
+      return true;
     let entries: unknown[] = [];
     try {
       const parsed = typeof value === 'string' ? (JSON.parse(value) as unknown) : value;
@@ -189,7 +209,7 @@ function createRepeatableFieldSchema(
       return this.createError({ message: `Add at least ${minimumEntries} entries.` });
     if (entries.length > maximumEntries)
       return this.createError({ message: `Add no more than ${maximumEntries} entries.` });
-    if (field.required && entries.some(isEmpty))
+    if (!isOptionalStudentNamePart(field) && field.required && entries.some(isEmpty))
       return this.createError({ message: `${field.label} is required in every entry.` });
     return true;
   });
@@ -218,8 +238,14 @@ export function buildDynamicAdmissionYupSchema(form: AdmissionFormValidationDefi
       (result, { field, section }) => ({
         ...result,
         [field.code]: section.isRepeatable
-          ? createRepeatableFieldSchema(field, section.minEntries ?? 0, section.maxEntries ?? 1)
-          : createFieldSchema(field, section.visibilityRuleJson),
+          ? createRepeatableFieldSchema(
+              field,
+              section.minEntries ?? 0,
+              section.maxEntries ?? 1,
+              section.visibilityRuleJson,
+              section.stepVisibilityRuleJson
+            )
+          : createFieldSchema(field, section.visibilityRuleJson, section.stepVisibilityRuleJson),
       }),
       {}
     );
@@ -239,4 +265,33 @@ export function getDynamicAdmissionValidationErrors(
       error.inner.map((item) => [item.path ?? '', item.message]).filter(([path]) => path)
     );
   }
+}
+
+/** Submission requires the editable identity questions; drafts and light Inquiry capture stay partial. */
+export function getAdmissionSubmissionValidationErrors(
+  form: AdmissionFormValidationDefinition,
+  values: DynamicValues
+) {
+  return getDynamicAdmissionValidationErrors(
+    {
+      ...form,
+      sections: form.sections.map((section) => ({
+        ...section,
+        fields: section.fields.map((field) => ({
+          ...field,
+          required:
+            field.required ||
+            (field.bindingType === 0 &&
+              !field.readOnly &&
+              [
+                'Applicant.Name',
+                'Applicant.FirstName',
+                'Applicant.DateOfBirth',
+                'Applicant.Gender',
+              ].includes(field.bindingKey ?? '')),
+        })),
+      })),
+    },
+    values
+  );
 }

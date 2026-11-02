@@ -3,12 +3,22 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-30
+updated_on: 2026-11-01
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Pre-finalization form corrections
+
+Run `application-runtime-form.test.tsx`, `application-form-correction-editor.test.tsx`, `application-form-correction-drawer.test.tsx`, `application-finalization-dialog.test.tsx`, `use-admission-application-decisions.test.ts`, `admission-application-detail.test.tsx`, `form-history-card.test.tsx` and `admission-form-correction-api.test.ts`. Cover explicit correction mode versus terminal/read-only states, required form/reason validation and earlier-step reveal, changed-only email normalization, frozen editing snapshots, failed-save retention, stale conflicts, exact uncertain retry, photo/save/navigation locks, cache refresh and renewed finalization confirmations. Backend preservation/security tests are maintained in the [Student testing guide](../../../Shikshamitra-BE/docs/modules/student/testing.md).
+
+Browser acceptance must separately check a synthetic pre-finalization Approved case on desktop and mobile: edit, retain values while stepping, save with reason, retain approval/number, reload checks and require new guardian/identity review. Do not treat component tests as live persistence or responsive-browser acceptance.
+
+## Admissions section, upload and navigation UI
+
+Run the Inquiry create/edit page, Resume dialog, decision recovery, Applications list/columns/detail, document-verification and shared CustomUpload suites. Cover collapse/expand with retained values and submit-error reveal, keyboard row navigation, text selection and native links, guarded breadcrumb Back/return context, upload replacement/removal, policy-specific size/type rejection, unchanged default size and busy locks. Follow with full TypeScript, scoped lint/format and Student docs validation. In-app browser review should cover desktop/mobile layout and info-tooltip access without creating or deciding a real application or submitting documents.
 
 ## Primary contact and Guardian responsibility
 
@@ -88,6 +98,12 @@ Focused coverage lives in `admission-journey-resume-api.test.ts`, `application-r
 
 ## Optional onboarding fees
 
+`student-onboarding-fee-heads.ui.test.tsx` exercises the real shared dropdown: one active picker, explicit structure selection, required checked/disabled heads, optional tick/untick, unchanged confirmation payload/stamp, cancelled structure edits, permission/paid locks and retained drafts after failure. The existing fees/editor suites cover empty scope, loading/read failures, untouched optional activation, completed Admissions snapshots and mounted receipt state. In the browser, compare compact Fees with other shared selects and verify single-line selection on narrow screens without submitting real fee changes.
+
+Local browser acceptance on 1 November 2026 used a published, clearly named Class 1 QA structure with a ₹100 required head and a ₹50 optional head. Student Setup reload/search, explicit structure choice, required checked/disabled state, optional tick/untick, cancelled structure changes, and desktop/mobile dropdown placement passed. The selected field stayed approximately 37.4 px high with either one or both heads. Unsaved student selections were discarded and reopening the case confirmed no structure assignment; no payment, activation or credential message was submitted. This verifies local UI behavior, not staging/production or monetary transaction acceptance. For local HTTPS, use the existing `npm run dev:local` command so Node trusts the Windows development certificate; launching Next without its system-CA option caused session refresh failures during this check.
+
+Subsequent persisted-save acceptance on the same date used one fictional applicant, **QA FeesSave 1101 / APP-004**, through the existing Inquiry and Admission journey. An audited assessment waiver and an explicitly synthetic document fixture completed the dummy prerequisites; payment collection was deferred with a reason. **Save for Later** saved Class 1/A, GR/roll numbers and the selected optional ₹50 head with the required ₹100 head. A full reload restored both selected heads and the Confirmed fee status. **Save & Activate** then created an active enrollment; another full reload retained the same fee selection, with both checkbox options checked and disabled. Payments & Receipts showed Confirmed payments ₹0 and No payments recorded yet. No Collect fees, payment preparation or manual credential-send action was used. Joining date remained blank, so the summary displayed no scheduled-fee/balance amount; this check does not validate pricing, collection or external delivery.
+
 The focused Quick Setup save/page, compact Fees editor/accordion, readiness model/summary and App Login suites passed 153 tests on 29 October 2026. They cover activation with an untouched blank fee section, independent fee-read failure/loading (including cached confirmed fees), explicit fee edits retaining validation and failure recovery, no implicit single-candidate selection, separately pending fees, and manual credential sending. Full TypeScript checking and scoped ESLint passed. Backend activation and monetary invariants are covered by [Student backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md#optional-onboarding-fees); these checks do not establish inbox delivery.
 
 ## Inquiry Add Sibling UI (29 October 2026)
@@ -109,6 +125,12 @@ Browser acceptance uses the actual dialog in an isolated fixture with synthetic 
 Run the focused `admission-joining-date-api.test.ts`, `use-admission-joining-date.test.tsx` and `admission-fee-collection-panel.test.tsx` suites with the Windows preload and one worker. All 36 tests pass, including date validation, read-only preview, stale inputs, concurrent preparation locking the saved date, date-confirmation failure before preparation, variable amount preview, permission gates, receipt access and existing collection retries. `npm run ts` and scoped ESLint pass. The broader unchanged fee-selection suite has five existing inline feedback/Retry assertions failing against the shared toast behavior; it mocks the collection panel and is not a green full-suite gate.
 
 In-app browser checks use actual Payment components with isolated synthetic transport at desktop 1440 × 900 and phone 390 × 844: missing-date collection lock, visible preview loading, 2 June reduced-fee preview, 1 June normal full fees without a proration section, invalid date feedback, preview error/retry, and concurrent preparation replacing the unsaved date with the saved value. No date confirmation, dues or payment was written during these browser checks. This fixture is UI proof only. Authenticated local end-to-end verification is blocked because the configured backend database lacks `AbpSettingDefinitions`; no database migration or reseed was performed. Backend integration tests own real calculation/persistence/permission coverage. Staging and production are unverified.
+
+## Inquiry to Pipeline navigation
+
+Run `use-inquiry-handoff.test.ts`, `admission-pipeline-workspace-route.test.tsx`, `admission-pipeline-state.test.ts`, `admission-pipeline-screen.test.tsx` and `application-return-url.test.ts` with the Windows Vitest preload and one worker. Cover direct pre-decision drawer navigation, the older-server missing-phase fallback, decision-entered Applications routing, denied move permission, Interested/duplicate/identity blockers, duplicate clicks and retry after failure. Existing legacy links and Assessment return filters must retain their behavior.
+
+For local browser acceptance, create a labelled QA inquiry through its configured offering, verify that Pending disables Move, mark it Interested through Follow-up, and move it to Pipeline. Confirm one linked application, its expected stage, a usable drawer after full reload, and completion of any QA reminder. Measure API-start-to-assessment-data completion separately from browser first paint. Cold Webpack compilation and warm-cache observations must retain their own conditions; a navigation change does not establish a backend speedup.
 
 ## Approval to finalization handoff (28 October 2026)
 
@@ -149,6 +171,12 @@ Run the family-contact, inquiry-model, inquiry-form-page and direct-registration
 The separate existing drawer/Quick Setup run passes 43 of 47 assertions, including the original four-argument parent activation callback. Four drawer assertions still expect former inline Additional admission details, activation-preview and Handling history error/Retry copy; they remain failures rather than being weakened. Full TypeScript and scoped feature-file ESLint pass. Student documentation validation passes; all-module documentation validation retains unrelated testing-folder taxonomy/frontmatter failures.
 
 Local in-app browser inspection loaded the Inquiry and Offering screens, but later form interactions stalled. Parent/guardian form completion, responsive contact-dialog acceptance, current-backend persistence and app-access delivery remain unverified by that browser attempt. Automated fixture tests do not establish staging, production or mailbox delivery.
+
+## Student I-card selection
+
+`student-icard-selection.test.tsx` covers standalone opener/saved-year context, saved filter and cross-page ID hydration, bounded reads without truncating unexpected legacy IDs, unavailable labels, save-failure draft retention and oldest-template refetch behavior. Restricted-cohort cases verify omitted assignment payloads, read-only controls and Restricted counts while directory printing keeps its own scoped cohort. Run it with `student-icard-builder.test.tsx`; these component fixtures do not establish live template persistence, PostgreSQL assignment concurrency or production acceptance.
+
+`student-icard-route.test.tsx` verifies the documented catalogue owner and retained generic history route. `student-record-documents-context.test.tsx` checks captured year and draft retention for that history builder. Selection cases also distinguish metadata-only saves from explicit assignment clears/filter intent and exercise the View-gated history link and deferred context changes.
 
 ## Student List actions and I-card print refinement (26 October 2026)
 
@@ -613,6 +641,19 @@ The first local Pipeline/options and list reads after restart returned HTTP 200 
 
 TL;DR: run the documentation check first, then focused lint, formatting, type, unit, and browser checks for the Enrollment Admissions surface that changed.
 
+## Attendance request and cache regression
+
+`leave-requests.requests.test.tsx` runs the real RTK Query subscriptions and invalidation against synthetic MSW HTTP responses.
+It checks one page plus one grouped counter, active-tab request counts, shared search/scope, status-filter exclusion for counters, accepted/rejected decisions, prerequisite skips, changed-scope data and zero totals.
+The daily screen regression verifies its explicit cumulative-summary opt-out without changing roster controls or write payloads.
+The focused 1 November 2026 run passed 77 tests across eight Attendance/upload screen/client/cache files.
+The upload selector network fixture covers more than ten scoped classes, division prerequisites, server paging/search, stale previous-division rows, lookup errors, read-only actions and standard-only scope without visible child divisions. Refreshed scope that removes a selected class or division withdraws cached pupils and keeps dependent reads skipped.
+That evidence covers synthetic requests and component behavior; full TypeScript, the final authenticated in-app browser smoke and backend/runtime timing remain separate gates.
+
+```powershell
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/student/attendance/leave-absent/leave-requests.requests.test.tsx src/screens/student/attendance/leave-absent/leave-requests.dashboard.test.tsx src/screens/student/attendance/leave-absent/index.test.tsx src/screens/student/attendance/leave-absent/leave-request-table-filters.test.ts src/screens/student/attendance/take-attendance/index.test.tsx src/redux/student/take-attendance/take-attendace-api.test.ts src/redux/student/attendance-management/cache.test.ts src/screens/student/upload-student-photo/upload-selectors.requests.test.tsx --maxWorkers=1 --no-file-parallelism
+```
+
 ## Daily Attendance alignment (2026-10-12)
 
 The final focused Attendance and attendance-tracking contract run passed 64 tests across six files. Scoped ESLint, formatting, diff checks and Student documentation validation passed. Full TypeScript checking reports only the existing Gradebook `Academic` component missing its required `student` prop at `gradebook.tsx:546`; no Attendance type errors were reported.
@@ -620,6 +661,22 @@ The final focused Attendance and attendance-tracking contract run passed 64 test
 Authenticated localhost acceptance used the final compiled backend. Student List and Attendance showed the same three active students. Selecting CBSE, English, Class 1 and A enabled the class register. Half-day and Absent Details remarks were saved as a partial draft and remained after a full reload with class filters preserved. The local verification marks and remark were restored to their original Pending/empty values. Submit stayed disabled while a student remained Pending; no browser Submit or Lock was performed. Backend acceptance passed 29 API/contract checks. The broader Directory application gate passed six and failed three existing provisioning assertions; source/fixture comparison confirmed those failures were not introduced by query extraction.
 
 Responsive browser checks covered desktop and 390px mobile: the document had no horizontal overflow, the Attendance column stayed sticky at the right, and mobile icon targets measured 44px. The mobile page scrolls naturally with a practical table minimum per DESIGN.md. Browser screenshots and test reports are retained under `D:\CodexArtifacts\attendance-workspace-20261012-01a12f8b`. These are local checks, not staging or deployment evidence.
+
+## Canonical legacy document adapter (1 November 2026)
+
+Run the adapter, existing profile API and document-model regressions together from the frontend repository:
+
+```powershell
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/redux/student/registration/registration-document-adapter.test.ts src/redux/student/records/student-profile-document-api.test.ts src/screens/student/studentProfile/student-document-table-model.test.ts --maxWorkers=1 --no-file-parallelism
+```
+
+All 22 cases pass: nine new adapter cases, four existing profile API cases and nine document-model cases.
+The new cases cover canonical required-status routes with raw/wrapped responses, actual selected-file bytes and MIME fallback, successful changed-Student document invalidation, unchanged other-Student caches, preserved server errors and no request after file-read failure.
+The nine new cases first failed on the old routes, multipart payload and unconditional broad invalidation before the adapter changed.
+Evidence is under `.artifacts/student-module-optimization-followup/document-adapter-red.{json,log}` and `document-adapter-green.{json,log}`.
+These are automated client/serialization/cache checks with network fixtures, not live file uploads or staging acceptance.
+Ordinary upload eligibility remains registration-only, as enforced by the existing backend owner and profile helper; this repair does not enable uploads for enrolled, inactive or former division-roster students.
+Full TypeScript, combined upload-screen checks and final browser evidence are recorded separately when run.
 
 ## Student Profile form, documents and audit refinement (2026-10-13)
 
@@ -1701,3 +1758,11 @@ The final builder, preview and application-runtime selection passes 334 tests ac
 Authenticated localhost acceptance now supersedes the earlier login-blocked component-only result. The unpublished QA Registration Inquiry Layout 30 Oct draft uses published Admission inquiry v1. Its original preview has Inquiry and Contact steps with two columns. The first Save draft, full page reload, table Edit and Build form retain those source steps and two columns while the base Registration stays Single page and retains its independent four-column setting. Registration notes survives reopening. Add step converts that same draft to Step by step; Additional details and Review notes survive a second Save draft, full reload and reopening. The final step order is Step 1, Additional details, Inquiry, Contact. Saved live Preview and Review both retain the source two-column grid. No form was published, Offering changed or applicant submitted. Evidence: .artifacts/inherited-layout-live-ui/evidence.json and original/before-save/after-reopen/final/preview/review screenshots.
 
 The local API was running an older Domain assembly. A fresh isolated Debug Host build succeeds with zero errors; the verified old checkout-local process is replaced by the updated Host with migrations, background jobs and workers disabled. No schema migration or auth changes are performed. During the flow, recomposition of an unsaved draft exposed selection loss when server-generated inherited IDs change. The builder now reconciles source selection by exact Inquiry version plus section/field code, retaining ordinary editable-field ID selection and refusing cross-source fallback. All 337 tests across 51 builder/preview/runtime suites pass with two workers. Full TypeScript, scoped ESLint and formatting pass. The draft remains unpublished for inspection.
+
+## Same-address capture (1 November 2026)
+
+Run `admission-address-sync.test.ts` and `admission-address-sync.ui.test.tsx` with the Inquiry create/edit, public Inquiry, preview, review and application-runtime suites. Cover all six mapped address components, arbitrary question codes, missing/empty sources, uncheck and independent editing, repeated-row isolation, hidden correction entries, read-only snapshots and geographic identity serialization. The create-page regression checks the Formik submit values; the edit-page test checks the update payload and rehydrates its saved values. The Registration runtime test saves through its callback and remounts the serialized response. These are automated persistence-boundary tests with mocked services, not live applicant saves.
+
+The eight-file regression run passes all 94 cases, followed by a five-case stable UI rerun. Scoped ESLint, formatting, Student documentation validation and diff checks pass. The latest full TypeScript run has no errors in these changed files but is blocked by the unrelated `findByRole` options error in `src/screens/student/upload-student-photo/upload-selectors.requests.test.tsx`; that concurrent work is left unchanged.
+
+Local desktop-browser verification created and published **QA Same Address Inquiry 01 Nov** and **QA Same Address Registration 01 Nov**. Their builder previews copy street lines and postal code, disable copied controls and retain/unlock values on uncheck. Registration additionally verifies current-address editing while checked and India/Gujarat/Ahmedabad copying through the shared geographic controls. Both QA forms remain Published after full reload. A temporary unsaved Registration also reloads and allows the published QA Inquiry as its source; its inherited current street and postal code copy into disabled permanent controls when checked. Evidence is under `.artifacts/same-address/registration-preview-copied.png`, `published-forms-after-reload.png` and `published-inquiry-registration-reuse.png`. Codex browser capability was disabled in Work settings; the user-authorized native desktop-browser fallback was used without changing that setting. No existing Offering, real applicant or messaging configuration was changed. Live applicant submission, server-persisted applicant reopening, mobile viewports and staging/production acceptance remain unverified.

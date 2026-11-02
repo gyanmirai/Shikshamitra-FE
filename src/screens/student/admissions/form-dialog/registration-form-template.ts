@@ -241,7 +241,6 @@ export function getRegistrationFormTemplate(): CreateUpdateAdmissionForm {
           label: 'Last Name',
           system: true,
           bindingKey: 'Applicant.LastName',
-          required: true,
         },
         {
           code: 'Applicant.DateOfBirth',

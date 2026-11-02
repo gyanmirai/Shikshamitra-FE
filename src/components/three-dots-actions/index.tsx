@@ -27,6 +27,7 @@ const ThreeDotsActions = ({
   deleteLabel = 'Delete',
   moreLabel = 'More actions',
   disableDeleteIcon = false,
+  deleteDisabledReason,
   disableEditIcon = false,
   disableViewIcon = false,
   handleViewClick = () => {},
@@ -86,7 +87,8 @@ const ThreeDotsActions = ({
         <CustomTooltip
           title={
             disableDeleteIcon
-              ? 'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.'
+              ? (deleteDisabledReason ??
+                'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.')
               : deleteLabel
           }
           placement="top"

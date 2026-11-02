@@ -10,6 +10,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useStartAdmissionApplicationMutation } from 'src/redux/student/admissions/admission-applications-api';
 
+import { admissionPipelineApplicationUrl } from '../pipeline/admission-pipeline-state';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 import { getApplicationWorkspaceUrl } from '../application-detail/application-return-url';
 
@@ -60,11 +61,9 @@ export function useInquiryHandoff() {
       });
       startNavigation(() =>
         router.push(
-          getApplicationWorkspaceUrl(
-            application.id,
-            studentPaths.enrollment.pipeline,
-            application.hasReachedDecision ?? false
-          )
+          application.hasReachedDecision
+            ? getApplicationWorkspaceUrl(application.id, studentPaths.enrollment.pipeline, true)
+            : admissionPipelineApplicationUrl(application.id, new URLSearchParams())
         )
       );
     } catch (error) {

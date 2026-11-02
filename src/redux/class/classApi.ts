@@ -1,10 +1,25 @@
-import { classType } from 'src/redux/tagTypes';
 import { academicReorderTags } from 'src/redux/academic-reorder-tags';
+import { classType, divisionType, organizationType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
+export type StandardLookupDivision = { id: string; name: string };
+export type StandardLookupOption = {
+  id: string;
+  name: string;
+  divisions: StandardLookupDivision[];
+};
+
 export const classApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getClassLookup: builder.query<{ items: StandardLookupOption[] }, void>({
+      query: () => ({ url: '/app/standard/lookup' }),
+      providesTags: [
+        classType.class,
+        divisionType.division,
+        organizationType.academicHierarchyOptions,
+      ],
+    }),
     getClass: builder.query({
       query: () => ({ url: '/app/standard', redirect: 'follow' }),
       providesTags: [classType.class],
@@ -56,6 +71,7 @@ export const classApi = api.injectEndpoints({
 });
 
 export const {
+  useGetClassLookupQuery,
   useGetClassQuery,
   useGetClassByIdQuery,
   useLazyGetClassByIdQuery,

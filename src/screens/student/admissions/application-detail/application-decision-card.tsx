@@ -114,6 +114,7 @@ export function ApplicationDecisionCard({
       open={finalizationDialog.value}
       presentation={compact ? 'inline' : 'dialog'}
       application={application}
+      applicationId={application.id}
       applicantId={application.applicantId}
       busy={disabled || decisions.isBusy || preparingFinalization}
       preview={decisions.finalizationPreviewQuery.data}
@@ -132,6 +133,10 @@ export function ApplicationDecisionCard({
         else decisions.finalizationPreviewQuery.refetch();
       }}
       onClose={finalizationDialog.onFalse}
+      onFormCorrected={() => {
+        decisions.resetFinalizationRequest();
+        decisions.finalizationPreviewQuery.refetch();
+      }}
       onSubmit={(value) =>
         disabled || decisions.isBusy
           ? Promise.resolve(false)

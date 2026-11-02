@@ -18,6 +18,7 @@ import { academicClassFilterInput } from 'src/utils/student-academic-filter-quer
 import { useGetAdmissionApplicationsQuery } from 'src/redux/student/admissions/admission-applications-api';
 
 import { AdmissionQueryError } from './admission-query-error';
+import { formatAdmissionReference } from './admission-reference';
 import { getAdmissionApplicationStatusLabel } from './application-status';
 import { serializeQueueColumnFilters } from './admission-queue-column-filters';
 import AdmissionDirectRegistrationDialog from './admission-direct-registration-dialog';
@@ -231,6 +232,22 @@ export default function AdmissionApplicationsScreen() {
               tableContainerProps={{ sx: { height: 1 } }}
               columns={columns}
               data={skip ? [] : (data?.items ?? [])}
+              getRowAction={(row) => ({
+                label: `Open ${formatAdmissionReference(row.applicationNumber)} for ${row.applicantName || 'applicant'}`,
+                onClick: () => openApplication(row.id),
+              })}
+              rowProps={() => ({
+                onClick: (event) => {
+                  const selection = window.getSelection();
+                  if (
+                    selection &&
+                    !selection.isCollapsed &&
+                    event.currentTarget.contains(selection.anchorNode)
+                  ) {
+                    event.preventDefault();
+                  }
+                },
+              })}
               isLoading={
                 scopeLoading ||
                 yearChanging ||

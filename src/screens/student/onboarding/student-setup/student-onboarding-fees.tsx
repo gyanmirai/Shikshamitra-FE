@@ -5,17 +5,19 @@ import type { Ref } from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomAccordion from 'src/components/custom-accordian';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useId, useRef, useState, useEffect, useImperativeHandle } from 'react';
-import { Stack, Button, Skeleton, Typography, AccordionSummary } from '@mui/material';
+import { Stack, Button, Skeleton, Typography, IconButton, AccordionSummary } from '@mui/material';
 import {
   useGetStudentOnboardingCaseQuery,
   useGetStudentOnboardingFeeStructureQuery,
@@ -58,7 +60,7 @@ export default function StudentOnboardingFees({
   const pendingSave = useRef(false);
   const [saveRequested, setSaveRequested] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
-  const feeDetails = useBoolean();
+  const [changingStructure, setChangingStructure] = useState(false);
   const paymentDetails = useBoolean();
   const item = useGetStudentOnboardingCaseQuery(caseId);
   const selection = useGetStudentOnboardingFeeStructureQuery(caseId);
@@ -294,6 +296,14 @@ export default function StudentOnboardingFees({
         {head.feeHeadName}
       </Typography>
     ));
+  const requiredHeadIds =
+    chosen?.heads.filter((head) => !head.isOptional).map((head) => head.feeHeadId) ?? [];
+  const showStructurePicker = !automaticallyConfirmed && (!compact || !chosen || changingStructure);
+  const feeHeadsReadOnly =
+    Boolean(lockedSnapshot) ||
+    !canManage ||
+    Boolean(caseState.studentEnrollmentId) ||
+    caseState.status === 5;
   return (
     <Stack spacing={compact ? 1 : 1.5} component="form" onSubmit={form.handleSubmit}>
       {feeState.feeCollectionDeferral && (
@@ -364,72 +374,117 @@ export default function StudentOnboardingFees({
           </Button>
         </Stack>
       )}
-      {automaticallyConfirmed ? (
-        <Stack spacing={0.5}>
-          <Typography variant="caption" color="text.secondary">
-            Fee structure
-          </Typography>
-          <Typography variant="body2">
-            {feeState.selection?.structureName} · Revision {feeState.selection?.revisionNumber}
-          </Typography>
+      {!showStructurePicker && chosen ? (
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+          <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
+            <Typography variant="caption" color="text.secondary">
+              Fee structure
+            </Typography>
+            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+              {chosen.structureName} · Revision {chosen.revisionNumber}
+            </Typography>
+          </Stack>
+          {compact && !lockedSnapshot && canManage && (
+            <CustomTooltip title="Change fee structure">
+              <span>
+                <IconButton
+                  size="small"
+                  aria-label="Change fee structure"
+                  disabled={disabled}
+                  onClick={() => setChangingStructure(true)}
+                >
+                  <Iconify icon={GlobalIcons.edit} width={18} />
+                </IconButton>
+              </span>
+            </CustomTooltip>
+          )}
         </Stack>
       ) : structures.length > 0 ? (
-        <ShakingTextField error={Boolean(form.touched.structureId && form.errors.structureId)}>
-          <CustomSelect
-            label="Fee structure"
-            size="small"
-            required={!compact}
-            fullWidth
-            isSearch
-            value={form.values.structureId}
-            options={structures.map((candidate) => ({
-              value: candidate.structureId,
-              label: `${candidate.structureName} · Revision ${candidate.revisionNumber}`,
-            }))}
-            disabled={disabled || feeState.isLocked || !structures.length}
-            onChange={(value) => {
-              form.setStatus(undefined);
-              setFieldValue('structureId', String(value));
-              setFieldValue('optionalHeadIds', []);
-            }}
-            onBlur={() => form.setFieldTouched('structureId', true)}
-            error={Boolean(form.touched.structureId && form.errors.structureId)}
-            helperText={form.touched.structureId ? form.errors.structureId : undefined}
-          />
-        </ShakingTextField>
+        <Stack direction="row" alignItems="flex-start" spacing={1}>
+          <ShakingTextField error={Boolean(form.touched.structureId && form.errors.structureId)}>
+            <CustomSelect
+              label="Fee structure"
+              size="small"
+              required={!compact}
+              fullWidth
+              isSearch
+              value={form.values.structureId}
+              options={structures.map((candidate) => ({
+                value: candidate.structureId,
+                label: `${candidate.structureName} · Revision ${candidate.revisionNumber}`,
+              }))}
+              disabled={disabled || feeState.isLocked || !structures.length}
+              onChange={(value) => {
+                form.setStatus(undefined);
+                setFieldValue('structureId', String(value));
+                setFieldValue('optionalHeadIds', []);
+                setChangingStructure(false);
+              }}
+              onBlur={() => form.setFieldTouched('structureId', true)}
+              error={Boolean(form.touched.structureId && form.errors.structureId)}
+              helperText={form.touched.structureId ? form.errors.structureId : undefined}
+            />
+          </ShakingTextField>
+          {compact && changingStructure && chosen && (
+            <Button
+              size="small"
+              aria-label="Cancel fee structure change"
+              disabled={disabled}
+              onClick={() => setChangingStructure(false)}
+            >
+              Cancel
+            </Button>
+          )}
+        </Stack>
       ) : null}
       {chosen && (
         <>
           {compact ? (
-            <CustomAccordion
-              title="Fee Details"
-              expanded={feeDetails.value}
-              summary={
-                <AccordionSummary
-                  id={`${disclosureId}-heads-summary`}
-                  aria-controls={`${disclosureId}-heads-content`}
-                  disabled={externallyDisabled || busy}
-                  expandIcon={<Iconify icon="mdi:chevron-down" />}
-                >
-                  <Typography variant="subtitle2">Fee Details</Typography>
-                </AccordionSummary>
-              }
-              onChange={() => {
-                if (!externallyDisabled && !busy) feeDetails.onToggle();
-              }}
-              content={
-                <Stack id={`${disclosureId}-heads-content`} spacing={0.5}>
-                  {includedFeeHeads}
-                </Stack>
-              }
-            />
+            !changingStructure && (
+              <CustomSelect
+                label="Fee heads"
+                size="small"
+                multiple
+                fullWidth
+                groupKey="group"
+                options={[
+                  ...chosen.heads.filter((head) => !head.isOptional),
+                  ...chosen.heads.filter((head) => head.isOptional),
+                ].map((head) => ({
+                  value: head.feeHeadId,
+                  label: head.feeHeadName,
+                  group: head.isOptional ? 'Optional fees' : 'Required fees',
+                }))}
+                value={[...requiredHeadIds, ...form.values.optionalHeadIds]}
+                disabledValues={
+                  feeHeadsReadOnly ? chosen.heads.map((head) => head.feeHeadId) : requiredHeadIds
+                }
+                disabledLabel={feeHeadsReadOnly ? 'Read-only fee selection' : 'Required fee'}
+                disabled={externallyDisabled || busy || readError || loading}
+                renderValue={(selected) => (
+                  <Typography component="span" variant="body2" noWrap sx={{ display: 'block' }}>
+                    {chosen.heads
+                      .filter((head) => (selected as string[]).includes(head.feeHeadId))
+                      .map((head) => head.feeHeadName)
+                      .join(', ')}
+                  </Typography>
+                )}
+                onChange={(value) => {
+                  if (feeHeadsReadOnly) return;
+                  setFieldValue(
+                    'optionalHeadIds',
+                    (value as string[]).filter((id) => !requiredHeadIds.includes(id))
+                  );
+                }}
+              />
+            )
           ) : (
             <>
               <Typography variant="subtitle2">Included fee heads</Typography>
               {includedFeeHeads}
             </>
           )}
-          {!automaticallyConfirmed && chosen.heads.some((head) => head.isOptional) && (
+          {!compact && !automaticallyConfirmed && chosen.heads.some((head) => head.isOptional) && (
             <CustomSelect
               label="Optional fee heads"
               size="small"

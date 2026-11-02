@@ -15,10 +15,14 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
 import AdmissionRuntimeField from 'src/screens/student/admissions/admission-runtime-field';
 import { useAdmissionPhotoReads } from 'src/screens/student/admissions/use-admission-photo-reads';
-import { canonicalInquiryBinding } from 'src/screens/student/admissions/admission-inquiry-field-bindings';
 import { isAdmissionRuleVisible } from 'src/screens/student/admissions/admission-visibility-rules';
 import { normalizeAdmissionEmailValue } from 'src/screens/student/admissions/admission-email-values';
+import { canonicalInquiryBinding } from 'src/screens/student/admissions/admission-inquiry-field-bindings';
 import { buildDynamicAdmissionYupSchema } from 'src/screens/student/admissions/admission-form-validation';
+import {
+  useAdmissionAddressSync,
+  isAdmissionCopiedAddressField,
+} from 'src/screens/student/admissions/admission-address-sync';
 import {
   Box,
   Card,
@@ -544,6 +548,14 @@ function InquiryForm({
   useEffect(() => {
     onBusy(formik.isSubmitting || readingPhoto);
   }, [formik.isSubmitting, onBusy, readingPhoto]);
+  useAdmissionAddressSync(
+    sections,
+    formik.values.fields,
+    (changes) => {
+      formik.setValues((current) => ({ ...current, fields: { ...current.fields, ...changes } }));
+    },
+    formik.isSubmitting || readingPhoto
+  );
   useEffect(() => {
     onDraft({ fields, values: formik.values.fields });
   }, [fields, formik.values.fields, onDraft]);
@@ -590,7 +602,12 @@ function InquiryForm({
                             onBusyChange={(busy) => onPhotoReading(field.code, busy)}
                             field={field}
                             value={formik.values.fields[field.code] ?? ''}
-                            disabled={readingPhoto || formik.isSubmitting || field.readOnly}
+                            disabled={
+                              readingPhoto ||
+                              formik.isSubmitting ||
+                              field.readOnly ||
+                              isAdmissionCopiedAddressField(field, sections, formik.values.fields)
+                            }
                             error={
                               formik.submitCount > 0 || touchedFields?.[field.code]
                                 ? fieldErrors?.[field.code]

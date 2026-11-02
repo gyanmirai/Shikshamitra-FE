@@ -9,6 +9,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 export function ReviewDialog({
   open = true,
   title,
+  titleInfo,
   maxWidth = 'sm',
   dirty,
   busy,
@@ -18,6 +19,7 @@ export function ReviewDialog({
 }: {
   open?: boolean;
   title: string;
+  titleInfo?: string;
   maxWidth?: DialogProps['maxWidth'];
   dirty: boolean;
   busy: boolean;
@@ -42,6 +44,7 @@ export function ReviewDialog({
       <CustomDialog
         open={open}
         title={title}
+        titleInfo={titleInfo}
         maxWidth={maxWidth}
         handleClose={requestClose}
         guardUnsavedChanges={false}

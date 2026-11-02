@@ -52,8 +52,10 @@ import { ApplicationFinalizedActions } from './application-detail/application-fi
 import { requiresStageCompletionDetails } from './application-detail/admission-stage-completion';
 import { AdmissionWorkflowRuntimeActionDialog } from './admission-workflow-runtime-action-dialog';
 import { ApplicationEndJourneyDialog } from './application-detail/application-end-journey-dialog';
+import { canCorrectApplicationForm } from './application-detail/application-form-correction-model';
 import { isAdmissionApplicationNotFound } from './application-detail/application-detail-query-state';
 import { AdmissionStageCompletionDialog } from './application-detail/admission-stage-completion-dialog';
+import { ApplicationFormCorrectionDrawer } from './application-detail/application-form-correction-drawer';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
@@ -105,6 +107,7 @@ export default function AdmissionApplicationDetailScreen({
   const resumeJourneyDialog = useBoolean();
   const [resumeBusy, setResumeBusy] = useState(false);
   const activityDrawer = useBoolean();
+  const correctionDrawer = useBoolean();
   const actionsPopover = usePopover();
   const [finalizationOpen, setFinalizationOpen] = useState(false);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -197,7 +200,11 @@ export default function AdmissionApplicationDetailScreen({
     detail.endJourneyState.isLoading ||
     (stageReadiness?.stageId === selectedStage?.id && Boolean(stageReadiness?.busy));
   const navigationLocked =
-    workspaceBusy || isLoading || finalizationOpen || resumeJourneyDialog.value;
+    workspaceBusy ||
+    isLoading ||
+    finalizationOpen ||
+    resumeJourneyDialog.value ||
+    correctionDrawer.value;
   useEffect(() => {
     if (
       ((applicationId || onClose) && !isDrawer) ||
@@ -467,11 +474,39 @@ export default function AdmissionApplicationDetailScreen({
     if (workspace.view === 'form')
       return (
         <Stack spacing={1.5}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            useFlexGap
+            flexWrap="wrap"
+            spacing={1}
+          >
             <Typography variant="h6">Application record</Typography>
-            <Button size="small" onClick={() => requestNavigation({ view: 'journey' })}>
-              Current Step
-            </Button>
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              {application &&
+                form &&
+                detail.canEdit &&
+                canCorrectApplicationForm(application, form) && (
+                  <Button
+                    size="small"
+                    color="inherit"
+                    variant="outlined"
+                    disabled={navigationLocked}
+                    startIcon={<Iconify icon={GlobalIcons.edit} />}
+                    onClick={correctionDrawer.onTrue}
+                  >
+                    Edit application form
+                  </Button>
+                )}
+              <Button
+                size="small"
+                disabled={navigationLocked}
+                onClick={() => requestNavigation({ view: 'journey' })}
+              >
+                Current Step
+              </Button>
+            </Stack>
           </Stack>
           {renderRuntimeForm(!isFormStage(currentStage))}
         </Stack>
@@ -597,22 +632,14 @@ export default function AdmissionApplicationDetailScreen({
         <CustomBreadcrumbs
           heading={decisionWorkspace ? 'Applications' : 'Pipeline'}
           description="Review or prepare any admission stage. Continue admission advances the current stage when its requirements are complete."
+          isBack
+          onBack={closeDetail}
+          backDisabled={navigationLocked}
           links={[
             { name: 'Students', href: studentPaths.dashboard },
             { name: 'Admissions', href: studentPaths.enrollment.root },
             { name: decisionWorkspace ? 'Applications' : 'Pipeline' },
           ]}
-          action={
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:arrow-left" />}
-              disabled={navigationLocked}
-              onClick={closeDetail}
-            >
-              Back to list
-            </Button>
-          }
         />
       )}
       <Paper
@@ -1011,6 +1038,23 @@ export default function AdmissionApplicationDetailScreen({
         />
       )}
       {leaveGuard.confirmation}
+      {application && (
+        <ApplicationFormCorrectionDrawer
+          open={correctionDrawer.value}
+          applicationId={application.id}
+          onClose={correctionDrawer.onFalse}
+          onSaved={() => {
+            applicationQuery.refetch();
+            formQuery.refetch();
+            workflowQuery.refetch();
+          }}
+          onRefresh={() => {
+            applicationQuery.refetch();
+            formQuery.refetch();
+            workflowQuery.refetch();
+          }}
+        />
+      )}
       {application && (
         <ApplicationActivityDrawer
           open={activityDrawer.value}

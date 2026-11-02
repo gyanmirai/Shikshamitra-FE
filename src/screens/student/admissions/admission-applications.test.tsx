@@ -1,10 +1,17 @@
 import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
 
 import { useEffect } from 'react';
+import { Table } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { defaultSettings } from 'src/components/settings/config-settings';
+import { TableBody } from 'src/components/customizabaleTable/components/TableBody';
 
 import AdmissionApplicationsScreen from './admission-applications';
+
+const theme = createTheme(defaultSettings);
 
 const state = vi.hoisted(() => ({
   push: vi.fn(),
@@ -73,13 +80,6 @@ vi.mock('./admission-query-error', () => ({
     </div>
   ),
 }));
-vi.mock('src/components/three-dots-actions', () => ({
-  default: ({ viewLabel, handleViewClick }: { viewLabel: string; handleViewClick: () => void }) => (
-    <button type="button" onClick={handleViewClick}>
-      {viewLabel}
-    </button>
-  ),
-}));
 vi.mock('./application-detail/application-workspace-redirect', () => ({
   ApplicationWorkspaceRedirect: ({
     applicationId,
@@ -135,17 +135,30 @@ vi.mock('src/components/customizabaleTable', () => ({
         >
           Sort applicant
         </button>
-        {props.errorContent
-          ? props.errorContent
-          : props.data.length
-            ? props.data.map((row) => (
-                <div key={row.id}>
-                  {props.columns.map((column) => (
-                    <span key={column.id}>{column.render?.(row[column.id], row)}</span>
-                  ))}
-                </div>
-              ))
-            : props.noDataText}
+        {props.errorContent ? (
+          props.errorContent
+        ) : props.data.length ? (
+          <ThemeProvider theme={theme}>
+            <Table>
+              <TableBody
+                isLoading={false}
+                data={props.data}
+                columns={props.columns}
+                columnVisibility={Object.fromEntries(props.columns.map(({ id }) => [id, true]))}
+                getStickyStyle={() => ({})}
+                dense
+                onRowClick={props.handleRowClick ?? (() => {})}
+                getRowAction={props.getRowAction}
+                rowProps={props.rowProps ?? (() => ({}))}
+                expandedRows={{}}
+                onExpandRow={() => {}}
+                tableRef={600}
+              />
+            </Table>
+          </ThemeProvider>
+        ) : (
+          props.noDataText
+        )}
       </section>
     );
   },
@@ -238,8 +251,39 @@ describe('Applications decision workspace', () => {
     });
     fireEvent.click(screen.getByRole('link', { name: 'Parth Patel' }), { button: 0 });
     expect(state.push).toHaveBeenCalledWith(links[0].getAttribute('href'), { scroll: false });
-    fireEvent.click(screen.getByRole('button', { name: 'View APP-2026-000001 for Parth Patel' }));
-    expect(state.push).toHaveBeenCalledTimes(2);
+    expect(state.push).toHaveBeenCalledTimes(1);
+    expect(state.tableProps?.columns.some(({ id }) => id === 'actions')).toBe(false);
+  });
+  it('opens the same detail and retained list context by clicking a row data cell', () => {
+    render(<AdmissionApplicationsScreen />);
+    fireEvent.click(screen.getByRole('cell', { name: 'Class 6' }));
+    expect(state.push).toHaveBeenCalledWith(
+      '/student/admissions/applications/application-1?returnTo=%2Fstudent%2Fadmissions%2Fapplications%3Fboard%3Dboard-1%26medium%3Dmedium-1%26page%3D2',
+      { scroll: false }
+    );
+  });
+  it.each(['Enter', ' '])('opens an application from the focused row with %s', (key) => {
+    render(<AdmissionApplicationsScreen />);
+    const row = screen.getByRole('row', { name: 'Open APP-2026-000001 for Parth Patel' });
+    expect(row).toHaveAttribute('tabindex', '0');
+    fireEvent.keyDown(row, { key });
+    expect(state.push).toHaveBeenCalledOnce();
+    expect(state.push.mock.calls[0][0]).toBe(
+      screen.getByRole('link', { name: 'Parth Patel' }).getAttribute('href')
+    );
+  });
+  it('allows text selection in the row without opening the application', () => {
+    render(<AdmissionApplicationsScreen />);
+    const cell = screen.getByRole('cell', { name: 'Class 6' });
+    const selection = window.getSelection()!;
+    const range = document.createRange();
+    range.selectNodeContents(cell);
+    selection.addRange(range);
+    fireEvent.click(cell);
+    expect(state.push).not.toHaveBeenCalled();
+    selection.removeAllRanges();
+    fireEvent.click(cell);
+    expect(state.push).toHaveBeenCalledOnce();
   });
   it.each([
     { ctrlKey: true },
@@ -368,7 +412,7 @@ it('restores scalar filters and explicit Draft while applying them across the se
   const filters = [
     { column: 'standardName', type: 'equals', value: 'Class 6', valueType: 'string' },
   ];
-  state.search += `&status=0&filters=${  encodeURIComponent(JSON.stringify(filters))}`;
+  state.search += `&status=0&filters=${encodeURIComponent(JSON.stringify(filters))}`;
   render(<AdmissionApplicationsScreen />);
   expect(state.query).toHaveBeenLastCalledWith(
     expect.objectContaining({ status: 0, columnFilters: JSON.stringify(filters), skipCount: 25 }),

@@ -21,6 +21,7 @@ import { Box, Grid, Checkbox, TextField, FormHelperText, FormControlLabel } from
 
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { isAdmissionEmailField } from './admission-email-values';
+import { isOptionalStudentNamePart } from './admission-student-name';
 import { AdmissionBoardClassField } from './admission-board-class-field';
 import { parseFieldConfiguration } from './form-dialog/form-field-presets';
 import { AdmissionProfilePhotoField } from './admission-profile-photo-field';
@@ -41,6 +42,7 @@ type Field = {
   code: string;
   label: string;
   bindingKey?: string | null;
+  bindingType?: number;
   fieldType: number;
   required: boolean;
   readOnly: boolean;
@@ -83,7 +85,11 @@ const GENDER_OPTIONS: ChoiceOption[] = [
   { value: 'Female', label: 'Female' },
 ];
 
-export default function AdmissionRuntimeField(props: AdmissionRuntimeFieldProps) {
+export default function AdmissionRuntimeField(input: AdmissionRuntimeFieldProps) {
+  const { field: inputField } = input;
+  const props = isOptionalStudentNamePart(inputField)
+    ? { ...input, field: { ...inputField, required: false } }
+    : input;
   const helperId = useId();
   const { field, formValues, optionsResolved } = props;
   const { format } = parseFieldConfiguration(field.validationJson);

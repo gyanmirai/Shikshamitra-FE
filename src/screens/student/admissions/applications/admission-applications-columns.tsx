@@ -5,7 +5,6 @@ import NextLink from 'next/link';
 import { Label } from 'src/components/label';
 import { Stack, Typography } from '@mui/material';
 import { fDateTime } from 'src/utils/format-time';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 
 import { formatAdmissionReference } from '../admission-reference';
 import {
@@ -142,31 +141,6 @@ export function buildAdmissionApplicationsColumns({
         <Label color={getAdmissionApplicationStatusColor(row.status)}>
           {getAdmissionApplicationStatusLabel(row.status)}
         </Label>
-      ),
-    },
-    {
-      id: 'actions',
-      label: 'Actions',
-      align: 'right',
-      width: 80,
-      minWidth: 80,
-      sticky: true,
-      stickyPosition: 'right',
-      excludeFromExport: true,
-      render: (_, row) => (
-        <ThreeDotsActions
-          sx={{
-            justifyContent: 'flex-end',
-            '& .MuiIconButton-root': {
-              minWidth: { xs: 44, sm: 30 },
-              minHeight: { xs: 44, sm: 30 },
-            },
-          }}
-          showViewIcon
-          showThreeDots={false}
-          viewLabel={`View ${formatAdmissionReference(row.applicationNumber)} for ${row.applicantName || 'applicant'}`}
-          handleViewClick={() => onOpen(row.id)}
-        />
       ),
     },
   ];

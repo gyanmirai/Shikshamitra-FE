@@ -1,5 +1,6 @@
 import { createRef } from 'react';
 import { it, vi, expect, beforeEach } from 'vitest';
+import { shikshaMitraToast } from 'src/components/toast';
 import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentOnboardingFees from './student-onboarding-fees';
@@ -70,19 +71,22 @@ vi.mock('src/components/custom-select', () => ({
     onChange,
     disabled,
     helperText,
+    multiple,
   }: {
     label: string;
-    value: string;
+    value: string | string[];
     options: Array<{ value: string; label: string }>;
     onChange: (value: string) => void;
     disabled: boolean;
     helperText?: string;
+    multiple?: boolean;
   }) => (
     <>
       <select
         aria-label={label}
         disabled={disabled}
         value={value}
+        multiple={multiple}
         onChange={(event) => onChange(event.target.value)}
       >
         <option value="">Select</option>
@@ -141,7 +145,10 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   },
   useConfirmStudentOnboardingFeeStructureMutation: () => [mocks.confirm, { isLoading: false }],
 }));
-beforeEach(() => {
+beforeEach(async () => {
+  // Let the shared feedback release notices from the preceding unmounted test.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  vi.clearAllMocks();
   mocks.confirm.mockReset();
   mocks.refetch.mockReset();
   mocks.refetch.mockReturnValue({
@@ -222,21 +229,19 @@ it('shows the fully paid Admission choice as complete and read-only without anot
   expect(mocks.confirm).not.toHaveBeenCalled();
 });
 
-it('right-aligns the completed status and keeps compact fee disclosures accessible and read-only', () => {
+it('right-aligns the completed status and keeps compact fee heads and receipts read-only', () => {
   mocks.selected = true;
   mocks.locked = true;
   mocks.automaticallyConfirmed = true;
   render(<StudentOnboardingFees caseId="case-1" canManage compact />);
   expect(screen.getByText('Completed in Admissions')).toHaveStyle({ alignSelf: 'flex-end' });
-  const feeDetails = screen.getByRole('button', { name: 'Fee Details' });
+  const feeHeads = screen.getByLabelText('Fee heads');
   const payments = screen.getByRole('button', { name: 'Payments & Receipts' });
-  expect(feeDetails).toHaveAttribute('aria-expanded', 'false');
+  expect(feeHeads).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Fee Details' })).not.toBeInTheDocument();
   expect(payments).toHaveAttribute('aria-expanded', 'false');
-  expect(document.getElementById(feeDetails.getAttribute('aria-controls')!)).toBeInTheDocument();
   expect(document.getElementById(payments.getAttribute('aria-controls')!)).toBeInTheDocument();
-  fireEvent.click(feeDetails);
-  expect(feeDetails).toHaveAttribute('aria-expanded', 'true');
-  expect(screen.getByText('Tuition')).toBeVisible();
+  expect(screen.getByRole('option', { name: 'Tuition' })).toBeInTheDocument();
   fireEvent.click(payments);
   expect(payments).toHaveAttribute('aria-expanded', 'true');
   fireEvent.click(screen.getByRole('button', { name: 'Show saved receipt' }));
@@ -251,11 +256,10 @@ it('right-aligns the completed status and keeps compact fee disclosures accessib
 it('preserves compact disclosure locks while the parent is saving', () => {
   mocks.selected = true;
   render(<StudentOnboardingFees caseId="case-1" canManage compact disabled />);
-  const feeDetails = screen.getByRole('button', { name: 'Fee Details' });
+  const feeHeads = screen.getByLabelText('Fee heads');
   const payments = screen.getByRole('button', { name: 'Payments & Receipts' });
-  fireEvent.click(feeDetails);
   fireEvent.click(payments);
-  expect(feeDetails).toHaveAttribute('aria-expanded', 'false');
+  expect(feeHeads).toBeDisabled();
   expect(payments).toHaveAttribute('aria-expanded', 'false');
   expect(screen.getByLabelText('Embedded fee collection')).toHaveAttribute('data-disabled', 'true');
   expect(mocks.confirm).not.toHaveBeenCalled();
@@ -275,8 +279,12 @@ it('keeps a completed Admission snapshot read-only and its receipt mounted durin
   expect(screen.getByLabelText('Embedded fee collection')).toBe(collection);
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Confirm fee structure' })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(mocks.refetch).toHaveBeenCalledTimes(2);
+  expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: 'Fee structures could not be refreshed. Retry before making changes.',
+    })
+  );
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   expect(mocks.candidatesRefetch).not.toHaveBeenCalled();
   expect(mocks.confirm).not.toHaveBeenCalled();
 });
@@ -303,12 +311,18 @@ it('keeps activated fee snapshots read-only', () => {
   render(<StudentOnboardingFees caseId="case-1" canManage />);
   expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
 });
-it('offers retry when fee structure reads fail', () => {
+it('reports failed fee reads through the standard toast and blocks confirmation', () => {
   mocks.error = true;
   render(<StudentOnboardingFees caseId="case-1" canManage />);
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(mocks.refetch).toHaveBeenCalledTimes(2);
-  expect(mocks.candidatesRefetch).toHaveBeenCalledTimes(1);
+  expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: 'Fee structures could not be refreshed. Retry before making changes.',
+    })
+  );
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(mocks.candidatesRefetch).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
+  expect(mocks.confirm).not.toHaveBeenCalled();
 });
 
 it('keeps the mounted receipt preview and saved snapshot when a post-payment context refresh fails', () => {
@@ -322,13 +336,16 @@ it('keeps the mounted receipt preview and saved snapshot when a post-payment con
   expect(screen.getByText('Saved receipt preview')).toBeInTheDocument();
   expect(screen.getByLabelText('Embedded fee collection')).toBe(collection);
   expect(collection).toHaveAttribute('data-disabled', 'true');
-  expect(screen.getByText(/Fee structures could not be refreshed/)).toBeInTheDocument();
+  expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: 'Fee structures could not be refreshed. Retry before making changes.',
+    })
+  );
   expect(screen.getByLabelText('Fee structure')).toHaveValue('fee-1');
   expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
   fireEvent.submit(screen.getByRole('button', { name: 'Confirm fee structure' }).closest('form')!);
   expect(mocks.confirm).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(mocks.refetch).toHaveBeenCalledTimes(2);
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   expect(mocks.candidatesRefetch).not.toHaveBeenCalled();
   expect(mocks.candidatesQuery).toHaveBeenLastCalledWith('case-1', { skip: true });
   mocks.error = false;
@@ -342,7 +359,11 @@ it('shows the blocking initial error without mounting collection when there is n
   mocks.error = true;
   mocks.currentDataAvailable = false;
   render(<StudentOnboardingFees caseId="case-1" canManage />);
-  expect(screen.getByText('Fee structures could not be loaded.')).toBeInTheDocument();
+  expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: 'Fee structures could not be loaded.',
+    })
+  );
   expect(screen.queryByLabelText('Embedded fee collection')).not.toBeInTheDocument();
 });
 

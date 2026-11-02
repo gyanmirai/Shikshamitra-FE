@@ -64,6 +64,7 @@ import {
   useUpdateStudentLeaveMutation,
   useRejectStudentLeaveMutation,
   useApproveStudentLeaveMutation,
+  useGetStudentLeaveStatusCountsQuery,
 } from 'src/redux/student/student-leave/student-leave-api';
 
 import { LeaveRequestActions } from './leave-request-actions';
@@ -180,21 +181,14 @@ const LeaveAndAbsentScreen = ({
     ...scope,
     filterText: query.filterText,
     tableFilters: countTableFiltersQuery,
-    skipCount: 0,
-    maxResultCount: 1,
   };
-  const { currentData: pendingCountData } = useGetStudentLeaveQuery(
-    { ...countQuery, status: EmployeeLeaveStatusType.Pending },
-    { skip: skipLeaveQueries }
-  );
-  const { currentData: approvedCountData } = useGetStudentLeaveQuery(
-    { ...countQuery, status: EmployeeLeaveStatusType.Approved },
-    { skip: skipLeaveQueries }
-  );
-  const { currentData: rejectedCountData } = useGetStudentLeaveQuery(
-    { ...countQuery, status: EmployeeLeaveStatusType.Rejected },
-    { skip: skipLeaveQueries }
-  );
+  const { currentData: statusCounts } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentLeaveStatusCountsQuery,
+    params: countQuery,
+    options: { skip: skipLeaveQueries },
+    popupConfig: { error: false },
+  });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -397,19 +391,19 @@ const LeaveAndAbsentScreen = ({
                 value: 'pending',
                 label: 'Pending',
                 color: 'warning',
-                count: pendingCountData?.totalCount,
+                count: statusCounts?.pendingCount,
               },
               {
                 value: 'approved',
                 label: 'Approved',
                 color: 'success',
-                count: approvedCountData?.totalCount,
+                count: statusCounts?.approvedCount,
               },
               {
                 value: 'rejected',
                 label: 'Rejected',
                 color: 'error',
-                count: rejectedCountData?.totalCount,
+                count: statusCounts?.rejectedCount,
               },
             ].map((tab) => (
               <Tab

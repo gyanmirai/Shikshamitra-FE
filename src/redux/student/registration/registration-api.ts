@@ -1,5 +1,6 @@
 import { api } from 'src/redux/service';
 import { studentType, studentRegistrationType } from 'src/redux/tagTypes';
+import { studentDocumentUploadPayload } from 'src/screens/student/studentProfile/student-document-table-model';
 
 const unwrapResultData = (response: any) =>
   response && Object.prototype.hasOwnProperty.call(response, 'data') ? response.data : response;
@@ -195,20 +196,45 @@ export const StudentRegistrationApi = api.injectEndpoints({
 
     // document
     uploadStudentDocuments: builder.mutation({
-      query: ({ studentId, body }) => ({
-        url: `/student/enrollment/registrations/${studentId}/documents`,
-        method: 'POST',
-        body,
-      }),
-      transformResponse: unwrapResultData,
-      invalidatesTags: [studentRegistrationType.studentDocument, studentType.student],
+      async queryFn(
+        { studentId, body }: { studentId: string; body: FormData },
+        _queryApi,
+        _options,
+        baseQuery
+      ) {
+        try {
+          const file = body.get('file');
+          const documentTypeId = body.get('documentTypeId');
+          if (!(file instanceof File) || typeof documentTypeId !== 'string') {
+            return { error: { status: 'CUSTOM_ERROR', error: 'Select a document type and file.' } };
+          }
+          const response = await baseQuery({
+            url: `/app/student-document/upload-document/${studentId}`,
+            method: 'POST',
+            body: await studentDocumentUploadPayload(file, documentTypeId),
+          });
+          return response.error
+            ? { error: response.error }
+            : { data: unwrapResultData(response.data) };
+        } catch {
+          return {
+            error: { status: 'CUSTOM_ERROR', error: 'The selected document could not be read.' },
+          };
+        }
+      },
+      invalidatesTags: (_result, error, { studentId }) =>
+        error
+          ? []
+          : [{ type: studentRegistrationType.studentDocument, id: studentId }, studentType.student],
     }),
     getStudentDocuments: builder.query({
       query: ({ studentId }) => ({
-        url: `/student/enrollment/registrations/${studentId}/documents/required-status`,
+        url: `/app/student-document/required-documents-status/${studentId}`,
       }),
       transformResponse: unwrapResultData,
-      providesTags: [studentRegistrationType.studentDocument],
+      providesTags: (_result, _error, { studentId }) => [
+        { type: studentRegistrationType.studentDocument, id: studentId },
+      ],
     }),
     getStudentDocumentList: builder.query({
       query: ({ studentId }) => ({

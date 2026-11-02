@@ -2,7 +2,7 @@ import { it, vi, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import userEvent from '@testing-library/user-event';
-import { screen, within, waitFor } from '@testing-library/react';
+import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 import {
   documentSummary,
   documentStagePath,
@@ -38,7 +38,9 @@ it('keeps a selected file and notes when both upload and background checklist re
   await userEvent.click(await screen.findByRole('button', { name: 'Upload document' }));
   const dialog = within(screen.getByRole('dialog'));
   const file = new File(['%PDF-1.7'], 'birth.pdf', { type: 'application/pdf' });
-  await userEvent.upload(dialog.getByLabelText(/^Document/), file);
+  fireEvent.change(dialog.getByRole('group', { name: 'Document' }).querySelector('input')!, {
+    target: { files: [file] },
+  });
   await userEvent.type(dialog.getByLabelText('Notes'), 'Keep this replacement');
   await userEvent.click(dialog.getByRole('button', { name: 'Upload document' }));
   expect(
@@ -47,6 +49,6 @@ it('keeps a selected file and notes when both upload and background checklist re
   await waitFor(() => expect(reads).toBe(2));
   expect(dialog.getByRole('button', { name: 'Upload document' })).toBeEnabled();
   expect(dialog.getByLabelText('Notes')).toHaveValue('Keep this replacement');
-  expect((dialog.getByLabelText(/^Document/) as HTMLInputElement).files?.[0]).toBe(file);
+  expect(dialog.getByText('birth.pdf')).toBeVisible();
   expect(screen.getByRole('dialog')).toBeInTheDocument();
 }, 15000);

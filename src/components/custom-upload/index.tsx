@@ -57,6 +57,7 @@ interface FileUploaderProps<T extends boolean = true> {
   disabled?: boolean;
   hideDropzone?: boolean;
   accept?: string;
+  maxFileSizeMb?: number;
   showPreview?: boolean;
 }
 
@@ -172,6 +173,7 @@ const FileUploader = <T extends boolean = true>({
   disabled = false,
   hideDropzone = false,
   accept,
+  maxFileSizeMb = 5,
   showPreview = true,
 }: FileUploaderProps<T>) => {
   const { sx: parentSx = {}, ...remainingProps } = parentsProps;
@@ -214,7 +216,7 @@ const FileUploader = <T extends boolean = true>({
   };
 
   const handleFiles = (newFile: T extends true ? File[] | FileData[] : File | FileData) => {
-    const maxSizeInBytes = 5 * 1024 * 1024; // 5 MB
+    const maxSizeInBytes = maxFileSizeMb * 1024 * 1024;
 
     if (multiple) {
       const existingFiles = (value || []) as (File | FileData)[];
@@ -222,7 +224,7 @@ const FileUploader = <T extends boolean = true>({
       const filteredFiles = newFiles.filter((file: File | FileData) => {
         const size = file instanceof File ? file.size : (file?.size ?? 0);
         if (size > maxSizeInBytes) {
-          const message = 'File exceeds the 5 MB size limit.';
+          const message = `File exceeds the ${maxFileSizeMb} MB size limit.`;
           shikshaMitraToast.error({ message });
           onReject?.(message);
           return false;
@@ -252,7 +254,7 @@ const FileUploader = <T extends boolean = true>({
       }
 
       if (size > maxSizeInBytes) {
-        const message = 'File exceeds the 5 MB size limit.';
+        const message = `File exceeds the ${maxFileSizeMb} MB size limit.`;
         shikshaMitraToast.error({ message });
         onReject?.(message);
         return;
@@ -471,7 +473,12 @@ const FileUploader = <T extends boolean = true>({
                 size={value && (Array.isArray(value) ? value.length > 0 : value) ? 22 : 28}
                 sx={{ color: 'primary.main' }}
               />
-              <Typography role="status" variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+              <Typography
+                role="status"
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontWeight: 500 }}
+              >
                 Uploading document...
               </Typography>
             </>

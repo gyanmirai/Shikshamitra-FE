@@ -1,5 +1,6 @@
-import { api } from 'src/redux/service';
 import type { IdentityChoices, IdentitySelection } from 'src/screens/setting/school-identity/types';
+
+import { api } from 'src/redux/service';
 import { studentType } from 'src/redux/tagTypes';
 
 import { unwrapRecordsResult } from './student-records-api';
@@ -13,7 +14,7 @@ export type CertificateBatch = { id: string; certificateType: string; generatedA
 export type CertificateBatchDetail = { id: string; certificates: CertificateResponse[] };
 export type CertificateBatchQuery = { certificateType: CertificateType; generatedFrom: string; generatedTo: string; skipCount: number; maxResultCount: number };
 export type IdCardSelection = { academicYearId?: string | null; boardIds: string[]; mediumIds: string[]; standardIds: string[]; divisionIds: string[]; studentIds: string[] };
-export type IdCardTemplate = { logo?: IdentitySelection; id?: string | null; name: string; presetKey: string; orientation: 'Horizontal' | 'Vertical'; schoolName: string; schoolAddress: string; headerText: string; footerText: string; primaryColor: string; backgroundColor: string; cardsPerPage: number; showQrCode: boolean; showPhoto: boolean; fields: string[]; selection?: IdCardSelection; concurrencyStamp?: string | null };
+export type IdCardTemplate = { logo?: IdentitySelection; id?: string | null; name: string; presetKey: string; orientation: 'Horizontal' | 'Vertical'; schoolName: string; schoolAddress: string; headerText: string; footerText: string; primaryColor: string; backgroundColor: string; cardsPerPage: number; showQrCode: boolean; showPhoto: boolean; fields: string[]; selection?: IdCardSelection | null; selectionRestricted?: boolean; concurrencyStamp?: string | null };
 export type IdCard = { id?: string | null; studentId: string; cardNumber: string; status: string; issuedAt?: string | null; issuedByUserId?: string | null; hasPhoto: boolean; studentSnapshot: Record<string, string | null>; templateSnapshot: IdCardTemplate };
 export type GuardianLink = { linkId: string; userId: string; relationship: string; email: string; emailConfirmed: boolean; isActive: boolean };
 export type GuardianReview = { id: string; studentId: string; changeRequestId: string; status: string; concurrencyStamp: string; onApprovedChangeMode: 'SuspendUntilReview' | 'KeepUntilReview'; previousLinks: GuardianLink[]; creationTime: string; reviewedByUserId?: string | null; reviewedAt?: string | null };

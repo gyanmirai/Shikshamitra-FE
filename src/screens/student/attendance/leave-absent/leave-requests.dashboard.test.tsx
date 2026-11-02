@@ -28,6 +28,9 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 vi.mock('src/redux/student/student-leave/student-leave-api', () => ({
   useGetStudentLeaveQuery: () => ({ currentData: { totalCount: 1 } }),
+  useGetStudentLeaveStatusCountsQuery: () => ({
+    currentData: { pendingCount: 1, approvedCount: 1, rejectedCount: 1 },
+  }),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/customDialog', () => ({

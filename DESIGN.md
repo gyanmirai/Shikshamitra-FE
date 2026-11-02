@@ -1731,13 +1731,14 @@ Use `CustomUpload` from `src/components/custom-upload/` for file selection, drag
 | `error`                         | Pass a safe, field-level validation message when the upload is invalid.                                  |
 | `primaryText` / `secondaryText` | Explain what the user can upload and any important requirement.                                          |
 | `propertyPr`                    | Use for concise file requirements such as accepted type or size.                                         |
+| `maxFileSizeMb`                 | Optional per-file size limit from the owning policy; defaults to 5 MB for existing consumers.            |
 | `parentsProps` / `dragProps`    | Use only for intentional layout or drag-area customization; preserve the shared upload interaction.      |
 
 **Rules**
 
 - Always use `CustomUpload` for upload fields; do not create a separate drag-and-drop implementation.
 - Keep upload state in Formik when the uploader is part of a form and validate it with Yup.
-- Preserve the component’s accepted file types and 5 MB size limit unless a scoped product change updates the shared component and its contract.
+- Preserve the component’s accepted file types and default 5 MB size limit. Pass `maxFileSizeMb` only when the owning workflow already defines a different limit; validate that policy in the owning form and server too.
 - Show clear accepted-format, size, and count guidance before selection.
 - Handle rejected files through the component’s error or toast behavior; do not silently discard invalid files.
 - Keep existing server files and newly selected files distinguishable in the owning value contract.

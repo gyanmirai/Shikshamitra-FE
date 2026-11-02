@@ -2,17 +2,17 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { UploadAvatar } from 'src/components/upload';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetClassQuery } from 'src/redux/class/classApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { studentPermissions } from 'src/constants/student-menu';
+import { useGetClassLookupQuery } from 'src/redux/class/classApi';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -33,29 +33,39 @@ import {
 const UploadStudentPhotoScreen = () => {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canWrite = hasGrantedPermission(permissions, studentPermissions.records.manageStudent);
-  const { data: classes, isLoading } = useQueryAndMutation({
+  const {
+    currentData: cachedClasses,
+    error: classLookupError,
+    isLoading,
+  } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
+    currentQueryAndMutation: useGetClassLookupQuery,
   });
+  const classes = classLookupError ? undefined : cachedClasses;
   const dialog = useBoolean();
-  const [divisions, setDivisions] = useState([]);
+  const closeDialog = dialog.onFalse;
   const [classValue, setClassValue] = React.useState('');
   const [division, setDivision] = React.useState('');
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [tableParams, setTableParams] = useState({ page: 1, rowsPerPage: 10, searchTerm: '' });
+  const selectedClass = classes?.items?.find((item: any) => item.id === classValue);
+  const divisions = selectedClass?.divisions || [];
+  const selectedDivision = divisions.some((item: any) => item.id === division) ? division : '';
   const {
-    data: students,
-    isLoading: studentsLoading,
+    currentData: cachedStudents,
+    error: studentsError,
+    isFetching: studentsLoading,
     isError,
   } = useGetStudentsByDivisionQuery(
     {
-      divisionId: division,
+      divisionId: selectedDivision,
       skipCount: (tableParams.page - 1) * tableParams.rowsPerPage,
       maxResultCount: tableParams.rowsPerPage,
       searchTerm: tableParams.searchTerm,
     },
-    { skip: !division }
+    { skip: !selectedDivision }
   );
+  const students = studentsError ? undefined : cachedStudents;
 
   const tableData =
     students?.items?.map((student: any) => ({
@@ -66,13 +76,20 @@ const UploadStudentPhotoScreen = () => {
         [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' '),
       upload: student.photoUrl ? 'Uploaded' : 'No photo on file',
     })) || [];
+  const currentSelectedStudent =
+    selectedDivision && selectedStudent
+      ? tableData.find((student: any) => student.studentId === selectedStudent.studentId)
+      : undefined;
+  useEffect(() => {
+    if (selectedStudent && (!canWrite || !currentSelectedStudent)) {
+      closeDialog();
+      setSelectedStudent(null);
+    }
+  }, [canWrite, currentSelectedStudent, closeDialog, selectedStudent]);
 
   const handleClassChange = (event: any) => {
     setClassValue(event.target.value);
     setDivision('');
-    setDivisions(
-      classes?.items?.find((item: any) => item.id === event.target.value)?.divisions || []
-    );
   };
 
   const handleDivisionChange = (event: any) => {
@@ -96,7 +113,7 @@ const UploadStudentPhotoScreen = () => {
             <Select
               labelId="class-select-label"
               id="class-select"
-              value={classValue}
+              value={selectedClass ? classValue : ''}
               label="Class"
               onChange={handleClassChange}
               size="small"
@@ -123,12 +140,12 @@ const UploadStudentPhotoScreen = () => {
             <Select
               labelId="division-select-label"
               id="division-select"
-              value={division}
+              value={selectedDivision}
               label="Division"
               onChange={handleDivisionChange}
               size="small"
-              disabled={!classValue}
-              sx={{ cursor: !classValue ? 'no-drop !important' : 'default' }}
+              disabled={!selectedClass}
+              sx={{ cursor: !selectedClass ? 'no-drop !important' : 'default' }}
             >
               {divisions && divisions.length > 0 ? (
                 divisions.map((divisionItem: any) => (
@@ -144,7 +161,7 @@ const UploadStudentPhotoScreen = () => {
         </Grid>
       </Grid>
 
-      {division && (
+      {selectedDivision && (
         <>
           {isError && (
             <StudentFeedback
@@ -198,16 +215,16 @@ const UploadStudentPhotoScreen = () => {
       )}
 
       <CustomDialog
-        open={dialog.value && canWrite}
+        open={Boolean(dialog.value && canWrite && currentSelectedStudent)}
         handleClose={() => {
           dialog.onFalse();
           setSelectedStudent(null);
         }}
-        title={`Upload Photo${selectedStudent?.fullName ? ` - ${selectedStudent.fullName}` : ''}`}
+        title={`Upload Photo${currentSelectedStudent?.fullName ? ` - ${currentSelectedStudent.fullName}` : ''}`}
       >
-        {selectedStudent && (
+        {currentSelectedStudent && (
           <UploadPhotoFlow
-            student={selectedStudent}
+            student={currentSelectedStudent}
             onClose={() => {
               dialog.onFalse();
               setSelectedStudent(null);

@@ -170,6 +170,67 @@ function useValidationController() {
   return { ...fixture, formik } as unknown as ReturnType<typeof useAdmissionInquiryDialog>;
 }
 
+it('copies a checked address into the Inquiry create values sent by Formik', async () => {
+  const submit = vi.fn();
+  function useAddressController() {
+    const fixture = controller();
+    const fields = [
+      {
+        id: 'current',
+        code: 'CURRENT',
+        label: 'Current street',
+        bindingKey: 'Address.AddressLine1',
+        fieldType: 0,
+      },
+      {
+        id: 'same',
+        code: 'SAME',
+        label: 'Same address',
+        bindingKey: 'PermanentAddress.SameAsCurrent',
+        fieldType: 9,
+      },
+      {
+        id: 'permanent',
+        code: 'PERMANENT',
+        label: 'Permanent street',
+        bindingKey: 'PermanentAddress.Line1',
+        fieldType: 0,
+      },
+    ].map((field) => ({ ...field, bindingType: 0, required: false, readOnly: false }));
+    const formik = useFormik({ initialValues: fixture.formik.values, onSubmit: submit });
+    return {
+      ...fixture,
+      formik,
+      fields,
+      sections: [{ ...fixture.sections[0], fields }],
+    } as unknown as ReturnType<typeof useAdmissionInquiryDialog>;
+  }
+  vi.mocked(useAdmissionInquiryDialog).mockImplementation(useAddressController);
+  render(<AdmissionInquiryFormPage />);
+  const user = userEvent.setup();
+  await user.type(screen.getByRole('textbox', { name: 'Current street' }), 'Inquiry current road');
+  await user.click(screen.getByRole('checkbox', { name: 'Same address' }));
+  await waitFor(() =>
+    expect(screen.getByRole('textbox', { name: 'Permanent street' })).toHaveValue(
+      'Inquiry current road'
+    )
+  );
+  expect(screen.getByRole('textbox', { name: 'Permanent street' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Create inquiry' }));
+  await waitFor(() =>
+    expect(submit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fields: expect.objectContaining({
+          CURRENT: 'Inquiry current road',
+          SAME: 'true',
+          PERMANENT: 'Inquiry current road',
+        }),
+      }),
+      expect.anything()
+    )
+  );
+});
+
 it('does not display publication requirements or disable capture for a legacy published form', () => {
   vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
     controller({
@@ -224,6 +285,44 @@ function useMultilingualController() {
 }
 
 describe('New inquiry form', () => {
+  it('collapses Admission Interest without clearing its selected values or hiding student fields', async () => {
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      controller() as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    render(<AdmissionInquiryFormPage />);
+    await userEvent.click(screen.getByRole('button', { name: 'Collapse Admission Interest' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('combobox', { name: 'Board' })).not.toBeInTheDocument()
+    );
+    expect(screen.getByRole('textbox', { name: 'Applicant first name' })).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Expand Admission Interest' }));
+    expect(screen.getByRole('combobox', { name: 'Board' })).toHaveTextContent('CBSE');
+    expect(screen.getByRole('combobox', { name: 'Offering' })).toHaveTextContent(
+      'Class 1 offering'
+    );
+  });
+
+  it('reveals collapsed Admission Interest when another submission has a context error', async () => {
+    const fixture = controller();
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      fixture as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    const view = render(<AdmissionInquiryFormPage />);
+    await userEvent.click(screen.getByRole('button', { name: 'Collapse Admission Interest' }));
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue({
+      ...fixture,
+      formik: {
+        ...fixture.formik,
+        submitCount: 2,
+        errors: { offeringId: 'Select an offering' },
+        touched: { offeringId: true },
+      },
+    } as unknown as ReturnType<typeof useAdmissionInquiryDialog>);
+    view.rerender(<AdmissionInquiryFormPage />);
+    expect(await screen.findByRole('combobox', { name: 'Offering' })).toBeVisible();
+    expect(screen.getByText('Select an offering')).toBeVisible();
+  });
+
   it.each([
     { name: 'ADM-STD-4', code: 'ADM-STD-4', expected: 'ADM-STD-4' },
     { name: 'Class 4 admission', code: 'ADM-STD-4', expected: 'Class 4 admission' },

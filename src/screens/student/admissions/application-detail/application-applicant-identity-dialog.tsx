@@ -79,21 +79,21 @@ export function ApplicationApplicantIdentityDialog({
               from the Student record.
             </StudentFeedback>
           ) : (
-            <StudentFeedback
-              notificationKey="STU-0175"
-              presentation="toast"
-              severity="error"
-              action={
-                <Button size="small" color="inherit" disabled={busy} onClick={query.refetch}>
-                  Retry
-                </Button>
-              }
-            >
+            <StudentFeedback notificationKey="STU-0175" presentation="toast" severity="error">
               Applicant identity could not be loaded. Try again.
             </StudentFeedback>
           )}
         </DialogScrollContent>
         <DialogActions sx={{ p: 2 }}>
+          {allowed &&
+            !locked &&
+            !query.isLoading &&
+            !query.isFetching &&
+            (query.isError || !data) && (
+              <Button size="small" variant="outlined" onClick={query.refetch}>
+                Retry
+              </Button>
+            )}
           <Button
             size="small"
             variant="outlined"

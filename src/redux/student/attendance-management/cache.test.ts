@@ -37,13 +37,14 @@ describe('attendance-derived cache refresh', () => {
   it.each(['addStudentLeave', 'approveStudentLeave', 'rejectStudentLeave'])(
     '%s refreshes leave evidence, the daily roster, and legacy summaries',
     (name) => {
-      expect(definitions.leaves[name].invalidatesTags).toEqual(
+      expect(definitions.leaves[name].invalidatesTags({}, undefined)).toEqual(
         expect.arrayContaining([
           studentLeaveType.studentLeave,
           studentTakeAttendanceType.studentTakeAttendance,
           studentType.student,
         ])
       );
+      expect(definitions.leaves[name].invalidatesTags(undefined, { status: 409 })).toEqual([]);
     }
   );
 });

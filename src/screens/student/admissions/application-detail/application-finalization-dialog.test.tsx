@@ -18,6 +18,34 @@ vi.mock('react-redux', () => ({
 vi.mock('src/components/label', () => ({
   Label: ({ children }: { children: ReactNode }) => <span>{children}</span>,
 }));
+vi.mock('./application-form-correction-drawer', () => ({
+  ApplicationFormCorrectionDrawer: ({ open, applicationId, onSaved, onRefresh, onClose }: any) =>
+    open ? (
+      <div role="dialog" aria-label="Edit Application Form" data-application-id={applicationId}>
+        <button type="button" onClick={onClose}>
+          Cancel correction
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onSaved();
+            onClose();
+          }}
+        >
+          Save correction
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onRefresh();
+            onClose();
+          }}
+        >
+          Refresh unconfirmed correction
+        </button>
+      </div>
+    ) : null,
+}));
 vi.mock('./application-applicant-identity-dialog', () => ({
   ApplicationApplicantIdentityDialog: ({
     open,
@@ -138,6 +166,134 @@ describe('ApplicationFinalizationDialog', () => {
       { name: 'Students.Admissions.Applicants.Add', isGranted: true },
     ];
   });
+  const correctionContext = {
+    applicationId: 'application-1',
+    application: {
+      applicantName: 'Approved applicant',
+      applicationNumber: 'APP-46',
+      offeringCode: 'CLASS-8',
+      status: 6 as const,
+    },
+  };
+  const grantCorrection = () => {
+    permissions.values.push(
+      { name: 'Students.Admissions.Applications.View', isGranted: true },
+      { name: 'Students.Admissions.Applications.Add', isGranted: true }
+    );
+  };
+
+  it('opens the correct approved application form and retains confirmations when correction is cancelled', () => {
+    grantCorrection();
+    const onRetry = vi.fn();
+    const onFormCorrected = vi.fn();
+    renderDialog(readyPreview, undefined, { ...correctionContext, onRetry, onFormCorrected });
+    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit application form' }));
+    expect(screen.getByRole('dialog', { name: 'Edit Application Form' })).toHaveAttribute(
+      'data-application-id',
+      'application-1'
+    );
+    expect(screen.queryByRole('heading', { name: 'Finalize Admission' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel correction' }));
+    expect(screen.getByLabelText(/I verified the primary guardian/)).toBeChecked();
+    expect(onRetry).not.toHaveBeenCalled();
+    expect(onFormCorrected).not.toHaveBeenCalled();
+  });
+
+  it('resets identity, guardian and profile review after correction and requests fresh finalization checks', () => {
+    grantCorrection();
+    const onRetry = vi.fn();
+    const onFormCorrected = vi.fn();
+    renderDialog(
+      {
+        ...readyPreview,
+        possibleMatches: [
+          {
+            studentId: 'student-1',
+            studentName: 'Existing Student',
+            dateOfBirth: '2016-04-12',
+            status: 8,
+            grNumber: 'GR-42',
+            academicYearId: 'year',
+          },
+        ],
+        capturedStudentFields: [{ key: 'Medical.Allergies', label: 'Allergies', value: 'Peanuts' }],
+      },
+      undefined,
+      { ...correctionContext, onRetry, onFormCorrected }
+    );
+    fireEvent.click(screen.getByLabelText(/Existing Student/));
+    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
+    fireEvent.click(
+      screen.getByLabelText(/Submit these admission details for Student profile review/)
+    );
+    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit application form' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save correction' }));
+    expect(onFormCorrected).toHaveBeenCalledOnce();
+    expect(onRetry).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/Existing Student/)).not.toBeChecked();
+    expect(screen.getByLabelText(/I verified the primary guardian/)).not.toBeChecked();
+    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeDisabled();
+    fireEvent.click(screen.getByLabelText(/Existing Student/));
+    expect(
+      screen.getByLabelText(/Submit these admission details for Student profile review/)
+    ).not.toBeChecked();
+  });
+
+  it('refreshes unconfirmed correction without resetting the finalization request as a successful save', () => {
+    grantCorrection();
+    const onRetry = vi.fn();
+    const onFormCorrected = vi.fn();
+    renderDialog(readyPreview, undefined, { ...correctionContext, onRetry, onFormCorrected });
+    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit application form' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh unconfirmed correction' }));
+    expect(onRetry).toHaveBeenCalledOnce();
+    expect(onFormCorrected).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/I verified the primary guardian/)).not.toBeChecked();
+  });
+
+  it.each([0, 2, 3, 9, 10, 11] as const)(
+    'does not offer form correction in closed or Draft status %s',
+    (status) => {
+      grantCorrection();
+      renderDialog(readyPreview, undefined, {
+        ...correctionContext,
+        application: { ...correctionContext.application, status },
+      });
+      expect(
+        screen.queryByRole('button', { name: 'Edit application form' })
+      ).not.toBeInTheDocument();
+    }
+  );
+
+  it.each(['Students.Admissions.Applications.View', 'Students.Admissions.Applications.Add'])(
+    'requires the exact %s grant for correction',
+    (grant) => {
+      grantCorrection();
+      permissions.values = permissions.values.filter((permission) => permission.name !== grant);
+      renderDialog(readyPreview, undefined, correctionContext);
+      expect(
+        screen.queryByRole('button', { name: 'Edit application form' })
+      ).not.toBeInTheDocument();
+    }
+  );
+
+  it('does not offer form correction without application identity', () => {
+    grantCorrection();
+    renderDialog(readyPreview, undefined, { application: correctionContext.application });
+    expect(screen.queryByRole('button', { name: 'Edit application form' })).not.toBeInTheDocument();
+  });
+
+  it.each([{ busy: true }, { loading: true }, { hasError: true }])(
+    'locks form correction while finalization is unavailable: %s',
+    (state) => {
+      grantCorrection();
+      renderDialog(readyPreview, undefined, { ...correctionContext, ...state });
+      expect(screen.getByRole('button', { name: 'Edit application form' })).toBeDisabled();
+    }
+  );
   it('retains optional finalization when profile-review access is unavailable', async () => {
     const onSubmit = renderDialog({
       ...readyPreview,
