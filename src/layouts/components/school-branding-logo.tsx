@@ -3,7 +3,13 @@ import { Logo } from 'src/components/logo';
 import { useState, useEffect } from 'react';
 import { useGetSchoolBrandingImageQuery } from 'src/redux/InstituteSetup/schoolIdentityApi';
 
-export function SchoolBrandingLogo({ tenantId }: { tenantId?: string }) {
+export function SchoolBrandingLogo({
+  tenantId,
+  disableLink = false,
+}: {
+  tenantId?: string;
+  disableLink?: boolean;
+}) {
   const image = useGetSchoolBrandingImageQuery(
     { kind: 'logo', tenantId: tenantId ?? '' },
     { skip: !tenantId }
@@ -25,7 +31,7 @@ export function SchoolBrandingLogo({ tenantId }: { tenantId?: string }) {
     source.url === failedSource ||
     image.isError
   )
-    return <Logo data-slot="logo" />;
+    return <Logo data-slot="logo" disableLink={disableLink} />;
   return (
     <Box
       component="img"

@@ -22,6 +22,14 @@ export default function SetupFooter({
   next: () => Promise<void>;
   onExit: () => Promise<void>;
 }) {
+  const actionLabel =
+    step === 0
+      ? 'Get started'
+      : step === 6
+        ? 'Finish setup'
+        : step === 5
+          ? 'Continue to review'
+          : 'Save and continue';
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
@@ -108,10 +116,8 @@ export default function SetupFooter({
         </Button>
         <Button
           size="small"
-          aria-label={
-            step === 0 ? 'Get started' : step === 5 ? 'Finish setup' : 'Save and continue'
-          }
-          endIcon={<Iconify icon={step === 5 ? 'mdi:check' : 'mdi:chevron-right'} width={18} />}
+          aria-label={actionLabel}
+          endIcon={<Iconify icon={step === 6 ? 'mdi:check' : 'mdi:chevron-right'} width={18} />}
           variant="contained"
           color="inherit"
           loading={disabled}
@@ -121,10 +127,10 @@ export default function SetupFooter({
           }}
         >
           <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
-            {step === 0 ? 'Get started' : step === 5 ? 'Finish setup' : 'Save and continue'}
+            {actionLabel}
           </Box>
           <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
-            {step === 0 ? 'Start' : step === 5 ? 'Finish' : 'Continue'}
+            {step === 0 ? 'Start' : step === 6 ? 'Finish' : 'Continue'}
           </Box>
         </Button>
       </Stack>

@@ -9,11 +9,13 @@ import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Alert, Stack, Button, CssBaseline } from '@mui/material';
+import { Box, Alert, Stack, Button, CssBaseline, Typography } from '@mui/material';
 import SchoolIdentityScreen from 'src/screens/setting/school-identity';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { OrganizationForm } from 'src/components/academic-setup/stage-form';
 import { schoolIdentityActions } from 'src/screens/setting/school-identity/types';
+import SchoolIdentityStep from 'src/screens/initial-setup-screen/components/school-identity-step';
+import { SchoolNavigationBrand } from 'src/layouts/components/school-navigation-brand';
 
 import { fixtureState, installFixture } from './mock-api';
 
@@ -24,7 +26,11 @@ const grants = Object.values(schoolIdentityActions)
   .map((name) => ({ name, isGranted: true }));
 const store = configureStore({
   reducer: {
-    auth: () => ({ permissions: grants, permissionsInitialized: true }),
+    auth: () => ({
+      permissions: grants,
+      permissionsInitialized: true,
+      sessionContext: { accountMode: 'tenant', tenantId: 'synthetic-school' },
+    }),
     confirmPopup: () => ({ isChanges: false }),
     globalState: () => ({
       currentYear: { id: 'year-26' },
@@ -77,7 +83,20 @@ function App() {
               Simulate next upload error
             </Button>
           </Stack>
-          <SchoolIdentityScreen />
+          {new URLSearchParams(window.location.search).has('setup') ? (
+            <Stack spacing={2}>
+              <Stack direction="row" spacing={3} alignItems="center">
+                <SchoolNavigationBrand href="#" />
+                <SchoolNavigationBrand href="#" compact />
+              </Stack>
+              <Typography variant="h4" component="h1">
+                School Identity (Optional)
+              </Typography>
+              <SchoolIdentityStep />
+            </Stack>
+          ) : (
+            <SchoolIdentityScreen />
+          )}
           {editOrganizationName && (
             <CustomDialog
               open

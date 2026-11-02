@@ -3,10 +3,11 @@ import type { NavSectionProps } from 'src/components/nav-section';
 import { useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { usePathname } from 'src/routes/hooks';
-import { LogoWithText } from 'src/components/logo';
 import { Scrollbar } from 'src/components/scrollbar';
 import Drawer, { drawerClasses } from '@mui/material/Drawer';
 import { NavSectionVertical } from 'src/components/nav-section';
+
+import { SchoolNavigationBrand } from '../components/school-navigation-brand';
 
 // ----------------------------------------------------------------------
 
@@ -62,8 +63,8 @@ export function NavMobile({
       }}
     >
       {slots?.topArea ?? (
-        <Box sx={{ pl: 3.5, pt: 2.5, pb: 1 }}>
-          <LogoWithText href={homePath} />
+        <Box sx={{ pl: 3.5, pr: 2, pt: 2.5, pb: 1, minWidth: 0 }}>
+          <SchoolNavigationBrand href={homePath} />
         </Box>
       )}
 

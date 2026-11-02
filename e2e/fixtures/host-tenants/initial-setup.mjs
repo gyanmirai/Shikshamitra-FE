@@ -48,8 +48,8 @@ export function createInitialSetupFixture(profile, options = {}) {
     if (action === 'structure') { state.draft = structuredClone(body.draft); state.divisionId ??= randomUUID(); academics.addBranch(state.academicYearId, state.draft, state.divisionId); confirmed[3] = projection(3); state.currentStep = 4; state.furthestStep = Math.max(state.furthestStep, 4); }
     if (action === 'users') state.createdUsers.push({ id: randomUUID(), requestId: body.requestId, userName: body.userName, email: body.email });
     if (action === 'complete') {
-      if (current().pendingSteps.length || !state.divisionId || state.furthestStep < 5) { send(400, { errorCode: 'ShikshaMitra:InitialSetup:UnconfirmedChanges' }); return true; }
-      state.isCompleted = true; state.currentStep = state.furthestStep = 6; state.completedAt = new Date().toISOString();
+      if (current().pendingSteps.length || !state.divisionId || state.furthestStep < 6) { send(400, { errorCode: 'ShikshaMitra:InitialSetup:UnconfirmedChanges' }); return true; }
+      state.isCompleted = true; state.currentStep = state.furthestStep = 7; state.completedAt = new Date().toISOString();
     }
     state.concurrencyStamp = randomUUID(); send(200, current()); return true;
   }

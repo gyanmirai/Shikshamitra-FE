@@ -7,13 +7,13 @@ import Box from '@mui/material/Box';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Logo, LogoWithText } from 'src/components/logo';
 import { varAlpha, hideScrollY } from 'src/theme/styles';
 import { hostTenantPath } from 'src/constants/host-tenant-menu';
 import { NavSectionMini, NavSectionVertical } from 'src/components/nav-section';
 
 import { settingMenu } from '../config-nav-dashboard';
 import { NavToggleButton } from '../components/nav-toggle-button';
+import { SchoolNavigationBrand } from '../components/school-navigation-brand';
 
 // ----------------------------------------------------------------------
 
@@ -60,8 +60,8 @@ export function NavVertical({
       }}
     >
       {slots?.topArea ?? (
-        <Box sx={{ pl: 3.5, pt: 2.5, pb: 1, flexShrink: 0 }}>
-          <LogoWithText href={isHost ? hostTenantPath : '/'} />
+        <Box sx={{ pl: 3.5, pr: 2, pt: 2.5, pb: 1, flexShrink: 0, minWidth: 0 }}>
+          <SchoolNavigationBrand href={isHost ? hostTenantPath : '/'} />
         </Box>
       )}
       <Box
@@ -86,7 +86,7 @@ export function NavVertical({
     <>
       {slots?.topArea ?? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 2.5, flexShrink: 0 }}>
-          <Logo href={isHost ? hostTenantPath : '/dashboard'} />
+          <SchoolNavigationBrand href={isHost ? hostTenantPath : '/dashboard'} compact />
         </Box>
       )}
 

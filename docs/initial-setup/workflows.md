@@ -3,7 +3,7 @@ module: initial-setup
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-09
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -19,9 +19,12 @@ TL;DR: the wizard separates saved draft entries from validated configuration and
 | Academic year | Create or select a year and confirm ordered dates |
 | Academic structure | Configure the first board, medium, stage, class and division |
 | Users and access | Optionally open the full academic workspace for more branches; optionally create staff with available roles |
+| School Identity (optional) | Use the existing school-default editor for logo, banner and principal signature, or continue without assets |
 | Review | Inspect the saved configuration, revisit earlier steps and finish |
 
 Save and continue first flushes the draft, then saves the active step.
+School Identity uses its existing authenticated asset and profile APIs. Submit in the editor saves assets independently of the setup draft; Cancel preserves saved settings. Continue to review skips optional configuration, including when identity permissions are unavailable. Missing/read-failed identity data never prevents advancing.
+Expanded desktop and mobile navigation show the school code. Expanded and collapsed navigation use the school-default logo, with the original icon when no logo is configured or the image cannot load. Existing schools use their already-saved school defaults too.
 Back and completed-step navigation save entries before moving.
 Save and exit waits for persistence before signing out.
 Closing the browser resumes the last successfully saved entries on the next login; offline entries are not guaranteed to have reached the server.

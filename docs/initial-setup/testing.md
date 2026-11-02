@@ -3,7 +3,7 @@ module: initial-setup
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-09
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -29,6 +29,8 @@ The browser suite covers saved-step reload, direct-link guards, completed login,
 Scenario ownership is recorded in `tests/catalog/initial-setup.yaml`.
 The motion regression covers focused step headings, uninterrupted input, saved values across Back/next navigation and reduced-motion removal of section and progress transitions.
 Finish UI verification in the Codex in-app browser after automated checks.
+
+Optional identity coverage: run `src/layouts/components/school-navigation-brand.test.tsx`, `src/layouts/components/school-branding-logo.test.tsx` and `src/components/setup-flow/initial-setup-shell.test.tsx` alongside the model tests. The full setup browser case now reloads the optional step and continues without assets. For upload and shared navigation evidence, start the existing school identity Vite fixture on port 4519 and run `node e2e/school-identity/setup-branding-check.mjs`. It uses synthetic assets and exercises the production setup identity component and editor; it does not prove real server persistence.
 
 Use the [backend testing page](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md) for API, tenant isolation and PostgreSQL migration validation.
 Keep fixture tokens, generated traces, logs and screenshots in ignored `.artifacts/`.

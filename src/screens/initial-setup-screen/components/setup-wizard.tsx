@@ -13,6 +13,7 @@ import ProfileStep from './profile-step';
 import StructureStep from './structure-step';
 import SetupCompleted from './setup-completed';
 import { setupSteps } from '../services/setup-model';
+import SchoolIdentityStep from './school-identity-step';
 import { useSetupWizard } from '../hooks/use-setup-wizard';
 
 export default function SetupWizard({
@@ -129,7 +130,8 @@ export default function SetupWizard({
               }}
             />
           )}
-          {step === 5 && (
+          {step === 5 && <SchoolIdentityStep />}
+          {step === 6 && (
             <ReviewStep
               progress={progress}
               onEdit={(target) => {
