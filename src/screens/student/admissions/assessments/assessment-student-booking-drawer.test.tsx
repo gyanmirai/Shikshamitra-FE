@@ -153,8 +153,24 @@ it('keeps incompatible future sessions visible with a disabled choice and reason
   ];
   show();
   expect(screen.getByRole('radio', { name: 'Class 2 Interview' })).toBeDisabled();
-  expect(screen.getByText('Class 10 not supported.')).toBeVisible();
+  expect(screen.getByText('This session uses a different assessment setup.')).toBeVisible();
   expect(screen.getByRole('radio', { name: 'Class 10 Entrance Exam' })).toBeEnabled();
+});
+
+it('explains a pinned-stage mismatch without claiming that the same class is unsupported', () => {
+  api.session = {
+    ...api.session,
+    scopes: [
+      { admissionOfferingId: 'offering-1', workflowStageDefinitionId: 'another-definition' },
+    ],
+  };
+  api.sessions = [api.session];
+  show();
+  expect(screen.getByRole('radio', { name: 'Class 10 Entrance Exam' })).toBeDisabled();
+  expect(screen.getByText('This session uses a different assessment setup.')).toBeVisible();
+  expect(screen.queryByText('Class 10 not supported.')).not.toBeInTheDocument();
+  expect(api.preview).not.toHaveBeenCalled();
+  expect(api.confirm).not.toHaveBeenCalled();
 });
 
 it('carries both students into the drawer and confirms them without a second selection step', async () => {

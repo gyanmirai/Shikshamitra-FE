@@ -26,7 +26,7 @@ const props = () => ({
 });
 
 describe('Admission form publish confirmation', () => {
-  it('shows a publish badge and readiness details without a warning icon', () => {
+  it('shows the publish badge and version consequence without a warning icon', () => {
     const callbacks = props();
     render(<AdmissionFormPublishDialog {...callbacks} />);
 
@@ -34,9 +34,9 @@ describe('Admission form publish confirmation', () => {
     expect(screen.getAllByTestId('mdi:publish')).toHaveLength(2);
     expect(screen.queryByTestId('WarningAmberIcon')).not.toBeInTheDocument();
     expect(
-      screen.getByText('All publish-readiness checks passed.', { exact: false })
+      screen.getByText(/Version 1 will become available for new admission offerings/)
     ).toBeVisible();
-    expect(screen.getByText(/linked to 0 offerings and 0 applications/)).toBeVisible();
+    expect(screen.getByText(/Published versions cannot be edited/)).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Publish form' }));
     expect(callbacks.onPublish).toHaveBeenCalledOnce();
   });

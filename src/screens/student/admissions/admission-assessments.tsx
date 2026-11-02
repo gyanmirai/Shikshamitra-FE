@@ -71,6 +71,19 @@ export default function AdmissionAssessmentsScreen() {
   } | null>(null);
   const workbench = useAssessmentWorkspaceData(permissions.view, !!batch);
   const { academic, scopes, state, applicants, updateWorkbench } = workbench;
+  const setupScopes = useMemo(
+    () =>
+      academic.academicYearId && academic.boardId && academic.mediumId
+        ? (scopes.currentData ?? []).filter(
+            (scope) =>
+              scope.academicYearId === academic.academicYearId &&
+              scope.boardId === academic.boardId &&
+              scope.mediumId === academic.mediumId &&
+              scope.schedulingEnabled
+          )
+        : [],
+    [scopes.currentData, academic.academicYearId, academic.boardId, academic.mediumId]
+  );
   const openStudentBooking = (rows: AssessmentRosterItem[]) =>
     setBooking({ rows, scopes: scopes.currentData ?? [] });
   const tableFilters = useMemo<IParams['filters']>(
@@ -342,11 +355,7 @@ export default function AdmissionAssessmentsScreen() {
                         !academic.mediumId ||
                         scopes.isFetching ||
                         scopes.isError ||
-                        !(scopes.currentData ?? []).some(
-                          (scope) =>
-                            scope.academicYearId === academic.academicYearId &&
-                            scope.schedulingEnabled
-                        )
+                        !setupScopes.length
                       }
                       onClick={() => openSetup(null, 'create')}
                     >
@@ -650,9 +659,7 @@ export default function AdmissionAssessmentsScreen() {
           open
           mode={editing.mode}
           readOnly={!permissions.view || !permissions.manageSessions}
-          scopes={(scopes.currentData ?? []).filter(
-            (scope) => scope.academicYearId === academic.academicYearId && scope.schedulingEnabled
-          )}
+          scopes={setupScopes}
           rooms={resources.currentData?.rooms ?? []}
           interviewers={resources.currentData?.interviewers ?? []}
           onSearchInterviewers={(query) => searchInterviewers(query, false).unwrap()}

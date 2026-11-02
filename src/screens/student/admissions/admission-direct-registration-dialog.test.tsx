@@ -207,6 +207,17 @@ beforeEach(() => {
 });
 
 describe('Special direct-registration entry', () => {
+  it('starts registration with canonical Other gender', async () => {
+    renderDrawer();
+    await selectOffering();
+    fillApplicant();
+    fireEvent.change(screen.getByLabelText('Gender'), { target: { value: 'Other' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
+    fireEvent.click(await screen.findByRole('button', { name: 'Start registration' }));
+    await waitFor(() => expect(state.start).toHaveBeenCalledOnce());
+    expect(state.start).toHaveBeenCalledWith(expect.objectContaining({ applicantGender: 'Other' }));
+  });
   it('captures an optional guardian main contact without requiring another parent or repeating the family check', async () => {
     renderDrawer();
     await selectOffering();

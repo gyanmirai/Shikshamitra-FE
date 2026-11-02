@@ -3,8 +3,8 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useRef } from 'react';
 import { useFormik } from 'formik';
+import { useRef, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -75,7 +75,7 @@ export function AdmissionFormDialog({
       </CustomDialog>
     );
   }
-  return <AdmissionFormEditor key={editing?.id ?? 'new'} editing={editing} {...props} />;
+  return <AdmissionFormEditor editing={editing} {...props} />;
 }
 
 function AdmissionFormEditor({
@@ -105,6 +105,20 @@ function AdmissionFormEditor({
     validateOnChange: true,
     onSubmit: () => undefined,
   });
+  const savedStamp = editing?.concurrencyStamp;
+  const setEditorValues = editorFormik.setValues;
+  useEffect(() => {
+    if (!savedStamp) return;
+    // The owner supplies a new revision only after our draft save succeeds. Updating
+    // this token must not reset the user's values, touched fields or current step.
+    setEditorValues(
+      (current) =>
+        current.concurrencyStamp === savedStamp
+          ? current
+          : { ...current, concurrencyStamp: savedStamp },
+      false
+    );
+  }, [savedStamp, setEditorValues]);
   const busy = saving || wizard.submitting;
   const formType = editorFormik.values.purpose === 0 ? 'Inquiry' : 'Registration';
   return (

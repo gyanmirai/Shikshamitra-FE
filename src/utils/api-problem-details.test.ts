@@ -3,6 +3,21 @@ import { it, expect, describe } from 'vitest';
 import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
+  it('explains an admission form revision conflict instead of the generic business error', () => {
+    expect(
+      parseApiProblemDetail({
+        status: 400,
+        data: {
+          errorCode: 'Admissions.FormConcurrencyConflict',
+          detail: 'One or more business rules were violated.',
+        },
+      })
+    ).toEqual({
+      errorCode: 'Admissions.FormConcurrencyConflict',
+      detail:
+        'This form has changed since it was opened. Close and reopen it to review the latest version before trying again.',
+    });
+  });
   it.each([
     'An internal error occurred during your request!',
     'An internal error occurred during your request.',

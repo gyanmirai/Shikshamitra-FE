@@ -18,7 +18,7 @@ const options = (items: string[]) =>
   JSON.stringify(items.map((label) => ({ value: label, label })));
 
 const yesNo = options(['Yes', 'No']);
-const gender = options(['Male', 'Female']);
+const gender = options(['Male', 'Female', 'Other']);
 const category = options(['General', 'OBC', 'SC', 'ST', 'EWS', 'Other']);
 const classOptions = JSON.stringify({ source: 'StandardsByMedium', parentField: 'MEDIUM' });
 const bloodGroups = options(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);

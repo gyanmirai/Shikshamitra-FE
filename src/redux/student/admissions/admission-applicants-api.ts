@@ -17,7 +17,7 @@ export type UpdateAdmissionApplicantProfile = {
   middleName?: string | null;
   lastName?: string | null;
   dateOfBirth: string;
-  gender: 'Male' | 'Female';
+  gender: 'Male' | 'Female' | 'Other';
   guardianMobile?: string | null;
   guardianEmail?: string | null;
 };

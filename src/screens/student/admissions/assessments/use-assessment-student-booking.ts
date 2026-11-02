@@ -226,8 +226,7 @@ export function useAssessmentStudentBooking(props: StudentBookingProps) {
     );
     if (!rows.length) return 'Select students first.';
     if (!unsupported.length) return '';
-    const classes = [...new Set(unsupported.map((row) => row.className).filter(Boolean))];
-    return classes.length ? `${classes.join(', ')} not supported.` : 'Different assessment.';
+    return 'This session uses a different assessment setup.';
   };
   return {
     rows,

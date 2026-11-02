@@ -14,6 +14,18 @@ import {
 } from './admission-form-template-catalog';
 
 describe('admission form template catalogue', () => {
+  it('collects required mapped identity in the application template without requiring a surname', () => {
+    const fields = getSystemAdmissionFormTemplate('admission-application').sections.flatMap(
+      (section) => section.fields
+    );
+    ['Applicant.FirstName', 'Applicant.DateOfBirth', 'Applicant.Gender'].forEach((binding) => {
+      const field = fields.find((item) => item.bindingKey === binding)!;
+      expect(field.bindingType).toBe(0);
+      expect(field.required).toBe(true);
+      expect(field.readOnly).toBe(false);
+    });
+    expect(fields.find((field) => field.bindingKey === 'Applicant.LastName')?.required).toBe(false);
+  });
   it('uses registry-supported gender choices in system applicant questions', () => {
     SYSTEM_ADMISSION_FORM_TEMPLATES.forEach(({ id }) => {
       getSystemAdmissionFormTemplate(id)
@@ -23,6 +35,7 @@ describe('admission form template catalogue', () => {
           expect(JSON.parse(field.optionsJson!)).toEqual([
             { value: 'Male', label: 'Male' },
             { value: 'Female', label: 'Female' },
+            { value: 'Other', label: 'Other' },
           ])
         );
     });

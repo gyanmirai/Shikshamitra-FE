@@ -8,6 +8,54 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import AdmissionRuntimeField from './admission-runtime-field';
 
+it('uses configured translated Other gender choices and emits the canonical answer', async () => {
+  const onChange = vi.fn();
+  render(
+    <AdmissionRuntimeField
+      field={{
+        code: 'GENDER',
+        label: 'Gender',
+        fieldType: 6,
+        bindingType: 0,
+        bindingKey: 'Applicant.Gender',
+        required: true,
+        readOnly: false,
+        optionsJson: '[{"value":"Other","label":"अन्य"}]',
+      }}
+      value=""
+      disabled={false}
+      onChange={onChange}
+    />
+  );
+  await userEvent.click(screen.getByRole('combobox', { name: /Gender/ }));
+  await userEvent.click(screen.getByRole('option', { name: 'अन्य' }));
+  expect(onChange).toHaveBeenCalledWith('Other');
+});
+
+it('keeps a custom survey named Gender on its configured answer semantics', async () => {
+  const onChange = vi.fn();
+  render(
+    <AdmissionRuntimeField
+      field={{
+        code: 'Gender',
+        label: 'Survey',
+        fieldType: 6,
+        bindingType: 1,
+        bindingKey: 'Applicant.Gender',
+        required: false,
+        readOnly: false,
+        optionsJson: '[{"value":"PRIVATE","label":"Prefer not to say"}]',
+      }}
+      value=""
+      disabled={false}
+      onChange={onChange}
+    />
+  );
+  await userEvent.click(screen.getByRole('combobox', { name: 'Survey' }));
+  await userEvent.click(screen.getByRole('option', { name: 'Prefer not to say' }));
+  expect(onChange).toHaveBeenCalledWith('PRIVATE');
+});
+
 it('renders the saved student surname question as optional for single-name students', () => {
   render(
     <AdmissionRuntimeField
