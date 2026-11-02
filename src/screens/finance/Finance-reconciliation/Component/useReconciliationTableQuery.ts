@@ -46,6 +46,8 @@ export function useReconciliationTableQuery(queryParams?: GetReconciliationListP
       searchFieldProps: { placeholder: 'Receipt number, student name or GR number' },
       onServerPagination: (nextPage: number, pageSize: number) =>
         setState((previous) => ({ ...previous, scope, page: nextPage - 1, pageSize })),
+      onClearCriteria: () =>
+        setState((previous) => ({ ...previous, scope, page: 0, search: '', filters: [] })),
       onServerSearch: (search: string) =>
         setState((previous) => ({ ...previous, scope, page: 0, search })),
       ...(supportsColumnFilters ? {

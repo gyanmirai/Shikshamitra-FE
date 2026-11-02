@@ -291,12 +291,12 @@ function preview(input: AssignmentRequest): AssignmentPreview {
         : defaultPolicy;
       return selected
         ? [
-            {
-              ...selected,
-              source:
-                selected.versionId === defaultPolicy.versionId ? 'FeeStructure' : 'StudentOverride',
-            },
-          ]
+          {
+            ...selected,
+            source:
+              selected.versionId === defaultPolicy.versionId ? 'FeeStructure' : 'StudentOverride',
+          },
+        ]
         : [];
     }),
   };
@@ -554,7 +554,8 @@ export const api = createApi({
       };
     }
     if (args.url.endsWith('/assign-bulk')) {
-      const results = args.body.items.map((input: AssignmentRequest) => {
+      const items: AssignmentRequest[] = args.body.items;
+      const results = items.map((input) => {
         const attempt = commitAttempts.get(input.studentId) ?? 0;
         commitAttempts.set(input.studentId, attempt + 1);
         if (admissionScenario === 'partial' && input.studentId === 'student-two' && attempt === 0)

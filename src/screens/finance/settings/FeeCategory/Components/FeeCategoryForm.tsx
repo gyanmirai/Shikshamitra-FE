@@ -215,14 +215,14 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
     setupOptionsMissing(
       incomeCategoryQuery,
       !!currentYear?.id &&
-        !!open?.value &&
-        values.feeHeads.some(
-          (head) =>
-            !categoryDetails?.feeHeads?.some(
-              (saved: any) =>
-                saved.id && saved.id === head.id && saved.incomeCategoryId === head.incomeCategoryId
-            )
-        )
+      !!open?.value &&
+      values.feeHeads.some(
+        (head) =>
+          !categoryDetails?.feeHeads?.some(
+            (saved: any) =>
+              saved.id && saved.id === head.id && saved.incomeCategoryId === head.incomeCategoryId
+          )
+      )
     );
   const missingIncomeCategory = isIncomeSetupMissing(formik.values);
 
@@ -339,8 +339,8 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
         );
         const nextAction = formik.values.feeHeads.length
           ? document.querySelector<HTMLElement>(
-              '[data-fee-category-editor] input[name="feeHeads.0.name"]'
-            )
+            '[data-fee-category-editor] input[name="feeHeads.0.name"]'
+          )
           : document.querySelector<HTMLElement>('[data-add-fee-head]');
         (firstInvalid ?? nextAction)?.focus();
       });
@@ -755,7 +755,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                               }
                                               helperText={
                                                 (feeHeadTouched?.incomeCategoryId &&
-                                                feeHeadError?.incomeCategoryId
+                                                  feeHeadError?.incomeCategoryId
                                                   ? (feeHeadError.incomeCategoryId as string)
                                                   : undefined) || undefined
                                               }
@@ -870,9 +870,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                         ? 'At least one fee head is required'
                                         : removalBlocked
                                           ? feeHeadDependencyMessage(
-                                              fh.name,
-                                              originalHead?.dependencies
-                                            )
+                                            fh.name,
+                                            originalHead?.dependencies
+                                          )
                                           : 'Remove fee head'
                                     }
                                   >
