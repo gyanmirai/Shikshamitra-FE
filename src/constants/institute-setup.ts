@@ -85,14 +85,14 @@ const instituteSetupModule = {
           ],
         },
         {
-          title: 'Shift Management',
+          title: 'School Shifts',
           path: instituteSetupPaths.shiftManagement,
           _action: 'shift-management',
           shortcutKey: 'Ctrl+S',
           shortcutKeyName: 'Ctrl+S',
           permissionName: instituteSetupPermissions.shiftManagement,
           permissionChildren: [
-            { title: 'Shift Management', permissionName: 'InstituteSetup.ShiftManagement.View' },
+            { title: 'School Shifts', permissionName: 'InstituteSetup.ShiftManagement.View' },
           ],
           icon: menuIconView('mdi:clock-time-three-outline'),
         },

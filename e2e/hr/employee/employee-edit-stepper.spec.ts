@@ -234,7 +234,7 @@ async function firstNonAdminRoleId(page: Page) {
 }
 
 async function firstShiftId(page: Page) {
-  const shiftsBody = await getJson<any>(page, '/app/shift-management');
+  const shiftsBody = await getJson<any>(page, '/hr/work-shifts');
   const shift = asItems<any>(shiftsBody).find((candidate) => candidate?.id);
 
   if (!shift?.id) {

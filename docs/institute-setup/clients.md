@@ -3,7 +3,7 @@ module: institute-setup
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-27
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -117,3 +117,8 @@ Staff ID previews use `useGetEmployeeICardSchoolLogoQuery` in `employee-icard-te
 `src/redux/shiftManagement/shift-management-api.ts` supplies both the `/setting/shift-management` grid and `ClassForm`'s optional shift dropdown. It calls the backend's `/api/app/shift-management` endpoints through the shared authenticated API. Writes invalidate the Shift tag.
 
 `LoadSession` in `src/redux/auth/load-session.tsx` clears both RTK Query and `session-cache.ts` when user/tenant identity changes or the session ends. Clearing only query data leaves the previous bearer token cached for up to 30 seconds; the session-transition regression verifies that the next shift request uses the new tenant token immediately.
+
+## School Shifts
+
+src/redux/shiftManagement/shift-management-api.ts remains the school-session client for Institute Setup and class selection.
+HR employee selectors and shift tables use a separate HR client and cache tags.

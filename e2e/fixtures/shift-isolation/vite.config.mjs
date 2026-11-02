@@ -25,7 +25,7 @@ export default defineConfig({
               canManageSetup: false,
             };
           } else if (request.url?.startsWith('/api/permission-management/permissions')) {
-            body = { groups: [] };
+            body = { groups: [{ name: 'Synthetic', permissions: ['HR.AttendanceAndLeave.Setting.ShiftManagement.View','HR.AttendanceAndLeave.Setting.ShiftManagement.Add','HR.AttendanceAndLeave.Setting.ShiftManagement.Delete','HR.Employee.EmployeeList.View','HR.Employee.EmployeeList.Edit'].map(name => ({ name, isGranted: true })) }] };
           } else {
             next();
             return;
@@ -53,6 +53,6 @@ export default defineConfig({
     port: 4321,
     strictPort: true,
     fs: { allow: [repo] },
-    proxy: { '/api': { target: 'http://127.0.0.1:4391', changeOrigin: true } },
+    proxy: { '/fixture': { target: 'http://127.0.0.1:4391', changeOrigin: true }, '/api': { target: 'http://127.0.0.1:4391', changeOrigin: true } },
   },
 });

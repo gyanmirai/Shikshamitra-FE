@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -254,3 +254,11 @@ Active edits/default replacement attach `X-HR-Policy-Impact-Token`; edits carry 
 `hrOperationalTableApi.ts` and `use-hr-table-query.ts` provide the shared typed query adapter for operational HR table instances, including Register and I-card staff selection. Existing readers remain the unfiltered fast path. Active header criteria use POST `/hr/table-query` with the canonical domain query, typed criteria and zero-based offset/size. Raw response envelopes preserve existing mappers and editing metadata. The field catalog gates header controls; the backend independently validates fields and types. Own mutation tags invalidate criteria views. `useHrTableExport` sends matching criteria and visible columns to the existing complete export workflow. Register retains its native period/division/domain scope and uses the same typed header-criteria path; I-card staff selection reuses the existing authorized employee reader with a narrow field allowlist. Captured reporting retains its owning contract.
 
 The [column capability matrix](references/hr-column-capabilities.md) enumerates every discovered data column and dynamic schema. `staff-directory-column-capabilities.ts` supplies the real directory labels/filter types to the screen and its browser contract. Shared headers show an unsorted neutral affordance, preserve categorical choices and retain explicit computed search accessors without raw fallback.
+
+## Employee Work Shifts
+
+src/redux/hr/work-shifts-api.ts owns HR catalogue, active options and employee assignment APIs.
+EmployeeWorkShift and EmployeeShiftAssignment cache tags are independent of the school Shift tag.
+Employee creation sends initialWorkShiftAssignment with a workShiftId and effectiveFrom date.
+Profile updates do not send a schedule change.
+See [backend contracts](../../../Shikshamitra-BE/docs/modules/hr/api.md#employee-work-shift-apis) for validation and ownership.

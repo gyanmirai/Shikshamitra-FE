@@ -28,6 +28,7 @@ export type FinalizeFormState = {
   identificationMark1: string;
   roleId: string;
   shiftId: string;
+  shiftEffectiveFrom: string;
   academicPermissionStageIds: string;
   address1: string;
   address2: string;
@@ -97,6 +98,7 @@ export const finalizeEmployeeFieldsSchema = Yup.object({
   qualification: Yup.string().nullable(),
   identificationMark1: Yup.string().nullable(),
   roleId: Yup.string().required('Role is required'),
+  shiftEffectiveFrom: Yup.string().required('Shift effective date is required'),
   shiftId: Yup.string().required('Shift is required'),
   address1: Yup.string().required('Building No./Flat/House No. is required'),
   address2: Yup.string().required('Area/Locality/Road Name is required'),

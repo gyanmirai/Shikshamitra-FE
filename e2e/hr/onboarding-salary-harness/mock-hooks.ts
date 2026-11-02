@@ -36,8 +36,11 @@ export const useGetRolesQuery = () => ({
   },
   isLoading: false,
 });
-export const useGetShiftsQuery = () => ({
-  data: { items: [{ id: 'shift', shiftName: 'Day shift', name: 'Day shift' }] },
+export const useGetWorkShiftOptionsQuery = () => ({
+  data: {
+    today: new Date().toISOString().slice(0, 10),
+    items: [{ id: 'shift', shiftName: 'Day shift', name: 'Day shift' }],
+  },
   isLoading: false,
 });
 export const useAcademicOrganizationOptions = () => ({

@@ -23,3 +23,5 @@ export default forwardRef<HTMLAnchorElement, React.ComponentProps<'a'>>(
     </a>
   )
 );
+
+export function useSelectedLayoutSegments() { return window.location.pathname.split('/').filter(Boolean); }

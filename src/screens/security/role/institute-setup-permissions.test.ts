@@ -23,7 +23,7 @@ const catalogue: PermissionCatalogue = {
 };
 
 describe.each([
-  ['Shift Management', 'ShiftManagement'], ['Academic Setup', 'AcademicSetup'],
+  ['School Shifts', 'ShiftManagement'], ['Academic Setup', 'AcademicSetup'],
 ])('%s action catalogue mapping', (title, feature) => {
   const node = nodes.find((item) => item.title === title)!;
   const names = actions.map((action) => `InstituteSetup.${feature}.${action}`);

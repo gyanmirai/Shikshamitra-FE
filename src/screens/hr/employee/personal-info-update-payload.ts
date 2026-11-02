@@ -56,7 +56,7 @@ export function buildProfilePersonalInfoUpdatePayload(
     state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
     city: values?.city?.name,
     pinCode: String(values.pincode),
-    shiftId: values.shift,
+
   };
 
   if (values.secondaryMobileNo) {

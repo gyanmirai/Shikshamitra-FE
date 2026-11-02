@@ -89,9 +89,9 @@ vi.mock('input-otp', () => ({
     />
   ),
 }));
-vi.mock('src/redux/shiftManagement/shift-management-api', () => ({
-  useGetShiftsQuery: () => ({
-    data: { items: [{ id: 'shift', name: 'Day shift' }] },
+vi.mock('src/redux/hr/work-shifts-api', () => ({
+  useGetWorkShiftOptionsQuery: () => ({
+    data: { today: '2026-11-02', items: [{ id: 'shift', name: 'Day shift' }] },
     isLoading: false,
   }),
 }));
@@ -359,7 +359,7 @@ async function academicStep(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByTestId('aadhaar-input'), '999999999999');
   await user.type(screen.getByTestId('pan-input'), 'ABCDE1234F');
   await user.selectOptions(screen.getByLabelText('Role'), 'teacher-role');
-  fireEvent.mouseDown(screen.getByLabelText('Shift *'));
+  fireEvent.mouseDown(screen.getByLabelText('Work shift *'));
   await user.click(await screen.findByRole('option', { name: 'Day shift' }));
   await user.click(screen.getByRole('button', { name: 'Next' }));
   await screen.findByRole('checkbox', { name: /Organization 1/ });

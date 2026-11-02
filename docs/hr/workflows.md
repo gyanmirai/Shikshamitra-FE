@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-29
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -758,3 +758,11 @@ List and application-detail Finalize actions open `/hr/employee/onboarding/{appl
 Application/session changes abort the old read, clear its in-memory editor and reject responses for another ID. A temporary same-application read failure preserves edits and locks finalization until retry succeeds. Denied/deleted records hide cached protected content. Step navigation keeps the authoritative Formik, work-assignment, statutory and salary drafts mounted. Academic cards retain one native full-surface checkbox label; unchecked hover is neutral and focus has a separate outline.
 
 Finalization uses the existing atomic endpoint and payload, role/assignment/academic/salary gates and inactive-staff result. Confirmed success is terminal in the current editor and returns to the sanitized onboarding destination using replacement navigation; existing RTK tags invalidate application/staff readers. Late results from an unmounted editor cannot navigate a newer context. Errors retain the draft for explicit retry. Closing a page does not prove an already submitted server operation was rolled back; reopening must read its current application status before another action.
+
+## Work shift workflows
+
+Create a daytime definition in Work Shifts, then select it during employee creation or schedule a change through Work Schedule.
+Choose today or a future effective date and review current and upcoming assignments after saving.
+Future assignments can be changed or cancelled; the server protects recorded attendance and locked payroll.
+Assigned shift times remain fixed; create a new definition for changed working hours.
+Inactive definitions retain history but disappear from new-assignment options.

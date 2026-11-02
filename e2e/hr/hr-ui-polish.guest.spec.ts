@@ -117,7 +117,7 @@ test.describe('HR UI polish', () => {
     },
     {
       route: '/hr/attendance-setting/shiftManagement',
-      heading: 'Shift Management',
+      heading: 'Work Shifts',
       action: 'Add Shift',
       table: 'hr-attendance-shift-management',
     },
@@ -139,7 +139,7 @@ test.describe('HR UI polish', () => {
 
   test('populated shifts scroll inside the table @visual', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 700 });
-    await page.route('**/api/app/shift-management', (route) =>
+    await page.route('**/api/hr/work-shifts', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -191,7 +191,7 @@ test.describe('HR UI polish', () => {
       for (const screen of [
         { route: '/hr/employee', heading: 'Staff Directory' },
         { route: '/hr/setting', heading: 'Document Types' },
-        { route: '/hr/attendance-setting/shiftManagement', heading: 'Shift Management' },
+        { route: '/hr/attendance-setting/shiftManagement', heading: 'Work Shifts' },
         { route: '/hr/attendance-tracking', heading: 'Attendance Register' },
         { route: '/hr/hr-notification', heading: 'Notification' },
         { route: '/hr/professional-management/reviews', heading: 'Performance Management' },

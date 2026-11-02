@@ -3,7 +3,7 @@ module: institute-setup
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -43,3 +43,8 @@ Start with routes for navigation, clients for requests, and workflows for forms.
 ## Validation
 
 Run the focused commands in [testing.md](./testing.md), `node scripts/docs/validate-docs.mjs --module institute-setup`, and `git diff --check`.
+
+## School Shifts
+
+Institute Setup owns academic school sessions.
+Employee shifts are configured separately in [HR](../hr/README.md#employee-work-shifts).

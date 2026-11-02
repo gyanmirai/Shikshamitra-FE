@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { employeeType, shiftManagementType, payrollStructureType } from 'src/redux/tagTypes';
+import { employeeType, workShiftType, payrollStructureType } from 'src/redux/tagTypes';
 
 import type { ReportTableCriteria } from './hrReportingWorkspaceApi';
 
@@ -26,7 +26,7 @@ export function operationalTableTags(table: string) {
     case 'hr-professional-tax':
       return [employeeType.pf];
     case 'hr-shifts':
-      return [shiftManagementType.shift];
+      return [workShiftType.workShift];
     case 'hr-policy-leave':
       return [employeeType.employeeLeavePolicy];
     case 'esi-employee-impact':

@@ -33,6 +33,7 @@ const validValues = (): FinalizeFormState => ({
   identificationMark1: '',
   roleId: 'employee-role',
   shiftId: 'day-shift',
+  shiftEffectiveFrom: '2026-11-02',
   academicPermissionStageIds: '',
   address1: 'House 1',
   address2: 'School Road',

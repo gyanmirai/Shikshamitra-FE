@@ -190,7 +190,8 @@ export const getPersonalInformationValidationSchema = (
       .default(() => ({ name: '' }))
       .required('State is required'),
     pincode: Yup.string().test('picode', 'Must be exactly 6 numbers', isValidPincode),
-    shift: Yup.string().required('Shift is required'),
+    shiftEffectiveFrom: Yup.string().when('employeeId', { is: (id: string) => !id, then: schema => schema.required('Shift effective date is required') }),
+    shift: Yup.string().when('employeeId', { is: (id: string) => !id, then: schema => schema.required('Work shift is required') }),
     //   employeeId: Yup.string().required('Employee ID is required'),
   });
 

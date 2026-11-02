@@ -977,7 +977,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           size={{ xs: 12, sm: 6, md: 6, lg: 4.5 }}
           sx={{ pb: formik.touched.shift && formik.errors.shift ? 3 : 0 }}
         >
-          <RenderShift formik={formik} disabled={!isProfessionalDetailsEditable.value} />
+          {!formik.values.employeeId ? <RenderShift formik={formik} disabled={!isProfessionalDetailsEditable.value} /> : <TextField label="Work schedule" value="Manage shifts from the employee Work Schedule section" size="small" fullWidth slotProps={{ input: { readOnly: true } }} />}
         </Grid>
       </SectionCard>
 

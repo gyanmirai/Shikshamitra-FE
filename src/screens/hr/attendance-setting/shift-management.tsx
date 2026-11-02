@@ -1,44 +1,62 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { TimePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
-import { Box, Grid, Stack, Button, TextField, DialogActions } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Alert,
+  Switch,
+  Button,
+  TextField,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
 import {
   SetupEditorBody,
   SetupEditorActions,
   useHrSetupEditorState,
 } from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
-  useGetShiftsQuery,
-  useAddShiftMutation,
-  useUpdateShiftMutation,
-  useDeleteShiftMutation,
-} from 'src/redux/shiftManagement/shift-management-api';
+  useGetWorkShiftsQuery,
+  useAddWorkShiftMutation,
+  useUpdateWorkShiftMutation,
+  useDeleteWorkShiftMutation,
+} from 'src/redux/hr/work-shifts-api';
 
 import { isValidShiftTimeRange } from './shift-management-utils';
 
 type ShiftRow = {
+  isActive: boolean;
+  isAssigned: boolean;
+  concurrencyStamp: string;
   id: string;
   shiftName: string;
   startTime: string;
@@ -46,6 +64,7 @@ type ShiftRow = {
 };
 
 type ShiftFormValues = {
+  isActive: boolean;
   shiftName: string;
   startTime: Dayjs | null;
   endTime: Dayjs | null;
@@ -60,6 +79,15 @@ const formatShiftTime = (value?: string | null) => {
 };
 
 const ShiftManagement = () => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canAdd = hasGrantedPermission(
+    permissions,
+    'HR.AttendanceAndLeave.Setting.ShiftManagement.Add'
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    'HR.AttendanceAndLeave.Setting.ShiftManagement.Delete'
+  );
   const [tablePage, setTablePage] = useState({ number: 1, size: 20 });
   const [shiftSorts, setShiftSorts] = useState<
     Array<{ column: string; direction: 'asc' | 'desc' }>
@@ -92,7 +120,7 @@ const ShiftManagement = () => {
     },
     useQueryAndMutation({
       type: 'query',
-      currentQueryAndMutation: useGetShiftsQuery,
+      currentQueryAndMutation: useGetWorkShiftsQuery,
       params: {
         skipCount: (tablePage.number - 1) * tablePage.size,
         maxResultCount: tablePage.size,
@@ -103,10 +131,19 @@ const ShiftManagement = () => {
 
   const [deleteShift, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDeleteShiftMutation,
+    currentQueryAndMutation: useDeleteWorkShiftMutation,
   });
 
+  const [formState, setFormState] = useState({ dirty: false, busy: false });
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const requestCloseDialog = () => {
+    if (formState.busy) return;
+    if (formState.dirty) setDiscardOpen(true);
+    else closeDialog();
+  };
   const closeDialog = () => {
+    setDiscardOpen(false);
+    setFormState({ dirty: false, busy: false });
     shiftDialog.onFalse();
     setTimeout(() => setEditData(null), 200);
   };
@@ -114,7 +151,10 @@ const ShiftManagement = () => {
   const handleDelete = async () => {
     if (!deleteInformation?.id) return;
     try {
-      await deleteShift(deleteInformation.id).unwrap();
+      await deleteShift({
+        id: deleteInformation.id,
+        concurrencyStamp: deleteInformation.concurrencyStamp,
+      }).unwrap();
       shikshaMitraToast.success({ message: 'Shift deleted successfully.' });
       setDeleteInformation(null);
       confirm.onFalse();
@@ -130,7 +170,7 @@ const ShiftManagement = () => {
       sx={{ height: '100%', minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}
     >
       <CustomBreadcrumbs
-        heading="Shift Management"
+        heading="Work Shifts"
         slotProps={{
           action: { justifyContent: 'flex-end', alignSelf: { xs: 'flex-end', md: 'center' } },
           heading: {},
@@ -140,12 +180,20 @@ const ShiftManagement = () => {
         description="Configure shift timings used by attendance evaluation. Manage advanced attendance rules in Policies & Rules."
         links={[
           { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
-          { name: 'Shift Management' },
+          { name: 'Work Shifts' },
         ]}
         action={
-          <Button startIcon={<Add />} variant="contained" size="small" onClick={shiftDialog.onTrue}>
-            Add Shift
-          </Button>
+          canAdd && (
+            <Button
+              startIcon={<Add />}
+              variant="contained"
+              size="small"
+              onClick={shiftDialog.onTrue}
+              disabled={!canAdd}
+            >
+              Create work shift
+            </Button>
+          )
         }
       />
 
@@ -192,12 +240,22 @@ const ShiftManagement = () => {
               sx={{ display: 'flex', mx: 'auto', mt: 1 }}
               onClick={shiftDialog.onTrue}
             >
-              Add Shift
+              Create work shift
             </Button>
           </>
         }
         columns={[
           { id: 'shiftName', label: 'Shift Name' },
+          {
+            id: 'isActive',
+            label: 'Status',
+            isFilter: false,
+            isSort: false,
+            excludeFromExport: true,
+            render: (active: boolean) => (
+              <Label color={active ? 'success' : 'default'}>{active ? 'Active' : 'Inactive'}</Label>
+            ),
+          },
           {
             id: 'startTime',
             label: 'Start Time',
@@ -228,8 +286,8 @@ const ShiftManagement = () => {
                   deleteLabel={`Delete ${String(row.shiftName || row.id)}`}
                   moreLabel={`More actions for ${String(row.shiftName || row.id)}`}
                   showThreeDots={false}
-                  showEditIcon
-                  showDeleteIcon
+                  showEditIcon={canAdd}
+                  showDeleteIcon={canDelete && !shift.isAssigned}
                   handleEditClick={() => {
                     setEditData(shift);
                     shiftDialog.onTrue();
@@ -274,13 +332,35 @@ const ShiftManagement = () => {
 
       <CustomDialog
         hasForm={false}
+        hasUnsavedChanges={formState.dirty}
+        guardUnsavedChanges={false}
+        disableClose={formState.busy}
         maxWidth="sm"
-        title={editData ? 'Update Shift Rule' : 'Add Shift Rule'}
-        handleClose={closeDialog}
+        title={editData ? 'Edit Work Shift' : 'Create Work Shift'}
+        titleInfo="Define employee working hours independently of school sessions. Assigned times remain fixed."
+        handleClose={requestCloseDialog}
         open={shiftDialog.value}
       >
-        <ShiftManagementForm handleClose={closeDialog} editData={editData} />
+        <ShiftManagementForm
+          handleClose={requestCloseDialog}
+          onSaved={closeDialog}
+          editData={editData}
+          onStateChange={setFormState}
+        />
       </CustomDialog>
+      <ConfirmDialog
+        open={discardOpen}
+        onClose={() => setDiscardOpen(false)}
+        title="Discard Changes"
+        icon="warning"
+        cancelText="Keep editing"
+        content="Your unsaved work shift changes will be lost."
+        action={
+          <Button size="small" variant="contained" color="warning" onClick={closeDialog}>
+            Discard changes
+          </Button>
+        }
+      />
     </Box>
   );
 };
@@ -289,25 +369,30 @@ export default ShiftManagement;
 
 export const ShiftManagementForm = ({
   handleClose,
+  onSaved,
   editData,
+  onStateChange,
 }: {
   handleClose: () => void;
+  onSaved?: () => void;
   editData: ShiftRow | null;
+  onStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 }) => {
   const [addShift, { isLoading: isAdding }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddShiftMutation,
+    currentQueryAndMutation: useAddWorkShiftMutation,
   });
 
   const [updateShift, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateShiftMutation,
+    currentQueryAndMutation: useUpdateWorkShiftMutation,
   });
 
   const formik = useFormik<ShiftFormValues>({
     enableReinitialize: true,
     initialValues: {
       shiftName: editData?.shiftName || '',
+      isActive: editData?.isActive ?? true,
       startTime: parseShiftTime(editData?.startTime) || dayjs('2024-01-01T09:00:00'),
       endTime: parseShiftTime(editData?.endTime) || dayjs('2024-01-01T17:00:00'),
     },
@@ -323,6 +408,8 @@ export const ShiftManagementForm = ({
     onSubmit: async (values) => {
       const body = {
         shiftName: values.shiftName.trim(),
+        isActive: values.isActive,
+        concurrencyStamp: editData?.concurrencyStamp,
         startTime: values.startTime?.format('HH:mm:ss'),
         endTime: values.endTime?.format('HH:mm:ss'),
       };
@@ -335,12 +422,18 @@ export const ShiftManagementForm = ({
           await addShift(body).unwrap();
           shikshaMitraToast.success({ message: 'Shift added successfully.' });
         }
-        handleClose();
-      } catch {
-        shikshaMitraToast.error({ message: 'Failed to save shift.' });
+        (onSaved || handleClose)();
+      } catch (error) {
+        shikshaMitraToast.error({
+          message: parseApiProblemDetail(error).detail || 'Failed to save work shift.',
+        });
       }
     },
   });
+
+  React.useEffect(() => {
+    onStateChange?.({ dirty: formik.dirty, busy: isAdding || isUpdating });
+  }, [onStateChange, formik.dirty, isAdding, isUpdating]);
 
   useHrSetupEditorState({
     dirty: formik.dirty,
@@ -351,7 +444,16 @@ export const ShiftManagementForm = ({
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <SetupEditorBody>
-        <Stack spacing={2}>
+        <FormSectionCard
+          title="Shift Details"
+          icon={GlobalIcons.clock}
+          descriptionTooltip="Employee work shifts are independent of school sessions. Assigned timings cannot change."
+        >
+          {editData?.isAssigned && (
+            <Alert severity="info">
+              Assigned timings are fixed. Create a new work shift to change working hours.
+            </Alert>
+          )}
           <ShakingTextField error={formik.touched.shiftName && Boolean(formik.errors.shiftName)}>
             <TextField
               label="Shift Name *"
@@ -373,6 +475,7 @@ export const ShiftManagementForm = ({
               >
                 <TimePicker
                   label="Start Time"
+                  disabled={editData?.isAssigned}
                   value={formik.values.startTime}
                   format="hh:mm A"
                   onChange={(date) => formik.setFieldValue('startTime', date)}
@@ -394,6 +497,7 @@ export const ShiftManagementForm = ({
               <ShakingTextField error={formik.touched.endTime && Boolean(formik.errors.endTime)}>
                 <TimePicker
                   label="End Time"
+                  disabled={editData?.isAssigned}
                   value={formik.values.endTime}
                   format="hh:mm A"
                   onChange={(date) => formik.setFieldValue('endTime', date)}
@@ -412,7 +516,16 @@ export const ShiftManagementForm = ({
               </ShakingTextField>
             </Grid>
           </Grid>
-        </Stack>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formik.values.isActive}
+                onChange={(_, checked) => formik.setFieldValue('isActive', checked)}
+              />
+            }
+            label="Active"
+          />
+        </FormSectionCard>
       </SetupEditorBody>
       <SetupEditorActions>
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
@@ -431,7 +544,7 @@ export const ShiftManagementForm = ({
             size="small"
             startIcon={<Iconify icon="eva:save-fill" />}
           >
-            Save
+            Submit
           </LoadingButton>
         </DialogActions>
       </SetupEditorActions>
