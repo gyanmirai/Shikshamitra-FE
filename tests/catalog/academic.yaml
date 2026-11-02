@@ -1,6 +1,34 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-HOMEWORK-SUBMISSION-PREVIEW-001
+    module: Academic
+    submodule: Homework and Assignment
+    title: Teachers preview and download all submitted attachments without losing feedback
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive]
+    roles: [teacher]
+    tenants: [synthetic-school]
+    routes: [/academic/gradingAndFeedback]
+    automated: true
+    automationFile: e2e/academic/submission-attachments.spec.ts
+    status: automated
+    tags: ['@module-academic', '@critical', '@regression']
+  - id: ACM-TT-DIVISION-ROOM-SYNC-001
+    module: Academic
+    submodule: Timetable
+    title: New timetable lectures inherit a changed division room without replacing saved lecture overrides
+    risk: high
+    priority: P1
+    type: [functional, regression]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/newTimetable]
+    automated: true
+    automationFile: e2e/academic/timetable-room-sync.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-timetable', '@regression']
   - id: ACM-HOMEWORK-CALENDAR-MIDNIGHT-001
     module: Academic
     submodule: Homework and Assignment
@@ -657,6 +685,20 @@ scenarios:
     automationFile: e2e/academic/academic-smoke.spec.ts
     status: automated
     tags: ['@module-academic', '@submodule-timetable', '@critical', '@smoke', '@positive']
+  - id: ACM-TT-ROOM-LOOKUP-001
+    module: Academic
+    submodule: Timetable
+    title: Room Availability building and floor filters do not require Building management access
+    risk: critical
+    priority: P0
+    type: [functional, integration, permission]
+    roles: [teacher]
+    tenants: [school]
+    routes: [/academic/roomAvailability]
+    automated: true
+    automationFile: src/screens/academic/timetable-schedule-management/roomAvailability/room-building-access.integration.test.tsx
+    status: automated-outside-default-config
+    tags: ['@module-academic', '@submodule-timetable', '@critical', '@permission', '@positive']
   - id: ACM-HW-001
     module: Academic
     submodule: Homework And Assignment

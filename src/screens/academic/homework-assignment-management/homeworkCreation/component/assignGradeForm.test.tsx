@@ -101,6 +101,34 @@ function renderForm(props = baseProps) {
 }
 
 describe('homework approved evaluation navigation', () => {
+  it('recognizes a legacy image without an original filename', async () => {
+    renderForm({
+      ...baseProps,
+      hasRubricAssessment: false,
+      data: { ...baseProps.data!, submittedDocumentUrl: 'photo.jpg' },
+    });
+    expect(await screen.findByRole('img', { name: 'Submitted document' })).toBeInTheDocument();
+  });
+  it('shows all student attachments above the rubric even for physical submissions', async () => {
+    renderForm({
+      ...baseProps,
+      hasRubricAssessment: false,
+      data: {
+        ...baseProps.data!,
+        ...{
+          submissionAttachments: [
+            { id: 'photo', name: 'work.jpg', url: '/api/files/photo.jpg', contentType: 'image/jpeg', size: 120 },
+            { id: 'pdf', name: 'answers.pdf', url: '/api/files/answers.pdf', contentType: 'application/pdf', size: 240 },
+          ],
+        },
+      },
+    });
+    expect(screen.getByText('Student Submission Attachments')).toBeInTheDocument();
+    expect(screen.getByText('work.jpg')).toBeInTheDocument();
+    expect(screen.getByText('answers.pdf')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Preview answers.pdf' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download work.jpg' })).toBeInTheDocument();
+  });
   const writes: string[] = [];
 
   beforeEach(() => {
@@ -127,10 +155,14 @@ describe('homework approved evaluation navigation', () => {
         }
       ),
       http.get('*/api/auth/session', () => HttpResponse.json(null)),
+      http.get('*/api/files/photo.jpg', () => new HttpResponse(new Uint8Array([255, 216, 255]), {
+        headers: { 'Content-Type': 'image/jpeg' },
+      })),
       http.get('*/api/academic/rubrics', () => HttpResponse.json([rubric])),
-      http.get('*/api/academic/rubrics/rubric-1/evaluations', () =>
-        HttpResponse.json([evaluation('student-1', 2), evaluation('student-2', 0)])
-      ),
+      http.get('*/api/academic/rubrics/rubric-1/evaluations/submission/:submissionId', ({ request }) => {
+        const studentId = new URL(request.url).searchParams.get('studentId') || 'student-1';
+        return HttpResponse.json(evaluation(studentId, studentId === 'student-1' ? 2 : 0));
+      }),
       http.post('*/api/academic/rubrics/*', ({ request }) => {
         writes.push(request.url);
         return HttpResponse.json(evaluation('student-1', 0));
@@ -145,7 +177,7 @@ describe('homework approved evaluation navigation', () => {
   it('disables approved scores, comments, feedback and updates, then advances without any write or required feedback validation', async () => {
     renderForm();
     await screen.findByText(/This evaluation is approved and locked/);
-    expect(screen.getByRole('spinbutton', { name: 'Marks' })).toBeDisabled();
+    expect(screen.getByRole('spinbutton', { name: 'Points earned' })).toBeDisabled();
     expect(screen.queryByRole('textbox', { name: 'Understanding Feedback' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('textbox', { name: 'Overall rubric feedback (optional)' })
@@ -153,6 +185,7 @@ describe('homework approved evaluation navigation', () => {
     expect(screen.getByRole('textbox', { name: 'Feedback *' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Quick Templates' })).toBeDisabled();
     expect(screen.getByRole('button', { name: /^Submit$/ })).toBeDisabled();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit & Next' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Submit & Next' }));
     expect(baseProps.onNext).toHaveBeenCalledOnce();
     expect(writes).toEqual([]);
@@ -181,11 +214,11 @@ describe('homework approved evaluation navigation', () => {
 
   it('still saves scores, submits, approves and updates feedback for an editable evaluation', async () => {
     mswServer.use(
-      http.get('*/api/academic/rubrics/rubric-1/evaluations', () =>
-        HttpResponse.json([evaluation('student-1', 0)])
+      http.get('*/api/academic/rubrics/rubric-1/evaluations/submission/:submissionId', () =>
+        HttpResponse.json(evaluation('student-1', 0))
       )
     );
-    renderForm({ ...baseProps, data: { ...baseProps.data!, feedback: 'Great work' } });
+    renderForm({ ...baseProps, data: { ...baseProps.data!, status: '3', feedback: 'Great work' } });
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Submit & Next' })).toBeEnabled()
     );
@@ -238,7 +271,7 @@ describe('homework approved evaluation navigation', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Submit & Next' }));
     await screen.findByText('Next Student');
-    await waitFor(() => expect(screen.getByRole('spinbutton', { name: 'Marks' })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole('spinbutton', { name: 'Points earned' })).toBeEnabled());
     expect(screen.getByRole('textbox', { name: 'Feedback *' })).toBeEnabled();
     expect(screen.getByRole('button', { name: /^Update$/ })).toBeEnabled();
     expect(writes).toEqual([]);

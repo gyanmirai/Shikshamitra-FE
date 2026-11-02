@@ -122,6 +122,7 @@ export interface IHomeworkTableProps {
 }
 
 export interface TStudentGrade {
+  submissionAttachments?: SubmissionAttachment[];
   id: string;
   studentId: string;
   homeworkId: string;
@@ -141,4 +142,12 @@ export interface TStudentGrade {
   originalFileName?: string;
   evaluationStatus?: string;
   submissionStatusLabel?: string;
+}
+
+export interface SubmissionAttachment {
+  id?: string | null;
+  name: string;
+  url: string;
+  contentType?: string | null;
+  size?: number | null;
 }

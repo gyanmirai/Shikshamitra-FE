@@ -5,6 +5,7 @@ import { useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { MOCK_AI_PARSE_RESULT } from './roomAvailability.mock';
+import { useRoomCalendarMedium } from './useRoomCalendarMedium';
 import { useRoomReservationPage } from './useRoomReservationPage';
 import { buildRoomSuggestionRequest } from './services/roomSuggestionSearch';
 import {
@@ -71,7 +72,9 @@ export function useRoomAvailability(
   filters?: Partial<RoomAvailabilityFilters>,
   options?: { skip?: boolean }
 ) {
+  const academicMediumId = useRoomCalendarMedium();
   const params = {
+    academicMediumId,
     date: filters?.date,
     startTime: filters?.startTime,
     endTime: filters?.endTime,
@@ -103,11 +106,12 @@ export function useRoomAvailability(
 
 // ─── useRoomSchedule ──────────────────────────────────────────────────────────
 export function useRoomSchedule(roomId: string | null, dateStr?: string) {
+  const academicMediumId = useRoomCalendarMedium();
   const queryDate = dateStr || dayjs().format('YYYY-MM-DD');
   const { data, isLoading, isError, refetch, isFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRoomScheduleQuery,
-    params: { roomId, date: queryDate },
+    params: { roomId, date: queryDate, academicMediumId },
     options: { skip: !roomId },
   });
 
@@ -123,6 +127,7 @@ export function useRoomSchedule(roomId: string | null, dateStr?: string) {
 
 // ─── useRoomDetails ───────────────────────────────────────────────────────────
 export function useRoomDetails(roomId: string | null) {
+  const academicMediumId = useRoomCalendarMedium();
   const {
     data: list,
     isLoading,
@@ -132,7 +137,7 @@ export function useRoomDetails(roomId: string | null) {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRoomAvailabilityQuery,
-    params: undefined,
+    params: { academicMediumId },
     options: { skip: !roomId },
   });
   const rooms = (list || []) as RoomAvailabilityItem[];
@@ -258,6 +263,7 @@ export function useRoomAuditLogs(roomId?: string | null, options?: { skip?: bool
 
 // ─── useRoomSuggestions ───────────────────────────────────────────────────────
 export function useRoomSuggestions() {
+  const academicMediumId = useRoomCalendarMedium();
   const [suggestRooms, { isLoading, isError }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useSuggestAlternativeRoomsMutation,
@@ -269,7 +275,7 @@ export function useRoomSuggestions() {
       setLocalData([]);
       try {
         const payload = buildRoomSuggestionRequest(requirements);
-        const response = await suggestRooms(payload).unwrap();
+        const response = await suggestRooms({ ...payload, academicMediumId }).unwrap();
 
         const mapped = response.map((r: any) => ({
           roomId: r.roomId,
@@ -297,7 +303,7 @@ export function useRoomSuggestions() {
         // suggest error
       }
     },
-    [suggestRooms]
+    [suggestRooms, academicMediumId]
   );
 
   const reset = useCallback(() => {
@@ -315,6 +321,7 @@ export function useRoomSuggestions() {
 
 // ─── useRoomConflictCheck ─────────────────────────────────────────────────────
 export function useRoomConflictCheck() {
+  const academicMediumId = useRoomCalendarMedium();
   const [checkConflicts, { isLoading, isError }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCheckRoomConflictsMutation,
@@ -325,6 +332,7 @@ export function useRoomConflictCheck() {
     async (requirements: ReservationRequirements, roomId: string) => {
       try {
         const payload = {
+          academicMediumId,
           roomId,
           date: requirements.date,
           startTime: requirements.startTime,
@@ -377,7 +385,7 @@ export function useRoomConflictCheck() {
       }
       return { roomId };
     },
-    [checkConflicts]
+    [checkConflicts, academicMediumId]
   );
 
   const reset = useCallback(() => {
@@ -395,6 +403,7 @@ export function useRoomConflictCheck() {
 
 // ─── useCreateRoomReservation ─────────────────────────────────────────────────
 export function useCreateRoomReservation() {
+  const academicMediumId = useRoomCalendarMedium();
   const [createReservation, { isLoading, isError, isSuccess }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateRoomReservationMutation,
@@ -410,6 +419,7 @@ export function useCreateRoomReservation() {
       };
 
       const body = {
+        academicMediumId,
         roomId: payload.roomId,
         date: payload.date,
         startTime: formatTime(payload.startTime || ''),
@@ -461,7 +471,7 @@ export function useCreateRoomReservation() {
         createdAt: response.creationTime,
       } as any;
     },
-    [createReservation]
+    [createReservation, academicMediumId]
   );
 
   return { isLoading, error: isError ? 'Failed to create reservation.' : null, isSuccess, create };

@@ -450,6 +450,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         paperProps={{ sx: { maxHeight: '90vh' } }}
       >
         <AssignGrade
+          key={selectedStudent?.studentId}
           data={selectedStudent}
           onClose={handleClose}
           isEdit={isEditMode}

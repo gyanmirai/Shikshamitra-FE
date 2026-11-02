@@ -1,4 +1,4 @@
-import { academicType, instituteSetupType } from 'src/redux/tagTypes';
+import { academicType, instituteSetupType, academicCalendarType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../academicApi';
 import { reservationPageUrl } from './roomReadContracts';
@@ -6,8 +6,21 @@ import { reservationPageUrl } from './roomReadContracts';
 import type { WeeklyRoomRow, WeeklyRoomInput } from './weeklyRoomReadContracts';
 import type { ReservationPage, RoomAuditReadRow, RoomAuditPageInput, ReservationPageInput } from './roomReadContracts';
 
+export type RoomBuildingLookup = {
+  id: string;
+  buildingName: string;
+  floors: { id: string; floorName: string; floorNo: number }[];
+};
+
 export const roomAvailabilityApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
+    getRoomBuildingLookup: builder.query<RoomBuildingLookup[], void>({
+      query: () => ({
+        url: 'academics/timetable/room-availability/buildings/lookup',
+        method: 'GET',
+      }),
+      providesTags: [instituteSetupType.buildings],
+    }),
     getWeeklyTimetableRooms: builder.query<WeeklyRoomRow[], WeeklyRoomInput>({
       query: (params) => ({
         url: 'academics/timetable/room-availability',
@@ -34,7 +47,7 @@ export const roomAvailabilityApi = academicApi.injectEndpoints({
         method: 'GET',
         params: filters,
       }),
-      providesTags: [academicType.timetableManagement],
+      providesTags: [academicType.timetableManagement, academicCalendarType.calendar, academicCalendarType.calendarDay],
     }),
 
     getReservations: builder.query({
@@ -121,17 +134,18 @@ export const roomAvailabilityApi = academicApi.injectEndpoints({
       }),
     }),
     getRoomSchedule: builder.query({
-      query: ({ roomId, date }) => ({
+      query: ({ roomId, date, academicMediumId }) => ({
         url: 'academics/timetable/room-availability/schedule',
         method: 'GET',
-        params: { roomId, date },
+        params: { roomId, date, academicMediumId },
       }),
-      providesTags: [academicType.timetableManagement],
+      providesTags: [academicType.timetableManagement, academicCalendarType.calendar, academicCalendarType.calendarDay],
     }),
   }),
 });
 
 export const {
+  useGetRoomBuildingLookupQuery,
   useGetWeeklyTimetableRoomsQuery,
   useGetReservationPageQuery,
   useLazyGetReservationPageQuery,

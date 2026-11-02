@@ -14,9 +14,8 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AcademicDatePicker } from 'src/components/academic-date-picker';
-import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import { Box, Tab, Chip, Paper, Stack, Alert, Button, Tooltip, IconButton } from '@mui/material';
-import { useGetReservationSummaryQuery } from 'src/redux/academicAPI/timetableApi/roomAvailabilityApi';
+import { useGetRoomBuildingLookupQuery, useGetReservationSummaryQuery } from 'src/redux/academicAPI/timetableApi/roomAvailabilityApi';
 
 // Removed MOCK_SUMMARY
 import { RoomDetailDrawer } from './components/RoomDetailDrawer';
@@ -81,7 +80,7 @@ const RoomAvailabilityScreen = () => {
   // ── Data Hooks ─────────────────────────────────────────────────────────────
   const { data: buildingsData } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetBuildingsQuery,
+    currentQueryAndMutation: useGetRoomBuildingLookupQuery,
     params: undefined,
   });
   const buildings = useMemo(() => (buildingsData || []) as BuildingWithFloors[], [buildingsData]);

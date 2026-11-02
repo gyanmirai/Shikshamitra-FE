@@ -1,11 +1,13 @@
 import type { RefObject } from 'react';
 
 import { useState } from 'react';
-
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { DialogScrollContent } from 'src/components/customDialog';
+import { ASSIGNMENT_SUBMISSION_TYPE_LABELS } from 'src/enums/assignment';
+import { StudentFeedbackContext } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/feedbackContextCards';
 import {
   Box,
   Card,
@@ -18,12 +20,11 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import { ASSIGNMENT_SUBMISSION_TYPE_LABELS } from 'src/enums/assignment';
-import { DialogScrollContent } from 'src/components/customDialog';
-import { StudentFeedbackContext } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/feedbackContextCards';
 import RubricEvaluationPanel, {
   type RubricEvaluationPanelRef,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
+
+import StudentSubmissionAttachments from '../../marksAndFeedback/studentSubmissionAttachments';
 
 import type { TStudentGrade } from '../../homeworkCreation/type';
 
@@ -160,6 +161,7 @@ export default function AssignmentRubricEvaluationContent({
               </Card>
             </Grid>
           </Grid>
+          <StudentSubmissionAttachments key={student.studentId} student={student} />
           <RubricEvaluationPanel
             key={student.studentId}
             ref={rubricRef}
