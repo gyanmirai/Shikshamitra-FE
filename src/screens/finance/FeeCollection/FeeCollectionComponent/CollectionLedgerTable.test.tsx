@@ -185,8 +185,8 @@ describe('collection ledger checkbox state', () => {
       </LedgerTestProviders>
     );
     const { rerender } = render(view());
-    const group = () => screen.getByRole('checkbox', { name: 'Select Tuition', exact: true });
-    const header = () => screen.getByRole('checkbox', { name: 'Select all Tuition', exact: true });
+    const group = () => screen.getByRole('checkbox', { name: 'Select Tuition' });
+    const header = () => screen.getByRole('checkbox', { name: 'Select all Tuition' });
     expect(group()).not.toBeChecked();
     expect(group()).toBeEnabled();
     fireEvent.click(group());
