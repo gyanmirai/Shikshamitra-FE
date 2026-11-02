@@ -1,9 +1,18 @@
+import type { SetupDraft } from 'src/redux/initial-setup/types';
+
 import { it, expect, describe } from 'vitest';
 
 import { setupError } from './setup-error';
-import { setupSchema } from './setup-model';
+import { setupSteps, setupSchema, setupStepRequest } from './setup-model';
 
 describe('institute setup validation', () => {
+  it('allows skipping school identity and finishes only from the final review', async () => {
+    const draft = {} as SetupDraft;
+    expect(setupSteps[5].title).toBe('School Identity (optional)');
+    expect(await setupSchema(5).isValid(draft)).toBe(true);
+    expect(setupStepRequest(5, draft)).toEqual({ action: 'advance', input: { step: 5 } });
+    expect(setupStepRequest(6, draft)).toEqual({ action: 'complete', input: {} });
+  });
   it('allows incomplete drafts but requires a complete profile to continue', async () => {
     const draft = { profile: { instituteName: 'School', email: 'invalid', country: 'India' } };
     expect(await setupSchema(0).isValid(draft)).toBe(true);

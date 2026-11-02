@@ -5,6 +5,8 @@ import { formatDateOnly } from 'src/utils/date-only';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { Box, Stack, Alert, Button, Typography } from '@mui/material';
 
+import SchoolIdentityReview from './school-identity-review';
+
 export default function ReviewStep({
   progress,
   onEdit,
@@ -108,6 +110,7 @@ export default function ReviewStep({
           </Box>
         </FormSectionCard>
       ))}
+      <SchoolIdentityReview onEdit={() => onEdit(5)} />
     </Stack>
   );
 }

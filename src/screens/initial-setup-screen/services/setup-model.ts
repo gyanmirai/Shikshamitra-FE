@@ -38,6 +38,13 @@ export const setupSteps = [
     icon: 'mdi:account-group-outline',
   },
   {
+    title: 'School Identity (optional)',
+    heading: 'Add your school identity',
+    description:
+      'Add your school logo, banner and principal’s signature now, or continue and configure them later in Institute Setup.',
+    icon: 'mdi:image-multiple-outline',
+  },
+  {
     title: 'Review and finish',
     heading: 'Everything ready for your school',
     description: 'Review your saved configuration before opening the dashboard.',
@@ -112,6 +119,6 @@ export function setupStepRequest(
       },
     };
   if (step === 3) return { action: 'structure', input: { draft: normalizeSetupDraft(draft) } };
-  if (step === 5) return { action: 'complete', input: {} };
+  if (step === 6) return { action: 'complete', input: {} };
   return { action: 'advance', input: { step } };
 }

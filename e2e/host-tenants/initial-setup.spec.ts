@@ -253,6 +253,45 @@ async function verifyAcademicOnboarding(page: import('@playwright/test').Page) {
   await page.getByRole('button', { name: 'Back to setup', exact: true }).click();
 }
 
+test('optional school identity can be skipped, resumed and completed without assets', async ({
+  page,
+}) => {
+  await login(page, 'SCHOOL_01');
+  await page.getByRole('button', { name: 'Get started', exact: true }).click();
+  await page.getByRole('button', { name: 'Save and continue', exact: true }).click();
+  await field(page, 'Academic year name').fill('2026-2027');
+  const start = page.getByRole('group', { name: 'Start date', exact: true });
+  await start.getByRole('spinbutton', { name: 'Month', exact: true }).fill('06');
+  await start.getByRole('spinbutton', { name: 'Day', exact: true }).fill('01');
+  await start.getByRole('spinbutton', { name: 'Year', exact: true }).fill('2026');
+  const end = page.getByRole('group', { name: 'End date', exact: true });
+  await end.getByRole('spinbutton', { name: 'Month', exact: true }).fill('05');
+  await end.getByRole('spinbutton', { name: 'Day', exact: true }).fill('31');
+  await end.getByRole('spinbutton', { name: 'Year', exact: true }).fill('2027');
+  await page.getByRole('button', { name: 'Save and continue', exact: true }).click();
+  await field(page, 'Board').click();
+  await page.getByRole('option', { name: 'CBSE', exact: true }).click();
+  await field(page, 'Medium').fill('English');
+  await field(page, 'Stage').fill('Primary');
+  await field(page, 'Class name').fill('Class 1');
+  await field(page, 'Minimum age').fill('6');
+  await field(page, 'Division name').fill('A');
+  await field(page, 'Division capacity').fill('30');
+  await page.getByRole('button', { name: 'Save and continue', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Bring your team on board' })).toBeVisible();
+  await page.getByRole('button', { name: 'Save and continue', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Add your school identity' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Finish setup', exact: true })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Add your school identity' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continue to review', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Everything ready for your school' })
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Finish setup', exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+});
+
 test('onboarding board options, standard, division and header regressions', async ({ page }) => {
   await verifyAcademicOnboarding(page);
 });
@@ -273,6 +312,10 @@ test('academic setup and staff creation finish the guided flow and preserve comp
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByText('teacher.one', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Save and continue', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Add your school identity' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Add your school identity' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continue to review', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'Everything ready for your school' })
   ).toBeVisible();

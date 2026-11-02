@@ -3,7 +3,7 @@ module: initial-setup
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-09
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -21,6 +21,8 @@ TL;DR: the owning RTK Query injection uses the shared authenticated API and rece
 | `src/screens/initial-setup-screen/hooks/use-setup-autosave.ts` | Debounce draft changes by 800 ms; warn about unsaved entries on browser exit |
 | `src/screens/initial-setup-screen/services/setup-model.ts` | Per-step validation and payload serialization |
 | `src/screens/initial-setup-screen/services/setup-error.ts` | Useful conflict, permission and domain error messages |
+| `src/redux/InstituteSetup/schoolIdentityApi.ts` | Existing school-default profile, upload, preview and authenticated branding image APIs; identity saves invalidate branding |
+| `src/layouts/components/school-navigation-brand.tsx` | Tenant school code and shared logo for desktop and mobile navigation |
 
 Academic-year saves invalidate year data; structure saves invalidate boards and academic organization options.
 User creation uses a stable request ID for retry and the server password-policy client from `src/redux/host-tenants/password-policy.ts`.

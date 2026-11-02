@@ -5,7 +5,7 @@ import SetupShell from 'src/screens/initial-setup-screen/components/setup-shell'
 vi.mock('src/components/logo', () => ({ Logo: () => <span>School logo</span> }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 
-it('preserves initial setup labels, pending-save state and six-step navigation', () => {
+it('preserves initial setup labels, pending-save state and seven-step navigation', () => {
   const onStep = vi.fn();
   render(
     <SetupShell
@@ -22,7 +22,7 @@ it('preserves initial setup labels, pending-save state and six-step navigation',
   );
   expect(screen.getByText('INSTITUTE SETUP')).toBeInTheDocument();
   expect(screen.getByText('Initial setup')).toBeInTheDocument();
-  expect(screen.getByText('Step 3 of 6')).toBeInTheDocument();
+  expect(screen.getByText('Step 3 of 7')).toBeInTheDocument();
   expect(
     screen.getByText('Your progress is saved to your institute. You can return and continue later.')
   ).toBeInTheDocument();

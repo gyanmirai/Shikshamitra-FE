@@ -127,6 +127,19 @@ export function installFixture() {
     const request = new Request(input, init);
     const url = new URL(request.url, window.location.origin);
     if (!url.pathname.startsWith('/api/')) return nativeFetch(input, init);
+    if (url.pathname === '/api/multi-tenancy/tenants/synthetic-school')
+      return json({
+        name: 'SYNTHETIC_SCHOOL',
+        extraProperties: { InstituteName: 'Synthetic school full name' },
+      });
+    if (url.pathname === `${base}/branding/logo`) {
+      const logo = read({}).effective.logo?.asset;
+      return logo
+        ? new Response(assets.get(logo.id)!.bytes, {
+            headers: { 'Content-Type': logo.contentType },
+          })
+        : new Response(null, { status: 204 });
+    }
     const context = {
       boardId: url.searchParams.get('boardId') ?? undefined,
       mediumId: url.searchParams.get('mediumId') ?? undefined,
