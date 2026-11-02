@@ -870,7 +870,9 @@ export function FinalizeWorkflow({
               <Typography component="h2" variant="subtitle1" sx={{ mb: 2 }}>
                 Step {currentStep + 1} of {steps.length}: {steps[currentStep]}
               </Typography>
-              {currentStep === 0 && (
+              {/* Keep the assignment lookup mounted across steps. Navigation alone must not
+                  trigger a refresh that invalidates an otherwise unchanged confirmation. */}
+              <Box hidden={currentStep !== 0}>
                 <Grid container spacing={1} mb={1}>
                   <Grid size={{ xs: 12 }} data-work-assignment tabIndex={-1}>
                     <WorkAssignmentField
@@ -1195,7 +1197,7 @@ export function FinalizeWorkflow({
                     </Card>
                   </Grid>
                 </Grid>
-              )}
+              </Box>
 
               {currentStep === 1 && (
                 <Box>
@@ -1983,7 +1985,7 @@ export function FinalizeWorkflow({
                       ) : (
                         <Box>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                            Select the organizations this staff member should have access to:
+                            Select access permissions separately from the work assignment. Your selections are retained when moving between steps.
                           </Typography>
                           {academicTouched && selectedStageIds?.length === 0 && (
                             <FormHelperText error sx={{ mb: 1, ml: 0 }}>

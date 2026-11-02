@@ -1,4 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+export const useGetAcademicOrganizationOptionsQuery = () => {
+  const [isFetching, setFetching] = useState(true);
+  useEffect(() => {
+    setFetching(false);
+  }, []);
+  return {
+    currentData: { items: [{ id: 'synthetic-stage', label: 'Synthetic organization' }] },
+    isFetching,
+    isError: false,
+  };
+};
 
 export const useRouter = () => ({
   push: (href: string) => window.history.pushState({}, '', href),
@@ -101,20 +113,36 @@ export const useGetActiveSalaryTemplatesQuery = () => ({
 });
 export const useCalculateSalaryTemplateMutation = () => [
   (input: any) => ({
-    unwrap: async () => ({
-      grossSalary: input.monthlyAmount,
-      totalDeductions: 0,
-      netSalary: input.monthlyAmount,
-      employerCost: input.monthlyAmount,
-      earnings: [],
-      deductions: [],
-      employerContributions: [],
-      statutorySummary: [],
-      warnings: [],
-      pfEligibility: { canSave: true, status: 'NOT_APPLICABLE' },
-      targetResult: { isExact: true, difference: 0 },
-      employeeStateInsurance: { canCalculate: true, issueCodes: [] },
-    }),
+    unwrap: async () => {
+      const qa = window as any;
+      qa.previewRequests = [...(qa.previewRequests || []), input];
+      if (qa.failNextPreviewContext) {
+        qa.failNextPreviewContext = false;
+        throw Object.assign(new Error('Synthetic missing context'), {
+          status: 400,
+          data: {
+            error: {
+              code: 'HR:Payroll:StatutoryProfileEmployeeRequired',
+              message: 'One or more business rules were violated.',
+            },
+          },
+        });
+      }
+      return {
+        grossSalary: input.monthlyAmount,
+        totalDeductions: 0,
+        netSalary: input.monthlyAmount,
+        employerCost: input.monthlyAmount,
+        earnings: [],
+        deductions: [],
+        employerContributions: [],
+        statutorySummary: [],
+        warnings: [],
+        pfEligibility: { canSave: true, status: input.pfApplicable ? 'MANDATORY' : 'NOT_APPLICABLE' },
+        targetResult: { isExact: true, difference: 0 },
+        employeeStateInsurance: { canCalculate: true, issueCodes: [] },
+      };
+    },
   }),
   {},
 ];

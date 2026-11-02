@@ -574,6 +574,9 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       expect.objectContaining({
         employeeId: null,
         statutoryProfileOverride: expect.objectContaining({ applyPf: true, applyEsic: true }),
+        statutoryProfileUpdatePf: true,
+        statutoryProfileUpdateEsic: true,
+        statutoryProfileConcurrencyStamp: null,
       })
     );
     expect(mocks.saveSalary).not.toHaveBeenCalled();
@@ -585,6 +588,45 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     expect(
       screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/i })
     ).toBeDisabled();
+  });
+
+  it('explains missing employee context once, preserves onboarding choices and retries without saving staff', async () => {
+    const onSalaryChange = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder onSalaryChange={onSalaryChange} />
+      </ThemeProvider>
+    );
+    fireEvent.change(screen.getByLabelText('Monthly cost to school (CTC)'), {
+      target: { value: '18000' },
+    });
+    mocks.calculate.mockReturnValueOnce({
+      unwrap: vi.fn().mockRejectedValue({
+        status: 400,
+        data: {
+          error: {
+            code: 'HR:Payroll:StatutoryProfileEmployeeRequired',
+            message: 'One or more business rules were violated.',
+          },
+        },
+      }),
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }));
+    expect(
+      await screen.findAllByText(/Salary preview needs either a complete onboarding/)
+    ).toHaveLength(1);
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 18,000');
+    expect(screen.getByLabelText('Apply PF')).toBeChecked();
+    expect(screen.getByLabelText('Apply ESIC')).toBeChecked();
+    expect(onSalaryChange).toHaveBeenLastCalledWith(null);
+    fireEvent.click(screen.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ }));
+    await waitFor(() =>
+      expect(onSalaryChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ monthlyAmount: 18000 })
+      )
+    );
+    expect(mocks.saveSalary).not.toHaveBeenCalled();
+    expect(mocks.activate).not.toHaveBeenCalled();
   });
 
   it('requires the existing explicit PF enrollment choice for onboarding above the threshold', async () => {

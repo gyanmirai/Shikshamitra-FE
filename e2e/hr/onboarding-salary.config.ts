@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: 'http://127.0.0.1:3955',
-    headless: false,
+    headless: true,
     launchOptions: process.env.E2E_BROWSER_EXECUTABLE_PATH
       ? { executablePath: process.env.E2E_BROWSER_EXECUTABLE_PATH, args: ['--disable-vivaldi'] }
       : undefined,
