@@ -29,6 +29,8 @@ const mocks = vi.hoisted(() => ({
   assignmentValid: true,
   salaryBusy: false,
   customizationReview: false,
+  assignmentMounts: 0,
+  realAssignment: false,
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { error: mocks.error, success: mocks.success, warning: mocks.warning },
@@ -104,29 +106,58 @@ vi.mock('src/screens/hr/hooks/useAcademicOrganizationOptions', () => ({
     isLoading: mocks.organizationLoading,
   }),
 }));
-vi.mock('./work-assignment-field', () => ({
-  default: function WorkAssignmentFixture({ onValidityChange, confirmation }: any) {
-    const valid = mocks.assignmentValid;
-    useEffect(() => onValidityChange(valid), [onValidityChange, valid]);
-    return (
-      <>
-        <p>Work assignment fixture</p>
-        {/* Also supports the confirmation owned by the pending shared assignment field. */}
-        {confirmation && (
-          <label htmlFor="fixture-assignment-confirmed">
-            <input
-              id="fixture-assignment-confirmed"
-              type="checkbox"
-              checked={confirmation.checked}
-              onChange={(event) => confirmation.onChange(event.target.checked)}
-            />
-            I confirm this work assignment. Access permissions are reviewed separately.
-          </label>
-        )}
-      </>
-    );
+vi.mock('src/redux/academicOrganizationOptions/academicOrganizationOptionsApi', () => ({
+  useGetAcademicOrganizationOptionsQuery: () => {
+    const [isFetching, setFetching] = useState(true);
+    useEffect(() => {
+      setFetching(false);
+    }, []);
+    return {
+      currentData: { items: [{ id: 'stage-1', label: 'Organization 1' }] },
+      isFetching,
+      isError: false,
+    };
   },
 }));
+vi.mock('./work-assignment-field', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./work-assignment-field')>();
+  return {
+    default: function WorkAssignmentFixture({ onValidityChange, confirmation, ...props }: any) {
+      useEffect(() => {
+        mocks.assignmentMounts += 1;
+      }, []);
+      const valid = mocks.assignmentValid;
+      useEffect(() => {
+        if (!mocks.realAssignment) onValidityChange(valid);
+      }, [onValidityChange, valid]);
+      if (mocks.realAssignment)
+        return (
+          <actual.WorkAssignmentField
+            {...props}
+            onValidityChange={onValidityChange}
+            confirmation={confirmation}
+          />
+        );
+      return (
+        <>
+          <p>Work assignment fixture</p>
+          {/* Also supports the confirmation owned by the pending shared assignment field. */}
+          {confirmation && (
+            <label htmlFor="fixture-assignment-confirmed">
+              <input
+                id="fixture-assignment-confirmed"
+                type="checkbox"
+                checked={confirmation.checked}
+                onChange={(event) => confirmation.onChange(event.target.checked)}
+              />
+              I confirm this work assignment. Access permissions are reviewed separately.
+            </label>
+          )}
+        </>
+      );
+    },
+  };
+});
 vi.mock('./finalize-role-field', () => ({
   useFinalizeRoles: () => ({
     ready: mocks.roleReady,
@@ -299,6 +330,8 @@ const content = (readReady = true) => (
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.assignmentMounts = 0;
+  mocks.realAssignment = false;
   mocks.canManageSalary = true;
   mocks.canManageEnrollment = true;
   mocks.roleReady = true;
@@ -331,6 +364,35 @@ async function academicStep(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: 'Next' }));
   await screen.findByRole('checkbox', { name: /Organization 1/ });
 }
+
+it('keeps the real assignment confirmed across Review navigation without prefilling academic access', async () => {
+  mocks.realAssignment = true;
+  const previous = application.workAssignment;
+  application.workAssignment = {
+    mode: 'specificOrganizations',
+    academicYearId: 'year',
+    organizationIds: ['stage-1'],
+    organizationLabels: ['Organization 1'],
+  };
+  try {
+    const user = userEvent.setup();
+    render(content());
+    await academicStep(user);
+    expect(screen.getByRole('checkbox', { name: /Organization 1/ })).not.toBeChecked();
+    await user.click(screen.getByRole('checkbox', { name: /Organization 2/ }));
+    await user.click(screen.getAllByRole('button', { name: 'Back' }).at(-1)!);
+    await user.click(screen.getAllByRole('button', { name: 'Back' }).at(-1)!);
+    expect(screen.getByRole('checkbox', { name: /I confirm this work assignment/ })).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('checkbox', { name: /Organization 2/ })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /Organization 1/ })).not.toBeChecked();
+    expect(mocks.finalize).not.toHaveBeenCalled();
+  } finally {
+    application.workAssignment = previous;
+  }
+});
 
 it('uses the real full-card native labels in the page, with one toggle from text, subtitle, blank area and keyboard', async () => {
   const user = userEvent.setup();
@@ -378,6 +440,11 @@ it('preserves staff and salary drafts across steps and safe dirty departure, ret
   await user.type(screen.getByLabelText('Salary draft'), '12000');
   await user.click(screen.getAllByRole('button', { name: 'Back' }).at(-1)!);
   await user.click(screen.getAllByRole('button', { name: 'Back' }).at(-1)!);
+  expect(screen.getByTestId('pan-input')).toHaveValue('ABCDE1234F');
+  await user.click(screen.getAllByRole('button', { name: 'Back' }).at(-1)!);
+  expect(screen.getByRole('checkbox', { name: /I confirm this work assignment/ })).toBeChecked();
+  expect(mocks.assignmentMounts).toBe(1);
+  await user.click(screen.getByRole('button', { name: 'Next' }));
   expect(screen.getByTestId('pan-input')).toHaveValue('ABCDE1234F');
   await user.click(screen.getByRole('button', { name: 'Next' }));
   expect(screen.getByRole('checkbox', { name: /Organization 1/ })).toBeChecked();

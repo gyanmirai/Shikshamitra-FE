@@ -82,6 +82,10 @@ This wizard does not change staff creation, finalization, activation, or payroll
 
 ## Employee onboarding behavior
 
+Review stays mounted while moving through finalization steps, so returning to it does not refetch the work-assignment catalogue or clear an unchanged confirmation. Assignment edits, catalogue refresh failures, unavailable organizations and changed labels still require reconfirmation. Work assignment never preselects Academic Permission; explicitly chosen access permissions remain independent and survive step navigation.
+
+Salary preview uses the complete unsaved PF/ESIC draft before staff creation. Missing-context responses explain how to review the draft and retry without losing entries or creating staff early.
+
 Staff Directory's Add Staff form opens Personal Information without fetching policy lists or requiring policy-management grants.
 Its profile photo is optional; a selected photo retains the 3MB form limit and is sent as the `ProfilePicture` multipart part.
 Saving a basic profile omits `policyOverride`; it uses backend effective-policy inheritance rather than creating an employee-specific assignment.

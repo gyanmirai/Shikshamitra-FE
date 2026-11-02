@@ -42,6 +42,14 @@ export function safeHrText(value: unknown): string | undefined {
 }
 
 const known: Record<string, { message: string; setup?: HrSetup }> = {
+  'HR:Payroll:StatutoryProfileEmployeeRequired': {
+    message:
+      'Salary preview needs either a complete onboarding PF/ESIC draft or an existing staff record. Review the PF/ESIC choices and preview again. If this continues, ask your administrator to check salary-preview setup.',
+  },
+  'HR:Payroll:StatutoryProfileInvalid': {
+    message:
+      'Review the PF/ESIC details and enter a reason for each scheme turned off, then preview again.',
+  },
   'HR:Payroll:SalaryTemplateSampleBlocked': {
     message:
       'ESIC setup blocks this salary preview. Review statutory settings, then preview again.',

@@ -1,5 +1,69 @@
 import { test, expect } from '@playwright/test';
 
+[
+  { width: 390, height: 844 },
+  { width: 768, height: 1024 },
+  { width: 1440, height: 900 },
+].forEach((viewport) => {
+  test(`Bug6560 retains work assignment confirmation at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    const confirmation = page.getByRole('checkbox', { name: /I confirm this work assignment/ });
+    await confirmation.check();
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await expect(confirmation).toBeHidden();
+    await page.getByRole('button', { name: 'Back', exact: true }).last().click();
+    await expect(confirmation).toBeChecked();
+    await expect(page.getByText('Synthetic organization', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeEnabled();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+    ).toBe(true);
+    await page.screenshot({
+      path: `.artifacts/onboarding-salary-browser/bug6560-${viewport.width}.png`,
+    });
+  });
+});
+
+test('Bug6564 preserves onboarding salary after context failure and retries the complete draft', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('checkbox', { name: /I confirm this work assignment/ }).check();
+  await page.getByRole('button', { name: 'Next', exact: true }).click();
+  await page.locator('input[maxlength="12"]').fill('123456789012');
+  await page.locator('input[maxlength="10"]').fill('ABCDE1234F');
+  await page.getByRole('combobox', { name: 'Religion *', exact: true }).click();
+  await page.getByRole('option', { name: 'Hinduism', exact: true }).click();
+  await page.getByRole('combobox', { name: /^Role(?: \*)?$/ }).click();
+  await page.getByRole('option', { name: 'Office staff', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Shift *', exact: true }).click();
+  await page.getByRole('option', { name: 'Day shift', exact: true }).click();
+  await page.getByRole('button', { name: 'Next', exact: true }).click();
+  await page.getByRole('button', { name: 'Next', exact: true }).click();
+  const amount = page.getByLabel('Monthly salary', { exact: true });
+  await amount.fill('18000');
+  await page.evaluate(() => {
+    (window as any).failNextPreviewContext = true;
+  });
+  await page.getByRole('button', { name: 'Preview salary', exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: /Salary preview needs either a complete onboarding/ })).toHaveCount(1);
+  await expect(page.getByRole('region', { name: /Notifications/ }).getByText(/Salary preview needs/)).toHaveCount(0);
+  await expect(amount).toHaveValue('₹ 18,000');
+  await expect(page.getByRole('button', { name: 'Finalize', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: /^(Preview salary|Refresh preview)$/ }).click();
+  await expect(page.getByRole('button', { name: 'Finalize', exact: true })).toBeEnabled();
+  const requests = await page.evaluate(() => (window as any).previewRequests);
+  expect(requests).toHaveLength(2);
+  expect(requests[1]).toMatchObject({
+    employeeId: null,
+    statutoryProfileUpdatePf: true,
+    statutoryProfileUpdateEsic: true,
+    statutoryProfileOverride: { applyPf: true, applyEsic: true },
+  });
+  expect(await page.evaluate(() => (window as any).finalizeRequests || [])).toHaveLength(0);
+});
+
 // Real onboarding controls with module-local synthetic hooks; no staff/tenant API writes.
 test('salary precedes Finalize; back, cancel, failure and retry preserve the draft', async ({
   page,
@@ -11,7 +75,7 @@ test('salary precedes Finalize; back, cancel, failure and retry preserve the dra
   await page.locator('input[maxlength="10"]').fill('ABCDE1234F');
   await page.getByRole('combobox', { name: 'Religion *', exact: true }).click();
   await page.getByRole('option', { name: 'Hinduism', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Role *', exact: true }).click();
+  await page.getByRole('combobox', { name: /^Role(?: \*)?$/ }).click();
   await page.getByRole('option', { name: 'Office staff', exact: true }).click();
   await page.getByRole('combobox', { name: 'Shift *', exact: true }).click();
   await page.getByRole('option', { name: 'Day shift', exact: true }).click();

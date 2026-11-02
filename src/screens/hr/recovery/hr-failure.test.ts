@@ -5,19 +5,46 @@ import { hrSetupAction } from './hr-setup';
 import { safeHrText, normalizeHrFailure } from './hr-failure';
 
 describe('HR failure contract', () => {
+  it('explains missing preview context without requiring premature employee creation', () => {
+    const failure = normalizeHrFailure({
+      status: 400,
+      data: {
+        error: {
+          code: 'HR:Payroll:StatutoryProfileEmployeeRequired',
+          message: 'One or more business rules were violated.',
+        },
+      },
+    });
+    expect(failure.message).toContain('complete onboarding PF/ESIC draft');
+    expect(failure.message).toContain('preview again');
+    expect(failure.fields).toEqual([]);
+    expect(failure.setup).toBeUndefined();
+  });
   it('keeps salary-preview guidance concise without inventing duplicate field errors', () => {
-    const failure = normalizeHrFailure({ status: 400,
-      data: { errorCode: 'HR:Payroll:SalaryTemplateAllocationMismatch' } });
-    expect(failure).toMatchObject({ kind: 'salaryPreview', title: 'Review Salary Preview',
-      guidance: 'Review the amount or earning rules.', fields: [] });
+    const failure = normalizeHrFailure({
+      status: 400,
+      data: { errorCode: 'HR:Payroll:SalaryTemplateAllocationMismatch' },
+    });
+    expect(failure).toMatchObject({
+      kind: 'salaryPreview',
+      title: 'Review Salary Preview',
+      guidance: 'Review the amount or earning rules.',
+      fields: [],
+    });
     expect(failure.message).toContain('gross salary');
     expect(failure.guidance).not.toContain('server');
   });
   it('retains genuine distinct validation messages alongside a salary-preview summary', () => {
-    const failure = normalizeHrFailure({ status: 400, data: {
-      errorCode: 'HR:Payroll:SalaryTemplateAllocationMismatch',
-      errors: { monthlyAmount: ['Enter a positive amount.'], rules: ['Choose an earning basis.'] },
-    } });
+    const failure = normalizeHrFailure({
+      status: 400,
+      data: {
+        errorCode: 'HR:Payroll:SalaryTemplateAllocationMismatch',
+        errors: {
+          monthlyAmount: ['Enter a positive amount.'],
+          rules: ['Choose an earning basis.'],
+        },
+      },
+    });
     expect(failure.fields).toEqual([
       { name: 'Monthly amount', message: 'Enter a positive amount.' },
       { name: 'Earning rules', message: 'Choose an earning basis.' },

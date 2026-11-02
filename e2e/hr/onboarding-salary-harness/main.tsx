@@ -20,7 +20,7 @@ const state = {
       hrPermissions.payroll.settings.statutorySchemeActions.manageEnrollment,
     ].map((name) => ({ name, isGranted: true })),
   },
-  globalState: {},
+  globalState: { currentYear: { id: 'synthetic-year', name: '2026-27' } },
   confirmPopup: { isChanges: false },
 };
 const store = configureStore({
@@ -43,7 +43,12 @@ const application: any = {
   hasPhoto: true,
   hasResume: false,
   status: 'Applied',
-  workAssignment: { mode: 'decideLater', academicYearId: null, organizationIds: [] },
+  workAssignment: {
+    mode: 'specificOrganizations',
+    academicYearId: 'synthetic-year',
+    organizationIds: ['synthetic-stage'],
+    organizationLabels: ['Synthetic organization'],
+  },
   personalInfo: {
     firstName: 'Synthetic',
     lastName: 'Staff',
