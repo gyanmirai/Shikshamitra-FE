@@ -1,7 +1,6 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
 import { useFormik } from 'formik';
 import { useRef, useState } from 'react';
@@ -14,7 +13,18 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
+import {
+  Box,
+  Grid,
+  Card,
+  Menu,
+  Stack,
+  Button,
+  MenuItem,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import {
   StudentFeedbackContext,
   HomeworkFeedbackContext,
@@ -23,22 +33,9 @@ import { useUpdateHomeworkSubmissionFeedbackMutation } from 'src/redux/academicA
 import RubricEvaluationPanel, {
   type RubricEvaluationPanelRef,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
-import {
-  Box,
-  Grid,
-  Card,
-  Menu,
-  Stack,
-  Button,
-  Tooltip,
-  MenuItem,
-  TextField,
-  Typography,
-  IconButton,
-  DialogActions,
-} from '@mui/material';
 
 import { assignGradeValidationSchema } from './validationSchema';
+import StudentSubmissionAttachments from '../../marksAndFeedback/studentSubmissionAttachments';
 
 import type { IAssignGradeProps } from '../type';
 import type { RubricEvaluationState } from '../../marksAndFeedback/rubricEvaluationTypes';
@@ -146,18 +143,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
       }
     },
   });
-
-  const handleDownload = (doc: IDocument) => {
-    window.open(doc.url, '_blank');
-  };
-
-  const submittedDocument: IDocument = {
-    id: data?.id || '',
-    name: data?.originalFileName || 'Submitted document',
-    type: data?.originalFileName?.split('.').pop() || 'txt',
-    url: data?.submittedDocumentUrl || '',
-    size: '',
-  };
 
   const handleTemplateSelect = (template: string) => {
     if (!isEdit || isEvaluationLocked || isEvaluationUnavailable) return;
@@ -276,67 +261,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
               </Typography>
             </Card>
           ) : data?.submittedDocumentUrl ? (
-            <Card
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: 1,
-                bgcolor: 'background.paper',
-                boxShadow: 'none',
-                '&:hover': {
-                  bgcolor: 'background.neutral',
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  minWidth: 0,
-                  flex: '1 1 160px',
-                }}
-              >
-                {getFileIconByType(submittedDocument.name, 36)}
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography
-                    variant="subtitle2"
-                    noWrap
-                    sx={{ maxWidth: '100%', fontWeight: 600 }}
-                  >
-                    {data.originalFileName || 'Submitted document'}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {data.submissionDate
-                      ? `Submitted on ${data.submissionDate}`
-                      : 'Uploaded by student'}
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Stack direction="row" spacing={1} flexShrink={0} sx={{ ml: 'auto' }}>
-                <Tooltip title="Preview File">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDownload(submittedDocument)}
-                    sx={{ color: 'text.secondary' }}
-                  >
-                    <Iconify icon={GlobalIcons.eye} width={20} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Download File">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDownload(submittedDocument)}
-                    sx={{ color: 'text.secondary' }}
-                  >
-                    <Iconify icon={GlobalIcons.download} width={20} />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-            </Card>
+            <Typography variant="subtitle2">File Submission</Typography>
           ) : (
             <Box
               sx={{
@@ -384,6 +309,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           </Grid>
 
           {submissionSection}
+
+          <Grid size={{ xs: 12 }}>
+            <StudentSubmissionAttachments key={data?.studentId} student={data} />
+          </Grid>
 
           {/* Rubric Evaluation Panel */}
           {data &&

@@ -20,7 +20,9 @@ export function useDivisionRoomDefaults({
   readOnly,
 }: DivisionRoomDefaultsProps) {
   const skip = readOnly || !divisionId;
-  const [loadDivision] = divisionApi.useLazyGetDivisionByIdQuery();
+  const [loadDivision, division] = divisionApi.useLazyGetDivisionByIdQuery({
+    refetchOnFocus: true,
+  });
   const [loadRoom] = roomsApi.useLazyGetRoomByIdQuery();
   const latestDraft = useRef({ slots, onChange });
   const defaultRoom = useRef<{ id: string; roomName: string } | null>(null);
@@ -30,18 +32,26 @@ export function useDivisionRoomDefaults({
   }, [onChange, slots]);
 
   useEffect(() => {
+    if (!skip) loadDivision(divisionId);
+  }, [divisionId, loadDivision, skip]);
+
+  useEffect(() => {
     defaultRoom.current = null;
-    if (skip) return undefined;
+    const roomId = division.currentData?.roomId;
+    if (
+      skip ||
+      division.originalArgs !== divisionId ||
+      division.isFetching ||
+      division.isError ||
+      !roomId
+    )
+      return undefined;
 
     let active = true;
-    const resolveDefault = async () => {
+    const resolveRoom = async () => {
       try {
-        const division = await loadDivision(divisionId).unwrap();
-        if (!active || !division.roomId) return;
-
-        const room = await loadRoom(division.roomId).unwrap();
-        if (!active || room.id !== division.roomId) return;
-
+        const room = await loadRoom(roomId).unwrap();
+        if (!active || room.id !== roomId) return;
         defaultRoom.current = room;
         const draft = latestDraft.current;
         const updatedSlots = applyDivisionRoomDefaults(draft.slots, room);
@@ -50,13 +60,20 @@ export function useDivisionRoomDefaults({
         if (active) defaultRoom.current = null;
       }
     };
-    resolveDefault();
-
+    resolveRoom();
     return () => {
       active = false;
       defaultRoom.current = null;
     };
-  }, [divisionId, loadDivision, loadRoom, skip]);
+  }, [
+    division.currentData,
+    division.isError,
+    division.isFetching,
+    division.originalArgs,
+    divisionId,
+    loadRoom,
+    skip,
+  ]);
 
   useEffect(() => {
     if (skip || !defaultRoom.current) return;

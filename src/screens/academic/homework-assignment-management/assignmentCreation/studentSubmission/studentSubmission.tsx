@@ -652,6 +652,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           )}
         {!usesRubric && (
           <AssignGrade
+            key={selectedStudent?.studentId}
             data={selectedStudent}
             onClose={handleClose}
             isEdit={isEditMode}

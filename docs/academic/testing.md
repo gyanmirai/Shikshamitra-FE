@@ -3,7 +3,7 @@ module: academic
 domain: validation
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-29
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -88,6 +88,14 @@ Classify failures using `docs/testing/BUG_CLASSIFICATION_POLICY.md` without weak
 
 Run automated checks before the final Codex in-app browser confirmation.
 Keep source checks, automated results, browser evidence, and any unverified environments separate in delivery notes.
+
+Division room sync: run the `useDivisionRoomDefaults*.test.tsx`, `roomAssignmentDefaults.test.ts`
+and `AssignRoomDialog.defaults.test.tsx` tests under `src/components/timetable`.
+The synthetic browser regression runs with
+`npx playwright test --config e2e/academic/timetable-room-sync.config.ts`.
+It uses the production division form, RTK Query clients and timetable board to check
+`B101` to `B2222`, drag-and-drop, reopening the builder and preservation of saved lecture overrides.
+Its local API does not establish deployed staging acceptance.
 
 ## Operational read regressions
 

@@ -3,7 +3,7 @@ module: academic
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-30
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,6 +12,14 @@ audience: humans-and-agents
 
 TL;DR: `src/redux/academic-setup/api.ts` persists guide position and reads configuration status; existing module clients continue to save the actual settings.
 Use the [backend API reference](../../../Shikshamitra-BE/docs/modules/academic/api.md) for endpoint semantics and authorization.
+
+## Student submission attachments
+
+`studentSubmissionAttachments.tsx` under `src/screens/academic/homework-assignment-management/marksAndFeedback/` displays the selected student's files in homework and assignment evaluation, independently of submission type.
+Images use the shared lightbox for zoom/full-screen inspection; PDFs use `DocumentPreviewDialog` with authenticated direct fetching.
+Downloads use `fetchProtectedPreview` and retain the original filename.
+The section resets when navigating between students and leaves the feedback form mounted while previewing.
+The [backend API reference](../../../Shikshamitra-BE/docs/modules/academic/api.md#student-submission-attachments) owns attachment response fields and tenant storage references.
 
 ## Guide client
 
@@ -77,6 +85,10 @@ Real numeric zeros remain valid for their existing consumers.
 
 ## Operational read clients
 
+Dated room list, timeline, suggestion and booking requests include the currently selected `academicMediumId` through `useRoomCalendarMedium`.
+Room list and timeline cache entries subscribe to `AcademicCalendar` and `AcademicCalendarDay`, so calendar mutations refresh mounted reads and invalidate inactive cached results.
+See the [backend calendar context](../../../Shikshamitra-BE/docs/modules/academic/product.md#room-reservation-calendar-context) for authoritative selection and saved-booking behavior.
+
 The [backend read reference](../../../Shikshamitra-BE/docs/modules/academic/references/ui-read-performance.md) owns exact endpoint contracts, counts, compatibility and scope.
 These clients replace broad initial reads while retaining existing mutation tags and explicit post-save refreshes.
 
@@ -88,7 +100,7 @@ These clients replace broad initial reads while retaining existing mutation tags
 | Rubric templates | `src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricTemplateReadApi.ts`, `src/screens/academic/homework-assignment-management/setting/rubricConfig/hooks/useRubricTemplateDetails.ts` | Page summary rows; fetch criterion details only for the selected action. |
 | Rubric scoring | `src/screens/academic/homework-assignment-management/marksAndFeedback/useRubricEvaluationQueries.ts` | Read the selected submission/student evaluation; refresh the saved evaluation chain after mutations. |
 | Elective assignments and exam readiness | `src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment.ts`, `src/screens/examination/scheduleExam/components/use-elective-readiness.ts` | Reuse shared options and grouped selection counts instead of downloading student selections to count them. |
-| Rooms and approvals | `src/redux/academicAPI/timetableApi/roomAvailabilityApi.ts`, `src/screens/academic/timetable-schedule-management/roomAvailability/useRoomReservationPage.ts` | Page active reservation/approval views; read badge summaries separately; mount audit reads on demand. |
+| Rooms and approvals | `src/redux/academicAPI/timetableApi/roomAvailabilityApi.ts`, `src/screens/academic/timetable-schedule-management/roomAvailability/useRoomReservationPage.ts` | Page active reservation/approval views; read badge summaries separately; mount audit reads on demand. Room Availability filters use `getRoomBuildingLookup` at `/academics/timetable/room-availability/buildings/lookup`, with the existing building cache tag, instead of the Institute Setup management list. See the [backend lookup contract](../../../Shikshamitra-BE/docs/modules/academic/references/ui-read-performance.md#read-contracts). |
 | Weekly timetable room assignment | `src/components/timetable/useWeeklyRoomOptions.ts`, `getWeeklyTimetableRooms` in `roomAvailabilityApi.ts` | Send the weekly day and period times without a calendar date. Read current-query options, preserve saved choices, retry failed reads and validate prospective assignments before applying them. Room catalogue and timetable mutations invalidate these options. See the [backend room read contract](../../../Shikshamitra-BE/docs/modules/academic/references/ui-read-performance.md#read-contracts). |
 | Student Academic 360 drawer | `src/screens/academic/student-academic-360/hooks/useStudentAcademic360Detail.ts` | Query only while open; reset filters/page on student or tab changes. Overview requests 10 tasks/5 exams; detail pages request 20 tasks or 10 exams and retain historical pagination. |
 | Published seating and subject-card teachers | `src/screens/examination/seatingPlan/guided/published/use-published-seating-data.ts`, `src/screens/academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/hooks/useTeacherSelection.ts` | Keep reusable plan roster queries and delay optional teacher detail reads until needed. |
@@ -108,3 +120,12 @@ Curriculum, timetable, homework/assignment and Examination lists mount only the 
 Opening a paged preview begins at page one without first requesting the previous page.
 Optional PDF renderers load when their export action is used.
 Report generation and download semantics remain owned by the backend reference.
+
+## Division room defaults in the timetable
+
+`src/components/timetable/useDivisionRoomDefaults.ts` subscribes to the division lookup from
+`src/redux/division/divisionApi.ts`. Saving a division already invalidates its `Division` tag;
+the timetable consumes the refreshed result and resolves the current room through the room-detail API.
+Opening the builder and returning browser focus refresh the division lookup.
+Pending, failed, cleared or superseded lookups cannot apply the previous default to new lectures.
+The default fills only unassigned lecture rooms; saved room assignments and lecture overrides remain intact.

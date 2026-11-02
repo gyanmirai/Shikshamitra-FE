@@ -1,7 +1,6 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -17,7 +16,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
 import { useUpdateSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 import {
   Box,
@@ -29,24 +27,16 @@ import {
   Avatar,
   Button,
   Divider,
-  Tooltip,
   MenuItem,
   TextField,
   Typography,
-  IconButton,
   DialogActions,
   InputAdornment,
 } from '@mui/material';
 
-import type { IAssignGradeProps } from '../../homeworkCreation/type';
+import StudentSubmissionAttachments from '../../marksAndFeedback/studentSubmissionAttachments';
 
-export const document: IDocument = {
-  id: 'doc-1',
-  name: 'Lecture Notes.pdf',
-  type: 'pdf',
-  url: 'https://example.com/files/lecture-notes.pdf',
-  size: '2.4 MB',
-};
+import type { IAssignGradeProps } from '../../homeworkCreation/type';
 
 const FEEDBACK_MAX_LENGTH = 500;
 
@@ -168,19 +158,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     Boolean(data?.submittedContent?.trim() && !data?.submittedDocumentUrl);
 
   const submittedFileUrl = data?.submittedDocumentUrl;
-  const submittedFileName =
-    data?.originalFileName || submittedFileUrl?.split('/').pop() || 'Submitted document';
-  const submittedFileType = submittedFileName.includes('.')
-    ? submittedFileName.split('.').pop() || 'file'
-    : 'file';
-  const submittedDocument: IDocument = {
-    ...document,
-    name: submittedFileName,
-    type: submittedFileType,
-    url: submittedFileUrl || '',
-    size: '',
-  };
-
   const quickScores = [
     { label: `Full Marks (${totalMarks})`, key: 'full', value: totalMarks },
     {
@@ -206,10 +183,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     if (!isEdit) return;
     formik.setFieldValue('feedback', template);
     setTemplateMenuOpen(false);
-  };
-
-  const handleDownload = (doc: IDocument) => {
-    window.open(doc.url, '_blank');
   };
 
   const formatSubmissionDate = (date: any): string => {
@@ -437,67 +410,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                         </Typography>
                       </Card>
                     ) : submittedFileUrl ? (
-                      <Card
-                        variant="outlined"
-                        sx={{
-                          p: 1.5,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: 1,
-                          transition: (theme) => theme.transitions.create('background-color'),
-                          '&:hover': { bgcolor: 'action.hover' },
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
-                          {getFileIconByType(submittedDocument.name, 36)}
-                          <Box sx={{ minWidth: 0 }}>
-                            <Typography variant="body2" fontWeight={600} noWrap>
-                              {submittedDocument.name}
-                            </Typography>
-                            <Typography variant="caption" color="text.disabled">
-                              Submitted file
-                              {submittedDocument.type
-                                ? ` - ${submittedDocument.type.toUpperCase()} Document`
-                                : ''}
-                            </Typography>
-                          </Box>
-                        </Box>
-                        <Stack direction="row" spacing={1} flexShrink={0}>
-                          <Tooltip title="Preview">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDownload(submittedDocument)}
-                              sx={{
-                                color: 'text.secondary',
-                                '&:hover': {
-                                  color: 'primary.main',
-                                  bgcolor: (theme) =>
-                                    varAlpha(theme.palette.primary.mainChannel, 0.1),
-                                },
-                              }}
-                            >
-                              <Iconify icon={GlobalIcons.eye} width={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Download">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDownload(submittedDocument)}
-                              sx={{
-                                color: 'text.secondary',
-                                '&:hover': {
-                                  color: 'success.main',
-                                  bgcolor: (theme) =>
-                                    varAlpha(theme.palette.success.mainChannel, 0.1),
-                                },
-                              }}
-                            >
-                              <Iconify icon={GlobalIcons.download} width={18} />
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </Card>
+                      <Typography variant="subtitle2">File Submission</Typography>
                     ) : (
                       <Box
                         sx={{
@@ -513,6 +426,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                     )}
                   </Box>
                 </Card>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <StudentSubmissionAttachments key={data?.studentId} student={data} />
               </Grid>
 
               {/* Evaluation & Marks Section */}
