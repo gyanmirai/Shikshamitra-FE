@@ -26,6 +26,7 @@ import {
   FormControl,
 } from '@mui/material';
 
+import { esiRequestError } from './esi-request-error';
 import { formatEsiCurrency, enrollmentStatusLabel } from './esi-statutory-utils';
 
 import type { EsiWorkspaceQuery } from './esi-statutory-utils';
@@ -35,6 +36,7 @@ type EsiEmployeesPanelProps = {
   preview?: EsiImpactPreview;
   isLoading: boolean;
   isError: boolean;
+  error?: unknown;
   canManageEnrollment: boolean;
   canApproveOverride: boolean;
   onRetry: () => void;
@@ -55,6 +57,7 @@ export function EsiStatutoryEmployees({
   preview: basePreview,
   isLoading: baseLoading,
   isError: baseError,
+  error: baseFailure,
   canManageEnrollment,
   canApproveOverride,
   onRetry: baseRetry,
@@ -65,6 +68,7 @@ export function EsiStatutoryEmployees({
     data: preview,
     isLoading,
     isError,
+    error,
     refetch: onRetry,
     tableProps,
   } = useHrTableQuery(
@@ -81,6 +85,7 @@ export function EsiStatutoryEmployees({
       isLoading: baseLoading,
       isFetching: baseLoading,
       isError: baseError,
+      error: baseFailure,
       refetch: baseRetry,
     }
   );
@@ -312,7 +317,10 @@ export function EsiStatutoryEmployees({
             </Button>
           }
         >
-          The staff ESI preview could not be loaded.
+          {esiRequestError(
+            error,
+            'The staff ESIC preview could not be loaded. Retry to check again.'
+          )}
         </Alert>
       ) : null}
 

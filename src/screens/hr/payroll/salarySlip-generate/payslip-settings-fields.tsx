@@ -1,12 +1,15 @@
+import type { RootState } from 'src/redux/store';
 import type { PayslipSettings, SalaryDocumentPresentation } from 'src/redux/hr/payslip-api';
 
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import CustomSelect from 'src/components/custom-select';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { instituteSetupPaths } from 'src/constants/institute-setup';
 import { Box, Stack, Switch, Button, Typography, FormControlLabel } from '@mui/material';
+import { instituteSetupPaths, instituteSetupPermissions } from 'src/constants/institute-setup';
 
 import { salaryDocumentFields } from './salary-document-fields';
 
@@ -25,6 +28,13 @@ export default function PayslipSettingsFields({
   update: (key: keyof SalaryDocumentPresentation, value: unknown) => void;
   onEmailChange: (checked: boolean) => void;
 }) {
+  const { permissions, permissionsInitialized } = useSelector((state: RootState) => state.auth);
+  // Match both the /setting layout and the School Identity screen guard.
+  const canOpenIdentity =
+    permissionsInitialized &&
+    [instituteSetupPermissions.root, instituteSetupPermissions.schoolIdentity].every((permission) =>
+      hasGrantedPermission(permissions, permission)
+    );
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
       <FormSectionCard
@@ -42,18 +52,28 @@ export default function PayslipSettingsFields({
             sx={{ whiteSpace: 'pre-line', mt: 0.5 }}
           >
             {initial.schoolAddress ||
-              'Add your school address in Institute Setup before issuing documents.'}
+              'Ask your school administrator to complete the institute address before issuing documents.'}
           </Typography>
         </Box>
-        <Button
-          component={RouterLink}
-          href={instituteSetupPaths.schoolIdentity}
-          size="small"
-          sx={{ alignSelf: 'flex-start' }}
-          startIcon={<Iconify icon={GlobalIcons.edit} />}
-        >
-          Open Institute Setup
-        </Button>
+        {canOpenIdentity ? (
+          <Button
+            component={RouterLink}
+            href={instituteSetupPaths.schoolIdentity}
+            size="small"
+            sx={{ alignSelf: 'flex-start' }}
+            startIcon={<Iconify icon={GlobalIcons.edit} />}
+          >
+            Open School Identity
+          </Button>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            Ask an administrator with School Identity access to review the school logo.
+          </Typography>
+        )}
+        <Typography variant="caption" color="text.secondary">
+          School Identity manages the logo. Ask your school administrator to update the institute
+          name or address.
+        </Typography>
       </FormSectionCard>
       <FormSectionCard
         icon={GlobalIcons.documentIcon}
