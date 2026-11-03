@@ -4,13 +4,12 @@ import type { RootState } from 'src/redux/store';
 import type { AcademicReportExportJobResponse } from 'src/redux/academicAPI/AcademicReportApi';
 
 import dayjs from 'dayjs';
+import React, { useMemo } from 'react';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useState } from 'react';
 import { Box, Chip, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -27,6 +26,7 @@ import CurriculumReports from './CurriculumReports';
 import ShikshaMitraAiReportDrawer from './ShikshaMitraAiReportDrawer';
 import { getCurriculumReportActions } from './curriculumReportActions';
 import CurriculumReportPreviewDrawer from './CurriculumReportPreviewDrawer';
+import { useCurriculumReportPreview } from './hooks/useCurriculumReportPreview';
 
 const STATUS_COLOR: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
   Queued: 'default',
@@ -50,30 +50,7 @@ const CurriculumReportList = () => {
     popupConfig: { error: true, errorMessage: 'Failed to load export history' },
   });
 
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewExportJobId, setPreviewExportJobId] = useState<string | null>(null);
-  const [selectedReportRequest, setSelectedReportRequest] = useState<any>(null);
-  const [selectedReportTitle, setSelectedReportTitle] = useState('');
-  const handleView = (row: any) => {
-    try {
-      let requestPayload: any = {};
-      if (row.requestJson && row.requestJson !== '{}') {
-        requestPayload = JSON.parse(row.requestJson);
-      }
-      if (!requestPayload.reportType) {
-        requestPayload.reportType = row.reportType;
-      }
-      if (!requestPayload.filters) {
-        requestPayload.filters = {};
-      }
-      setSelectedReportRequest(requestPayload);
-      setPreviewExportJobId(row.status === 'Completed' && String(row.format || 'pdf').toLowerCase() === 'pdf' ? row.id : null);
-      setSelectedReportTitle(row.reportType);
-      setPreviewOpen(true);
-    } catch (e) {
-      shikshaMitraToast.error({ message: 'Failed to parse report parameters.' });
-    }
-  };
+  const { selection, loadingJobId, handleView, closePreview } = useCurriculumReportPreview();
 
   const rows = useMemo(() => {
     const allExports: AcademicReportExportJobResponse[] = Array.isArray(exportsData)
@@ -209,6 +186,7 @@ const CurriculumReportList = () => {
                 if (!canAdd) return null;
                 const actions = getCurriculumReportActions(row as AcademicReportExportJobResponse, {
                   downloadingJobId,
+                  loadingJobId,
                   onView: handleView,
                   onDownload: handleDownload,
                 });
@@ -226,11 +204,11 @@ const CurriculumReportList = () => {
         />
       )}
       <CurriculumReportPreviewDrawer
-        open={previewOpen}
-        onClose={() => setPreviewOpen(false)}
-        reportRequest={selectedReportRequest}
-        reportTitle={selectedReportTitle}
-        existingExportJobId={previewExportJobId}
+        open={selection !== null}
+        onClose={closePreview}
+        reportRequest={selection?.request ?? null}
+        reportTitle={selection?.title ?? ''}
+        existingExportJobId={selection?.exportJobId ?? null}
       />
       <ShikshaMitraAiReportDrawer open={aiReportDialog.value} onClose={aiReportDialog.onFalse} />
     </Box>

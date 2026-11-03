@@ -88,8 +88,8 @@ export const AcademicYearContext = ({
         </FormControl>
         {currentYear?.startDate && currentYear.endDate ? (
           <Typography variant="caption" color="text.secondary">
-            {dayjs(currentYear.startDate).format('DD MMM YYYY')} –{' '}
-            {dayjs(currentYear.endDate).format('DD MMM YYYY')}
+            {dayjs(currentYear.startDate).format('DD-MM-YYYY')} –{' '}
+            {dayjs(currentYear.endDate).format('DD-MM-YYYY')}
           </Typography>
         ) : null}
       </Box>

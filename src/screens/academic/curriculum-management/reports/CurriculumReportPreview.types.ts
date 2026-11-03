@@ -6,7 +6,9 @@ export interface AcademicReportRequestDto {
   filters?: {
     academicYearId?: string | null;
     classIds?: string[] | null;
+    divisionIds?: string[] | null;
     subjectIds?: string[] | null;
+    chapterIds?: string[] | null;
     statuses?: number[] | null;
     revisionRequired?: boolean | null;
   };

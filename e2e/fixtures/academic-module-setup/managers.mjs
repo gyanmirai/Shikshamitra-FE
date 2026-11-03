@@ -85,7 +85,7 @@ export async function handleManagers(url, method, body, send, fixture, claims) {
     );
     return true;
   }
-  if (/\/standards\/[^/]+$/.test(path)) {
+  if (/\/standards\/[^/]+$/.test(path) || /\/education-medium\/[^/]+\/standards$/.test(path)) {
     send(200, [standard]);
     return true;
   }

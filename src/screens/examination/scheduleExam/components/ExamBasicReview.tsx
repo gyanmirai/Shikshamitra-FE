@@ -3,8 +3,9 @@ import type { Division } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Box, Grid, Chip, Paper, Divider, Typography } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Box, Grid, Chip, Paper, Divider } from '@mui/material';
+import { FormSectionHeader } from 'src/components/form-section-card';
 
 import { ExamReviewInfoItem } from './ExamReviewInfoItem';
 import { ExamReviewAccordion } from './ExamReviewAccordion';
@@ -28,11 +29,7 @@ const ExamBasicReview = ({
 
   const statusLabel =
     values.status === undefined ? undefined : (
-      <Label
-        variant="filled"
-        color={statusConfig.color as LabelColor}
-        sx={{ textTransform: 'uppercase', py: 0.5, px: 1 }}
-      >
+      <Label variant="filled" color={statusConfig.color as LabelColor} sx={{ py: 0.5, px: 1 }}>
         {statusConfig.label}
       </Label>
     );
@@ -40,23 +37,19 @@ const ExamBasicReview = ({
   return (
     <ExamReviewAccordion
       title="Basic Details"
-      icon="healthicons:i-exam-multiple-choice"
+      icon={GlobalIcons.notebook}
       onEdit={onEdit}
       status={statusLabel}
     >
       <Grid container spacing={2} alignItems="stretch">
         <Grid size={{ xs: 12, lg: 6 }}>
           <Paper variant="outlined" sx={reviewCardSx}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Iconify
-                icon="mdi:clipboard-text-outline"
-                width={20}
-                sx={{ color: 'text.secondary' }}
-              />
-              <Typography variant="subtitle2" fontWeight={700}>
-                Exam setup
-              </Typography>
-            </Box>
+            <FormSectionHeader
+              icon={GlobalIcons.calendar}
+              title="Exam Setup"
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+              descriptionTooltip="Review the exam name, type, and grading scale selected in Basic Details."
+            />
             <Divider sx={{ my: 2 }} />
             <Box
               sx={{
@@ -66,12 +59,12 @@ const ExamBasicReview = ({
                 },
               }}
             >
-              <ExamReviewInfoItem label="Exam Name" value={values.examName || '-'} />
+              <ExamReviewInfoItem label="Exam name" value={values.examName || '-'} />
               <ExamReviewInfoItem
-                label="Exam Type"
+                label="Exam type"
                 value={values.examTypeName || values.examType || '-'}
               />
-              <ExamReviewInfoItem label="Grading Scale" value={gradingScaleName} />
+              <ExamReviewInfoItem label="Grading scale" value={gradingScaleName} />
               {values.description && (
                 <Box sx={{ gridColumn: '1 / -1' }}>
                   <ExamReviewInfoItem label="Description" value={values.description} />
@@ -83,12 +76,12 @@ const ExamBasicReview = ({
 
         <Grid size={{ xs: 12, lg: 6 }}>
           <Paper variant="outlined" sx={reviewCardSx}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Iconify icon="mdi:school-outline" width={20} sx={{ color: 'text.secondary' }} />
-              <Typography variant="subtitle2" fontWeight={700}>
-                Class & subjects
-              </Typography>
-            </Box>
+            <FormSectionHeader
+              icon={GlobalIcons.admissionInterest}
+              title="Class & Subjects"
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+              descriptionTooltip="Review the class, divisions, and subjects included in this exam."
+            />
             <Divider sx={{ my: 2 }} />
             <Box sx={reviewFactsSx}>
               <ExamReviewInfoItem label="Class" value={className || '-'} />

@@ -60,6 +60,22 @@ const formatConflictIssue = (conflict: Record<string, unknown>): TimetableValida
   const standardName = getValue(conflict, 'conflictingStandardName', 'ConflictingStandardName');
   const divisionName = getValue(conflict, 'conflictingDivisionName', 'ConflictingDivisionName');
   const subjectName = getValue(conflict, 'conflictingSubjectName', 'ConflictingSubjectName');
+  const academicYear = getValue(
+    conflict,
+    'conflictingAcademicYearName',
+    'ConflictingAcademicYearName'
+  );
+  const board = getValue(
+    conflict,
+    'conflictingEducationBoardName',
+    'ConflictingEducationBoardName'
+  );
+  const medium = getValue(
+    conflict,
+    'conflictingEducationMediumName',
+    'ConflictingEducationMediumName'
+  );
+  const academicContext = [academicYear, board, medium].filter(Boolean).join(' / ');
   const classText = [standardName, divisionName && `Division ${divisionName}`]
     .filter(Boolean)
     .join(' ');
@@ -69,6 +85,7 @@ const formatConflictIssue = (conflict: Record<string, unknown>): TimetableValida
     description: [
       `${resourceName} is already assigned`,
       classText ? `to ${classText}` : 'to another class',
+      academicContext ? `(${academicContext})` : '',
       subjectName ? `for ${subjectName}` : '',
       day || timeRange ? `during ${[day, timeRange].filter(Boolean).join(' ')}` : '',
     ]
@@ -81,6 +98,9 @@ const formatConflictIssue = (conflict: Record<string, unknown>): TimetableValida
       ...(day ? { Day: day } : {}),
       ...(classText ? { Class: classText } : {}),
       ...(subjectName ? { Subject: subjectName } : {}),
+      ...(academicYear ? { 'Academic year': academicYear } : {}),
+      ...(board ? { Board: board } : {}),
+      ...(medium ? { Medium: medium } : {}),
       [resourceLabel]: resourceName,
     },
   };

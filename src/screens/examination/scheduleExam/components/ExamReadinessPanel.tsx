@@ -1,3 +1,4 @@
+import { GlobalIcons } from 'src/utils/icons';
 import { Box, Chip, Stack, Button, Divider, Typography } from '@mui/material';
 
 import { ExamReviewAccordion } from './ExamReviewAccordion';
@@ -16,12 +17,8 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
 
   return (
     <ExamReviewAccordion
-      title="Readiness check"
-      icon={
-        readiness.isReady
-          ? 'solar:verified-check-bold-duotone'
-          : 'solar:danger-triangle-bold-duotone'
-      }
+      title="Readiness Check"
+      icon={readiness.isReady ? GlobalIcons.tick : GlobalIcons.alertIcon}
       status={
         <Chip
           size="small"

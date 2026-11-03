@@ -5,23 +5,23 @@ import type { TooltipProps } from '@mui/material';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
+import { Box, Card } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Card, Typography } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   scheduleExamApi,
   useDeleteExamMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import NewExamForm from './components/examFormComponent';
+import { useExamFormClose } from './use-exam-form-close';
 import ScheduledExamTable from './components/scheduleExamTable';
 import ExamTimetableDialog from './components/ExamTimetableDialog';
 import { useScheduleExamListQuery } from './use-schedule-exam-list-query';
@@ -31,6 +31,7 @@ import type { IExamFormValues } from './type';
 const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control exam form visibility
   const [open, setOpen] = useState(false);
+  const [isFormBusy, setIsFormBusy] = useState(false);
   // State to store currently selected exam for editing
   const [selectedExam, setSelectedExam] = useState<IExamFormValues | null>(null);
   // Active status tab driving the API query
@@ -54,8 +55,6 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   // Boolean hook to control delete confirmation dialog
   const deleteDialog = useBoolean();
   const insightsDrawer = useBoolean();
-  // Redux dispatch hook for state management
-  const dispatch = useDispatch();
   // Boolean hook to control time view dialog
   const viewTimeDialog = useBoolean(); // Dynamic breadcrumb navigation links based on current view (form or list)
 
@@ -100,85 +99,21 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     setSelectedExam(null);
   };
 
-  /**
-   * Handles closing the exam form with confirmation if there are unsaved changes
-   * @param _e - Event object (unused)
-   * @param isSubmit - Boolean indicating if form was submitted successfully
-   */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      setOpen(false);
-      dispatch(setIsChanges(false));
-      setSelectedExam(null);
-    } else if (!isChanges) {
+  const { handleClose, confirmation } = useExamFormClose(
+    open,
+    isChanges,
+    () => {
       setOpen(false);
       setSelectedExam(null);
-    }
-  };
+    },
+    isFormBusy
+  );
   const listTooltip = "Manage all your institution's exams from a single place.";
 
-  const createTooltip = (
-    <Box sx={{ p: 1.5, maxWidth: 340 }}>
-      <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-        Creating a New Exam — 4 Steps
-      </Typography>
-
-      <Box component="ol" sx={{ m: 0, pl: 2.5, '& li': { mb: 0.5 } }}>
-        <Typography component="li" variant="caption" color="text.secondary">
-          <strong>Basic Details</strong> — Enter exam name, type, class, medium, and exam dates.
-          Mark it for <em>Online</em> or <em>Offline</em> mode.
-        </Typography>
-        <Typography component="li" variant="caption" color="text.secondary">
-          <strong>Subject Schedule</strong> — Assign each subject its exam date, start time, end
-          time, total marks, and passing marks. Set grade scaling and add notes if needed.
-        </Typography>
-        <Typography component="li" variant="caption" color="text.secondary">
-          <strong>Room Allocation</strong> — Assign rooms and seating capacity per subject so
-          students are distributed correctly.
-        </Typography>
-        <Typography component="li" variant="caption" color="text.secondary">
-          <strong>Review &amp; Finish</strong> — Verify all details and finish the draft setup. Use
-          the visible <strong>Publish exam</strong> action in the list when the timetable is ready.
-        </Typography>
-      </Box>
-
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ display: 'block', mt: 1, fontStyle: 'italic' }}
-      >
-        Tip: You can save progress and return to continue later before submitting.
-      </Typography>
-    </Box>
-  );
-
-  const updateTooltip = (
-    <Box sx={{ p: 1.5, maxWidth: 320 }}>
-      <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-        Updating an Existing Exam
-      </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-        Edit any section of the previously saved exam without losing your other data.
-      </Typography>
-
-      <Box component="ul" sx={{ m: 0, pl: 2, '& li': { mb: 0.25 } }}>
-        <Typography component="li" variant="caption" color="text.secondary">
-          Navigate between steps freely using <strong>Back</strong> / <strong>Next</strong>.
-        </Typography>
-        <Typography component="li" variant="caption" color="text.secondary">
-          Changes to <strong>Subject Schedule</strong> or <strong>Rooms</strong> are independent of
-          other steps.
-        </Typography>
-        <Typography component="li" variant="caption" color="text.secondary">
-          The <strong>Review</strong> step highlights incomplete fields before you finish the draft.
-        </Typography>
-        <Typography component="li" variant="caption" color="text.secondary">
-          Only <strong>Pending</strong> exams can be fully edited. Scheduled exams allow limited
-          updates.
-        </Typography>
-      </Box>
-    </Box>
-  );
+  const createTooltip =
+    'Complete Basic Details, Schedule, Room Details, and Review. Save each step as a draft, then publish the exam separately from the list.';
+  const updateTooltip =
+    'Update the exam details, subject schedule, and optional room assignments. Save each changed step before finishing the draft.';
 
   return (
     <Box height="100%" display="flex" flexDirection="column" overflow="hidden">
@@ -204,6 +139,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
               { name: 'Schedule Exam' },
             ]}
             isBack
+            backDisabled={isFormBusy}
             onBack={() => {
               handleClose(null, false);
             }}
@@ -236,11 +172,10 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
             transition={{ duration: 0.28, ease: 'easeOut' }}
             style={{ flex: 1, minHeight: 0 }}
           >
-            <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+            <Card sx={{ height: '100%', boxShadow: 'none' }}>
               <NewExamForm
-                onClose={() => {
-                  setOpen(false);
-                }}
+                onClose={() => handleClose(null, true)}
+                onBusyChange={setIsFormBusy}
                 editData={selectedExam as any}
               />
             </Card>
@@ -327,6 +262,8 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           </LoadingButton>
         }
       />
+
+      {confirmation}
 
       <ExamTimetableDialog
         open={viewTimeDialog.value}

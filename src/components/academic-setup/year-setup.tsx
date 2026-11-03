@@ -101,6 +101,7 @@ const YearSetup = ({ initialYearId }: { initialYearId?: string } = {}) => {
                   currentYear={workspace.currentYear}
                   onSelectNode={workspace.selectNode}
                   onSelectCrumb={workspace.selectCrumb}
+                  onAddBoard={boardDialog.onTrue}
                 />
               ) : (
                 <AcademicSetupStatus kind="empty" onCreateYear={openCreateYear} />

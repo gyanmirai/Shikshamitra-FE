@@ -3,12 +3,16 @@ module: security
 domain: permissions
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-30
+updated_on: 2026-11-03
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Security frontend changes
+
+## Protected admin permissions
+
+`use-permission-draft.test.tsx` covers blocked edits and programmatic submits for protected role/user catalogues. `e2e/security/admin-permissions.spec.ts` uses the real shared form and synthetic API responses to check both dialogs, disabled controls, and zero writes at desktop/mobile sizes. Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/security/admin-permissions.config.ts`, then complete the final in-app browser smoke test. These fixtures do not prove deployed backend authorization.
 
 ## Visibility prerequisites and role shortcuts
 

@@ -1,15 +1,17 @@
 import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../academicApi';
+import { fetchAllTimetableSettings } from './fetchAllTimetableSettings';
 
 export const weeklyLecturesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     getWeeklyLectureSlots: builder.query({
-      query: ({ AcademicMediumId }: { AcademicMediumId: string }) => ({
-        url: '/academics/timetable/settings/weekly-lecture-slots',
-        method: 'GET',
-        params: { AcademicMediumId },
-      }),
+      queryFn: ({ AcademicMediumId }: { AcademicMediumId: string }, _api, _options, baseQuery) =>
+        fetchAllTimetableSettings(
+          baseQuery,
+          '/academics/timetable/settings/weekly-lecture-slots',
+          AcademicMediumId
+        ),
       providesTags: [academicType.weeklyLectureSlot],
     }),
 

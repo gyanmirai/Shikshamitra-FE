@@ -59,6 +59,26 @@ beforeEach(() => {
 });
 
 describe('permission drafts and verified changed-only writes', () => {
+  it('locks the admin role even without optional server metadata', async () => {
+    const admin = { providerName: 'R', providerKey: 'admin' };
+    mocks.query.currentData = catalogue(['View'], admin);
+    const { result } = start(admin);
+    act(() => result.current.setGrants(['View'], false));
+    await act(() => result.current.submit());
+    expect(result.current.blocked).toBe(true);
+    expect(result.current.dirty).toBe(false);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+  it.each([role, user])('blocks every edit and submit for a protected $providerName provider', async (provider) => {
+    mocks.query.currentData = { ...catalogue(['View', 'Edit', 'Activate'], provider), isReadOnly: true };
+    const { result, saved } = start(provider);
+    act(() => result.current.setStates(['View'], 'deny'));
+    await act(() => result.current.submit());
+    expect(result.current.blocked).toBe(true);
+    expect(result.current.dirty).toBe(false);
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(saved).not.toHaveBeenCalled();
+  });
   it('discards an unsaved rule without reloading or writing permissions', () => {
     mocks.query.currentData = { ...catalogue([], user, true), overrides: { Edit: 'deny' as const } };
     const { result } = start(user);

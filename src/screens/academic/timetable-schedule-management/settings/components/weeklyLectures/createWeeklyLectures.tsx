@@ -11,8 +11,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 
 import { CapacityBanner } from './components/CapacityBanner';
 import { useWeeklyLectureForm } from './hooks/useWeeklyLectureForm';
-import { SubjectListSkeleton } from './components/SubjectListSkeleton';
-import { SubjectsLectureTable } from './components/SubjectsLectureTable';
+import { WeeklyLectureTargets } from './components/WeeklyLectureTargets';
 import { WeeklyLectureClassPicker } from './components/WeeklyLectureClassPicker';
 import { WeeklyLectureFormActions } from './components/WeeklyLectureFormActions';
 
@@ -112,42 +111,25 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                 requiredLectures={requiredLectures}
                 hasSlots={hasSlots}
                 classContext={classContext}
+                onRefresh={refetchCapacity}
+                disabled={isSubmitting}
               />
             ))}
 
           {hasClass && (
-            <FormSectionCard
-              title="Subject Lecture Targets"
-              icon={GlobalIcons.notebook}
-              descriptionTooltip="Set each subject's weekly lecture target within the available teaching capacity."
-            >
-              {isSubjectsLoading || isDetailsLoading ? (
-                <Stack role="status" aria-label="Loading subject lecture targets" aria-busy>
-                  <SubjectListSkeleton />
-                </Stack>
-              ) : detailsError ? (
-                <Alert severity="error">Subject lecture targets could not be loaded.</Alert>
-              ) : !editData && subjectsError ? (
-                <Alert
-                  severity="error"
-                  action={
-                    <Button size="small" onClick={refetchSubjects}>
-                      Retry
-                    </Button>
-                  }
-                >
-                  Subject assignments could not be loaded for {classContext}.
-                </Alert>
-              ) : formik.values.subjects.length === 0 ? (
-                <Alert severity="info">
-                  No published subject assignments were found for {classContext}. Publish this
-                  class&apos;s subject assignments in Subject Allocation before entering weekly
-                  lecture targets.
-                </Alert>
-              ) : (
-                <SubjectsLectureTable formik={formik} disabled={disabled} isEdit={isEdit} />
-              )}
-            </FormSectionCard>
+            <WeeklyLectureTargets
+              formik={formik}
+              isSubjectsLoading={isSubjectsLoading}
+              isDetailsLoading={isDetailsLoading}
+              detailsError={detailsError}
+              subjectsError={subjectsError}
+              classContext={classContext}
+              refetchSubjects={editData ? refetchDetails : refetchSubjects}
+              isSubmitting={isSubmitting}
+              disabled={disabled}
+              isEdit={isEdit}
+              hasEditData={!!editData}
+            />
           )}
         </Stack>
       </DialogScrollContent>

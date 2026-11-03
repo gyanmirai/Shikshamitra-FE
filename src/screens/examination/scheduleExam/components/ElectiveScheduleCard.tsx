@@ -1,15 +1,8 @@
 import type { ReactNode } from 'react';
 
-import { varAlpha } from 'src/theme/styles';
-import { Iconify } from 'src/components/iconify';
-import {
-  Box,
-  Chip,
-  Accordion,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Chip } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { EmptyElectiveSchedule } from './EmptyElectiveSchedule';
 
@@ -29,67 +22,31 @@ export function ElectiveScheduleCard({
   children,
 }: Props) {
   return (
-    <Accordion
-      defaultExpanded
-      disableGutters
-      elevation={0}
-      sx={{
-        mb: 2,
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-        overflow: 'hidden',
-        '&:before': { display: 'none' },
-      }}
-    >
-      <AccordionSummary
-        expandIcon={<Iconify icon="eva:chevron-down-fill" width={18} />}
-        sx={{
-          px: 2,
-          minHeight: 44,
-          bgcolor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.07),
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          '&.Mui-expanded': { minHeight: 44 },
-          '& .MuiAccordionSummary-content': {
-            alignItems: 'center',
-            gap: 1,
-            my: 0.75,
-            flexWrap: 'wrap',
-          },
-        }}
-      >
-        <Box
-          sx={{
-            width: 10,
-            height: 10,
-            borderRadius: '50%',
-            bgcolor: 'warning.main',
-            flexShrink: 0,
-          }}
-        />
-        <Typography variant="subtitle2" fontWeight={700}>
-          {name}
-        </Typography>
+    <FormSectionCard
+      collapsible
+      title={name}
+      icon={GlobalIcons.family}
+      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+      descriptionTooltip="Schedule the electives with assigned students in the selected divisions. Subjects without assigned students are excluded from this exam."
+      sx={{ mb: 2, minWidth: 0 }}
+      contentSx={{ minWidth: 0 }}
+      action={
         <Chip
           label={
             subjectCount === 0
               ? 'No assigned students'
-              : `${subjectCount} subject${subjectCount !== 1 ? 's' : ''}`
+              : `${subjectCount} subject${subjectCount === 1 ? '' : 's'}`
           }
           size="small"
-          color="warning"
-          variant="soft"
-          sx={{ fontSize: '0.7rem', height: 20, fontWeight: 600 }}
+          variant="outlined"
         />
-      </AccordionSummary>
-      <AccordionDetails sx={{ p: 0 }}>
-        {subjectCount === 0 ? (
-          <EmptyElectiveSchedule standardId={standardId} divisionIds={divisionIds} />
-        ) : (
-          children
-        )}
-      </AccordionDetails>
-    </Accordion>
+      }
+    >
+      {subjectCount === 0 ? (
+        <EmptyElectiveSchedule standardId={standardId} divisionIds={divisionIds} />
+      ) : (
+        children
+      )}
+    </FormSectionCard>
   );
 }

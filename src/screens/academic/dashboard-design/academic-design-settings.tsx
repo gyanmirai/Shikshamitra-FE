@@ -18,21 +18,23 @@ const groups = [
 
 export function AcademicDesignSettings({ entry }: { entry: AcademicInsightsDisplayArea }) {
   const rows = getAcademicSettingRows(entry.section, entry.links);
-  return <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: {
-    xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))',
+  return <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: {
+    xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(4, minmax(0, 1fr))',
   } }}>
     {groups.map((group) => {
       const settings = rows.filter((row) => row.group === group.key).sort((a, b) =>
         group.key === 'timetable' ? Number(b.key === 'lecture-slots') - Number(a.key === 'lecture-slots') : 0);
       if (!settings.length) return null;
-      return <Box key={group.key} sx={{ minWidth: 0 }}>
-        <Stack direction="row" alignItems="center" gap={0.75} sx={{ mb: 0.75 }}>
+      return <Box component="section" aria-label={group.label} key={group.key}
+        sx={{ minWidth: 0, border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
+        <Stack direction="row" alignItems="center" gap={1}
+          sx={{ px: 1.5, py: 1.25, bgcolor: 'background.neutral', borderBottom: '1px solid', borderColor: 'divider' }}>
           <Iconify icon={group.icon} width={18} aria-hidden sx={{ color: 'text.secondary' }} />
           <Typography component="h3" variant="subtitle2">{group.label}</Typography>
         </Stack>
-        <Stack component="ul" aria-label={`${group.label} settings`} spacing={0} sx={{ m: 0, p: 0, listStyle: 'none' }}>
+        <Stack component="ul" aria-label={`${group.label} settings`} spacing={0} sx={{ m: 0, px: 1.5, py: 0.5, listStyle: 'none' }}>
           {settings.map((row) => <Stack component="li" key={row.key} direction="row" alignItems="center" justifyContent="space-between"
-            gap={0.75} sx={{ py: 0.75, minWidth: 0, borderBottom: '1px solid', borderColor: 'divider', flexWrap: 'wrap' }}>
+            gap={1} sx={{ py: 1, minWidth: 0, borderBottom: '1px solid', borderColor: 'divider', flexWrap: 'wrap', '&:last-child': { borderBottom: 0 } }}>
             {row.href ? <MuiLink component={Link} href={row.href} variant="caption" color="inherit" underline="hover"
               sx={{ overflowWrap: 'anywhere', minWidth: 0 }}>{row.label}</MuiLink>
               : <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>{row.label}</Typography>}

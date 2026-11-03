@@ -3,6 +3,7 @@ import { Box, Grid, Paper, Typography } from '@mui/material';
 
 import { NODE_TYPE_META } from './academic-setup-model';
 import { AcademicOrderAction } from './academic-order-action';
+import { AcademicSetupAddAction } from './academic-setup-add-action';
 import { AcademicSetupChildCard } from './academic-setup-child-card';
 import { AcademicSetupDetailsHeader } from './academic-setup-details-header';
 
@@ -17,6 +18,7 @@ type AcademicSetupDetailsProps = {
   currentYear: AcademicYearRecord;
   onSelectNode: (node: AcademicSetupNode) => void;
   onSelectCrumb: (id: string, type: AcademicSetupNodeType, name: string) => void;
+  onAddBoard: () => void;
 };
 
 export const AcademicSetupDetails = ({
@@ -24,6 +26,7 @@ export const AcademicSetupDetails = ({
   currentYear,
   onSelectNode,
   onSelectCrumb,
+  onAddBoard,
 }: AcademicSetupDetailsProps) => {
   const meta = NODE_TYPE_META[node.type];
   const children = node.children ?? [];
@@ -51,7 +54,7 @@ export const AcademicSetupDetails = ({
       />
 
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 1 }}>
-        {node.type !== 'Academic Year' && !isFinalLevel && (
+        {!isFinalLevel && (
           <Box
             sx={{
               display: 'flex',
@@ -62,8 +65,26 @@ export const AcademicSetupDetails = ({
               mb: 1,
             }}
           >
-            <Typography variant="subtitle2">{meta.childLabel}</Typography>
-            <AcademicOrderAction key={`${node.type}-${node.id}`} node={node} />
+            {node.type !== 'Academic Year' && (
+              <Typography variant="subtitle2">{meta.childLabel}</Typography>
+            )}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                flexWrap: 'wrap',
+                gap: 1,
+                ml: 'auto',
+              }}
+            >
+              <AcademicOrderAction key={`${node.type}-${node.id}`} node={node} />
+              <AcademicSetupAddAction
+                key={`add-${node.type}-${node.id}`}
+                node={node}
+                onAddBoard={onAddBoard}
+              />
+            </Box>
           </Box>
         )}
 

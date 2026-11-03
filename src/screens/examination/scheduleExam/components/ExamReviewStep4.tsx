@@ -7,6 +7,7 @@ import ExamBasicReview from './ExamBasicReview';
 import ExamScheduleReview from './ExamScheduleReview';
 import ExamReadinessPanel from './ExamReadinessPanel';
 import RoomAllocationReview from './RoomAllocationReview';
+import { ExamValidationSummary } from './ExamValidationSummary';
 
 import type { IExamFormValues } from '../type';
 
@@ -18,6 +19,7 @@ const ExamReviewStep4 = (
   const { onEditStep } = props;
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <ExamValidationSummary errors={formik.errors} onEditStep={onEditStep} />
       <ExamBasicReview formik={formik} onEdit={onEditStep ? () => onEditStep(0) : undefined} />
       <ExamScheduleReview formik={formik} onEdit={onEditStep ? () => onEditStep(1) : undefined} />
       <RoomAllocationReview formik={formik} onEdit={onEditStep ? () => onEditStep(2) : undefined} />

@@ -7,12 +7,16 @@ import { alpha } from '@mui/material/styles';
 import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 
+import { WeeklyLectureSetupActions } from './WeeklyLectureSetupActions';
+
 interface CapacityBannerProps {
   status: TimetableSettingStatus;
   availableCapacity: number;
   requiredLectures: number;
   hasSlots: boolean;
   classContext: string;
+  onRefresh: () => unknown;
+  disabled?: boolean;
 }
 
 const BANNER_CONFIG: Record<
@@ -32,6 +36,8 @@ export function CapacityBanner({
   requiredLectures,
   hasSlots,
   classContext,
+  onRefresh,
+  disabled,
 }: CapacityBannerProps) {
   const { color, icon } = BANNER_CONFIG[status];
   const remaining = availableCapacity - requiredLectures;
@@ -53,7 +59,7 @@ export function CapacityBanner({
     <Box
       sx={{
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap: 1,
         p: 1.5,
         borderRadius: 1.5,
@@ -62,11 +68,14 @@ export function CapacityBanner({
         border: (theme) => `1px solid ${alpha(theme.palette[color].main, 0.35)}`,
       }}
     >
-      <Iconify icon={icon} width={20} sx={{ color: `${color}.main`, flexShrink: 0 }} />
+      <Iconify icon={icon} width={20} sx={{ color: `${color}.dark`, flexShrink: 0 }} />
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2" color={`${color}.main`} fontWeight={600}>
+        <Typography variant="body2" color="text.primary" fontWeight={600}>
           {message}
         </Typography>
+        {(!hasSlots || status === 'OverCapacity') && (
+          <WeeklyLectureSetupActions setup="slots" onRefresh={onRefresh} disabled={disabled} />
+        )}
       </Box>
     </Box>
   );

@@ -6,28 +6,21 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { getIn } from 'formik';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { shikshaMitraToast } from 'src/components/toast';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { GroupedRoomSelector } from 'src/components/room-selection/GroupedRoomSelector';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { Box, Grid, Chip, Menu, Stack, Button, MenuItem, Typography } from '@mui/material';
 import { sortRoomOptions, createRoomOption } from 'src/components/room-selection/roomOptions';
-import {
-  Box,
-  Grid,
-  Chip,
-  Menu,
-  Paper,
-  Stack,
-  Button,
-  Switch,
-  MenuItem,
-  Typography,
-} from '@mui/material';
+
+import { RoomAssignmentToggle } from './RoomAssignmentToggle';
 
 import type { IExamFormValues } from '../type';
 
@@ -51,59 +44,11 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
   const formik = props;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {/* Modernized Switch Section */}
-      <Paper
-        role="button"
-        tabIndex={0}
-        elevation={0}
-        sx={{
-          p: 2,
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          cursor: 'pointer',
-          backgroundColor: 'background.paper',
-        }}
-        onClick={() => {
-          formik.setFieldValue('isRoomAssign', !formik.values.isRoomAssign);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            formik.setFieldValue('isRoomAssign', !formik.values.isRoomAssign);
-          }
-        }}
-      >
-        <Switch
-          checked={formik.values.isRoomAssign}
-          onChange={() => {
-            formik.setFieldValue('isRoomAssign', !formik.values.isRoomAssign);
-          }}
-          onClick={(e) => e.stopPropagation()}
-          inputProps={{ 'aria-label': 'room-assignment-toggle' }}
-        />
-        <Box>
-          <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-            Assign Rooms{' '}
-            <Typography
-              component="span"
-              variant="subtitle1"
-              color="text.secondary"
-              fontWeight={400}
-            >
-              (Optional)
-            </Typography>
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Optionally allocate specific rooms for each division and subject. Leave off if room
-            assignment is not needed.
-          </Typography>
-        </Box>
-      </Paper>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+      <RoomAssignmentToggle
+        checked={Boolean(formik.values.isRoomAssign)}
+        onChange={(checked) => formik.setFieldValue('isRoomAssign', checked)}
+      />
 
       {/* Render Subject Cards if functionality is enabled */}
       <AnimatePresence>
@@ -115,7 +60,7 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
             animate="show"
             exit="exit"
           >
-            <Grid container spacing={1.5}>
+            <Grid container spacing={2}>
               {(formik.values.subjects ?? []).flatMap((subject: any) => {
                 if (subject.electiveGroupId && Array.isArray(subject.subjects)) {
                   return subject.subjects.flatMap((s: any, sIdx: number) => {
@@ -245,9 +190,12 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
   );
 
   return (
-    <SectionCard
+    <FormSectionCard
       title={subjectName}
-      headerContent={
+      icon={GlobalIcons.building}
+      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+      descriptionTooltip="Assign rooms to each selected division for this subject. Capacity is the total capacity of the selected rooms."
+      action={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           {electiveGroupName && (
             <Chip
@@ -279,10 +227,13 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
           <Button
             size="small"
             variant="contained"
-            startIcon={<Iconify icon="mdi:domain" />}
+            color="inherit"
+            type="button"
+            disabled={isRoomsLoading || roomOptions.length === 0}
+            startIcon={<Iconify icon={GlobalIcons.building} />}
             onClick={(e) => setBulkAnchorEl(e.currentTarget)}
           >
-            Apply Room to All Divisions
+            Apply room to all divisions
           </Button>
 
           <Menu
@@ -293,7 +244,7 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
           >
             <Box sx={{ px: 2, py: 1 }}>
               <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                SELECT ROOM TO APPLY
+                Select room to apply
               </Typography>
             </Box>
             {roomOptions.map((opt: any) => (
@@ -315,15 +266,6 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
           </Menu>
         </Box>
       }
-      paperProps={{
-        sx: {
-          mb: 2,
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          boxShadow: 'none',
-        },
-      }}
     >
       <Grid size={{ xs: 12 }}>
         <CustomizableTable
@@ -347,7 +289,7 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
             },
             {
               id: 'roomIds',
-              label: `Room Assignment${formik.values.isRoomAssign ? ' *' : ''}`,
+              label: 'Room assignment',
               isFilter: false,
               isSort: false,
               render: (_value, row) => {
@@ -370,29 +312,33 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                 const hasError = Boolean(isRequiredMissing);
 
                 return (
-                  <GroupedRoomSelector
-                    multiple
-                    label={`Select Room(s)${formik.values.isRoomAssign ? ' *' : ''}`}
-                    loading={isRoomsLoading}
-                    options={roomOptions}
-                    value={selectedRooms}
-                    error={hasError}
-                    helperText={errorMessage || ''}
-                    onChange={(newValue) => {
-                      const newVal = Array.isArray(newValue) ? newValue : [];
-                      const ids = newVal.map((r) => r.id);
-                      const totalCapacity = newVal.reduce((sum, r) => sum + (r.capacity || 0), 0);
-                      formik.setFieldValue(fieldPath, ids);
-                      formik.setFieldValue(
-                        `roomDetails.${subjectId}.${row.divisionId}.capacity`,
-                        totalCapacity
-                      );
-                      formik.setFieldTouched(fieldPath, true, false);
-                      if (ids.length > 0) {
-                        formik.setFieldError(fieldPath, undefined);
-                      }
-                    }}
-                  />
+                  <ShakingTextField error={hasError}>
+                    <GroupedRoomSelector
+                      multiple
+                      required={Boolean(formik.values.isRoomAssign)}
+                      name={fieldPath}
+                      label="Rooms"
+                      loading={isRoomsLoading}
+                      options={roomOptions}
+                      value={selectedRooms}
+                      error={hasError}
+                      helperText={errorMessage || ''}
+                      onChange={(newValue) => {
+                        const newVal = Array.isArray(newValue) ? newValue : [];
+                        const ids = newVal.map((r) => r.id);
+                        const totalCapacity = newVal.reduce((sum, r) => sum + (r.capacity || 0), 0);
+                        formik.setFieldValue(fieldPath, ids);
+                        formik.setFieldValue(
+                          `roomDetails.${subjectId}.${row.divisionId}.capacity`,
+                          totalCapacity
+                        );
+                        formik.setFieldTouched(fieldPath, true, false);
+                        if (ids.length > 0) {
+                          formik.setFieldError(fieldPath, undefined);
+                        }
+                      }}
+                    />
+                  </ShakingTextField>
                 );
               },
             },
@@ -411,6 +357,6 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
           data={tableData}
         />
       </Grid>
-    </SectionCard>
+    </FormSectionCard>
   );
 };

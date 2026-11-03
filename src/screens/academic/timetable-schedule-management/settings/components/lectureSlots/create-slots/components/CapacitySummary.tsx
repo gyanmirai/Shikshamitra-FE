@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import { alpha } from '@mui/material/styles';
 import { Box, Grid, Skeleton, Typography } from '@mui/material';
 import {
   getActiveDaysCount,
@@ -50,11 +49,11 @@ export default function CapacitySummary({
   }, [slotConfigurations]);
 
   const items = [
-    { label: 'Total Slots', value: stats.totalSlotsPerDay },
-    { label: 'Teaching Slots/Day', value: stats.teachingSlotsPerDay },
-    { label: 'Non-Teaching Slots/Day', value: stats.nonTeachingSlotsPerDay },
-    { label: 'Active Days', value: stats.activeDaysCount },
-    { label: 'Weekly Teaching Capacity', value: stats.weeklyTeachingCapacity, highlight: true },
+    { label: 'Total slots', value: stats.totalSlotsPerDay },
+    { label: 'Teaching slots/day', value: stats.teachingSlotsPerDay },
+    { label: 'Non-teaching slots/day', value: stats.nonTeachingSlotsPerDay },
+    { label: 'Active days', value: stats.activeDaysCount },
+    { label: 'Weekly teaching capacity', value: stats.weeklyTeachingCapacity },
   ];
 
   return (
@@ -64,8 +63,7 @@ export default function CapacitySummary({
         p: 1.5,
         borderRadius: 2,
         border: (theme) => `1px solid ${theme.palette.divider}`,
-        bgcolor: (theme) =>
-          alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.08 : 0.04),
+        bgcolor: 'background.neutral',
       }}
     >
       <Grid container spacing={1}>
@@ -78,11 +76,7 @@ export default function CapacitySummary({
             {isLoading ? (
               <Skeleton width={28} height={32} sx={{ mx: 'auto' }} />
             ) : (
-              <Typography
-                variant="h6"
-                fontWeight={700}
-                color={item.highlight ? 'primary.main' : 'text.primary'}
-              >
+              <Typography variant="h6" fontWeight={700} color="text.primary">
                 {item.value}
               </Typography>
             )}

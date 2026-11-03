@@ -3,24 +3,24 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
-import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Card, Button } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
+import { useGetChapterLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   CurriculumReportTitle,
   CurriculumReportApiTypeMap,
   CurriculumReportTitleOptions,
 } from 'src/enums/curriuculum-reports';
-import { useGetChapterLookupQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import CurriculumReportPreviewDrawer from './CurriculumReportPreviewDrawer';
@@ -194,8 +194,8 @@ const CurriculumReportForm = ({
         setPreviewOpen(true);
       } else if (submitType === 'export') {
         try {
-          const res = await createExport({ ...requestPayload, format: 'pdf' }).unwrap();
-          toast.success(`Export job queued successfully! Status: ${res.status || 'Queued'}`);
+          await createExport({ ...requestPayload, format: 'pdf' }).unwrap();
+          shikshaMitraToast.info({ message: 'Report export queued.' });
           if (onSuccess) {
             onSuccess();
           }

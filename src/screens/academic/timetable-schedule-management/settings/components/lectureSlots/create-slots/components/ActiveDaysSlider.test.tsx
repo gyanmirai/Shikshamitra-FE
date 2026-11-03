@@ -17,6 +17,19 @@ const renderSelector = (value: number[], onChange = vi.fn()) =>
   );
 
 describe('ActiveDaysSlider', () => {
+  it('associates a required day group with its validation error', () => {
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <ActiveDaysSlider value={[]} onChange={vi.fn()} error="Select at least one active day" />
+      </ThemeProvider>
+    );
+
+    const group = screen.getByRole('group', { name: /Active Days/ });
+    expect(group).toHaveAccessibleName('Active Days (required)');
+    expect(group).toHaveAccessibleDescription('Select at least one active day');
+    expect(screen.getByRole('combobox', { name: 'Schedule' })).toBeEnabled();
+  });
+
   it('toggles an individual interior day without changing the other selected days', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -37,13 +50,25 @@ describe('ActiveDaysSlider', () => {
     expect(onChange).toHaveBeenCalledWith([0, 2, 5]);
   });
 
-  it('retains quick selection for the Monday to Saturday range', async () => {
+  it('applies the Monday to Saturday preset to a custom selection', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     renderSelector([0, 2, 5], onChange);
 
-    await user.click(screen.getByRole('button', { name: 'Mon–Sat' }));
+    expect(screen.getByRole('combobox', { name: 'Schedule' })).toHaveTextContent('Custom');
+    await user.click(screen.getByRole('combobox', { name: 'Schedule' }));
+    await user.click(screen.getByRole('option', { name: 'Mon–Sat' }));
 
     expect(onChange).toHaveBeenCalledWith([0, 1, 2, 3, 4, 5]);
+  });
+
+  it('identifies the weekday preset and applies it without including Saturday', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderSelector([0, 1, 2, 3, 4, 5], onChange);
+    expect(screen.getByRole('combobox', { name: 'Schedule' })).toHaveTextContent('Mon–Sat');
+    await user.click(screen.getByRole('combobox', { name: 'Schedule' }));
+    await user.click(screen.getByRole('option', { name: 'Mon–Fri' }));
+    expect(onChange).toHaveBeenCalledWith([0, 1, 2, 3, 4]);
   });
 });

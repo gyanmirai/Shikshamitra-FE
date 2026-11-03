@@ -18,6 +18,7 @@ import { Box, Card, Stack, Button, Typography, LinearProgress } from '@mui/mater
 import { useGetLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 import { TimetableStatusChip } from 'src/components/timetable-status-chip/TimetableStatusChip';
 import { TIMETABLE_STATUS_LABEL, normalizeTimetableStatus } from 'src/utils/timetable-capacity';
+import { useAcademicDiscardGuard } from 'src/screens/academic/components/useAcademicDiscardGuard';
 import { TimetableSettingsSummaryCards } from 'src/screens/academic/components/AcademicSummaryInsights';
 import { useLectureSlotsNavigation } from 'src/screens/academic/setup/embedding/useLectureSlotsNavigation';
 import { lectureSlotActionLocation } from 'src/screens/academic/setup/embedding/lecture-slot-action-location';
@@ -51,6 +52,16 @@ const LectureSlots = () => {
   const viewSlotsDialog = useBoolean();
 
   const assignSlotsDialog = useBoolean();
+  const slotNavigation = useAcademicDiscardGuard(
+    !embedded && addLectureSlotDialog.value && formState.dirty,
+    !embedded && addLectureSlotDialog.value && formState.busy,
+    router.push
+  );
+  const assignNavigation = useAcademicDiscardGuard(
+    !embedded && assignSlotsDialog.value && formState.dirty,
+    !embedded && assignSlotsDialog.value && formState.busy,
+    router.push
+  );
 
   React.useEffect(() => {
     const action = searchParams.get('action');
@@ -168,6 +179,7 @@ const LectureSlots = () => {
   }, [tableData]);
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (!isSubmit && formState.busy) return;
     const resetState = () => {
       addLectureSlotDialog.onFalse();
       assignSlotsDialog.onFalse();
@@ -182,6 +194,8 @@ const LectureSlots = () => {
 
     if (isSubmit) resetState();
     else if (embedded) navigation.requestNavigation(resetState);
+    else if (addLectureSlotDialog.value) slotNavigation.requestNavigation(resetState);
+    else if (assignSlotsDialog.value) assignNavigation.requestNavigation(resetState);
     else if (!isChanges || window.confirm('Are you sure you want to leave this page?'))
       resetState();
   };
@@ -383,6 +397,8 @@ const LectureSlots = () => {
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {navigation.confirmation}
+      {slotNavigation.confirmation}
+      {assignNavigation.confirmation}
       {/* Conditional Breadcrumbs */}
       {viewSlotsDialog.value ? (
         <CustomBreadcrumbs
@@ -402,7 +418,7 @@ const LectureSlots = () => {
         <CustomBreadcrumbs
           sx={{ mb: 1 }}
           heading={`${isEdit ? 'Update' : 'Add'} Lecture Slot`}
-          description={`${isEdit ? 'Update' : 'Add'} a new lecture slot for a class.`}
+          description={isEdit ? 'Update the active days, periods, and breaks for this class.' : 'Configure active days, periods, and breaks for a class.'}
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Timetable', href: '/academic/newTimetable' },
@@ -469,7 +485,7 @@ const LectureSlots = () => {
 
       {/* Conditional Card/Table Rendering */}
       {addLectureSlotDialog.value ? (
-        <Card sx={{ flex: 1, minHeight: 0, overflow: 'hidden', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ display: 'flex', flexDirection: 'column', flex: '0 1 auto', minHeight: 0, overflow: embedded ? 'auto' : 'hidden', boxShadow: 'var(--shadows-4)' }}>
           <CreateSlotsForm
             disabled={disabled}
             handleClose={handleClose}
@@ -483,7 +499,7 @@ const LectureSlots = () => {
           <ViewCreateSlots data={editData} />
         </Card>
       ) : assignSlotsDialog.value ? (
-        <Card sx={{ flex: 1, minHeight: 0, overflow: 'auto', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ display: 'flex', flexDirection: 'column', flexShrink: 1, minHeight: 0, overflow: 'hidden' }}>
           <AssignSlots
             onClose={handleClose}
             lectureSlotId={editData?.id}

@@ -414,6 +414,12 @@ export const validationSchema = [
   yup.object().shape({}),
 ];
 
+export const fullExamValidationSchema = yup
+  .object()
+  .concat(validationSchema[0])
+  .concat(validationSchema[1])
+  .concat(validationSchema[2]);
+
 // Helper function to validate with context
 export const validateSubjectsWithContext = (subjects: any, currentIndex = null) => {
   const schema = validationSchema[1]; // Step 1 schema

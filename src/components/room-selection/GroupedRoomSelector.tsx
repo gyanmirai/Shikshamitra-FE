@@ -5,6 +5,8 @@ import { renderRoomGroup, renderRoomOption } from './room-option-renderers';
 import type { RoomOption } from './roomOptions';
 
 interface GroupedRoomSelectorProps {
+  name?: string;
+  required?: boolean;
   label: string;
   options: RoomOption[];
   value: RoomOption | RoomOption[] | null;
@@ -16,6 +18,8 @@ interface GroupedRoomSelectorProps {
 }
 
 export function GroupedRoomSelector({
+  name,
+  required = false,
   label,
   options,
   value,
@@ -54,7 +58,10 @@ export function GroupedRoomSelector({
       renderInput={(params) => (
         <TextField
           {...params}
+          name={name}
           label={label}
+          inputProps={{ ...params.inputProps, 'aria-required': required }}
+          InputLabelProps={{ required }}
           error={error}
           helperText={helperText}
           slotProps={{ formHelperText: { sx: { fontWeight: error ? 600 : 400 } } }}

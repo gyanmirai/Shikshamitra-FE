@@ -686,6 +686,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   const renderFormContent = () => (
     <Box
       component="form"
+      noValidate
+      inert={isBusy}
       sx={{
         display: 'flex',
         flexDirection: 'column',

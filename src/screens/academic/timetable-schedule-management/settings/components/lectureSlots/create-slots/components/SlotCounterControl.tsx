@@ -1,7 +1,7 @@
-import React from 'react';
-import { alpha } from '@mui/material/styles';
+import React, { useId } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Stack, Tooltip, IconButton, Typography } from '@mui/material';
 
 interface ISlotCounterControlProps {
@@ -12,9 +12,10 @@ interface ISlotCounterControlProps {
   max?: number;
   onChange: (value: number) => void;
   label?: string;
+  fieldName?: string;
 }
 
-const SlotCounterControl: React.FC<ISlotCounterControlProps> = ({
+export default function SlotCounterControl({
   value,
   label = 'lecture slot group',
   disabled,
@@ -22,116 +23,102 @@ const SlotCounterControl: React.FC<ISlotCounterControlProps> = ({
   min = 1,
   max = 20,
   onChange,
-}) => {
-  const canDecrement = !disabled && value > min;
-  const canIncrement = !disabled && value < max;
-
-  const handleDecrement = () => canDecrement && onChange(value - 1);
-  const handleIncrement = () => canIncrement && onChange(value + 1);
-
+  fieldName,
+}: ISlotCounterControlProps) {
+  const errorId = useId();
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
-      <Tooltip title={disabled ? 'Select a class first' : 'Remove slot'} arrow>
-        <span>
-          <IconButton
-            size="small"
-            aria-label={`Decrease slots for ${label}`}
-            onClick={handleDecrement}
-            disabled={!canDecrement}
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              border: '1px solid',
-              borderColor: (theme) =>
-                disabled
-                  ? theme.palette.action.disabledBackground
-                  : alpha(theme.palette.error.main, 0.5),
-              color: (theme) =>
-                disabled ? theme.palette.action.disabled : theme.palette.error.main,
-              bgcolor: (theme) =>
-                disabled ? 'transparent' : alpha(theme.palette.error.main, 0.04),
-              transition: 'all 150ms ease',
-              '&:hover:not(:disabled)': {
-                bgcolor: (theme) => alpha(theme.palette.error.main, 0.12),
-                borderColor: 'error.main',
-              },
-              '&.Mui-disabled': {
-                opacity: 0.5,
-              },
-            }}
-          >
-            <RemoveIcon fontSize="small" />
-          </IconButton>
-        </span>
-      </Tooltip>
-
+    <ShakingTextField error={Boolean(error)}>
       <Box
+        component="fieldset"
+        name={fieldName}
+        tabIndex={-1}
+        role="group"
+        aria-label={`Slots per day for ${label} (required)`}
+        aria-describedby={error ? errorId : undefined}
         sx={{
-          minWidth: 36,
-          height: 36,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: 1.5,
-          bgcolor: (theme) =>
-            error ? alpha(theme.palette.error.main, 0.08) : alpha(theme.palette.primary.main, 0.08),
-          border: '1px solid',
-          borderColor: (theme) =>
-            error ? alpha(theme.palette.error.main, 0.3) : alpha(theme.palette.primary.main, 0.2),
+          m: 0,
+          p: 0,
+          border: 0,
+          minWidth: 0,
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: 'primary.main',
+            outlineOffset: 2,
+          },
         }}
       >
-        <Typography
-          variant="subtitle2"
-          fontWeight={700}
-          color={error ? 'error.main' : disabled ? 'text.disabled' : 'text.primary'}
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          spacing={1}
         >
-          {value}
-        </Typography>
-      </Box>
-
-      <Tooltip title={disabled ? 'Select a class first' : 'Add slot'} arrow>
-        <span>
-          <IconButton
-            size="small"
-            aria-label={`Increase slots for ${label}`}
-            onClick={handleIncrement}
-            disabled={!canIncrement}
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              border: '1px solid',
-              borderColor: (theme) =>
-                disabled
-                  ? theme.palette.action.disabledBackground
-                  : alpha(theme.palette.primary.main, 0.5),
-              color: (theme) =>
-                disabled ? theme.palette.action.disabled : theme.palette.primary.main,
-              bgcolor: (theme) =>
-                disabled ? 'transparent' : alpha(theme.palette.primary.main, 0.04),
-              transition: 'all 150ms ease',
-              '&:hover:not(:disabled)': {
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
-                borderColor: 'primary.main',
-              },
-              '&.Mui-disabled': {
-                opacity: 0.5,
-              },
-            }}
+          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+            Slots per day *
+          </Typography>
+          <Stack
+            direction="row"
+            alignItems="center"
+            sx={{ border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: 1 }}
           >
-            <AddIcon fontSize="small" />
-          </IconButton>
-        </span>
-      </Tooltip>
-
-      {error && (
-        <Typography variant="caption" color="error.main" sx={{ ml: 1 }}>
-          {error}
-        </Typography>
-      )}
-    </Stack>
+            <Tooltip title={value <= min ? `Minimum ${min} slot` : 'Remove slot'}>
+              <span>
+                <IconButton
+                  aria-label={`Decrease slots for ${label}`}
+                  size="small"
+                  disabled={disabled || value <= min}
+                  onClick={() => onChange(value - 1)}
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    color: 'text.secondary',
+                    borderRadius: 0,
+                  }}
+                >
+                  <RemoveIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                minWidth: 36,
+                flex: { xs: 1, sm: 'initial' },
+                height: 44,
+                display: 'grid',
+                placeItems: 'center',
+                borderLeft: 1,
+                borderRight: 1,
+                borderColor: 'divider',
+              }}
+            >
+              {value}
+            </Typography>
+            <Tooltip title={value >= max ? `Maximum ${max} slots` : 'Add slot'}>
+              <span>
+                <IconButton
+                  aria-label={`Increase slots for ${label}`}
+                  size="small"
+                  disabled={disabled || value >= max}
+                  onClick={() => onChange(value + 1)}
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    color: 'text.secondary',
+                    borderRadius: 0,
+                  }}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Stack>
+        </Stack>
+        {error && (
+          <Typography data-slot-error id={errorId} variant="caption" color="error" display="block">
+            {error}
+          </Typography>
+        )}
+      </Box>
+    </ShakingTextField>
   );
-};
-
-export default SlotCounterControl;
+}

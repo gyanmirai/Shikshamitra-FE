@@ -3,6 +3,41 @@ import { it, expect, describe } from 'vitest';
 import { extractTimetableApiIssues } from './timetableValidationIssues';
 
 describe('extractTimetableApiIssues', () => {
+  it.each(['teacher', 'room'])(
+    'identifies the academic context of a cross-medium %s conflict',
+    (type) => {
+      const [issue] = extractTimetableApiIssues({
+        data: {
+          errorCode: type === 'teacher' ? 'Academic:Timetable:030003' : 'Academic:Timetable:030004',
+          data: {
+            ConflictDetails: JSON.stringify([
+              {
+                Type: type,
+                ResourceName: type === 'teacher' ? 'Jeet Ram' : 'B104',
+                ConflictingStandardName: 'Class 12',
+                ConflictingDivisionName: 'A',
+                ConflictingSubjectName: 'Social Science',
+                ConflictingAcademicYearName: '2026-2027',
+                ConflictingEducationBoardName: 'GSEB',
+                ConflictingEducationMediumName: 'Gujarati',
+                Day: 'Monday',
+                StartTime: '11:30',
+                EndTime: '12:30',
+              },
+            ]),
+          },
+        },
+      });
+
+      expect(issue.description).toContain('Class 12 Division A (2026-2027 / GSEB / Gujarati)');
+      expect(issue.details).toMatchObject({
+        'Academic year': '2026-2027',
+        Board: 'GSEB',
+        Medium: 'Gujarati',
+      });
+    }
+  );
+
   it('uses nested RFC 7807 conflict details instead of exposing the timetable rule code', () => {
     const [issue] = extractTimetableApiIssues(
       {

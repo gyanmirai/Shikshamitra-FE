@@ -122,9 +122,9 @@ describe('Schedule Exam basic-details subject validation', () => {
         </Provider>
       );
 
-      await user.click(screen.getByRole('combobox', { name: 'Class *' }));
+      await user.click(screen.getByRole('combobox', { name: 'Class' }));
       await user.click(await screen.findByRole('option', { name: 'Class 12' }));
-      await user.click(screen.getByRole('combobox', { name: 'Division *' }));
+      await user.click(screen.getByRole('combobox', { name: 'Division' }));
       await user.click(await screen.findByRole('option', { name: 'A' }));
 
       const subjectsInput = await screen.findByRole('combobox', { name: 'Subjects *' });
