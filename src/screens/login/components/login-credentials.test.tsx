@@ -20,6 +20,11 @@ function CredentialsForm() {
   );
 }
 
+function SignInForm() {
+  const form = useLoginForm();
+  return <LoginForm form={form} />;
+}
+
 describe('sign-in required fields', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -41,7 +46,7 @@ describe('sign-in required fields', () => {
   });
 
   it('submits the login form without a school code or administrator mode button', async () => {
-    render(<LoginForm />);
+    render(<SignInForm />);
     expect(
       screen.queryByRole('button', { name: 'Platform administrator sign in' })
     ).not.toBeInTheDocument();
