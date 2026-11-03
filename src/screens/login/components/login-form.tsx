@@ -8,11 +8,17 @@ import { RouterLink } from 'src/routes/components';
 import { AuthCard } from './auth-card';
 import { LoginHelp } from './login-help';
 import { LoginCredentials } from './login-credentials';
-import { useLoginForm } from '../hooks/use-login-form';
 import { AuthSubmitButton } from './auth-submit-button';
 
-export function LoginForm() {
-  const { formik, tenantInactive, errorMessage } = useLoginForm();
+import type { useLoginForm } from '../hooks/use-login-form';
+
+type Props = {
+  form: ReturnType<typeof useLoginForm>;
+  onPasswordFocusChange?: (focused: boolean) => void;
+};
+
+export function LoginForm({ form, onPasswordFocusChange }: Props) {
+  const { formik, tenantInactive, errorMessage } = form;
 
   return (
     <Box sx={{ width: 1, maxWidth: 440, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -25,6 +31,20 @@ export function LoginForm() {
           component="form"
           noValidate
           onSubmit={formik.handleSubmit}
+          onPointerDownCapture={(event) =>
+            onPasswordFocusChange?.(
+              event.target instanceof Element &&
+                Boolean(event.target.closest('[data-login-password]'))
+            )
+          }
+          onFocusCapture={(event) =>
+            onPasswordFocusChange?.(Boolean(event.target.closest('[data-login-password]')))
+          }
+          onBlurCapture={(event) => {
+            if (!event.relatedTarget || !event.currentTarget.contains(event.relatedTarget)) {
+              onPasswordFocusChange?.(false);
+            }
+          }}
           aria-busy={formik.isSubmitting}
         >
           <Stack spacing={2}>

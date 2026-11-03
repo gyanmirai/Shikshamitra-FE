@@ -4,7 +4,13 @@ import Box from '@mui/material/Box';
 
 import { LoginBrandPanel } from './login-brand-panel';
 
-export function AuthLayout({ children }: { children: ReactNode }) {
+export function AuthLayout({
+  children,
+  brandPanel,
+}: {
+  children: ReactNode;
+  brandPanel?: ReactNode;
+}) {
   return (
     <Box
       component="main"
@@ -36,7 +42,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           boxShadow: { xs: 'none', sm: theme.customShadows.card },
         })}
       >
-        <LoginBrandPanel />
+        {brandPanel ?? <LoginBrandPanel />}
         <Box
           sx={{
             display: 'flex',
