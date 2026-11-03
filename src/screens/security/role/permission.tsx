@@ -11,6 +11,7 @@ export default function Permission({
   grants,
   setGrants,
   disabled = false,
+  navigationDisabled,
   subjectName,
 }: {
   catalogue: PermissionCatalogue;
@@ -18,6 +19,7 @@ export default function Permission({
   grants: Record<string, boolean>;
   setGrants: (names: string[], value: boolean) => void;
   disabled?: boolean;
+  navigationDisabled?: boolean;
   subjectName?: string;
 }) {
   const overrides = useUserPermissionOverrides();
@@ -26,6 +28,7 @@ export default function Permission({
       catalogue={catalogue}
       provider={provider}
       disabled={disabled}
+      navigationDisabled={navigationDisabled}
       subjectName={subjectName}
       states={
         overrides?.states ??

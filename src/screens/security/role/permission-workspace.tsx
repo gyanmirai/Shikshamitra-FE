@@ -24,6 +24,7 @@ export type PermissionWorkspaceProps = {
   states: PermissionStates;
   setStates: (names: string[], state: PermissionOverrideState) => void;
   disabled: boolean;
+  navigationDisabled?: boolean;
   visibility?: boolean;
   subjectName?: string;
 };
@@ -31,6 +32,7 @@ export default function PermissionWorkspace(props: PermissionWorkspaceProps) {
   const {
     provider,
     disabled,
+    navigationDisabled,
     visibility = false,
     catalogue,
     states,
@@ -84,7 +86,7 @@ export default function PermissionWorkspace(props: PermissionWorkspaceProps) {
               setDependencyNote('');
             }
           }}
-          disabled={disabled}
+          disabled={navigationDisabled ?? disabled}
           bulkActions={<PermissionBulkActions scope="All modules" nodes={modules} />}
         />
         <Box

@@ -10,6 +10,7 @@ export type CataloguePermission = {
   grantedProviders: GrantProvider[];
 };
 export type PermissionCatalogue = {
+  isReadOnly?: boolean;
   groups: { name: string; displayName: string; permissions: CataloguePermission[] }[];
   overrides?: Record<string, PermissionOverrideState>;
 };

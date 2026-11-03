@@ -99,14 +99,12 @@ describe('academic setup states and actions', () => {
       <AcademicActionButtons
         recordName="Primary"
         recordType="stage"
-        addLabel="Add standard"
-        onAdd={vi.fn()}
         onEdit={vi.fn()}
         onDelete={vi.fn()}
       />
     );
 
-    expect(screen.getByRole('button', { name: 'Add standard' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Add standard' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Edit stage Primary' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Delete stage Primary' })).toBeVisible();
   });
@@ -116,14 +114,12 @@ describe('academic setup states and actions', () => {
       <AcademicActionButtons
         recordName="Primary"
         recordType="stage"
-        addLabel="Add standard"
-        onAdd={vi.fn()}
         onEdit={vi.fn()}
         onDelete={vi.fn()}
       />,
       ['Add']
     );
-    expect(screen.getByRole('button', { name: 'Add standard' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Add standard' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit stage Primary' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Delete stage Primary' })).not.toBeInTheDocument();
   });

@@ -1,15 +1,15 @@
 import type { RootState } from 'src/redux/store';
 
+import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { varAlpha } from 'src/theme/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingScreen } from 'src/components/loading-screen';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
-import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import {
@@ -27,7 +27,11 @@ import SelectExam from './selectExamStep1';
 import RoomDetails from './roomManageStep3';
 import ExamDetails from './examDetailsStep2';
 import ExamReviewStep4 from './ExamReviewStep4';
-import { validationSchema as stepValidationSchemas } from '../validationSchema';
+import { ExamContextHeader } from './ExamContextHeader';
+import {
+  fullExamValidationSchema,
+  validationSchema as stepValidationSchemas,
+} from '../validationSchema';
 import {
   mapBackendToFormik,
   defaultExamFormValues,
@@ -40,198 +44,10 @@ import type { INewExamFormProps } from '../type';
 
 const steps = ['Basic Details', 'Schedule', 'Room Details', 'Review'];
 
-// ---------------------------------------------------------------------------
-// ExamContextHeader — Compact persistent context bar (NON-BREAKING)
-// Visible from Step 2 onwards to remind users what they're scheduling
-// ---------------------------------------------------------------------------
-const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  const allClass = useMemo(
-    () => medium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [],
-    [medium]
-  );
-
-  const className = useMemo(
-    () => allClass.find((c: any) => c.id === formik.values.className)?.name || '',
-    [allClass, formik.values.className]
-  );
-
-  const divisions = useMemo(() => {
-    const classDivisions =
-      allClass.find((c: any) => c.id === formik.values.className)?.divisions || [];
-    return classDivisions.filter(
-      (d: any) => formik.values.divisions.includes(d.id) && d.id !== 'all'
-    );
-  }, [allClass, formik.values.className, formik.values.divisions]);
-
-  const { examName, subjects } = formik.values;
-  const hasContext = className || examName || subjects.length > 0;
-
-  if (!hasContext || step === 0) return null;
-  return (
-    <Box
-      sx={{
-        px: 2.5,
-        py: 1.25,
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 1,
-        alignItems: 'center',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        bgcolor: (theme) => varAlpha(theme.vars.palette.background.neutralChannel, 0.4),
-        backdropFilter: 'blur(8px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-      }}
-    >
-      <Stack
-        direction="row"
-        alignItems="center"
-        spacing={1}
-        sx={{ mr: 1.5, color: 'text.secondary' }}
-      >
-        <Iconify icon="solar:widget-5-bold-duotone" width={18} sx={{ color: 'primary.main' }} />
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 800,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            fontSize: '0.68rem',
-            color: 'text.secondary',
-          }}
-        >
-          Exam Details
-        </Typography>
-      </Stack>
-
-      {examName && (
-        <Tooltip title="Exam Name" arrow>
-          <Chip
-            icon={<Iconify icon="mdi:clipboard-text-outline" width={14} />}
-            label={examName}
-            size="small"
-            variant="soft"
-            sx={{
-              fontWeight: 700,
-              fontSize: '0.72rem',
-              height: 24,
-              px: 0.5,
-              borderRadius: '8px',
-              border: '1px solid',
-              borderColor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
-            }}
-          />
-        </Tooltip>
-      )}
-
-      {(className || divisions.length > 0) && (
-        <>
-          <Iconify
-            icon="eva:arrow-ios-forward-fill"
-            width={14}
-            sx={{ color: 'text.disabled', mx: 0.25 }}
-          />
-
-          <Stack direction="row" alignItems="center" spacing={1}>
-            {className && (
-              <Tooltip title="Class" arrow>
-                <Chip
-                  icon={<Iconify icon="mdi:school-outline" width={14} />}
-                  label={className}
-                  size="small"
-                  color="primary"
-                  variant="soft"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: '0.72rem',
-                    height: 24,
-                    px: 0.5,
-                    borderRadius: '8px',
-                  }}
-                />
-              </Tooltip>
-            )}
-
-            {divisions.map((div: any) => (
-              <Tooltip key={div.id} title="Division" arrow>
-                <Chip
-                  label={`Div ${div.name}`}
-                  size="small"
-                  color="info"
-                  variant="soft"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: '0.72rem',
-                    height: 24,
-                    px: 0.5,
-                    borderRadius: '8px',
-                  }}
-                />
-              </Tooltip>
-            ))}
-          </Stack>
-        </>
-      )}
-
-      {subjects.length > 0 && (
-        <>
-          <Iconify
-            icon="eva:arrow-ios-forward-fill"
-            width={14}
-            sx={{ color: 'text.disabled', mx: 0.25 }}
-          />
-
-          <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
-            {subjects.slice(0, 5).map((sub: any) => (
-              <Chip
-                key={sub.subjectId}
-                label={sub.subjectName}
-                size="small"
-                variant="soft"
-                sx={{
-                  fontSize: '0.72rem',
-                  height: 24,
-                  px: 0.5,
-                  borderRadius: '8px',
-                  bgcolor: sub.subjectColor ? `${sub.subjectColor}22` : undefined,
-                  color: sub.subjectColor || 'text.secondary',
-                  border: sub.subjectColor ? `1px solid ${sub.subjectColor}44` : undefined,
-                  '& .MuiChip-label': { fontWeight: 700 },
-                }}
-              />
-            ))}
-
-            {subjects.length > 5 && (
-              <Chip
-                label={`+${subjects.length - 5} more`}
-                size="small"
-                variant="soft"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.72rem',
-                  height: 24,
-                  px: 0.5,
-                  borderRadius: '8px',
-                  color: 'text.secondary',
-                  border: '1px dashed',
-                  borderColor: 'divider',
-                }}
-              />
-            )}
-          </Stack>
-        </>
-      )}
-    </Box>
-  );
-};
-
-const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
+const NewExamForm = ({ onClose, editData, onBusyChange }: INewExamFormProps) => {
   const [activeStep, setActiveStep] = useState(0);
   const [maxReachedStep, setMaxReachedStep] = useState(0);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Mutations
   const [addExamBasicDetails] = useQueryAndMutation({
@@ -303,6 +119,7 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
     ) => {
       try {
         setIsLoading(true);
+        onBusyChange?.(true);
         if (activeStep === 0) {
           await handleBasicDetails(values, formik);
           shikshaMitraToast.success({ message: 'Basic details saved successfully' });
@@ -316,7 +133,7 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
           }
         }
         if (isSaveButton) {
-          return;
+          return true;
         }
         if (!isLastStep) {
           setActiveStep((prev) => {
@@ -330,17 +147,27 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
           });
           onClose();
         }
+        return true;
       } catch (error) {
         const parsed = parseApiProblemDetail(error);
         shikshaMitraToast.error({
           message:
             parsed.detail || 'Unable to save the exam. Please review the details and try again.',
         });
+        return false;
       } finally {
         setIsLoading(false);
+        onBusyChange?.(false);
       }
     },
-    [activeStep, handleBasicDetails, handleExamSchedule, handleRoomAssignment, onClose]
+    [
+      activeStep,
+      handleBasicDetails,
+      handleExamSchedule,
+      handleRoomAssignment,
+      onClose,
+      onBusyChange,
+    ]
   );
 
   const allSteps = [SelectExam, ExamDetails, RoomDetails, ExamReviewStep4];
@@ -350,28 +177,22 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
       sx={(theme) => ({
         width: '100%',
         height: '100%',
+        minHeight: 0,
+        minWidth: 0,
         '& .MuiStepper-root': {
           pt: 2,
           pb: 1.5,
+          '& .MuiStep-root': { px: { xs: 0, sm: 1 } },
+          '& .MuiStepButton-root': { px: { xs: 0.25, sm: 1 } },
         },
-        // Fix loader overlay positioning during step transitions
-        '& .loading-overlay': {
-          position: 'fixed !important',
-          top: '0 !important',
-          left: '0 !important',
-          right: '0 !important',
-          bottom: '0 !important',
-          width: '100vw !important',
-          height: '100vh !important',
-          zIndex: '1300 !important',
-          backgroundColor: 'rgba(255, 255, 255, 0.85) !important',
-          opacity: '1 !important',
+        '& .MuiFormLabel-root.Mui-error, & .MuiFormHelperText-root.Mui-error': {
+          color: 'error.dark',
+          ...theme.applyStyles('dark', { color: 'error.light' }),
         },
-        ...theme.applyStyles('dark', {
-          '& .loading-overlay': {
-            backgroundColor: 'rgba(33, 43, 54, 0.9) !important',
-          },
-        }),
+        '& .MuiFormLabel-root.Mui-error.Mui-disabled': {
+          color: `${theme.vars.palette.error.dark} !important`,
+          ...theme.applyStyles('dark', { color: `${theme.vars.palette.error.light} !important` }),
+        },
       })}
     >
       <CustomStepperWithFormik
@@ -380,18 +201,31 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         activeStep={activeStep}
         handleBack={() => setActiveStep((prev) => prev - 1)}
         validateOnChange={false}
-        validationSchema={stepValidationSchemas[activeStep]}
-        validateFinalStep={false}
+        validationSchema={
+          activeStep === 3 ? fullExamValidationSchema : stepValidationSchemas[activeStep]
+        }
+        validateForwardStepClick
         showSaveButton={activeStep !== steps.length - 1}
         finalButtonLabel="Finish setup"
+        saveButtonLabel="Save draft"
+        nextButtonLabel="Save & next"
+        saveButtonProps={{
+          color: 'inherit',
+          loading: isNavigating,
+          startIcon: <Iconify icon={GlobalIcons.draftIcon} />,
+        }}
         handleNext={(isLastStep, values, formik, setIsLoading) =>
           handleSave(isLastStep, values, formik, setIsLoading, false)
         }
         onSave={(isLastStep, values, formik, setIsLoading) => {
           handleSave(isLastStep, values, formik, setIsLoading, true);
         }}
-        onStepClick={(index) => {
+        onStepClick={async (index, _label, formik) => {
           if (editData || index <= maxReachedStep) {
+            if (index > activeStep) {
+              const saved = await handleSave(false, formik.values, formik, setIsNavigating, true);
+              if (!saved) return;
+            }
             setActiveStep(index);
           }
         }}
@@ -466,6 +300,7 @@ const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps, setActi
   // EDIT mode only: initialize Formik once all queries finish loading.
   // Only basicDetails is required — schedule/rooms may be empty for new exams.
   useEffect(() => {
+    if (initializedRef.current) return;
     if (!isEditMode || !examId) return;
     if (basicLoading || scheduleLoading || roomLoading || subjectsLoading) return;
     if (!basicDetails) return;
@@ -504,9 +339,9 @@ const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps, setActi
         {/* NON-BREAKING: Step progress indicator */}
 
         {/* NON-BREAKING: Persistent context chips — visible from Step 2 onwards */}
-        <ExamContextHeader formik={formik} step={step} />
+        <ExamContextHeader values={formik.values} step={step} />
 
-        <Box p={2}>
+        <Box sx={{ p: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
           {/* NON-BREAKING: Pass onEditStep to Review step for section-level edit links */}
           <StepComponent {...formik} onEditStep={step === 3 ? setActiveStep : undefined} />
         </Box>

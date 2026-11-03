@@ -24,10 +24,11 @@ export function AcademicDesignNotes() {
           p: 0.5,
           height: 60,
           bgcolor: 'error.light',
+          borderRadius: 1,
           color: 'common.black',
           transform: 'rotate(-10deg)',
-          fontFamily: (theme) => theme.typography.fontSecondaryFamily,
-          fontWeight: 800,
+          fontFamily: (theme) => theme.typography.fontFamily,
+          fontWeight: 700,
           fontSize: 12,
           lineHeight: 1.05,
           whiteSpace: 'pre-line',
@@ -41,6 +42,7 @@ export function AcademicDesignNotes() {
           p: 0.5,
           height: 60,
           bgcolor: 'primary.light',
+          borderRadius: 1,
           color: 'common.black',
           transform: 'rotate(4deg)',
         }}
@@ -49,8 +51,8 @@ export function AcademicDesignNotes() {
           component="p"
           sx={{
             m: 0,
-            fontFamily: (theme) => theme.typography.fontSecondaryFamily,
-            fontWeight: 800,
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 700,
             fontSize: 12,
             lineHeight: 1.05,
             whiteSpace: 'pre-line',

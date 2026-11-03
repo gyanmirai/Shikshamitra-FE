@@ -495,20 +495,20 @@ const GradeForm: React.FC<IGradeFormProps> = ({
       title="Configured Grade Ranges"
       descriptionTooltip="Define the mark range, grade, and result status for each band."
       titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+      action={
+        !viewOnly && (
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            size="small"
+            onClick={handleAddGradingScale}
+          >
+            Ranges
+          </Button>
+        )
+      }
     >
       <Box display="flex" flexDirection="column">
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          {!viewOnly && (
-            <Button
-              startIcon={<Add />}
-              variant="contained"
-              size="small"
-              onClick={handleAddGradingScale}
-            >
-              Add row
-            </Button>
-          )}
-        </Box>
         {typeof formik.errors.gradingScale === 'string' && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {formik.errors.gradingScale}

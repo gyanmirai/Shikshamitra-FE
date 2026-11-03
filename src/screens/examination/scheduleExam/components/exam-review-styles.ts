@@ -3,8 +3,8 @@ import type { Theme, SxProps } from '@mui/material/styles';
 export const reviewCardSx = {
   height: '100%',
   minWidth: 0,
-  p: { xs: 2, sm: 2.5 },
-  borderRadius: 1.5,
+  p: { xs: 1.5, sm: 2 },
+  borderRadius: 2,
   boxShadow: 'none',
   containerType: 'inline-size',
 } satisfies SxProps<Theme>;

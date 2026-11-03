@@ -17,7 +17,7 @@ export default function AcademicDesignScreen() {
   const areas = data ? orderDesignAreas(getAcademicInsightsDisplayAreas(data, query.permissions), data.role) : [];
   const metrics = data ? getDesignOverview(areas, data.role) : [];
   const refresh = () => { if (query.hasContext && query.authorized) query.refetch(); };
-  return <Stack data-testid="academic-image-dashboard" spacing={2} sx={{ pb: 2, minWidth: 0 }}>
+  return <Stack data-testid="academic-image-dashboard" spacing={1} sx={{ pb: 2, minWidth: 0 }}>
     <AcademicDesignHeader query={query} refresh={refresh} />
     {query.isFetching && data && <LinearProgress aria-label="Refreshing academic insights" />}
     <AcademicInsightsRequestState query={query} onRetry={refresh} />

@@ -38,6 +38,11 @@ export default function PermissionAccessBody({
         },
       }}
     >
+      {draft.readOnly && (
+        <Alert severity="info">
+          Admin has all permissions by default. Admin permissions and module visibility cannot be changed.
+        </Alert>
+      )}
       {(draft.error || draft.isError) && (
         <Alert
           severity="error"
@@ -70,6 +75,7 @@ export default function PermissionAccessBody({
               grants={draft.grants}
               setGrants={draft.setGrants}
               disabled={draft.blocked}
+              navigationDisabled={draft.navigationBlocked}
               subjectName={subjectName}
             />
           ) : (

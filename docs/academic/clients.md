@@ -3,7 +3,7 @@ module: academic
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -116,10 +116,19 @@ Existing server refresh choices remain explicit; a warm cache does not replace r
 `src/screens/academic/components/reports/useAcademicReportDownload.ts` shares job polling across report lists, stops timers on unmount/account changes, ignores stale completions and backs off transient failures.
 Completed jobs download directly without creating another export.
 
+Curriculum history View uses `hooks/useCurriculumReportPreview.ts` to fetch fresh job details before opening the drawer.
+History summaries omit `requestJson`; the detail request supplies the saved parameters. Pascal-case stored DTO keys and camel-case keys normalize to the preview request without dropping class, division, subject or chapter filters.
+Pending detail reads disable View; missing/malformed parameters and failed reads show shared feedback without issuing an unfiltered preview. Unmounts and account changes prevent late responses from opening a drawer.
+The drawer keeps the completed PDF job ID, so Download PDF retrieves that file instead of queuing another export. The preview queries current records using saved filters; the PDF remains the generated snapshot.
+
 Curriculum, timetable, homework/assignment and Examination lists mount only the selected preview drawer.
 Opening a paged preview begins at page one without first requesting the previous page.
 Optional PDF renderers load when their export action is used.
 Report generation and download semantics remain owned by the backend reference.
+
+## Timetable conflict messages
+
+`src/components/timetable/timetableValidationIssues.ts` formats the backend's structured teacher and room conflicts. Optional `ConflictingAcademicYearName`, `ConflictingEducationBoardName`, and `ConflictingEducationMediumName` appear beside the competing class and in issue details. Both Pascal-case and camel-case fields are accepted; older responses retain their class/division wording. These labels identify the competing timetable, which can belong to another board or medium. See the [backend context contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#timetable-conflict-context).
 
 ## Division room defaults in the timetable
 

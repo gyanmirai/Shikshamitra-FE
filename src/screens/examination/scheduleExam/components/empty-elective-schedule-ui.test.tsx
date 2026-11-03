@@ -15,6 +15,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
 
 import ExamDetails from './examDetailsStep2';
 import ExamScheduleReview from './ExamScheduleReview';
@@ -96,14 +97,21 @@ function renderSchedule() {
 }
 
 describe('Schedule step empty elective behavior', () => {
+  it('focuses a nested elective schedule input when step validation reports an error', async () => {
+    renderSchedule();
+    const totalMarks = await screen.findByRole('spinbutton', { name: 'Total marks *' });
+    focusFirstFormikError({
+      subjects: [{}, { subjects: [{ totalMarks: 'Total marks is required' }] }],
+    });
+    await waitFor(() => expect(totalMarks).toHaveFocus());
+  });
+
   it('explains the division, hides bulk controls and table, and saves only Pt into review', async () => {
     const { onSave } = renderSchedule();
     await waitFor(() =>
-      expect(screen.getByText('Elective subjects').closest('[style]')).toHaveStyle({ opacity: '1' })
+      expect(screen.getByRole('heading', { name: 'Elective Subjects' })).toBeVisible()
     );
-    const computerCard = screen
-      .getByText('Computer Science')
-      .closest('.MuiAccordion-root') as HTMLElement;
+    const computerCard = screen.getByText('Computer Science').closest('section') as HTMLElement;
     expect(
       within(computerCard).getByText('No students are assigned to this elective in Div A.')
     ).toBeInTheDocument();
@@ -135,7 +143,7 @@ describe('Schedule step empty elective behavior', () => {
     expect(screen.getByText('1 student')).toBeInTheDocument();
     expect(screen.getAllByRole('table')).toHaveLength(2);
     await waitFor(() =>
-      expect(screen.getByText('Elective subjects').closest('[style]')).toHaveStyle({ opacity: '1' })
+      expect(screen.getByRole('heading', { name: 'Elective Subjects' })).toBeVisible()
     );
   });
 });

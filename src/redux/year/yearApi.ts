@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { yearType } from 'src/redux/tagTypes';
+import { yearType, boardType, organizationType, academicCalendarType } from 'src/redux/tagTypes';
 
 export const yearApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -25,7 +25,15 @@ export const yearApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [yearType.year],
+      invalidatesTags: [
+        yearType.year,
+        boardType.board,
+        organizationType.academicOrganizationOptions,
+        academicCalendarType.calendar,
+        academicCalendarType.calendarDay,
+        academicCalendarType.checkDate,
+        academicCalendarType.auditLog,
+      ],
     }),
     deleteYear: builder.mutation({
       query: (id) => ({

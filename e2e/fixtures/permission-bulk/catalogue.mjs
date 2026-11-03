@@ -55,7 +55,9 @@ export function createFixture() {
     writes,
     read(provider, key) {
       const rules = overrides.get(key) ?? new Map();
+      const protectedAdmin = (provider === 'R' && key === 'admin') || key === 'synthetic-admin';
       return {
+        isReadOnly: protectedAdmin,
         ...(provider === 'U' ? { overrides: Object.fromEntries(rules) } : {}),
         groups: [
           {
@@ -64,7 +66,7 @@ export function createFixture() {
             permissions: names.map((name) => {
               const rule = provider === 'U' ? rules.get(name) : undefined;
               const sources = [
-                ...(role.has(name) ? [{ providerName: 'R', providerKey: 'HOD' }] : []),
+                ...(role.has(name) ? [{ providerName: 'R', providerKey: protectedAdmin ? 'admin' : 'HOD' }] : []),
                 ...(rule === 'allow' ? [{ providerName: 'U', providerKey: key }] : []),
               ];
               return {

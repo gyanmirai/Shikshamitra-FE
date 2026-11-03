@@ -195,8 +195,8 @@ const CalendarManagement = () => {
         : startYear + 1;
 
       const startDate =
-        currentYear.startDate || currentBoard?.startDate || `${startYear}-06-01T00:00:00Z`;
-      const endDate = currentYear.endDate || currentBoard?.endDate || `${endYear}-03-31T00:00:00Z`;
+        currentBoard?.startDate || currentYear.startDate || `${startYear}-06-01T00:00:00Z`;
+      const endDate = currentBoard?.endDate || currentYear.endDate || `${endYear}-03-31T00:00:00Z`;
 
       createCalendar({
         academicMediumId: medium.id,

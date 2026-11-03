@@ -20,6 +20,7 @@ export default function PermissionVisibilityPanel({
       states={draft.states}
       setStates={draft.setStates}
       disabled={draft.blocked}
+      navigationDisabled={draft.navigationBlocked}
       subjectName={subjectName}
     />
   ) : null;

@@ -3,7 +3,7 @@ module: academic
 domain: validation
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -14,6 +14,8 @@ TL;DR: verify guide persistence and authorization separately from the existing s
 Do not report a check as passed unless it ran against the current implementation.
 
 ## Local checks
+
+Timetable conflict formatting is covered by `src/components/timetable/timetableValidationIssues.test.ts`: teacher and room conflicts include the competing year/board/medium, while legacy responses retain the existing fallback. Run it with `AssignTeacherDialog.reassignment.test.tsx` to protect the production teacher dialog's allocated options and error flow. Browser acceptance should distinguish the currently selected academic context from the context named in the conflict; changing the displayed board or medium must not bypass a teacher's published booking.
 
 Run from the frontend repository root:
 
@@ -112,6 +114,7 @@ Frontend regression sources cover query ownership and UI behavior:
 | Rubric server paging, on-demand detail and evaluation refresh | `src/screens/academic/homework-assignment-management/setting/rubricConfig/hooks/useRubricTemplateList.integration.test.tsx`, `src/screens/academic/homework-assignment-management/setting/rubricConfig/hooks/useRubricTemplateDetails.integration.test.tsx`, `src/screens/academic/homework-assignment-management/marksAndFeedback/useRubricEvaluationQueries.integration.test.tsx`, `src/screens/academic/homework-assignment-management/marksAndFeedback/rubricSaveRefresh.integration.test.tsx` |
 | Room page controls, tab/query ownership and summary reads | `src/screens/academic/timetable-schedule-management/roomAvailability/room-paging.integration.test.tsx`, `src/screens/academic/timetable-schedule-management/roomAvailability/room-query-ownership.test.tsx` |
 | Native file responses, polling cancellation and preview reopening | `src/redux/academicAPI/AcademicReportApi.download.test.ts`, `src/screens/academic/components/reports/useAcademicReportDownload.test.tsx`, `src/screens/academic/components/reports/report-preview-lifecycle.test.tsx` |
+| Curriculum history saved filters, backend key casing, failed/malformed detail reads, loading and late-response protection, existing PDF reuse | `src/screens/academic/curriculum-management/reports/curriculum-report-history.test.tsx` |
 | Student detail paging, query serialization and cache reuse | `src/screens/academic/student-academic-360/components/StudentAcademic360Drawer.test.tsx`, `src/redux/academicAPI/StudentAcademic360Api/studentAcademic360Api.test.ts` |
 | Grouped elective readiness and cached published seating | `src/screens/examination/scheduleExam/components/use-elective-readiness.test.tsx`, `src/screens/examination/seatingPlan/guided/published/use-published-seating-data.cache.test.tsx` |
 

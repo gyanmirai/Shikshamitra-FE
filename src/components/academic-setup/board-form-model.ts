@@ -66,7 +66,7 @@ export const getBoardValidationSchema = (
       .test(
         'board-start-within-year',
         yearStart && yearEnd
-          ? `Start Date must be within the academic year (${yearStart.format('DD MMM YYYY')} – ${yearEnd.format('DD MMM YYYY')}).`
+          ? `Start Date must be within the academic year (${yearStart.format('DD-MM-YYYY')} – ${yearEnd.format('DD-MM-YYYY')}).`
           : 'Start Date must be within the academic year.',
         withinYear
       ),
@@ -78,7 +78,7 @@ export const getBoardValidationSchema = (
       .test(
         'board-end-within-year',
         yearStart && yearEnd
-          ? `End Date must be within the academic year (${yearStart.format('DD MMM YYYY')} – ${yearEnd.format('DD MMM YYYY')}).`
+          ? `End Date must be within the academic year (${yearStart.format('DD-MM-YYYY')} – ${yearEnd.format('DD-MM-YYYY')}).`
           : 'End Date must be within the academic year.',
         withinYear
       ),

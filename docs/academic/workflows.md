@@ -3,7 +3,7 @@ module: academic
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-30
+updated_on: 2026-11-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -58,6 +58,8 @@ Do not infer completion from having visited a page.
 The catalogue orders Welcome, Curriculum, Timetable, Homework & Assignment, Examination, and Review & Finish.
 Curriculum includes subjects and elective groups; Timetable includes weekly lectures and lecture slots.
 Homework & Assignment includes homework types, assignment types, and reusable rubric templates.
+The rubric template's final Preview step reuses the teacher evaluation controls for trial scores and feedback, with a live total and Reset preview action.
+Trial entries stay local, are cleared when leaving the preview or changing its configuration, and are excluded from Save draft and Publish Rubric requests.
 Examination includes grade scaling and exam types.
 
 The guide renders each existing manager under `AcademicSetupEmbeddingProvider`.

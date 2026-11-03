@@ -52,7 +52,7 @@ export const BoardForm = (props: BoardFormProps) => {
                   <Typography variant="caption" sx={{ display: 'block', mt: 0.25 }}>
                     Allowed date range:{' '}
                     <b>
-                      {yearStart.format('DD MMM YYYY')} to {yearEnd.format('DD MMM YYYY')}
+                      {yearStart.format('DD-MM-YYYY')} to {yearEnd.format('DD-MM-YYYY')}
                     </b>
                     . Board dates must fall within this range.
                   </Typography>

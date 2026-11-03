@@ -8,7 +8,6 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useDeleteOrganizationMutation } from 'src/redux/oraganization/oraganization';
 
-import { ClassForm } from '../class-setup';
 import { OrganizationForm } from '../stage-form';
 import { AcademicFormDialog } from '../academic-form-dialog';
 import { AcademicActionButtons } from './academic-action-buttons';
@@ -22,7 +21,6 @@ export const StageActions = ({
   stage: Organization;
   parents: AcademicSetupParents;
 }) => {
-  const addDialog = useBoolean();
   const editDialog = useBoolean();
   const deleteDialog = useBoolean();
   const dispatch = useDispatch();
@@ -40,19 +38,6 @@ export const StageActions = ({
 
   return (
     <>
-      <AcademicFormDialog
-        kind="standard"
-        title={`Add Standard to ${stage.name}`}
-        handleClose={addDialog.onFalse}
-        open={addDialog.value}
-      >
-        <ClassForm
-          handleClose={addDialog.onFalse}
-          editData={null}
-          organizationId={stage.id}
-          existingStandards={stage.standards}
-        />
-      </AcademicFormDialog>
       <AcademicFormDialog
         kind="stage"
         title={`Edit Stage ${stage.name}`}
@@ -89,8 +74,6 @@ export const StageActions = ({
       <AcademicActionButtons
         recordName={stage.name}
         recordType="stage"
-        addLabel="Add standard"
-        onAdd={addDialog.onTrue}
         onEdit={editDialog.onTrue}
         onDelete={deleteDialog.onTrue}
       />

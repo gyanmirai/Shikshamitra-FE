@@ -10,13 +10,13 @@ interface ExamReviewInfoItemProps {
 export function ExamReviewInfoItem({ label, value }: ExamReviewInfoItemProps) {
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.75 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
         {label}
       </Typography>
       <Box
         sx={{
           typography: 'body2',
-          fontWeight: 600,
+          fontWeight: 400,
           color: 'text.primary',
           overflowWrap: 'anywhere',
         }}

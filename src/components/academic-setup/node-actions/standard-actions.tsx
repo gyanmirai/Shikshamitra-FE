@@ -9,7 +9,6 @@ import { useDeleteClassMutation } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { ClassForm } from '../class-setup';
-import { DivisionForm } from '../division-setup';
 import { AcademicFormDialog } from '../academic-form-dialog';
 import { AcademicActionButtons } from './academic-action-buttons';
 
@@ -22,7 +21,6 @@ export const StandardActions = ({
   standard: Standards;
   parents: AcademicSetupParents;
 }) => {
-  const addDialog = useBoolean();
   const editDialog = useBoolean();
   const deleteDialog = useBoolean();
   const dispatch = useDispatch();
@@ -40,19 +38,6 @@ export const StandardActions = ({
 
   return (
     <>
-      <AcademicFormDialog
-        kind="division"
-        title={`Add Division to ${standard.name}`}
-        handleClose={addDialog.onFalse}
-        open={addDialog.value}
-      >
-        <DivisionForm
-          handleClose={addDialog.onFalse}
-          editData={null}
-          classId={standard.id}
-          existingDivisions={standard.divisions}
-        />
-      </AcademicFormDialog>
       <AcademicFormDialog
         kind="standard"
         title={`Edit Standard ${standard.name}`}
@@ -90,8 +75,6 @@ export const StandardActions = ({
       <AcademicActionButtons
         recordName={standard.name}
         recordType="standard"
-        addLabel="Add division"
-        onAdd={addDialog.onTrue}
         onEdit={editDialog.onTrue}
         onDelete={deleteDialog.onTrue}
       />

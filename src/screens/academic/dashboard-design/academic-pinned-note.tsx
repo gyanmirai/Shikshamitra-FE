@@ -31,7 +31,7 @@ export function AcademicPinnedNote({
         mr: 0.5,
         bgcolor: color,
         color: 'common.black',
-        borderRadius: '1px 1px 10px 1px',
+        borderRadius: 1,
         boxShadow: theme.shadows[2],
         transform: { xs: 'none', sm: `rotate(${angle}deg)` },
         transformOrigin: '50% 8px',
@@ -44,7 +44,7 @@ export function AcademicPinnedNote({
           height: 10,
           bgcolor: 'common.white',
           opacity: 0.45,
-          borderRadius: '0 0 10px 0',
+          borderRadius: `0 0 ${theme.shape.borderRadius}px 0`,
           boxShadow: theme.shadows[1],
         },
       })}
@@ -80,8 +80,8 @@ export function AcademicPinnedNote({
           m: 0,
           whiteSpace: 'pre-line',
           overflowWrap: 'anywhere',
-          fontFamily: (theme) => theme.typography.fontSecondaryFamily,
-          fontWeight: 800,
+          fontFamily: (theme) => theme.typography.fontFamily,
+          fontWeight: 700,
           fontSize: compact ? 11 : 12,
           lineHeight: compact ? 1.05 : 1.15,
         }}

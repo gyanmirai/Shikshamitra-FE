@@ -3,15 +3,16 @@ import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { memo, useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import {
@@ -164,6 +165,7 @@ interface SubjectRowValues {
 }
 
 interface SubjectScheduleRowProps {
+  namePrefix: string;
   values: SubjectRowValues;
   errors?: Record<string, string>;
   touched?: Record<string, boolean>;
@@ -179,6 +181,7 @@ interface SubjectScheduleRowProps {
 
 const SubjectScheduleRow = memo(
   ({
+    namePrefix,
     values,
     errors = {},
     touched = {},
@@ -280,6 +283,7 @@ const SubjectScheduleRow = memo(
             value={values.examDate || null}
             format="DD/MM/YYYY"
             label="Date *"
+            name={`${namePrefix}.examDate`}
             onChange={async (v) => {
               await onFieldChange('examDate', v);
               onFieldBlur('examDate');
@@ -294,6 +298,7 @@ const SubjectScheduleRow = memo(
               textField: {
                 size: 'small',
                 sx: { width: 145 },
+                inputProps: { 'aria-required': true },
                 error: !!(touched.examDate && errors.examDate),
                 helperText: touched.examDate && errors.examDate ? errors.examDate : ' ',
                 FormHelperTextProps: HELPER_TEXT_PROPS,
@@ -311,7 +316,8 @@ const SubjectScheduleRow = memo(
           <TimePicker
             value={values.startTime || null}
             format="hh:mm a"
-            label="Start Time *"
+            label="Start time *"
+            name={`${namePrefix}.startTime`}
             onChange={async (v) => {
               await onFieldChange('startTime', v);
               onFieldBlur('startTime');
@@ -321,6 +327,7 @@ const SubjectScheduleRow = memo(
               textField: {
                 size: 'small',
                 sx: { width: 140 },
+                inputProps: { 'aria-required': true },
                 error: !!(touched.startTime && errors.startTime),
                 helperText: touched.startTime && errors.startTime ? errors.startTime : ' ',
                 FormHelperTextProps: HELPER_TEXT_PROPS,
@@ -337,7 +344,8 @@ const SubjectScheduleRow = memo(
           <TimePicker
             value={values.endTime || null}
             format="hh:mm a"
-            label="End Time *"
+            label="End time *"
+            name={`${namePrefix}.endTime`}
             onChange={async (v) => {
               await onFieldChange('endTime', v);
               onFieldBlur('endTime');
@@ -348,6 +356,7 @@ const SubjectScheduleRow = memo(
                 size: 'small',
                 sx: { width: 140 },
                 error: !!(touched.endTime && errors.endTime),
+                inputProps: { 'aria-required': true },
                 helperText: touched.endTime && errors.endTime ? errors.endTime : ' ',
                 FormHelperTextProps: HELPER_TEXT_PROPS,
                 InputLabelProps: LABEL_PROPS,
@@ -403,6 +412,8 @@ const SubjectScheduleRow = memo(
                 <TextField
                   {...params}
                   label="Scale *"
+                  name={`${namePrefix}.gradeScalingId`}
+                  inputProps={{ ...params.inputProps, 'aria-required': true }}
                   size="small"
                   sx={{ width: 175 }}
                   error={!!(touched.gradeScalingId && errors.gradeScalingId)}
@@ -434,7 +445,9 @@ const SubjectScheduleRow = memo(
           <TextField
             value={values.totalMarks ?? ''}
             type="number"
-            label="Total Marks *"
+            label="Total marks *"
+            name={`${namePrefix}.totalMarks`}
+            inputProps={{ 'aria-required': true }}
             size="small"
             onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
             onChange={async (e) => {
@@ -465,7 +478,9 @@ const SubjectScheduleRow = memo(
               <TextField
                 value={values.passingMarks ?? ''}
                 type="number"
-                label="Passing Marks *"
+                label="Passing marks *"
+                name={`${namePrefix}.passingMarks`}
+                inputProps={{ 'aria-required': true }}
                 size="small"
                 onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
                 onChange={async (e) => {
@@ -496,6 +511,7 @@ const SubjectScheduleRow = memo(
             multiline
             rows={1}
             label="Notes"
+            name={`${namePrefix}.notes`}
             size="small"
             onChange={async (e) => {
               await onFieldChange('notes', e.target.value);
@@ -575,7 +591,7 @@ const ApplyToAllBar = memo(({ onApply }: ApplyToAllBarProps) => {
       <Divider orientation="vertical" flexItem sx={{ height: 28, my: 'auto' }} />
       <TimePicker
         value={bulkStartTime}
-        label="Start Time"
+        label="Start time"
         format="hh:mm a"
         onChange={setBulkStartTime}
         viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
@@ -583,7 +599,7 @@ const ApplyToAllBar = memo(({ onApply }: ApplyToAllBarProps) => {
       />
       <TimePicker
         value={bulkEndTime}
-        label="End Time"
+        label="End time"
         format="hh:mm a"
         onChange={setBulkEndTime}
         viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
@@ -616,10 +632,11 @@ const ApplyToAllBar = memo(({ onApply }: ApplyToAllBarProps) => {
             <Button
               size="small"
               variant="contained"
-              color="success"
+              color="inherit"
+              type="button"
               disabled={!hasAnyValue}
               onClick={handleApply}
-              sx={{ minWidth: 72, fontWeight: 700, fontSize: '0.72rem', borderRadius: 1 }}
+              startIcon={<Iconify icon={GlobalIcons.assigned} />}
             >
               Apply
             </Button>
@@ -636,47 +653,25 @@ ApplyToAllBar.displayName = 'ApplyToAllBar';
 // ---------------------------------------------------------------------------
 interface SectionHeaderProps {
   icon: string;
-  accent: 'primary' | 'warning';
   title: string;
   chips: Array<{ label: string; color: 'primary' | 'warning' | 'default' | 'info' }>;
 }
 
-const SectionHeader = memo(({ icon, accent, title, chips }: SectionHeaderProps) => (
-  <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 2 }}>
-    <Box
-      sx={{
-        width: 36,
-        height: 36,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 1.5,
-        flexShrink: 0,
-        bgcolor: (theme: any) =>
-          accent === 'primary'
-            ? varAlpha(theme.vars.palette.primary.mainChannel, 0.12)
-            : varAlpha(theme.vars.palette.warning.mainChannel, 0.14),
-        color: accent === 'primary' ? 'primary.main' : 'warning.main',
-      }}
-    >
-      <Iconify icon={icon} width={20} />
-    </Box>
-    <Typography variant="subtitle1" fontWeight={700}>
-      {title}
-    </Typography>
-    {chips.map((chip) => (
-      <Chip
-        key={chip.label}
-        label={chip.label}
-        size="small"
-        color={chip.color}
-        variant="soft"
-        sx={{ fontSize: '0.72rem', height: 22, fontWeight: 600 }}
-      />
-    ))}
-  </Stack>
-));
-SectionHeader.displayName = 'SectionHeader';
+const SectionHeader = ({ icon, title, chips }: SectionHeaderProps) => (
+  <FormSectionHeader
+    icon={icon}
+    title={title}
+    titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+    descriptionTooltip="Set the date, start and end times, grading scale, and marks for each subject."
+    action={
+      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+        {chips.map((chip) => (
+          <Chip key={chip.label} label={chip.label} size="small" color="default" variant="soft" />
+        ))}
+      </Stack>
+    }
+  />
+);
 
 // ---------------------------------------------------------------------------
 // Helper: Check if two exam slots overlap on same date
@@ -838,6 +833,7 @@ const ElectiveGroupCard = memo(
                 return (
                   <SubjectScheduleRow
                     key={`sep-${groupIndex}-${j}-${sub.subjectId || j}`}
+                    namePrefix={`subjects[${groupIndex}].subjects[${j}]`}
                     values={{
                       subjectColor: sub.subjectColor || sub.color || '#9E9E9E',
                       subjectName: sub.subjectName || sub.name || '',
@@ -944,42 +940,14 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   const hasNoSubjects = coreSubjects.length === 0 && electiveGroups.length === 0;
 
   return (
-    <Box
-      component={motion.div}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-    >
-      <Paper
-        variant="outlined"
-        sx={{
-          mb: 3,
-          p: 2,
-          borderRadius: 2,
-          borderColor: 'divider',
-          bgcolor: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.04),
-        }}
-      >
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={1}
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
-          justifyContent="space-between"
-        >
-          <Stack direction="row" spacing={1} alignItems="flex-start">
-            <Iconify
-              icon="solar:calendar-add-bold-duotone"
-              width={24}
-              sx={{ color: 'info.main', mt: 0.25 }}
-            />
-            <Box>
-              <Typography variant="subtitle2">Add exam dates to academic calendar</Typography>
-              <Typography variant="caption" color="text.secondary">
-                Creates class-specific exam markers named Exam Name (Subject Name).
-              </Typography>
-            </Box>
-          </Stack>
-
+    <Box sx={{ minWidth: 0 }}>
+      <FormSectionCard
+        title="Academic Calendar"
+        icon={GlobalIcons.calendar}
+        titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+        descriptionTooltip="Add class-specific exam markers named Exam Name (Subject Name) to the academic calendar."
+        sx={{ mb: 2 }}
+        action={
           <FormControlLabel
             sx={{ m: 0 }}
             control={
@@ -989,12 +957,13 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   formik.setFieldValue('syncToAcademicCalendar', event.target.checked)
                 }
                 color="primary"
+                slotProps={{ input: { 'aria-label': 'Add exam dates to academic calendar' } }}
               />
             }
             label={formik.values.syncToAcademicCalendar ? 'Enabled' : 'Disabled'}
           />
-        </Stack>
-      </Paper>
+        }
+      />
       {/* ═══════════════════════════════════
           CORE SUBJECTS SECTION
       ═══════════════════════════════════ */}
@@ -1002,18 +971,17 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
         <Paper
           variant="outlined"
           sx={{
-            mb: 3,
+            mb: 2,
             overflow: 'hidden',
             borderRadius: 2,
             border: '1px solid',
             borderColor: 'divider',
           }}
         >
-          <Box sx={{ p: 2, pb: 1.5 }}>
+          <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 } }}>
             <SectionHeader
-              icon="solar:list-bold-duotone"
-              accent="primary"
-              title="Core subjects"
+              icon={GlobalIcons.notebook}
+              title="Core Subjects"
               chips={[
                 {
                   label: `${coreSubjects.length} subject${coreSubjects.length !== 1 ? 's' : ''}`,
@@ -1022,7 +990,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
               ]}
             />
             <ApplyToAllBar onApply={handleApplyAllCore} />
-          </Box>
+          </Stack>
           <TableContainer>
             <Table size="small" sx={{ tableLayout: 'auto' }}>
               <ScheduleTableHead />
@@ -1036,6 +1004,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   return (
                     <SubjectScheduleRow
                       key={subject.subjectId || index}
+                      namePrefix={`subjects[${index}]`}
                       values={subject}
                       errors={subErrors}
                       touched={subTouched}
@@ -1066,9 +1035,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
         <Box>
           <Box sx={{ mb: 2, px: 0.5 }}>
             <SectionHeader
-              icon="solar:star-bold-duotone"
-              accent="warning"
-              title="Elective subjects"
+              icon={GlobalIcons.family}
+              title="Elective Subjects"
               chips={[
                 {
                   label: `${electiveGroups.length} group${electiveGroups.length !== 1 ? 's' : ''}`,

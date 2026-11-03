@@ -33,10 +33,12 @@ export function usePermissionDraft(provider: GrantProvider, onSaved: () => void)
   const submitting = useRef(false);
   const [requestPending, setRequestPending] = useState(false);
   const entries = snapshot ? catalogueEntries(snapshot.catalogue) : [];
+  const readOnly = (provider.providerName === 'R' && provider.providerKey.toLowerCase() === 'admin')
+    || query.currentData?.isReadOnly === true || snapshot?.catalogue.isReadOnly === true;
   const formik = useFormik({
     initialValues: { states: {} as PermissionStates }, validationSchema: schema,
     onSubmit: async ({ states }) => {
-      if (!snapshot || snapshot.key !== key || submitting.current || query.isError) return;
+      if (!snapshot || snapshot.key !== key || submitting.current || query.isError || readOnly) return;
       submitting.current = true;
       setRequestPending(true);
       setError('');
@@ -86,7 +88,7 @@ export function usePermissionDraft(provider: GrantProvider, onSaved: () => void)
     finally { submitting.current = false; setRequestPending(false); }
   };
   const setStateValues = (updates: PermissionStates) => {
-    if (mismatch || submitting.current || formik.isSubmitting || query.isError) return;
+    if (mismatch || submitting.current || formik.isSubmitting || query.isError || readOnly) return;
     const permitted = new Set(entries.filter((entry) => canManageGrant(entry, provider)).map((entry) => entry.name));
     formik.setValues((values) => ({ states: { ...values.states,
       ...Object.fromEntries(Object.entries(updates).filter(([name]) => permitted.has(name))) } }), false);
@@ -95,14 +97,15 @@ export function usePermissionDraft(provider: GrantProvider, onSaved: () => void)
     setStateValues(Object.fromEntries(names.map((name) => [name, state])));
   const setGrantValues = (updates: Record<string, boolean>) => setStateValues(Object.fromEntries(
     Object.entries(updates).map(([name, granted]) => [name, granted ? 'allow' : user ? 'deny' : 'inherit'])));
+  const navigationBlocked = !snapshot || mismatch || query.isError || formik.isSubmitting || requestPending;
   return {
     catalogue: snapshot?.catalogue, states: formik.values.states,
     grants: Object.fromEntries(Object.entries(formik.values.states).map(([name, state]) => [name, state === 'allow'])),
-    changes, dirty, mismatch,
+    changes, dirty, mismatch, readOnly, navigationBlocked,
     error: mismatch ? 'The selected role or user changed. Your original draft is preserved. Reload to switch safely.' : error,
     isLoading: !snapshot && query.isFetching, isError: query.isError,
     busy: formik.isSubmitting || requestPending,
-    blocked: !snapshot || mismatch || query.isError || formik.isSubmitting || requestPending,
+    blocked: readOnly || navigationBlocked,
     reload, setStates, setGrantValues,
     discard: () => {
       if (!snapshot || mismatch || submitting.current || formik.isSubmitting) return;

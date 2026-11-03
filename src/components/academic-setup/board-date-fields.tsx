@@ -25,7 +25,7 @@ export const BoardDateFields = ({
           value={formik.values.startDate}
           minDate={yearStart ?? undefined}
           maxDate={yearEnd ?? undefined}
-          format="DD-MMM-YYYY"
+          format="DD-MM-YYYY"
           onChange={(value) => {
             formik.setFieldValue('startDate', value);
             if (formik.values.endDate) formik.setFieldTouched('endDate', true, false);
@@ -48,7 +48,7 @@ export const BoardDateFields = ({
         <DatePicker
           label="End date"
           value={formik.values.endDate}
-          format="DD-MMM-YYYY"
+          format="DD-MM-YYYY"
           minDate={formik.values.startDate ?? yearStart ?? undefined}
           maxDate={yearEnd ?? undefined}
           onChange={(value) => formik.setFieldValue('endDate', value)}

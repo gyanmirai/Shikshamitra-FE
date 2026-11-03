@@ -7,8 +7,6 @@ import { Iconify } from 'src/components/iconify';
 type AcademicActionButtonsProps = {
   recordName: string;
   recordType: string;
-  addLabel?: string;
-  onAdd?: () => void;
   onEdit: () => void;
   onDelete: () => void;
 };
@@ -16,8 +14,6 @@ type AcademicActionButtonsProps = {
 export const AcademicActionButtons = ({
   recordName,
   recordType,
-  addLabel,
-  onAdd,
   onEdit,
   onDelete,
 }: AcademicActionButtonsProps) => {
@@ -27,9 +23,6 @@ export const AcademicActionButtons = ({
       (permission: { name: string; isGranted: boolean }) =>
         permission.name === `InstituteSetup.AcademicSetup.${action}` && permission.isGranted
     );
-  const childLabel = addLabel
-    ?.replace(/^Add\s+/i, '')
-    .replace(/^./, (letter) => letter.toUpperCase());
   return (
     <Stack
       role="group"
@@ -67,18 +60,6 @@ export const AcademicActionButtons = ({
           Delete
         </Button>
       )}
-      {addLabel && onAdd && granted('Add') ? (
-        <Button
-          type="button"
-          size="small"
-          variant="contained"
-          aria-label={addLabel}
-          startIcon={<Iconify icon="mingcute:add-line" width={16} aria-hidden />}
-          onClick={onAdd}
-        >
-          {childLabel}
-        </Button>
-      ) : null}
     </Stack>
   );
 };

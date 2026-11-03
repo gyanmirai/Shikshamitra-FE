@@ -23,11 +23,11 @@ export function AcademicDesignSections({ entries, retry, refreshing }: {
       <AcademicDesignVisualization entry={entry} />
     </AcademicDesignSection>
   );
-  return <Stack spacing={2} sx={{ minWidth: 0 }}>
+  return <Stack spacing={1} sx={{ minWidth: 0 }}>
     {groups.map((group) => <Box key={group[0].area.key} sx={{ minWidth: 0 }}>
       {group[0].area.key === 'settings' ? renderSection(group[0]) : (
-        <Masonry columns={{ xs: 1, lg: 2 }} spacing={2} sequential
-          sx={{ m: -1, width: (theme) => `calc(100% + ${theme.spacing(2)})` }}>
+        <Masonry columns={{ xs: 1, lg: 2 }} spacing={1} sequential
+          sx={{ m: -0.5, width: (theme) => `calc(100% + ${theme.spacing(1)})` }}>
           {group.map((entry) => <Box key={entry.area.key} sx={{ minWidth: 0 }}>
             {renderSection(entry)}
           </Box>)}
