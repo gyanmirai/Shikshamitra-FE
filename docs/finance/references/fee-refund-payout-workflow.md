@@ -3,7 +3,7 @@ module: finance
 domain: accounts
 content_type: Reference
 status: active
-updated_on: 2026-10-24
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -29,14 +29,13 @@ filters, Completed status labels, narrow-screen scrolling, and the pinned right 
 
 The request form uses shared Student information, Refund details, and Refund payment details sections, with optional guidance in accessible heading tooltips and one **Submit** action in the stable footer. Refund details shows the resolved policy name and server-returned maximum refundable amount beside the full/partial controls. The fee allocation table retains paid, refunded, refundable, and receipt information; duplicate summary cards, utilization progress, and instructional banners are omitted. The request captures the allowed payout method, required recipient details, and a single required Refund reason (empty or whitespace-only reasons block submission); payment remarks, instrument details, school account, and payout dates belong to payment recording. The server recalculates on submission. A Failed request can open a linked replacement form with the source allocations filled in; staff must choose and review payment details again.
 
-Full-refund selections stay within the server policy limit, and a policy that disallows partial refunds resets a partial selection to full. Eligibility loading retains entered amounts and never reuses a previous student's response. The method selector and submission both enforce the policy's allowed methods; legacy drafts use their saved method snapshot. Checking or saving locks the form using the shared busy overlay.
+Full and Partial are request choices independent of the deprecated policy partial-refund flag. The policy editor no longer exposes that toggle. Full preserves selected source amounts for the server's formula and cap allocation; Partial retains the entered payout ceiling. Eligibility loading retains entered amounts and never reuses a previous student's response. The method selector and submission both enforce the policy's allowed methods; legacy drafts use their saved method snapshot. Checking or saving locks the form using the shared busy overlay.
 
-Paid installments remain visible after selection. Refund selection is restricted to one original
-receipt: the fee-head checkbox selects eligible installments from the selected receipt, or the
-first refundable receipt when none is selected. Other receipts remain visible and disabled with
-a tooltip explaining how to switch; clearing the selection unlocks them. Counts, amounts, and
-the submitted allocation lines use the same selection. Adjustment selection still permits
-multiple receipts. Selection validation appears as compact field feedback after submission,
+Paid installments remain visible after selection. Refund selection permits multiple eligible
+receipts, fee heads and months; group checkboxes operate on eligible rows without locking sibling receipts.
+Counts, amounts and submitted allocation lines use the same selection and retain each source receipt.
+The original lead receipt remains unchanged during editing or replacement, even when selection order changes.
+Selection validation appears as compact field feedback after submission,
 without instructional or receipt-lock banners. Narrow tables scroll inside the fee-head card.
 
 Add-form eligibility loading uses matching refund and payment section skeletons. Edit and
@@ -49,7 +48,9 @@ submission; stale allocation responses cannot replace a newer request. Focused c
 Approved refunds show **Record payment**, opening a single Payment Details dialog. Every method requires an Expense category and Source school bank account; new non-cash payments also require the cheque/DD number or transaction reference. Cash has no signed handover field and receives a server-generated voucher reference. Submit completes the refund and creates its expense atomically. There is no subsequent verification dialog or Awaiting verification state. A previously recorded pending payment opens this same dialog with its original reference, date, and any saved bank preserved. Its masked reference is display-only and is omitted from the payout payload; the server reuses the stored payment reference. Confirmed non-cash returns remain available from Completed rows.
 
 Historical statuses remain readable through existing refund detail and API responses. The old processing route is not used for new requests.
-Approval collects optional remarks and reserves the refund amount; expense routing is collected during payment recording. The review detail shows saved policy methods; legacy method aliases are normalized before payment selection. Reject and Cancel require a reason.
+For explicit Cash, administrator creation offers **Submit and pay cash**, and an independent checker's Pending approval offers **Approve and pay cash**. Both require the existing Approve and Process grants and complete atomically using the pinned payout routing. Ordinary staff can submit Cash to Pending without Process. Non-cash approval collects optional remarks and reserves the amount for later payment recording. The review detail shows saved policy methods; legacy method aliases are normalized before payment selection. Reject and Cancel require a reason. See the [backend cash completion contract](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-refund-payout-workflow.md).
 The **Record payment** method options come from the request's saved `allowedPayoutMethods` policy snapshot. They never expand to all methods when the snapshot is absent or empty; payment recording remains disabled until the selected method is allowed. Policy edits therefore do not change historical request choices.
+
+Version 1 administrator Cash forms and Cash approval reuse the existing payout category/bank controls. Active pinned defaults are preselected; missing or stale defaults require an explicit choice before completion. These authorized paths load the canonical routing options and retain their loading, error and prerequisite states. An ordinary maker submitting Cash to Pending does not load payout routing or need Process. Historical version 0 Draft submission retains its approval wording and flow.
 
 The detail view shows the net refund subledger amount and a balance check against the request, refund lines, and due fees. Recording payment creates a source-linked expense and refund subledger entry; a late return creates compensating entries. The payout mutation refreshes refund, fee, collection, expense, and account posting caches. These entries are not General Accounts journal postings.

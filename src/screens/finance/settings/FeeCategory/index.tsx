@@ -6,14 +6,14 @@ import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { useDispatch, useSelector } from 'react-redux';
+import { Box, Button, DialogActions } from '@mui/material';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Button, DialogActions } from '@mui/material';
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 
 import FeeCategoryForm from './Components/FeeCategoryForm';
 import FeeCategoryView from './Components/FeeCategoryView';
@@ -54,7 +54,8 @@ const FeeCategoryCreation = () => {
 
   return (
     <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-      <CustomBreadcrumbs
+      <FinanceSetupManagerHeader
+        editorOpen={addFeeCategoryDialog.value || formBusy}
         heading="Fee Category"
         description="Organize fee heads into categories and manage their status."
         links={[

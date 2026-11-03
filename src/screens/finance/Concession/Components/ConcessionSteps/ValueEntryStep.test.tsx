@@ -79,6 +79,26 @@ function Editor({
 }
 
 describe('concession values and review', () => {
+  it.each([false, true])(
+    'keeps sticky installment headers above floating input labels (fixed amount: %s)',
+    (fixed) => {
+      render(<Editor fixed={fixed} />);
+      const table = screen.getByRole('table', { name: 'Installment concessions table' });
+      const input = within(table).getAllByRole('textbox')[0];
+      const label = input.closest('.MuiFormControl-root')!.querySelector('label')!;
+      const labelLayer = Number(window.getComputedStyle(label).zIndex);
+      expect(labelLayer).toBeGreaterThan(0);
+      within(table)
+        .getAllByRole('columnheader')
+        .forEach((header) => {
+          const style = window.getComputedStyle(header);
+          expect(style.position).toBe('sticky');
+          expect(Number(style.zIndex)).toBeGreaterThan(labelLayer);
+          expect(style.backgroundColor).not.toBe('transparent');
+          expect(style.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+        });
+    }
+  );
   it('uses the common embedded table for installment entry without extra record controls', () => {
     render(<Editor />);
     const table = screen.getByRole('table', { name: 'Installment concessions table' });

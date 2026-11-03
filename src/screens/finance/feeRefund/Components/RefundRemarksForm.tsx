@@ -116,8 +116,11 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
       value: dto?.voucherNumber || 'N/A',
     },
     {
-      label: 'Original Receipt',
-      value: dto?.originalReceiptNumber || 'N/A',
+      label: 'Source receipts',
+      value:
+        dto?.sourceReceipts?.map((receipt) => receipt.receiptNumber).join(', ') ||
+        dto?.originalReceiptNumber ||
+        'N/A',
     },
     {
       label: 'Source',

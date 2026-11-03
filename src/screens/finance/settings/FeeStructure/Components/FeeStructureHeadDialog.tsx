@@ -3,6 +3,7 @@ import type { StructureLine, StructureSettings } from 'src/redux/finance/feeStru
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
+import { Autocomplete, TextField, CircularProgress } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
@@ -228,26 +229,55 @@ export default function FeeStructureHeadDialog({
               title="Fee Head Details"
             >
               <ShakingTextField error={!!errorFor('feeHeadId')}>
-                <CustomSelect
-                  name="feeHeadId"
-                  label="Fee head"
+                <Autocomplete
                   size="small"
-                  required
-                  isSearch
-                  value={formik.values.feeHeadId}
                   options={headOptions}
-                  labelKey="label"
-                  valueKey="id"
-                  groupKey="categoryName"
-                  searchPlaceholder="Search fee category or fee head"
-                  disabled={busy || headsLoading || headsError || !settings.permissions.headsRead}
-                  isLoading={headsLoading}
-                  onChange={(value) => formik.setFieldValue('feeHeadId', String(value ?? ''))}
-                  onBlur={() => formik.setFieldTouched('feeHeadId', true)}
-                  error={!!errorFor('feeHeadId')}
-                  helperText={errorFor('feeHeadId')}
-                  noOptionsMessage="All available fee heads have been added."
-                  formControlProps={{ fullWidth: true, required: true }}
+                  groupBy={(option) => option.categoryName || 'Other'}
+                  getOptionLabel={(option) => option.label || ''}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  value={
+                    headOptions.find(
+                      (head) => head.id === formik.values.feeHeadId
+                    ) || null
+                  }
+                  onChange={(_, newValue) => {
+                    formik.setFieldValue(
+                      'feeHeadId',
+                      String(newValue?.id ?? '')
+                    );
+                  }}
+                  disabled={
+                    busy ||
+                    headsLoading ||
+                    Boolean(headsError) ||
+                    !settings.permissions.headsRead
+                  }
+                  loading={headsLoading}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      name="feeHeadId"
+                      label="Fee head"
+                      placeholder="Search fee category or fee head"
+                      required
+                      onBlur={() => formik.setFieldTouched('feeHeadId', true)}
+                      error={!!errorFor('feeHeadId')}
+                      helperText={errorFor('feeHeadId')}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {headsLoading ? (
+                              <CircularProgress size={18} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                  noOptionsText="All available fee heads have been added."
+                  fullWidth
                 />
               </ShakingTextField>
               <FormControlLabel

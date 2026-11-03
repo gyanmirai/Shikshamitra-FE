@@ -9,6 +9,8 @@ export const GlobalIcons = {
   moveUp: 'eva:arrow-upward-fill',
   moveDown: 'eva:arrow-downward-fill',
   back: 'eva:arrow-back-fill',
+  exit: 'mdi:exit-to-app',
+  openInNew: 'mdi:open-in-new',
   family: 'mdi:account-group-outline',
   retrunIcon: 'famicons:return-down-back-outline',
   info: 'lucide:info',

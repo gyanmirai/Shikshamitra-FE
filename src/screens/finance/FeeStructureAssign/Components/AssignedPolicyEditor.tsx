@@ -53,7 +53,12 @@ export default function AssignedPolicyEditor({
         'collection',
         'Select a collection policy.',
         (policies) => !!policies?.find((p) => p.family === 'collection')?.versionId
-      ),
+      )
+        .test(
+          'refund',
+          'Select a refund policy.',
+          (policies) => !!policies?.find((p) => p.family === 'refund')?.versionId
+        ),
     }),
     onSubmit: async (values) => {
       if (pending.current) return;
@@ -158,7 +163,8 @@ export default function AssignedPolicyEditor({
             state.isLoading ||
             !policiesChanged ||
             !formik.values.reason.trim() ||
-            !formik.values.policies.find((p) => p.family === 'collection')?.versionId
+            !formik.values.policies.find((p) => p.family === 'collection')?.versionId ||
+            !formik.values.policies.find((p) => p.family === 'refund')?.versionId
           }
           startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
           onClick={() => formik.handleSubmit()}

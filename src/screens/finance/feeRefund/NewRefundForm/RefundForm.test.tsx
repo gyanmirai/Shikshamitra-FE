@@ -15,6 +15,17 @@ const mocks = vi.hoisted(() => ({
   createEligibility: {} as any,
   session: null as any,
   permissions: [] as any[],
+  routing: {
+    currentData: {
+      expenseCategories: [{ id: 'expense', label: 'Refund expense' }],
+      bankAccounts: [{ id: 'bank', label: 'School account' }],
+    },
+    refetch: vi.fn(),
+  } as any,
+  routingQuery: vi.fn(),
+}));
+vi.mock('src/redux/finance/financeRoutingApi', () => ({
+  useGetFinanceRoutingOptionsQuery: (...args: any[]) => mocks.routingQuery(...args),
 }));
 vi.mock('react-redux', () => ({
   useSelector: (select: any) =>
@@ -166,10 +177,73 @@ describe('refund edit loading', () => {
     mocks.session = null;
     mocks.permissions = [];
     mocks.createEligibility = {};
+    mocks.routingQuery.mockReturnValue(mocks.routing);
     mocks.update.mockReturnValue({
       unwrap: async () => ({ status: 0, concurrencyStamp: 'saved-stamp' }),
     });
     mocks.submit.mockReturnValue({ unwrap: async () => ({ status: 0 }) });
+  });
+
+  it('requires an explicit cash bank and expense category before administrator submission when defaults are missing', async () => {
+    mocks.detail = { isLoading: false, isFetching: false };
+    mocks.session = { profile: { role: ['admin'] } };
+    mocks.permissions = [
+      { name: financePermissions.fees.refundActions.approve, isGranted: true },
+      { name: financePermissions.fees.refundActions.process, isGranted: true },
+    ];
+    mocks.createEligibility = {
+      currentData: {
+        totalRefundable: 1000,
+        allowedPayoutMethods: ['Cash'],
+        feeHeads: [{ months: [{ refundable: 1000 }] }],
+      },
+    };
+    mocks.preview.mockReturnValue({
+      unwrap: async () => ({ isAllowed: true, maximumAllowedAmount: 700 }),
+    });
+    mocks.mutation.mockReturnValue({ unwrap: async () => ({ status: 7 }) });
+    render(<RefundForm />);
+    fireEvent.click(screen.getByRole('button', { name: 'Complete selected amounts' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled());
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Expense category/ }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Refund expense' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Source school bank account/ }));
+    fireEvent.click(await screen.findByRole('option', { name: 'School account' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Submit and pay cash' }));
+    await waitFor(() =>
+      expect(mocks.mutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          expenseCategoryId: 'expense',
+          bankAccountId: 'bank',
+        })
+      )
+    );
+  });
+
+  it('submits ordinary maker cash requests without processing permission or a routing lookup', async () => {
+    mocks.detail = { isLoading: false, isFetching: false };
+    mocks.session = { profile: { role: ['staff'] } };
+    mocks.createEligibility = {
+      currentData: {
+        totalRefundable: 1000,
+        allowedPayoutMethods: ['Cash'],
+        feeHeads: [{ months: [{ refundable: 1000 }] }],
+      },
+    };
+    mocks.preview.mockReturnValue({
+      unwrap: async () => ({ isAllowed: true, maximumAllowedAmount: 700 }),
+    });
+    mocks.mutation.mockReturnValue({ unwrap: async () => ({ status: 0 }) });
+    render(<RefundForm />);
+    fireEvent.click(screen.getByRole('button', { name: 'Complete selected amounts' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(mocks.mutation).toHaveBeenCalledOnce());
+    expect(mocks.routingQuery).not.toHaveBeenCalled();
+    expect(mocks.mutation.mock.calls[0][0]).not.toHaveProperty('bankAccountId');
+    expect(mocks.mutation.mock.calls[0][0]).not.toHaveProperty('expenseCategoryId');
   });
 
   it('locks the student card and preserves a saved partial amount when editing a Pending refund', async () => {
@@ -333,7 +407,7 @@ describe('refund edit loading', () => {
     await waitFor(() => expect(screen.getByText('Loaded allocations: 1')).toBeVisible());
   });
 
-  it('blocks confirmation and even direct form submission until every selected installment is complete', async () => {
+  it('disables administrator cash completion when payment processing access is missing', async () => {
     mocks.detail = { isLoading: false, isFetching: false };
     mocks.session = { profile: { role: ['admin'] } };
     mocks.permissions = [{ name: financePermissions.fees.refundActions.approve, isGranted: true }];
@@ -341,6 +415,30 @@ describe('refund edit loading', () => {
       currentData: {
         totalRefundable: 1000,
         allowedPayoutMethods: ['Cash'],
+        feeHeads: [{ months: [{ refundable: 1000 }] }],
+      },
+    };
+    render(<RefundForm />);
+    fireEvent.click(screen.getByRole('button', { name: 'Complete selected amounts' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled());
+    expect(screen.getByRole('alert')).toHaveTextContent('payment processing access');
+    expect(mocks.mutation).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('blocks confirmation and even direct form submission until every selected installment is complete', async () => {
+    mocks.detail = { isLoading: false, isFetching: false };
+    mocks.session = { profile: { role: ['admin'] } };
+    mocks.permissions = [
+      { name: financePermissions.fees.refundActions.approve, isGranted: true },
+      { name: financePermissions.fees.refundActions.process, isGranted: true },
+    ];
+    mocks.createEligibility = {
+      currentData: {
+        totalRefundable: 1000,
+        allowedPayoutMethods: ['Cash'],
+        defaultExpenseCategoryId: 'expense',
+        defaultPayingBankAccountId: 'bank',
         feeHeads: [{ months: [{ refundable: 1000 }] }],
       },
     };
@@ -371,5 +469,8 @@ describe('refund edit loading', () => {
     );
     expect(mocks.preview).toHaveBeenCalledOnce();
     expect(mocks.mutation).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog')).toHaveTextContent('cash payout');
+    expect(screen.getByRole('button', { name: 'Submit and pay cash' })).toBeEnabled();
+    expect(screen.getByRole('dialog')).not.toHaveTextContent('payout is recorded separately');
   });
 });

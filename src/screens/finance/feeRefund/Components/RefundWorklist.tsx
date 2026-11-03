@@ -86,7 +86,10 @@ function toRow(item: FeeRefundRequestDto, index: number): IStudentFeeData {
     _defaultPayingBankAccountId: item.defaultPayingBankAccountId ?? undefined,
     _settlementId: payout?.id,
     _voucherNumber: item.voucherNumber,
-    _receiptNumber: item.originalReceiptNumber ?? '',
+    _receiptNumber:
+      item.sourceReceipts?.map((receipt) => receipt.receiptNumber).join(', ') ||
+      item.originalReceiptNumber ||
+      '',
     _payoutPending: payout?.status === 0,
     _payoutReference: payout?.externalReference,
     _paymentDate: payout?.settlementDate,

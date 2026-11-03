@@ -109,12 +109,16 @@ describe('refund allocation policy limits', () => {
     };
   });
 
-  it('caps selected full-refund lines at the server policy limit', () => {
-    render(<FeeHeadRefundTable formik={formik()} compact />);
+  it('preserves all full-refund sources for the canonical server policy calculation', () => {
+    const values = formik();
+    values.values.feeHeadRefunds[0].months.forEach((month: any) => {
+      month.amount = 20;
+    });
+    render(<FeeHeadRefundTable formik={values} compact />);
     const updated = mocks.setFieldValue.mock.calls.find(
       ([field]) => field === 'feeHeadRefunds'
     )?.[1];
-    expect(updated[0].months.map((month: any) => month.amount)).toEqual([60, 40]);
+    expect(updated[0].months.map((month: any) => month.amount)).toEqual([60, 60]);
     expect(screen.getByText('Transport')).toBeInTheDocument();
     expect(mocks.summary).not.toHaveBeenCalled();
     expect(screen.queryByText('How to create a refund request')).not.toBeInTheDocument();

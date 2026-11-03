@@ -50,6 +50,8 @@ export interface FeeCollectionSummaryItem {
   pendingFees: number;
   overdueFees: number;
   totalCharges: number;
+  /** Missing only for older/cached API responses; unavailable must not be displayed as zero. */
+  paidCharges?: number | null;
   pendingCharges: number;
   totalConcessionAmount: number;
   isFeeStructureAssigned: boolean;

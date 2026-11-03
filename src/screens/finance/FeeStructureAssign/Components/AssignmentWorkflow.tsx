@@ -63,7 +63,11 @@ import AssignmentStudentInputs from './AssignmentStudentInputs';
 import PreparedAssignmentHandoff from './PreparedAssignmentHandoff';
 import { assignmentCurrencyTotals } from './assignmentReviewPresentation';
 import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
-import { assignmentInputError, assignmentFeeSelectionError } from './variableAssignmentValidation';
+import {
+  assignmentInputError,
+  assignmentPolicyError,
+  assignmentFeeSelectionError,
+} from './variableAssignmentValidation';
 import {
   mergeAssignmentInputs,
   admissionServicePeriods,
@@ -460,6 +464,18 @@ function AssignmentEditor({
       setActiveStep(0);
       return;
     }
+    const missingPolicy = items.find((request) => assignmentPolicyError(candidate, request));
+    if (missingPolicy) {
+      setStructureValidated(false);
+      setSelectedStudentId(missingPolicy.studentId);
+      setActiveStep(0);
+      const policyErr = assignmentPolicyError(candidate, missingPolicy)!;
+      const studentName =
+        students.find((student) => student.studentId === missingPolicy.studentId)?.studentName ||
+        'Student';
+      setError(students.length === 1 || isBulk ? policyErr : `${studentName}: ${policyErr}`);
+      return;
+    }
     const missingReason = items.find(
       (request) =>
         request.policies?.some(
@@ -769,6 +785,50 @@ function AssignmentEditor({
         isStepClickable={(index) => !busy && !complete && !showResults && index <= reachedStep}
         onStepClick={async (index, _label, formik) => {
           if (operation.current || busy || index === activeStep) return;
+          if (activeStep === 0 && index > 0) {
+            const candidate = candidates.data?.find((c) => c.id === formik.values.structureId);
+            if (candidate) {
+              const missingPolicy = formik.values.requests.find(
+                (r: AssignmentRequest) =>
+                  !committedIds.has(r.studentId) && assignmentPolicyError(candidate, r)
+              );
+              if (missingPolicy) {
+                setSelectedStudentId(missingPolicy.studentId);
+                setActiveStep(0);
+                const policyErr = assignmentPolicyError(candidate, missingPolicy)!;
+                const studentName =
+                  students.find((student) => student.studentId === missingPolicy.studentId)
+                    ?.studentName || 'Student';
+                setError(
+                  students.length === 1 || isBulk ? policyErr : `${studentName}: ${policyErr}`
+                );
+                return;
+              }
+              const missingReason = formik.values.requests.find(
+                (r: AssignmentRequest) =>
+                  !committedIds.has(r.studentId) &&
+                  r.policies?.some(
+                    (p) =>
+                      p.versionId !==
+                      (candidate.policies?.find((d) => d.family === p.family)?.versionId ?? null)
+                  ) &&
+                  !r.policyOverrideReason?.trim()
+              );
+              if (missingReason) {
+                setSelectedStudentId(missingReason.studentId);
+                setActiveStep(0);
+                setError(
+                  students.length === 1 || isBulk
+                    ? 'Enter a policy override reason.'
+                    : `${
+                        students.find((student) => student.studentId === missingReason.studentId)
+                          ?.studentName || 'Student'
+                      }: Enter a policy override reason.`
+                );
+                return;
+              }
+            }
+          }
           if (
             index !== 2 ||
             (preview &&
@@ -833,14 +893,32 @@ function AssignmentEditor({
         handleNext={async (_last, values: AssignmentValues, _formik, setLoading) => {
           if (operation.current || busy || missingStructure) return;
           if (activeStep === 0) {
+            const candidate = candidates.data?.find((c) => c.id === values.structureId);
+            if (candidate) {
+              const missingPolicy = values.requests.find(
+                (r) => !committedIds.has(r.studentId) && assignmentPolicyError(candidate, r)
+              );
+              if (missingPolicy) {
+                setSelectedStudentId(missingPolicy.studentId);
+                setActiveStep(0);
+                const policyErr = assignmentPolicyError(candidate, missingPolicy)!;
+                const studentName =
+                  students.find((student) => student.studentId === missingPolicy.studentId)
+                    ?.studentName || 'Student';
+                setError(
+                  students.length === 1 || isBulk ? policyErr : `${studentName}: ${policyErr}`
+                );
+                return;
+              }
+            }
             const missingReason = values.requests.find((r) => {
-              const candidate = candidates.data?.find((c) => c.id === values.structureId);
+              const requestCandidate = candidates.data?.find((c) => c.id === values.structureId);
               return (
                 !committedIds.has(r.studentId) &&
                 r.policies?.some(
                   (p) =>
                     p.versionId !==
-                    (candidate?.policies?.find((d) => d.family === p.family)?.versionId ?? null)
+                    (requestCandidate?.policies?.find((d) => d.family === p.family)?.versionId ?? null)
                 ) &&
                 !r.policyOverrideReason?.trim()
               );

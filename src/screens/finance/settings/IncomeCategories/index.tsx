@@ -1,16 +1,13 @@
 'use client';
 
-import type { IParams } from 'src/components/customizabaleTable/types';
-import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
-
-import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
+import type { IParams } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { useState, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -18,9 +15,10 @@ import { Box, Alert, Stack, Button } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 import {
   useGetIncomeCategoriesQuery,
   useDeleteIncomeCategoryMutation,
@@ -98,7 +96,8 @@ const FinanceIncomeCategoriesScreen = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       {discardConfirmation}
-      <CustomBreadcrumbs
+      <FinanceSetupManagerHeader
+        editorOpen={addIncomeCategoryDialog.value || deleteIncomeCategoryDialog.value || isDeleting}
         description="This screen displays all the created income categories with an option to create a new income category."
         heading="Income Category"
 

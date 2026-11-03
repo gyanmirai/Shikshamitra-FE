@@ -83,7 +83,7 @@ supplies an already-assigned student, so that workflow is never rendered.
 6. Use Request evidence on the grid to inspect captured POST requests. A fee-only payment must
    send an empty `lateFeePayments` array.
 7. Collect charges alone or waive one with a reason, then confirm Pending Charges refreshes while
-   Total Charges retains the assessed amount. Reset synthetic scenario restores all balances.
+   Total Charges subtracts applied waivers while retaining collected amounts. Reset synthetic scenario restores all balances.
 
 The full synthetic ledger contains ₹24,000 tuition and ₹9,600 transport; its six selected
 installments reproduce the reported ₹12,396 payment. Reloading or resetting discards all

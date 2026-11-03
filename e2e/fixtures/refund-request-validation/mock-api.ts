@@ -1,8 +1,10 @@
 const eligibility = {
   totalPaid: 6000,
   totalRefundable: 6000,
-  allowPartialRefund: true,
+  allowPartialRefund: false,
   allowedPayoutMethods: ['Cash'],
+  defaultExpenseCategoryId: 'synthetic-expense',
+  defaultPayingBankAccountId: 'synthetic-bank',
   feeHeads: ['FH1', 'FH2'].map((feeHeadId) => ({
     feeHeadId,
     feeHeadName: feeHeadId,
@@ -11,8 +13,8 @@ const eligibility = {
       year: 2026,
       dueFeeId: `${feeHeadId}-${month}`,
       sourceAllocationId: `${feeHeadId}-allocation-${month}`,
-      sourceReceiptId: 'receipt-1',
-      receiptNumber: 'SYNTHETIC-001',
+      sourceReceiptId: `receipt-${month}`,
+      receiptNumber: `SYNTHETIC-00${month}`,
       total: 1000,
       paid: 1000,
       refunded: 0,
@@ -28,6 +30,25 @@ const query = {
   refetch: () => undefined,
 };
 export const useGetRefundEligibilityQuery = () => query;
+const routingQuery = {
+  currentData: {
+    expenseCategories: [{ id: 'synthetic-expense', label: 'Synthetic refund expense' }],
+    bankAccounts: [{ id: 'synthetic-bank', label: 'Synthetic school cash routing account' }],
+  },
+  isLoading: false,
+  isFetching: false,
+  isError: false,
+  isUninitialized: false,
+  refetch: () => undefined,
+};
+export const useGetFinanceRoutingOptionsQuery = () => routingQuery;
+if (
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).has('missingRoutingDefaults')
+) {
+  eligibility.defaultExpenseCategoryId = '';
+  eligibility.defaultPayingBankAccountId = '';
+}
 export const useGetAdjustmentEligibilityQuery = () => query;
 export const refundDetail = {
   id: 'refund-1',
@@ -44,6 +65,10 @@ export const refundDetail = {
   workflowVersion: 1,
   voucherNumber: 'SYNTHETIC-REFUND-001',
   originalReceiptNumber: 'SYNTHETIC-RECEIPT-001',
+  sourceReceipts: [
+    { receiptId: 'receipt-6', receiptNumber: 'SYNTHETIC-006' },
+    { receiptId: 'receipt-7', receiptNumber: 'SYNTHETIC-007' },
+  ],
   refundPolicyName: 'Synthetic fee refund policy',
   calculatedAmount: 10829,
   approvedAmount: 10829,
@@ -138,11 +163,19 @@ const mutation = (body: any) => ({
     deductionAmount: 0,
     capAdjustment: 0,
     refundPolicyName: 'Synthetic refund policy',
-    status: 2,
+    status: body?.refundMethod === 'Cash' ? 7 : 2,
   }),
 });
 const hook = () => [mutation, { isLoading: false }];
-export const useCreateFeeRefundMutation = hook;
+let submittedRefund: unknown;
+export const getSubmittedRefund = () => submittedRefund;
+export const useCreateFeeRefundMutation = () => [
+  (body: unknown) => {
+    submittedRefund = body;
+    return mutation(body);
+  },
+  { isLoading: false },
+];
 export const useSubmitFeeRefundMutation = hook;
 export const useUpdateFeeRefundMutation = hook;
 export const usePreviewFeeRefundMutation = hook;

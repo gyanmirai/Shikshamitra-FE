@@ -144,16 +144,14 @@ describe('refund policy payment methods', () => {
     expect(screen.queryByRole('option', { name: 'Cheque' })).not.toBeInTheDocument();
   });
 
-  it('resets a partial request when the linked policy only allows full refunds', () => {
+  it('keeps partial requests available for a legacy policy with partial refunds disabled', () => {
     mocks.eligibility.currentData = { ...eligible(['Cash']), allowPartialRefund: false };
     const values = formik();
     values.values.refundType = 'partial';
     render(<FeeRefundDetailsForm formik={values} />);
-    expect(screen.getByRole('radio', { name: 'Partial refund' })).toBeDisabled();
-    expect(
-      screen.getByText('The linked refund policy allows full refunds only.')
-    ).toBeInTheDocument();
-    expect(mocks.setFieldValue).toHaveBeenCalledWith('refundType', 'full', false);
+    expect(screen.getByRole('radio', { name: 'Partial refund' })).toBeEnabled();
+    expect(screen.getByRole('radio', { name: 'Partial refund' })).toBeChecked();
+    expect(mocks.setFieldValue).not.toHaveBeenCalledWith('refundType', 'full', false);
   });
 
   it('keeps one reason field and required recipient details in the shared sections', () => {

@@ -3,7 +3,7 @@ module: finance
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -97,3 +97,12 @@ The implemented selectors, retired Account Heads route, lookup permissions, cach
 
 Separate registers use exact IncomeTracking.View and ExpenseTracking.View grants in navigation, route and screen guards.
 See [Income and Expenses workspaces](./references/income-expense-workspaces.md).
+
+## Finance setup guide
+
+`/finance/setup` is a protected full-screen guide, linked from Finance > Setup guide.
+`src/app/finance/setup/page.tsx` uses the same authentication boundary as the Academic guide.
+The screen additionally requires Finance module visibility and any exact setup or operational View grant from `financeSetupViewPermissions`.
+The guide starts directly at Accounts Setup and uses the existing globally selected academic year; it does not create academic years.
+Stage and setting navigation uses `stage`, `setting` and `guideYear` query parameters.
+A position belonging to another guide year is ignored in favour of that year's saved position.

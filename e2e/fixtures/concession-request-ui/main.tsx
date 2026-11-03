@@ -37,6 +37,7 @@ function Fixture() {
     new URLSearchParams(window.location.search).get('mode') || 'policy'
   );
   const [review, setReview] = React.useState(false);
+  const [policyVersionId, setPolicyVersionId] = React.useState('version');
   const [documents, setDocuments] = React.useState<any[]>(() =>
     new URLSearchParams(window.location.search).get('documents') === 'ready'
       ? ['income-proof', 'identity-proof'].map((documentId) => ({
@@ -60,6 +61,8 @@ function Fixture() {
   });
   const currentPolicy: typeof policy = {
     ...policy,
+    concessionPolicyVersionId: policyVersionId,
+    version: policyVersionId === 'version-2' ? 2 : 1,
     policyName: mode === 'policy' ? 'Nikhil Test Concession · 50%' : 'Sibling policy',
     policyCode: 'CON',
     valueSource: mode === 'policy' ? 'PolicyFixed' : policy.valueSource,
@@ -68,6 +71,25 @@ function Fixture() {
     maximumFixedAmount: 11111,
     applyOn: 'AllOutstanding',
   };
+  const policies = [
+    { ...currentPolicy, concessionPolicyVersionId: 'version', version: 1 },
+    { ...currentPolicy, concessionPolicyVersionId: 'version-2', version: 2 },
+  ];
+  const installmentLines = (feeHeadId: string, feeHeadName: string, total: number) =>
+    Array.from({ length: 12 }, (_, index) => {
+      const amount = index === 11 ? total - Math.floor(total / 12) * 11 : Math.floor(total / 12);
+      return {
+        ...context.eligibleDueFees[0],
+        dueFeeId: feeHeadId === 'school' ? `school-${index}` : `due-${index + 1}`,
+        feeHeadId,
+        feeHeadName,
+        installmentLabel: `Installment ${index + 1}`,
+        originalAmount: amount,
+        paidAmount: 0,
+        eligibleConcessionAmount: amount,
+        outstandingAmount: amount,
+      };
+    });
   const uiContext = {
     ...context,
     feeHeads: [
@@ -75,22 +97,8 @@ function Fixture() {
       { feeHeadId: 'tuition', feeHeadName: 'General Tuition Fee', eligibleOutstanding: 20000 },
     ],
     eligibleDueFees: [
-      ...context.eligibleDueFees.map((line, index) => ({
-        ...line,
-        dueFeeId: `school-${index}`,
-        feeHeadId: 'school',
-        feeHeadName: 'General School Fees',
-        originalAmount: 15000,
-        eligibleConcessionAmount: 15000,
-        outstandingAmount: 15000,
-      })),
-      ...context.eligibleDueFees.map((line) => ({
-        ...line,
-        feeHeadName: 'General Tuition Fee',
-        originalAmount: 10000,
-        eligibleConcessionAmount: 10000,
-        outstandingAmount: 10000,
-      })),
+      ...installmentLines('school', 'General School Fees', 30000),
+      ...installmentLines('tuition', 'General Tuition Fee', 20000),
     ],
   };
   const selected = uiContext.feeHeads.filter((head) =>
@@ -192,6 +200,7 @@ function Fixture() {
                     variant={mode === value ? 'contained' : 'outlined'}
                     onClick={() => {
                       formik.resetForm();
+                      setPolicyVersionId('version');
                       setMode(value);
                     }}
                   >
@@ -199,6 +208,9 @@ function Fixture() {
                   </Button>
                 ))}
               </Stack>
+              <Typography component="output" variant="caption" aria-label="Selected policy version">
+                {policyVersionId}
+              </Typography>
               <Button size="small" onClick={() => setBusy(!busy)}>
                 {busy ? 'End saving preview' : 'Preview saving lock'}
               </Button>
@@ -206,11 +218,14 @@ function Fixture() {
                 <ConcessionRequestWorkspace
                   policyFields={
                     <ConcessionPolicyFields
-                      policies={[currentPolicy]}
+                      policies={policies}
                       types={[{ id: 'sibling', name: 'General School Nikhil' }]}
                       policyVersionId={currentPolicy.concessionPolicyVersionId}
                       typeId="sibling"
-                      onPolicyChange={() => undefined}
+                      onPolicyChange={(selectedPolicy) => {
+                        if (selectedPolicy)
+                          setPolicyVersionId(selectedPolicy.concessionPolicyVersionId);
+                      }}
                       onTypeChange={() => undefined}
                       onPolicyBlur={() => undefined}
                       onTypeBlur={() => undefined}
