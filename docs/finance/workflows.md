@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-31
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -911,3 +911,49 @@ Direct Finance routes: Fee Head and Receipt Book remain implemented behind their
 ## Collection group checkboxes
 
 A fully settled fee or charge group shows checked, disabled group and table-header checkboxes, matching its checked, disabled rows. Groups with collectible balances continue to derive selected and partial states from the collectible rows only. Bulk selection never adds settled items to the payment allocation.
+
+## Cash activity and net charge summaries
+
+Collections shows server-calculated Total Charges after applied waivers, Paid Charges for active collected payments, and Pending Charges after waivers and active payments. Paid Charges sits between Total and Pending with numeric sort/filter, right-aligned INR values, column visibility and export support. Its tooltip explains payments awaiting verification; waived and reversed amounts are excluded. Missing amounts in older cached responses show `—`, while an actual zero shows ₹0. Fully waived unpaid charges contribute zero to all three; ledger details preserve gross, collected and waived evidence.
+
+Cash Management uses `activitySummary` for Collected, Spent and Deposited. Selected-month activity follows each collection, expense payment and confirmed credit date, including payments funded by earlier cash sources. All months shows all scoped activity. Academic-year cash available remains cumulative and is not replaced by the monthly activity difference.
+
+## Concession request policy names and installment headers
+
+Policy options and the selected field show only the policy name. Preview/save retain immutable policy/version identities, and explicit policy details retain version information. Bounded installment-entry headers use an opaque theme surface above floating input labels so labels scroll underneath the headings.
+
+## Bulk concession installment entry
+
+For request-entered concessions, each fee head's breakdown offers **Apply to all installments**
+and **Auto-distribute equal** above its installment table. Eligible rows start checked; the header
+checkbox selects all or clears the bulk targets and shows a mixed state for a subset. Checkboxes
+only choose which rows a bulk action updates: unchecking a row preserves its current amount and
+does not exclude a positive entered amount from the request. Manual row editing remains available.
+
+Apply sets an exact amount or percentage on every checked row. Auto-distribute divides the entered
+total within eligible row capacities, reallocating amounts from capped rows and putting the rounding
+remainder on the last checked row with capacity. Fixed concessions retain the backend's whole-rupee
+rule (₹5,000 across six rows is ₹833 on five and ₹835 on the last); percentage totals retain two
+decimal places. Both actions respect the allowance shared across all selected heads, including
+untargeted manual values, and reject an invalid batch without changing any entries. Bulk drafts and
+targets reset with student, assignment, policy version, concession type or eligible-row changes.
+Policy-fixed concessions keep their existing automatic calculation.
+
+## Review Finance setup
+
+Open Finance > Setup guide to follow Accounts Setup, Fee Settings, Policies & Rules, Fee Structures, Student Fee Assignment, Finance Workflows and Review & Finish.
+Accounts starts with Income Categories, then Expense Categories and Bank Accounts.
+Fee Category forms own the fee-head creation and income mappings; the guide does not expose a separate retired Fee Head menu item.
+Each configuration tab embeds its existing Finance management screen, including the native table and authorized add/edit dialogs or drawers.
+The guide owns the step heading; standalone routes keep their usual breadcrumbs and actions.
+Submit or close the native editor before changing steps or academic year. Background checks preserve the mounted screen and its draft; closing an editor refreshes configuration presence.
+Expandable setup guidance explains the dependency order without replacing the working screen.
+The native form retains ownership of drafts, validation, exact action permissions and financial writes.
+
+Active configuration available means relevant active records were found; it does not prove every class, mapping or payment method is ready.
+Do this later saves a deferred item without marking its configuration complete.
+Assignment and operational steps explain prerequisites and provide authorized links without requiring financial transactions.
+Finish review records the review separately from configuration presence; pending and inaccessible settings remain explicit.
+Saving progress does not change policy versions, assign fees, generate dues or approve requests.
+Changing the selected year remounts the guide, loads its own saved progress and discards stale year results.
+The backend [Finance workflows](../../../Shikshamitra-BE/docs/modules/finance/workflows.md) own persistence, scope and permission rules.

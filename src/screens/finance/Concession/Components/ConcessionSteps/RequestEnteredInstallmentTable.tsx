@@ -1,19 +1,20 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { ConcessionEligibleDueFee } from 'src/redux/finance/ConcessionManagement/types';
 
-import { useId } from 'react';
-import { visuallyHidden } from '@mui/utils';
-import { Box, Typography } from '@mui/material';
+import { useId, useState } from 'react';
+import { Box, Checkbox, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
 import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { concessionInstallmentLabel } from '../concessionInstallmentLabel';
+import ConcessionBulkActions from './ConcessionBulkActions';
 
 export default function RequestEnteredInstallmentTable({
   formik,
   lines,
+  allLines,
   validationErrors,
   percentage,
   maximum,
@@ -22,6 +23,7 @@ export default function RequestEnteredInstallmentTable({
 }: {
   formik: any;
   lines: ConcessionEligibleDueFee[];
+  allLines: ConcessionEligibleDueFee[];
   validationErrors: Record<string, string>;
   percentage: boolean;
   maximum: number;
@@ -29,12 +31,54 @@ export default function RequestEnteredInstallmentTable({
   tableKey: string;
 }) {
   const descriptionPrefix = useId();
+  const [targetIds, setTargetIds] = useState(() => lines.map((line) => line.dueFeeId));
+  const targets = lines
+    .filter((line) => targetIds.includes(line.dueFeeId))
+    .map((line) => line.dueFeeId);
+  const allChecked = lines.length > 0 && targets.length === lines.length;
+  const disabled = Boolean(formik.isSubmitting);
   const entries: Record<string, number | string> = formik.values.dueFeeEntries || {};
   const money = (amount: number) => formatNumber(amount, 'INR');
   const errorFor = (line: ConcessionEligibleDueFee) =>
     validationErrors[line.dueFeeId] ||
     (formik.touched.dueFeeEntries?.[line.dueFeeId] && formik.errors.dueFeeEntries?.[line.dueFeeId]);
   const columns: IColumn[] = [
+    {
+      id: 'bulkTarget',
+      label: (
+        <Checkbox
+          size="small"
+          checked={allChecked}
+          indeterminate={targets.length > 0 && !allChecked}
+          disabled={disabled || !lines.length}
+          slotProps={{ input: { 'aria-label': 'Select all installments for bulk actions' } }}
+          onChange={() => setTargetIds(allChecked ? [] : lines.map((line) => line.dueFeeId))}
+        />
+      ),
+      width: 80,
+      minWidth: 80,
+      maxWidth: 80,
+      excludeFromExport: true,
+      render: (_, row) => (
+        <Checkbox
+          size="small"
+          checked={targets.includes(row.dueFeeId)}
+          disabled={disabled}
+          slotProps={{
+            input: {
+              'aria-label': `Select ${concessionInstallmentLabel(row.installmentLabel, row.year)} ${row.feeHeadName} for bulk actions`,
+            },
+          }}
+          onChange={() =>
+            setTargetIds((previous) =>
+              previous.includes(row.dueFeeId)
+                ? previous.filter((id) => id !== row.dueFeeId)
+                : [...previous, row.dueFeeId]
+            )
+          }
+        />
+      ),
+    },
     {
       id: 'installmentLabel',
       label: 'Installment / fee',
@@ -108,7 +152,7 @@ export default function RequestEnteredInstallmentTable({
               helperText={error || undefined}
               FormHelperTextProps={{ sx: { mt: 0.5, mx: 0 } }}
             />
-            <Box component="span" id={descriptionId} sx={visuallyHidden}>
+            <Box component="span" id={descriptionId} hidden>
               {description}
             </Box>
           </>
@@ -142,22 +186,44 @@ export default function RequestEnteredInstallmentTable({
     );
 
   return (
-    <CustomizableTable
-      tableId={`concession-request-installments-${tableKey}`}
-      tableTitle="Installment concessions"
-      variant="embedded"
-      columns={columns.map((column) => ({ ...column, isFilter: false, isSort: false }))}
-      data={lines.map((line) => ({ ...line, id: line.dueFeeId }))}
-      showToolbar={false}
-      showColumns={false}
-      showExport={false}
-      showFullScreen={false}
-      isSearch={false}
-      isFilter={false}
-      isPagination={false}
-      isShowedDense={false}
-      wrapperProps={{ sx: { flex: '0 0 auto', minWidth: 0 } }}
-      tableContainerProps={{ sx: { height: 'auto', maxHeight: 360 } }}
-    />
+    <>
+      <ConcessionBulkActions
+        lines={allLines}
+        targetIds={targets}
+        entries={entries}
+        maximum={maximum}
+        percentage={percentage}
+        decimalPlaces={percentage ? 2 : 0}
+        disabled={disabled}
+        onApply={(nextEntries) => formik.setFieldValue('dueFeeEntries', nextEntries)}
+      />
+      <CustomizableTable
+        tableId={`concession-request-installments-${tableKey}`}
+        tableTitle="Installment concessions"
+        variant="embedded"
+        columns={columns.map((column) => ({
+          ...column,
+          isFilter: false,
+          isSort: false,
+          headerSx: {
+            // Outlined input labels use layer 1 and must scroll underneath these headers.
+            zIndex: 2,
+            bgcolor: 'background.neutral',
+            backgroundImage: 'none',
+          },
+        }))}
+        data={lines.map((line) => ({ ...line, id: line.dueFeeId }))}
+        showToolbar={false}
+        showColumns={false}
+        showExport={false}
+        showFullScreen={false}
+        isSearch={false}
+        isFilter={false}
+        isPagination={false}
+        isShowedDense={false}
+        wrapperProps={{ sx: { flex: '0 0 auto', minWidth: 0 } }}
+        tableContainerProps={{ sx: { height: 'auto', maxHeight: 360 } }}
+      />
+    </>
   );
 }

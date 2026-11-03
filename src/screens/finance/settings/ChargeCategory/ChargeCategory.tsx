@@ -1,6 +1,5 @@
 'use client';
 
-import { financeNameSchema, sanitizeFinanceName } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 import type { IParams, IColumn } from 'src/components/customizabaleTable/types';
 
@@ -22,9 +21,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
+import { financeNameSchema, sanitizeFinanceName } from 'src/utils/finance-name';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -33,6 +32,7 @@ import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrer
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import { setupOptionsMissing } from 'src/screens/finance/settings/components/financeSetupPrerequisites';
+import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
 import {
   Box,
@@ -340,7 +340,8 @@ const FinanceChargeCategory = () => {
       sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, minWidth: 0 }}
     >
       {discardConfirmation}
-      <CustomBreadcrumbs
+      <FinanceSetupManagerHeader
+        editorOpen={addDialog.value || editDialog.value || confirm.value}
         description="This screen displays all created charge Category, helping the school manage additional fees or penalties that can be applied to students"
         heading="Charge Category"
         links={[

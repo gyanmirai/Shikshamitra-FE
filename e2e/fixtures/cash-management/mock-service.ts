@@ -97,9 +97,30 @@ export const api = createApi({
           return text.includes(String(expected).toLowerCase());
         });
       const visible = matches && (!params.month || params.month === 10);
+      const inPeriod = (date: string | null) => {
+        if (!params.month) return true;
+        if (!date) return false;
+        const indiaDate = new Date(new Date(date).getTime() + 330 * 60 * 1000);
+        return (
+          indiaDate.getUTCMonth() + 1 === params.month && indiaDate.getUTCFullYear() === params.year
+        );
+      };
       return {
         data: {
           availableCash: row.remainingAmount,
+          activitySummary: {
+            collected: matches && inPeriod(row.collectedAt) ? row.amount : 0,
+            spent: matches
+              ? row.expenses
+                  .filter((expense) => inPeriod(expense.paymentDate))
+                  .reduce((sum, expense) => sum + expense.amount, 0)
+              : 0,
+            deposited: matches
+              ? row.deposits
+                  .filter((deposit) => inPeriod(deposit.creditDate))
+                  .reduce((sum, deposit) => sum + deposit.creditedAmount, 0)
+              : 0,
+          },
           yearSummary: {
             collected: row.amount,
             spent: row.spentAmount,

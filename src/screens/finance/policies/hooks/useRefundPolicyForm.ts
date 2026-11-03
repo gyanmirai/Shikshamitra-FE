@@ -328,7 +328,7 @@ export function useRefundPolicyForm({
           values.feeHeadScope === 'SelectedFeeHeads' ? values.applicableFeeHeadIds : [],
         includePaidCharges: values.includePaidCharges,
         includePaidLateFee: values.includePaidLateFee,
-        allowPartialRefund: values.allowPartialRefund,
+        allowPartialRefund: true,
         amountMode: values.amountMode,
         percentageValue: values.amountMode === 'Percentage' ? values.percentageValue : null,
         fixedAmount: values.amountMode === 'FixedAmount' ? values.fixedAmount : null,

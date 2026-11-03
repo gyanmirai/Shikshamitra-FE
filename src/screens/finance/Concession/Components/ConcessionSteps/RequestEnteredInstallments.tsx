@@ -82,8 +82,18 @@ export default function RequestEnteredInstallments({
         </Box>
       )}
       <RequestEnteredInstallmentTable
+        key={JSON.stringify([
+          requestContext?.studentId,
+          requestContext?.academicYearId,
+          requestContext?.studentFeeStructureId,
+          policy.concessionPolicyVersionId,
+          values.concessionTypeId,
+          feeHeadId,
+          visibleLines.map((line) => [line.dueFeeId, line.eligibleConcessionAmount]),
+        ])}
         formik={formik}
         lines={visibleLines}
+        allLines={lines}
         validationErrors={validationErrors}
         percentage={percentage}
         maximum={maximum}

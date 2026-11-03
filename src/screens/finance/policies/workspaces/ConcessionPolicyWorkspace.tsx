@@ -4,13 +4,13 @@ import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Button } from '@mui/material';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
+import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 
 import FinancePolicyTable from '../components/FinancePolicyTable';
 import ConcessionPolicyDrawer from '../components/ConcessionPolicyDrawer';
@@ -41,7 +41,8 @@ export default function ConcessionPolicyWorkspace() {
 
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <CustomBreadcrumbs
+      <FinanceSetupManagerHeader
+        editorOpen={drawerOpen.value}
         description="Manage reusable concession rules and limits. Staff select an applicable policy on each concession request."
         heading="Concession Policy"
         action={

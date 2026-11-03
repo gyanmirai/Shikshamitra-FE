@@ -64,7 +64,10 @@ describe('Finance ledger filter context', () => {
         groupByInstallment
       />
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+    expect(screen.getByRole('button', { name: 'Filters' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
     const grouping = screen.getByRole('combobox', { name: 'Group by' });
     expect(grouping).toBeEnabled();
     fireEvent.change(grouping, { target: { value: 'by-month' } });
@@ -116,7 +119,6 @@ describe('Finance ledger filter context', () => {
     expect(mocks.query).toHaveBeenLastCalledWith(
       expect.objectContaining({ options: { skip: true } })
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
     expect(screen.getByRole('option', { name: 'Form fee' })).toBeVisible();
     expect(screen.queryByRole('option', { name: 'Tuition' })).not.toBeInTheDocument();
   });

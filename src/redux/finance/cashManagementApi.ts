@@ -48,6 +48,7 @@ export type CashDetail = CashRow & {
 export type CashPage = {
   availableCash: number;
   yearSummary: CashPage['summary'];
+  activitySummary: { collected: number; spent: number; deposited: number };
   items: CashRow[];
   totalCount: number;
   page: number;

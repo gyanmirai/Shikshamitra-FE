@@ -75,7 +75,7 @@ const POLICY_CONFIG: Array<{
     label: 'Refund Policy',
     icon: 'solar:arrow-left-up-bold-duotone',
     color: 'warning',
-    required: false,
+    required: true,
     description: 'Defines eligible paid amounts, caps, deductions, and allowed payout methods',
   },
 ];
@@ -219,6 +219,7 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
 
         <CustomSelect
           label={`Select ${label}`}
+          required={required}
           options={options}
           isLoading={isLoading}
           labelKey="label"

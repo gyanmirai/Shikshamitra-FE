@@ -7,46 +7,51 @@ export default function PdfCanvas({
   url,
   title,
   showPageText = true,
+  controlsPosition = 'top',
 }: {
   url: string;
   title: string;
   showPageText?: boolean;
+  controlsPosition?: 'top' | 'bottom';
 }) {
   const [page, setPage] = useState(1);
   const [retry, setRetry] = useState(0);
   const [zoom, setZoom] = useState(false);
   const pdf = usePdfPage(url, page, retry);
+  const controls = (
+    <Stack
+      direction="row"
+      spacing={1}
+      alignItems="center"
+      justifyContent="center"
+      flexWrap="wrap"
+      useFlexGap
+    >
+      <Button
+        size="small"
+        disabled={pdf.loading || pdf.error || page === 1}
+        onClick={() => setPage(page - 1)}
+      >
+        Previous Page
+      </Button>
+      <Typography variant="body2" role="status">
+        Page {page} of {pdf.pageCount}
+      </Typography>
+      <Button
+        size="small"
+        disabled={pdf.loading || pdf.error || page >= pdf.pageCount}
+        onClick={() => setPage(page + 1)}
+      >
+        Next Page
+      </Button>
+      <Button size="small" disabled={pdf.loading || pdf.error} onClick={() => setZoom(!zoom)}>
+        {zoom ? 'Fit Width' : 'Zoom In'}
+      </Button>
+    </Stack>
+  );
   return (
     <Stack spacing={1}>
-      <Stack
-        direction="row"
-        spacing={1}
-        alignItems="center"
-        justifyContent="center"
-        flexWrap="wrap"
-        useFlexGap
-      >
-        <Button
-          size="small"
-          disabled={pdf.loading || pdf.error || page === 1}
-          onClick={() => setPage(page - 1)}
-        >
-          Previous Page
-        </Button>
-        <Typography variant="body2" role="status">
-          Page {page} of {pdf.pageCount}
-        </Typography>
-        <Button
-          size="small"
-          disabled={pdf.loading || pdf.error || page >= pdf.pageCount}
-          onClick={() => setPage(page + 1)}
-        >
-          Next Page
-        </Button>
-        <Button size="small" disabled={pdf.loading || pdf.error} onClick={() => setZoom(!zoom)}>
-          {zoom ? 'Fit Width' : 'Zoom In'}
-        </Button>
-      </Stack>
+      {controlsPosition === 'top' && controls}
       {pdf.loading && <Skeleton aria-label="Rendering PDF page" variant="rounded" height={400} />}
       {pdf.error && (
         <Alert
@@ -92,6 +97,7 @@ export default function PdfCanvas({
           </Box>
         )}
       </Box>
+      {controlsPosition === 'bottom' && controls}
     </Stack>
   );
 }

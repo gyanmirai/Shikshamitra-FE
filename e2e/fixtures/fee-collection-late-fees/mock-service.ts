@@ -67,7 +67,7 @@ let remainingPdfFailures = 0;
 export const requests: Array<{ url: string; method: string; body?: unknown }> = [];
 const replay = new Map<string, CollectFeeOutput>();
 
-export function resetFixture(scenario?: 'statuses' | 'selection' | 'settled' | 'charge-receipt' | 'charge-receipt-retry' | 'pending-balance' | 'receipt-separate' | 'receipt-combined') {
+export function resetFixture(scenario?: 'statuses' | 'selection' | 'settled' | 'charge-receipt' | 'charge-receipt-retry' | 'pending-balance' | 'receipt-separate' | 'receipt-combined' | 'waiver-full' | 'waiver-partial' | 'waiver-mixed') {
   ledger = initialLedger();
   charges = initialCharges();
   chargeReceiptScenario = scenario === 'charge-receipt' || scenario === 'charge-receipt-retry';
@@ -77,6 +77,19 @@ export function resetFixture(scenario?: 'statuses' | 'selection' | 'settled' | '
     const principal = { ...ledger[0].items[0], total: 20000, due: 20000, paid: 0 };
     ledger = [{ ...ledger[0], items: [principal], totalDue: 20000 }];
     charges = [{ ...charges[0], amount: 60600, pendingAmount: 60600 }];
+  }
+  if (scenario === 'waiver-full' || scenario === 'waiver-partial' || scenario === 'waiver-mixed') {
+    const fullyWaived: ChargeDetail = {
+      ...charges[0], chargeId: 'waived-manual-charge', sourceId: 'waived-manual-charge',
+      sourceType: 'Charge', name: 'Fully Waived Manual Charge', isSystemGenerated: false,
+      amount: 5000, paidAmount: 0, waivedAmount: 5000, pendingAmount: 0, canWaive: false, status: 6,
+    };
+    const partiallyWaived: ChargeDetail = {
+      ...charges[0], name: 'Partially Waived Late Fee - Jun 2026',
+      amount: 1000, paidAmount: 300, waivedAmount: 200, pendingAmount: 500, canWaive: true, status: 4,
+    };
+    charges = scenario === 'waiver-full' ? [fullyWaived]
+      : scenario === 'waiver-partial' ? [partiallyWaived] : [fullyWaived, partiallyWaived];
   }
   if (scenario === 'pending-balance') {
     // API response contract for the reported split: 3306 due plus 26470 future unpaid.
@@ -195,7 +208,8 @@ function balances() {
     totalFees: money(items.reduce((sum, item) => sum + item.total, 0)),
     paidFees: money(items.reduce((sum, item) => sum + item.paid, 0)),
     pendingFees: money(items.reduce((sum, item) => sum + item.due, 0)),
-    totalCharges: money(charges.reduce((sum, charge) => sum + charge.amount, 0)),
+    totalCharges: money(charges.reduce((sum, charge) => sum + Math.max(0, charge.amount - (charge.waivedAmount ?? 0)), 0)),
+    paidCharges: money(charges.reduce((sum, charge) => sum + charge.paidAmount, 0)),
     pendingCharges: money(charges.reduce((sum, charge) => sum + charge.pendingAmount, 0)),
   };
 }

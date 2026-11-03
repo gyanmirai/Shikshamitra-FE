@@ -19,11 +19,11 @@ import {
   IconButton,
 } from '@mui/material';
 
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { SectionCard } from './RefundCommon';
 
 import type { IRefundPolicyFormValues } from '../../types/finance-policy.types';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 interface FeeHeadOption {
   id: string;
@@ -157,11 +157,6 @@ export default function RefundEligibilitySection({
         <Grid container spacing={2}>
           {[
             {
-              name: 'allowPartialRefund',
-              label: 'Allow partial refunds',
-              help: 'Staff may request less than the full eligible paid balance.',
-            },
-            {
               name: 'includePaidCharges',
               label: 'Include paid charges',
               help: 'Allow refunds of collected charges in addition to fee heads.',
@@ -172,7 +167,7 @@ export default function RefundEligibilitySection({
               help: 'Allow refunds of collected late fees.',
             },
           ].map(({ name, label, help }) => (
-            <Grid key={name} size={{ xs: 12, sm: 4 }}>
+            <Grid key={name} size={{ xs: 12, sm: 6 }}>
               <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, height: 1 }}>
                 <Stack direction="row" spacing={0.5} alignItems="center">
                   <FormControlLabel
@@ -189,13 +184,6 @@ export default function RefundEligibilitySection({
                         checked={Boolean(values[name as keyof IRefundPolicyFormValues])}
                         onChange={(_, checked) => {
                           setFieldValue(name, checked);
-                          if (
-                            name === 'allowPartialRefund' &&
-                            !checked &&
-                            values.amountMode === 'ManualUpToEligible'
-                          ) {
-                            setFieldValue('amountMode', 'RemainingPaidAmount');
-                          }
                         }}
                       />
                     }

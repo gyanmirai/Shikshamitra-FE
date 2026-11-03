@@ -130,7 +130,7 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   useAssignmentCandidatesQuery: () => ({
     ...mocks.candidateState,
     refetch: mocks.candidateRefetch,
-    data: [
+    data: (mocks.candidateState.data as any) ?? [
       {
         id: 'structure',
         name: 'Annual fees',
@@ -144,6 +144,13 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
             policyId: 'default-policy',
             versionId: 'default-version',
             name: 'School collection',
+            version: 2,
+          },
+          {
+            family: 'refund',
+            policyId: 'default-refund-policy',
+            versionId: 'default-refund-version',
+            name: 'School refund',
             version: 2,
           },
         ],
@@ -638,6 +645,36 @@ describe('assignment review and commit boundaries', () => {
     );
     expect(mocks.preview).not.toHaveBeenCalled();
   });
+  it('does not offer No policy option for refund and blocks advancing without a refund policy', async () => {
+    mocks.candidateState = {
+      data: [
+        {
+          id: 'structure',
+          name: 'Annual fees',
+          revisionNumber: 1,
+          heads: [{ feeHeadId: 'tuition', feeHeadName: 'Tuition', isOptional: false }],
+          policies: [
+            {
+              family: 'collection',
+              policyId: 'default-policy',
+              versionId: 'default-version',
+              name: 'School collection',
+              version: 2,
+            },
+          ],
+        },
+      ],
+    };
+    mount(undefined, true);
+    await chooseStructure();
+    const refundSelect = screen.getByRole('combobox', { name: 'Refund policy' });
+    expect(within(refundSelect).queryByText('No policy assigned')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Select a Refund Policy before continuing.'
+    );
+    expect(screen.queryByRole('heading', { name: 'Fees & Dates' })).not.toBeInTheDocument();
+  });
   it('shows names only during bulk setup and preserves the common form while searching', async () => {
     mount(
       [
@@ -722,6 +759,13 @@ describe('assignment review and commit boundaries', () => {
               name: 'School collection',
               version: 2,
             },
+            {
+              family: 'refund',
+              policyId: 'default-refund-policy',
+              versionId: 'default-refund-version',
+              name: 'School refund',
+              version: 2,
+            },
           ],
         },
         warnings: [],
@@ -770,6 +814,13 @@ describe('assignment review and commit boundaries', () => {
               family: 'collection',
               versionId: 'default-version',
               name: 'School collection',
+              version: 2,
+            },
+            {
+              family: 'refund',
+              policyId: 'default-refund-policy',
+              versionId: 'default-refund-version',
+              name: 'School refund',
               version: 2,
             },
           ],
@@ -863,7 +914,7 @@ describe('assignment review and commit boundaries', () => {
     fireEvent.change(refundSelectors[0], { target: { value: 'refund-version' } });
     fireEvent.change(collectionSelectors[0], { target: { value: 'collection-version' } });
     fireEvent.click(screen.getByRole('button', { name: 'Reset refund' }));
-    expect(refundSelectors[0]).toHaveValue('');
+    expect(refundSelectors[0]).toHaveValue('default-refund-version');
     fireEvent.change(screen.getByRole('textbox', { name: /Policy override reason/ }), {
       target: { value: 'Approved bulk exception' },
     });

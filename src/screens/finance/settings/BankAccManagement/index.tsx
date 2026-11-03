@@ -14,11 +14,11 @@ import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 import {
   bankAccountApi,
   useGetBankAccountQuery,
@@ -162,7 +162,8 @@ const BankAccountManagement: React.FC = () => {
   return (
     <Box height="100%" minHeight={0} display="flex" flexDirection="column">
       {discardConfirmation}
-      <CustomBreadcrumbs
+      <FinanceSetupManagerHeader
+        editorOpen={addBankAccountDialog.value || deleteBankAccountDialog.value}
         description="Manage bank accounts used by the school. Add, edit or delete bank account details and link payment methods or branches."
         heading="Bank Accounts"
 

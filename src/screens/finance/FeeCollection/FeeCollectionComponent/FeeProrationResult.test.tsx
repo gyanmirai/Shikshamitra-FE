@@ -1,3 +1,5 @@
+import type { FeeProrationResult as FinanceResult } from 'src/redux/finance/fee-proration-result';
+
 import { it, vi, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
@@ -23,7 +25,7 @@ const result = {
     'Full months charged from August through December using the saved Finance policy.',
   ],
 };
-const show = (value?: typeof result | null) =>
+const show = (value?: FinanceResult | null) =>
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <FeeProrationResult result={value} />
@@ -61,5 +63,12 @@ describe('Finance-owned read-only proration result', () => {
     expect(screen.queryByText('Withdrawal credit')).not.toBeInTheDocument();
     expect(screen.queryByText('Excess paid')).not.toBeInTheDocument();
     expect(screen.getByText('Joining date reduction')).toBeVisible();
+  });
+
+  it('shows an unavailable joining date without substituting the charge-period start', () => {
+    show({ ...result, joiningDate: null });
+    expect(screen.getByText('Actual joining date').parentElement).toHaveTextContent('—');
+    expect(screen.getByText('Charge period').parentElement).toHaveTextContent('01 Aug 2026');
+    expect(screen.queryByText('Invalid time value')).not.toBeInTheDocument();
   });
 });

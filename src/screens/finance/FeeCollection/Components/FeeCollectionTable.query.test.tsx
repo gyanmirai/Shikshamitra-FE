@@ -122,4 +122,28 @@ describe('Collections full-result query', () => {
       excludeFromExport: true,
     });
   });
+  it('offers Paid Charges to the shared column, sort, filter and export controls', () => {
+    setup();
+    const paid = state.table.columns.find((column: any) => column.id === 'paidCharges');
+    expect(paid).toMatchObject({
+      label: 'Paid Charges',
+      filterType: 'number',
+      isFilter: true,
+      isSort: true,
+    });
+    expect(paid.defaultHidden).not.toBe(true);
+    expect(paid.excludeFromExport).not.toBe(true);
+    React.act(() =>
+      state.table.onServerFilter([
+        { column: 'paidCharges', type: 'greaterThan', value: 200, valueType: 'number' },
+      ])
+    );
+    expect(JSON.parse(state.params.Filters)).toEqual([
+      { column: 'paidCharges', type: 'greaterThan', value: 200 },
+    ]);
+    React.act(() =>
+      state.table.onServerSort('paidCharges', [{ column: 'paidCharges', direction: 'desc' }])
+    );
+    expect(state.params).toMatchObject({ SortBy: 'paidCharges', SortOrder: 'desc', SkipCount: 0 });
+  });
 });

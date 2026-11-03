@@ -82,7 +82,9 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [financeModuleType.concessionRequest],
+      // Administrator creation can approve immediately and create linked refunds.
+      invalidatesTags: (_result, error) =>
+        error ? [] : [financeModuleType.concessionRequest, financeModuleType.feeRefund],
     }),
 
     createConcessionDraft: builder.mutation<
@@ -112,7 +114,9 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.concessionRequest],
+      // Administrator submission follows the same automatic approval path.
+      invalidatesTags: (_result, error) =>
+        error ? [] : [financeModuleType.concessionRequest, financeModuleType.feeRefund],
     }),
 
     previewConcessionRequest: builder.mutation<ConcessionRequestPreview, PreviewCommand>({

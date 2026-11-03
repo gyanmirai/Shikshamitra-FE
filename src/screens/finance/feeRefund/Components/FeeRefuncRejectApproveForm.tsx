@@ -6,17 +6,32 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Grid, Alert, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+
+import CashRefundRouting, { type CashRefundRoutingValues } from './CashRefundRouting';
 
 /** Extended props that also pass the entered notes/reason back on close. */
 interface IFeeRefundApprovalFormProps {
-  onClose: (e: any, isSubmit: boolean, notes?: string) => void;
+  onClose: (e: any, isSubmit: boolean, notes?: string, routing?: CashRefundRoutingValues) => void;
   mode: string;
   loading?: boolean;
+  cashRefund?: boolean;
+  academicYearId?: string;
+  defaultExpenseCategoryId?: string | null;
+  defaultBankAccountId?: string | null;
 }
 
-const FeeRefundReasonApprovalForm = ({ onClose, mode, loading }: IFeeRefundApprovalFormProps) => {
+const FeeRefundReasonApprovalForm = ({
+  onClose,
+  mode,
+  loading,
+  cashRefund,
+  academicYearId = '',
+  defaultExpenseCategoryId,
+  defaultBankAccountId,
+}: IFeeRefundApprovalFormProps) => {
+  const [cashRouting, setCashRouting] = React.useState<CashRefundRoutingValues | null>(null);
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
@@ -29,7 +44,10 @@ const FeeRefundReasonApprovalForm = ({ onClose, mode, loading }: IFeeRefundAppro
           : Yup.string(),
     }),
     onSubmit: (values) => {
-      onClose(null, true, values.reason || undefined);
+      if (mode === 'Approve' && cashRefund) {
+        if (!cashRouting) return;
+        onClose(null, true, values.reason || undefined, cashRouting);
+      } else onClose(null, true, values.reason || undefined);
     },
   });
 
@@ -37,6 +55,25 @@ const FeeRefundReasonApprovalForm = ({ onClose, mode, loading }: IFeeRefundAppro
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={2} sx={{ mb: 2 }}>
+          {mode === 'Approve' && cashRefund && (
+            <Grid size={12}>
+              <Alert severity="info">
+                Approval completes the cash payout to the named recipient using the selected expense
+                routing.
+              </Alert>
+            </Grid>
+          )}
+          {mode === 'Approve' && cashRefund && (
+            <Grid size={12}>
+              <CashRefundRouting
+                academicYearId={academicYearId}
+                defaultExpenseCategoryId={defaultExpenseCategoryId}
+                defaultBankAccountId={defaultBankAccountId}
+                busy={loading}
+                onChange={setCashRouting}
+              />
+            </Grid>
+          )}
           <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
               <TextField
@@ -65,6 +102,7 @@ const FeeRefundReasonApprovalForm = ({ onClose, mode, loading }: IFeeRefundAppro
             onClose(null, false);
           }}
           variant="outlined"
+          disabled={loading}
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
@@ -77,12 +115,13 @@ const FeeRefundReasonApprovalForm = ({ onClose, mode, loading }: IFeeRefundAppro
           color={mode === 'Reject' || mode === 'Cancel' ? 'error' : 'success'}
           startIcon={<Iconify icon={mode === 'Reject' ? GlobalIcons.cancel : GlobalIcons.tick} />}
           loading={loading}
+          disabled={Boolean(mode === 'Approve' && cashRefund && !cashRouting)}
           onClick={(e: any) => {
             e.preventDefault();
             formik.handleSubmit(e);
           }}
         >
-          {mode}
+          {mode === 'Approve' && cashRefund ? 'Approve and pay cash' : mode}
         </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>

@@ -63,7 +63,12 @@ export default function UnifiedReceiptDisplay({
             {error}
           </Alert>
         ) : blobUrl ? (
-          <PdfPreview url={blobUrl} title={`${name} Receipt`} showPageText={false} />
+          <PdfPreview
+            url={blobUrl}
+            title={`${name} Receipt`}
+            showPageText={false}
+            controlsPosition="bottom"
+          />
         ) : (
           <Typography variant="body2" color="text.secondary">
             {name} receipt preview is unavailable.

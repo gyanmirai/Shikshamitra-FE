@@ -2,6 +2,7 @@ import { it, expect, describe } from 'vitest';
 
 import {
   buildRefundInitialValues,
+  buildFeeRefundApiPayload,
   buildRefundValidationSchema,
 } from './initialValuesAndValidation';
 
@@ -48,6 +49,12 @@ describe('refund selected installment validation', () => {
     values.feeHeadRefunds.pop();
     await expect(schema.validate(values)).resolves.toBeDefined();
   });
+
+  it('allows eligible selected installments from different receipts', async () => {
+    const values = request(100);
+    values.feeHeadRefunds[1].months[0].sourceReceiptId = 'second-receipt';
+    await expect(schema.validate(values)).resolves.toBeDefined();
+  });
 });
 
 describe('refund reason validation', () => {
@@ -64,4 +71,34 @@ describe('refund reason validation', () => {
       schema.validate({ ...request(100), notes: '  Excess fee payment  ' })
     ).resolves.toMatchObject({ notes: 'Excess fee payment' });
   });
+});
+
+it('retains the saved lead receipt when a multi-source replacement reloads lines in another order', () => {
+  const values = buildRefundInitialValues({
+    studentId: 'student',
+    feeHeadRefunds: [
+      {
+        feeHeadId: 'head',
+        months: [
+          {
+            month: 'June',
+            dueFeeId: 'due-a',
+            sourceAllocationId: 'allocation-a',
+            sourceReceiptId: 'receipt-a',
+            amount: 100,
+          },
+          {
+            month: 'July',
+            dueFeeId: 'due-b',
+            sourceAllocationId: 'allocation-b',
+            sourceReceiptId: 'saved-lead',
+            amount: 200,
+          },
+        ],
+      },
+    ],
+  });
+  const payload = buildFeeRefundApiPayload(values, 'year', 'saved-lead');
+  expect(payload.originalReceiptId).toBe('saved-lead');
+  expect(payload.lines.map((line) => line.sourceReceiptId)).toEqual(['receipt-a', 'saved-lead']);
 });

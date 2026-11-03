@@ -58,6 +58,9 @@ function Fixture() {
         <Button onClick={() => { close(); resetFixture('selection'); store.dispatch(api.util.resetApiState()); }}>Selection regression</Button>
         <Button onClick={() => { close(); resetFixture('settled'); store.dispatch(api.util.resetApiState()); }}>Settled balances</Button>
         <Button onClick={() => { close(); resetFixture('pending-balance'); store.dispatch(api.util.resetApiState()); }}>Pending balance regression</Button>
+        <Button onClick={() => { close(); resetFixture('waiver-full'); store.dispatch(api.util.resetApiState()); }}>Fully waived charge</Button>
+        <Button onClick={() => { close(); resetFixture('waiver-partial'); store.dispatch(api.util.resetApiState()); }}>Partially waived charge</Button>
+        <Button onClick={() => { close(); resetFixture('waiver-mixed'); store.dispatch(api.util.resetApiState()); }}>Mixed waived charges</Button>
         <Button onClick={() => { close(); resetFixture('charge-receipt'); store.dispatch(api.util.resetApiState()); }}>Charge receipt regression</Button>
         <Button onClick={() => { close(); resetFixture('charge-receipt-retry'); store.dispatch(api.util.resetApiState()); }}>Charge receipt retry regression</Button>
         <Button onClick={() => { close(); resetFixture('receipt-separate'); store.dispatch(api.util.resetApiState()); }}>Separate receipt grouping</Button>

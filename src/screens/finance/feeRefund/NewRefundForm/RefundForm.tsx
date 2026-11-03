@@ -49,6 +49,7 @@ import {
 
 import RefundFormSkeleton from './RefundFormSkeleton';
 import FeeRefundDetailsForm from './FeeRefundDetailForm';
+import CashRefundRouting, { type CashRefundRoutingValues } from '../Components/CashRefundRouting';
 import RefundGeneralInfoCard from './RefundGeneralInfoCard';
 import { getRefundPrerequisite } from './refundPrerequisites';
 import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
@@ -95,6 +96,10 @@ const FeeRefundFormComponent = ({
   const adminCanApprove = hasGrantedPermission(
     refundPermissions,
     financePermissions.fees.refundActions.approve
+  );
+  const adminCanProcess = hasGrantedPermission(
+    refundPermissions,
+    financePermissions.fees.refundActions.process
   );
   const [adminConfirmation, setAdminConfirmation] = React.useState<{
     fingerprint: string;
@@ -163,6 +168,8 @@ const FeeRefundFormComponent = ({
 
   const canAutoApproveSubmission =
     isAdminCreator && (!isEdit || editRefundDetail?.status === FeeRefundStatusType.Draft);
+  const canCompleteCashOnSubmission = canAutoApproveSubmission && !isEdit;
+  const [cashRouting, setCashRouting] = React.useState<CashRefundRoutingValues | null>(null);
 
   const [getRefundEligibility] = useQueryAndMutation({
     type: 'mutation',
@@ -215,6 +222,7 @@ const FeeRefundFormComponent = ({
                 lateFeeDueFeeId: m.lateFeeDueFeeId ?? undefined,
                 sourceAllocationId: m.sourceAllocationId,
                 sourceReceiptId: m.sourceReceiptId,
+                receiptNumber: m.receiptNumber,
                 month: m.chargeName
                   ? `${m.chargeName} · ${m.receiptNumber}${feeHead.months.filter((other) => other.month === m.month && other.year === m.year && other.receiptNumber === m.receiptNumber).length > 1 ? ` · allocation ${m.sourceAllocationId.slice(0, 8)}` : ''}`
                   : refundAllocationLabel(
@@ -242,23 +250,16 @@ const FeeRefundFormComponent = ({
           .filter((feeHead) => feeHead.months.length > 0);
 
         if (cancelled) return;
-        let remaining =
-          eligibility.allowPartialRefund === false
-            ? Number.POSITIVE_INFINITY
-            : Number(eligibility.totalRefundable ?? 0);
         const fullAmountsMatch = mappedFeeHeads.every((head) =>
           head.months.every((month) => {
             const source = eligibility.feeHeads
               .flatMap((item) => item.months)
               .find((item) => item.sourceAllocationId === month.sourceAllocationId);
-            const amount = Math.min(Math.max(0, source?.refundable ?? 0), Math.max(0, remaining));
-            remaining -= amount;
+            const amount = Math.max(0, source?.refundable ?? 0);
             return Number(month.amount) === amount;
           })
         );
-        setPrefilledRefundType(
-          eligibility.allowPartialRefund === false || fullAmountsMatch ? 'full' : 'partial'
-        );
+        setPrefilledRefundType(fullAmountsMatch ? 'full' : 'partial');
         setPrefilledFeeHeadRefunds(mappedFeeHeads);
       } catch (_err) {
         if (cancelled) return;
@@ -409,8 +410,22 @@ const FeeRefundFormComponent = ({
         );
         return;
       }
+      if (canCompleteCashOnSubmission && values.refundMethod === 'Cash' && !adminCanProcess) {
+        shikshaMitraToast.error({
+          message: 'Payment processing access is required to complete this cash refund.',
+        });
+        return;
+      }
+      if (canCompleteCashOnSubmission && values.refundMethod === 'Cash' && !cashRouting) return;
       try {
-        const payload = buildFeeRefundApiPayload(values, currentYear.id);
+        const payload = {
+          ...buildFeeRefundApiPayload(
+            values,
+            currentYear.id,
+            hasSourceRefund ? editRefundDetail?.originalReceiptId : undefined
+          ),
+          ...(canCompleteCashOnSubmission && values.refundMethod === 'Cash' ? cashRouting : {}),
+        };
         if (payload.lines.length === 0) {
           shikshaMitraToast.error({ message: 'Enter a refund amount for at least one month.' });
           return;
@@ -442,10 +457,15 @@ const FeeRefundFormComponent = ({
               studentName: values.studentName,
               amount: latest.maximumAllowedAmount,
               method: values.refundMethod,
-              receiptNumber:
-                values.feeHeadRefunds
-                  .flatMap((feeHead) => feeHead.months)
-                  .find((month) => Number(month.amount) > 0)?.receiptNumber ?? '',
+              receiptNumber: [
+                ...new Set(
+                  values.feeHeadRefunds
+                    .flatMap((feeHead) => feeHead.months)
+                    .filter((month) => Number(month.amount) > 0)
+                    .map((month) => month.receiptNumber)
+                    .filter(Boolean)
+                ),
+              ].join(', '),
             });
             return;
           }
@@ -464,7 +484,12 @@ const FeeRefundFormComponent = ({
               studentName: values.studentName,
               amount: payload.lines.reduce((sum, line) => sum + line.amount, 0),
               method: values.refundMethod,
-              receiptNumber: editRefundDetail?.originalReceiptNumber ?? '',
+              receiptNumber:
+                editRefundDetail?.sourceReceipts
+                  ?.map((receipt) => receipt.receiptNumber)
+                  .join(', ') ||
+                editRefundDetail?.originalReceiptNumber ||
+                '',
             });
             return;
           }
@@ -476,16 +501,22 @@ const FeeRefundFormComponent = ({
           }).unwrap();
           if (updated.status === FeeRefundStatusType.Draft && submitIntent.current === 'submit') {
             const submitted = await submitFeeRefund(editRefundId).unwrap();
-            if (isAdminCreator && submitted.status !== 2) {
+            if (
+              isAdminCreator &&
+              submitted.status !== 2 &&
+              submitted.status !== FeeRefundStatusType.Processed
+            ) {
               shikshaMitraToast.warning({
                 message: 'Refund request is Pending. Automatic approval did not occur.',
               });
             } else {
               shikshaMitraToast.success({
                 message:
-                  submitted.status === 2
-                    ? 'Refund request approved. Record the payout separately.'
-                    : 'Refund request submitted successfully.',
+                  submitted.status === FeeRefundStatusType.Processed
+                    ? 'Cash refund completed successfully.'
+                    : submitted.status === 2
+                      ? 'Refund request approved. Record the payout separately.'
+                      : 'Refund request submitted successfully.',
               });
             }
           } else {
@@ -502,16 +533,22 @@ const FeeRefundFormComponent = ({
             idempotencyKey: requestKey.current,
             replacesRefundRequestId: replacementRefundId,
           }).unwrap();
-          if (isAdminCreator && created.status !== 2) {
+          if (
+            isAdminCreator &&
+            created.status !== 2 &&
+            created.status !== FeeRefundStatusType.Processed
+          ) {
             shikshaMitraToast.warning({
               message: 'Refund request is Pending. Automatic approval did not occur.',
             });
           } else {
             shikshaMitraToast.success({
               message:
-                created.status === 2
-                  ? 'Refund request approved. Record the payout separately.'
-                  : 'Refund request submitted successfully.',
+                created.status === FeeRefundStatusType.Processed
+                  ? 'Cash refund completed successfully.'
+                  : created.status === 2
+                    ? 'Refund request approved. Record the payout separately.'
+                    : 'Refund request submitted successfully.',
             });
           }
         }
@@ -582,10 +619,27 @@ const FeeRefundFormComponent = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear?.id]);
   const currentFingerprint = currentYear?.id
-    ? JSON.stringify(buildFeeRefundApiPayload(formik.values, currentYear.id))
+    ? JSON.stringify({
+        ...buildFeeRefundApiPayload(
+          formik.values,
+          currentYear.id,
+          hasSourceRefund ? editRefundDetail?.originalReceiptId : undefined
+        ),
+        ...(canCompleteCashOnSubmission && formik.values.refundMethod === 'Cash'
+          ? cashRouting
+          : {}),
+      })
     : '';
   const currentPreview =
     reviewedPreview?.fingerprint === currentFingerprint ? reviewedPreview.result : null;
+  const adminCashAccessMessage =
+    canCompleteCashOnSubmission && formik.values.refundMethod === 'Cash'
+      ? !adminCanApprove
+        ? 'Approval access is required to submit and complete this cash refund.'
+        : !adminCanProcess
+          ? 'Ask your administrator for payment processing access to complete this cash refund.'
+          : undefined
+      : undefined;
   // ── Derived totals for sticky footer ────────────────────────────────────────
   const { totalSelectedMonths, totalRefundRequested, incompleteRefundMonths } = useMemo(() => {
     const refunds = formik.values.feeHeadRefunds as IFeeHeadRefundItem[];
@@ -691,7 +745,6 @@ const FeeRefundFormComponent = ({
                   ) : (
                     <FeeRefundDetailsForm
                       formik={formik}
-                      lockedReceiptId={isEdit ? editRefundDetail?.originalReceiptId : undefined}
                       allowedPayoutMethods={
                         isEdit || (replacementRefundId && editRefundDetail?.concessionRequestId)
                           ? editRefundDetail?.allowedPayoutMethods
@@ -699,6 +752,30 @@ const FeeRefundFormComponent = ({
                       }
                     />
                   )}
+                  {!prerequisite &&
+                    canCompleteCashOnSubmission &&
+                    adminCanApprove &&
+                    adminCanProcess &&
+                    formik.values.refundMethod === 'Cash' &&
+                    formik.values.studentId &&
+                    currentYear?.id && (
+                      <CashRefundRouting
+                        key={`${currentYear.id}:${formik.values.studentId}`}
+                        academicYearId={currentYear.id}
+                        defaultExpenseCategoryId={
+                          replacementRefundId
+                            ? editRefundDetail?.defaultExpenseCategoryId
+                            : refundEligibility.currentData?.defaultExpenseCategoryId
+                        }
+                        defaultBankAccountId={
+                          replacementRefundId
+                            ? editRefundDetail?.defaultPayingBankAccountId
+                            : refundEligibility.currentData?.defaultPayingBankAccountId
+                        }
+                        busy={busy}
+                        onChange={setCashRouting}
+                      />
+                    )}
                 </Stack>
               )}
             </BackPopUpChecked>
@@ -716,6 +793,11 @@ const FeeRefundFormComponent = ({
           py: 1.5,
         }}
       >
+        {adminCashAccessMessage && (
+          <Alert severity="warning" sx={{ mb: 1.5 }}>
+            {adminCashAccessMessage}
+          </Alert>
+        )}
         {currentPreview && (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
             <strong>Calculated refund:</strong> {currentPreview.refundPolicyName} · Requested{' '}
@@ -796,6 +878,10 @@ const FeeRefundFormComponent = ({
                 editLoadError ||
                 (isEdit && !editRefundDetail?.availableActions?.includes('edit')) ||
                 sessionStatus === 'loading' ||
+                Boolean(adminCashAccessMessage) ||
+                (canCompleteCashOnSubmission &&
+                  formik.values.refundMethod === 'Cash' &&
+                  !cashRouting) ||
                 !formik.isValid ||
                 totalSelectedMonths === 0 ||
                 incompleteRefundMonths > 0 ||
@@ -878,8 +964,9 @@ const FeeRefundFormComponent = ({
               )}
             </Box>
             <Typography variant="body2" color="text.secondary">
-              This request will be approved automatically when you confirm. Approval does not send
-              the payout; payout is recorded separately.
+              {canCompleteCashOnSubmission && adminConfirmation?.method === 'Cash'
+                ? 'Confirming approves this request and completes the cash payout using the selected expense routing.'
+                : 'This request will be approved automatically when you confirm. The payout is recorded separately.'}
             </Typography>
           </Stack>
         </DialogScrollContent>
@@ -900,7 +987,12 @@ const FeeRefundFormComponent = ({
             type="button"
             variant="contained"
             size="small"
-            disabled={busy || !formik.isValid || incompleteRefundMonths > 0}
+            disabled={
+              busy ||
+              !formik.isValid ||
+              incompleteRefundMonths > 0 ||
+              (canCompleteCashOnSubmission && adminConfirmation?.method === 'Cash' && !cashRouting)
+            }
             loading={isSubmitting || isUpdating || isSubmittingDraft || isPreviewing}
             onClick={() => {
               confirmedAdminFingerprint.current = adminConfirmation?.fingerprint ?? null;
@@ -908,7 +1000,9 @@ const FeeRefundFormComponent = ({
               formik.submitForm();
             }}
           >
-            Submit and approve
+            {canCompleteCashOnSubmission && adminConfirmation?.method === 'Cash'
+              ? 'Submit and pay cash'
+              : 'Submit and approve'}
           </LoadingButton>
         </DialogActions>
       </CustomDialog>

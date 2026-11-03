@@ -745,12 +745,6 @@ export default function FinancePolicyDetailsDrawer({
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <BooleanChip
-                                label="Allow Partial Refund"
-                                value={policyDetails.allowPartialRefund}
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <BooleanChip
                                 label="Include Paid Incidental Charges"
                                 value={policyDetails.includePaidCharges}
                               />

@@ -323,9 +323,9 @@ export default function StructureScheduleDialog({
                             )}
                             helperText={
                               (error &&
-                              (!row.allocationPercentage ||
-                                row.allocationPercentage > 100 ||
-                                row.allocationPercentage < 0)
+                                (!row.allocationPercentage ||
+                                  row.allocationPercentage > 100 ||
+                                  row.allocationPercentage < 0)
                                 ? 'Enter a percentage greater than 0 and up to 100'
                                 : undefined) || undefined
                             }

@@ -74,6 +74,8 @@ export const isValidRefundAmount = (amount: number | string): boolean =>
 
 /** Shape sent to POST /api/fee-refunds and PUT /api/fee-refunds/{id} */
 export interface IFeeRefundApiPayload {
+  expenseCategoryId?: string;
+  bankAccountId?: string;
   idempotencyKey?: string;
   replacesRefundRequestId?: string;
   studentId: string;
@@ -84,6 +86,7 @@ export interface IFeeRefundApiPayload {
     chargeId?: string;
     lateFeeDueFeeId?: string;
     sourceAllocationId: string;
+    sourceReceiptId?: string;
     amount: number;
   }[];
   refundMethod: string;
@@ -119,7 +122,8 @@ export interface IRefundFormValues {
 
 export const buildFeeRefundApiPayload = (
   values: IRefundFormValues,
-  academicYearId: string
+  academicYearId: string,
+  originalReceiptId?: string
 ): IFeeRefundApiPayload => {
   const selected = (values.feeHeadRefunds || []).flatMap((fh) =>
     fh.months.filter(
@@ -132,7 +136,7 @@ export const buildFeeRefundApiPayload = (
   return {
     studentId: values.studentId,
     academicYearId,
-    originalReceiptId: selected[0]?.sourceReceiptId || '',
+    originalReceiptId: originalReceiptId || selected[0]?.sourceReceiptId || '',
     refundMethod: values.refundMethod,
     reason: values.notes,
     paymentDetails: Object.fromEntries(
@@ -148,6 +152,7 @@ export const buildFeeRefundApiPayload = (
           ? { chargeId: m.chargeId }
           : { dueFeeId: m.dueFeeId }),
       sourceAllocationId: m.sourceAllocationId || '',
+      sourceReceiptId: m.sourceReceiptId,
       amount: Number(m.amount),
     })),
   };
@@ -227,16 +232,7 @@ export const buildRefundValidationSchema = (
           (value as IFeeHeadRefundItem[]).every((head) =>
             head.months.every((month) => isValidRefundAmount(month.amount))
           )
-      )
-      .test('single-receipt', 'Select refund lines from one original receipt only', (value) => {
-        if (!Array.isArray(value)) return false;
-        const ids = new Set(
-          (value as IFeeHeadRefundItem[]).flatMap((x) =>
-            x.months.map((m) => m.sourceReceiptId).filter(Boolean)
-          )
-        );
-        return ids.size <= 1;
-      }),
+      ),
     paymentDetails: Yup.object().when(['refundMethod'], ([refundMethod], schema, context) => {
       if (
         !refundMethod ||

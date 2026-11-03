@@ -4,6 +4,10 @@ import type { IParams } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { useResponsive } from 'src/hooks/use-responsive';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Alert, Button } from '@mui/material';
@@ -33,6 +37,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onView,
   academicFilters,
 }) => {
+  const pinStudent = useResponsive('up', 'sm');
   const access = useFinancePermissions(financePermissions.fees.collections);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const {
@@ -148,6 +153,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
         overdueFees: item.overdueFees ?? 0,
         totalConcessionAmount: item.totalConcessionAmount ?? 0,
         totalCharges: item.totalCharges ?? 0,
+        paidCharges: item.paidCharges,
         pendingCharges: item.pendingCharges ?? 0,
       })),
     [feeCollectionData?.items]
@@ -183,12 +189,13 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           getRowAction={(row) =>
             access.canView && row.studentId
               ? {
-                label: `Open ${row.name || 'record'}`,
-                onClick: () => {
-                  onView(row as IFeeData);
-                },
-              }
-              : undefined}
+                  label: `Open ${row.name || 'record'}`,
+                  onClick: () => {
+                    onView(row as IFeeData);
+                  },
+                }
+              : undefined
+          }
           tableId="fee-collection-table"
           tableTitle="Collections"
           wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
@@ -231,7 +238,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 200,
               minWidth: 200,
               maxWidth: 500,
-              sticky: true,
+              sticky: pinStudent,
               stickyPosition: 'left',
             },
             {
@@ -307,7 +314,32 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 150,
               minWidth: 130,
               maxWidth: 180,
+              cellSx: { textAlign: 'right' },
               render: (value: any) => formatNumber(value ?? 0, 'INR'),
+            },
+            {
+              id: 'paidCharges',
+              label: 'Paid Charges',
+              align: 'left',
+              isFilter: true,
+              isSort: true,
+              filterType: 'number',
+              valueType: 'money',
+              width: 170,
+              minWidth: 150,
+              maxWidth: 190,
+              cellSx: { textAlign: 'right' },
+              renderColumn: () => (
+                <CustomTooltip
+                  title="Collected charges, including payments awaiting verification. Waived and reversed amounts are excluded."
+                  arrow
+                >
+                  <Box component="span" sx={{ display: 'inline-flex', ml: 0.5 }}>
+                    <Iconify icon={GlobalIcons.info} width={14} />
+                  </Box>
+                </CustomTooltip>
+              ),
+              render: (value: any) => (value == null ? '—' : formatNumber(value, 'INR')),
             },
             {
               id: 'pendingCharges',
@@ -318,6 +350,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 150,
               minWidth: 130,
               maxWidth: 180,
+              cellSx: { textAlign: 'right' },
               render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
