@@ -4,11 +4,14 @@ import type { GrantedPermission } from 'src/utils/permissions';
 import type { FinanceSetupScope } from 'src/redux/finance/setup/types';
 
 import { useRouter } from 'next/navigation';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { SetupFlowShell } from 'src/components/setup-flow';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { Box, Stack, Alert, Button, Skeleton } from '@mui/material';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useFinanceSetupStateQuery } from 'src/redux/finance/setup/api';
-import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 import GlobalAcademicSearch from 'src/layouts/components/global-academic-search';
 
 import FinanceSetupReview from './FinanceSetupReview';
@@ -17,7 +20,6 @@ import FinanceSetupGuidance from './FinanceSetupGuidance';
 import FinanceSetupSettingPanel from './FinanceSetupSettingPanel';
 import { useFinanceSetupProgress } from './use-finance-setup-progress';
 import { financeSetupStages, financeSetupSettings } from './finance-setup-catalog';
-import { FinanceSetupEmbeddingProvider } from './embedding/FinanceSetupEmbeddingProvider';
 import { getFinanceSetupPosition, getFinanceSetupStepStates } from './finance-setup-model';
 
 import type { FinanceSetupPosition } from './finance-setup-catalog';
@@ -58,7 +60,7 @@ export default function FinanceSetupWorkspace({
   const wasEditorOpen = useRef(false);
   const [reloading, setReloading] = useState(false);
   const refreshLock = useRef(false);
-  const heading = useRef<HTMLHeadingElement>(null);
+  const heading = useRef<HTMLSpanElement>(null);
   const { position } = progress;
   const activeStep = financeSetupStages.findIndex((item) => item.key === position.stage);
   const visible = financeSetupSettings.filter((item) =>
@@ -159,6 +161,8 @@ export default function FinanceSetupWorkspace({
 
   return (
     <SetupFlowShell
+      density="compact"
+      contentMaxWidth={tableStage ? 'none' : 1040}
       steps={financeSetupStages}
       fillContent={tableStage}
       activeStep={activeStep}
@@ -213,58 +217,68 @@ export default function FinanceSetupWorkspace({
       }
     >
       <Stack
-        spacing={tableStage ? 1.5 : 3}
+        spacing={tableStage ? 1 : 2}
         sx={tableStage ? { flex: { xs: '1 0 auto', sm: 1 }, minHeight: 0 } : undefined}
       >
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          gap={1}
-          flexWrap="wrap"
-        >
-          <Box
-            inert={editorOpen || progress.saving || reloading}
-            sx={{ flex: '1 1 200px', minWidth: 0, maxWidth: 300 }}
-          >
-            <GlobalAcademicSearch />
-          </Box>
-          <Button
-            size="small"
-            color="inherit"
-            variant="outlined"
-            disabled={
-              editorOpen ||
-              progress.saving ||
-              reloading ||
-              (Boolean(state) && query.isFetching && !query.isError)
-            }
-            onClick={() => {
-              if (state && !query.isError && !progress.conflict) saveExit();
-              else router.push(returnTo);
-            }}
-          >
-            Exit setup
-          </Button>
-        </Stack>
-        <Stack spacing={1}>
-          <Typography variant="overline" color="text.secondary">
-            Finance setup
-          </Typography>
-          <Typography
-            ref={heading}
-            tabIndex={-1}
-            variant="h4"
-            component="h1"
-            sx={{ outline: 'none' }}
-          >
-            {financeSetupStages[activeStep].title}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Configure each item using its usual form. Submit your changes before continuing with the
-            guide.
-          </Typography>
-        </Stack>
+        <CustomBreadcrumbs
+          headingComponent="h1"
+          heading={
+            <Box component="span" ref={heading} tabIndex={-1} sx={{ outline: 'none' }}>
+              {financeSetupStages[activeStep].title}
+            </Box>
+          }
+          description="Save changes in each setting before continuing. Guide progress is saved for the selected academic year."
+          links={[]}
+          slotProps={{
+            action: { maxWidth: '100%', ml: { md: 'auto' } },
+            heading: {},
+            moreLink: {},
+            breadcrumbs: {},
+          }}
+          sx={{ flexShrink: 0, minHeight: 44 }}
+          action={
+            <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap" sx={{ minWidth: 0 }}>
+              <Box
+                inert={editorOpen || progress.saving || reloading}
+                sx={{ flex: '1 1 160px', minWidth: 0, maxWidth: 200 }}
+              >
+                <GlobalAcademicSearch />
+              </Box>
+              {tableStage && state && !query.isError && (
+                <Button
+                  startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
+                  size="small"
+                  color="inherit"
+                  variant="outlined"
+                  disabled={disabled}
+                  onClick={() => {
+                    query.refetch();
+                  }}
+                >
+                  Refresh checks
+                </Button>
+              )}
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.exit} width={18} />}
+                size="small"
+                color="inherit"
+                variant="outlined"
+                disabled={
+                  editorOpen ||
+                  progress.saving ||
+                  reloading ||
+                  (Boolean(state) && query.isFetching && !query.isError)
+                }
+                onClick={() => {
+                  if (state && !query.isError && !progress.conflict) saveExit();
+                  else router.push(returnTo);
+                }}
+              >
+                Exit setup
+              </Button>
+            </Stack>
+          }
+        />
         {!scope.academicYearId ? (
           <Alert severity="info">
             Select an existing academic year above to view Finance configuration and guide progress.
@@ -274,6 +288,7 @@ export default function FinanceSetupWorkspace({
             severity="error"
             action={
               <Button
+                startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
                 color="inherit"
                 size="small"
                 disabled={query.isFetching}
@@ -319,23 +334,22 @@ export default function FinanceSetupWorkspace({
               flexDirection: 'column',
             }}
           >
-            <FinanceSetupEmbeddingProvider onEditorOpenChange={setEditorOpen}>
-              <FinanceSetupSettingPanel
-                position={position}
-                settings={
-                  query.isError
-                    ? visibleSettings.map((item) => ({
-                        ...item,
-                        configurationState: 'unavailable',
-                      }))
-                    : visibleSettings
-                }
-                deferred={progress.deferred}
-                disabled={disabled}
-                onOpen={move}
-                hrefFor={progress.hrefFor}
-              />
-            </FinanceSetupEmbeddingProvider>
+            <FinanceSetupSettingPanel
+              onEditorOpenChange={setEditorOpen}
+              position={position}
+              settings={
+                query.isError
+                  ? visibleSettings.map((item) => ({
+                      ...item,
+                      configurationState: 'unavailable',
+                    }))
+                  : visibleSettings
+              }
+              deferred={progress.deferred}
+              disabled={disabled}
+              onOpen={move}
+              hrefFor={progress.hrefFor}
+            />
           </Box>
         )}
         {query.isError && state && (
@@ -343,6 +357,7 @@ export default function FinanceSetupWorkspace({
             severity="error"
             action={
               <Button
+                startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
                 color="inherit"
                 size="small"
                 disabled={query.isFetching || editorOpen}
@@ -364,6 +379,7 @@ export default function FinanceSetupWorkspace({
             action={
               progress.conflict ? (
                 <Button
+                  startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
                   size="small"
                   color="inherit"
                   disabled={reloading}
@@ -379,25 +395,6 @@ export default function FinanceSetupWorkspace({
             {progress.message}
           </Alert>
         )}
-        {!isGuidance &&
-          position.stage !== 'review' &&
-          state &&
-          !query.isError &&
-          !query.isFetching && (
-            <Stack direction="row" justifyContent="flex-end">
-              <Button
-                size="small"
-                color="inherit"
-                variant="outlined"
-                disabled={disabled}
-                onClick={() => {
-                  query.refetch();
-                }}
-              >
-                Refresh configuration checks
-              </Button>
-            </Stack>
-          )}
       </Stack>
     </SetupFlowShell>
   );

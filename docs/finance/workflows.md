@@ -948,6 +948,7 @@ Each configuration tab embeds its existing Finance management screen, including 
 The guide owns the step heading; standalone routes keep their usual breadcrumbs and actions.
 Submit or close the native editor before changing steps or academic year. Background checks preserve the mounted screen and its draft; closing an editor refreshes configuration presence.
 Expandable setup guidance explains the dependency order without replacing the working screen.
+Configuration steps use the compact setup shell and fill the available width and height with the native table. The shared title/help header contains the academic-year selector and refresh/exit controls; each setting's native actions sit beside its tabs. Configuration status stays visible beside expandable guidance, and the compact footer keeps save feedback and navigation together.
 The native form retains ownership of drafts, validation, exact action permissions and financial writes.
 
 Active configuration available means relevant active records were found; it does not prove every class, mapping or payment method is ready.

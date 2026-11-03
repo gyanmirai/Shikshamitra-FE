@@ -66,3 +66,33 @@ it('reports open editors and releases the guide lock when the editor closes or u
   view.unmount();
   expect(report).toHaveBeenLastCalledWith(false);
 });
+
+it('places the native action in the tabs toolbar and preserves its handler, disabled state and cleanup', () => {
+  render(<div role="toolbar" aria-label="Setting actions" />);
+  const actionContainer = screen.getByRole('toolbar', { name: 'Setting actions' });
+  const add = vi.fn();
+  const report = vi.fn();
+  const content = (disabled: boolean) => (
+    <FinanceSetupEmbeddingProvider onEditorOpenChange={report} actionContainer={actionContainer}>
+      <FinanceSetupManagerHeader
+        heading="Income Category"
+        links={[]}
+        action={
+          <button type="button" disabled={disabled} onClick={add}>
+            Add income category
+          </button>
+        }
+      />
+    </FinanceSetupEmbeddingProvider>
+  );
+  const view = render(content(false));
+  const button = screen.getByRole('button', { name: 'Add income category' });
+  expect(actionContainer).toContainElement(button);
+  expect(view.container).not.toContainElement(button);
+  fireEvent.click(button);
+  expect(add).toHaveBeenCalledOnce();
+  view.rerender(content(true));
+  expect(screen.getByRole('button', { name: 'Add income category' })).toBeDisabled();
+  view.unmount();
+  expect(actionContainer).toBeEmptyDOMElement();
+});

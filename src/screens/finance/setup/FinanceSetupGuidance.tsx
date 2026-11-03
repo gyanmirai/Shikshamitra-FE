@@ -2,6 +2,8 @@
 
 import type { GrantedPermission } from 'src/utils/permissions';
 
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { Stack, Alert, Button, Typography } from '@mui/material';
 import { FormSectionCard } from 'src/components/form-section-card';
@@ -39,6 +41,7 @@ export default function FinanceSetupGuidance({
           </Stack>
           {hasGrantedPermission(permissions, `${financePermissions.fees.structureAssign}.View`) && (
             <Button
+              startIcon={<Iconify icon={GlobalIcons.openInNew} width={18} />}
               component="a"
               href={financePaths.fees.structureAssign}
               target="_blank"
@@ -76,6 +79,7 @@ export default function FinanceSetupGuidance({
           description={item.description}
           action={
             <Button
+              startIcon={<Iconify icon={GlobalIcons.openInNew} width={18} />}
               component="a"
               href={item.path}
               target="_blank"

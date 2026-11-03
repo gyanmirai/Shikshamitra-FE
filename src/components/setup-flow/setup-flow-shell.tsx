@@ -27,7 +27,10 @@ export default function SetupFlowShell({
   footer,
   heightMode = 'viewport',
   fillContent = false,
+  density = 'standard',
+  contentMaxWidth = 1040,
 }: SetupFlowShellProps) {
+  const compact = density === 'compact';
   const body = useRef<HTMLElement>(null);
   useEffect(() => {
     body.current?.scrollTo({ top: 0 });
@@ -69,7 +72,7 @@ export default function SetupFlowShell({
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ px: { xs: 2, sm: 3 }, py: 2 }}
+            sx={{ px: { xs: 2, sm: 3 }, py: compact ? 1 : 2 }}
           >
             <Stack direction="row" alignItems="center" spacing={1}>
               <Box sx={{ display: { md: 'none' } }}>
@@ -106,8 +109,19 @@ export default function SetupFlowShell({
             key={activeStep}
             className={styles.step}
             data-setup-step={activeStep}
-            sx={{ width: '100%', maxWidth: 1040, mx: 'auto', p: { xs: 2, sm: 3, lg: 4 },
-              ...(fillContent && { height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }) }}
+            sx={{
+              width: '100%',
+              maxWidth: contentMaxWidth,
+              mx: 'auto',
+              p: compact ? 1 : { xs: 2, sm: 3, lg: 4 },
+              ...(compact && { px: { xs: 1, sm: 2 } }),
+              ...(fillContent && {
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0,
+              }),
+            }}
           >
             {children}
           </Box>
@@ -121,8 +135,11 @@ export default function SetupFlowShell({
             borderColor: 'divider',
             bgcolor: 'background.paper',
             px: { xs: 2, sm: 3 },
-            py: 2,
-            pb: 'max(16px, env(safe-area-inset-bottom))',
+            py: compact ? 1 : 2,
+            ...(compact && { pt: 0.5 }),
+            pb: compact
+              ? 'max(8px, env(safe-area-inset-bottom))'
+              : 'max(16px, env(safe-area-inset-bottom))',
           }}
         >
           {footer}

@@ -197,6 +197,14 @@ A mobile-only practical minimum height is allowed when the surrounding mobile la
 A bounded table is allowed only when it is an embedded preview, import result, comparison, or history inside a larger task.
 The component and its tests must make that embedded-table exception explicit.
 
+Table-first setup steps may use `src/components/setup-flow/setup-flow-shell.tsx` with
+`fillContent`, `density="compact"`, and `contentMaxWidth="none"`. Compact mode uses the shared
+spacing scale for shell padding and retains table-owned desktop scrolling; the default form shell
+keeps its existing width and spacing. Finance setup places the shared title/help header first,
+native setting actions beside `CustomTabs`, and secondary guidance behind an expandable summary.
+As requested for this guide, omit the breadcrumb trail while retaining the shared header component;
+use compact vertical content padding and footer top padding to keep actions close to their content.
+
 Use one primary `CustomizableTable` per table workspace.
 If two record sets are both primary, separate them with URL-backed tabs or routes.
 Keep domain filters outside the table toolbar.

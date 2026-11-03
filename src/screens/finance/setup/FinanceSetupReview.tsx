@@ -3,6 +3,8 @@
 import type { FinanceSetupSettingStatus } from 'src/redux/finance/setup/types';
 
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { Stack, Alert, Button, Divider, Typography } from '@mui/material';
 
@@ -76,6 +78,7 @@ export default function FinanceSetupReview({
                           )}
                         </Label>
                         <Button
+                          startIcon={<Iconify icon={GlobalIcons.eye} width={18} />}
                           color="inherit"
                           variant="outlined"
                           size="small"
